@@ -59,7 +59,7 @@ function domainHero({ key, word, sub, weight, score, comps }) {
       </div>
     </div>`;
   }).join('');
-  return `<div class="domain-score-hero dsh-${key}">
+  return `<div class="card card-hero hero-${key}"><div class="domain-score-hero dsh-${key}">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-${lb.label}">
         <div class="dsh-number">${score}</div>
@@ -72,7 +72,7 @@ function domainHero({ key, word, sub, weight, score, comps }) {
       </div>
     </div>
     <div class="dsh-components">${pills}</div>
-  </div>`;
+  </div></div>`;
 }
 
 function homeHero({ score, trend, domains }) {
@@ -98,7 +98,7 @@ const SURFACES = [
   {
     id: 'hero-ziva',
     title: 'Ziva Score hero (Home)',
-    note: 'The home front-door hero — composite score ring + per-domain pills. `.ziva-score-hero.zs-score-{label}`. Tap a domain pill to jump to that tab; tap the ring for the score popup.',
+    note: 'The home front-door hero — composite score ring + per-domain pills. `.ziva-score-hero.zs-score-{label}`. Carries the signature rainbow FADE (rose→peach→sage→lavender) over `--card-bg`, hue-swapped in dark. Domain pills reflow 2-per-row at medium/large zoom. Tap a pill to jump to that tab; tap the ring for the score popup.',
     exemplars: [
       { label: 'Strong week', html: homeHero({ score: 84, trend: '↑ +4 vs last week', domains: [
         { key: 'sleep', icon: 'moon', label: 'Sleep', score: 79 },
@@ -119,14 +119,14 @@ const SURFACES = [
   {
     id: 'hero-domain',
     title: 'Domain Score hero (per-tab)',
-    note: 'Per-tab score hero — ring + component-pill breakdown. `.domain-score-hero.dsh-{domain}`, ring tinted by band via `.dsh-ring-{label}`, component bars `.dcb-{high|mid|low}`. One per tab (diet/sleep/poop/medical/milestones).',
+    note: 'Per-tab score hero. Rendered inside its real `.card.card-hero.hero-{domain}` shell (the floor’s two-domain semantic gradient + the 5px `::before` accent stripe) wrapping `.domain-score-hero.dsh-{domain}`. The RING carries the score-band polarity (`.dsh-ring-{label}`), the card-hero gradient carries domain identity — the two never compete (§Polarity Collision). Component bars `.dcb-{high|mid|low}`. One per tab (diet/sleep/poop/medical/milestones).',
     exemplars: [
       { label: 'Diet · Great (88)', html: domainHero({
         key: 'diet', word: 'Diet', sub: 'Based on meals, variety, groups & nutrients', weight: '24%', score: 88,
         comps: [
           { name: 'Meals logged', weight: '40%', score: 92, icon: 'bowl', detail: '3 of 3 today' },
           { name: 'Variety', weight: '30%', score: 78, icon: 'rainbow', detail: '5 food groups' },
-          { name: 'Nutrients', weight: '30%', score: 84, icon: 'drop', detail: 'iron + Vit C paired' },
+          { name: 'Nutrients', weight: '30%', score: 84, icon: 'drop', detail: 'iron + Vitamin C paired this morning — great for absorption' },
         ] }) },
       { label: 'Sleep · Fair (55)', html: domainHero({
         key: 'sleep', word: 'Sleep', sub: 'Based on duration, wake-ups, bedtime & naps', weight: '22%', score: 55,

@@ -6429,6 +6429,38 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .dsh-medical .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(242,168,184,0.10)); border-color:rgba(242,168,184,0.3); }
 .dsh-milestones .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(201,184,232,0.10)); border-color:rgba(201,184,232,0.3); }
 
+/* ═══════════════════════════════════════════════════════════════
+   Hero polish (Surface Catalog, design floor §Tint System).
+   The Home Ziva-Score hero (.ziva-score-hero) carries NO card-hero shell, so
+   it was flat — give it the signature rainbow FADE (rose→peach→sage→lavender,
+   §Tint "home rainbow"), as a directional fade over --card-bg (not a flat
+   fill), hue-swapped deep in dark (Law 1). The per-tab domain heroes already
+   carry their .card.card-hero.hero-{domain} gradient + ::before stripe, so
+   they are NOT re-washed here (a second wash would muddy — §Tint Law 2).
+   ═══════════════════════════════════════════════════════════════ */
+.ziva-score-hero {
+  border-bottom:none;
+  border-radius:var(--r-xl);
+  padding:var(--sp-12) var(--sp-14);
+  background-color:var(--card-bg);
+  background-image:linear-gradient(135deg, rgba(242,168,184,0.12), rgba(250,212,180,0.08) 35%, rgba(181,213,197,0.08) 65%, rgba(201,184,232,0.14));
+  background-repeat:no-repeat;
+}
+[data-theme="dark"] .ziva-score-hero {
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, rgba(158,62,82,0.20), rgba(138,101,32,0.10) 35%, rgba(58,112,96,0.10) 65%, rgba(110,94,154,0.20));
+}
+
+/* Text in full + reflow at medium/large zoom (HR-5/HR-11 — no truncation,
+   wraps; the rigid grids relax so longer detail/label text never clips). */
+.dsh-domain-name, .dsh-domain-sublabel, .dcp-name, .dcp-detail, .zsd-label, .zsd-score { overflow-wrap:break-word; }
+.dsh-components { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+:root[data-zoom="high"] .dsh-components { grid-template-columns:1fr; }
+:root[data-zoom="med"]  .zs-domains,
+:root[data-zoom="high"] .zs-domains { grid-template-columns:repeat(4, 1fr); }
+:root[data-zoom="med"]  .zs-domain-pill,
+:root[data-zoom="high"] .zs-domain-pill { grid-column:span 2 !important; }
+
 /* ── Domain-tinted card backgrounds per track tab ── */
 #tab-diet .card { background:linear-gradient(135deg, var(--warm), rgba(181,213,197,0.10)); }
 #tab-sleep .card { background:linear-gradient(135deg, var(--warm), rgba(155,168,216,0.10)); }
@@ -12293,7 +12325,7 @@ body { padding:0; margin:0; }
   <h2 style="font-family:'Fraunces',serif;font-size:24px;color:var(--text,#3a2e2e);margin:10px 0 0;">Heroes</h2>
   <section class="sc-surface" id="hero-ziva">
     <h3>Ziva Score hero (Home)</h3>
-    <p class="sc-surface-note">The home front-door hero — composite score ring + per-domain pills. <code>.ziva-score-hero.zs-score-{label}</code>. Tap a domain pill to jump to that tab; tap the ring for the score popup.</p>
+    <p class="sc-surface-note">The home front-door hero — composite score ring + per-domain pills. <code>.ziva-score-hero.zs-score-{label}</code>. Carries the signature rainbow FADE (rose→peach→sage→lavender) over <code>--card-bg</code>, hue-swapped in dark. Domain pills reflow 2-per-row at medium/large zoom. Tap a pill to jump to that tab; tap the ring for the score popup.</p>
     
     <div class="sc-specimen">
       <div class="sc-specimen-label">Strong week</div>
@@ -12446,12 +12478,12 @@ body { padding:0; margin:0; }
   </section>
 <section class="sc-surface" id="hero-domain">
     <h3>Domain Score hero (per-tab)</h3>
-    <p class="sc-surface-note">Per-tab score hero — ring + component-pill breakdown. <code>.domain-score-hero.dsh-{domain}</code>, ring tinted by band via <code>.dsh-ring-{label}</code>, component bars <code>.dcb-{high|mid|low}</code>. One per tab (diet/sleep/poop/medical/milestones).</p>
+    <p class="sc-surface-note">Per-tab score hero. Rendered inside its real <code>.card.card-hero.hero-{domain}</code> shell (the floor’s two-domain semantic gradient + the 5px <code>::before</code> accent stripe) wrapping <code>.domain-score-hero.dsh-{domain}</code>. The RING carries the score-band polarity (<code>.dsh-ring-{label}</code>), the card-hero gradient carries domain identity — the two never compete (§Polarity Collision). Component bars <code>.dcb-{high|mid|low}</code>. One per tab (diet/sleep/poop/medical/milestones).</p>
     
     <div class="sc-specimen">
       <div class="sc-specimen-label">Diet · Great (88)</div>
       <div class="sc-render-row">
-        <div class="sc-panel"><span class="sc-mode">Light</span><div class="sc-stage"><div class="domain-score-hero dsh-diet">
+        <div class="sc-panel"><span class="sc-mode">Light</span><div class="sc-stage"><div class="card card-hero hero-diet"><div class="domain-score-hero dsh-diet">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-great">
         <div class="dsh-number">88</div>
@@ -12479,11 +12511,11 @@ body { padding:0; margin:0; }
       <div class="dcp-bar dcb-high">84</div>
       <div class="dcp-text">
         <div class="dcp-name">Nutrients <span class="dcp-weight">30%</span></div>
-        <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-drop"/></svg> iron + Vit C paired</div>
+        <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-drop"/></svg> iron + Vitamin C paired this morning — great for absorption</div>
       </div>
     </div></div>
-  </div></div></div>
-        <div class="sc-panel" data-theme="dark"><span class="sc-mode">Dark</span><div class="sc-stage"><div class="domain-score-hero dsh-diet">
+  </div></div></div></div>
+        <div class="sc-panel" data-theme="dark"><span class="sc-mode">Dark</span><div class="sc-stage"><div class="card card-hero hero-diet"><div class="domain-score-hero dsh-diet">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-great">
         <div class="dsh-number">88</div>
@@ -12511,12 +12543,12 @@ body { padding:0; margin:0; }
       <div class="dcp-bar dcb-high">84</div>
       <div class="dcp-text">
         <div class="dcp-name">Nutrients <span class="dcp-weight">30%</span></div>
-        <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-drop"/></svg> iron + Vit C paired</div>
+        <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-drop"/></svg> iron + Vitamin C paired this morning — great for absorption</div>
       </div>
     </div></div>
-  </div></div></div>
+  </div></div></div></div>
       </div>
-      <details class="sc-markup"><summary>Canonical markup</summary><pre><code>&lt;div class="domain-score-hero dsh-diet"&gt;
+      <details class="sc-markup"><summary>Canonical markup</summary><pre><code>&lt;div class="card card-hero hero-diet"&gt;&lt;div class="domain-score-hero dsh-diet"&gt;
     &lt;div class="dsh-top"&gt;
       &lt;div class="dsh-ring dsh-ring-great"&gt;
         &lt;div class="dsh-number"&gt;88&lt;/div&gt;
@@ -12544,15 +12576,15 @@ body { padding:0; margin:0; }
       &lt;div class="dcp-bar dcb-high"&gt;84&lt;/div&gt;
       &lt;div class="dcp-text"&gt;
         &lt;div class="dcp-name"&gt;Nutrients &lt;span class="dcp-weight"&gt;30%&lt;/span&gt;&lt;/div&gt;
-        &lt;div class="dcp-detail"&gt;&lt;svg class="zi" aria-hidden="true"&gt;&lt;use href="#zi-drop"/&gt;&lt;/svg&gt; iron + Vit C paired&lt;/div&gt;
+        &lt;div class="dcp-detail"&gt;&lt;svg class="zi" aria-hidden="true"&gt;&lt;use href="#zi-drop"/&gt;&lt;/svg&gt; iron + Vitamin C paired this morning — great for absorption&lt;/div&gt;
       &lt;/div&gt;
     &lt;/div&gt;&lt;/div&gt;
-  &lt;/div&gt;</code></pre></details>
+  &lt;/div&gt;&lt;/div&gt;</code></pre></details>
     </div>
     <div class="sc-specimen">
       <div class="sc-specimen-label">Sleep · Fair (55)</div>
       <div class="sc-render-row">
-        <div class="sc-panel"><span class="sc-mode">Light</span><div class="sc-stage"><div class="domain-score-hero dsh-sleep">
+        <div class="sc-panel"><span class="sc-mode">Light</span><div class="sc-stage"><div class="card card-hero hero-sleep"><div class="domain-score-hero dsh-sleep">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-fair">
         <div class="dsh-number">55</div>
@@ -12583,8 +12615,8 @@ body { padding:0; margin:0; }
         <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> 1 of 2 expected</div>
       </div>
     </div></div>
-  </div></div></div>
-        <div class="sc-panel" data-theme="dark"><span class="sc-mode">Dark</span><div class="sc-stage"><div class="domain-score-hero dsh-sleep">
+  </div></div></div></div>
+        <div class="sc-panel" data-theme="dark"><span class="sc-mode">Dark</span><div class="sc-stage"><div class="card card-hero hero-sleep"><div class="domain-score-hero dsh-sleep">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-fair">
         <div class="dsh-number">55</div>
@@ -12615,9 +12647,9 @@ body { padding:0; margin:0; }
         <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-sun"/></svg> 1 of 2 expected</div>
       </div>
     </div></div>
-  </div></div></div>
+  </div></div></div></div>
       </div>
-      <details class="sc-markup"><summary>Canonical markup</summary><pre><code>&lt;div class="domain-score-hero dsh-sleep"&gt;
+      <details class="sc-markup"><summary>Canonical markup</summary><pre><code>&lt;div class="card card-hero hero-sleep"&gt;&lt;div class="domain-score-hero dsh-sleep"&gt;
     &lt;div class="dsh-top"&gt;
       &lt;div class="dsh-ring dsh-ring-fair"&gt;
         &lt;div class="dsh-number"&gt;55&lt;/div&gt;
@@ -12648,12 +12680,12 @@ body { padding:0; margin:0; }
         &lt;div class="dcp-detail"&gt;&lt;svg class="zi" aria-hidden="true"&gt;&lt;use href="#zi-sun"/&gt;&lt;/svg&gt; 1 of 2 expected&lt;/div&gt;
       &lt;/div&gt;
     &lt;/div&gt;&lt;/div&gt;
-  &lt;/div&gt;</code></pre></details>
+  &lt;/div&gt;&lt;/div&gt;</code></pre></details>
     </div>
     <div class="sc-specimen">
       <div class="sc-specimen-label">Medical · Excellent (95)</div>
       <div class="sc-render-row">
-        <div class="sc-panel"><span class="sc-mode">Light</span><div class="sc-stage"><div class="domain-score-hero dsh-medical">
+        <div class="sc-panel"><span class="sc-mode">Light</span><div class="sc-stage"><div class="card card-hero hero-medical"><div class="domain-score-hero dsh-medical">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-excellent">
         <div class="dsh-number">95</div>
@@ -12684,8 +12716,8 @@ body { padding:0; margin:0; }
         <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg> 50th percentile</div>
       </div>
     </div></div>
-  </div></div></div>
-        <div class="sc-panel" data-theme="dark"><span class="sc-mode">Dark</span><div class="sc-stage"><div class="domain-score-hero dsh-medical">
+  </div></div></div></div>
+        <div class="sc-panel" data-theme="dark"><span class="sc-mode">Dark</span><div class="sc-stage"><div class="card card-hero hero-medical"><div class="domain-score-hero dsh-medical">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-excellent">
         <div class="dsh-number">95</div>
@@ -12716,9 +12748,9 @@ body { padding:0; margin:0; }
         <div class="dcp-detail"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg> 50th percentile</div>
       </div>
     </div></div>
-  </div></div></div>
+  </div></div></div></div>
       </div>
-      <details class="sc-markup"><summary>Canonical markup</summary><pre><code>&lt;div class="domain-score-hero dsh-medical"&gt;
+      <details class="sc-markup"><summary>Canonical markup</summary><pre><code>&lt;div class="card card-hero hero-medical"&gt;&lt;div class="domain-score-hero dsh-medical"&gt;
     &lt;div class="dsh-top"&gt;
       &lt;div class="dsh-ring dsh-ring-excellent"&gt;
         &lt;div class="dsh-number"&gt;95&lt;/div&gt;
@@ -12749,7 +12781,7 @@ body { padding:0; margin:0; }
         &lt;div class="dcp-detail"&gt;&lt;svg class="zi" aria-hidden="true"&gt;&lt;use href="#zi-ruler"/&gt;&lt;/svg&gt; 50th percentile&lt;/div&gt;
       &lt;/div&gt;
     &lt;/div&gt;&lt;/div&gt;
-  &lt;/div&gt;</code></pre></details>
+  &lt;/div&gt;&lt;/div&gt;</code></pre></details>
     </div>
   </section>
 </div>
