@@ -1574,7 +1574,10 @@ function _qlFeedInsight(foodArg) {
     // typed text into _qlFeedItems but BEFORE calling _qlFeedInsight.
     // The legacy input-read path returns '' and the 'New food!' branch
     // dies silently. Prefer the food arg (built from items by caller).
-    var food = (typeof foodArg === 'string' && foodArg) ? foodArg : (document.getElementById('qlFeedInput')?.value?.trim() || '');
+    // F-6a: the qlFeedInput element was removed with the FAB shell rewire;
+    // the live caller (saveQLFeed) always passes the items-derived food arg,
+    // so the old typed-input fallback is dropped (it could only return '').
+    var food = (typeof foodArg === 'string' && foodArg) ? foodArg : '';
     if (food) {
       var base = _baseFoodName(food);
       var isNew = !foods.some(function(f) { return _baseFoodName(f.name) === base; });

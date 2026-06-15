@@ -5884,7 +5884,9 @@ function _fcRenderInsight(inst) {
   var itemsText = inst.items.map(function(it) { return it.name; }).join(', ');
   var insight = getMealInsight(itemsText);
   if (!insight) return '';
-  // Diversity hint (mirrors updateMealInsight's home.js logic).
+  // Diversity hint (the food-group heuristic formerly in updateMealInsight,
+  // home.js — that function is now a thin re-render shim, so this is the
+  // authoritative copy).
   var diversityHint = '';
   try {
     var foodItems = itemsText.split(/[,+]/).map(function(f) { return f.trim().toLowerCase(); }).filter(function(f) { return f.length > 1; });
@@ -6100,6 +6102,16 @@ function fcSkipMeal(inst) {
   if (!inst || !inst.slot) return;
   if (inst.variant === 'sheet') { _fcSheetSkip(inst); return; }
   // card variant
+  // Cancel any open burst on this slot first — the skip supersedes the
+  // in-progress edit. Otherwise the orphaned 5s timer later fires
+  // _fcCloseBurst with a stale pre-skip snapshot: a second "<slot> updated"
+  // toast whose undo silently reverts the skip, plus burst-close
+  // introductions for items the parent just chose to skip.
+  if (inst._burst) {
+    if (inst._burstTimer) { clearTimeout(inst._burstTimer); inst._burstTimer = null; }
+    inst._burst = null;
+    if (_fcActiveBurst === inst) _fcActiveBurst = null;
+  }
   var dateStr = inst.dateOf();
   var fd = load(KEYS.feeding, {}) || {};
   var prevDay = fd[dateStr] || {};
@@ -6426,6 +6438,12 @@ function renderDomainHero(domainKey) {
   const d = zs.domains[domainKey];
   if (!d || d.score === null || d.score === undefined) { el.style.display = 'none'; return; }
 
+  // F-6a: #dietDomainHero ships hidden via the .fc-hidden class
+  // (display:none !important), which an inline el.style.display='' cannot
+  // override. Drop the class on the show path so the diet score hero can
+  // actually appear; the hide paths set style.display='none' which wins
+  // regardless of class. (No-op for the four heroes that lack the class.)
+  el.classList.remove('fc-hidden');
   el.style.display = '';
   const score = Math.round(d.score);
   const lbl = getScoreLabel(score);
