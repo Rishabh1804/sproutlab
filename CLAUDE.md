@@ -93,9 +93,9 @@ it. Silence is not a waiver. Full procedure: `docs/QA_GATE_SPEC.md` Gate 2.5.
 
 ## What SproutLab Is
 
-Baby development tracker for **Ziva Jain** (born 4 Sep 2025). Architecture: split-file HTML PWA, localStorage + Firestore sync, no backend server. Used on a phone by new parents, often one-handed while holding a baby.
+Development & health-intelligence tracker for **Ziva Jain** (born 4 Sep 2025) — one app, tagged to one child, built to **evolve with her** across life-stages (tracking → learning → education). Architecture: split-file HTML PWA, localStorage + Firestore sync, no backend server. Used on a phone by parents, often one-handed while holding a baby.
 
-**Design brief:** Warm, sturdy, calm. A cozy nursery journal, not a clinical health app.
+**Design brief:** Warm, sturdy, calm — *a health intelligence system with the soul of a journal.* Warmth is **design law** (the half-awake test), not a ceiling on capability: the analytical power — cross-domain correlation, illness state machines, the milestone engine, Smart Q&A — is real and is the point, and it must *always* arrive legible and kind to a tired parent at 2 AM. The journal is the manner; the intelligence is the matter. *(North star ratified 2026-07-11; supersedes the earlier "cozy nursery journal, not a clinical health app" brief.)*
 
 **Live:** https://rishabh1804.github.io/sproutlab/
 
