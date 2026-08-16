@@ -36,10 +36,8 @@ const PARTY = {
   date:     'Friday, 4 September 2026',
   place:    'Jamshedpur',
   welcome:  'Welcome to',
-  // Welcome board dedication — the name's meaning, not logistics.
-  means:    'her name means',
-  radiance: 'Radiance',
-  triad:    'light · brightness · splendor',
+  // Welcome board 'celebrate' variant close — playful, no explaining.
+  glow:     'Let it glow',
 };
 
 /* Deterministic RNG — same seed, same snow, every rebuild. A poster that
@@ -588,24 +586,25 @@ function buildBackdrop() {
    Same world, vertical composition: the lockup stacks, so the constellation
    and the sky get the room the landscape board cannot give them.
    ═════════════════════════════════════════════════════════════════════════ */
-function buildWelcome() {
+function buildWelcome(variant = 'minimal') {
   const W = 1200, H = 1697, cx = W / 2; // A2 ratio
   const rand = mulberry32(50925);
 
-  // A greeting, not a briefing: no date, no time, no venue. The stack ends on
-  // what her name means — the one gold word on the board is "Radiance".
-  const welcomeY  = H * 0.228;
-  const nameY     = H * 0.322;
-  const ruleY     = H * 0.360;
-  const preY      = H * 0.434;
+  // A greeting, not a briefing: no date, no time, no venue, no explaining.
+  // 'celebrate' closes on one playful gold line; 'minimal' lets the lockup be
+  // the last word and the night sky carry the rest.
+  const celebrate = variant === 'celebrate';
+  const welcomeY  = H * 0.240;
+  const nameY     = H * 0.336;
+  const ruleY     = H * 0.376;
+  const preY      = H * 0.452;
   const oneSize   = H * 0.175;
-  const oneBase   = H * 0.588;
-  const postY     = H * 0.644;
-  const meansY    = H * 0.708;
-  const radianceY = H * 0.762;
-  const triadY    = H * 0.800;
+  const oneBase   = H * 0.612;
+  const postY     = H * 0.670;
+  const glowY     = H * 0.746;
 
-  const block = { x0: W * 0.05, x1: W * 0.95, y0: welcomeY - H * 0.035, y1: triadY + H * 0.012 };
+  const blockEnd = celebrate ? glowY + H * 0.014 : postY + H * 0.014;
+  const block = { x0: W * 0.05, x1: W * 0.95, y0: welcomeY - H * 0.035, y1: blockEnd };
   const lines = [
     { x0: W * 0.30, x1: W * 0.70, y0: welcomeY - H * 0.022, y1: welcomeY + H * 0.008 },
     { x0: W * 0.22, x1: W * 0.78, y0: nameY - H * 0.066, y1: nameY + H * 0.014 },
@@ -613,10 +612,8 @@ function buildWelcome() {
     { x0: W * 0.28, x1: W * 0.72, y0: preY - H * 0.042, y1: preY + H * 0.014 },
     { x0: W * 0.16, x1: W * 0.84, y0: oneBase - H * 0.146, y1: oneBase + H * 0.018 },
     { x0: W * 0.26, x1: W * 0.74, y0: postY - H * 0.042, y1: postY + H * 0.014 },
-    { x0: W * 0.30, x1: W * 0.70, y0: meansY - H * 0.018, y1: meansY + H * 0.008 },
-    { x0: W * 0.20, x1: W * 0.80, y0: radianceY - H * 0.048, y1: radianceY + H * 0.014 },
-    { x0: W * 0.20, x1: W * 0.80, y0: triadY - H * 0.016, y1: triadY + H * 0.008 },
   ];
+  if (celebrate) lines.push({ x0: W * 0.24, x1: W * 0.76, y0: glowY - H * 0.044, y1: glowY + H * 0.014 });
 
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" `
         + `aria-label="Welcome to Ziva's Winter ONEderland — A2 welcome board">`;
@@ -664,40 +661,34 @@ function buildWelcome() {
   s += `<text ${T.punword} x="${r2(midX(cx, sideTrack))}" y="${r2(postY)}" text-anchor="middle" `
      + `font-size="${r2(H * 0.052)}" letter-spacing="${r2(sideTrack)}">${PARTY.pun.post}</text>`;
 
-  // ── The dedication: what her name stands for ───────────────────────────
-  const mTrack = H * 0.0092;
-  s += `<text ${T.blessing} x="${r2(midX(cx, mTrack))}" y="${r2(meansY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.0175)}" letter-spacing="${r2(mTrack)}" opacity=".85">`
-     + PARTY.means.toUpperCase() + `</text>`;
-
-  // The one gold word on the board. Vega above, "Radiance" below — the same
-  // light, named twice. Flanked by two small gold sparkles.
-  const radTrack = H * 0.0062;
-  s += `<text font-family="Poiret One" fill="${C.gold}" x="${r2(midX(cx, radTrack))}" y="${r2(radianceY)}" `
-     + `text-anchor="middle" font-size="${r2(H * 0.054)}" letter-spacing="${r2(radTrack)}" `
-     + `filter="url(#softGlow)">${PARTY.radiance}</text>`;
-  for (const sgn of [-1, 1]) {
-    const sx = cx + sgn * W * 0.255, sy = radianceY - H * 0.016;
-    const a = H * 0.0085, b = a * 0.42; // long cross + short diagonal = star sparkle, not a plus sign
-    s += `<g stroke="${C.gold}" stroke-linecap="round" opacity=".85" fill="none">`
-       + `<path d="M${r2(sx - a)} ${r2(sy)} H${r2(sx + a)} M${r2(sx)} ${r2(sy - a)} V${r2(sy + a)}" `
-       + `stroke-width="${r2(a * 0.20)}"/>`
-       + `<path d="M${r2(sx - b)} ${r2(sy - b)} L${r2(sx + b)} ${r2(sy + b)} `
-       + `M${r2(sx - b)} ${r2(sy + b)} L${r2(sx + b)} ${r2(sy - b)}" stroke-width="${r2(a * 0.14)}"/>`
-       + `<circle cx="${r2(sx)}" cy="${r2(sy)}" r="${r2(a * 0.16)}" fill="${C.gold}" stroke="none"/></g>`;
+  if (celebrate) {
+    // One playful gold line closes the board — a Frozen wink that carries her
+    // radiance without explaining it. Flanked by two gold star sparkles.
+    const glTrack = H * 0.0062;
+    s += `<text font-family="Poiret One" fill="${C.gold}" x="${r2(midX(cx, glTrack))}" y="${r2(glowY)}" `
+       + `text-anchor="middle" font-size="${r2(H * 0.049)}" letter-spacing="${r2(glTrack)}" `
+       + `filter="url(#softGlow)">${PARTY.glow}</text>`;
+    for (const sgn of [-1, 1]) {
+      const sx = cx + sgn * W * 0.265, sy = glowY - H * 0.014;
+      const a = H * 0.0085, b = a * 0.42; // long cross + short diagonal = star sparkle, not a plus sign
+      s += `<g stroke="${C.gold}" stroke-linecap="round" opacity=".85" fill="none">`
+         + `<path d="M${r2(sx - a)} ${r2(sy)} H${r2(sx + a)} M${r2(sx)} ${r2(sy - a)} V${r2(sy + a)}" `
+         + `stroke-width="${r2(a * 0.20)}"/>`
+         + `<path d="M${r2(sx - b)} ${r2(sy - b)} L${r2(sx + b)} ${r2(sy + b)} `
+         + `M${r2(sx - b)} ${r2(sy + b)} L${r2(sx + b)} ${r2(sy - b)}" stroke-width="${r2(a * 0.14)}"/>`
+         + `<circle cx="${r2(sx)}" cy="${r2(sy)}" r="${r2(a * 0.16)}" fill="${C.gold}" stroke="none"/></g>`;
+    }
   }
-
-  const trTrack = H * 0.0078;
-  s += `<text ${T.detailLite} x="${r2(midX(cx, trTrack))}" y="${r2(triadY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.0155)}" letter-spacing="${r2(trTrack)}">`
-     + PARTY.triad.toUpperCase() + `</text>`;
 
   s += `<rect width="${W}" height="${H}" fill="url(#vignette)" style="mix-blend-mode:multiply"/>`;
   s += `</svg>`;
   return page("Ziva's Winter ONEderland — Welcome Board", s, 16.54, 23.39);
 }
 
+// WELCOME_VARIANT: 'minimal' (stack ends at derland) or 'celebrate' (gold
+// "Let it glow" close). The shipped board is welcome-board.html.
+const WELCOME_VARIANT = process.env.WELCOME_VARIANT || 'celebrate';
 writeFileSync(join(HERE, 'backdrop.html'), buildBackdrop());
-writeFileSync(join(HERE, 'welcome-board.html'), buildWelcome());
+writeFileSync(join(HERE, 'welcome-board.html'), buildWelcome(WELCOME_VARIANT));
 console.log('built  backdrop.html        6ft x 4ft   (3:2 landscape)');
-console.log('built  welcome-board.html   A2          (420 x 594 mm portrait)');
+console.log(`built  welcome-board.html   A2          (420 x 594 mm portrait, ${WELCOME_VARIANT})`);

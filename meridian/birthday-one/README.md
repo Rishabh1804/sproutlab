@@ -7,7 +7,7 @@ six-foot backdrop with no loss.
 | File | What it is | Print size |
 |------|-----------|-----------|
 | `print-backdrop.pdf` | Photo-wall backdrop, landscape | 72 × 48 in (6 × 4 ft), 3:2 |
-| `print-welcome-board.pdf` | Entrance / easel welcome board, portrait — a greeting, not a briefing: no logistics, unlabelled sky, ends on *her name means Radiance* | 420 × 594 mm (A2) |
+| `print-welcome-board.pdf` | Entrance / easel welcome board, portrait — a greeting, not a briefing: no logistics, unlabelled sky, closes on the gold line *Let it glow* | 420 × 594 mm (A2) |
 | `proof-backdrop.png`, `proof-welcome-board.png` | On-screen proofs for approval | — |
 | `gallery.html` | Presentation page showing both boards + these specs | — |
 | `backdrop.html`, `welcome-board.html` | The artwork sources (self-contained) | — |
@@ -34,7 +34,7 @@ geometric sans) for details.
 **Palette.** `#0a1830` polar night · `#16345c` deep ice · `#6fb3d9` glacier ·
 `#cfe8f7` frost · `#f6fbff` snow · `#8fe3c4`/`#b9a6e8` aurora · `#f4d79a` Vega
 gold. The gold is reserved for starlight, the ice edge-light, and — on the
-welcome board — the single word *Radiance*.
+welcome board — the single closing line *Let it glow*.
 
 **Composition note.** On the backdrop all lettering sits in the upper half and
 the bottom third is deliberately quiet snowfield — that is the band guests stand

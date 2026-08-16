@@ -130,8 +130,8 @@ footer{margin-top:52px;text-align:center;color:var(--dim);font-size:13.5px}
 <div class="board">
   <div class="board-head"><h2>The welcome board</h2><span class="tag">A2 portrait</span></div>
   <p class="board-note">For the entrance, an easel, or the cake table. A greeting, not a briefing —
-  no date, no venue, and an unlabelled sky. The stack ends on what her name stands for:
-  <em>Ziva</em> means radiance, and the one gold word on the board is exactly that.</p>
+  no date, no venue, and an unlabelled sky. It closes on one playful gold line:
+  <em>Let it glow</em>.</p>
   <div class="frame portrait">${welcome}</div>
   <dl class="specs">
     <div class="spec"><dt>Print size</dt><dd>420 × 594 mm</dd></div>
@@ -150,8 +150,8 @@ footer{margin-top:52px;text-align:center;color:var(--dim);font-size:13.5px}
     and the theme and her name turn out to be the same word said twice.</p>
   </div>
   <p>The backdrop names it quietly (Vega, <em>her first sky</em>); the welcome board leaves the
-  sky unlabelled and says it in words instead — <em>her name means Radiance</em>. Most guests
-  will read a pretty constellation; the people who know will know.</p>
+  sky unlabelled and closes on <em>Let it glow</em> instead — the wink lands either way. Most
+  guests will read a pretty constellation; the people who know will know.</p>
 </section>
 
 <section class="panel">
