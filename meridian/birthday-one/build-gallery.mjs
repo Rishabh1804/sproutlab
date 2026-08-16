@@ -129,8 +129,9 @@ footer{margin-top:52px;text-align:center;color:var(--dim);font-size:13.5px}
 
 <div class="board">
   <div class="board-head"><h2>The welcome board</h2><span class="tag">A2 portrait</span></div>
-  <p class="board-note">For the entrance, an easel, or the cake table. Same night sky, stacked
-  vertically, and it carries the full details — date, time and place.</p>
+  <p class="board-note">For the entrance, an easel, or the cake table. A greeting, not a briefing —
+  no date, no venue, and an unlabelled sky. The stack ends on what her name stands for:
+  <em>Ziva</em> means radiance, and the one gold word on the board is exactly that.</p>
   <div class="frame portrait">${welcome}</div>
   <dl class="specs">
     <div class="spec"><dt>Print size</dt><dd>420 × 594 mm</dd></div>
@@ -143,13 +144,14 @@ footer{margin-top:52px;text-align:center;color:var(--dim);font-size:13.5px}
 <section class="panel">
   <h3>The detail in the top corner</h3>
   <div class="lore">
-    <p>The constellation above Vega's gold star is <strong>Lyra</strong> — the pattern that rode
+    <p>The constellation beneath the gold star is <strong>Lyra</strong> — the pattern that rode
     high over Jamshedpur at 5:09 pm on the evening Ziva was born, Vega blazing at its crown.
-    <em>Ziva</em> means radiance. So the sky on this poster is not decoration: it is her sky,
+    <em>Ziva</em> means radiance. So the sky on these boards is not decoration: it is her sky,
     and the theme and her name turn out to be the same word said twice.</p>
   </div>
-  <p>It is drawn small and quiet on purpose. Most guests will read it as a pretty constellation;
-  the people who know will know.</p>
+  <p>The backdrop names it quietly (Vega, <em>her first sky</em>); the welcome board leaves the
+  sky unlabelled and says it in words instead — <em>her name means Radiance</em>. Most guests
+  will read a pretty constellation; the people who know will know.</p>
 </section>
 
 <section class="panel">

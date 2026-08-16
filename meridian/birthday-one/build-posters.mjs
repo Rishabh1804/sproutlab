@@ -34,9 +34,12 @@ const PARTY = {
   pun:      { pre: 'Winter', hero: 'ONE', post: 'derland' },
   blessing: 'one whole year of radiance',
   date:     'Friday, 4 September 2026',
-  time:     'five o’clock in the evening',
   place:    'Jamshedpur',
   welcome:  'Welcome to',
+  // Welcome board dedication — the name's meaning, not logistics.
+  means:    'her name means',
+  radiance: 'Radiance',
+  triad:    'light · brightness · splendor',
 };
 
 /* Deterministic RNG — same seed, same snow, every rebuild. A poster that
@@ -589,27 +592,30 @@ function buildWelcome() {
   const W = 1200, H = 1697, cx = W / 2; // A2 ratio
   const rand = mulberry32(50925);
 
-  const welcomeY  = H * 0.222;
-  const nameY     = H * 0.310;
-  const ruleY     = H * 0.348;
-  const preY      = H * 0.418;
-  const oneSize   = H * 0.170;
-  const oneBase   = H * 0.567;
-  const postY     = H * 0.622;
-  const blessingY = H * 0.678;
-  const dateY     = H * 0.745;
-  const timeY     = H * 0.775;
+  // A greeting, not a briefing: no date, no time, no venue. The stack ends on
+  // what her name means — the one gold word on the board is "Radiance".
+  const welcomeY  = H * 0.228;
+  const nameY     = H * 0.322;
+  const ruleY     = H * 0.360;
+  const preY      = H * 0.434;
+  const oneSize   = H * 0.175;
+  const oneBase   = H * 0.588;
+  const postY     = H * 0.644;
+  const meansY    = H * 0.708;
+  const radianceY = H * 0.762;
+  const triadY    = H * 0.800;
 
-  const block = { x0: W * 0.05, x1: W * 0.95, y0: welcomeY - H * 0.035, y1: timeY + H * 0.015 };
+  const block = { x0: W * 0.05, x1: W * 0.95, y0: welcomeY - H * 0.035, y1: triadY + H * 0.012 };
   const lines = [
     { x0: W * 0.30, x1: W * 0.70, y0: welcomeY - H * 0.022, y1: welcomeY + H * 0.008 },
     { x0: W * 0.22, x1: W * 0.78, y0: nameY - H * 0.066, y1: nameY + H * 0.014 },
     { x0: W * 0.24, x1: W * 0.76, y0: ruleY - H * 0.018, y1: ruleY + H * 0.018 },
     { x0: W * 0.28, x1: W * 0.72, y0: preY - H * 0.042, y1: preY + H * 0.014 },
-    { x0: W * 0.16, x1: W * 0.84, y0: oneBase - H * 0.142, y1: oneBase + H * 0.018 },
+    { x0: W * 0.16, x1: W * 0.84, y0: oneBase - H * 0.146, y1: oneBase + H * 0.018 },
     { x0: W * 0.26, x1: W * 0.74, y0: postY - H * 0.042, y1: postY + H * 0.014 },
-    { x0: W * 0.22, x1: W * 0.78, y0: blessingY - H * 0.020, y1: blessingY + H * 0.008 },
-    { x0: W * 0.18, x1: W * 0.82, y0: dateY - H * 0.021, y1: timeY + H * 0.008 },
+    { x0: W * 0.30, x1: W * 0.70, y0: meansY - H * 0.018, y1: meansY + H * 0.008 },
+    { x0: W * 0.20, x1: W * 0.80, y0: radianceY - H * 0.048, y1: radianceY + H * 0.014 },
+    { x0: W * 0.20, x1: W * 0.80, y0: triadY - H * 0.016, y1: triadY + H * 0.008 },
   ];
 
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" `
@@ -618,22 +624,25 @@ function buildWelcome() {
   s += `<rect width="${W}" height="${H}" fill="url(#sky)"/>`;
   s += stars(rand, W, H * 0.82, 210, lines);
   s += aurora(rand, W, H * 0.9, 3);
-  s += lyra(W * 0.085, H * 0.052, W * 0.27, H * 0.105, { scale: 1.4, labelSize: W * 0.019 });
+  // Unlabelled: guests read a constellation and a bright gold star; the board
+  // itself explains the radiance in words further down.
+  s += lyra(W * 0.085, H * 0.052, W * 0.27, H * 0.105, { scale: 1.4, label: false });
 
-  s += peaks(rand, W, H * 0.878, H * 0.092, C.deepIce, 0.85, 0.55, '#9fc9e4');
-  s += peaks(rand, W, H * 0.900, H * 0.080, '#123153', 0.90, 0.78, '#8dbcdd');
-  s += peaks(rand, W, H * 0.918, H * 0.068, '#081d38', 0.95, 1, '#7fb2d6');
+  s += peaks(rand, W, H * 0.888, H * 0.082, C.deepIce, 0.85, 0.55, '#9fc9e4');
+  s += peaks(rand, W, H * 0.908, H * 0.072, '#123153', 0.90, 0.78, '#8dbcdd');
+  s += peaks(rand, W, H * 0.925, H * 0.062, '#081d38', 0.95, 1, '#7fb2d6');
 
-  s += `<rect x="0" y="${r2(H * 0.898)}" width="${W}" height="${r2(H * 0.102)}" fill="url(#snowGround)"/>`;
-  s += drift(rand, W, H * 0.922, H * 0.011, C.frost, 0.24);
-  s += drift(rand, W, H * 0.952, H * 0.009, C.snow, 0.20);
+  s += `<rect x="0" y="${r2(H * 0.905)}" width="${W}" height="${r2(H * 0.095)}" fill="url(#snowGround)"/>`;
+  s += drift(rand, W, H * 0.928, H * 0.011, C.frost, 0.24);
+  s += drift(rand, W, H * 0.956, H * 0.009, C.snow, 0.20);
 
   s += filigree(W * 0.020, H * 0.990, W * 0.20, -14, 0.30);
   s += `<g transform="translate(${W} 0) scale(-1 1)">`
      + filigree(W * 0.020, H * 0.990, W * 0.20, -14, 0.30) + `</g>`;
 
   // ── Type ───────────────────────────────────────────────────────────────
-  const skyMark = { x0: W * 0.03, x1: W * 0.41, y0: H * 0.02, y1: H * 0.205 };
+  // Keep-out shrinks to the constellation itself now that it carries no label.
+  const skyMark = { x0: W * 0.04, x1: W * 0.39, y0: H * 0.03, y1: H * 0.175 };
   s += snowfield(rand, W, H, 70, { minR: 6, maxR: 28, opacity: [0.14, 0.52], avoid: [block, skyMark] });
 
   const wTrack = H * 0.0105;
@@ -655,19 +664,33 @@ function buildWelcome() {
   s += `<text ${T.punword} x="${r2(midX(cx, sideTrack))}" y="${r2(postY)}" text-anchor="middle" `
      + `font-size="${r2(H * 0.052)}" letter-spacing="${r2(sideTrack)}">${PARTY.pun.post}</text>`;
 
-  const blTrack = H * 0.0092;
-  s += `<text ${T.blessing} x="${r2(midX(cx, blTrack))}" y="${r2(blessingY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.0195)}" letter-spacing="${r2(blTrack)}">`
-     + PARTY.blessing.toUpperCase() + `</text>`;
+  // ── The dedication: what her name stands for ───────────────────────────
+  const mTrack = H * 0.0092;
+  s += `<text ${T.blessing} x="${r2(midX(cx, mTrack))}" y="${r2(meansY)}" text-anchor="middle" `
+     + `font-size="${r2(H * 0.0175)}" letter-spacing="${r2(mTrack)}" opacity=".85">`
+     + PARTY.means.toUpperCase() + `</text>`;
 
-  const dTrack = H * 0.0058;
-  s += `<text ${T.detail} x="${r2(midX(cx, dTrack))}" y="${r2(dateY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.0205)}" letter-spacing="${r2(dTrack)}">`
-     + PARTY.date.toUpperCase() + `</text>`;
-  const tTrack = H * 0.0045;
-  s += `<text ${T.detailLite} x="${r2(midX(cx, tTrack))}" y="${r2(timeY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.0165)}" letter-spacing="${r2(tTrack)}">`
-     + `${PARTY.time.toUpperCase()} · ${PARTY.place.toUpperCase()}</text>`;
+  // The one gold word on the board. Vega above, "Radiance" below — the same
+  // light, named twice. Flanked by two small gold sparkles.
+  const radTrack = H * 0.0062;
+  s += `<text font-family="Poiret One" fill="${C.gold}" x="${r2(midX(cx, radTrack))}" y="${r2(radianceY)}" `
+     + `text-anchor="middle" font-size="${r2(H * 0.054)}" letter-spacing="${r2(radTrack)}" `
+     + `filter="url(#softGlow)">${PARTY.radiance}</text>`;
+  for (const sgn of [-1, 1]) {
+    const sx = cx + sgn * W * 0.255, sy = radianceY - H * 0.016;
+    const a = H * 0.0085, b = a * 0.42; // long cross + short diagonal = star sparkle, not a plus sign
+    s += `<g stroke="${C.gold}" stroke-linecap="round" opacity=".85" fill="none">`
+       + `<path d="M${r2(sx - a)} ${r2(sy)} H${r2(sx + a)} M${r2(sx)} ${r2(sy - a)} V${r2(sy + a)}" `
+       + `stroke-width="${r2(a * 0.20)}"/>`
+       + `<path d="M${r2(sx - b)} ${r2(sy - b)} L${r2(sx + b)} ${r2(sy + b)} `
+       + `M${r2(sx - b)} ${r2(sy + b)} L${r2(sx + b)} ${r2(sy - b)}" stroke-width="${r2(a * 0.14)}"/>`
+       + `<circle cx="${r2(sx)}" cy="${r2(sy)}" r="${r2(a * 0.16)}" fill="${C.gold}" stroke="none"/></g>`;
+  }
+
+  const trTrack = H * 0.0078;
+  s += `<text ${T.detailLite} x="${r2(midX(cx, trTrack))}" y="${r2(triadY)}" text-anchor="middle" `
+     + `font-size="${r2(H * 0.0155)}" letter-spacing="${r2(trTrack)}">`
+     + PARTY.triad.toUpperCase() + `</text>`;
 
   s += `<rect width="${W}" height="${H}" fill="url(#vignette)" style="mix-blend-mode:multiply"/>`;
   s += `</svg>`;
