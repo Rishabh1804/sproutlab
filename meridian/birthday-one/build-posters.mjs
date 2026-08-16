@@ -607,7 +607,7 @@ function buildWelcome(variant = 'minimal') {
   const block = { x0: W * 0.05, x1: W * 0.95, y0: welcomeY - H * 0.035, y1: blockEnd };
   const lines = [
     { x0: W * 0.30, x1: W * 0.70, y0: welcomeY - H * 0.022, y1: welcomeY + H * 0.008 },
-    { x0: W * 0.22, x1: W * 0.78, y0: nameY - H * 0.066, y1: nameY + H * 0.014 },
+    { x0: W * 0.19, x1: W * 0.81, y0: nameY - H * 0.066, y1: nameY + H * 0.014 },
     { x0: W * 0.24, x1: W * 0.76, y0: ruleY - H * 0.018, y1: ruleY + H * 0.018 },
     { x0: W * 0.28, x1: W * 0.72, y0: preY - H * 0.042, y1: preY + H * 0.014 },
     { x0: W * 0.16, x1: W * 0.84, y0: oneBase - H * 0.146, y1: oneBase + H * 0.018 },
@@ -647,10 +647,14 @@ function buildWelcome(variant = 'minimal') {
      + `font-size="${r2(H * 0.0215)}" letter-spacing="${r2(wTrack)}" opacity=".85">`
      + PARTY.welcome.toUpperCase() + `</text>`;
 
+  // ZIVA'S — "Welcome to" above makes the name possessive. The 'S is tucked
+  // in against the A (negative dx, near-zero tracking) so the wide hairline
+  // letter-spacing doesn't strand the apostrophe on an island of its own.
   const nameTrack = H * 0.042;
-  s += `<text ${nameAttrs("nameFill")} x="${r2(midX(cx, nameTrack))}" y="${r2(nameY)}" text-anchor="middle" `
+  s += `<text ${nameAttrs("nameFill")} x="${r2(cx)}" y="${r2(nameY)}" text-anchor="middle" `
      + `font-size="${r2(H * 0.079)}" letter-spacing="${r2(nameTrack)}" filter="url(#softGlow)">`
-     + PARTY.name + `</text>`;
+     + `<tspan>${PARTY.name}</tspan>`
+     + `<tspan dx="${r2(-nameTrack * 0.72)}" letter-spacing="${r2(nameTrack * 0.12)}">’S</tspan></text>`;
 
   s += ornamentRule(cx, ruleY, W * 0.235, H * 0.0135, 21);
 
