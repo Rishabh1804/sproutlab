@@ -654,7 +654,7 @@ function buildWelcome(variant = 'minimal') {
   s += `<text ${nameAttrs("nameFill")} x="${r2(cx)}" y="${r2(nameY)}" text-anchor="middle" `
      + `font-size="${r2(H * 0.079)}" letter-spacing="${r2(nameTrack)}" filter="url(#softGlow)">`
      + `<tspan>${PARTY.name}</tspan>`
-     + `<tspan dx="${r2(-nameTrack * 0.72)}" letter-spacing="${r2(nameTrack * 0.12)}">’S</tspan></text>`;
+     + `<tspan dx="${r2(-nameTrack * 0.72)}" letter-spacing="${r2(nameTrack * 0.12)}">’s</tspan></text>`;
 
   s += ornamentRule(cx, ruleY, W * 0.235, H * 0.0135, 21);
 
