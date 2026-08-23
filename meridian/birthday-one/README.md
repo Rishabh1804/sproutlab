@@ -7,7 +7,7 @@ six-foot backdrop with no loss.
 | File | What it is | Print size |
 |------|-----------|-----------|
 | `print-backdrop.pdf` | Photo-wall backdrop, landscape | 72 × 48 in (6 × 4 ft), 3:2 |
-| `print-welcome-board.pdf` | Entrance / easel welcome board, portrait — a greeting, not a briefing: no logistics, unlabelled sky, closes on the gold line *Let it glow* | 420 × 594 mm (A2) |
+| `print-welcome-board.pdf` | Entrance / easel welcome board, square — a greeting, not a briefing: no logistics, unlabelled sky, closes on the gold line *Let it glow* | 24 × 24 in (2 × 2 ft square) |
 | `proof-backdrop.png`, `proof-welcome-board.png` | On-screen proofs for approval | — |
 | `gallery.html` | Presentation page showing both boards + these specs | — |
 | `backdrop.html`, `welcome-board.html` | The artwork sources (self-contained) | — |

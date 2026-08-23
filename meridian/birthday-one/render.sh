@@ -28,5 +28,5 @@ PY
 }
 
 render backdrop      2400 1600
-render welcome-board 1400 1979
+render welcome-board 1600 1600
 ls -la "$HERE"/proof-*.png "$HERE"/print-*.pdf

@@ -73,7 +73,7 @@ h1 em{font-family:var(--serif);font-style:normal;letter-spacing:.01em}
 .frame{border:1px solid var(--line);border-radius:14px;overflow:hidden;
   box-shadow:0 22px 60px rgba(0,0,0,.46);background:var(--night);line-height:0}
 .frame svg{display:block;width:100%;height:auto}
-.frame.portrait{max-width:620px}
+.frame.square{max-width:680px}
 
 .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;
   background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:20px}
@@ -128,14 +128,14 @@ footer{margin-top:52px;text-align:center;color:var(--dim);font-size:13.5px}
 </div>
 
 <div class="board">
-  <div class="board-head"><h2>The welcome board</h2><span class="tag">A2 portrait</span></div>
+  <div class="board-head"><h2>The welcome board</h2><span class="tag">2 ft × 2 ft</span></div>
   <p class="board-note">For the entrance, an easel, or the cake table. A greeting, not a briefing —
   no date, no venue, and an unlabelled sky. It closes on one playful gold line:
   <em>Let it glow</em>.</p>
-  <div class="frame portrait">${welcome}</div>
+  <div class="frame square">${welcome}</div>
   <dl class="specs">
-    <div class="spec"><dt>Print size</dt><dd>420 × 594 mm</dd></div>
-    <div class="spec"><dt>Ratio</dt><dd>A2 portrait</dd></div>
+    <div class="spec"><dt>Print size</dt><dd>24 × 24 in</dd></div>
+    <div class="spec"><dt>Ratio</dt><dd>1 : 1 square</dd></div>
     <div class="spec"><dt>Send to printer</dt><dd>print-welcome-board.pdf</dd></div>
     <div class="spec"><dt>Material</dt><dd>300 gsm matte board</dd></div>
   </dl>

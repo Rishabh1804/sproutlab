@@ -14,7 +14,7 @@
  *
  *   node build-posters.mjs && ./render.sh
  *
- * Outputs: backdrop.html (3:2 landscape), welcome-board.html (A2 portrait)
+ * Outputs: backdrop.html (3:2 landscape), welcome-board.html (2x2 ft square)
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -582,99 +582,99 @@ function buildBackdrop() {
 }
 
 /* ═════════════════════════════════════════════════════════════════════════
-   BOARD 2 — Welcome board, A2 portrait (420 x 594 mm)
-   Same world, vertical composition: the lockup stacks, so the constellation
-   and the sky get the room the landscape board cannot give them.
+   BOARD 2 — Welcome board, 2 ft x 2 ft square (24 x 24 in)
+   Same world on a square: the stack compresses, the constellation keeps its
+   corner, and the mountains stay a low band so the type owns the middle.
    ═════════════════════════════════════════════════════════════════════════ */
 function buildWelcome(variant = 'minimal') {
-  const W = 1200, H = 1697, cx = W / 2; // A2 ratio
+  const W = 1200, H = 1200, cx = W / 2; // 1:1 — prints 24 x 24 in
   const rand = mulberry32(50925);
 
   // A greeting, not a briefing: no date, no time, no venue, no explaining.
   // 'celebrate' closes on one playful gold line; 'minimal' lets the lockup be
   // the last word and the night sky carry the rest.
   const celebrate = variant === 'celebrate';
-  const welcomeY  = H * 0.240;
-  const nameY     = H * 0.336;
-  const ruleY     = H * 0.376;
-  const preY      = H * 0.452;
-  const oneSize   = H * 0.175;
-  const oneBase   = H * 0.612;
-  const postY     = H * 0.670;
-  const glowY     = H * 0.746;
+  const welcomeY  = H * 0.170;
+  const nameY     = H * 0.276;
+  const ruleY     = H * 0.322;
+  const preY      = H * 0.404;
+  const oneSize   = H * 0.200;
+  const oneBase   = H * 0.590;
+  const postY     = H * 0.655;
+  const glowY     = H * 0.742;
 
-  const blockEnd = celebrate ? glowY + H * 0.014 : postY + H * 0.014;
-  const block = { x0: W * 0.05, x1: W * 0.95, y0: welcomeY - H * 0.035, y1: blockEnd };
+  const blockEnd = celebrate ? glowY + H * 0.016 : postY + H * 0.016;
+  const block = { x0: W * 0.05, x1: W * 0.95, y0: welcomeY - H * 0.040, y1: blockEnd };
   const lines = [
-    { x0: W * 0.30, x1: W * 0.70, y0: welcomeY - H * 0.022, y1: welcomeY + H * 0.008 },
-    { x0: W * 0.19, x1: W * 0.81, y0: nameY - H * 0.066, y1: nameY + H * 0.014 },
-    { x0: W * 0.24, x1: W * 0.76, y0: ruleY - H * 0.018, y1: ruleY + H * 0.018 },
-    { x0: W * 0.28, x1: W * 0.72, y0: preY - H * 0.042, y1: preY + H * 0.014 },
-    { x0: W * 0.16, x1: W * 0.84, y0: oneBase - H * 0.146, y1: oneBase + H * 0.018 },
-    { x0: W * 0.26, x1: W * 0.74, y0: postY - H * 0.042, y1: postY + H * 0.014 },
+    { x0: W * 0.28, x1: W * 0.72, y0: welcomeY - H * 0.028, y1: welcomeY + H * 0.010 },
+    { x0: W * 0.17, x1: W * 0.83, y0: nameY - H * 0.084, y1: nameY + H * 0.018 },
+    { x0: W * 0.22, x1: W * 0.78, y0: ruleY - H * 0.022, y1: ruleY + H * 0.022 },
+    { x0: W * 0.26, x1: W * 0.74, y0: preY - H * 0.054, y1: preY + H * 0.018 },
+    { x0: W * 0.14, x1: W * 0.86, y0: oneBase - H * 0.168, y1: oneBase + H * 0.022 },
+    { x0: W * 0.24, x1: W * 0.76, y0: postY - H * 0.054, y1: postY + H * 0.018 },
   ];
-  if (celebrate) lines.push({ x0: W * 0.24, x1: W * 0.76, y0: glowY - H * 0.044, y1: glowY + H * 0.014 });
+  if (celebrate) lines.push({ x0: W * 0.22, x1: W * 0.78, y0: glowY - H * 0.056, y1: glowY + H * 0.018 });
 
   let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" `
-        + `aria-label="Welcome to Ziva's Winter ONEderland — A2 welcome board">`;
+        + `aria-label="Welcome to Ziva's Winter ONEderland — 2 x 2 ft welcome board">`;
   s += defs(W, H);
   s += `<rect width="${W}" height="${H}" fill="url(#sky)"/>`;
-  s += stars(rand, W, H * 0.82, 210, lines);
+  s += stars(rand, W, H * 0.82, 180, lines);
   s += aurora(rand, W, H * 0.9, 3);
   // Unlabelled: guests read a constellation and a bright gold star; the board
-  // itself explains the radiance in words further down.
-  s += lyra(W * 0.085, H * 0.052, W * 0.27, H * 0.105, { scale: 1.4, label: false });
+  // itself carries the shine in words further down.
+  s += lyra(W * 0.075, H * 0.055, W * 0.24, H * 0.135, { scale: 1.3, label: false });
 
-  s += peaks(rand, W, H * 0.888, H * 0.082, C.deepIce, 0.85, 0.55, '#9fc9e4');
-  s += peaks(rand, W, H * 0.908, H * 0.072, '#123153', 0.90, 0.78, '#8dbcdd');
-  s += peaks(rand, W, H * 0.925, H * 0.062, '#081d38', 0.95, 1, '#7fb2d6');
+  s += peaks(rand, W, H * 0.880, H * 0.075, C.deepIce, 0.85, 0.55, '#9fc9e4');
+  s += peaks(rand, W, H * 0.902, H * 0.065, '#123153', 0.90, 0.78, '#8dbcdd');
+  s += peaks(rand, W, H * 0.920, H * 0.056, '#081d38', 0.95, 1, '#7fb2d6');
 
-  s += `<rect x="0" y="${r2(H * 0.905)}" width="${W}" height="${r2(H * 0.095)}" fill="url(#snowGround)"/>`;
-  s += drift(rand, W, H * 0.928, H * 0.011, C.frost, 0.24);
-  s += drift(rand, W, H * 0.956, H * 0.009, C.snow, 0.20);
+  s += `<rect x="0" y="${r2(H * 0.900)}" width="${W}" height="${r2(H * 0.100)}" fill="url(#snowGround)"/>`;
+  s += drift(rand, W, H * 0.924, H * 0.012, C.frost, 0.24);
+  s += drift(rand, W, H * 0.954, H * 0.010, C.snow, 0.20);
 
-  s += filigree(W * 0.020, H * 0.990, W * 0.20, -14, 0.30);
+  s += filigree(W * 0.018, H * 0.988, W * 0.17, -14, 0.30);
   s += `<g transform="translate(${W} 0) scale(-1 1)">`
-     + filigree(W * 0.020, H * 0.990, W * 0.20, -14, 0.30) + `</g>`;
+     + filigree(W * 0.018, H * 0.988, W * 0.17, -14, 0.30) + `</g>`;
 
   // ── Type ───────────────────────────────────────────────────────────────
   // Keep-out shrinks to the constellation itself now that it carries no label.
-  const skyMark = { x0: W * 0.04, x1: W * 0.39, y0: H * 0.03, y1: H * 0.175 };
-  s += snowfield(rand, W, H, 70, { minR: 6, maxR: 28, opacity: [0.14, 0.52], avoid: [block, skyMark] });
+  const skyMark = { x0: W * 0.03, x1: W * 0.36, y0: H * 0.03, y1: H * 0.215 };
+  s += snowfield(rand, W, H, 56, { minR: 6, maxR: 26, opacity: [0.14, 0.52], avoid: [block, skyMark] });
 
-  const wTrack = H * 0.0105;
+  const wTrack = H * 0.0135;
   s += `<text ${T.blessing} x="${r2(midX(cx, wTrack))}" y="${r2(welcomeY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.0215)}" letter-spacing="${r2(wTrack)}" opacity=".85">`
+     + `font-size="${r2(H * 0.0275)}" letter-spacing="${r2(wTrack)}" opacity=".85">`
      + PARTY.welcome.toUpperCase() + `</text>`;
 
   // ZIVA'S — "Welcome to" above makes the name possessive. The 'S is tucked
   // in against the A (negative dx, near-zero tracking) so the wide hairline
   // letter-spacing doesn't strand the apostrophe on an island of its own.
-  const nameTrack = H * 0.042;
+  const nameTrack = H * 0.053;
   s += `<text ${nameAttrs("nameFill")} x="${r2(cx)}" y="${r2(nameY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.079)}" letter-spacing="${r2(nameTrack)}" filter="url(#softGlow)">`
+     + `font-size="${r2(H * 0.100)}" letter-spacing="${r2(nameTrack)}" filter="url(#softGlow)">`
      + `<tspan>${PARTY.name}</tspan>`
      + `<tspan dx="${r2(-nameTrack * 0.72)}" letter-spacing="${r2(nameTrack * 0.12)}">’s</tspan></text>`;
 
-  s += ornamentRule(cx, ruleY, W * 0.235, H * 0.0135, 21);
+  s += ornamentRule(cx, ruleY, W * 0.235, H * 0.017, 21);
 
-  const sideTrack = H * 0.008;
+  const sideTrack = H * 0.010;
   s += `<text ${T.punword} x="${r2(midX(cx, sideTrack))}" y="${r2(preY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.052)}" letter-spacing="${r2(sideTrack)}">${PARTY.pun.pre}</text>`;
+     + `font-size="${r2(H * 0.066)}" letter-spacing="${r2(sideTrack)}">${PARTY.pun.pre}</text>`;
   s += heroOne(rand, cx, oneBase, oneSize, 'oneClipB');
   s += `<text ${T.punword} x="${r2(midX(cx, sideTrack))}" y="${r2(postY)}" text-anchor="middle" `
-     + `font-size="${r2(H * 0.052)}" letter-spacing="${r2(sideTrack)}">${PARTY.pun.post}</text>`;
+     + `font-size="${r2(H * 0.066)}" letter-spacing="${r2(sideTrack)}">${PARTY.pun.post}</text>`;
 
   if (celebrate) {
     // One playful gold line closes the board — a Frozen wink that carries her
     // radiance without explaining it. Flanked by two gold star sparkles.
-    const glTrack = H * 0.0062;
+    const glTrack = H * 0.0078;
     s += `<text font-family="Poiret One" fill="${C.gold}" x="${r2(midX(cx, glTrack))}" y="${r2(glowY)}" `
-       + `text-anchor="middle" font-size="${r2(H * 0.049)}" letter-spacing="${r2(glTrack)}" `
+       + `text-anchor="middle" font-size="${r2(H * 0.060)}" letter-spacing="${r2(glTrack)}" `
        + `filter="url(#softGlow)">${PARTY.glow}</text>`;
     for (const sgn of [-1, 1]) {
-      const sx = cx + sgn * W * 0.265, sy = glowY - H * 0.014;
-      const a = H * 0.0085, b = a * 0.42; // long cross + short diagonal = star sparkle, not a plus sign
+      const sx = cx + sgn * W * 0.315, sy = glowY - H * 0.017;
+      const a = H * 0.0105, b = a * 0.42; // long cross + short diagonal = star sparkle, not a plus sign
       s += `<g stroke="${C.gold}" stroke-linecap="round" opacity=".85" fill="none">`
          + `<path d="M${r2(sx - a)} ${r2(sy)} H${r2(sx + a)} M${r2(sx)} ${r2(sy - a)} V${r2(sy + a)}" `
          + `stroke-width="${r2(a * 0.20)}"/>`
@@ -686,7 +686,7 @@ function buildWelcome(variant = 'minimal') {
 
   s += `<rect width="${W}" height="${H}" fill="url(#vignette)" style="mix-blend-mode:multiply"/>`;
   s += `</svg>`;
-  return page("Ziva's Winter ONEderland — Welcome Board", s, 16.54, 23.39);
+  return page("Ziva's Winter ONEderland — Welcome Board", s, 24, 24);
 }
 
 // WELCOME_VARIANT: 'minimal' (stack ends at derland) or 'celebrate' (gold
@@ -695,4 +695,4 @@ const WELCOME_VARIANT = process.env.WELCOME_VARIANT || 'celebrate';
 writeFileSync(join(HERE, 'backdrop.html'), buildBackdrop());
 writeFileSync(join(HERE, 'welcome-board.html'), buildWelcome(WELCOME_VARIANT));
 console.log('built  backdrop.html        6ft x 4ft   (3:2 landscape)');
-console.log(`built  welcome-board.html   A2          (420 x 594 mm portrait, ${WELCOME_VARIANT})`);
+console.log(`built  welcome-board.html   2x2 ft      (24 x 24 in square, ${WELCOME_VARIANT})`);
