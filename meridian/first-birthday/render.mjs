@@ -2,9 +2,14 @@
 // Steps invite.html through time deterministically (window.seek) and
 // screenshots every frame; encode the result with ffmpeg (see build-video.sh).
 //
-// Needs playwright-core on the module path and a Chromium binary:
-//   CHROMIUM=/path/to/chrome node render.mjs <invite.html> <framesDir> [fps] [duration]
-import { mkdirSync, readdirSync } from 'node:fs';
+// Chromium comes from the repo's playwright-core devDependency (kept current —
+// the pinned @playwright/test 1.48 launcher predates modern headless Chromium).
+// Override the browser binary with CHROMIUM=/path/to/chrome; otherwise a
+// container install (/opt/pw-browsers) is used when present, else Playwright
+// resolves its own browser cache.
+//   node render.mjs <invite.html> <framesDir> [fps] [duration]
+import { existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const [, , htmlPath, outDir, fpsArg, durArg] = process.argv;
@@ -13,21 +18,26 @@ if (!htmlPath || !outDir) {
   process.exit(1);
 }
 const FPS = Number(fpsArg) || 30;
-const DUR = Number(durArg) || 10;
-const FRAMES = Math.round(FPS * DUR);
 mkdirSync(outDir, { recursive: true });
 
-const executablePath = process.env.CHROMIUM
-  || '/opt/pw-browsers/' + readdirSync('/opt/pw-browsers').find(d => /^chromium-\d+$/.test(d)) + '/chrome-linux/chrome';
+let executablePath = process.env.CHROMIUM;
+if (!executablePath && existsSync('/opt/pw-browsers')) {
+  const dir = readdirSync('/opt/pw-browsers').find(d => /^chromium-\d+$/.test(d));
+  if (dir) executablePath = `/opt/pw-browsers/${dir}/chrome-linux/chrome`;
+}
 
 const browser = await chromium.launch({
-  executablePath,
+  executablePath, // undefined → Playwright resolves its own managed browser
   args: ['--force-color-profile=srgb', '--font-render-hinting=none', '--hide-scrollbars'],
 });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-await page.goto('file://' + htmlPath + '?render=1');
+await page.goto('file://' + resolve(htmlPath) + '?render=1');
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(250);
+
+// duration defaults to the page's own timeline so the two can't drift
+const DUR = Number(durArg) || await page.evaluate(() => window.DUR);
+const FRAMES = Math.round(FPS * DUR);
 
 const t0 = Date.now();
 for (let i = 0; i < FRAMES; i++) {

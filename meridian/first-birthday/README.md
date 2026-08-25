@@ -3,7 +3,7 @@
 A 10-second frozen-theme invite for Ziva's first birthday, built as a keepsake
 alongside [`meridian/birth-sky.html`](../birth-sky.html).
 
-**The details on the card:** Friday, 4 September 2026 · 11:30 AM – 3:00 PM ·
+**The details on the card:** Friday, 4 September 2026 · 11:30 AM onwards ·
 Rishi Bhawan.
 
 **The hidden thread:** the constellation twinkling in the upper-right sky is
@@ -29,23 +29,47 @@ Edit the text in `invite.html` (the `#card` rows), then:
 bash meridian/first-birthday/build-video.sh
 ```
 
-Requires `python3` + numpy, `node` with `playwright-core` on the module path,
-a Chromium binary (`CHROMIUM` env, defaults to the Playwright install), and
-`ffmpeg` (`FFMPEG` env).
+Requires `python3` + numpy, `node` with the repo's `playwright-core`
+devDependency installed (`pnpm install`), and `ffmpeg` (`FFMPEG` env).
+Browser: `CHROMIUM` env if set, else a container Playwright install at
+`/opt/pw-browsers` if present, else Playwright's own browser cache.
 
 ## Design notes
 
 - 0.0–2.4s — a hero snowflake crystallizes over the script line
-  *"Our little snowflake is turning one"*
-- 2.4–3.0s — a snow-gust wipe with a synced glissando
-- 3.0–4.7s — **ZIVA** cascades in letter by letter with an ice-shimmer sweep,
-  then **TURNS ONE**
-- 4.7–7.3s — the frosted-glass card staggers in: date, time, venue
-- 7.3–10s — *"See you there!"* with a sparkle burst, settling on a complete
-  final frame (so the video's last frame works as a still invite too)
+  *"Our little snowflake is turning one"*; the **snow queen** fades in on
+  the foreground drift, stage left, and raises her arm
+- 2.4–3.0s — her conjuring sends a sparkle stream into the snow-gust wipe
+  (synced glissando) with cartoon star-pops
+- 3.0–4.7s — **ZIVA** pops in letter by letter (single-overshoot
+  squash-and-stretch) with an ice-shimmer sweep, then **TURNS ONE**
+- 4.7–7.3s — the frosted-glass card lands with one soft boing, rows stagger
+  in and sit dead-still for the reading dwell; at 6.15s the **snowman**
+  waddles in along the drifts carrying Ziva's candle-lit cake (synced
+  boing-boing foley), the **red fox** trotting behind
+- 7.3–10s — *"See you there!"* — the snowman waves with happy eyes, the fox
+  swishes her tail, star-pops burst, and everything settles into a complete
+  final frame (the video's last frame works as a still invite too)
 
-Scene: arctic-night gradient, aurora ribbons, crescent moon, 150 twinkling
-stars + Lyra, three parallax snowfall layers, pine ridge and snow drifts,
-frosted corners and an icy border frame. Type: Cormorant Garamond, Great
-Vibes, Montserrat (embedded as data URIs). No Disney assets — the theme is
-carried entirely by an original winter-wonderland treatment.
+Scene (daylight edition, ratified after the welcome board claimed the
+night sky): luminous ice-day gradient with a winter sun and halo, pearl
+sky-shimmer, a crystalline ice castle with warm windows on the horizon,
+faceted crystal shards framing the drifts, three parallax snowfall layers,
+pine ridge and bright drifts, etched-ice corner frame. Lyra survives as a
+faint pattern etched high in the sky. Typography flips navy + gold on the
+bright scene: navy ZIVA, the golden "IS TURNING (crown) 1" lockup, a
+frosted-white card with gold kicker/medallion/venue accents. Type:
+Cormorant Garamond, Great Vibes, Montserrat (embedded as data URIs).
+
+**Cartoon round (council-shaped, reference-calibrated).** The cartoon energy
+lives in *motion and performers*, not in the art style: single-overshoot
+entrances, confined star-pops, and three original characters — a storybook
+ice queen (golden side-braid, fair skin, silver tiara, rich teal gown,
+house-idiom face — per the Censor's ruling she stays golden-haired, teal,
+motif-free, deliberately not any studio's character design), a classic
+carrot-nose snowman in a sage scarf and amber knit cap, and a red fox.
+A family-provided reference e-card informed the *composition only* (big
+flanking characters, the snowflake date-medallion, "Join us for a Frozen
+celebration" wording, ornate double card frame). No Disney assets or
+on-model characters anywhere: the invite remains entirely the family's own
+artwork, safe to share publicly.
