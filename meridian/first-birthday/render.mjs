@@ -2,13 +2,15 @@
 // Steps invite.html through time deterministically (window.seek) and
 // screenshots every frame; encode the result with ffmpeg (see build-video.sh).
 //
-// Chromium comes from the repo's @playwright/test devDependency. Override the
-// browser binary with CHROMIUM=/path/to/chrome; otherwise a Playwright-managed
+// Chromium comes from the repo's playwright-core devDependency (kept current —
+// the pinned @playwright/test 1.48 launcher predates modern headless Chromium).
+// Override the browser binary with CHROMIUM=/path/to/chrome; otherwise a
 // container install (/opt/pw-browsers) is used when present, else Playwright
 // resolves its own browser cache.
 //   node render.mjs <invite.html> <framesDir> [fps] [duration]
 import { existsSync, mkdirSync, readdirSync } from 'node:fs';
-import { chromium } from '@playwright/test';
+import { resolve } from 'node:path';
+import { chromium } from 'playwright-core';
 
 const [, , htmlPath, outDir, fpsArg, durArg] = process.argv;
 if (!htmlPath || !outDir) {
@@ -29,7 +31,7 @@ const browser = await chromium.launch({
   args: ['--force-color-profile=srgb', '--font-render-hinting=none', '--hide-scrollbars'],
 });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-await page.goto('file://' + htmlPath + '?render=1');
+await page.goto('file://' + resolve(htmlPath) + '?render=1');
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(250);
 

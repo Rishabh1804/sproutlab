@@ -29,7 +29,7 @@ Edit the text in `invite.html` (the `#card` rows), then:
 bash meridian/first-birthday/build-video.sh
 ```
 
-Requires `python3` + numpy, `node` with the repo's `@playwright/test`
+Requires `python3` + numpy, `node` with the repo's `playwright-core`
 devDependency installed (`pnpm install`), and `ffmpeg` (`FFMPEG` env).
 Browser: `CHROMIUM` env if set, else a container Playwright install at
 `/opt/pw-browsers` if present, else Playwright's own browser cache.
