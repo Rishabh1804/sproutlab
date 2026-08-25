@@ -36,16 +36,29 @@ a Chromium binary (`CHROMIUM` env, defaults to the Playwright install), and
 ## Design notes
 
 - 0.0–2.4s — a hero snowflake crystallizes over the script line
-  *"Our little snowflake is turning one"*
-- 2.4–3.0s — a snow-gust wipe with a synced glissando
-- 3.0–4.7s — **ZIVA** cascades in letter by letter with an ice-shimmer sweep,
-  then **TURNS ONE**
-- 4.7–7.3s — the frosted-glass card staggers in: date, time, venue
-- 7.3–10s — *"See you there!"* with a sparkle burst, settling on a complete
-  final frame (so the video's last frame works as a still invite too)
+  *"Our little snowflake is turning one"*; the **snow queen** fades in on
+  the far ridge and raises her arm
+- 2.4–3.0s — her conjuring sends a sparkle stream into the snow-gust wipe
+  (synced glissando) with cartoon star-pops
+- 3.0–4.7s — **ZIVA** pops in letter by letter (single-overshoot
+  squash-and-stretch) with an ice-shimmer sweep, then **TURNS ONE**
+- 4.7–7.3s — the frosted-glass card lands with one soft boing, rows stagger
+  in and sit dead-still for the reading dwell; at 6.15s the **snowman**
+  waddles in along the drifts carrying Ziva's candle-lit cake (synced
+  boing-boing foley), the **arctic fox** trotting behind
+- 7.3–10s — *"See you there!"* — the snowman waves with happy eyes, the fox
+  swishes her tail, star-pops burst, and everything settles into a complete
+  final frame (the video's last frame works as a still invite too)
 
 Scene: arctic-night gradient, aurora ribbons, crescent moon, 150 twinkling
 stars + Lyra, three parallax snowfall layers, pine ridge and snow drifts,
 frosted corners and an icy border frame. Type: Cormorant Garamond, Great
-Vibes, Montserrat (embedded as data URIs). No Disney assets — the theme is
-carried entirely by an original winter-wonderland treatment.
+Vibes, Montserrat (embedded as data URIs).
+
+**Cartoon round (council-shaped).** The cartoon energy lives in *motion and
+performers*, not in the art style: single-overshoot entrances, confined
+star-pops, and three original characters — a faceless ice-queen silhouette
+with a braid (evocative of the theme, deliberately not any studio's
+character design), a classic carrot-nose scarf snowman, and an arctic fox.
+No Disney assets or on-model characters anywhere: the invite remains
+entirely the family's own artwork, safe to share publicly.

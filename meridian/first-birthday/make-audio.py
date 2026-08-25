@@ -70,6 +70,26 @@ for i, name in enumerate(gliss):
 music_box(NOTE['E6'], 7.32, amp=0.14, decay=1.6)
 music_box(NOTE['C6'], 7.40, amp=0.12, decay=1.8)
 music_box(NOTE['G6'], 7.52, amp=0.09, decay=1.9)
+music_box(NOTE['C7'], 7.62, amp=0.07, decay=1.4)  # star-pop twinkle
+
+
+def boing(f0, f1, start, amp=0.1, dur=0.35):
+    """Soft pitch-bent pluck — cartoon waddle foley, music-box friendly."""
+    i0 = int(start * SR)
+    if i0 >= N:
+        return
+    length = min(N - i0, int(SR * dur * 2.2))
+    tt = np.arange(length) / SR
+    sweep = np.clip(tt / dur, 0, 1)
+    freq = f0 + (f1 - f0) * sweep
+    phase = 2 * np.pi * (f0 * tt + (f1 - f0) * tt ** 2 / (2 * dur))
+    env = np.exp(-tt / 0.16) * (1 - np.exp(-tt / 0.005))
+    mix[i0:i0 + length] += amp * env * (np.sin(phase) + 0.25 * np.sin(2 * phase))
+
+
+# --- waddle boings as the snowman + fox hop in (TL.chars = 6.15 in invite.html) ---
+boing(262, 392, 6.22, amp=0.085)
+boing(311, 466, 6.50, amp=0.070)
 
 # --- low pad: C major, barely-there warmth ---
 pad_env = np.minimum(1, t_axis / 1.6) * np.clip((DUR - 0.4 - t_axis) / 1.8, 0, 1)

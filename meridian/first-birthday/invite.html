@@ -241,10 +241,13 @@ const easeOutBack = p => { const c = 1.70158; return 1 + (c + 1) * Math.pow(p - 
 const seg = (t, t0, dur) => clamp01((t - t0) / dur);
 
 /* ---------------- timeline ---------------- */
+/* NOTE: several timings are mirrored by hand in make-audio.py (gust gliss
+   2.55, closing chime 7.32, waddle boings 6.22/6.50) — edit both together */
 const TL = {
   introFlake: 0.05,
   introL1: 0.45,
   introL2: 0.95,
+  queenRaise: 1.98,
   introOut: 2.30,
   gust: 2.40,
   tiara: 2.85,
@@ -252,6 +255,8 @@ const TL = {
   turns: 3.95,
   card: 4.72,
   rows: [5.02, 5.26, 5.50, 5.72, 5.88, 6.02],
+  chars: 6.15,
+  wave: 7.28,
   closing: 7.30,
   burstName: 2.95,
   burstClose: 7.32,
@@ -395,6 +400,56 @@ function drawSparkle(ctx, x, y, r, alpha, rot) {
   }
   ctx.fill();
   ctx.restore();
+}
+
+/* cartoon star-pops — little five-point stars that boing in and fade */
+function makePops(seed, n, cx, cy, rx, ry, t0, span) {
+  const r = mulberry32(seed);
+  const pops = [];
+  for (let i = 0; i < n; i++) {
+    pops.push({
+      x: cx + (r() - 0.5) * 2 * rx,
+      y: cy + (r() - 0.5) * 2 * ry,
+      s: 9 + r() * 13,
+      t0: t0 + r() * span,
+      life: 0.55 + r() * 0.3,
+      rot: r() * 6.28,
+    });
+  }
+  return pops;
+}
+const popsGust  = makePops(61, 7, 540, 690, 310, 260, 2.52, 0.45);
+const popsClose = makePops(72, 9, 540, 1565, 330, 150, 7.36, 0.55);
+
+function drawStarPop(ctx, x, y, r, p, rot) {
+  const sc = easeOutBack(clamp01(p * 1.7));
+  const a = p < 0.55 ? 1 : clamp01((1 - p) / 0.45);
+  if (a <= 0 || sc <= 0) return;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot + p * 0.7);
+  ctx.strokeStyle = `rgba(255,255,255,${a * 0.9})`;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = `rgba(180,220,255,${a * 0.8})`;
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const ao = i * 1.2566 - Math.PI / 2, ai = ao + 0.6283;
+    const px = Math.cos(ao) * r * sc, py = Math.sin(ao) * r * sc;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    ctx.lineTo(Math.cos(ai) * r * 0.42 * sc, Math.sin(ai) * r * 0.42 * sc);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPops(ctx, pops, t) {
+  for (const s of pops) {
+    const p = (t - s.t0) / s.life;
+    if (p > 0 && p < 1) drawStarPop(ctx, s.x, s.y, s.s, p, s.rot);
+  }
 }
 
 function makeBurst(seed, n, cx, cy, radius, t0, life, rMin, rMax) {
@@ -563,6 +618,117 @@ function drawLyra(ctx, t) {
   ctx.restore();
 }
 
+/* ---------------- the snow queen ----------------
+   An original ice-queen silhouette on the far ridge — braid, gown, raised
+   arm conjuring the gust that reveals the name. Evocative, faceless,
+   entirely our own design. */
+function queenHand(t) {
+  /* arm pose: rest → raised at the conjuring, easing to a graceful hold */
+  const up = easeInOut(seg(t, TL.queenRaise, 0.5)) * (1 - 0.42 * easeInOut(seg(t, 3.5, 0.9)));
+  return { up, x: 148 + 22 + up * 14, y: 1672 - 88 - up * 66 };
+}
+
+function drawQueen(ctx, t) {
+  const a = easeInOut(seg(t, 1.5, 0.6));
+  if (a <= 0) return;
+  const fx = 148, fy = 1672;
+  const sway = Math.sin(t * 0.7) * 0.012;
+  const { up } = queenHand(t);
+  ctx.save();
+  ctx.translate(fx, fy);
+  ctx.rotate(sway);
+  ctx.globalAlpha = a;
+
+  /* cape shimmer trailing left, slow ripple */
+  ctx.beginPath();
+  ctx.moveTo(-6, -108);
+  ctx.bezierCurveTo(-30, -80 + Math.sin(t * 1.1) * 4, -52, -42, -64 + Math.sin(t * 0.9) * 5, -2);
+  ctx.lineTo(-30, 0);
+  ctx.bezierCurveTo(-20, -40, -12, -72, -8, -100);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(190,220,248,0.28)';
+  ctx.fill();
+
+  /* gown — flared silhouette with a small train to the right */
+  const g = ctx.createLinearGradient(0, -150, 0, 0);
+  g.addColorStop(0, 'rgba(232,244,255,0.96)');
+  g.addColorStop(0.55, 'rgba(178,208,240,0.92)');
+  g.addColorStop(1, 'rgba(128,168,214,0.8)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-36, 0);
+  ctx.bezierCurveTo(-22, -38, -13, -68, -9, -96);
+  ctx.lineTo(-9, -106);
+  ctx.bezierCurveTo(-9, -114, -5, -118, 0, -118);
+  ctx.bezierCurveTo(5, -118, 9, -114, 9, -106);
+  ctx.lineTo(9, -96);
+  ctx.bezierCurveTo(14, -66, 24, -36, 48, 0);
+  ctx.closePath();
+  ctx.fill();
+  /* rim light on the moonlit side */
+  ctx.strokeStyle = 'rgba(242,250,255,0.75)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(-36, 0);
+  ctx.bezierCurveTo(-22, -38, -13, -68, -9, -96);
+  ctx.stroke();
+
+  /* head + platinum braid over the left shoulder */
+  ctx.fillStyle = 'rgba(230,242,255,0.95)';
+  ctx.beginPath(); ctx.arc(0, -128, 8.6, 0, 7); ctx.fill();
+  ctx.fillStyle = 'rgba(246,251,255,0.95)';
+  ctx.beginPath(); ctx.arc(0, -132, 8.2, Math.PI * 0.95, Math.PI * 2.05); ctx.fill(); /* hair crown */
+  for (let i = 0; i < 6; i++) { /* braid beads */
+    const bx = -7 - i * 2.1, by = -124 + i * 7.6;
+    ctx.beginPath(); ctx.arc(bx, by, 4.4 - i * 0.35, 0, 7); ctx.fill();
+  }
+
+  /* conjuring arm (tapered, from right shoulder) */
+  const sx = 8, sy = -110;
+  const hx = 22 + up * 14, hy = -88 - up * 66;
+  const mx = (sx + hx) / 2 + 6 * up, my = (sy + hy) / 2 + 4;
+  ctx.strokeStyle = 'rgba(226,240,254,0.95)';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 4.6;
+  ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(mx, my, hx, hy); ctx.stroke();
+  /* glint at her hand while conjuring */
+  const glint = up * (0.5 + 0.5 * Math.sin(t * 6));
+  drawSparkle(ctx, hx, hy - 3, 6, glint * 0.9, t * 1.5);
+
+  /* frost sparkles woven through the gown */
+  const qr = mulberry32(19);
+  for (let i = 0; i < 8; i++) {
+    const gx = -18 + qr() * 44, gy = -14 - qr() * 82, ph = qr() * 6.28;
+    const tw = Math.max(0, Math.sin(t * 1.8 + ph));
+    ctx.fillStyle = `rgba(255,255,255,${tw * 0.55})`;
+    ctx.beginPath(); ctx.arc(gx, gy, 1.3, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+
+  /* magic stream: sparkles arcing from her hand up toward the name reveal */
+  const { x: hax, y: hay } = queenHand(t);
+  const sr = mulberry32(87);
+  for (let i = 0; i < 16; i++) {
+    const birth = 2.28 + i * 0.05, life = 0.85;
+    const jx = (sr() - 0.5) * 90, jy = (sr() - 0.5) * 70, sz = 3.5 + sr() * 4.5;
+    const p = (t - birth) / life;
+    if (p <= 0 || p >= 1) continue;
+    const e = easeOutCubic(p);
+    const px = hax + (540 + jx - hax) * e - 180 * Math.sin(Math.PI * e) * 0.6;
+    const py = hay + (640 + jy - hay) * e - 120 * Math.sin(Math.PI * e);
+    drawSparkle(ctx, px, py, sz * (1 - 0.4 * p), (1 - p) * 0.9, p * 5);
+  }
+  /* idle magic: a slow drip of sparkles rising from her hand afterwards */
+  if (t > 3.6) {
+    for (let i = 0; i < 3; i++) {
+      const p = ((t - 3.6) / 2.2 + i / 3) % 1;
+      const px = hax + Math.sin(p * 9 + i * 2.1) * 10;
+      const py = hay - p * 52;
+      drawSparkle(ctx, px, py, 3.4, Math.sin(p * Math.PI) * 0.5, p * 6 + i);
+    }
+  }
+}
+
 function drawGround(ctx, t) {
   /* far ridge with pines */
   ctx.save();
@@ -596,6 +762,8 @@ function drawGround(ctx, t) {
     ctx.lineTo(px + ph * 0.24, py - ph * 0.16);
     ctx.stroke();
   }
+  drawQueen(ctx, t);
+
   /* near drift */
   ctx.beginPath();
   ctx.moveTo(0, 1810);
@@ -633,6 +801,206 @@ function renderBG(t) {
   drawGround(bg, t);
   drawSnowLayer(bg, snowFar, t, false);
   drawSnowLayer(bg, snowMid, t, false);
+}
+
+/* ---------------- the party hosts ----------------
+   A carrot-nosed, scarf-wearing snowman (deliberately classic — not any
+   studio's character) waddles in with Ziva's cake, an arctic fox trotting
+   behind. They wave at "See you there!" and hold the pose for the still. */
+function ballGrad(ctx, x, y, r) {
+  const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.15, x, y, r * 1.05);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(0.75, '#eaf3fc');
+  g.addColorStop(1, '#c9dff2');
+  return g;
+}
+
+function waveAngle(t) {
+  /* arm swings up with a boing, then a damped goodbye wave */
+  const lift = easeOutBack(seg(t, TL.wave, 0.45));
+  let osc = 0;
+  if (t > TL.wave + 0.5) osc = Math.sin((t - TL.wave - 0.5) * 6.5) * 0.3 * Math.exp(-(t - TL.wave - 0.5) * 1.1);
+  return -0.55 - lift * 1.5 + osc;
+}
+
+function drawSnowman(ctx, t) {
+  const p = easeOutCubic(seg(t, TL.chars, 0.9));
+  if (p <= 0) return;
+  const x = -100 + 432 * p;              /* stops at x = 332 */
+  const phase = p * 6.5;                 /* waddle cycles tied to travel */
+  const moving = 1 - seg(t, TL.chars + 0.72, 0.25);
+  const bob = Math.abs(Math.sin(phase * Math.PI)) * 6 * moving;
+  const tilt = Math.sin(phase * 2 * Math.PI) * 0.055 * moving;
+  const y = 1788 - bob;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(tilt);
+
+  /* soft contact shadow */
+  ctx.fillStyle = 'rgba(16,44,78,0.28)';
+  ctx.beginPath(); ctx.ellipse(0, 2, 40, 9, 0, 0, 7); ctx.fill();
+
+  /* twig arm holding the cake plate (his right, screen-left) */
+  ctx.strokeStyle = '#5a4636';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 3.6;
+  ctx.beginPath(); ctx.moveTo(-18, -80); ctx.quadraticCurveTo(-34, -76, -42, -84); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-36, -80); ctx.lineTo(-41, -74); ctx.stroke(); /* fork */
+
+  /* body — three classic snowballs */
+  ctx.fillStyle = ballGrad(ctx, 0, -32, 34);
+  ctx.beginPath(); ctx.arc(0, -32, 34, 0, 7); ctx.fill();
+  ctx.fillStyle = ballGrad(ctx, 0, -78, 25);
+  ctx.beginPath(); ctx.arc(0, -78, 25, 0, 7); ctx.fill();
+  ctx.fillStyle = ballGrad(ctx, 0, -116, 18.5);
+  ctx.beginPath(); ctx.arc(0, -116, 18.5, 0, 7); ctx.fill();
+
+  /* coal buttons */
+  ctx.fillStyle = '#31414f';
+  for (const by of [-72, -82]) { ctx.beginPath(); ctx.arc(0, by, 2.1, 0, 7); ctx.fill(); }
+
+  /* waving twig arm (his left, screen-right) — pivots at the shoulder */
+  const wa = waveAngle(t);
+  ctx.save();
+  ctx.translate(15, -84);
+  ctx.rotate(wa);
+  ctx.strokeStyle = '#5a4636';
+  ctx.lineWidth = 3.6;
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(14, 2, 26, -2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(19, -1); ctx.lineTo(24, 5); ctx.stroke(); /* fork */
+  ctx.restore();
+
+  /* scarf — sage, with a fluttering tail */
+  ctx.strokeStyle = '#9ccdb4';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.arc(0, -98, 14, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke();
+  ctx.lineWidth = 6.5;
+  const fl = Math.sin(t * 3.1) * 4;
+  ctx.beginPath(); ctx.moveTo(9, -94); ctx.quadraticCurveTo(16, -78 + fl * 0.4, 12 + fl, -66); ctx.stroke();
+
+  /* face: coal eyes (happy arcs once he waves), blush, smile, carrot */
+  ctx.strokeStyle = '#31414f';
+  ctx.fillStyle = '#31414f';
+  if (t < TL.wave + 0.3) {
+    ctx.beginPath(); ctx.arc(-6.5, -120, 2.1, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(6.5, -120, 2.1, 0, 7); ctx.fill();
+  } else {
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(-6.5, -119, 3.2, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+    ctx.beginPath(); ctx.arc(6.5, -119, 3.2, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(242,168,184,0.5)';
+  ctx.beginPath(); ctx.arc(-11, -113, 3, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(11, -113, 3, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#31414f';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath(); ctx.arc(0, -113, 6.5, Math.PI * 0.25, Math.PI * 0.75); ctx.stroke();
+  ctx.fillStyle = '#e8a95d';
+  ctx.beginPath();
+  ctx.moveTo(1, -118); ctx.lineTo(15, -114.5); ctx.lineTo(1, -112.5);
+  ctx.closePath(); ctx.fill();
+
+  /* the birthday cake on its plate */
+  ctx.save();
+  ctx.translate(-46, -88);
+  ctx.fillStyle = '#e8f2fc';
+  ctx.beginPath(); ctx.ellipse(0, 6, 15, 4, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fad4b4';
+  ctx.beginPath(); ctx.roundRect(-12, -6, 24, 11, 2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-8, -14, 16, 9, 2); ctx.fill();
+  ctx.fillStyle = '#fdf3f6';                     /* frosting drips */
+  ctx.beginPath(); ctx.roundRect(-8, -14, 16, 3.4, 1.6); ctx.fill();
+  for (const dx of [-5, 0, 5]) { ctx.beginPath(); ctx.arc(dx, -10.6, 1.9, 0, 7); ctx.fill(); }
+  ctx.fillStyle = '#f2a8b8';                     /* candle */
+  ctx.fillRect(-1.4, -21, 2.8, 7);
+  const fk = 1 + 0.18 * Math.sin(t * 11);        /* flame flicker */
+  ctx.fillStyle = '#f4c67a';
+  ctx.shadowColor = 'rgba(250,210,140,0.9)';
+  ctx.shadowBlur = 9;
+  ctx.beginPath(); ctx.ellipse(0, -24.5, 2 * fk, 3.4 * fk, 0, 0, 7); ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function drawFox(ctx, t) {
+  const p = easeOutCubic(seg(t, TL.chars + 0.18, 0.9));
+  if (p <= 0) return;
+  const x = -160 + 388 * p;              /* stops at x = 228 */
+  const phase = p * 8;
+  const moving = 1 - seg(t, TL.chars + 0.88, 0.25);
+  const bob = Math.abs(Math.sin(phase * Math.PI)) * 4 * moving;
+  const y = 1792 - bob;
+  const idle = moving < 0.05 ? Math.sin(t * 1.6) * 1.2 : 0;
+  ctx.save();
+  ctx.translate(x, y + idle * 0.4);
+
+  ctx.fillStyle = 'rgba(16,44,78,0.25)';
+  ctx.beginPath(); ctx.ellipse(2, 2, 30, 6.5, 0, 0, 7); ctx.fill();
+
+  /* tail — bushy, swishing once she settles */
+  const swish = -0.35 + Math.sin(t * 2.2) * 0.16 * (1 - moving * 0.6);
+  ctx.save();
+  ctx.translate(-22, -20);
+  ctx.rotate(swish);
+  const tg = ctx.createLinearGradient(0, 0, -26, -10);
+  tg.addColorStop(0, '#dcebfa');
+  tg.addColorStop(0.8, '#eef6fe');
+  tg.addColorStop(1, '#ffffff');
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.moveTo(2, 3);
+  ctx.quadraticCurveTo(-16, 6, -27, -6);
+  ctx.quadraticCurveTo(-30, -12, -24, -14);
+  ctx.quadraticCurveTo(-12, -14, 2, -6);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  /* legs — little trot lifts while moving */
+  ctx.strokeStyle = '#cadcef';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 5;
+  for (const [lx, ph] of [[-13, 0], [-6, Math.PI], [8, Math.PI], [15, 0]]) {
+    const lift = Math.max(0, Math.sin(phase * 2 * Math.PI + ph)) * 4 * moving;
+    ctx.beginPath(); ctx.moveTo(lx, -14); ctx.lineTo(lx + 1, -2 - lift); ctx.stroke();
+  }
+
+  /* body + chest */
+  const bg2 = ctx.createLinearGradient(0, -34, 0, -6);
+  bg2.addColorStop(0, '#f1f7fe');
+  bg2.addColorStop(1, '#d3e4f5');
+  ctx.fillStyle = bg2;
+  ctx.beginPath(); ctx.ellipse(0, -21, 25, 13.5, -0.06, 0, 7); ctx.fill();
+
+  /* head, snout, ears */
+  ctx.fillStyle = '#f1f7fe';
+  ctx.beginPath(); ctx.arc(20, -32, 10.5, 0, 7); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(26, -29); ctx.quadraticCurveTo(33, -27.5, 34, -25.5);
+  ctx.quadraticCurveTo(30, -23.5, 25, -25);
+  ctx.closePath(); ctx.fill();
+  for (const [ex, er] of [[14, -0.22], [23, 0.18]]) {
+    ctx.save();
+    ctx.translate(ex, -40); ctx.rotate(er);
+    ctx.fillStyle = '#e4eefb';
+    ctx.beginPath(); ctx.moveTo(-3.6, 2); ctx.lineTo(0, -7.5); ctx.lineTo(3.6, 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(242,196,207,0.85)';
+    ctx.beginPath(); ctx.moveTo(-1.7, 1); ctx.lineTo(0, -4.5); ctx.lineTo(1.7, 1); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  /* face: nose, eye (happy arc at the wave) */
+  ctx.fillStyle = '#31414f';
+  ctx.beginPath(); ctx.arc(33.4, -25.6, 1.5, 0, 7); ctx.fill();
+  if (t < TL.wave + 0.3) {
+    ctx.beginPath(); ctx.arc(21, -33, 1.7, 0, 7); ctx.fill();
+  } else {
+    ctx.strokeStyle = '#31414f';
+    ctx.lineWidth = 1.7;
+    ctx.beginPath(); ctx.arc(21, -32.4, 2.6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  }
+  ctx.restore();
 }
 
 /* ---------------- foreground ---------------- */
@@ -690,9 +1058,15 @@ function renderFG(t) {
     fg.restore();
   }
 
-  /* sparkle bursts */
+  /* sparkle bursts + cartoon star-pops */
   drawBurst(fg, burstName, t);
   drawBurst(fg, burstClose, t);
+  drawPops(fg, popsGust, t);
+  drawPops(fg, popsClose, t);
+
+  /* the party hosts arrive along the drifts */
+  drawSnowman(fg, t);
+  drawFox(fg, t);
 
   /* ambient twinkles once the layout is up */
   const ambIn = easeInOut(seg(t, 4.4, 1.2));
@@ -776,11 +1150,13 @@ function renderDOM(t) {
     el.style.filter = `blur(${(1 - p) * 7 + outP * 9}px)`;
   }
 
-  /* ZIVA letters */
+  /* ZIVA letters — cartoon pop-in: grow with a single overshoot */
   els.letters.forEach((sp, i) => {
-    const p = easeOutCubic(seg(t, TL.name + i * 0.11, 0.72));
+    const q = seg(t, TL.name + i * 0.11, 0.72);
+    const p = easeOutCubic(q);
+    const sc = 0.72 + 0.28 * easeOutBack(q);
     sp.style.opacity = p;
-    sp.style.transform = `translateY(${(1 - p) * 70}px) scale(${1.16 - 0.16 * p})`;
+    sp.style.transform = `translateY(${(1 - p) * 70}px) scale(${sc})`;
     sp.style.filter = `blur(${(1 - p) * 12}px)`;
     /* shimmer sweep once settled */
     const sh = t > TL.name + 0.9 ? ((t - TL.name - 0.9) * 26) % 260 : 0;
@@ -788,14 +1164,20 @@ function renderDOM(t) {
   });
 
   fadeRise(els.turns, t, TL.turns, 0.8, 34, 6);
+  const tq = seg(t, TL.turns, 0.8);
+  if (tq > 0) els.turns.style.transform += ` scale(${0.9 + 0.1 * easeOutBack(tq)})`;
 
-  /* card + rows */
-  const cp = easeOutCubic(seg(t, TL.card, 0.9));
+  /* card + rows — single soft overshoot on the card scale (~3px), settled
+     well before the reading dwell; rows keep their calm stagger */
+  const cq = seg(t, TL.card, 0.9);
+  const cp = easeOutCubic(cq);
   els.card.style.opacity = cp;
-  els.card.style.transform = `translateY(${(1 - cp) * 90}px) scale(${0.965 + 0.035 * cp})`;
+  els.card.style.transform = `translateY(${(1 - cp) * 90}px) scale(${0.965 + 0.035 * easeOutBack(cq)})`;
   els.rows.forEach((row, i) => fadeRise(row, t, TL.rows[i], 0.7, 26, 4));
 
   fadeRise(els.closing, t, TL.closing, 0.9, 40, 7);
+  const zq = seg(t, TL.closing, 0.9);
+  if (zq > 0) els.closing.style.transform += ` scale(${0.82 + 0.18 * easeOutBack(zq)})`;
 }
 
 /* ---------------- master seek ---------------- */
