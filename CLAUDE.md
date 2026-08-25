@@ -278,7 +278,7 @@ Three tiers (default, medium, large) via `data-zoom` on `:root`. Header block ex
 
 ## Ziva Context
 
-Born 4 Sep 2025. Current: ~7 months. Milestones: rolling, sitting, early teething, sleeps independently, babbles, responds to name, pulls to stand. Takes Vit D3 — track administration timing, not just taken/not-taken.
+Born 4 Sep 2025. **Turning ONE on 4 Sep 2026** — first-birthday artwork suite lives at `meridian/birthday-one/` (#258) with a sibling invite video at `meridian/first-birthday/` (#259). Milestones as last recorded (~7 mo): rolling, sitting, early teething, sleeps independently, babbles, responds to name, pulls to stand — due a refresh from the parents' log at the 12-month mark. Takes Vit D3 — track administration timing, not just taken/not-taken.
 
 @import docs/DESIGN_PRINCIPLES.md
 @import docs/SPEC_ITERATION_PROCESS.md
