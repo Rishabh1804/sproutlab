@@ -199,7 +199,7 @@ canvas { position: absolute; left: 0; top: 0; }
   font-size: 22px;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
-  background-image: linear-gradient(160deg, #cfa14a 0%, #a2761f 45%, #dcb968 75%, #b0842c 100%);
+  background-image: linear-gradient(160deg, #b8892e 0%, #96691a 45%, #c49a3a 75%, #a2761f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -220,7 +220,7 @@ canvas { position: absolute; left: 0; top: 0; }
   font-size: 24px;
   letter-spacing: 0.42em;
   text-indent: 0.42em;
-  background-image: linear-gradient(160deg, #cfa14a 0%, #a2761f 45%, #dcb968 75%, #b0842c 100%);
+  background-image: linear-gradient(160deg, #b8892e 0%, #96691a 45%, #c49a3a 75%, #a2761f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -632,7 +632,7 @@ function drawAurora(ctx, t) {
 }
 
 /* winter sun — a soft warm-white disc with a halo ring (sun-dog) */
-function drawMoon(ctx, t) {
+function drawSun(ctx) {
   const x = 216, y = 258;
   ctx.save();
   const glow = ctx.createRadialGradient(x, y, 8, x, y, 170);
@@ -1024,7 +1024,7 @@ function renderBG(t) {
   drawAurora(bg, t);
   drawStars(bg, t);
   drawLyra(bg, t);
-  drawMoon(bg, t);
+  drawSun(bg);
   /* giant watermark flake behind the name, once the main layout is up */
   const wmIn = easeInOut(seg(t, 2.6, 1.4));
   drawFlake(bg, 540, 700, 330, t * 0.05, 0.075 * wmIn, 2);
