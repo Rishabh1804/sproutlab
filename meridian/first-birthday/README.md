@@ -29,15 +29,16 @@ Edit the text in `invite.html` (the `#card` rows), then:
 bash meridian/first-birthday/build-video.sh
 ```
 
-Requires `python3` + numpy, `node` with `playwright-core` on the module path,
-a Chromium binary (`CHROMIUM` env, defaults to the Playwright install), and
-`ffmpeg` (`FFMPEG` env).
+Requires `python3` + numpy, `node` with the repo's `@playwright/test`
+devDependency installed (`pnpm install`), and `ffmpeg` (`FFMPEG` env).
+Browser: `CHROMIUM` env if set, else a container Playwright install at
+`/opt/pw-browsers` if present, else Playwright's own browser cache.
 
 ## Design notes
 
 - 0.0–2.4s — a hero snowflake crystallizes over the script line
   *"Our little snowflake is turning one"*; the **snow queen** fades in on
-  the far ridge and raises her arm
+  the foreground drift, stage left, and raises her arm
 - 2.4–3.0s — her conjuring sends a sparkle stream into the snow-gust wipe
   (synced glissando) with cartoon star-pops
 - 3.0–4.7s — **ZIVA** pops in letter by letter (single-overshoot
@@ -45,7 +46,7 @@ a Chromium binary (`CHROMIUM` env, defaults to the Playwright install), and
 - 4.7–7.3s — the frosted-glass card lands with one soft boing, rows stagger
   in and sit dead-still for the reading dwell; at 6.15s the **snowman**
   waddles in along the drifts carrying Ziva's candle-lit cake (synced
-  boing-boing foley), the **arctic fox** trotting behind
+  boing-boing foley), the **red fox** trotting behind
 - 7.3–10s — *"See you there!"* — the snowman waves with happy eyes, the fox
   swishes her tail, star-pops burst, and everything settles into a complete
   final frame (the video's last frame works as a still invite too)

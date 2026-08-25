@@ -74,15 +74,19 @@ music_box(NOTE['C7'], 7.62, amp=0.07, decay=1.4)  # star-pop twinkle
 
 
 def boing(f0, f1, start, amp=0.1, dur=0.35):
-    """Soft pitch-bent pluck — cartoon waddle foley, music-box friendly."""
+    """Soft pitch-bent pluck — cartoon waddle foley, music-box friendly.
+
+    The chirp is clamped at f1: phase integrates a frequency that sweeps
+    f0→f1 over `dur`, then holds f1 through the ring-out tail.
+    """
     i0 = int(start * SR)
     if i0 >= N:
         return
     length = min(N - i0, int(SR * dur * 2.2))
     tt = np.arange(length) / SR
-    sweep = np.clip(tt / dur, 0, 1)
-    freq = f0 + (f1 - f0) * sweep
-    phase = 2 * np.pi * (f0 * tt + (f1 - f0) * tt ** 2 / (2 * dur))
+    phase_sweep = f0 * tt + (f1 - f0) * tt ** 2 / (2 * dur)
+    phase_hold = (f0 * dur + (f1 - f0) * dur / 2) + f1 * (tt - dur)
+    phase = 2 * np.pi * np.where(tt <= dur, phase_sweep, phase_hold)
     env = np.exp(-tt / 0.16) * (1 - np.exp(-tt / 0.005))
     mix[i0:i0 + length] += amp * env * (np.sin(phase) + 0.25 * np.sin(2 * phase))
 
