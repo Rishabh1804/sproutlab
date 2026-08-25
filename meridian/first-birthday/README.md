@@ -50,10 +50,15 @@ a Chromium binary (`CHROMIUM` env, defaults to the Playwright install), and
   swishes her tail, star-pops burst, and everything settles into a complete
   final frame (the video's last frame works as a still invite too)
 
-Scene: arctic-night gradient, aurora ribbons, crescent moon, 150 twinkling
-stars + Lyra, three parallax snowfall layers, pine ridge and snow drifts,
-frosted corners and an icy border frame. Type: Cormorant Garamond, Great
-Vibes, Montserrat (embedded as data URIs).
+Scene (daylight edition, ratified after the welcome board claimed the
+night sky): luminous ice-day gradient with a winter sun and halo, pearl
+sky-shimmer, a crystalline ice castle with warm windows on the horizon,
+faceted crystal shards framing the drifts, three parallax snowfall layers,
+pine ridge and bright drifts, etched-ice corner frame. Lyra survives as a
+faint pattern etched high in the sky. Typography flips navy + gold on the
+bright scene: navy ZIVA, the golden "IS TURNING (crown) 1" lockup, a
+frosted-white card with gold kicker/medallion/venue accents. Type:
+Cormorant Garamond, Great Vibes, Montserrat (embedded as data URIs).
 
 **Cartoon round (council-shaped, reference-calibrated).** The cartoon energy
 lives in *motion and performers*, not in the art style: single-overshoot

@@ -33,7 +33,7 @@ html, body {
   height: 1920px;
   overflow: hidden;
   transform-origin: top left;
-  background: linear-gradient(180deg, #050f21 0%, #081c38 30%, #0c2a4c 58%, #11395f 82%, #16456f 100%);
+  background: linear-gradient(180deg, #8fc4e8 0%, #a9d4f0 26%, #c6e4f7 52%, #ddeffa 76%, #ecf7fd 100%);
 }
 
 canvas { position: absolute; left: 0; top: 0; }
@@ -52,72 +52,88 @@ canvas { position: absolute; left: 0; top: 0; }
 /* ---------- Intro ---------- */
 #introL1, #introL2 {
   font-family: 'Great Vibes', cursive;
-  color: var(--ice-white);
-  text-shadow: 0 0 34px rgba(140, 195, 245, 0.65), 0 2px 14px rgba(8, 24, 48, 0.6);
+  color: #1d4066;
+  text-shadow: 0 0 26px rgba(255, 255, 255, 0.95), 0 2px 10px rgba(120, 165, 210, 0.35);
 }
 #introL1 { top: 852px; font-size: 96px; }
 #introL2 { top: 1000px; font-size: 118px; }
 #introL2 b {
   font-weight: 400;
-  color: #ffffff;
-  text-shadow: 0 0 44px rgba(170, 215, 255, 0.95), 0 2px 14px rgba(8, 24, 48, 0.6);
+  background-image: linear-gradient(160deg, #e2bd6b 0%, #b8892e 45%, #edd28a 75%, #c99a3d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* ---------- Name block ---------- */
 #name {
-  top: 486px;
+  top: 478px;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
-  font-size: 296px;
+  font-size: 272px;
   line-height: 1;
   letter-spacing: 0.045em;
   opacity: 1; /* letters carry their own opacity */
-  filter: drop-shadow(0 0 38px rgba(126, 180, 236, 0.5)) drop-shadow(0 6px 26px rgba(5, 18, 40, 0.55));
+  filter: drop-shadow(0 0 26px rgba(255, 255, 255, 0.9)) drop-shadow(0 6px 22px rgba(110, 155, 205, 0.45));
 }
 #name span {
   display: inline-block;
   opacity: 0;
   will-change: transform, opacity, filter;
   background-image: linear-gradient(104deg,
-      #c6dff5 0%, #ffffff 18%, #a5cdf2 36%,
-      #eef8ff 52%, #b4d5f3 68%, #ffffff 84%, #c6dff5 100%);
+      #1f4a78 0%, #2f6ba3 18%, #16375e 36%,
+      #4e8cc0 52%, #1b4470 68%, #35709f 84%, #1f4a78 100%);
   background-size: 260% 100%;
   background-position: 0% 0;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(240, 250, 255, 0.22);
+  -webkit-text-stroke: 1px rgba(20, 50, 90, 0.25);
 }
 
+/* "IS TURNING ♛ 1" lockup */
 #turns {
-  top: 828px;
+  top: 772px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
-  font-size: 46px;
-  letter-spacing: 0.62em;
-  text-indent: 0.62em; /* re-center tracked caps */
-  color: #cfe6fa;
-  text-shadow: 0 0 22px rgba(120, 175, 235, 0.6), 0 2px 10px rgba(6, 20, 44, 0.7);
+  font-size: 27px;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em; /* re-center tracked caps */
+  color: #2a5580;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
 }
+#one {
+  top: 812px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 112px;
+  line-height: 1;
+  background-image: linear-gradient(165deg, #e8c979 0%, #b8892e 40%, #f0d896 65%, #c1953a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px rgba(255, 248, 225, 0.9)) drop-shadow(0 3px 10px rgba(150, 110, 40, 0.35));
+}
+#one svg { display: block; margin: 0 auto 2px; }
 
 /* ---------- Details card ---------- */
 #card {
   position: absolute;
   left: 120px;
-  top: 950px;
+  top: 972px;
   width: 840px;
   box-sizing: border-box;
-  padding: 46px 40px 42px;
+  padding: 44px 40px 40px;
   text-align: center;
   border-radius: 40px;
-  background: linear-gradient(180deg, rgba(235, 246, 255, 0.13), rgba(235, 246, 255, 0.055));
-  border: 1.5px solid rgba(255, 255, 255, 0.30);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(240, 249, 255, 0.62));
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
   box-shadow:
-    0 34px 90px rgba(3, 14, 34, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px) saturate(1.25);
-  -webkit-backdrop-filter: blur(20px) saturate(1.25);
+    0 30px 70px rgba(70, 115, 165, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(190, 220, 245, 0.5);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
   opacity: 0;
   will-change: transform, opacity;
 }
@@ -128,13 +144,13 @@ canvas { position: absolute; left: 0; top: 0; }
   pointer-events: none;
   border-radius: 30px;
   inset: 12px;
-  border: 1.2px solid rgba(255, 255, 255, 0.30);
+  border: 1.2px solid rgba(184, 137, 46, 0.4);
 }
 #card::after {
   inset: 19px;
   border-radius: 24px;
   border-width: 1px;
-  border-color: rgba(255, 255, 255, 0.13);
+  border-color: rgba(70, 120, 170, 0.22);
 }
 .row { opacity: 0; will-change: transform, opacity; }
 #rowDay {
@@ -144,8 +160,7 @@ canvas { position: absolute; left: 0; top: 0; }
   font-size: 23px;
   letter-spacing: 0.46em;
   text-indent: 0.46em;
-  color: #ffffff;
-  text-shadow: 0 1px 8px rgba(6, 20, 44, 0.6);
+  color: #1d4066;
 }
 /* snowflake date medallion — SEP · (4) · 2026 */
 .datelock {
@@ -155,14 +170,14 @@ canvas { position: absolute; left: 0; top: 0; }
   justify-content: center;
   gap: 20px;
 }
-.dl-line { width: 116px; height: 1.4px; background: rgba(255, 255, 255, 0.4); }
+.dl-line { width: 116px; height: 1.4px; background: rgba(184, 137, 46, 0.55); }
 .dl-side {
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   font-size: 31px;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
-  color: #dcebfa;
+  color: #2a5580;
 }
 .dl-med { position: relative; width: 118px; height: 118px; }
 .dl-med .num {
@@ -176,8 +191,7 @@ canvas { position: absolute; left: 0; top: 0; }
   font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
   font-size: 64px;
-  color: #ffffff;
-  text-shadow: 0 0 22px rgba(150, 200, 250, 0.5), 0 2px 10px rgba(6, 20, 44, 0.6);
+  color: #16375e;
 }
 #rowKicker {
   font-family: 'Montserrat', sans-serif;
@@ -185,8 +199,10 @@ canvas { position: absolute; left: 0; top: 0; }
   font-size: 22px;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
-  color: #b7d8f3;
-  text-shadow: 0 1px 8px rgba(6, 20, 44, 0.6);
+  background-image: linear-gradient(160deg, #cfa14a 0%, #a2761f 45%, #dcb968 75%, #b0842c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 #rowTime {
   margin-top: 20px;
@@ -195,8 +211,7 @@ canvas { position: absolute; left: 0; top: 0; }
   font-size: 41px;
   letter-spacing: 0.14em;
   text-indent: 0.14em;
-  color: #ddecfb;
-  text-shadow: 0 1px 10px rgba(6, 20, 44, 0.65);
+  color: #29527d;
 }
 #rowVenueKicker {
   margin-top: 20px;
@@ -205,7 +220,10 @@ canvas { position: absolute; left: 0; top: 0; }
   font-size: 24px;
   letter-spacing: 0.42em;
   text-indent: 0.42em;
-  color: #b7d8f3;
+  background-image: linear-gradient(160deg, #cfa14a 0%, #a2761f 45%, #dcb968 75%, #b0842c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 #rowVenue {
   margin-top: 12px;
@@ -213,18 +231,17 @@ canvas { position: absolute; left: 0; top: 0; }
   font-weight: 600;
   font-size: 82px;
   line-height: 1.05;
-  color: #ffffff;
-  text-shadow: 0 0 26px rgba(150, 200, 250, 0.5), 0 2px 12px rgba(6, 20, 44, 0.6);
+  color: #16375e;
 }
 
 /* ---------- Closing ---------- */
 #closing {
-  top: 1512px;
+  top: 1516px;
   font-family: 'Great Vibes', cursive;
-  font-size: 102px;
+  font-size: 100px;
   padding: 20px 0; /* room for swashes */
-  color: #ffffff;
-  text-shadow: 0 0 40px rgba(165, 210, 255, 0.9), 0 2px 14px rgba(8, 24, 48, 0.6);
+  color: #1d4066;
+  text-shadow: 0 0 26px rgba(255, 255, 255, 0.95), 0 2px 10px rgba(120, 165, 210, 0.4);
 }
 </style>
 </head>
@@ -236,7 +253,16 @@ canvas { position: absolute; left: 0; top: 0; }
     <div class="txt" id="introL2">is turning <b>one</b></div>
 
     <div class="txt" id="name"><span>Z</span><span>I</span><span>V</span><span>A</span></div>
-    <div class="txt" id="turns">TURNS ONE</div>
+    <div class="txt" id="turns">IS&nbsp;TURNING</div>
+    <div class="txt" id="one">
+      <svg width="58" height="36" viewBox="0 0 58 36" fill="none">
+        <path d="M8 30 L12 10 L22 22 L29 6 L36 22 L46 10 L50 30 Z"
+              fill="#c9a03c" stroke="#a2761f" stroke-width="1.4" stroke-linejoin="round"/>
+        <rect x="8" y="30" width="42" height="4" rx="2" fill="#b8892e"/>
+        <circle cx="12" cy="8" r="2.4" fill="#e8c979"/>
+        <circle cx="29" cy="4" r="2.8" fill="#e8c979"/>
+        <circle cx="46" cy="8" r="2.4" fill="#e8c979"/>
+      </svg>1</div>
 
     <div id="card">
       <div class="row" id="rowKicker">JOIN&nbsp;US&nbsp;FOR&nbsp;A&nbsp;FROZEN&nbsp;CELEBRATION</div>
@@ -246,9 +272,9 @@ canvas { position: absolute; left: 0; top: 0; }
         <span class="dl-line"></span>
         <span class="dl-med">
           <svg width="118" height="118" viewBox="0 0 118 118" fill="none">
-            <circle cx="59" cy="59" r="44" stroke="rgba(255,255,255,0.55)" stroke-width="1.6"/>
-            <circle cx="59" cy="59" r="38" stroke="rgba(255,255,255,0.16)" stroke-width="1"/>
-            <g fill="#dff0ff" opacity="0.95">
+            <circle cx="59" cy="59" r="44" stroke="rgba(184,137,46,0.65)" stroke-width="1.6"/>
+            <circle cx="59" cy="59" r="38" stroke="rgba(70,120,170,0.25)" stroke-width="1"/>
+            <g fill="#c9a03c" opacity="0.95">
               <path d="M59 4 L63 12 L59 20 L55 12 Z"/>
               <path d="M59 114 L63 106 L59 98 L55 106 Z"/>
               <path d="M4 59 L12 63 L20 59 L12 55 Z"/>
@@ -396,15 +422,17 @@ function drawSnowLayer(ctx, flakes, t, blur) {
 }
 
 /* ---------------- ornamental snowflake ---------------- */
-function drawFlake(ctx, x, y, r, rot, alpha, lw) {
+function drawFlake(ctx, x, y, r, rot, alpha, lw, rgb, glowRgb) {
   if (alpha <= 0 || r <= 0) return;
+  rgb = rgb || '110,160,210';       /* etched-in-ice blue for the daylight scene */
+  glowRgb = glowRgb || '200,228,250';
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rot);
-  ctx.strokeStyle = `rgba(226,242,255,${alpha})`;
+  ctx.strokeStyle = `rgba(${rgb},${alpha})`;
   ctx.lineWidth = lw || Math.max(1.1, r * 0.022);
   ctx.lineCap = 'round';
-  ctx.shadowColor = `rgba(150,205,255,${alpha * 0.9})`;
+  ctx.shadowColor = `rgba(${glowRgb},${alpha * 0.9})`;
   ctx.shadowBlur = r * 0.16;
   for (let i = 0; i < 6; i++) {
     ctx.save();
@@ -442,13 +470,15 @@ function drawFlake(ctx, x, y, r, rot, alpha, lw) {
 }
 
 /* ---------------- sparkles ---------------- */
-function drawSparkle(ctx, x, y, r, alpha, rot) {
+function drawSparkle(ctx, x, y, r, alpha, rot, rgb, glowRgb) {
   if (alpha <= 0 || r <= 0) return;
+  rgb = rgb || '255,255,255';
+  glowRgb = glowRgb || '180,220,255';
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rot || 0);
-  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-  ctx.shadowColor = `rgba(180,220,255,${alpha})`;
+  ctx.fillStyle = `rgba(${rgb},${alpha})`;
+  ctx.shadowColor = `rgba(${glowRgb},${alpha})`;
   ctx.shadowBlur = r * 1.6;
   ctx.beginPath();
   for (let i = 0; i < 4; i++) {
@@ -487,10 +517,10 @@ function drawStarPop(ctx, x, y, r, p, rot) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rot + p * 0.7);
-  ctx.strokeStyle = `rgba(255,255,255,${a * 0.9})`;
+  ctx.strokeStyle = `rgba(200,152,52,${a * 0.95})`;
   ctx.lineWidth = 2;
   ctx.lineJoin = 'round';
-  ctx.shadowColor = `rgba(180,220,255,${a * 0.8})`;
+  ctx.shadowColor = `rgba(244,208,120,${a * 0.85})`;
   ctx.shadowBlur = 8;
   ctx.beginPath();
   for (let i = 0; i < 5; i++) {
@@ -538,7 +568,8 @@ function drawBurst(ctx, parts, t) {
     const e = easeOutCubic(q);
     const x = p.cx + Math.cos(p.ang) * p.dist * e;
     const y = p.cy + Math.sin(p.ang) * p.dist * e - 20 * q;
-    drawSparkle(ctx, x, y, p.size * (1 - 0.35 * q), (1 - q) * 0.95, p.spin * q * 6);
+    drawSparkle(ctx, x, y, p.size * (1 - 0.35 * q), (1 - q) * 0.95, p.spin * q * 6,
+      '250,222,150', '240,190,90');
   }
 }
 
@@ -580,9 +611,9 @@ function drawAurora(ctx, t) {
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   const ribbons = [
-    { base: 300, amp: 46, k: 0.0042, spd: 0.14, hue: 'rgba(110,225,205,', top: 0.11, hgt: 210 },
-    { base: 385, amp: 60, k: 0.0035, spd: -0.10, hue: 'rgba(150,190,245,', top: 0.09, hgt: 250 },
-    { base: 245, amp: 38, k: 0.0055, spd: 0.07, hue: 'rgba(180,165,235,', top: 0.07, hgt: 180 },
+    { base: 300, amp: 46, k: 0.0042, spd: 0.14, hue: 'rgba(255,255,255,', top: 0.10, hgt: 210 },
+    { base: 385, amp: 60, k: 0.0035, spd: -0.10, hue: 'rgba(224,244,252,', top: 0.09, hgt: 250 },
+    { base: 245, amp: 38, k: 0.0055, spd: 0.07, hue: 'rgba(236,232,252,', top: 0.07, hgt: 180 },
   ];
   for (const rb of ribbons) {
     for (let x = -20; x <= W + 20; x += 7) {
@@ -600,41 +631,36 @@ function drawAurora(ctx, t) {
   ctx.restore();
 }
 
-/* crescent sprite, built once — punching happens offscreen so the sky
-   glow can wrap the lit shape instead of ringing a dark hole */
-const moonSprite = (() => {
-  const c = document.createElement('canvas');
-  c.width = 160; c.height = 160;
-  const m = c.getContext('2d');
-  m.fillStyle = '#eef7ff';
-  m.beginPath(); m.arc(80, 80, 52, 0, 7); m.fill();
-  m.globalCompositeOperation = 'destination-out';
-  m.beginPath(); m.arc(80 + 26, 80 - 17, 48, 0, 7); m.fill();
-  return c;
-})();
-
+/* winter sun — a soft warm-white disc with a halo ring (sun-dog) */
 function drawMoon(ctx, t) {
   const x = 216, y = 258;
   ctx.save();
-  /* soft halo centred on the lit limb */
-  const glow = ctx.createRadialGradient(x - 14, y + 10, 10, x - 14, y + 10, 150);
-  glow.addColorStop(0, 'rgba(214,236,255,0.22)');
-  glow.addColorStop(1, 'rgba(214,236,255,0)');
+  const glow = ctx.createRadialGradient(x, y, 8, x, y, 170);
+  glow.addColorStop(0, 'rgba(255,252,240,0.85)');
+  glow.addColorStop(0.35, 'rgba(255,248,228,0.30)');
+  glow.addColorStop(1, 'rgba(255,248,228,0)');
   ctx.fillStyle = glow;
-  ctx.beginPath(); ctx.arc(x - 14, y + 10, 150, 0, 7); ctx.fill();
-  ctx.shadowColor = 'rgba(220,240,255,0.85)';
-  ctx.shadowBlur = 26;
-  ctx.drawImage(moonSprite, x - 80, y - 80);
+  ctx.beginPath(); ctx.arc(x, y, 170, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fffdf4';
+  ctx.shadowColor = 'rgba(255,250,230,0.95)';
+  ctx.shadowBlur = 34;
+  ctx.beginPath(); ctx.arc(x, y, 42, 0, 7); ctx.fill();
+  ctx.shadowBlur = 0;
+  /* faint halo ring */
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(x, y, 108, 0, 7); ctx.stroke();
   ctx.restore();
 }
 
 function drawStars(ctx, t) {
+  /* daylight scene: the star field becomes faint diamond-dust in the air */
   for (const s of stars) {
-    const tw = s.base * (0.55 + 0.45 * Math.sin(t * s.spd * 2 + s.ph));
-    ctx.fillStyle = `rgba(235,246,255,${tw})`;
+    const tw = s.base * (0.55 + 0.45 * Math.sin(t * s.spd * 2 + s.ph)) * 0.4;
+    ctx.fillStyle = `rgba(255,255,255,${tw})`;
     ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, 7); ctx.fill();
-    if (s.glint && tw > s.base * 0.8) {
-      ctx.strokeStyle = `rgba(235,246,255,${tw * 0.5})`;
+    if (s.glint && tw > s.base * 0.28) {
+      ctx.strokeStyle = `rgba(255,255,255,${tw * 0.6})`;
       ctx.lineWidth = 0.8;
       ctx.beginPath();
       ctx.moveTo(s.x - s.s * 4, s.y); ctx.lineTo(s.x + s.s * 4, s.y);
@@ -647,9 +673,9 @@ function drawStars(ctx, t) {
 function drawLyra(ctx, t) {
   /* breathes a little brighter while Ziva's name is on screen */
   const lift = 0.5 + 0.5 * easeInOut(seg(t, 3.1, 1.6)) - 0.25 * easeInOut(seg(t, 8.6, 1.2));
-  const lineA = 0.10 + 0.10 * lift;
+  const lineA = 0.07 + 0.07 * lift;  /* etched faintly into the bright sky */
   ctx.save();
-  ctx.strokeStyle = `rgba(214,236,255,${lineA})`;
+  ctx.strokeStyle = `rgba(90,140,190,${lineA})`;
   ctx.lineWidth = 1;
   for (const [a, b] of LYRA.lines) {
     const A = LYRA.stars[a], B = LYRA.stars[b];
@@ -659,16 +685,16 @@ function drawLyra(ctx, t) {
     const s = LYRA.stars[key];
     const tw = 0.55 + 0.45 * Math.sin(t * 1.4 + s.x);
     const r = s.m * (key === 'vega' ? 1.25 : 0.95);
-    ctx.fillStyle = `rgba(240,248,255,${(0.5 + 0.5 * lift) * tw})`;
-    ctx.shadowColor = 'rgba(190,225,255,0.9)';
-    ctx.shadowBlur = key === 'vega' ? 16 * lift + 6 : 5;
+    ctx.fillStyle = `rgba(255,255,255,${(0.35 + 0.4 * lift) * tw})`;
+    ctx.shadowColor = 'rgba(255,255,255,0.9)';
+    ctx.shadowBlur = key === 'vega' ? 14 * lift + 5 : 4;
     ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 7); ctx.fill();
   }
   ctx.shadowBlur = 0;
   /* Vega's glint */
   const v = LYRA.stars.vega;
-  const va = (0.35 + 0.45 * lift) * (0.7 + 0.3 * Math.sin(t * 2.1));
-  ctx.strokeStyle = `rgba(240,248,255,${va})`;
+  const va = (0.22 + 0.32 * lift) * (0.7 + 0.3 * Math.sin(t * 2.1));
+  ctx.strokeStyle = `rgba(255,255,255,${va})`;
   ctx.lineWidth = 1.1;
   ctx.beginPath();
   ctx.moveTo(v.x - 15, v.y); ctx.lineTo(v.x + 15, v.y);
@@ -699,10 +725,10 @@ function drawQueen(ctx, t) {
   ctx.rotate(sway);
   ctx.globalAlpha = a;
 
-  /* moonlit spotlight so she lifts off the drift */
+  /* warm spotlight so she lifts off the bright drift */
   const spot = ctx.createRadialGradient(0, -72, 8, 0, -72, 96);
-  spot.addColorStop(0, 'rgba(140,210,235,0.20)');
-  spot.addColorStop(1, 'rgba(140,210,235,0)');
+  spot.addColorStop(0, 'rgba(255,244,214,0.4)');
+  spot.addColorStop(1, 'rgba(255,244,214,0)');
   ctx.fillStyle = spot;
   ctx.beginPath(); ctx.arc(0, -72, 96, 0, 7); ctx.fill();
 
@@ -850,7 +876,7 @@ function drawQueen(ctx, t) {
     const e = easeOutCubic(p);
     const px = hax + (540 + jx - hax) * e - 180 * Math.sin(Math.PI * e) * 0.6;
     const py = hay + (640 + jy - hay) * e - 120 * Math.sin(Math.PI * e);
-    drawSparkle(ctx, px, py, sz * (1 - 0.4 * p), (1 - p) * 0.9, p * 5);
+    drawSparkle(ctx, px, py, sz * (1 - 0.4 * p), (1 - p) * 0.9, p * 5, '120,175,230', '190,225,255');
   }
   /* idle magic: a slow drip of sparkles rising from her hand afterwards */
   if (t > 3.6) {
@@ -858,12 +884,81 @@ function drawQueen(ctx, t) {
       const p = ((t - 3.6) / 2.2 + i / 3) % 1;
       const px = hax + Math.sin(p * 9 + i * 2.1) * 10;
       const py = hay - p * 52;
-      drawSparkle(ctx, px, py, 3.4, Math.sin(p * Math.PI) * 0.5, p * 6 + i);
+      drawSparkle(ctx, px, py, 3.4, Math.sin(p * Math.PI) * 0.55, p * 6 + i, '120,175,230', '190,225,255');
     }
   }
 }
 
+/* crystalline ice castle on the horizon — faceted spires, tiny gold windows */
+function drawCastle(ctx, t, cx, base, s) {
+  ctx.save();
+  ctx.translate(cx, base);
+  ctx.scale(s, s);
+  const spires = [
+    [-58, 96, 20], [-30, 148, 24], [0, 196, 30], [34, 132, 22], [60, 84, 17],
+  ];
+  for (const [sx, h, w] of spires) {
+    /* lit face */
+    ctx.fillStyle = '#e6f2fb';
+    ctx.beginPath();
+    ctx.moveTo(sx - w / 2, 0); ctx.lineTo(sx - w / 2, -h * 0.72);
+    ctx.lineTo(sx, -h); ctx.lineTo(sx, 0);
+    ctx.closePath(); ctx.fill();
+    /* shaded face */
+    ctx.fillStyle = '#b3d2ec';
+    ctx.beginPath();
+    ctx.moveTo(sx, 0); ctx.lineTo(sx, -h);
+    ctx.lineTo(sx + w / 2, -h * 0.72); ctx.lineTo(sx + w / 2, 0);
+    ctx.closePath(); ctx.fill();
+    /* spire tip glint */
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath(); ctx.arc(sx, -h, 1.6, 0, 7); ctx.fill();
+  }
+  /* connecting wall */
+  ctx.fillStyle = '#cfe4f5';
+  ctx.fillRect(-64, -34, 128, 34);
+  ctx.fillStyle = '#a9c9e6';
+  for (let i = 0; i < 5; i++) ctx.fillRect(-64 + 6 + i * 26, -40, 12, 6); /* battlements */
+  /* tiny warm windows */
+  const wt = 0.7 + 0.3 * Math.sin(t * 1.1);
+  ctx.fillStyle = `rgba(240,196,110,${0.85 * wt})`;
+  for (const [wx, wy] of [[-30, -84], [0, -120], [34, -76], [2, -60]]) {
+    ctx.fillRect(wx - 1.6, wy, 3.2, 5.5);
+  }
+  ctx.restore();
+}
+
+/* faceted crystal shard cluster */
+function drawCrystals(ctx, cx, cy, s, flip) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(flip ? -s : s, s);
+  const shards = [[0, 0, 26, 118, -0.14], [24, 6, 20, 82, 0.12], [-20, 8, 15, 62, -0.34]];
+  for (const [sx, sy, w, h, rot] of shards) {
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(rot);
+    ctx.fillStyle = 'rgba(214,236,250,0.85)';
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, 0); ctx.lineTo(-w / 2 + w * 0.18, -h * 0.7);
+    ctx.lineTo(0, -h); ctx.lineTo(w / 2 - w * 0.18, -h * 0.7); ctx.lineTo(w / 2, 0);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(178,196,238,0.55)'; /* cool violet facet */
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(0, -h);
+    ctx.lineTo(w / 2 - w * 0.18, -h * 0.7); ctx.lineTo(w / 2, 0);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(-w / 2 + w * 0.18, -h * 0.7); ctx.lineTo(0, -h); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
 function drawGround(ctx, t) {
+  /* castle on the horizon, peeking over the far ridge */
+  drawCastle(ctx, t, 790, 1668, 0.95);
   /* far ridge with pines */
   ctx.save();
   ctx.beginPath();
@@ -872,14 +967,14 @@ function drawGround(ctx, t) {
   ctx.quadraticCurveTo(840, 1710, W, 1650);
   ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
   const gFar = ctx.createLinearGradient(0, 1620, 0, H);
-  gFar.addColorStop(0, '#3f6b9c');
-  gFar.addColorStop(1, '#274a74');
+  gFar.addColorStop(0, '#a7c9e6');
+  gFar.addColorStop(1, '#8db2d6');
   ctx.fillStyle = gFar;
   ctx.fill();
   /* pines on the ridge */
   const pines = [[120, 1668, 74], [205, 1680, 52], [872, 1672, 66], [948, 1662, 46]];
   for (const [px, py, ph] of pines) {
-    ctx.fillStyle = '#1a3a5e';
+    ctx.fillStyle = '#39668f';
     for (let l = 0; l < 3; l++) {
       const w = ph * (0.52 - l * 0.13), yy = py - l * ph * 0.3;
       ctx.beginPath();
@@ -903,20 +998,23 @@ function drawGround(ctx, t) {
   ctx.quadraticCurveTo(830, 1822, W, 1758);
   ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
   const gNear = ctx.createLinearGradient(0, 1730, 0, H);
-  gNear.addColorStop(0, '#d7e9fa');
-  gNear.addColorStop(0.5, '#a9c9e8');
-  gNear.addColorStop(1, '#84abd6');
+  gNear.addColorStop(0, '#ffffff');
+  gNear.addColorStop(0.5, '#e4f1fb');
+  gNear.addColorStop(1, '#c2dcf1');
   ctx.fillStyle = gNear;
-  ctx.shadowColor = 'rgba(200,228,252,0.7)';
+  ctx.shadowColor = 'rgba(255,255,255,0.95)';
   ctx.shadowBlur = 26;
   ctx.fill();
   ctx.shadowBlur = 0;
-  /* twinkles in the snow */
+  /* crystal shards framing the drifts */
+  drawCrystals(ctx, 46, 1748, 1.0, false);
+  drawCrystals(ctx, 1036, 1724, 1.15, true);
+  /* golden twinkles in the snow */
   const r = mulberry32(99);
   for (let i = 0; i < 14; i++) {
     const x = r() * W, y = 1790 + r() * 110, ph = r() * 6.28, sp = 0.8 + r();
     const a = 0.25 + 0.75 * Math.max(0, Math.sin(t * sp * 2 + ph));
-    drawSparkle(ctx, x, y, 2.6 + r() * 2.4, a * 0.75, ph);
+    drawSparkle(ctx, x, y, 2.6 + r() * 2.4, a * 0.7, ph, '242,207,122', '238,190,100');
   }
   ctx.restore();
 }
@@ -979,8 +1077,8 @@ function drawSnowman(ctx, t) {
 
   /* soft spotlight + contact shadow */
   const spot = ctx.createRadialGradient(0, -70, 8, 0, -70, 90);
-  spot.addColorStop(0, 'rgba(150,215,235,0.16)');
-  spot.addColorStop(1, 'rgba(150,215,235,0)');
+  spot.addColorStop(0, 'rgba(255,244,214,0.35)');
+  spot.addColorStop(1, 'rgba(255,244,214,0)');
   ctx.fillStyle = spot;
   ctx.beginPath(); ctx.arc(0, -70, 90, 0, 7); ctx.fill();
   ctx.fillStyle = 'rgba(16,44,78,0.28)';
@@ -1259,10 +1357,11 @@ function renderFG(t) {
   /* ambient twinkles once the layout is up */
   const ambIn = easeInOut(seg(t, 4.4, 1.2));
   if (ambIn > 0) {
-    for (const p of ambient) {
+    ambient.forEach((p, i) => {
       const a = Math.max(0, Math.sin(t * p.spd * 1.6 + p.ph));
-      drawSparkle(fg, p.x, p.y, p.s, a * a * 0.5 * ambIn, p.ph + t * 0.4);
-    }
+      if (i % 2) drawSparkle(fg, p.x, p.y, p.s, a * a * 0.45 * ambIn, p.ph + t * 0.4, '246,214,134', '238,190,100');
+      else drawSparkle(fg, p.x, p.y, p.s, a * a * 0.4 * ambIn, p.ph + t * 0.4, '150,190,230', '190,220,250');
+    });
   }
 
   /* near snow — always on top */
@@ -1285,19 +1384,19 @@ function frostFrame(ctx, t) {
   /* corner frost glows */
   for (const [cx, cy] of [[0, 0], [W, 0], [0, H], [W, H]]) {
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 360);
-    g.addColorStop(0, `rgba(222,240,255,${0.16 * a})`);
-    g.addColorStop(1, 'rgba(222,240,255,0)');
+    g.addColorStop(0, `rgba(255,255,255,${0.30 * a})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = g;
     ctx.fillRect(cx - 360, cy - 360, 720, 720);
   }
   /* thin icy border */
-  ctx.strokeStyle = `rgba(238,248,255,${0.30 * a})`;
+  ctx.strokeStyle = `rgba(90,140,190,${0.32 * a})`;
   ctx.lineWidth = 2;
   const m = 30, rr = 26;
   ctx.beginPath();
   ctx.roundRect(m, m, W - 2 * m, H - 2 * m, rr);
   ctx.stroke();
-  ctx.strokeStyle = `rgba(238,248,255,${0.12 * a})`;
+  ctx.strokeStyle = `rgba(90,140,190,${0.13 * a})`;
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.roundRect(m + 7, m + 7, W - 2 * (m + 7), H - 2 * (m + 7), rr - 6);
@@ -1314,7 +1413,7 @@ const $ = id => document.getElementById(id);
 const els = {
   introL1: $('introL1'), introL2: $('introL2'),
   name: $('name'), letters: Array.from($('name').children),
-  turns: $('turns'), card: $('card'),
+  turns: $('turns'), one: $('one'), card: $('card'),
   rows: ['rowKicker', 'rowDay', 'rowDate', 'rowTime', 'rowVenueKicker', 'rowVenue'].map($),
   closing: $('closing'),
 };
@@ -1354,6 +1453,11 @@ function renderDOM(t) {
   fadeRise(els.turns, t, TL.turns, 0.8, 34, 6);
   const tq = seg(t, TL.turns, 0.8);
   if (tq > 0) els.turns.style.transform += ` scale(${0.9 + 0.1 * easeOutBack(tq)})`;
+  /* the golden "1" pops in with a crown (no blur — it carries drop-shadows) */
+  const oq = seg(t, TL.turns + 0.18, 0.75);
+  const op2 = easeOutCubic(oq);
+  els.one.style.opacity = op2;
+  els.one.style.transform = `translateY(${(1 - op2) * 42}px) scale(${0.55 + 0.45 * easeOutBack(oq)})`;
 
   /* card + rows — single soft overshoot on the card scale (~3px), settled
      well before the reading dwell; rows keep their calm stagger */
