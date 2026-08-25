@@ -55,10 +55,14 @@ stars + Lyra, three parallax snowfall layers, pine ridge and snow drifts,
 frosted corners and an icy border frame. Type: Cormorant Garamond, Great
 Vibes, Montserrat (embedded as data URIs).
 
-**Cartoon round (council-shaped).** The cartoon energy lives in *motion and
-performers*, not in the art style: single-overshoot entrances, confined
-star-pops, and three original characters — a faceless ice-queen silhouette
-with a braid (evocative of the theme, deliberately not any studio's
-character design), a classic carrot-nose scarf snowman, and an arctic fox.
-No Disney assets or on-model characters anywhere: the invite remains
-entirely the family's own artwork, safe to share publicly.
+**Cartoon round (council-shaped, reference-calibrated).** The cartoon energy
+lives in *motion and performers*, not in the art style: single-overshoot
+entrances, confined star-pops, and three original characters — a coloured
+ice queen (golden-platinum braid, fair skin, teal ice-gown; faceless at
+distance, deliberately not any studio's character design), a classic
+carrot-nose snowman in a sage scarf and amber knit cap, and an arctic fox.
+A family-provided reference e-card informed the *composition only* (big
+flanking characters, the snowflake date-medallion, "Join us for a Frozen
+celebration" wording, ornate double card frame). No Disney assets or
+on-model characters anywhere: the invite remains entirely the family's own
+artwork, safe to share publicly.

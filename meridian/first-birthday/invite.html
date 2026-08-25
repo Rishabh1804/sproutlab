@@ -107,7 +107,7 @@ canvas { position: absolute; left: 0; top: 0; }
   top: 950px;
   width: 840px;
   box-sizing: border-box;
-  padding: 58px 40px 54px;
+  padding: 46px 40px 42px;
   text-align: center;
   border-radius: 40px;
   background: linear-gradient(180deg, rgba(235, 246, 255, 0.13), rgba(235, 246, 255, 0.055));
@@ -121,27 +121,73 @@ canvas { position: absolute; left: 0; top: 0; }
   opacity: 0;
   will-change: transform, opacity;
 }
+/* ornate double inner frame, like a keepsake card mount */
+#card::before, #card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-radius: 30px;
+  inset: 12px;
+  border: 1.2px solid rgba(255, 255, 255, 0.30);
+}
+#card::after {
+  inset: 19px;
+  border-radius: 24px;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.13);
+}
 .row { opacity: 0; will-change: transform, opacity; }
+#rowDay {
+  margin-top: 18px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 23px;
+  letter-spacing: 0.46em;
+  text-indent: 0.46em;
+  color: #ffffff;
+  text-shadow: 0 1px 8px rgba(6, 20, 44, 0.6);
+}
+/* snowflake date medallion — SEP · (4) · 2026 */
+.datelock {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.dl-line { width: 116px; height: 1.4px; background: rgba(255, 255, 255, 0.4); }
+.dl-side {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 31px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: #dcebfa;
+}
+.dl-med { position: relative; width: 118px; height: 118px; }
+.dl-med .num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 66px;
+  color: #ffffff;
+  text-shadow: 0 0 22px rgba(150, 200, 250, 0.5), 0 2px 10px rgba(6, 20, 44, 0.6);
+}
 #rowKicker {
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
-  font-size: 27px;
-  letter-spacing: 0.42em;
-  text-indent: 0.42em;
+  font-size: 22px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
   color: #b7d8f3;
   text-shadow: 0 1px 8px rgba(6, 20, 44, 0.6);
 }
-#rowDate {
-  margin-top: 26px;
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 600;
-  font-size: 74px;
-  line-height: 1.08;
-  color: #ffffff;
-  text-shadow: 0 0 26px rgba(150, 200, 250, 0.45), 0 2px 12px rgba(6, 20, 44, 0.6);
-}
 #rowTime {
-  margin-top: 18px;
+  margin-top: 20px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   font-size: 41px;
@@ -150,8 +196,8 @@ canvas { position: absolute; left: 0; top: 0; }
   color: #ddecfb;
   text-shadow: 0 1px 10px rgba(6, 20, 44, 0.65);
 }
-#rowDivider { margin: 30px auto 26px; width: 380px; }
 #rowVenueKicker {
+  margin-top: 20px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   font-size: 24px;
@@ -171,7 +217,7 @@ canvas { position: absolute; left: 0; top: 0; }
 
 /* ---------- Closing ---------- */
 #closing {
-  top: 1506px;
+  top: 1512px;
   font-family: 'Great Vibes', cursive;
   font-size: 102px;
   padding: 20px 0; /* room for swashes */
@@ -191,22 +237,32 @@ canvas { position: absolute; left: 0; top: 0; }
     <div class="txt" id="turns">TURNS ONE</div>
 
     <div id="card">
-      <div class="row" id="rowKicker">A&nbsp;FROZEN&nbsp;FIRST&nbsp;BIRTHDAY</div>
-      <div class="row" id="rowDate">Friday, 4 September 2026</div>
-      <div class="row" id="rowTime">11:30&#8202;AM&nbsp;&ndash;&nbsp;3:00&#8202;PM</div>
-      <div class="row" id="rowDivider">
-        <svg width="380" height="34" viewBox="0 0 380 34" fill="none">
-          <line x1="10" y1="17" x2="150" y2="17" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
-          <line x1="230" y1="17" x2="370" y2="17" stroke="rgba(255,255,255,0.42)" stroke-width="1.4"/>
-          <g stroke="#dff0ff" stroke-width="1.7" stroke-linecap="round" opacity="0.95">
-            <line x1="190" y1="4" x2="190" y2="30"/>
-            <line x1="177" y1="10.5" x2="203" y2="23.5"/>
-            <line x1="177" y1="23.5" x2="203" y2="10.5"/>
-            <line x1="190" y1="9"  x2="185" y2="6"/><line x1="190" y1="9"  x2="195" y2="6"/>
-            <line x1="190" y1="25" x2="185" y2="28"/><line x1="190" y1="25" x2="195" y2="28"/>
-          </g>
-        </svg>
+      <div class="row" id="rowKicker">JOIN&nbsp;US&nbsp;FOR&nbsp;A&nbsp;FROZEN&nbsp;CELEBRATION</div>
+      <div class="row" id="rowDay">FRIDAY</div>
+      <div class="row datelock" id="rowDate">
+        <span class="dl-side">SEP</span>
+        <span class="dl-line"></span>
+        <span class="dl-med">
+          <svg width="118" height="118" viewBox="0 0 118 118" fill="none">
+            <circle cx="59" cy="59" r="44" stroke="rgba(255,255,255,0.55)" stroke-width="1.6"/>
+            <circle cx="59" cy="59" r="38" stroke="rgba(255,255,255,0.16)" stroke-width="1"/>
+            <g fill="#dff0ff" opacity="0.95">
+              <path d="M59 4 L63 12 L59 20 L55 12 Z"/>
+              <path d="M59 114 L63 106 L59 98 L55 106 Z"/>
+              <path d="M4 59 L12 63 L20 59 L12 55 Z"/>
+              <path d="M114 59 L106 63 L98 59 L106 55 Z"/>
+              <path d="M20.1 20.1 L28.6 22.9 L31.4 31.4 L22.9 28.6 Z"/>
+              <path d="M97.9 20.1 L89.4 22.9 L86.6 31.4 L95.1 28.6 Z"/>
+              <path d="M20.1 97.9 L28.6 95.1 L31.4 86.6 L22.9 89.4 Z"/>
+              <path d="M97.9 97.9 L89.4 95.1 L86.6 86.6 L95.1 89.4 Z"/>
+            </g>
+          </svg>
+          <span class="num">4</span>
+        </span>
+        <span class="dl-line"></span>
+        <span class="dl-side">2026</span>
       </div>
+      <div class="row" id="rowTime">11:30&#8202;AM&nbsp;&ndash;&nbsp;3:00&#8202;PM</div>
       <div class="row" id="rowVenueKicker">AT</div>
       <div class="row" id="rowVenue">Rishi Bhawan</div>
     </div>
@@ -623,38 +679,41 @@ function drawLyra(ctx, t) {
    An original ice-queen silhouette on the far ridge — braid, gown, raised
    arm conjuring the gust that reveals the name. Evocative, faceless,
    entirely our own design. */
+const QS = 1.4; /* queen scale — she stands taller in the movie-poster staging */
+const QX = 138, QY = 1688; /* her feet, kept clear of the card's glass corner */
 function queenHand(t) {
   /* arm pose: rest → raised at the conjuring, easing to a graceful hold */
   const up = easeInOut(seg(t, TL.queenRaise, 0.5)) * (1 - 0.42 * easeInOut(seg(t, 3.5, 0.9)));
-  return { up, x: 148 + 22 + up * 14, y: 1672 - 88 - up * 66 };
+  return { up, x: QX + (22 + up * 14) * QS, y: QY - (88 + up * 66) * QS };
 }
 
 function drawQueen(ctx, t) {
   const a = easeInOut(seg(t, 1.5, 0.6));
   if (a <= 0) return;
-  const fx = 148, fy = 1672;
+  const fx = QX, fy = QY;
   const sway = Math.sin(t * 0.7) * 0.012;
   const { up } = queenHand(t);
   ctx.save();
   ctx.translate(fx, fy);
+  ctx.scale(QS, QS);
   ctx.rotate(sway);
   ctx.globalAlpha = a;
 
-  /* cape shimmer trailing left, slow ripple */
+  /* cape shimmer trailing left, slow ripple — pale teal */
   ctx.beginPath();
   ctx.moveTo(-6, -108);
   ctx.bezierCurveTo(-30, -80 + Math.sin(t * 1.1) * 4, -52, -42, -64 + Math.sin(t * 0.9) * 5, -2);
   ctx.lineTo(-30, 0);
   ctx.bezierCurveTo(-20, -40, -12, -72, -8, -100);
   ctx.closePath();
-  ctx.fillStyle = 'rgba(190,220,248,0.28)';
+  ctx.fillStyle = 'rgba(168,218,232,0.32)';
   ctx.fill();
 
-  /* gown — flared silhouette with a small train to the right */
+  /* gown — flared silhouette with a small train, ice-teal */
   const g = ctx.createLinearGradient(0, -150, 0, 0);
-  g.addColorStop(0, 'rgba(232,244,255,0.96)');
-  g.addColorStop(0.55, 'rgba(178,208,240,0.92)');
-  g.addColorStop(1, 'rgba(128,168,214,0.8)');
+  g.addColorStop(0, 'rgba(197,236,232,0.97)');
+  g.addColorStop(0.45, 'rgba(140,203,217,0.95)');
+  g.addColorStop(1, 'rgba(90,153,194,0.9)');
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.moveTo(-36, 0);
@@ -674,24 +733,38 @@ function drawQueen(ctx, t) {
   ctx.bezierCurveTo(-22, -38, -13, -68, -9, -96);
   ctx.stroke();
 
-  /* head + platinum braid over the left shoulder */
-  ctx.fillStyle = 'rgba(230,242,255,0.95)';
+  /* bodice highlight */
+  ctx.fillStyle = 'rgba(224,246,246,0.6)';
+  ctx.beginPath();
+  ctx.moveTo(-8, -98);
+  ctx.bezierCurveTo(-8, -108, 8, -108, 8, -98);
+  ctx.bezierCurveTo(6, -84, -6, -84, -8, -98);
+  ctx.closePath(); ctx.fill();
+
+  /* head — fair skin, soft cheek */
+  ctx.fillStyle = '#f6dcc8';
   ctx.beginPath(); ctx.arc(0, -128, 8.6, 0, 7); ctx.fill();
-  ctx.fillStyle = 'rgba(246,251,255,0.95)';
-  ctx.beginPath(); ctx.arc(0, -132, 8.2, Math.PI * 0.95, Math.PI * 2.05); ctx.fill(); /* hair crown */
-  for (let i = 0; i < 6; i++) { /* braid beads */
+  ctx.fillStyle = 'rgba(240,158,148,0.35)';
+  ctx.beginPath(); ctx.arc(3.4, -125.4, 2.3, 0, 7); ctx.fill();
+  /* golden-platinum hair crown + braid over the left shoulder */
+  ctx.fillStyle = '#f0e2bd';
+  ctx.beginPath(); ctx.arc(0, -132, 8.2, Math.PI * 0.95, Math.PI * 2.05); ctx.fill();
+  for (let i = 0; i < 6; i++) { /* braid beads, subtly shaded */
     const bx = -7 - i * 2.1, by = -124 + i * 7.6;
+    ctx.fillStyle = i % 2 ? '#e6d2a2' : '#eeddb2';
     ctx.beginPath(); ctx.arc(bx, by, 4.4 - i * 0.35, 0, 7); ctx.fill();
   }
 
-  /* conjuring arm (tapered, from right shoulder) */
+  /* conjuring arm — gown sleeve, skin-tone hand */
   const sx = 8, sy = -110;
   const hx = 22 + up * 14, hy = -88 - up * 66;
   const mx = (sx + hx) / 2 + 6 * up, my = (sy + hy) / 2 + 4;
-  ctx.strokeStyle = 'rgba(226,240,254,0.95)';
+  ctx.strokeStyle = 'rgba(186,228,232,0.96)';
   ctx.lineCap = 'round';
   ctx.lineWidth = 4.6;
   ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(mx, my, hx, hy); ctx.stroke();
+  ctx.fillStyle = '#f6dcc8';
+  ctx.beginPath(); ctx.arc(hx, hy, 2.7, 0, 7); ctx.fill();
   /* glint at her hand while conjuring */
   const glint = up * (0.5 + 0.5 * Math.sin(t * 6));
   drawSparkle(ctx, hx, hy - 3, 6, glint * 0.9, t * 1.5);
@@ -799,6 +872,11 @@ function renderBG(t) {
   /* giant watermark flake behind the name, once the main layout is up */
   const wmIn = easeInOut(seg(t, 2.6, 1.4));
   drawFlake(bg, 540, 700, 330, t * 0.05, 0.075 * wmIn, 2);
+  /* bold edge flakes, movie-poster style */
+  const efIn = easeInOut(seg(t, 0.4, 1.2));
+  drawFlake(bg, 54, 940, 76, t * 0.03, 0.13 * efIn, 1.6);
+  drawFlake(bg, 1030, 1200, 88, -t * 0.025, 0.12 * efIn, 1.6);
+  drawFlake(bg, 1044, 620, 54, t * 0.04, 0.10 * efIn, 1.4);
   drawGround(bg, t);
   drawSnowLayer(bg, snowFar, t, false);
   drawSnowLayer(bg, snowMid, t, false);
@@ -824,17 +902,21 @@ function waveAngle(t) {
   return -0.55 - lift * 1.5 + osc;
 }
 
+/* deterministic blink gate: eyes shut for ~0.13s on a fixed period */
+const blink = (t, period, off) => ((t + off) % period) > period - 0.13;
+
 function drawSnowman(ctx, t) {
   const p = easeOutCubic(seg(t, TL.chars, 0.9));
   if (p <= 0) return;
-  const x = -100 + 432 * p;              /* stops at x = 332 */
+  const x = 1196 - 346 * p;              /* enters from the right, stops at x = 850 */
   const phase = p * 6.5;                 /* waddle cycles tied to travel */
   const moving = 1 - seg(t, TL.chars + 0.72, 0.25);
   const bob = Math.abs(Math.sin(phase * Math.PI)) * 6 * moving;
   const tilt = Math.sin(phase * 2 * Math.PI) * 0.055 * moving;
-  const y = 1788 - bob;
+  const y = 1830 - bob;
   ctx.save();
   ctx.translate(x, y);
+  ctx.scale(1.3, 1.3);
   ctx.rotate(tilt);
 
   /* soft contact shadow */
@@ -855,6 +937,14 @@ function drawSnowman(ctx, t) {
   ctx.beginPath(); ctx.arc(0, -78, 25, 0, 7); ctx.fill();
   ctx.fillStyle = ballGrad(ctx, 0, -116, 18.5);
   ctx.beginPath(); ctx.arc(0, -116, 18.5, 0, 7); ctx.fill();
+
+  /* amber knit cap with a snowy pom */
+  ctx.fillStyle = '#dfa963';
+  ctx.beginPath(); ctx.arc(0, -124, 16, Math.PI, 0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#e8b86d';
+  ctx.beginPath(); ctx.roundRect(-17, -127, 34, 6, 3); ctx.fill();
+  ctx.fillStyle = '#fdf6ec';
+  ctx.beginPath(); ctx.arc(0, -141, 4.5, 0, 7); ctx.fill();
 
   /* coal buttons */
   ctx.fillStyle = '#31414f';
@@ -884,8 +974,14 @@ function drawSnowman(ctx, t) {
   ctx.strokeStyle = '#31414f';
   ctx.fillStyle = '#31414f';
   if (t < TL.wave + 0.3) {
-    ctx.beginPath(); ctx.arc(-6.5, -120, 2.1, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.arc(6.5, -120, 2.1, 0, 7); ctx.fill();
+    if (blink(t, 3.4, 0.6)) {
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(-8.5, -120); ctx.lineTo(-4.5, -120); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(4.5, -120); ctx.lineTo(8.5, -120); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(-6.5, -120, 2.1, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(6.5, -120, 2.1, 0, 7); ctx.fill();
+    }
   } else {
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(-6.5, -119, 3.2, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
@@ -928,14 +1024,15 @@ function drawSnowman(ctx, t) {
 function drawFox(ctx, t) {
   const p = easeOutCubic(seg(t, TL.chars + 0.18, 0.9));
   if (p <= 0) return;
-  const x = -160 + 388 * p;              /* stops at x = 228 */
+  const x = -160 + 358 * p;              /* stops at x = 198, by the queen */
   const phase = p * 8;
   const moving = 1 - seg(t, TL.chars + 0.88, 0.25);
   const bob = Math.abs(Math.sin(phase * Math.PI)) * 4 * moving;
-  const y = 1792 - bob;
+  const y = 1786 - bob;
   const idle = moving < 0.05 ? Math.sin(t * 1.6) * 1.2 : 0;
   ctx.save();
   ctx.translate(x, y + idle * 0.4);
+  ctx.scale(1.15, 1.15);
 
   ctx.fillStyle = 'rgba(16,44,78,0.25)';
   ctx.beginPath(); ctx.ellipse(2, 2, 30, 6.5, 0, 0, 7); ctx.fill();
@@ -973,6 +1070,9 @@ function drawFox(ctx, t) {
   bg2.addColorStop(1, '#d3e4f5');
   ctx.fillStyle = bg2;
   ctx.beginPath(); ctx.ellipse(0, -21, 25, 13.5, -0.06, 0, 7); ctx.fill();
+  /* warm cream chest */
+  ctx.fillStyle = 'rgba(253,246,236,0.9)';
+  ctx.beginPath(); ctx.ellipse(13, -22, 9, 7.5, 0.25, 0, 7); ctx.fill();
 
   /* head, snout, ears */
   ctx.fillStyle = '#f1f7fe';
@@ -986,7 +1086,7 @@ function drawFox(ctx, t) {
     ctx.translate(ex, -40); ctx.rotate(er);
     ctx.fillStyle = '#e4eefb';
     ctx.beginPath(); ctx.moveTo(-3.6, 2); ctx.lineTo(0, -7.5); ctx.lineTo(3.6, 2); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(242,196,207,0.85)';
+    ctx.fillStyle = 'rgba(242,177,194,0.95)';
     ctx.beginPath(); ctx.moveTo(-1.7, 1); ctx.lineTo(0, -4.5); ctx.lineTo(1.7, 1); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
@@ -995,7 +1095,13 @@ function drawFox(ctx, t) {
   ctx.fillStyle = '#31414f';
   ctx.beginPath(); ctx.arc(33.4, -25.6, 1.5, 0, 7); ctx.fill();
   if (t < TL.wave + 0.3) {
-    ctx.beginPath(); ctx.arc(21, -33, 1.7, 0, 7); ctx.fill();
+    if (blink(t, 4.1, 1.7)) {
+      ctx.strokeStyle = '#31414f';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(19.2, -33); ctx.lineTo(22.8, -33); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(21, -33, 1.7, 0, 7); ctx.fill();
+    }
   } else {
     ctx.strokeStyle = '#31414f';
     ctx.lineWidth = 1.7;
@@ -1024,9 +1130,9 @@ function renderFG(t) {
   const tiP = seg(t, TL.tiara, 0.7);
   if (tiP > 0) {
     const sc = easeOutBack(tiP);
-    drawFlake(fg, 540, 428, 58 * sc, t * 0.18, 0.95 * clamp01(tiP * 2), 2);
-    drawFlake(fg, 388, 448, 22 * sc, -t * 0.3, 0.55 * clamp01(tiP * 2), 1.3);
-    drawFlake(fg, 692, 448, 22 * sc, t * 0.3, 0.55 * clamp01(tiP * 2), 1.3);
+    drawFlake(fg, 540, 424, 56 * sc, t * 0.18, 0.95 * clamp01(tiP * 2), 2);
+    drawFlake(fg, 390, 446, 21 * sc, -t * 0.3, 0.55 * clamp01(tiP * 2), 1.3);
+    drawFlake(fg, 690, 446, 21 * sc, t * 0.3, 0.55 * clamp01(tiP * 2), 1.3);
   }
 
   /* gust wipe */
@@ -1128,7 +1234,7 @@ const els = {
   introL1: $('introL1'), introL2: $('introL2'),
   name: $('name'), letters: Array.from($('name').children),
   turns: $('turns'), card: $('card'),
-  rows: ['rowKicker', 'rowDate', 'rowTime', 'rowDivider', 'rowVenueKicker', 'rowVenue'].map($),
+  rows: ['rowKicker', 'rowDay', 'rowDate', 'rowTime', 'rowVenueKicker', 'rowVenue'].map($),
   closing: $('closing'),
 };
 
