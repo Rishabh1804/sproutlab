@@ -3,7 +3,7 @@
 A 10-second frozen-theme invite for Ziva's first birthday, built as a keepsake
 alongside [`meridian/birth-sky.html`](../birth-sky.html).
 
-**The details on the card:** Friday, 4 September 2026 · 11:30 AM – 3:00 PM ·
+**The details on the card:** Friday, 4 September 2026 · 11:30 AM onwards ·
 Rishi Bhawan.
 
 **The hidden thread:** the constellation twinkling in the upper-right sky is
