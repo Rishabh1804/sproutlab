@@ -62,10 +62,11 @@ Cormorant Garamond, Great Vibes, Montserrat (embedded as data URIs).
 
 **Cartoon round (council-shaped, reference-calibrated).** The cartoon energy
 lives in *motion and performers*, not in the art style: single-overshoot
-entrances, confined star-pops, and three original characters — a coloured
-ice queen (golden-platinum braid, fair skin, teal ice-gown; faceless at
-distance, deliberately not any studio's character design), a classic
-carrot-nose snowman in a sage scarf and amber knit cap, and an arctic fox.
+entrances, confined star-pops, and three original characters — a storybook
+ice queen (golden side-braid, fair skin, silver tiara, rich teal gown,
+house-idiom face — per the Censor's ruling she stays golden-haired, teal,
+motif-free, deliberately not any studio's character design), a classic
+carrot-nose snowman in a sage scarf and amber knit cap, and a red fox.
 A family-provided reference e-card informed the *composition only* (big
 flanking characters, the snowflake date-medallion, "Join us for a Frozen
 celebration" wording, ornate double card frame). No Disney assets or
