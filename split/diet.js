@@ -6484,12 +6484,15 @@ function renderDomainHero(domainKey) {
     if (c.isTrend) return; // Trends line not shown in overview pills
     const barClass = c.score >= 70 ? 'dcb-high' : c.score >= 40 ? 'dcb-mid' : 'dcb-low';
     const pillClass = c.score >= 70 ? 'dcp-high' : c.score >= 40 ? 'dcp-mid' : 'dcp-low';
-    const shortDetail = c.detail && c.detail.length > 28 ? c.detail.substring(0, 26) + '…' : (c.detail || '');
+    // HR-5 — show the detail IN FULL and let it wrap (no '…' truncation); the
+    // .dcp-detail rule wraps, and the components grid reflows to 1 column at
+    // large zoom so longer detail text never clips.
+    const detail = c.detail || '';
     html += `<div class="dsh-comp-pill ${pillClass}" data-action="openScorePopup" data-arg="${domainKey}">
       <div class="dcp-bar ${barClass}">${c.score}</div>
       <div class="dcp-text">
         <div class="dcp-name">${c.name} <span class="dcp-weight">${c.weight}</span></div>
-        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(shortDetail)}</div>
+        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(detail)}</div>
       </div>
     </div>`;
   });

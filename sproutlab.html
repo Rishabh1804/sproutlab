@@ -6426,6 +6426,38 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .dsh-medical .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(242,168,184,0.10)); border-color:rgba(242,168,184,0.3); }
 .dsh-milestones .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(201,184,232,0.10)); border-color:rgba(201,184,232,0.3); }
 
+/* ═══════════════════════════════════════════════════════════════
+   Hero polish (Surface Catalog, design floor §Tint System).
+   The Home Ziva-Score hero (.ziva-score-hero) carries NO card-hero shell, so
+   it was flat — give it the signature rainbow FADE (rose→peach→sage→lavender,
+   §Tint "home rainbow"), as a directional fade over --card-bg (not a flat
+   fill), hue-swapped deep in dark (Law 1). The per-tab domain heroes already
+   carry their .card.card-hero.hero-{domain} gradient + ::before stripe, so
+   they are NOT re-washed here (a second wash would muddy — §Tint Law 2).
+   ═══════════════════════════════════════════════════════════════ */
+.ziva-score-hero {
+  border-bottom:none;
+  border-radius:var(--r-xl);
+  padding:var(--sp-12) var(--sp-14);
+  background-color:var(--card-bg);
+  background-image:linear-gradient(135deg, rgba(242,168,184,0.12), rgba(250,212,180,0.08) 35%, rgba(181,213,197,0.08) 65%, rgba(201,184,232,0.14));
+  background-repeat:no-repeat;
+}
+[data-theme="dark"] .ziva-score-hero {
+  background-color:var(--surface);
+  background-image:linear-gradient(135deg, rgba(158,62,82,0.20), rgba(138,101,32,0.10) 35%, rgba(58,112,96,0.10) 65%, rgba(110,94,154,0.20));
+}
+
+/* Text in full + reflow at medium/large zoom (HR-5/HR-11 — no truncation,
+   wraps; the rigid grids relax so longer detail/label text never clips). */
+.dsh-domain-name, .dsh-domain-sublabel, .dcp-name, .dcp-detail, .zsd-label, .zsd-score { overflow-wrap:break-word; }
+.dsh-components { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+:root[data-zoom="high"] .dsh-components { grid-template-columns:1fr; }
+:root[data-zoom="med"]  .zs-domains,
+:root[data-zoom="high"] .zs-domains { grid-template-columns:repeat(4, 1fr); }
+:root[data-zoom="med"]  .zs-domain-pill,
+:root[data-zoom="high"] .zs-domain-pill { grid-column:span 2 !important; }
+
 /* ── Domain-tinted card backgrounds per track tab ── */
 #tab-diet .card { background:linear-gradient(135deg, var(--warm), rgba(181,213,197,0.10)); }
 #tab-sleep .card { background:linear-gradient(135deg, var(--warm), rgba(155,168,216,0.10)); }
@@ -47100,12 +47132,15 @@ function renderDomainHero(domainKey) {
     if (c.isTrend) return; // Trends line not shown in overview pills
     const barClass = c.score >= 70 ? 'dcb-high' : c.score >= 40 ? 'dcb-mid' : 'dcb-low';
     const pillClass = c.score >= 70 ? 'dcp-high' : c.score >= 40 ? 'dcp-mid' : 'dcp-low';
-    const shortDetail = c.detail && c.detail.length > 28 ? c.detail.substring(0, 26) + '…' : (c.detail || '');
+    // HR-5 — show the detail IN FULL and let it wrap (no '…' truncation); the
+    // .dcp-detail rule wraps, and the components grid reflows to 1 column at
+    // large zoom so longer detail text never clips.
+    const detail = c.detail || '';
     html += `<div class="dsh-comp-pill ${pillClass}" data-action="openScorePopup" data-arg="${domainKey}">
       <div class="dcp-bar ${barClass}">${c.score}</div>
       <div class="dcp-text">
         <div class="dcp-name">${c.name} <span class="dcp-weight">${c.weight}</span></div>
-        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(shortDetail)}</div>
+        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(detail)}</div>
       </div>
     </div>`;
   });

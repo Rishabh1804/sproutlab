@@ -189,6 +189,11 @@ node build-doc-views.mjs >&2
 # Icon reference: a visual gallery of every zi-/zif- symbol in the sprite, auto-generated from
 # template.html so the icon count/list can never drift from the actual sprite.
 node build-icon-reference.mjs >&2
+# Surface Catalog: the living visual contract — every canonical surface type
+# rendered with the live styles.css tokens + sprite, light + dark + zoom. Both
+# documentation and the design surface (add a surface's exemplar to the
+# generator, review rendered, sign off, THEN wire it). Rebuilt each build.
+node build-surface-catalog.mjs >&2
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">
