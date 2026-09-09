@@ -66294,6 +66294,9 @@ try { _feverEpisodes = JSON.parse(localStorage.getItem(KEYS.feverEpisodes)) || [
 if (!Array.isArray(_feverEpisodes)) _feverEpisodes = [];
 
 let _feverCountdownInterval = null;
+// Readings timeline expand/collapse state for the active-episode card.
+// Render-only; not persisted. Reset when an episode resolves.
+let _feShowAllReadings = false;
 
 function getActiveFeverEpisode() {
   return _feverEpisodes.find(e => e.status === 'active') || null;
@@ -66390,6 +66393,7 @@ function resolveFeverEpisode(notes) {
   ep.resolvedNotes = notes || '';
   save(KEYS.feverEpisodes, _feverEpisodes);
   _stopFeverCountdown();
+  _feShowAllReadings = false;
   renderFeverEpisodeCard();
   renderFeverHistory();
   renderHomeFeverBanner();
@@ -66564,22 +66568,30 @@ function renderFeverEpisodeCard() {
   // Readings timeline
   html += '<div class="fe-section-title">Readings</div>';
   const showReadings = ep.readings.slice().reverse();
-  const maxShow = 5;
+  const collapsedMax = 5;
+  const hasMore = showReadings.length > collapsedMax;
+  // Normalize: once the list shrinks to the cap (readings deleted), drop the
+  // expanded state so regrowth past the cap opens collapsed, not expanded.
+  if (!hasMore) _feShowAllReadings = false;
+  const maxShow = _feShowAllReadings ? showReadings.length : collapsedMax;
+  const visibleCount = Math.min(showReadings.length, maxShow);
   html += '<div class="fe-timeline">';
   showReadings.slice(0, maxShow).forEach((r, i) => {
     const rs = getFeverSeverity(r.temp);
     const origIdx = ep.readings.length - 1 - i;
     html += '<div class="fe-tl-entry ep-entry-tap" data-action="feEditReading" data-arg="' + origIdx + '">';
     html += '<div class="fe-tl-dot" style="background:' + rs.color + ';"></div>';
-    if (i < Math.min(showReadings.length, maxShow) - 1) html += '<div class="fe-tl-line"></div>';
+    if (i < visibleCount - 1) html += '<div class="fe-tl-line"></div>';
     html += '<div class="fe-tl-time">' + _feverTimeShort(r.time) + '</div>';
     html += '<div class="fe-tl-temp" style="color:' + rs.color + ';">' + r.temp.toFixed(1) + '°F</div>';
     if (r.notes) html += '<div class="fe-tl-notes">' + escHtml(r.notes) + '</div>';
     html += '</div>';
   });
   html += '</div>';
-  if (showReadings.length > maxShow) {
-    html += '<div class="fe-more-toggle" data-action="feToggleAllReadings">Show ' + (showReadings.length - maxShow) + ' earlier ' + zi('chevron-down') + '</div>';
+  if (hasMore) {
+    html += _feShowAllReadings
+      ? '<div class="fe-more-toggle" data-action="feToggleAllReadings">Show fewer ' + zi('chevron-up') + '</div>'
+      : '<div class="fe-more-toggle" data-action="feToggleAllReadings">Show ' + (showReadings.length - collapsedMax) + ' earlier ' + zi('chevron-down') + '</div>';
   }
 
   // Medicine section
@@ -66844,8 +66856,9 @@ function feResolvePrompt() {
 }
 
 function feToggleAllReadings() {
-  // Re-render with all readings shown — toggle via a flag
-  // Simple approach: just re-render the card (readings are already in the data)
+  // Flip the expand/collapse flag, then re-render — the readings timeline
+  // reads _feShowAllReadings to decide between the 5-reading cap and all.
+  _feShowAllReadings = !_feShowAllReadings;
   renderFeverEpisodeCard();
 }
 
