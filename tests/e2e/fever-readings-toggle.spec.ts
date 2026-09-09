@@ -54,6 +54,8 @@ test('fever card: "Show N earlier" expands to all readings, then collapses again
   await expect(toggle).toContainText('Show fewer');
   // Oldest reading is now visible at the bottom of the timeline.
   await expect(entries.last().locator('.fe-tl-temp')).toHaveText('100.7°F');
+  // origIdx contract under expansion: the last (oldest) entry edits readings[0].
+  await expect(entries.last()).toHaveAttribute('data-arg', '0');
   // No dangling connector line after the final entry.
   await expect(entries.last().locator('.fe-tl-line')).toHaveCount(0);
 
@@ -73,6 +75,9 @@ test('fever card: no toggle rendered when 5 or fewer readings, even if flag is s
   const card = page.locator('#feverEpisodeCard');
   await expect(card.locator('.fe-tl-entry')).toHaveCount(4);
   await expect(card.locator('.fe-more-toggle')).toHaveCount(0);
+  // Render normalizes the stale flag, so regrowth past the cap opens collapsed.
+  const flag = await page.evaluate(() => _feShowAllReadings);
+  expect(flag).toBe(false);
 });
 
 test('fever card: resolving the episode resets the expand flag', async ({ page }) => {

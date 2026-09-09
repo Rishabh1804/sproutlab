@@ -281,9 +281,10 @@ function renderFeverEpisodeCard() {
   const showReadings = ep.readings.slice().reverse();
   const collapsedMax = 5;
   const hasMore = showReadings.length > collapsedMax;
-  // Expanded state only matters while there is something to expand; a
-  // stale flag on a short list is harmless (no toggle rendered).
-  const maxShow = (hasMore && _feShowAllReadings) ? showReadings.length : collapsedMax;
+  // Normalize: once the list shrinks to the cap (readings deleted), drop the
+  // expanded state so regrowth past the cap opens collapsed, not expanded.
+  if (!hasMore) _feShowAllReadings = false;
+  const maxShow = _feShowAllReadings ? showReadings.length : collapsedMax;
   const visibleCount = Math.min(showReadings.length, maxShow);
   html += '<div class="fe-timeline">';
   showReadings.slice(0, maxShow).forEach((r, i) => {
