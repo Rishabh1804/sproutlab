@@ -189,6 +189,15 @@ node build-doc-views.mjs >&2
 # Icon reference: a visual gallery of every zi-/zif- symbol in the sprite, auto-generated from
 # template.html so the icon count/list can never drift from the actual sprite.
 node build-icon-reference.mjs >&2
+# PWA installability (2026-09-18): Chrome offers "Install app" only when the page
+# links a manifest; iOS reads the apple-* tags for Add to Home Screen. These tags
+# were carried by the retired beta/ pages and never made it into this heredoc, so
+# the root index.html was non-installable from 2026-04-09 until this fix.
+# theme-color ships the light paper token; core.js toggleDarkMode / initDarkMode
+# rewrite it at runtime (#1a1a2e dark / #fdf0f3 light). Regression guard:
+# tests/e2e/pwa-head.spec.ts. NOTE (Cipher, Edict V): this <head> lives outside
+# every Governor jurisdiction — logged in docs/BUGS.md as a candidate move into
+# template.html.
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">
@@ -196,6 +205,14 @@ cat <<'HEAD'
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Ziva's Dashboard</title>
+  <!-- PWA install contract — regression guard: tests/e2e/pwa-head.spec.ts -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#fdf0f3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Ziva's Dashboard">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
 HEAD
 cat styles.css
