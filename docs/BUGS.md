@@ -96,8 +96,6 @@
 
 ---
 
----
-
 ## Fixed Bugs (Polish Sub-phase, Phase 4)
 
 ### Bridge Build — Symptom Checker (2026-05-13) — PR-bridge
