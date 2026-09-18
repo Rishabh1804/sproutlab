@@ -20,6 +20,7 @@ test('index.html head links the manifest and carries the PWA meta tags', async (
   expect(head).toMatch(/<meta name="theme-color" content="#fdf0f3">/);
   expect(head).toMatch(/<meta name="mobile-web-app-capable" content="yes">/);
   expect(head).toMatch(/<meta name="apple-mobile-web-app-capable" content="yes">/);
+  expect(head).toMatch(/<meta name="apple-mobile-web-app-status-bar-style" content="default">/);
   expect(head).toMatch(/<meta name="apple-mobile-web-app-title" content="Ziva's Dashboard">/);
   expect(head).toMatch(/<link rel="apple-touch-icon" href="apple-touch-icon\.png">/);
 });
@@ -44,7 +45,7 @@ test('theme-color meta is live: toggling dark mode rewrites it', async ({ page }
   const meta = page.locator('meta[name="theme-color"]');
   await expect(meta).toHaveCount(1);
   const before = await meta.getAttribute('content');
-  await page.evaluate(() => { toggleDarkMode(); });
+  await page.evaluate(() => { (window as any).toggleDarkMode(); });
   const after = await meta.getAttribute('content');
   expect(after).not.toBe(before);
   expect(['#1a1a2e', '#fdf0f3']).toContain(after);

@@ -1,6 +1,6 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-09-09 (illness-episode sync-receive gap logged from PR #263 chain)
+**Last updated:** 2026-09-18 (build.sh head-heredoc jurisdiction gap logged from PR #264 chain)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
@@ -87,6 +87,14 @@
 - **Symptom:** `bash build.sh > sproutlab.html 2>&1` merges stderr into the HTML output. `bump-version.mjs` intentionally uses `console.error()` so its log stays off stdout; `2>&1` injects `[bump-version] X → Y` as line 1 of the document.
 - **Status:** Triggered in Polish-11 session; fix landed (PR-41). Document here as a standing operational rule.
 - **Rule:** Always build as `bash build.sh > sproutlab.html` (stderr separate). Never append `2>&1`.
+
+#### P2 — Built `<head>` is authored in a bash heredoc outside every Governor jurisdiction
+- **Symptom:** `split/build.sh` emits the `<head>` (meta, title, PWA tags, CDN scripts) from a heredoc. No Governor audits `build.sh` (Public Works) and it is not on the quad-Gov shared-file trigger, so head regressions go unreviewed — this is how the manifest link and PWA meta tags were missing for five months (PR #264).
+- **Fix shape:** Move the head markup into `template.html` (shared module, quad-Gov review) and have `build.sh` splice it, or add `build.sh`'s head heredoc to the shared-file trigger. Regression guard already in place: `tests/e2e/pwa-head.spec.ts`.
+- **Origin:** Cipher Edict V ruling 3 on PR #264 (2026-09-18).
+- **File:** `split/build.sh` `cat <<'HEAD'` block
+
+---
 
 ---
 
