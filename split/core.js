@@ -577,6 +577,7 @@ function init() {
     else if (action === 'toggleVisitFormShow') toggleVisitForm(true);
     else if (action === 'toggleVisitFormHide') toggleVisitForm(false);
     else if (action === 'syncReload' && typeof syncReload === 'function') syncReload();
+    else if (action === 'syncRetryPush' && typeof syncRetryPush === 'function') syncRetryPush();
     else if (action === 'dismissWelcomeGuide') dismissWelcomeGuide();
     else if (action === 'toggleHomeVitals') toggleHomeVitals();
     else if (action === 'openScorePopupStop') { e.stopPropagation(); openScorePopup(arg); }
@@ -4969,14 +4970,19 @@ function restoreAutosave(slotIdx) {
   try {
     const data = JSON.parse(raw);
     const dateLabel = data._autosaveDate ? formatSavedTime(data._autosaveDate) : 'unknown';
-    confirmAction(`Restore from autosave ${slotIdx + 1}?\n\nSnapshot from: ${dateLabel}\n\nThis will replace all current data. A backup will be downloaded first.`, () => {
+    confirmAction(`Restore from autosave ${slotIdx + 1}?\n\nSnapshot from: ${dateLabel}\n\nThis replaces the data on this phone and, once it syncs, updates your household's copy too. Newer entries from other phones are merged back in, but edits made after this snapshot may be undone. A backup will be downloaded first.`, () => {
       exportData(); // Safety backup before restore
       setTimeout(() => {
+        const restored = [];
         Object.entries(data).forEach(([k, v]) => {
           if (k.startsWith('ziva_')) {
             localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+            restored.push(k);
           }
         });
+        // A restored snapshot is the parent's chosen truth: mark it unsynced so the
+        // reload pushes it to the cloud before listeners can overwrite it (PR #265).
+        if (typeof syncMarkUnsynced === 'function') syncMarkUnsynced(restored);
         location.reload();
       }, 500);
     }, 'Restore');
@@ -5048,12 +5054,18 @@ function importData(event) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      confirmAction(`Import backup from ${data._exportDate ? formatDate(data._exportDate.split('T')[0]) : 'unknown date'}? This will replace all current data.`, () => {
+      confirmAction(`Import backup from ${data._exportDate ? formatDate(data._exportDate.split('T')[0]) : 'unknown date'}?\n\nThis replaces the data on this phone and, once it syncs, updates your household's copy too. Newer entries from other phones are merged back in, but edits made after this backup may be undone. A backup of the current data will be downloaded first.`, () => {
+        exportData(); // Safety backup before import (Maren F4), as restoreAutosave does
+        const imported = [];
         Object.entries(data).forEach(([k, v]) => {
           if (k.startsWith('ziva_')) {
             localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+            imported.push(k);
           }
         });
+        // Imported data is the parent's chosen truth: mark it unsynced so the reload
+        // pushes it to the cloud before listeners can overwrite it (PR #265).
+        if (typeof syncMarkUnsynced === 'function') syncMarkUnsynced(imported);
         location.reload();
       }, 'Import');
     } catch (err) {
