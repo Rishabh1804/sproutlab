@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Ziva's Dashboard</title>
+  <!-- PWA installability (2026-09-18): Chrome offers "Install app" only when the
+       page links a manifest; iOS reads the apple-* tags for Add to Home Screen.
+       These were carried by the retired beta/ pages and never made it into the
+       split-file head — regression guard: tests/e2e/pwa-head.spec.ts. The
+       theme-color value is the light-theme paper token; core.js toggleDarkMode
+       rewrites it at runtime (#1a1a2e dark / #fdf0f3 light). -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#fdf0f3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Ziva's Dashboard">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
 /* ──────────────────────────────────────────────────────────────────────────
  * Responsive Breakpoint Conventions (Polish-7; canonical 4-value system)
