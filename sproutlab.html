@@ -80509,7 +80509,7 @@ const ALWAYS_POPULATED_KEYS = new Set([
 // listeners attach (_syncFlushDirty) and are never overwritten by a snapshot
 // while dirty. Lives in localStorage — not synced, and it survives sign-out and
 // clearPersistence(), unlike the SDK's own write queue.
-//   sl_sync_dirty      → { [lsKey]: msOfLastLocalWrite }
+//   sl_sync_dirty      → { [lsKey]: { f: firstUnackedWriteMs, l: lastWriteMs, nf: needsFullPush } }
 //   sl_sync_lastPushOk → ms of the last server-acknowledged push
 const SYNC_DIRTY_KEY   = 'sl_sync_dirty';
 const SYNC_LAST_OK_KEY = 'sl_sync_lastPushOk';
@@ -80605,7 +80605,9 @@ function _syncMarkDirtyKeys(keys) {
 // partial (diff-vs-shadow) flush may only clear writes made in THIS session
 // (notBefore = _syncSessionAttachedAt): earlier writes were already folded into
 // the shadow at attach and are only ever pushed in full by _syncFlushDirty.
-function _syncClearDirty(keys, notAfter, notBefore) {
+// `noStamp`: the keys are being dropped without any server contact (nothing to
+// push), so "last synced" must not move.
+function _syncClearDirty(keys, notAfter, notBefore, noStamp) {
   var m = _syncLoadDirty();
   var changed = false;
   (keys || []).forEach(function(k) {
@@ -80625,12 +80627,12 @@ function _syncClearDirty(keys, notAfter, notBefore) {
     // that the key is clean, so this device picks up the merged cloud copy (Kael F6).
     setTimeout(_syncReplaySkipped, 0);
   }
-  try { localStorage.setItem(SYNC_LAST_OK_KEY, String(Date.now())); } catch(e) {}
+  if (!noStamp) { try { localStorage.setItem(SYNC_LAST_OK_KEY, String(Date.now())); } catch(e) {} }
   if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
 function syncUnsyncedInfo() {
   var m = _syncLoadDirty();
-  var keys = Object.keys(m);
+  var keys = Object.keys(m).filter(function(k) { return !!SYNC_KEYS[k]; });   // a key retired from SYNC_KEYS must not pin 'stale' forever
   var oldest = null;
   keys.forEach(function(k) { var e = _syncLedgerEntry(m[k]); if (e && (oldest === null || e.f < oldest)) oldest = e.f; });
   var last = parseInt(localStorage.getItem(SYNC_LAST_OK_KEY) || '', 10);
@@ -81828,7 +81830,7 @@ function _syncFlushDirty(hRef) {
     if (!singlesByCol[cfg.collection]) singlesByCol[cfg.collection] = {};
     singlesByCol[cfg.collection][key] = val;
   });
-  if (settled.length > 0) _syncClearDirty(settled, startedAt);
+  if (settled.length > 0) _syncClearDirty(settled, startedAt, 0, true);
 
   var cols = Object.keys(singlesByCol);
   return Promise.all(cols.map(function(col) { return hRef.collection('singles').doc(col).get(); }))
@@ -83045,7 +83047,7 @@ function _syncUpdateOfflineBadge(snap) {
   }
 }
 
-// "3 changes on this phone haven't reached the cloud since 12 Mar." (PR #265)
+// "Entries on this phone haven't reached the cloud since 12 Mar — they're safe here." (PR #265)
 // The ledger counts KEYS (areas), not entries, so no number is shown: "3 changes"
 // would understate six months of feeds (Maren F2 / Vela F3). The reassurance is
 // part of the sentence, not only of the failure toast (Maren F5).
