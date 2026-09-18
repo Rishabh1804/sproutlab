@@ -11122,6 +11122,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   margin-left:auto;
 }
 .sync-status-connected { background:var(--sage-light); color:var(--tc-sage); }
+.sync-status-unsynced  { background:var(--amber-light); color:var(--tc-amber); }  /* ledger has unacknowledged writes (PR #265) */
 .sync-modal-overlay {
   position:fixed; inset:0; z-index:9999;
   background:var(--overlay-bg);
@@ -11221,6 +11222,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .sync-indicator[data-state="syncing"]    { color: var(--tc-amber); }
 .sync-indicator[data-state="offline"]    { color: var(--tc-danger); }
 .sync-indicator[data-state="halted"]     { color: var(--tc-danger); cursor: pointer; }
+.sync-indicator[data-state="stale"]      { color: var(--tc-amber); cursor: pointer; }  /* unsynced local writes (PR #265) */
 .sync-indicator[data-state="connecting"] .sync-indicator__dot,
 .sync-indicator[data-state="syncing"]    .sync-indicator__dot {
   animation: sync-indicator-pulse 1.4s ease-in-out infinite;
@@ -11293,6 +11295,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   outline-offset: 2px;
 }
 [data-theme="dark"] .offline-badge { background: rgba(224, 112, 112, 0.08); }
+/* stale = caution, not danger (PR #265): unacknowledged local writes; the entries
+   are safe on the phone, so the banner must not paint the danger family under an
+   amber pill. Reload/offline/halted keep rose. */
+.offline-badge[data-state="stale"] { border-left-color: var(--tc-amber); background: var(--amber-light); }
+.offline-badge[data-state="stale"] .offline-badge__icon { color: var(--tc-amber); }
+.offline-badge[data-state="stale"] .offline-badge__action { border-color: var(--tc-amber); color: var(--tc-amber); }
+.offline-badge[data-state="stale"] .offline-badge__action:hover,
+.offline-badge[data-state="stale"] .offline-badge__action:focus-visible { background: var(--tc-amber); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    v3-6 — Card-priority registry (single source of truth, card tier).
@@ -22604,6 +22614,7 @@ function init() {
     else if (action === 'toggleVisitFormShow') toggleVisitForm(true);
     else if (action === 'toggleVisitFormHide') toggleVisitForm(false);
     else if (action === 'syncReload' && typeof syncReload === 'function') syncReload();
+    else if (action === 'syncRetryPush' && typeof syncRetryPush === 'function') syncRetryPush();
     else if (action === 'dismissWelcomeGuide') dismissWelcomeGuide();
     else if (action === 'toggleHomeVitals') toggleHomeVitals();
     else if (action === 'openScorePopupStop') { e.stopPropagation(); openScorePopup(arg); }
@@ -26996,14 +27007,19 @@ function restoreAutosave(slotIdx) {
   try {
     const data = JSON.parse(raw);
     const dateLabel = data._autosaveDate ? formatSavedTime(data._autosaveDate) : 'unknown';
-    confirmAction(`Restore from autosave ${slotIdx + 1}?\n\nSnapshot from: ${dateLabel}\n\nThis will replace all current data. A backup will be downloaded first.`, () => {
+    confirmAction(`Restore from autosave ${slotIdx + 1}?\n\nSnapshot from: ${dateLabel}\n\nThis replaces the data on this phone and, once it syncs, updates your household's copy too. Newer entries from other phones are merged back in, but edits made after this snapshot may be undone. A backup will be downloaded first.`, () => {
       exportData(); // Safety backup before restore
       setTimeout(() => {
+        const restored = [];
         Object.entries(data).forEach(([k, v]) => {
           if (k.startsWith('ziva_')) {
             localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+            restored.push(k);
           }
         });
+        // A restored snapshot is the parent's chosen truth: mark it unsynced so the
+        // reload pushes it to the cloud before listeners can overwrite it (PR #265).
+        if (typeof _syncMarkDirtyKeys === 'function') _syncMarkDirtyKeys(restored);
         location.reload();
       }, 500);
     }, 'Restore');
@@ -27075,12 +27091,18 @@ function importData(event) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      confirmAction(`Import backup from ${data._exportDate ? formatDate(data._exportDate.split('T')[0]) : 'unknown date'}? This will replace all current data.`, () => {
+      confirmAction(`Import backup from ${data._exportDate ? formatDate(data._exportDate.split('T')[0]) : 'unknown date'}?\n\nThis replaces the data on this phone and, once it syncs, updates your household's copy too. Newer entries from other phones are merged back in, but edits made after this backup may be undone. A backup of the current data will be downloaded first.`, () => {
+        exportData(); // Safety backup before import (Maren F4), as restoreAutosave does
+        const imported = [];
         Object.entries(data).forEach(([k, v]) => {
           if (k.startsWith('ziva_')) {
             localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+            imported.push(k);
           }
         });
+        // Imported data is the parent's chosen truth: mark it unsynced so the reload
+        // pushes it to the cloud before listeners can overwrite it (PR #265).
+        if (typeof _syncMarkDirtyKeys === 'function') _syncMarkDirtyKeys(imported);
         location.reload();
       }, 'Import');
     } catch (err) {
@@ -80478,6 +80500,143 @@ const ALWAYS_POPULATED_KEYS = new Set([
   KEYS.meds
 ]);
 
+// ─── Unsynced-write ledger (PR #265, 2026-09-18) ───
+// Root cause of the September data loss: writes made while the cloud was not
+// acknowledging (breaker tripped, listeners never firing, writes rejected) were
+// never pushed again, and the next listener attach applied the stale cloud copy
+// over the newer local copy. Every local write to a synced key is recorded here
+// until the SERVER acknowledges a push. Dirty keys are pushed in full before
+// listeners attach (_syncFlushDirty) and are never overwritten by a snapshot
+// while dirty. Lives in localStorage — not synced, and it survives sign-out and
+// clearPersistence(), unlike the SDK's own write queue.
+//   sl_sync_dirty      → { [lsKey]: msOfLastLocalWrite }
+//   sl_sync_lastPushOk → ms of the last server-acknowledged push
+const SYNC_DIRTY_KEY   = 'sl_sync_dirty';
+const SYNC_LAST_OK_KEY = 'sl_sync_lastPushOk';
+const SYNC_STALE_MS    = 6 * 60 * 60 * 1000;   // unacknowledged for 6h → 'stale' state
+var _syncSessionAttachedAt = 0;               // ms when this session's listeners attached
+var _syncSkippedSnapshots = {};               // docName | 'pe:'+collection → { gen, doc | snapshot } skipped by the [L] guard
+function _syncReplaySkipped() {
+  var keys = Object.keys(_syncSkippedSnapshots);
+  keys.forEach(function(k) {
+    var c = _syncSkippedSnapshots[k];
+    delete _syncSkippedSnapshots[k];
+    if (!c || _syncDisabled || (typeof _syncListenerGen !== 'undefined' && c.gen !== _syncListenerGen)) return;
+    try {
+      if (c.doc) _syncHandleSingleDocSnapshot(k, c.doc);
+      else if (c.snapshot) _syncHandlePerEntrySnapshot(k.slice(3), c.snapshot);
+    } catch(e) { console.warn('[sync] replay of skipped snapshot ' + k + ' failed:', e); }
+  });
+}
+
+function _syncLoadDirty() {
+  try {
+    var m = JSON.parse(localStorage.getItem(SYNC_DIRTY_KEY) || '{}');
+    return (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
+  } catch(e) { return {}; }
+}
+function _syncSaveDirty(m) {
+  try {
+    if (Object.keys(m).length === 0) localStorage.removeItem(SYNC_DIRTY_KEY);
+    else localStorage.setItem(SYNC_DIRTY_KEY, JSON.stringify(m));
+  } catch(e) { /* storage full — the write itself already landed locally */ }
+}
+function _syncIsDirty(key) { return _syncLoadDirty()[key] !== undefined; }
+// Ledger entry shape: { f: firstUnackedWriteMs, l: lastWriteMs, nf: needsFullPush }.
+// Legacy plain-number entries (first ship) read as f = l = n.
+function _syncLedgerEntry(v) {
+  if (typeof v === 'number') return { f: v, l: v, nf: false };
+  if (v && typeof v === 'object') {
+    var f = typeof v.f === 'number' ? v.f : (typeof v.l === 'number' ? v.l : 0);
+    var l = typeof v.l === 'number' ? v.l : f;
+    return { f: f, l: l, nf: !!v.nf };
+  }
+  return null;
+}
+// A push that failed (rejected set/update/batch) leaves the key needing a FULL
+// push: a later partial (diff-vs-shadow) flush cannot carry the failed content,
+// so only _syncFlushDirty may clear it (Kael V-K F2).
+function _syncMarkNeedsFull(key) {
+  var m = _syncLoadDirty();
+  var e = _syncLedgerEntry(m[key]);
+  if (!e) return;
+  e.nf = true;
+  m[key] = e;
+  _syncSaveDirty(m);
+}
+// "Unsynced" is only meaningful for a device that is already attached to the
+// household (sl_sync_seeded === '4'). Before that, local writes are app defaults
+// or pre-join entries, and the existing rules apply: an admin's first sign-in
+// seeds, a joiner takes the household's data. Gating here keeps a fresh install
+// from ever pushing its defaults over the household's arrays.
+function _syncLedgerActive() {
+  try { return localStorage.getItem('sl_sync_seeded') === '4'; } catch(e) { return false; }
+}
+function _syncMarkDirty(key) {
+  if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;
+  var m = _syncLoadDirty();
+  var now = Date.now();
+  var e = _syncLedgerEntry(m[key]) || { f: now, l: now, nf: false };
+  if (!e.f) e.f = now;
+  e.l = now;                      // first write time is kept — a later write never launders earlier dirt (Kael F1)
+  m[key] = e;
+  _syncSaveDirty(m);
+  if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
+}
+// Import / autosave-restore entry point (core.js): the restored keys are the
+// parent's chosen truth and must reach the cloud before any snapshot applies.
+function _syncMarkDirtyKeys(keys) {
+  if (!_syncLedgerActive()) return;
+  var m = _syncLoadDirty();
+  var now = Date.now();
+  var any = false;
+  (keys || []).forEach(function(k) {
+    if (!SYNC_KEYS[k]) return;
+    var e = _syncLedgerEntry(m[k]) || { f: now, l: now, nf: false };
+    if (!e.f) e.f = now;
+    e.l = now;
+    e.nf = true;                  // a restored snapshot must go up in full
+    m[k] = e;
+    any = true;
+  });
+  if (any) _syncSaveDirty(m);
+}
+// Clear ledger entries whose local write is inside [notBefore, notAfter]. A
+// partial (diff-vs-shadow) flush may only clear writes made in THIS session
+// (notBefore = _syncSessionAttachedAt): earlier writes were already folded into
+// the shadow at attach and are only ever pushed in full by _syncFlushDirty.
+function _syncClearDirty(keys, notAfter, notBefore) {
+  var m = _syncLoadDirty();
+  var changed = false;
+  (keys || []).forEach(function(k) {
+    var e = _syncLedgerEntry(m[k]);
+    if (!e) return;
+    if (e.l > notAfter) return;                       // a write landed after this push started
+    if (notBefore) {                                  // partial (session-scoped) clear:
+      if (e.nf) return;                               //   a failed push needs a full push first
+      if (e.f < notBefore) return;                    //   pre-attach dirt is not carried by a diff
+    }
+    delete m[k];
+    changed = true;
+  });
+  if (changed) {
+    _syncSaveDirty(m);
+    // A snapshot skipped by the [L] guard while the key was dirty is replayed now
+    // that the key is clean, so this device picks up the merged cloud copy (Kael F6).
+    setTimeout(_syncReplaySkipped, 0);
+  }
+  try { localStorage.setItem(SYNC_LAST_OK_KEY, String(Date.now())); } catch(e) {}
+  if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
+}
+function syncUnsyncedInfo() {
+  var m = _syncLoadDirty();
+  var keys = Object.keys(m);
+  var oldest = null;
+  keys.forEach(function(k) { var e = _syncLedgerEntry(m[k]); if (e && (oldest === null || e.f < oldest)) oldest = e.f; });
+  var last = parseInt(localStorage.getItem(SYNC_LAST_OK_KEY) || '', 10);
+  return { count: keys.length, since: oldest, lastSyncedAt: isNaN(last) ? null : last };
+}
+
 // ─── SYNC_RENDER_DEPS (Phase 3 PR-9) ───
 // Per-key declaration of (a) the module-global name to rehydrate on listener
 // fire and (b) the active-tab-keyed renderer functions to call after
@@ -80898,7 +81057,8 @@ function syncSignOut() {
     return firebase.auth().signOut();
   }).then(function() {
     // Clear sync state but KEEP user data in localStorage (safe sign-out)
-    // Data stays local; next sign-in will re-seed if needed
+    // Data stays local; next sign-in re-seeds (admin) or takes the household copy (member).
+    // Writes made while signed out are not ledgered (the ledger needs the seeded flag).
     localStorage.removeItem('sl_sync_seeded');
     _syncShadow = {};
     _syncUser = null;
@@ -80910,6 +81070,12 @@ function syncSignOut() {
 }
 
 // ─── Household Lookup ───
+// Role of `uid` in the household currently loaded into _syncHousehold.
+function _syncRoleFor(uid) {
+  return (_syncHousehold && _syncHousehold.members && _syncHousehold.members[uid])
+    ? (_syncHousehold.members[uid].role || 'member') : 'member';
+}
+
 function _syncFindHousehold(uid) {
   var db = firebase.firestore();
   db.collection('households')
@@ -80928,11 +81094,11 @@ function _syncFindHousehold(uid) {
           var _seedVer = localStorage.getItem('sl_sync_seeded');
           if (!_seedVer || _seedVer !== '4') {
             // Only admin seeds — members receive data via listeners
-            var _myRole = (_syncHousehold.members && _syncHousehold.members[user.uid])
-              ? _syncHousehold.members[user.uid].role : 'member';
+            var _myRole = _syncRoleFor(uid);   // was `user.uid` — a ReferenceError that killed attach on every launch (Kael F3)
             if (_myRole === 'admin') {
               _syncSeedFirestore(_syncHouseholdId).then(function() {
                 localStorage.setItem('sl_sync_seeded', '4');
+                _syncSaveDirty({});   // ledger: the seed just pushed every non-empty key
                 try { _syncAttachListeners(_syncHouseholdId); }
                 catch(e) { _syncRecordCrash('attachListeners-post-seed', e); }
               }).catch(function(e) {
@@ -80943,12 +81109,17 @@ function _syncFindHousehold(uid) {
                 }
               });
             } else {
-              // Member: skip seed, just bump version and attach listeners
+              // Member: skip seed, just bump version and attach listeners. First
+              // attach on this device → whatever it wrote before is not household
+              // data (same rule as syncJoinByCode): drop the ledger.
               localStorage.setItem('sl_sync_seeded', '4');
+              _syncSaveDirty({});
               _syncAttachListeners(_syncHouseholdId);
             }
           } else {
-            _syncAttachListeners(_syncHouseholdId);
+            // Already-attached device (PR #265): push anything the cloud never
+            // acknowledged BEFORE listeners can apply a stale cloud copy over it.
+            _syncPushDirtyThenAttach(_syncHouseholdId);
           }
         } catch(e) { _syncRecordCrash('attachListeners', e); }
       } else {
@@ -80992,7 +81163,13 @@ function syncCreateHousehold(babyName, dob) {
     showQLToast('Household created — share the invite code');
     _syncSeedFirestore(_syncHouseholdId).then(function() {
       localStorage.setItem('sl_sync_seeded', '4');
+      _syncSaveDirty({});   // ledger: the seed just pushed every non-empty key
       _syncAttachListeners(_syncHouseholdId);
+    }).catch(function(e) {
+      // Seed failed: the flag stays unset so the next launch re-seeds; attach so
+      // the household is at least readable meanwhile.
+      _syncRecordCrash('seed', e);
+      if (!_syncDisabled) { try { _syncAttachListeners(_syncHouseholdId); } catch(e2) { _syncRecordCrash('attachListeners-after-seed-fail', e2); } }
     });
   }).catch(function(err) {
     console.error('[sync] Create household error:', err);
@@ -81033,8 +81210,11 @@ function syncJoinByCode(code) {
         _syncRenderSettingsUI();
         _syncCloseHouseholdModal();
         showQLToast('Joined household!');
-        // Joining device does NOT seed — data comes from admin's seed via listeners
+        // Joining device does NOT seed — data comes from admin's seed via listeners.
+        // Same rule for the ledger: whatever was written on this device before it
+        // joined must not clobber the household, so drop it before attaching.
         localStorage.setItem('sl_sync_seeded', '4');
+        _syncSaveDirty({});
         _syncAttachListeners(_syncHouseholdId);
       });
     })
@@ -81298,24 +81478,21 @@ function syncWrite(key, val, old) {
     // See docs/handoffs/session-2026-04-17-lyra-c0-deploy.md for the trace.
 
     // Guards
-    if (_syncDisabled) return;                  // Layer 4: auto-disabled after crashes
     if (_remoteWriteDepth > 0) return;          // don't echo back remote writes
     if (!SYNC_KEYS[key]) return;                // local-only key
+    if (_syncSameValue(old, val)) return;       // no-op re-save (render paths re-save on boot) — nothing to sync (Ceres F1)
+    _syncMarkDirty(key);                        // ledger: unsynced until the server acks (PR #265)
+    if (_syncDisabled) return;                  // Layer 4: auto-disabled after crashes
     if (!_syncHouseholdId) return;              // no household
     if (!_syncUser) return;                     // not signed in
 
     // Circuit breaker (§4.7 #48)
     if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) {
       console.warn('[sync] Circuit breaker tripped — ' + _syncWriteCount + ' writes this hour');
+      if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();   // the ledger keeps the write; surface it
       return;
     }
-    _syncWriteCount++;
-    if (!_syncWriteCountReset) {
-      _syncWriteCountReset = setTimeout(function() {
-        _syncWriteCount = 0;
-        _syncWriteCountReset = null;
-      }, 3600000); // 1 hour
-    }
+    _syncCountWrites(1);
 
     var config = SYNC_KEYS[key];
     var db = firebase.firestore();
@@ -81332,6 +81509,27 @@ function syncWrite(key, val, old) {
 }
 
 // ─── Per-Entry Write (immediate) ───
+function _syncSameValue(a, b) {
+  try { return JSON.stringify(a) === JSON.stringify(b); } catch(e) { return false; }
+}
+// Hourly write counter shared by the debounce path and the ledger's full push;
+// arms the reset once and surfaces the breaker trip to the visibility store (Kael F7).
+function _syncCountWrites(n) {
+  _syncWriteCount += (n || 1);
+  if (!_syncWriteCountReset) {
+    _syncWriteCountReset = setTimeout(function() {
+      _syncWriteCount = 0;
+      _syncWriteCountReset = null;
+      if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
+    }, 3600000); // 1 hour
+  }
+  if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT && typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
+}
+function _syncServerTs() {
+  return (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+    ? firebase.firestore.FieldValue.serverTimestamp() : Date.now();
+}
+
 function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
   var diff = _syncDiffArray(oldVal, newVal);
   var colRef = hRef.collection(collection);
@@ -81340,12 +81538,17 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
     __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
+  var startedAt = Date.now();
+  var ops = [];   // raw promises (before .catch) so Promise.all sees real failures
+
   // Added entries
   diff.added.forEach(function(entry) {
     var data = Object.assign({}, entry, syncMeta, {
       __sync_createdBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' }
     });
-    colRef.doc(entry.id).set(data).catch(function(e) {
+    var p = colRef.doc(entry.id).set(data);
+    ops.push(p);
+    p.catch(function(e) {
       console.error('[sync] Add ' + collection + '/' + entry.id + ' failed:', e);
     });
   });
@@ -81353,16 +81556,27 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
   // Edited entries — field-level updates
   diff.edited.forEach(function(change) {
     var payload = Object.assign({}, change.updates, change.deletes, syncMeta);
-    colRef.doc(change.id).update(payload).catch(function(e) {
+    var p = colRef.doc(change.id).update(payload);
+    ops.push(p);
+    p.catch(function(e) {
       console.error('[sync] Update ' + collection + '/' + change.id + ' failed:', e);
     });
   });
 
   // Deleted entries
   diff.deleted.forEach(function(id) {
-    colRef.doc(id).delete().catch(function(e) {
+    var p = colRef.doc(id).delete();
+    ops.push(p);
+    p.catch(function(e) {
       console.error('[sync] Delete ' + collection + '/' + id + ' failed:', e);
     });
+  });
+
+  // Ledger (PR #265): this session's writes to `key` are acknowledged once every op lands.
+  Promise.all(ops).then(function() {
+    _syncClearDirty([key], startedAt, _syncSessionAttachedAt);
+  }).catch(function() {
+    _syncMarkNeedsFull(key);   // logged per-op above; only a full push may clear it now (Kael F2)
   });
 }
 
@@ -81461,6 +81675,7 @@ function _syncFlushSingleDoc(hRef, collection) {
   // Gather all localStorage KEYS that map to this collection
   var keysForCol = _syncCollectionToKeys[collection];
   if (!keysForCol || keysForCol.length === 0) return;
+  var startedAt = Date.now();
 
   // C0 Fix 2: gate on listener-ready — don't push with a blind shadow.
   // If the listener hasn't first-fired for this collection, _syncShadow
@@ -81537,14 +81752,168 @@ function _syncFlushSingleDoc(hRef, collection) {
     promises.push(docRef.update(deletePayload));
   }
 
-  Promise.all(promises).catch(function(e) {
+  Promise.all(promises).then(function() {
+    // Ledger (PR #265): only writes made in THIS session are proven pushed by a
+    // diff-vs-shadow flush; pre-attach writes are cleared solely by _syncFlushDirty.
+    _syncClearDirty(keysForCol, startedAt, _syncSessionAttachedAt);
+  }).catch(function(e) {
     console.error('[sync] Single-doc write ' + collection + ' failed:', e);
+    // The shadow below already absorbed this content, so no later diff will carry
+    // it: flag every key of the collection for a full push (Kael F2).
+    keysForCol.forEach(_syncMarkNeedsFull);
   });
 
   // Update shadow to current
   for (var k = 0; k < keysForCol.length; k++) {
     _syncShadow[keysForCol[k]] = _syncCloneDeep(current[keysForCol[k]]);
   }
+}
+
+// ─── Full push of unsynced keys (PR #265) ───
+// Pushes every dirty key's CURRENT local value, merged against the cloud copy so a
+// recovering phone never erases what the other parent logged meanwhile
+// (Kael F5 / Ceres F1 / Maren F4): the singles doc is read first and every
+// array is unioned by entry identity (local wins on the same entry; cloud-only
+// entries are kept), nested maps union server-side via set(merge:true).
+// Per-entry keys go up as batched full-record sets (their identity is the doc id).
+// Resolves with the number of keys pushed once the server acknowledges; rejects
+// with the ledger untouched if the read or any write fails. `db` is derived from
+// hRef so the hermetic spec can drive this with a stub.
+function _syncEntryIdentity(entry) {
+  if (!entry || typeof entry !== 'object') return 'v:' + JSON.stringify(entry);
+  if (entry.id !== undefined && entry.id !== null) return 'id:' + entry.id;
+  if (entry.date) return 'date:' + entry.date + (entry.time ? 'T' + entry.time : '') + (entry.start ? 'S' + entry.start : '');
+  if (entry.name) return 'name:' + String(entry.name).toLowerCase().trim();
+  return 'v:' + JSON.stringify(entry);
+}
+function _syncUnionArrays(local, cloud) {
+  var seen = {};
+  var out = [];
+  (local || []).forEach(function(e) { seen[_syncEntryIdentity(e)] = true; out.push(e); });
+  (cloud || []).forEach(function(e) { var id = _syncEntryIdentity(e); if (!seen[id]) { seen[id] = true; out.push(e); } });
+  return out;
+}
+function _syncMergeForPush(local, cloud) {
+  if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud) : local;
+  if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
+    var out = {};
+    Object.keys(local).forEach(function(k) {
+      out[k] = (Array.isArray(local[k]) && Array.isArray(cloud[k])) ? _syncUnionArrays(local[k], cloud[k]) : local[k];
+    });
+    return out;   // cloud-only keys survive server-side under merge:true
+  }
+  return local;
+}
+function _syncFlushDirty(hRef) {
+  var m = _syncLoadDirty();
+  var dirtyKeys = Object.keys(m).filter(function(k) { return !!SYNC_KEYS[k]; });
+  if (dirtyKeys.length === 0) return Promise.resolve(0);
+  if (!_syncUser || !hRef) return Promise.reject(new Error('not signed in'));
+  var startedAt = Date.now();
+  var db = hRef.firestore || ((typeof firebase !== 'undefined') ? firebase.firestore() : null);
+  var writer = { uid: _syncUser.uid || null, name: _syncUser.displayName || 'Parent' };
+  var settled = [];        // keys with nothing to push (empty local) — cleared without a write
+  var perEntry = [];
+  var singlesByCol = {};
+
+  dirtyKeys.forEach(function(key) {
+    var cfg = SYNC_KEYS[key];
+    var val = load(key, null);
+    if (cfg.model === 'per-entry') {
+      if (!Array.isArray(val) || val.length === 0) settled.push(key);
+      else perEntry.push({ key: key, cfg: cfg, val: val });
+      return;
+    }
+    if (val === null || val === undefined) { settled.push(key); return; }
+    if (!singlesByCol[cfg.collection]) singlesByCol[cfg.collection] = {};
+    singlesByCol[cfg.collection][key] = val;
+  });
+  if (settled.length > 0) _syncClearDirty(settled, startedAt);
+
+  var cols = Object.keys(singlesByCol);
+  return Promise.all(cols.map(function(col) { return hRef.collection('singles').doc(col).get(); }))
+    .then(function(docs) {
+      var promises = [];
+      cols.forEach(function(col, i) {
+        var cloud = (docs[i] && docs[i].exists) ? (docs[i].data() || {}) : {};
+        var payload = {};
+        Object.keys(singlesByCol[col]).forEach(function(key) {
+          payload[key] = _syncStampUnattributed(_syncMergeForPush(singlesByCol[col][key], cloud[key]), writer);
+        });
+        payload.__sync_updatedBy = writer;
+        payload.__sync_syncedAt = _syncServerTs();
+        promises.push(hRef.collection('singles').doc(col).set(payload, { merge: true }));
+      });
+      perEntry.forEach(function(pe) {
+        for (var i = 0; i < pe.val.length; i += 450) {
+          var chunk = pe.val.slice(i, i + 450);
+          var batch = db.batch();
+          chunk.forEach(function(entry) {
+            if (!entry || !entry.id) return;
+            batch.set(hRef.collection(pe.cfg.collection).doc(entry.id), Object.assign({}, entry, {
+              __sync_updatedBy: writer,
+              __sync_syncedAt: _syncServerTs()
+            }), { merge: false });
+          });
+          promises.push(batch.commit());
+        }
+      });
+      _syncCountWrites(promises.length);   // bypasses the breaker on purpose: this is the recovery path
+      return Promise.all(promises);
+    })
+    .then(function() {
+      _syncClearDirty(dirtyKeys, startedAt);
+      return dirtyKeys.length;
+    });
+}
+
+// Push unsynced local writes, THEN attach listeners — so a stale cloud copy can
+// never be applied over newer local data. On push failure the ledger is kept and
+// listeners still attach: dirty keys stay protected by the snapshot-apply guard.
+function _syncPushDirtyThenAttach(hId) {
+  var p;
+  try {
+    var hRef = firebase.firestore().collection('households').doc(hId);
+    p = _syncFlushDirty(hRef);
+  } catch(e) { p = Promise.reject(e); }
+  return p.then(function(n) {
+    if (n > 0) console.log('[sync] Pushed ' + n + ' unsynced key(s) before attaching listeners');
+  }).catch(function(e) {
+    console.error('[sync] Unsynced push before attach failed — ledger kept, dirty keys protected:', e);
+  }).then(function() {
+    try { _syncAttachListeners(hId); }
+    catch(e) { _syncRecordCrash('attachListeners', e); return; }
+    // Residual pass (Kael F8): a write that landed between the ledger read above
+    // and the attach stamp was folded into the shadow and would never be diffed —
+    // push the ledger once more, post-attach, under the same merge semantics.
+    var m = _syncLoadDirty();
+    var residual = Object.keys(m).some(function(k) {
+      var e = _syncLedgerEntry(m[k]); return !!(e && SYNC_KEYS[k] && e.l < _syncSessionAttachedAt);
+    });
+    if (residual) {
+      try {
+        var hRef2 = firebase.firestore().collection('households').doc(hId);
+        _syncFlushDirty(hRef2).catch(function(e) { console.warn('[sync] Residual unsynced push failed — ledger kept:', e); });
+      } catch(e) { console.warn('[sync] Residual unsynced push threw:', e); }
+    }
+  });
+}
+
+// Header / settings "Retry" action for the stale state (data-action="syncRetryPush").
+function syncRetryPush() {
+  if (!_syncUser || !_syncHouseholdId || typeof firebase === 'undefined') {
+    showQLToast('Sign in to sync');
+    return;
+  }
+  var hRef = firebase.firestore().collection('households').doc(_syncHouseholdId);
+  showQLToast('Syncing…');
+  _syncFlushDirty(hRef).then(function(n) {
+    showQLToast(n > 0 ? '' + zi('check') + ' Synced — everything on this phone is now in the cloud' : 'Already synced');
+    _syncRenderSettingsUI();
+  }).catch(function(e) {
+    console.error('[sync] Retry push failed:', e);
+    showQLToast('Still could not reach the cloud — your entries are safe on this phone', 4000);
+  });
 }
 
 // ─── Attach Listeners (§7.3) ───
@@ -81556,6 +81925,7 @@ function _syncAttachListeners(hId) {
   // tracks the broader straggler limitation; this reset only protects
   // reconcile re-fire, not snapshot-apply.
   _reconcileDone = new Set();
+  _syncSessionAttachedAt = Date.now();   // ledger: partial flushes may clear writes from here on
   // Issue #53 — capture the generation these listeners belong to. _syncDetachListeners()
   // (called just above, and on any future re-attach) bumps _syncListenerGen; each
   // callback below bails if its captured _gen no longer matches the live one, so a
@@ -81645,6 +82015,13 @@ function _syncHandlePerEntrySnapshot(collection, snapshot) {
       }
     }
     if (!lsKey) return;
+
+    // Ledger guard (PR #265): see [L] in _syncHandleSingleDocSnapshot.
+    if (_syncIsDirty(lsKey)) {
+      console.warn('[sync] Skipping overwrite of ' + lsKey + ' — local changes not yet acknowledged by the cloud');
+      _syncSkippedSnapshots['pe:' + collection] = { gen: _syncListenerGen, snapshot: snapshot };
+      return;
+    }
 
     // Build full array from Firestore snapshot
     var entries = [];
@@ -81939,6 +82316,14 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       // [N] null-remote — preserve local
       if (remoteVal === null) continue;
 
+      // [L] Ledger guard (PR #265): never apply a cloud copy over local writes the
+      // server has not acknowledged — the stale-cloud-overwrites-newer-local bug.
+      if (_syncIsDirty(key)) {
+        console.warn('[sync] Skipping overwrite of ' + key + ' — local changes not yet acknowledged by the cloud');
+        _syncSkippedSnapshots[docName] = { gen: _syncListenerGen, doc: doc };
+        continue;
+      }
+
       // [M1] ALWAYS_POPULATED_KEYS empty-remote guard
       if (ALWAYS_POPULATED_KEYS.has(key)) {
         var remoteEmptyArr = Array.isArray(remoteVal) && remoteVal.length === 0;
@@ -82193,6 +82578,7 @@ function _syncSeedFirestore(hId) {
   }).catch(function(e) {
     _syncIsMigrating = false;
     console.error('[sync] Seed error:', e);
+    throw e;   // callers decide (retry next launch); a swallowed seed used to look like success (Kael F4)
   });
 }
 
@@ -82286,13 +82672,33 @@ function _syncRenderSettingsUI() {
         '<button class="btn btn-ghost btn-sm" data-action="syncRegenerateCode">Generate</button>' +
       '</div>';
 
+  // Ledger status (PR #265): last acknowledged push + anything still waiting.
+  // Same threshold as the header: fresh dirt is "on its way", not "Not synced".
+  var un = syncUnsyncedInfo();
+  var unStale = un.count > 0 && un.since && ((Date.now() - un.since) > SYNC_STALE_MS || _syncWriteCount >= CIRCUIT_BREAKER_LIMIT);
+  var lastRow = un.lastSyncedAt && typeof formatSavedTime === 'function'
+    ? '<div class="t-sub">Last synced: ' + escHtml(formatSavedTime(new Date(un.lastSyncedAt).toISOString())) + '</div>'
+    : (un.count > 0 ? '<div class="t-sub">Last synced: not recorded yet on this phone</div>' : '');
+  var statusRow =
+    '<div class="sync-card-body">' +
+      lastRow +
+      (unStale
+        ? '<div class="t-sub t-amber">' + escHtml(_syncUnsyncedCopy({ unsynced: un.count, unsyncedSince: un.since })) +
+          ' Until they do, this phone also won\u2019t show the other phone\u2019s newer entries in those areas.</div>' +
+          '<button class="btn btn-sage btn-full-sm" data-action="syncRetryPush">' + zi('bolt') + ' Push to cloud now</button>'
+        : un.count > 0
+          ? '<div class="t-sub">Recent entries are on their way to the cloud.</div>'
+          : '<div class="t-sub">All entries on this phone are in the cloud.</div>') +
+    '</div>';
+
   container.innerHTML =
     '<div class="sync-card sync-card-active">' +
       '<div class="sync-card-hdr">' +
         '<span class="icon icon-sage">' + zi('link') + '</span>' +
         '<span class="sync-card-title">' + escHtml((_syncHousehold ? _syncHousehold.name : '') || 'Household') + '</span>' +
-        '<span class="sync-status-badge sync-status-connected">Connected</span>' +
+        '<span class="sync-status-badge ' + (unStale ? 'sync-status-unsynced' : 'sync-status-connected') + '">' + (unStale ? 'Not synced' : (un.count > 0 ? 'Syncing\u2026' : 'Connected')) + '</span>' +
       '</div>' +
+      statusRow +
       '<div class="sync-members">' +
         '<div class="sync-section-label">Members</div>' +
         memberList +
@@ -82389,7 +82795,7 @@ function _syncConfirmJoin() {
 //       now subscribe with {includeMetadataChanges:true})
 //   (d) Pre-submit queue: _syncDebounceTimers (active count) + _syncPendingFlush
 //
-// Five logical states, three visual colors (color mapping lives in CSS):
+// Six logical states, three visual colors (color mapping lives in CSS; 'stale' = amber, PR #265):
 //   connecting — cold boot: no listener has fired, no drain event yet, pending===0
 //   online     — network up, fully drained
 //   syncing    — network up, pending > 0
@@ -82461,14 +82867,23 @@ function syncVisibilityState() {
   var postSubmit = _syncCountPostSubmit();
   var pending = preSubmit + postSubmit;  // disjoint by construction (see header comment)
   var state, reason;
+  // PR #265: stale = signed in, in a household, and local writes have gone
+  // unacknowledged by the server for longer than SYNC_STALE_MS.
+  var un = syncUnsyncedInfo();
+  var stale = !!(_syncUser && _syncHouseholdId && un.count > 0 && un.since &&
+                 ((Date.now() - un.since) > SYNC_STALE_MS || _syncWriteCount >= CIRCUIT_BREAKER_LIMIT));
 
   // Evaluation order matters: halted is a local fault independent of network,
-  // so it wins over offline. connecting is only valid before any proof of
-  // Firestore activity; it collapses to syncing the moment pending > 0.
+  // so it wins over offline. stale sits below both (they explain it) and above
+  // connecting/syncing/online, which would otherwise hide it. connecting is only
+  // valid before any proof of Firestore activity; it collapses to syncing the
+  // moment pending > 0.
   if (_syncDisabled) {
     state = 'halted';     reason = 'sync-disabled';
   } else if (!online) {
     state = 'offline';    reason = 'no-network';
+  } else if (stale) {
+    state = 'stale';      reason = 'unsynced-writes';
   } else if (!_syncHasEverFired && pending === 0) {
     state = 'connecting'; reason = 'no-listener-yet';
   } else if (pending > 0) {
@@ -82476,7 +82891,8 @@ function syncVisibilityState() {
   } else {
     state = 'online';     reason = 'synced';
   }
-  return { state: state, pending: pending, reason: reason };
+  return { state: state, pending: pending, reason: reason,
+           unsynced: un.count, unsyncedSince: un.since, lastSyncedAt: un.lastSyncedAt };
 }
 
 function onSyncVisibilityChange(listener) {
@@ -82495,7 +82911,7 @@ function _syncNotifyVisibility() {
     _syncVisibilityNotifyTimer = null;
     var snap = syncVisibilityState();
     var prev = _syncLastVisibility;
-    if (prev && prev.state === snap.state && prev.pending === snap.pending && prev.reason === snap.reason) return;
+    if (prev && prev.state === snap.state && prev.pending === snap.pending && prev.reason === snap.reason && prev.unsynced === snap.unsynced && prev.unsyncedSince === snap.unsyncedSince) return;
     _syncLastVisibility = snap;
     for (var i = 0; i < _syncVisibilityListeners.length; i++) {
       try { _syncVisibilityListeners[i](snap); } catch(e) { console.error('[sync-vis] listener threw', e); }
@@ -82510,7 +82926,7 @@ function _syncUpdateStatusIndicator(snap) {
   // synced / syncing) no longer consume top-of-screen real estate — only the
   // not-syncing states (offline / halted) surface the pill, so a parent still
   // learns when their data is genuinely not backing up.
-  if (snap.state !== 'offline' && snap.state !== 'halted') {
+  if (snap.state !== 'offline' && snap.state !== 'halted' && snap.state !== 'stale') {
     btn.setAttribute('hidden', '');
     btn.removeAttribute('data-action');
     return;
@@ -82543,6 +82959,10 @@ function _syncUpdateStatusIndicator(snap) {
       label = 'Sync paused';
       title = 'Sync paused after errors — tap to reload.' + (snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '');
       break;
+    case 'stale':
+      label = 'Not synced';
+      title = _syncUnsyncedCopy(snap) + ' Tap to retry.';
+      break;
     default:
       label = ''; title = '';
   }
@@ -82558,10 +82978,11 @@ function _syncUpdateStatusIndicator(snap) {
   if (typeof _a11yAnnounce === 'function') _a11yAnnounce(title);
 
   // HR-3 / HR-6 (r3): tap-to-reload is routed through the core.js data-action
-  // dispatcher. Only halted is tappable; other states are read-only pills.
+  // dispatcher. halted (reload) and stale (retry push) are tappable; other states are read-only pills.
   // Toggle the attribute's presence — the dispatcher gates on its presence,
   // so other states are non-interactive without any extra guard here.
   if (snap.state === 'halted') btn.setAttribute('data-action', 'syncReload');
+  else if (snap.state === 'stale') btn.setAttribute('data-action', 'syncRetryPush');
   else btn.removeAttribute('data-action');
 }
 
@@ -82583,7 +83004,7 @@ function syncReload() {
 function _syncUpdateOfflineBadge(snap) {
   var badge = document.getElementById('offlineBadge');
   if (!badge) return;
-  var visible = snap.state === 'offline' || snap.state === 'halted';
+  var visible = snap.state === 'offline' || snap.state === 'halted' || snap.state === 'stale';
   if (!visible) {
     if (!badge.hasAttribute('hidden')) badge.setAttribute('hidden', '');
     return;
@@ -82592,9 +83013,12 @@ function _syncUpdateOfflineBadge(snap) {
   badge.setAttribute('data-state', snap.state);
 
   var nPending = snap.pending > 0 ? ' (' + snap.pending + ' pending)' : '';
+  var unsyncedNote = (snap.unsynced > 0) ? ' ' + _syncUnsyncedCopy(snap) : '';
   var copy = snap.state === 'halted'
-    ? 'Sync paused after errors — reload to retry.' + nPending
-    : 'Offline — changes will sync when back online.' + nPending;
+    ? 'Sync paused after errors — reload to retry.' + nPending + unsyncedNote
+    : snap.state === 'stale'
+      ? _syncUnsyncedCopy(snap) + ' Tap Retry.'
+      : 'Offline — changes will sync when back online.' + nPending + unsyncedNote;
 
   var copyEl = badge.querySelector('.offline-badge__copy');
   if (copyEl) copyEl.textContent = copy;
@@ -82603,14 +83027,46 @@ function _syncUpdateOfflineBadge(snap) {
   // Reload button stays outside the announced text.
   if (typeof _a11yAnnounce === 'function') _a11yAnnounce(copy);
 
-  // Reload surfaces only in halted (local fault); offline auto-resumes
-  // on network restore, no user action needed.
+  // The action button is Reload in halted (local fault) and Retry in stale
+  // (unacknowledged writes); offline auto-resumes on network restore.
   var reloadBtn = badge.querySelector('.offline-badge__action');
   if (reloadBtn) {
-    if (snap.state === 'halted') reloadBtn.removeAttribute('hidden');
-    else reloadBtn.setAttribute('hidden', '');
+    if (snap.state === 'halted') {
+      reloadBtn.textContent = 'Reload';
+      reloadBtn.setAttribute('data-action', 'syncReload');
+      reloadBtn.removeAttribute('hidden');
+    } else if (snap.state === 'stale') {
+      reloadBtn.textContent = 'Retry';
+      reloadBtn.setAttribute('data-action', 'syncRetryPush');
+      reloadBtn.removeAttribute('hidden');
+    } else {
+      reloadBtn.setAttribute('hidden', '');
+    }
   }
 }
+
+// "3 changes on this phone haven't reached the cloud since 12 Mar." (PR #265)
+// The ledger counts KEYS (areas), not entries, so no number is shown: "3 changes"
+// would understate six months of feeds (Maren F2 / Vela F3). The reassurance is
+// part of the sentence, not only of the failure toast (Maren F5).
+function _syncUnsyncedCopy(snap) {
+  var since = snap.unsyncedSince || null;
+  var sinceStr = null;
+  if (since) {
+    var longTail = (Date.now() - since) > 300 * 24 * 3600 * 1000;
+    sinceStr = new Date(since).toLocaleDateString('en-IN', longTail
+      ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' });
+  }
+  return (sinceStr
+    ? 'Entries on this phone haven\u2019t reached the cloud since ' + sinceStr
+    : 'Some entries on this phone haven\u2019t reached the cloud yet') + ' \u2014 they\u2019re safe here.';
+}
+
+// Keep the Settings sync card live: it renders the ledger state, so re-render on
+// every visibility change while signed in (Vela F2).
+onSyncVisibilityChange(function() {
+  if (_syncUser && _syncHouseholdId) { try { _syncRenderSettingsUI(); } catch(e) {} }
+});
 
 function initSyncVisibility() {
   if (_syncVisibilityInitDone) return;

@@ -1,6 +1,6 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-09-18 (build.sh head-heredoc jurisdiction gap logged from PR #264 chain)
+**Last updated:** 2026-09-18 (unsynced-write ledger follow-ups logged from PR #265 chain)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
@@ -61,6 +61,17 @@
 - **Fix shape:** Either a `_postReceive*` hook per episode key that reassigns the module array (the `_postReceiveMilestones` idiom), or have `getActive*Episode()` read through `load()`. Kael-primary; separate PR.
 - **Origin:** Kael V-K-3 on PR #263 (fever readings toggle), widened by Cipher Edict V ruling 5 from fever-only to all four illness-episode keys. Pre-existing; not introduced by #263.
 - **Files:** `split/sync.js` ~lines 244–247 (registrations), `split/intelligence-illness.js` ~lines 3–14 (`_feverEpisodes` hydration) and the diarrhoea / vomiting / cold module arrays.
+
+#### P1 — Unsynced-write ledger follow-ups (PR #265, 2026-09-18)
+- **Context:** PR #265 added the ledger after the September incident (six months of one phone's entries overwritten by a stale March cloud copy on reinstall). The Governor chain accepted the design with these follow-ups still open:
+- **(a) Map-shaped keys union on full push, so a stale phone can re-introduce a day a parent deleted elsewhere** (Ceres F2). `KEYS.feeding` / `medChecks` / `activityMeta` are date-keyed maps pushed with `set(merge:true)`. Fix shape: ledger the touched sub-keys per save site and push only those subtrees via `_syncNestDottedPaths`. Kael-primary, Ceres consult.
+- **(b) Array union has no delete signal** (Kael F5 note): entries deleted locally come back from the cloud on the replay after a full push. Acceptable for the recovery path; a tombstone list per key would close it.
+- **(c) Join silently discards this phone's ledger** (Kael F9): consistent with "joiner never seeds", but the join modal copy should say "entries on this phone will be replaced by the household's". Maren/Vela copy.
+- **(d) `renderFoods()` saves on render** (`diet.js:177`, Ceres F1.3): a render function writing storage; harmless since `syncWrite` now skips no-op re-saves, still a layer smell. Ceres.
+- **(e) Stale comments**: `template.html:322-324` says Reload surfaces only in halted — the badge button is now Reload (halted) or Retry (stale). Comment-only; next template touch.
+- **Fixed in the same PR, worth the record:** `_syncFindHousehold` referenced `user.uid` (undefined) in the seed/member branch — a ReferenceError that killed listener attach on every launch for any device whose seeded flag was missing (e.g. after sign-out). Sync went silently dead with the pill hidden. Candidate root cause of the March stop (Kael F3).
+
+---
 
 ---
 

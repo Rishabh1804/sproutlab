@@ -11107,6 +11107,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   margin-left:auto;
 }
 .sync-status-connected { background:var(--sage-light); color:var(--tc-sage); }
+.sync-status-unsynced  { background:var(--amber-light); color:var(--tc-amber); }  /* ledger has unacknowledged writes (PR #265) */
 .sync-modal-overlay {
   position:fixed; inset:0; z-index:9999;
   background:var(--overlay-bg);
@@ -11206,6 +11207,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .sync-indicator[data-state="syncing"]    { color: var(--tc-amber); }
 .sync-indicator[data-state="offline"]    { color: var(--tc-danger); }
 .sync-indicator[data-state="halted"]     { color: var(--tc-danger); cursor: pointer; }
+.sync-indicator[data-state="stale"]      { color: var(--tc-amber); cursor: pointer; }  /* unsynced local writes (PR #265) */
 .sync-indicator[data-state="connecting"] .sync-indicator__dot,
 .sync-indicator[data-state="syncing"]    .sync-indicator__dot {
   animation: sync-indicator-pulse 1.4s ease-in-out infinite;
@@ -11278,6 +11280,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   outline-offset: 2px;
 }
 [data-theme="dark"] .offline-badge { background: rgba(224, 112, 112, 0.08); }
+/* stale = caution, not danger (PR #265): unacknowledged local writes; the entries
+   are safe on the phone, so the banner must not paint the danger family under an
+   amber pill. Reload/offline/halted keep rose. */
+.offline-badge[data-state="stale"] { border-left-color: var(--tc-amber); background: var(--amber-light); }
+.offline-badge[data-state="stale"] .offline-badge__icon { color: var(--tc-amber); }
+.offline-badge[data-state="stale"] .offline-badge__action { border-color: var(--tc-amber); color: var(--tc-amber); }
+.offline-badge[data-state="stale"] .offline-badge__action:hover,
+.offline-badge[data-state="stale"] .offline-badge__action:focus-visible { background: var(--tc-amber); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    v3-6 — Card-priority registry (single source of truth, card tier).
