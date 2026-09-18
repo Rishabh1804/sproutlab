@@ -240,6 +240,14 @@ Gate 2.5.
 | a build / audit / test run and reported | scribe-verify | subagent |
 | a journal / canon / log entry recorded | scribe-record | subagent |
 
+**Model tiers (2026-07-27):** invocation cost follows the
+[Model Selection Protocol](docs/MODEL_SELECTION_PROTOCOL.md). Scribes run on
+pinned cheap tiers (scout/verify → Haiku, draft/record → Sonnet, via `model:`
+frontmatter); Builders, Governors, Cipher, and the Chronicler carry no `model:`
+field and inherit the session model — the canon-cc-008 QA chain never runs
+below it (the safety floor). Skills always run in-session at the session
+model; model economy is a subagent-mode concern only.
+
 ## 9. Cross-model invocation — deferred
 
 AGENTS.md scopes its instructions across three tools — Claude Code, the OpenAI

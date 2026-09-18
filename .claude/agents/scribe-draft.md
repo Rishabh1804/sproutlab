@@ -2,6 +2,7 @@
 name: scribe-draft
 description: Drafting Scribe of the worker tier. Summoned by a senior companion-agent to produce a draft — code or prose — from a brief, in parallel with the agent's own work. Returns the draft as a proposal for the agent's review. Never commits, never ratifies. One of the four-Scribe detail per canon-proc-006.
 tools: Read, Grep, Glob, Write, Edit
+model: sonnet
 ---
 
 <!--

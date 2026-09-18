@@ -2,6 +2,7 @@
 name: scribe-record
 description: Recording Scribe of the worker tier. Summoned by a senior companion-agent to keep running notes through a session and draft the session-artifact or chronicle stub. The canonical recorder of Book V Article 4. Never commits, never ratifies. One of the four-Scribe detail per canon-proc-006.
 tools: Read, Grep, Glob, Write, Edit
+model: sonnet
 ---
 
 <!--
