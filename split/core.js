@@ -4982,7 +4982,7 @@ function restoreAutosave(slotIdx) {
         });
         // A restored snapshot is the parent's chosen truth: mark it unsynced so the
         // reload pushes it to the cloud before listeners can overwrite it (PR #265).
-        if (typeof _syncMarkDirtyKeys === 'function') _syncMarkDirtyKeys(restored);
+        if (typeof syncMarkUnsynced === 'function') syncMarkUnsynced(restored);
         location.reload();
       }, 500);
     }, 'Restore');
@@ -5065,7 +5065,7 @@ function importData(event) {
         });
         // Imported data is the parent's chosen truth: mark it unsynced so the reload
         // pushes it to the cloud before listeners can overwrite it (PR #265).
-        if (typeof _syncMarkDirtyKeys === 'function') _syncMarkDirtyKeys(imported);
+        if (typeof syncMarkUnsynced === 'function') syncMarkUnsynced(imported);
         location.reload();
       }, 'Import');
     } catch (err) {

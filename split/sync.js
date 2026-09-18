@@ -246,9 +246,10 @@ function _syncLedgerEntry(v) {
 // push: a later partial (diff-vs-shadow) flush cannot carry the failed content,
 // so only _syncFlushDirty may clear it (Kael V-K F2).
 function _syncMarkNeedsFull(key) {
+  if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;   // same activation boundary as _syncMarkDirty
   var m = _syncLoadDirty();
-  var e = _syncLedgerEntry(m[key]);
-  if (!e) return;
+  var now = Date.now();
+  var e = _syncLedgerEntry(m[key]) || { f: now, l: now, nf: false };   // positive knowledge of a failed push (Kael F19)
   e.nf = true;
   m[key] = e;
   _syncSaveDirty(m);
@@ -258,8 +259,17 @@ function _syncMarkNeedsFull(key) {
 // or pre-join entries, and the existing rules apply: an admin's first sign-in
 // seeds, a joiner takes the household's data. Gating here keeps a fresh install
 // from ever pushing its defaults over the household's arrays.
+// `sl_sync_attached_once` is set at every listener attach and is NOT cleared by
+// sign-out, so a member device that signs out, logs entries, and signs back in
+// still ledgers those writes and pushes them instead of taking the cloud copy
+// (Kael F18).
+const SYNC_ATTACHED_KEY = 'sl_sync_attached_once';
 function _syncLedgerActive() {
-  try { return localStorage.getItem('sl_sync_seeded') === '4'; } catch(e) { return false; }
+  try { return localStorage.getItem('sl_sync_seeded') === '4' || localStorage.getItem(SYNC_ATTACHED_KEY) === '1'; }
+  catch(e) { return false; }
+}
+function _syncAttachedOnce() {
+  try { return localStorage.getItem(SYNC_ATTACHED_KEY) === '1'; } catch(e) { return false; }
 }
 function _syncMarkDirty(key) {
   if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;
@@ -272,9 +282,10 @@ function _syncMarkDirty(key) {
   _syncSaveDirty(m);
   if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();
 }
-// Import / autosave-restore entry point (core.js): the restored keys are the
-// parent's chosen truth and must reach the cloud before any snapshot applies.
-function _syncMarkDirtyKeys(keys) {
+// Import / autosave-restore entry point (core.js; public sync* name per the
+// module boundary): the restored keys are the parent's chosen truth and must
+// reach the cloud before any snapshot applies.
+function syncMarkUnsynced(keys) {
   if (!_syncLedgerActive()) return;
   var m = _syncLoadDirty();
   var now = Date.now();
@@ -800,12 +811,18 @@ function _syncFindHousehold(uid) {
                 }
               });
             } else {
-              // Member: skip seed, just bump version and attach listeners. First
-              // attach on this device → whatever it wrote before is not household
-              // data (same rule as syncJoinByCode): drop the ledger.
+              // Member: skip seed, just bump version and attach listeners. On a
+              // device that has attached before (signed out and back in), the ledger
+              // holds real household writes → push them first (Kael F18). On a true
+              // first attach, whatever it wrote before is not household data (same
+              // rule as syncJoinByCode): drop the ledger.
               localStorage.setItem('sl_sync_seeded', '4');
-              _syncSaveDirty({});
-              _syncAttachListeners(_syncHouseholdId);
+              if (_syncAttachedOnce()) {
+                _syncPushDirtyThenAttach(_syncHouseholdId);
+              } else {
+                _syncSaveDirty({});
+                _syncAttachListeners(_syncHouseholdId);
+              }
             }
           } else {
             // Already-attached device (PR #265): push anything the cloud never
@@ -1173,13 +1190,17 @@ function syncWrite(key, val, old) {
     if (!SYNC_KEYS[key]) return;                // local-only key
     if (_syncSameValue(old, val)) return;       // no-op re-save (render paths re-save on boot) — nothing to sync (Ceres F1)
     _syncMarkDirty(key);                        // ledger: unsynced until the server acks (PR #265)
-    if (_syncDisabled) return;                  // Layer 4: auto-disabled after crashes
-    if (!_syncHouseholdId) return;              // no household
-    if (!_syncUser) return;                     // not signed in
+    // A bail-out below IS a failed push: a per-entry delta dropped here is never
+    // carried by the next call's old→new diff, so the key must wait for a full
+    // push (Cipher A2). Single-doc keys are covered either way (cumulative shadow).
+    if (_syncDisabled)     { _syncMarkNeedsFull(key); return; }   // Layer 4: auto-disabled after crashes
+    if (!_syncHouseholdId) { _syncMarkNeedsFull(key); return; }   // no household
+    if (!_syncUser)        { _syncMarkNeedsFull(key); return; }   // not signed in
 
     // Circuit breaker (§4.7 #48)
     if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) {
       console.warn('[sync] Circuit breaker tripped — ' + _syncWriteCount + ' writes this hour');
+      _syncMarkNeedsFull(key);
       if (typeof _syncNotifyVisibility === 'function') _syncNotifyVisibility();   // the ledger keeps the write; surface it
       return;
     }
@@ -1416,7 +1437,13 @@ function _syncFlushSingleDoc(hRef, collection) {
   var diff = _syncDeepDiff(shadow, current, '');
   var hasUpdates = Object.keys(diff.updates).length > 0;
   var hasDeletes = Object.keys(diff.deletes).length > 0;
-  if (!hasUpdates && !hasDeletes) return;
+  if (!hasUpdates && !hasDeletes) {
+    // Net-empty (e.g. add then Undo inside the debounce): content equals the shadow,
+    // which is the last pushed/observed state — release this session's entries so
+    // the [L] guard does not hide the other phone's data for a no-op (Kael F15).
+    _syncClearDirty(keysForCol, startedAt, _syncSessionAttachedAt);
+    return;
+  }
 
   var docRef = hRef.collection('singles').doc(collection);
   var syncMeta = {
@@ -1461,41 +1488,68 @@ function _syncFlushSingleDoc(hRef, collection) {
 }
 
 // ─── Full push of unsynced keys (PR #265) ───
-// Pushes every dirty key's CURRENT local value, merged against the cloud copy so a
-// recovering phone never erases what the other parent logged meanwhile
-// (Kael F5 / Ceres F1 / Maren F4): the singles doc is read first and every
-// array is unioned by entry identity (local wins on the same entry; cloud-only
-// entries are kept), nested maps union server-side via set(merge:true).
-// Per-entry keys go up as batched full-record sets (their identity is the doc id).
-// Resolves with the number of keys pushed once the server acknowledges; rejects
-// with the ledger untouched if the read or any write fails. `db` is derived from
-// hRef so the hermetic spec can drive this with a stub.
-function _syncEntryIdentity(entry) {
-  if (!entry || typeof entry !== 'object') return 'v:' + JSON.stringify(entry);
-  if (entry.id !== undefined && entry.id !== null) return 'id:' + entry.id;
-  if (entry.date) return 'date:' + entry.date + (entry.time ? 'T' + entry.time : '') + (entry.start ? 'S' + entry.start : '');
-  if (entry.name) return 'name:' + String(entry.name).toLowerCase().trim();
-  return 'v:' + JSON.stringify(entry);
+// Pushes every dirty key's CURRENT local value, merged against the SERVER copy so
+// a recovering phone never erases what the other parent logged meanwhile
+// (Kael F5 / Ceres F1 / Maren F4): the singles doc is read with source:'server'
+// (a cache-served read would be the stale copy this exists to defeat — Kael F14)
+// and every array is unioned by a per-key entry identity (local wins on the same
+// entry; cloud-only entries are kept — Kael F13), nested maps union server-side
+// via set(merge:true). A null single is pushed as null (parity with the partial
+// path — Kael F16). Per-entry keys go up as batched full-record sets. Resolves
+// with the number of keys pushed once the server acknowledges; rejects with the
+// ledger untouched if the read or any write fails. A write that lands mid-push
+// triggers one bounded re-pass (Kael F17). `db` is derived from hRef so the
+// hermetic spec can drive this with a stub.
+const SYNC_ENTRY_IDENTITY = {
+  [KEYS.sleep]:   ['date', 'type', 'bedtime'],
+  [KEYS.poop]:    ['date', 'time'],
+  [KEYS.vacc]:    ['name', 'date'],
+  [KEYS.foods]:   ['name'],
+  [KEYS.visits]:  ['date', 'doctor', 'reason'],
+  [KEYS.notes]:   ['ts'],
+  [KEYS.growth]:  ['date'],
+  [KEYS.meds]:    ['name', 'start'],
+  [KEYS.doctors]: ['name']
+};
+function _syncStableJson(v) {
+  if (Array.isArray(v)) return '[' + v.map(_syncStableJson).join(',') + ']';
+  if (v && typeof v === 'object') {
+    return '{' + Object.keys(v).filter(function(k) { return k.indexOf('__sync_') !== 0; }).sort().map(function(k) {
+      return JSON.stringify(k) + ':' + _syncStableJson(v[k]);
+    }).join(',') + '}';
+  }
+  return JSON.stringify(v);
 }
-function _syncUnionArrays(local, cloud) {
+function _syncEntryIdentity(entry, key) {
+  if (!entry || typeof entry !== 'object') return 'v:' + _syncStableJson(entry);
+  var fields = SYNC_ENTRY_IDENTITY[key];
+  if (fields) {
+    var parts = [];
+    fields.forEach(function(f) { if (entry[f] !== undefined && entry[f] !== null && entry[f] !== '') parts.push(f + '=' + String(entry[f]).toLowerCase().trim()); });
+    if (parts.length > 0) return 'k:' + parts.join('|');
+  }
+  if (entry.id !== undefined && entry.id !== null) return 'id:' + entry.id;
+  return 'v:' + _syncStableJson(entry);
+}
+function _syncUnionArrays(local, cloud, key) {
   var seen = {};
   var out = [];
-  (local || []).forEach(function(e) { seen[_syncEntryIdentity(e)] = true; out.push(e); });
-  (cloud || []).forEach(function(e) { var id = _syncEntryIdentity(e); if (!seen[id]) { seen[id] = true; out.push(e); } });
+  (local || []).forEach(function(e) { seen[_syncEntryIdentity(e, key)] = true; out.push(e); });
+  (cloud || []).forEach(function(e) { var id = _syncEntryIdentity(e, key); if (!seen[id]) { seen[id] = true; out.push(e); } });
   return out;
 }
-function _syncMergeForPush(local, cloud) {
-  if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud) : local;
+function _syncMergeForPush(local, cloud, key) {
+  if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud, key) : local;
   if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
     var out = {};
     Object.keys(local).forEach(function(k) {
-      out[k] = (Array.isArray(local[k]) && Array.isArray(cloud[k])) ? _syncUnionArrays(local[k], cloud[k]) : local[k];
+      out[k] = (Array.isArray(local[k]) && Array.isArray(cloud[k])) ? _syncUnionArrays(local[k], cloud[k], key) : local[k];
     });
     return out;   // cloud-only keys survive server-side under merge:true
   }
   return local;
 }
-function _syncFlushDirty(hRef) {
+function _syncFlushDirty(hRef, _pass) {
   var m = _syncLoadDirty();
   var dirtyKeys = Object.keys(m).filter(function(k) { return !!SYNC_KEYS[k]; });
   if (dirtyKeys.length === 0) return Promise.resolve(0);
@@ -1503,7 +1557,7 @@ function _syncFlushDirty(hRef) {
   var startedAt = Date.now();
   var db = hRef.firestore || ((typeof firebase !== 'undefined') ? firebase.firestore() : null);
   var writer = { uid: _syncUser.uid || null, name: _syncUser.displayName || 'Parent' };
-  var settled = [];        // keys with nothing to push (empty local) — cleared without a write
+  var settled = [];        // per-entry keys with an empty local array — nothing to push
   var perEntry = [];
   var singlesByCol = {};
 
@@ -1515,21 +1569,21 @@ function _syncFlushDirty(hRef) {
       else perEntry.push({ key: key, cfg: cfg, val: val });
       return;
     }
-    if (val === null || val === undefined) { settled.push(key); return; }
     if (!singlesByCol[cfg.collection]) singlesByCol[cfg.collection] = {};
-    singlesByCol[cfg.collection][key] = val;
+    singlesByCol[cfg.collection][key] = (val === undefined) ? null : val;   // null is a value (un-booking) — push it
   });
   if (settled.length > 0) _syncClearDirty(settled, startedAt, 0, true);
 
   var cols = Object.keys(singlesByCol);
-  return Promise.all(cols.map(function(col) { return hRef.collection('singles').doc(col).get(); }))
+  return Promise.all(cols.map(function(col) { return hRef.collection('singles').doc(col).get({ source: 'server' }); }))
     .then(function(docs) {
       var promises = [];
       cols.forEach(function(col, i) {
         var cloud = (docs[i] && docs[i].exists) ? (docs[i].data() || {}) : {};
         var payload = {};
         Object.keys(singlesByCol[col]).forEach(function(key) {
-          payload[key] = _syncStampUnattributed(_syncMergeForPush(singlesByCol[col][key], cloud[key]), writer);
+          var merged = _syncMergeForPush(singlesByCol[col][key], cloud[key], key);
+          payload[key] = (merged === null) ? null : _syncStampUnattributed(merged, writer);
         });
         payload.__sync_updatedBy = writer;
         payload.__sync_syncedAt = _syncServerTs();
@@ -1554,6 +1608,13 @@ function _syncFlushDirty(hRef) {
     })
     .then(function() {
       _syncClearDirty(dirtyKeys, startedAt);
+      // A write that landed mid-push kept its entry (l > startedAt) with a first
+      // stamp no diff can ever clear — push once more, bounded (Kael F17).
+      var after = _syncLoadDirty();
+      var late = dirtyKeys.some(function(k) { var e = _syncLedgerEntry(after[k]); return !!(e && e.f <= startedAt); });
+      if (late && (_pass || 0) < 2) {
+        return _syncFlushDirty(hRef, (_pass || 0) + 1).then(function(n2) { return dirtyKeys.length + n2; });
+      }
       return dirtyKeys.length;
     });
 }
@@ -1567,11 +1628,16 @@ function _syncPushDirtyThenAttach(hId) {
     var hRef = firebase.firestore().collection('households').doc(hId);
     p = _syncFlushDirty(hRef);
   } catch(e) { p = Promise.reject(e); }
-  return p.then(function(n) {
-    if (n > 0) console.log('[sync] Pushed ' + n + ' unsynced key(s) before attaching listeners');
-  }).catch(function(e) {
-    console.error('[sync] Unsynced push before attach failed — ledger kept, dirty keys protected:', e);
-  }).then(function() {
+  // Bound the wait: offline-with-cache would queue the set() indefinitely and
+  // listeners would never attach. Past the timeout we attach anyway — dirty keys
+  // stay guarded, and the push clears the ledger (and replays) whenever it lands.
+  var waitMs = (typeof _syncReconcileFallbackMs === 'function') ? _syncReconcileFallbackMs() : 15000;
+  var bounded = Promise.race([p, new Promise(function(res) { setTimeout(function() { res('timeout'); }, waitMs); })]);
+  p.catch(function(e) { console.error('[sync] Unsynced push before attach failed — ledger kept, dirty keys protected:', e); });
+  return bounded.then(function(n) {
+    if (n === 'timeout') console.warn('[sync] Unsynced push still in flight after ' + waitMs + 'ms — attaching; dirty keys stay guarded');
+    else if (n > 0) console.log('[sync] Pushed ' + n + ' unsynced key(s) before attaching listeners');
+  }).catch(function() {}).then(function() {
     try { _syncAttachListeners(hId); }
     catch(e) { _syncRecordCrash('attachListeners', e); return; }
     // Residual pass (Kael F8): a write that landed between the ledger read above
@@ -1579,7 +1645,7 @@ function _syncPushDirtyThenAttach(hId) {
     // push the ledger once more, post-attach, under the same merge semantics.
     var m = _syncLoadDirty();
     var residual = Object.keys(m).some(function(k) {
-      var e = _syncLedgerEntry(m[k]); return !!(e && SYNC_KEYS[k] && e.l < _syncSessionAttachedAt);
+      var e = _syncLedgerEntry(m[k]); return !!(e && SYNC_KEYS[k] && e.f < _syncSessionAttachedAt);   // un-clearable by any diff
     });
     if (residual) {
       try {
@@ -1591,11 +1657,14 @@ function _syncPushDirtyThenAttach(hId) {
 }
 
 // Header / settings "Retry" action for the stale state (data-action="syncRetryPush").
+var _syncRetryInFlight = false;
 function syncRetryPush() {
   if (!_syncUser || !_syncHouseholdId || typeof firebase === 'undefined') {
     showQLToast('Sign in to sync');
     return;
   }
+  if (_syncRetryInFlight) return;   // repeat taps would only add reads/writes to the hourly count (Kael F21)
+  _syncRetryInFlight = true;
   var hRef = firebase.firestore().collection('households').doc(_syncHouseholdId);
   showQLToast('Syncing…');
   _syncFlushDirty(hRef).then(function(n) {
@@ -1604,7 +1673,7 @@ function syncRetryPush() {
   }).catch(function(e) {
     console.error('[sync] Retry push failed:', e);
     showQLToast('Still could not reach the cloud — your entries are safe on this phone', 4000);
-  });
+  }).then(function() { _syncRetryInFlight = false; });
 }
 
 // ─── Attach Listeners (§7.3) ───
@@ -1617,6 +1686,7 @@ function _syncAttachListeners(hId) {
   // reconcile re-fire, not snapshot-apply.
   _reconcileDone = new Set();
   _syncSessionAttachedAt = Date.now();   // ledger: partial flushes may clear writes from here on
+  try { localStorage.setItem(SYNC_ATTACHED_KEY, '1'); } catch(e) {}
   // Issue #53 — capture the generation these listeners belong to. _syncDetachListeners()
   // (called just above, and on any future re-attach) bumps _syncListenerGen; each
   // callback below bails if its captured _gen no longer matches the live one, so a
@@ -1993,6 +2063,19 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       var remoteVal = clean[key] !== undefined ? clean[key] : null;
       var current = load(key, null);
 
+      // [L] Ledger guard (PR #265) — FIRST, before [E]: every snapshot seen while
+      // the key is dirty must refresh the replay cache, or an echo equal to local
+      // would leave a stale earlier snapshot cached and the replay after the ack
+      // would resurrect it (Cipher A1). Never apply a cloud copy over local
+      // writes the server has not acknowledged.
+      if (_syncIsDirty(key)) {
+        _syncSkippedSnapshots[docName] = { gen: _syncListenerGen, doc: doc };
+        if (JSON.stringify(current) !== JSON.stringify(remoteVal)) {
+          console.warn('[sync] Skipping overwrite of ' + key + ' — local changes not yet acknowledged by the cloud');
+        }
+        continue;
+      }
+
       // [E] equality skip
       if (JSON.stringify(current) === JSON.stringify(remoteVal)) continue;
 
@@ -2006,14 +2089,6 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
 
       // [N] null-remote — preserve local
       if (remoteVal === null) continue;
-
-      // [L] Ledger guard (PR #265): never apply a cloud copy over local writes the
-      // server has not acknowledged — the stale-cloud-overwrites-newer-local bug.
-      if (_syncIsDirty(key)) {
-        console.warn('[sync] Skipping overwrite of ' + key + ' — local changes not yet acknowledged by the cloud');
-        _syncSkippedSnapshots[docName] = { gen: _syncListenerGen, doc: doc };
-        continue;
-      }
 
       // [M1] ALWAYS_POPULATED_KEYS empty-remote guard
       if (ALWAYS_POPULATED_KEYS.has(key)) {

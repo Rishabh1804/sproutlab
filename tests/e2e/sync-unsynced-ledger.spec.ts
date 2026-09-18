@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 declare const KEYS: any; declare const SYNC_KEYS: any;
 declare let _syncUser: any; declare let _syncHouseholdId: any; declare let _syncHousehold: any;
-declare let _syncSessionAttachedAt: number; declare let _syncWriteCount: number;
+declare let _syncSessionAttachedAt: number; declare let _syncWriteCount: number; declare let _syncShadow: any; declare let _syncReady: any;
 
 // PR #265 — unsynced-write ledger (2026-09-18).
 // Incident: a device whose writes stopped reaching the cloud in March kept six
@@ -34,7 +34,7 @@ test('ledger: a device not yet attached to a household records nothing (fresh-in
     const w = window as any;
     localStorage.removeItem('sl_sync_seeded'); localStorage.removeItem('sl_sync_dirty');
     w.save(KEYS.notes, [{ id: 'n-unattached', text: 'pre-join', date: '2026-09-18' }]);
-    w._syncMarkDirtyKeys([KEYS.growth]);
+    w.syncMarkUnsynced([KEYS.growth]);
     return w.syncUnsyncedInfo().count;
   });
   expect(r).toBe(0);
@@ -276,4 +276,230 @@ test('ledger: existing halted/online indicator contract is unchanged; badge butt
   });
   expect(r.halted).toEqual({ hidden: false, action: 'syncReload', btn: 'Reload', btnAction: 'syncReload' });
   expect(r.online).toEqual({ hidden: true, action: null });
+});
+
+// ── Kael delta re-audit (F13–F17) ─────────────────────────────────────────
+
+test('union: per-key identity keeps same-day entries that differ in the fields that matter (F13)', async ({ page }) => {
+  await gotoApp(page);
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    const ids = (arr: any[], f: (e: any) => string) => arr.map(f);
+    // sleep: a night and two naps on one date, both phones
+    const sleepL = [{ date: '2026-09-17', type: 'night', bedtime: '20:00' }, { date: '2026-09-17', type: 'nap', bedtime: '13:00' }];
+    const sleepC = [{ date: '2026-09-17', type: 'nap', bedtime: '10:00' }, { date: '2026-09-17', type: 'nap', bedtime: '13:00', __sync_updatedBy: { uid: 'o' } }];
+    const sleep = ids(w._syncUnionArrays(sleepL, sleepC, KEYS.sleep), e => e.type + '@' + e.bedtime);
+    // vacc: six vaccines share a date
+    const vaccL = [{ name: 'DTP-1', date: '2025-10-16' }, { name: 'IPV-1', date: '2025-10-16' }];
+    const vaccC = [{ name: 'Hib-1', date: '2025-10-16' }, { name: 'DTP-1', date: '2025-10-16', upcoming: false }];
+    const vacc = ids(w._syncUnionArrays(vaccL, vaccC, KEYS.vacc), e => e.name);
+    // notes: identity is ts; a toggled `done` must not duplicate, and local wins
+    const notesL = [{ ts: 1700, text: 'buy wipes', done: true }];
+    const notesC = [{ ts: 1700, text: 'buy wipes', done: false, __sync_updatedBy: { uid: 'o' } }, { ts: 1800, text: 'call doc', done: false }];
+    const notes = w._syncUnionArrays(notesL, notesC, KEYS.notes);
+    // JSON fallback: key order and __sync_* stamps must not split identity
+    const a = { x: 1, y: 'z' }, b = { y: 'z', x: 1, __sync_updatedBy: { uid: 'o' } };
+    const fallback = w._syncUnionArrays([a], [b], 'ziva_unknown_key').length;
+    // foods: first foods cluster by date — identity is the name
+    const foods = ids(w._syncUnionArrays([{ name: 'Egg', date: '2026-09-10' }], [{ name: 'Banana', date: '2026-09-10' }, { name: 'egg', date: '2026-09-10' }], KEYS.foods), e => e.name);
+    return { sleep, vacc, notes: notes.map((e: any) => e.ts + ':' + e.done), fallback, foods };
+  });
+  expect(r.sleep).toEqual(['night@20:00', 'nap@13:00', 'nap@10:00']);
+  expect(r.vacc).toEqual(['DTP-1', 'IPV-1', 'Hib-1']);
+  expect(r.notes).toEqual(['1700:true', '1800:false']);
+  expect(r.fallback).toBe(1);
+  expect(r.foods).toEqual(['Egg', 'Banana']);
+});
+
+test('full push: merge base is read from the server; a failed read issues no write and keeps the ledger (F14)', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(async () => {
+    const w = window as any;
+    const key = KEYS.notes;
+    w.save(key, [{ ts: 1, text: 'local' }]);
+    const getOpts: any[] = []; const sets: any[] = [];
+    const hRef = {
+      firestore: { batch: () => ({ set() {}, commit: async () => {} }) },
+      collection: () => ({ doc: () => ({
+        get: async (o: any) => { getOpts.push(o); throw new Error('unavailable'); },
+        set: async (p: any) => { sets.push(p); },
+      }) }),
+    };
+    _syncUser = { uid: 't', displayName: 'T' };
+    let rejected = false;
+    try { await w._syncFlushDirty(hRef); } catch { rejected = true; }
+    _syncUser = null;
+    return { rejected, sets: sets.length, getOpts, stillDirty: w._syncIsDirty(key) };
+  });
+  expect(r.rejected).toBe(true);
+  expect(r.sets).toBe(0);
+  expect(r.getOpts).toEqual([{ source: 'server' }]);
+  expect(r.stillDirty).toBe(true);
+});
+
+test('partial flush: a net-empty diff (add then Undo inside the debounce) releases this session\'s entries (F15)', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    const col = 'tracking';
+    _syncSessionAttachedAt = Date.now() - 60_000;
+    _syncReady[col] = true;
+    // shadow == current for every key of the collection (the add was undone)
+    const keys = Object.keys(SYNC_KEYS).filter(k => SYNC_KEYS[k].collection === col);
+    keys.forEach(k => { _syncShadow[k] = JSON.parse(JSON.stringify(w.load(k, null))); });
+    const key = KEYS.notes;
+    localStorage.setItem('sl_sync_dirty', JSON.stringify({ [key]: { f: Date.now() - 1000, l: Date.now() - 500 } }));   // in-session dirt
+    const hRef = { collection: () => ({ doc: () => ({ set: async () => {}, update: async () => {} }) }) };
+    w._syncFlushSingleDoc(hRef, col);
+    return { dirty: w._syncIsDirty(key) };
+  });
+  expect(r.dirty).toBe(false);
+});
+
+test('full push: a null single (un-booking) is pushed as null, not settled away (F16)', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(async () => {
+    const w = window as any;
+    const key = KEYS.vaccBooked;
+    localStorage.setItem(key, 'null');
+    w.syncMarkUnsynced([key]);
+    const sets: any[] = [];
+    const hRef = {
+      firestore: { batch: () => ({ set() {}, commit: async () => {} }) },
+      collection: () => ({ doc: (id: string) => ({
+        get: async () => ({ exists: false, data: () => ({}) }),
+        set: async (p: any) => { sets.push({ id, p }); },
+      }) }),
+    };
+    _syncUser = { uid: 't', displayName: 'T' };
+    const n = await w._syncFlushDirty(hRef);
+    _syncUser = null;
+    return { n, doc: sets[0]?.id, pushedNull: sets[0] && key in sets[0].p && sets[0].p[key] === null, cleared: !w._syncIsDirty(key) };
+  });
+  expect(r.n).toBe(1);
+  expect(r.doc).toBe('vaccinations');
+  expect(r.pushedNull).toBe(true);
+  expect(r.cleared).toBe(true);
+});
+
+test('full push: a write landing mid-push triggers one bounded re-pass and the ledger still clears (F17)', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(async () => {
+    const w = window as any;
+    const key = KEYS.notes;
+    w.save(key, [{ ts: 1, text: 'first' }]);
+    const sets: any[] = [];
+    const hRef = {
+      firestore: { batch: () => ({ set() {}, commit: async () => {} }) },
+      collection: () => ({ doc: () => ({
+        get: async () => ({ exists: false, data: () => ({}) }),
+        set: async (p: any) => {
+          sets.push(p[key].map((e: any) => e.text));
+          if (sets.length === 1) w.save(key, [{ ts: 1, text: 'first' }, { ts: 2, text: 'landed mid-push' }]);   // late write
+        },
+      }) }),
+    };
+    _syncUser = { uid: 't', displayName: 'T' };
+    const n = await w._syncFlushDirty(hRef);
+    _syncUser = null;
+    return { n, sets, cleared: !w._syncIsDirty(key) };
+  });
+  expect(r.sets).toEqual([['first'], ['first', 'landed mid-push']]);
+  expect(r.n).toBe(2);
+  expect(r.cleared).toBe(true);
+});
+
+
+// ── Cipher Edict V amendments (A1, A2) + named test gaps ──────────────────
+
+test('single-doc guard runs before the equality skip: an echo equal to local refreshes the replay cache (A1)', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(async () => {
+    const w = window as any;
+    const key = KEYS.notes;
+    const local = [{ ts: 1, text: 'six months of local' }];
+    const stale = [{ ts: 0, text: 'march cloud' }];
+    w.save(key, local);                                                            // dirty
+    const doc = (v: any) => ({ exists: true, metadata: { hasPendingWrites: false }, data: () => ({ [key]: v }) });
+    w._syncHandleSingleDocSnapshot('tracking', doc(stale));                         // S0: stale, skipped + cached
+    w._syncHandleSingleDocSnapshot('tracking', doc(local));                         // S1: echo of our own push, equal to local
+    w._syncClearDirty([key], Date.now() + 1);                                       // ack → replay must use S1, not S0
+    await new Promise(res => setTimeout(res, 50));
+    return JSON.parse(localStorage.getItem(key) || '[]').map((e: any) => e.text);
+  });
+  expect(r).toEqual(['six months of local']);
+});
+
+test('a write that bails out before pushing is flagged needs-full; a later session-scoped ack cannot clear it (A2)', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    const key = KEYS.careTickets;                                                   // per-entry: deltas are per call
+    _syncUser = null; _syncHouseholdId = null;                                      // bail-out path (not signed in)
+    w.save(key, [{ id: 'ct-1', title: 'dropped by bail-out' }]);
+    const e = JSON.parse(localStorage.getItem('sl_sync_dirty') || '{}')[key];
+    w._syncClearDirty([key], Date.now() + 1, Date.now() - 60_000);                 // a later partial ack on the same key
+    return { nf: !!(e && e.nf), stillDirty: w._syncIsDirty(key) };
+  });
+  expect(r).toEqual({ nf: true, stillDirty: true });
+});
+
+test('partial single-doc flush: ack clears this session\'s entry; a rejected set flags needs-full', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(async () => {
+    const w = window as any;
+    const col = 'tracking'; const key = KEYS.notes;
+    _syncSessionAttachedAt = Date.now() - 60_000;
+    _syncReady[col] = true;
+    Object.keys(SYNC_KEYS).filter(k => SYNC_KEYS[k].collection === col).forEach(k => { _syncShadow[k] = JSON.parse(JSON.stringify(w.load(k, null))); });
+    _syncUser = { uid: 't', displayName: 'T' };
+    let fail = false;
+    const hRef = { collection: () => ({ doc: () => ({ set: async () => { if (fail) throw new Error('rejected'); }, update: async () => {} }) }) };
+    // an in-session write with a clean ledger entry (save() would bail out here — no household — and flag nf)
+    localStorage.setItem(key, JSON.stringify([{ ts: 5, text: 'in-session write' }]));
+    localStorage.setItem('sl_sync_dirty', JSON.stringify({ [key]: { f: Date.now() - 1000, l: Date.now() - 500, nf: false } }));
+    w._syncFlushSingleDoc(hRef, col);
+    await new Promise(res => setTimeout(res, 30));
+    const clearedOnAck = !w._syncIsDirty(key);
+    localStorage.setItem(key, JSON.stringify([{ ts: 5, text: 'in-session write' }, { ts: 6, text: 'second' }]));
+    localStorage.setItem('sl_sync_dirty', JSON.stringify({ [key]: { f: Date.now() - 100, l: Date.now() - 50, nf: false } }));
+    fail = true;
+    w._syncFlushSingleDoc(hRef, col);
+    await new Promise(res => setTimeout(res, 30));
+    const entry = JSON.parse(localStorage.getItem('sl_sync_dirty') || '{}')[key];
+    _syncUser = null;
+    return { clearedOnAck, nfAfterReject: !!(entry && entry.nf) };
+  });
+  expect(r).toEqual({ clearedOnAck: true, nfAfterReject: true });
+});
+
+test('merge-for-push unions arrays nested in a date-keyed map and keeps local scalars', async ({ page }) => {
+  await gotoApp(page);
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    const local = { '2026-09-17': [{ id: 'a1' }], '2026-09-18': [{ id: 'b1' }], note: 'local' };
+    const cloud = { '2026-09-17': [{ id: 'a0' }, { id: 'a1' }], '2026-09-16': [{ id: 'z' }], note: 'cloud' };
+    const m = w._syncMergeForPush(local, cloud, KEYS.activityLog);
+    return { d17: m['2026-09-17'].map((e: any) => e.id), d18: m['2026-09-18'].map((e: any) => e.id), note: m.note, has16: '2026-09-16' in m };
+  });
+  expect(r).toEqual({ d17: ['a1', 'a0'], d18: ['b1'], note: 'local', has16: false });   // cloud-only keys survive server-side via merge:true
+});
+
+test('import / restore marking: restored synced keys are flagged needs-full on an attached device', async ({ page }) => {
+  await gotoApp(page);
+  await armLedger(page);
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    w.syncMarkUnsynced([KEYS.growth, 'ziva_theme', KEYS.meds]);
+    const m = JSON.parse(localStorage.getItem('sl_sync_dirty') || '{}');
+    return { growth: !!(m[KEYS.growth] && m[KEYS.growth].nf), meds: !!(m[KEYS.meds] && m[KEYS.meds].nf), themeIgnored: !(('ziva_theme') in m) };
+  });
+  expect(r).toEqual({ growth: true, meds: true, themeIgnored: true });
 });
