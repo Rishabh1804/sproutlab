@@ -3432,11 +3432,14 @@ function checkFoodCombo() {
     benefits.push('Iron + Vitamin C pairing — absorption boosted up to 3×!');
   }
   // Iron + Calcium conflict
-  const hasIron = tags.includes('iron-rich');
-  const hasCalcium = tags.includes('bone-health') && (nutrients.includes('calcium') || rawFoods.some(f => ['paneer','cheese','curd','yogurt','dahi','sesame','til','ragi'].includes(f)));
-  if (hasIron && hasCalcium && rawFoods.length > 1) {
-    if (verdict === 'safe') { verdict = 'caution'; verdictEmoji = zi('warn'); }
-    warnings.push('Iron + calcium in same meal can reduce iron absorption. Consider spacing them 2 hours apart.');
+  // Proportionate (Ceres V-C-270-18): only when the iron and the calcium come from DIFFERENT
+  // foods (ragi alone carries both), and as a gentle note, not a caution verdict — a single
+  // meal's effect is real (Hallberg 1991) but longer-term iron status is not changed
+  // (Ames 1999, young children). Everyday dal with a little curd is fine.
+  const _ironFoods = rawFoods.filter(f => getFoodTags([f]).tags.includes('iron-rich'));
+  const _calcFoods = rawFoods.filter(f => ['paneer','cheese','curd','yogurt','dahi','milk'].includes(f));
+  if (_ironFoods.some(f => _calcFoods.indexOf(f) === -1) && _calcFoods.some(f => _ironFoods.indexOf(f) === -1)) {
+    warnings.push('For her main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
   }
   // Brain health combo
   if (tags.includes('brain-health') || tags.includes('omega-3')) {

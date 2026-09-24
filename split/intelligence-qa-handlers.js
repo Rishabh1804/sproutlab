@@ -318,7 +318,7 @@ function _qaRoutine() {
 
   var md = getDomainData('medical', _offsetDateStr(today(), -6), today());
   if (md.suppAdherence !== null) {
-    var d3Text = 'Vit D3: ' + md.suppAdherence + '% adherence';
+    var d3Text = 'Vitamin D: ' + md.suppAdherence + '% adherence';
     if (md.d3FatRate !== null && (md.d3WithFat + md.d3WithoutFat) >= 3) {
       d3Text += ' · ' + md.d3FatRate + '% with fat';
     }
@@ -2065,7 +2065,7 @@ function _qaNutrientTips(nutrient) {
       { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
     ],
     'calcium': [
-      { text: 'Vitamin D3 helps calcium absorption \u2014 ensure daily D3 drops', signal: 'info' },
+      { text: 'Vitamin D helps her absorb calcium \u2014 keep her Vitamin D supplement as prescribed', signal: 'info' },
       { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
     ],
     'protein': [
@@ -3073,6 +3073,23 @@ function qaAnswerSupplement(intentId) {
         actionItems.push({ text: 'Set extra reminders for ' + s.flaggedDays.join(', '), signal: 'action' });
       }
 
+      // A twice-daily med: one line per dose from its slot state, so "not given yet" never
+      // follows two logged doses (Kael V-K-270-18) and an unlogged earlier dose is never a
+      // "don't forget" (that invites a double dose).
+      var sMed = (meds || []).filter(function(mm) { return mm.active && mm.name === s.name; })[0];
+      if (sMed && medDoseSlots(sMed).length > 1) {
+        medSlotStates(sMed).forEach(function(x) {
+          if (x.state === 'na') return;
+          var L = x.label.charAt(0).toUpperCase() + x.label.slice(1) + ' dose';
+          if (x.state === 'resolved') {
+            if (x.parsed.status === 'skipped') actionItems.push({ text: L + ': skipped', signal: 'info' });
+            else actionItems.push({ text: L + ': given' + (x.parsed.givenAt ? ' at ' + _formatTime12h(x.parsed.givenAt) : ''), signal: 'good' });
+          } else if (x.state === 'later') actionItems.push({ text: L + ': later today', signal: 'info' });
+          else if (x.state === 'due') actionItems.push({ text: L + ': due now', signal: 'action' });
+          else actionItems.push({ text: L + ': not logged — record whether it was given; don\'t double up', signal: 'action' });
+        });
+        return;
+      }
       // Today's status — CR-1: schema-aware via parseMedCheck (handles both legacy string + new object).
       var todayEntry = (medChecks || {})[today()];
       var todayStatus = todayEntry ? todayEntry[s.name] : undefined;

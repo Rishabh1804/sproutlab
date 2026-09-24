@@ -2286,7 +2286,8 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
     if (ev.type === 'feed') counts.meal++;
     else if (ev.type === 'nap') counts.nap++;
     else if (ev.type === 'sleep') counts.night++;
-    else if (ev.type === 'med') counts.med++;
+    // Only a GIVEN dose counts as logged — never a skip (Vela V-V-270-2).
+    else if (ev.type === 'med') { if (ev.parsed && (ev.parsed.status === 'done' || ev.parsed.status === 'late')) counts.med++; }
     else if (ev.type === 'poop') counts.poop++;
     else if (ev.type === 'activity') counts.activity++;
     else if (ev.type === 'ct' || ev.type === 'careticket') counts.ct++;
@@ -2301,7 +2302,15 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
   if (counts.meal > 0) parts.push(num(counts.meal, 'meal', 'meals'));
   if (counts.night > 0) parts.push('night sleep');
   if (counts.nap > 0) parts.push(num(counts.nap, 'nap', 'naps'));
-  if (counts.med > 0) parts.push('D3 logged');
+  if (counts.med > 0) {
+    // Name the supplement's actual state: a twice-daily dose half-done must not read as done.
+    const _vd = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+    const _vdSlots = _vd ? medDoseSlots(_vd) : [];
+    if (_vdSlots.length > 1) {
+      const nIn = _vdSlots.filter(function(sl) { return medCheckIsDone(medSlotRecord(_vd, today(), sl.key)); }).length;
+      parts.push(nIn === _vdSlots.length ? 'all supplement doses given' : nIn + ' of ' + _vdSlots.length + ' supplement doses given');
+    } else parts.push(counts.med === 1 ? 'supplement given' : counts.med + ' supplements given');
+  }
   if (counts.poop > 0) parts.push(num(counts.poop, 'poop', 'poops'));
   // V-K-91 (Kael synth-fold): activity + careticket counts are taxonomy
   // citizens. "care-note" is the soft surface word — neither "ticket"
@@ -2945,7 +2954,11 @@ function renderTodaySoFar() {
   const anchor = _tsfGetAnchor();
   const nudges = _tsfGetNudges();
   const patterns = _tsfPatternCache || [];
-  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0;
+  // Never "All caught up" while a med dose is due or unlogged (Vela V-V-270-2).
+  const _medOpen = (typeof medSlotStates === 'function') && (meds || []).some(function(m) {
+    return m.active && medSlotStates(m).some(function(x) { return x.state === 'due' || x.state === 'unlogged'; });
+  });
+  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0 && !_medOpen;
 
   // Mark cache as clean
   _tsfCacheDirty = false;

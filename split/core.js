@@ -160,9 +160,17 @@ function medCheckGivenAt(val) {
 function medDosesPerDay(m) {
   if (!m) return 1;
   if (m.dosesPerDay >= 1 && m.dosesPerDay <= 3) return Math.floor(m.dosesPerDay);
-  var t = ((m.freq || '') + ' ' + (m.dose || '')).toLowerCase();
-  if (/\b(thrice|three times|3 times|tds|tid)\b|\bx\s*3\b|\b3\s*x\b/.test(t)) return 3;
-  if (/\b(twice|two times|2 times|bd|bid)\b|\bx\s*2\b|\b2\s*x\b/.test(t)) return 2;
+  // Free text is read conservatively (Kael V-K-270-17/21): "How often" only — never the dose
+  // ("2 x 400 IU") — and a course length ("x 5 days") or a once-marker never multiplies.
+  // The add form's explicit "Doses a day" choice is the reliable path.
+  var t = String(m.freq || '').toLowerCase();
+  if (!t) return 1;
+  if (/\b(once|od|o\.d|q24h|weekly|week|alternate|sos|prn|as needed|if needed|stat)\b/.test(t)) return 1;
+  var abc = t.match(/\b([0-9])-([0-9])-([0-9])\b/);   // 1-0-1 · 1-1-1
+  if (abc) { var n = [abc[1], abc[2], abc[3]].filter(function(x) { return x !== '0'; }).length; return Math.min(Math.max(n, 1), 3); }
+  var perDay = '\\s*(a |per )?(day|daily)\\b';
+  if (new RegExp('\\b(thrice|tds|tid|t\\.d\\.s)\\b|8 ?-?hourly|every 8 ?h|\\bq8h\\b|\\b(3 ?x|x ?3|3 times)' + perDay).test(t)) return 3;
+  if (new RegExp('\\b(twice|bd|bid|b\\.d)\\b|12 ?-?hourly|every 12 ?h|\\bq12h\\b|morning (and|&) (night|evening)|\\b(2 ?x|x ?2|2 times|two times)' + perDay).test(t)) return 2;
   return 1;
 }
 function medDoseSlots(m) {
@@ -177,24 +185,77 @@ function activeMedDoses() {
   var out = [];
   (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).forEach(function(m) {
     if (!m.active) return;
-    medDoseSlots(m).forEach(function(s) { out.push(Object.assign({}, m, { name: s.key, doseSlot: s.label, baseName: m.name })); });
+    // `label` is the parent-facing text (slot first — Vela V-V-270-7); `name` stays the storage key.
+    medDoseSlots(m).forEach(function(s) { out.push(Object.assign({}, m, { name: s.key, doseSlot: s.label, baseName: m.name,
+      label: s.label ? s.label.charAt(0).toUpperCase() + s.label.slice(1) + ' dose · ' + m.name : m.name })); });
   });
   return out;
 }
-// A slot is due from its part of the day on (morning always; afternoon from 12; evening from 16).
+// A slot is due from its part of the day: morning from 05:00 (so a late-night log of last
+// evening's dose never lands on today's morning — Maren S-1), afternoon 12:00, evening 16:00.
+var _MED_SLOT_FROM = { '': 0, morning: 5, afternoon: 12, evening: 16 };
 function medSlotDueNow(slot, hour) {
   if (hour === undefined) hour = new Date().getHours();
-  return !slot || !slot.doseSlot || slot.doseSlot === 'morning' || hour >= (slot.doseSlot === 'afternoon' ? 12 : 16);
+  return hour >= (_MED_SLOT_FROM[(slot && slot.doseSlot) || ''] || 0);
+}
+// A slot's record for a day. A bare-name record on a multi-dose med (logged by a device on an
+// older build, or history from before a once→twice switch) counts for its first slot (Maren S-9).
+function medSlotRecord(m, ds, slotKey) {
+  var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+  if (!day) return undefined;
+  if (day[slotKey] !== undefined) return day[slotKey];
+  var slots = medDoseSlots(m);
+  return (slots.length > 1 && slots[0].key === slotKey) ? day[m.name] : undefined;
+}
+// Does a slot count on a given day? Not before the med's start, and on the start day not a
+// slot whose window had already closed when the med was added (Maren S-8: a med added at 5 PM
+// is not "missed this morning").
+function medSlotApplies(m, ds, slotLabel) {
+  if (m.start && ds < m.start) return false;
+  if (ds !== m.start || !m.createdAt) return true;
+  var labels = medDoseSlots(m).map(function(s) { return s.label; });
+  var i = labels.indexOf(slotLabel || '');
+  var closes = (i >= 0 && i < labels.length - 1) ? _MED_SLOT_FROM[labels[i + 1]] : 24;
+  return parseInt(m.createdAt, 10) < closes;
+}
+// The record for one activeMedDoses() entry on a day (bare-name fallback included).
+function medDoseRecord(entry, ds) {
+  if (!entry) return undefined;
+  if (!entry.baseName) { var d = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null; return d ? d[entry.name] : undefined; }
+  return medSlotRecord(Object.assign({}, entry, { name: entry.baseName }), ds, entry.name);
+}
+// Today's state per dose slot, so exactly ONE dose per med is ever offered as "Done now"
+// (Maren B-1): 'resolved' · 'due' (the latest slot already due) · 'unlogged' (an earlier slot
+// never logged once a later one is due — resolve it, never give it now) · 'later' (not due yet).
+function medSlotStates(m, hour) {
+  var t = today();
+  var slots = medDoseSlots(m);
+  var dueIdx = -1;
+  slots.forEach(function(s, i) { if (medSlotDueNow({ doseSlot: s.label }, hour)) dueIdx = i; });
+  return slots.map(function(s, i) {
+    var p = parseMedCheck(medSlotRecord(m, t, s.key));
+    var resolved = !!(p && (p.status === 'done' || p.status === 'late' || p.status === 'skipped'));
+    var state = !medSlotApplies(m, t, s.label) ? 'na'
+      : resolved ? 'resolved' : i > dueIdx ? 'later' : i === dueIdx ? 'due' : 'unlogged';
+    return { key: s.key, label: s.label, state: state, parsed: p };
+  });
 }
 // One day's record for a whole med, in the med-check object shape (parseMedCheck-compatible):
 // once-daily → the raw value; multi-dose → 'done'/'late' only when EVERY slot is given,
 // 'skipped' when every slot was skipped, 'partial' otherwise (neither done nor skipped).
 function medDayVal(m, ds) {
-  var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
   var slots = medDoseSlots(m);
-  if (slots.length === 1) return day ? day[m.name] : undefined;
-  var ps = slots.map(function(s) { return parseMedCheck(day && day[s.key]); });
-  if (ps.every(function(p) { return !p; })) return undefined;
+  if (slots.length === 1) {
+    var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+    if (!day) return undefined;
+    if (day[m.name] !== undefined) return day[m.name];
+    // Switched back to once a day: a given slot-keyed dose still counts for that day (V-K-270-23).
+    var sk = Object.keys(day).filter(function(k) { return k.indexOf(m.name + ' · ') === 0; });
+    return sk.map(function(k) { return day[k]; }).filter(medCheckIsDone)[0];
+  }
+  var ps = slots.filter(function(s) { return medSlotApplies(m, ds, s.label); })
+    .map(function(s) { return parseMedCheck(medSlotRecord(m, ds, s.key)); });
+  if (!ps.length || ps.every(function(p) { return !p; })) return undefined;
   var done = ps.filter(function(p) { return p && (p.status === 'done' || p.status === 'late'); });
   if (done.length === ps.length) {
     var fat = done.filter(function(p) { return p.withFat === true; })[0];
@@ -205,19 +266,36 @@ function medDayVal(m, ds) {
   if (ps.every(function(p) { return p && p.status === 'skipped'; })) return { status: 'skipped' };
   return { status: 'partial', givenAt: done.length ? done[0].givenAt : null };
 }
-// Her Vitamin D supplement — by what it contains, not only a "D3" name (a calcium + D3
-// suspension such as Caldikind-P NF replaced the drops on 2026-09-24).
+// One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
+// stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
+// date keeps the sync identity (name + start) the same on both phones, so they merge.
+function _migrateCaldikind20260924() {
+  try {
+    if (localStorage.getItem('ziva_mig_caldikind') === '1') return;
+    localStorage.setItem('ziva_mig_caldikind', '1');
+    if (!Array.isArray(meds) || meds.some(function(m) { return /caldikind/i.test(m.name || ''); })) return;
+    var drops = meds.filter(function(m) { return m.active && /\bd3\b|vitamin\s*d\b/i.test(m.name || ''); });
+    if (!drops.length) return;
+    drops.forEach(function(m) { m.active = false; });
+    meds.push(Object.assign({}, DEFAULT_MEDS[0]));
+    save(KEYS.meds, meds);
+  } catch (e) { console.warn('[migrate] caldikind:', e); }
+}
+// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
+// iron drop must not match — Maren S-4). With two active, the most recently started wins.
 function isVitDSupplement(m) {
-  var t = m ? ((m.name || '') + ' ' + (m.brand || '') + ' ' + (m.notes || '')) : '';
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
   return /\bd3\b|vitamin\s*d\b|\bvit\.?\s*d\b|cholecalciferol|caldikind/i.test(t);
 }
 function vitDSupplement() {
-  return (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).find(function(m) { return m.active && isVitDSupplement(m); }) || null;
+  var list = (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).filter(function(m) { return m.active && isVitDSupplement(m); });
+  list.sort(function(a, b) { return String(b.start || '').localeCompare(String(a.start || '')); });
+  return list[0] || null;
 }
 // A calcium-bearing supplement (calcium + D3 combos) — drives the iron-spacing guidance.
 function isCalciumSupplement(m) {
-  var t = m ? ((m.name || '') + ' ' + (m.brand || '') + ' ' + (m.notes || '')) : '';
-  return /calci|caldikind/i.test(t);
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
+  return /\bcalcium\b|caldikind/i.test(t);
 }
 
 // Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
@@ -1384,6 +1462,7 @@ function init() {
     if (!Array.isArray(vaccData)) vaccData = DEFAULT_VACC.slice();
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
+    _migrateCaldikind20260924();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -2260,7 +2339,9 @@ function calcMedicalScore() {
       const dayChecks = medChecks[ds];
       if (dayChecks) {
         // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
-        const anyDone = Object.values(dayChecks).some(v => medCheckIsDone(v));
+        // Her Vitamin D supplement counts a day only when every dose was given (Kael V-K-270-22).
+        const _vd = vitDSupplement();
+        const anyDone = _vd ? medCheckIsDone(medDayVal(_vd, ds)) : Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }

@@ -3122,6 +3122,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mi-adherence-dot.mi-adh-missed { background:rgba(230,100,100,0.2); color:var(--tc-rose); }
 .mi-adherence-dot.mi-adh-skipped { background:rgba(240,180,80,0.2); color:var(--tc-amber); }
 .mi-adherence-dot.mi-adh-late { background:rgba(180,180,180,0.2); color:var(--mid); }
+.mi-adherence-dot.mi-adh-partial { background:rgba(240,180,80,0.12); color:var(--tc-amber); }
 .mi-adherence-dot.mi-adh-future { background:rgba(0,0,0,0.03); }
 .mi-velocity-range { position:relative; height:8px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:visible; margin:var(--sp-8) 0; }
 .mi-velocity-expected { position:absolute; top:0; height:100%; border-radius:var(--r-full); background:rgba(58,112,96,0.15); }
@@ -12952,7 +12953,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <!-- VIT D3 14-DAY PATTERN -->
       <div class="card card-info col-full" id="medD3PatternCard">
         <div class="card-header">
-          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-sun"/></svg></div> Vitamin D3 · 14-day pattern</div>
+          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-sun"/></svg></div> Vitamin D supplement · 14-day pattern</div>
         </div>
         <div id="medD3PatternBody"></div>
       </div>
@@ -15378,15 +15379,21 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   <div class="modal">
     <h3><svg class="zi" aria-hidden="true"><use href="#zi-pill"/></svg> Add Medication / Supplement</h3>
     <div class="fx-col g8">
-      <input type="text" id="medName" class="modal-input">
-      <input type="text" id="medDose" class="modal-input">
-      <input type="text" id="medBrand" class="modal-input">
-      <input type="text" id="medFreq" class="modal-input">
+      <input type="text" id="medName" class="modal-input" placeholder="Name (e.g. Caldikind-P NF)" aria-label="Name">
+      <input type="text" id="medDose" class="modal-input" placeholder="Dose (e.g. 2.5 ml)" aria-label="Dose">
+      <input type="text" id="medBrand" class="modal-input" placeholder="Brand" aria-label="Brand">
+      <input type="text" id="medFreq" class="modal-input" placeholder="How often (e.g. Twice daily)" aria-label="How often">
+      <select id="medDoses" class="modal-input" aria-label="Doses a day">
+        <option value="">Doses a day — read from "How often"</option>
+        <option value="1">Once a day</option>
+        <option value="2">Twice a day (morning + evening)</option>
+        <option value="3">Three times a day</option>
+      </select>
       <div class="settings-row">
         <label style="font-size:var(--fs-base);color:var(--mid);">Started:</label>
         <input type="date" id="medStart" style="flex:1;padding:7px 10px;border-radius:var(--r-lg);border:1.5px solid var(--sky-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sky-light);outline:none;">
       </div>
-      <input type="text" id="medNotes" class="modal-input">
+      <input type="text" id="medNotes" class="modal-input" placeholder="Notes" aria-label="Notes">
     </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" data-close-modal="medModal">Cancel</button>
@@ -17512,6 +17519,7 @@ const DEFAULT_MEDS = [
     dose:    '2.5 ml',
     brand:   'Mankind',
     freq:    'Twice daily',
+    dosesPerDay: 2,
     start:   '2026-09-24',
     notes:   'Calcium, phosphorus, magnesium, zinc & Vitamin D3 suspension (replaces the D3 drops)',
     active:  true,
@@ -18936,7 +18944,7 @@ const ALLERGENS = {
 // ── COMBINATION LOGIC ──
 const COMBO_RULES = [
   { foods:['iron','calcium'], type:'caution', title:'Iron + Calcium compete for absorption',
-    detail:'Calcium can reduce iron absorption by 30-50%. Don\'t serve ragi (iron) with paneer (calcium) in the same meal. Space iron-rich and calcium-rich foods at least 2 hours apart.' },
+    detail:'Calcium lowers iron absorption at the same meal. For her main iron meal, keep big dairy portions and any calcium supplement dose apart; a little curd with dal is fine.' },
   { foods:['iron','vitamin c'], type:'boost', title:'Iron + Vitamin C = absorption boost',
     detail:'Vitamin C increases iron absorption by up to 3×. This is an excellent combination! Pair ragi/dal with lemon, tomato, orange, or mango.' },
   { foods:['iron','tea'], type:'avoid', title:'Tea blocks iron absorption',
@@ -21432,9 +21440,9 @@ const ESCALATING_TIPS = {
     'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
   ],
   'supp-streak-broken': [
-    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s drops as usual; there is no need to double up for the missed day.',
-    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking the drops to the morning feed makes them hard to forget.',
-    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the drops next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
+    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
+    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking each dose to a meal or her milk makes it hard to forget.',
+    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
   ],
   'low-iron': [
     'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',
@@ -23500,9 +23508,17 @@ function medCheckGivenAt(val) {
 function medDosesPerDay(m) {
   if (!m) return 1;
   if (m.dosesPerDay >= 1 && m.dosesPerDay <= 3) return Math.floor(m.dosesPerDay);
-  var t = ((m.freq || '') + ' ' + (m.dose || '')).toLowerCase();
-  if (/\b(thrice|three times|3 times|tds|tid)\b|\bx\s*3\b|\b3\s*x\b/.test(t)) return 3;
-  if (/\b(twice|two times|2 times|bd|bid)\b|\bx\s*2\b|\b2\s*x\b/.test(t)) return 2;
+  // Free text is read conservatively (Kael V-K-270-17/21): "How often" only — never the dose
+  // ("2 x 400 IU") — and a course length ("x 5 days") or a once-marker never multiplies.
+  // The add form's explicit "Doses a day" choice is the reliable path.
+  var t = String(m.freq || '').toLowerCase();
+  if (!t) return 1;
+  if (/\b(once|od|o\.d|q24h|weekly|week|alternate|sos|prn|as needed|if needed|stat)\b/.test(t)) return 1;
+  var abc = t.match(/\b([0-9])-([0-9])-([0-9])\b/);   // 1-0-1 · 1-1-1
+  if (abc) { var n = [abc[1], abc[2], abc[3]].filter(function(x) { return x !== '0'; }).length; return Math.min(Math.max(n, 1), 3); }
+  var perDay = '\\s*(a |per )?(day|daily)\\b';
+  if (new RegExp('\\b(thrice|tds|tid|t\\.d\\.s)\\b|8 ?-?hourly|every 8 ?h|\\bq8h\\b|\\b(3 ?x|x ?3|3 times)' + perDay).test(t)) return 3;
+  if (new RegExp('\\b(twice|bd|bid|b\\.d)\\b|12 ?-?hourly|every 12 ?h|\\bq12h\\b|morning (and|&) (night|evening)|\\b(2 ?x|x ?2|2 times|two times)' + perDay).test(t)) return 2;
   return 1;
 }
 function medDoseSlots(m) {
@@ -23517,24 +23533,77 @@ function activeMedDoses() {
   var out = [];
   (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).forEach(function(m) {
     if (!m.active) return;
-    medDoseSlots(m).forEach(function(s) { out.push(Object.assign({}, m, { name: s.key, doseSlot: s.label, baseName: m.name })); });
+    // `label` is the parent-facing text (slot first — Vela V-V-270-7); `name` stays the storage key.
+    medDoseSlots(m).forEach(function(s) { out.push(Object.assign({}, m, { name: s.key, doseSlot: s.label, baseName: m.name,
+      label: s.label ? s.label.charAt(0).toUpperCase() + s.label.slice(1) + ' dose · ' + m.name : m.name })); });
   });
   return out;
 }
-// A slot is due from its part of the day on (morning always; afternoon from 12; evening from 16).
+// A slot is due from its part of the day: morning from 05:00 (so a late-night log of last
+// evening's dose never lands on today's morning — Maren S-1), afternoon 12:00, evening 16:00.
+var _MED_SLOT_FROM = { '': 0, morning: 5, afternoon: 12, evening: 16 };
 function medSlotDueNow(slot, hour) {
   if (hour === undefined) hour = new Date().getHours();
-  return !slot || !slot.doseSlot || slot.doseSlot === 'morning' || hour >= (slot.doseSlot === 'afternoon' ? 12 : 16);
+  return hour >= (_MED_SLOT_FROM[(slot && slot.doseSlot) || ''] || 0);
+}
+// A slot's record for a day. A bare-name record on a multi-dose med (logged by a device on an
+// older build, or history from before a once→twice switch) counts for its first slot (Maren S-9).
+function medSlotRecord(m, ds, slotKey) {
+  var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+  if (!day) return undefined;
+  if (day[slotKey] !== undefined) return day[slotKey];
+  var slots = medDoseSlots(m);
+  return (slots.length > 1 && slots[0].key === slotKey) ? day[m.name] : undefined;
+}
+// Does a slot count on a given day? Not before the med's start, and on the start day not a
+// slot whose window had already closed when the med was added (Maren S-8: a med added at 5 PM
+// is not "missed this morning").
+function medSlotApplies(m, ds, slotLabel) {
+  if (m.start && ds < m.start) return false;
+  if (ds !== m.start || !m.createdAt) return true;
+  var labels = medDoseSlots(m).map(function(s) { return s.label; });
+  var i = labels.indexOf(slotLabel || '');
+  var closes = (i >= 0 && i < labels.length - 1) ? _MED_SLOT_FROM[labels[i + 1]] : 24;
+  return parseInt(m.createdAt, 10) < closes;
+}
+// The record for one activeMedDoses() entry on a day (bare-name fallback included).
+function medDoseRecord(entry, ds) {
+  if (!entry) return undefined;
+  if (!entry.baseName) { var d = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null; return d ? d[entry.name] : undefined; }
+  return medSlotRecord(Object.assign({}, entry, { name: entry.baseName }), ds, entry.name);
+}
+// Today's state per dose slot, so exactly ONE dose per med is ever offered as "Done now"
+// (Maren B-1): 'resolved' · 'due' (the latest slot already due) · 'unlogged' (an earlier slot
+// never logged once a later one is due — resolve it, never give it now) · 'later' (not due yet).
+function medSlotStates(m, hour) {
+  var t = today();
+  var slots = medDoseSlots(m);
+  var dueIdx = -1;
+  slots.forEach(function(s, i) { if (medSlotDueNow({ doseSlot: s.label }, hour)) dueIdx = i; });
+  return slots.map(function(s, i) {
+    var p = parseMedCheck(medSlotRecord(m, t, s.key));
+    var resolved = !!(p && (p.status === 'done' || p.status === 'late' || p.status === 'skipped'));
+    var state = !medSlotApplies(m, t, s.label) ? 'na'
+      : resolved ? 'resolved' : i > dueIdx ? 'later' : i === dueIdx ? 'due' : 'unlogged';
+    return { key: s.key, label: s.label, state: state, parsed: p };
+  });
 }
 // One day's record for a whole med, in the med-check object shape (parseMedCheck-compatible):
 // once-daily → the raw value; multi-dose → 'done'/'late' only when EVERY slot is given,
 // 'skipped' when every slot was skipped, 'partial' otherwise (neither done nor skipped).
 function medDayVal(m, ds) {
-  var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
   var slots = medDoseSlots(m);
-  if (slots.length === 1) return day ? day[m.name] : undefined;
-  var ps = slots.map(function(s) { return parseMedCheck(day && day[s.key]); });
-  if (ps.every(function(p) { return !p; })) return undefined;
+  if (slots.length === 1) {
+    var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+    if (!day) return undefined;
+    if (day[m.name] !== undefined) return day[m.name];
+    // Switched back to once a day: a given slot-keyed dose still counts for that day (V-K-270-23).
+    var sk = Object.keys(day).filter(function(k) { return k.indexOf(m.name + ' · ') === 0; });
+    return sk.map(function(k) { return day[k]; }).filter(medCheckIsDone)[0];
+  }
+  var ps = slots.filter(function(s) { return medSlotApplies(m, ds, s.label); })
+    .map(function(s) { return parseMedCheck(medSlotRecord(m, ds, s.key)); });
+  if (!ps.length || ps.every(function(p) { return !p; })) return undefined;
   var done = ps.filter(function(p) { return p && (p.status === 'done' || p.status === 'late'); });
   if (done.length === ps.length) {
     var fat = done.filter(function(p) { return p.withFat === true; })[0];
@@ -23545,19 +23614,36 @@ function medDayVal(m, ds) {
   if (ps.every(function(p) { return p && p.status === 'skipped'; })) return { status: 'skipped' };
   return { status: 'partial', givenAt: done.length ? done[0].givenAt : null };
 }
-// Her Vitamin D supplement — by what it contains, not only a "D3" name (a calcium + D3
-// suspension such as Caldikind-P NF replaced the drops on 2026-09-24).
+// One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
+// stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
+// date keeps the sync identity (name + start) the same on both phones, so they merge.
+function _migrateCaldikind20260924() {
+  try {
+    if (localStorage.getItem('ziva_mig_caldikind') === '1') return;
+    localStorage.setItem('ziva_mig_caldikind', '1');
+    if (!Array.isArray(meds) || meds.some(function(m) { return /caldikind/i.test(m.name || ''); })) return;
+    var drops = meds.filter(function(m) { return m.active && /\bd3\b|vitamin\s*d\b/i.test(m.name || ''); });
+    if (!drops.length) return;
+    drops.forEach(function(m) { m.active = false; });
+    meds.push(Object.assign({}, DEFAULT_MEDS[0]));
+    save(KEYS.meds, meds);
+  } catch (e) { console.warn('[migrate] caldikind:', e); }
+}
+// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
+// iron drop must not match — Maren S-4). With two active, the most recently started wins.
 function isVitDSupplement(m) {
-  var t = m ? ((m.name || '') + ' ' + (m.brand || '') + ' ' + (m.notes || '')) : '';
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
   return /\bd3\b|vitamin\s*d\b|\bvit\.?\s*d\b|cholecalciferol|caldikind/i.test(t);
 }
 function vitDSupplement() {
-  return (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).find(function(m) { return m.active && isVitDSupplement(m); }) || null;
+  var list = (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).filter(function(m) { return m.active && isVitDSupplement(m); });
+  list.sort(function(a, b) { return String(b.start || '').localeCompare(String(a.start || '')); });
+  return list[0] || null;
 }
 // A calcium-bearing supplement (calcium + D3 combos) — drives the iron-spacing guidance.
 function isCalciumSupplement(m) {
-  var t = m ? ((m.name || '') + ' ' + (m.brand || '') + ' ' + (m.notes || '')) : '';
-  return /calci|caldikind/i.test(t);
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
+  return /\bcalcium\b|caldikind/i.test(t);
 }
 
 // Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
@@ -24724,6 +24810,7 @@ function init() {
     if (!Array.isArray(vaccData)) vaccData = DEFAULT_VACC.slice();
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
+    _migrateCaldikind20260924();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -25600,7 +25687,9 @@ function calcMedicalScore() {
       const dayChecks = medChecks[ds];
       if (dayChecks) {
         // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
-        const anyDone = Object.values(dayChecks).some(v => medCheckIsDone(v));
+        // Her Vitamin D supplement counts a day only when every dose was given (Kael V-K-270-22).
+        const _vd = vitDSupplement();
+        const anyDone = _vd ? medCheckIsDone(medDayVal(_vd, ds)) : Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }
@@ -31649,20 +31738,20 @@ function renderRemindersAndAlerts() {
         const d = new Date(); d.setDate(d.getDate() - i);
         const ds = toDateStr(d);
         if (ds < earliest) continue;
-        const dayLog = medChecks[ds];
-        if (!dayLog || !dayLog[m.name]) {
+        if (!medSlotApplies(m, ds, m.doseSlot)) continue;   // start day: slot closed before it was added
+        if (!medDoseRecord(m, ds)) {
           const uid = `missed-${m.name}-${ds}`.replace(/[^a-zA-Z0-9-]/g, '_');
           html += `
           <div class="supp-alert missed" id="${uid}">
             <div class="supp-alert-top">
               <div class="supp-alert-icon">${zi('dot-red')}</div>
-              <div class="supp-alert-title">Missed — ${escHtml(m.name)}</div>
-              <div class="supp-alert-action">
-                <button class="supp-check-btn" data-action="resolveMissedMedDone" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Was given</button>
-                <button class="supp-skip-btn" data-action="resolveMissedMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Not given</button>
-              </div>
+              <div class="supp-alert-title">Not logged — ${escHtml(m.label || m.name)}</div>
             </div>
-            <div class="supp-alert-detail">${escHtml(m.dose || '')} · ${formatDate(ds)}</div>
+            <div class="supp-alert-action">
+              <button class="supp-check-btn" data-action="resolveMissedMedDone" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Was given</button>
+              <button class="supp-skip-btn" data-action="resolveMissedMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${ds}">Not given</button>
+            </div>
+            <div class="supp-alert-detail">${formatDate(ds)}${m.dose ? ' · ' + escHtml(m.dose) : ''} · was it given? Record it — don't give it now.</div>
           </div>`;
         }
       }
@@ -31684,15 +31773,54 @@ function renderRemindersAndAlerts() {
   // Vit D3 tracking v1: pending state offers "Done now" + "Done at..." + Skip.
   // Done state renders captured givenAt + with-fat context with a reachable Adjust.
   let allTodayResolved = true;
+  // Per-med slot states (core medSlotStates): exactly ONE dose per med is ever offered as
+  // "Done now" (Maren B-1). An earlier dose never logged becomes a was-it-given prompt; a dose
+  // not due yet is a quiet row that can still be logged if given early (Maren S-2).
+  const _slotStates = {};
   activeMeds.forEach((m, idx) => {
-    const dayLog = medChecks[todayStr] || {};
-    const status = dayLog[m.name];
-    const parsed = parseMedCheck(status);
+    if (!_slotStates[m.baseName]) _slotStates[m.baseName] = medSlotStates(Object.assign({}, m, { name: m.baseName }));
+    const states = _slotStates[m.baseName];
+    const st = (states.find(x => x.key === m.name) || {}).state;
+    const dueSlot = states.find(x => x.state === 'due');
+    const parsed = parseMedCheck(medDoseRecord(m, todayStr));
     const isDone = !!(parsed && (parsed.status === 'done' || parsed.status === 'late'));
     const isSkipped = !!(parsed && parsed.status === 'skipped');
     const isResolved = isDone || isSkipped;
-    // A later dose (evening) stays quiet until its part of the day.
-    if (!isResolved && !medSlotDueNow(m)) return;
+    if (st === 'na') return;
+    // Before the day's first dose window (≈5 AM) the "later today" rows are only night noise.
+    if (st === 'later' && new Date().getHours() < 5) return;
+    if (st === 'later') {
+      const fromH = { afternoon: '12 PM', evening: '4 PM' }[m.doseSlot] || '';
+      html += `
+      <div class="supp-alert supp-alert-skipped" id="supp-alert-${idx}">
+        <div class="supp-alert-top">
+          <div class="supp-alert-icon">${zi('clock')}</div>
+          <div class="supp-alert-title">Later today — ${escHtml(m.label || m.name)}</div>
+        </div>
+        <div class="supp-alert-action">
+          <button class="supp-skip-btn supp-adjust-btn" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Given early? Log time</button>
+        </div>
+        <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fromH ? 'due from ' + fromH : 'later today'}</div>
+      </div>`;
+      return;
+    }
+    if (st === 'unlogged') {
+      allTodayResolved = false;
+      html += `
+      <div class="supp-alert missed" id="supp-alert-${idx}">
+        <div class="supp-alert-top">
+          <div class="supp-alert-icon">${zi('warn')}</div>
+          <div class="supp-alert-title">Not logged — ${escHtml(m.label || m.name)}</div>
+        </div>
+        <div class="supp-alert-action">
+          <button class="supp-check-btn" data-action="resolveMissedMedDone" data-arg="${escHtml(m.name)}" data-arg2="${todayStr}">Was given</button>
+          <button class="supp-check-btn supp-check-btn-alt" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Given at...</button>
+          <button class="supp-skip-btn" data-action="resolveMissedMedSkipped" data-arg="${escHtml(m.name)}" data-arg2="${todayStr}">Not given</button>
+        </div>
+        <div class="supp-alert-detail">Was this dose given? Don't double up${dueSlot ? ' — give only the ' + escHtml(dueSlot.label) + ' dose now' : ''}.</div>
+      </div>`;
+      return;
+    }
     if (!isResolved) allTodayResolved = false;
 
     if (!isResolved) {
@@ -31706,7 +31834,7 @@ function renderRemindersAndAlerts() {
       <div class="supp-alert" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('warn')}</div>
-          <div class="supp-alert-title">Reminder — ${escHtml(m.name)}</div>
+          <div class="supp-alert-title">Reminder — ${escHtml(m.label || m.name)}</div>
         </div>
         <div class="supp-alert-action">
           <button class="supp-check-btn" data-action="markMedDone" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Done now</button>
@@ -31738,7 +31866,7 @@ function renderRemindersAndAlerts() {
       <div class="supp-alert supp-alert-done" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('check')}</div>
-          <div class="supp-alert-title">${timeText} — ${escHtml(m.name)}</div>
+          <div class="supp-alert-title">${timeText} — ${escHtml(m.label || m.name)}</div>
         </div>
         <div class="supp-alert-action">
           <button class="supp-skip-btn supp-adjust-btn" data-action="openMedAdjust" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Adjust</button>
@@ -31757,7 +31885,7 @@ function renderRemindersAndAlerts() {
       <div class="supp-alert supp-alert-skipped" id="supp-alert-${idx}">
         <div class="supp-alert-top">
           <div class="supp-alert-icon">${zi('skip-forward')}</div>
-          <div class="supp-alert-title">Skipped today — ${escHtml(m.name)}</div>
+          <div class="supp-alert-title">Skipped today — ${escHtml(m.label || m.name)}</div>
         </div>
         <div class="supp-alert-action">
           <button class="supp-skip-btn supp-adjust-btn" data-action="undoMedSkip" data-arg="${escHtml(m.name)}" data-arg2="${idx}">Undo skip</button>
@@ -31860,26 +31988,28 @@ function getActiveCareSignals() {
         var d = new Date(); d.setDate(d.getDate() - i);
         var ds = toDateStr(d);
         if (ds < earliest) continue;
-        var dayLog = medChecks[ds];
-        if (!dayLog || !dayLog[m.name]) { missed++; if (!firstMissedDs) firstMissedDs = ds; }
+        if (!medSlotApplies(m, ds, m.doseSlot)) continue;
+        if (!medDoseRecord(m, ds)) { missed++; if (!firstMissedDs) firstMissedDs = ds; }
       }
       if (missed > 0) {
         // Land on the Home missed-resolution card (Was given / Not given) — same
         // id scheme as renderRemindersAndAlerts: missed-${name}-${ds} sanitised.
         var missedUid = ('missed-' + m.name + '-' + firstMissedDs).replace(/[^a-zA-Z0-9-]/g, '_');
         push('med-missed-' + m.name, 'high', 'dot-red',
-            missed + ' missed ' + m.name + ' dose' + (missed > 1 ? 's' : ''),
-            'Tap to resolve the past ' + (missed > 1 ? missed + ' days' : 'day'),
+            (m.label || m.name) + ' not logged on ' + missed + ' day' + (missed > 1 ? 's' : ''),
+            'Log whether it was given — don\'t give a catch-up dose',
             'home', missedUid);
       }
-      // today-pending
-      var todayLog = medChecks[todayStr] || {};
-      var parsed = (typeof parseMedCheck === 'function') ? parseMedCheck(todayLog[m.name]) : null;
-      var resolved = !!(parsed && (parsed.status === 'done' || parsed.status === 'late' || parsed.status === 'skipped'));
-      if (!resolved && medSlotDueNow(m)) {
+      // today-pending: only the slot that is 'due' (one per med) or an earlier 'unlogged' one —
+      // never a later slot, never two "due" signals for one bottle (Maren B-1).
+      var _st = medSlotStates(Object.assign({}, m, { name: m.baseName }));
+      var _mine = _st.filter(function(x) { return x.key === m.name; })[0];
+      if (_mine && (_mine.state === 'due' || _mine.state === 'unlogged')) {
         // Land on the pending reminder card (Done now / Done at… / Skip) — where
         // the dose is logged — not the read-only Meds inventory card.
-        push('med-due-' + m.name, 'med', 'warn', m.name + ' due today',
+        if (_mine.state === 'unlogged') push('med-due-' + m.name, 'med', 'warn', (m.label || m.name) + ' not logged',
+            'Was it given? Tap to record — don\'t double up', 'home', 'supp-alert-' + idx);
+        else push('med-due-' + m.name, 'med', 'warn', (m.label || m.name) + ' due now',
             m.dose ? m.dose : 'Tap to log the dose', 'home', 'supp-alert-' + idx);
       }
     });
@@ -38936,36 +39066,46 @@ function renderHistoryPreviews() {
     // Check yesterday for missed/skipped — V-K-74: schema-aware via medCheckSkipped.
     // Pre-fix `=== 'skipped'` missed the new object shape; parent who skipped yesterday
     // saw the "Yesterday's meds not logged" danger strip instead of "Skipped yesterday".
-    const ydMissed = activeMeds.filter(m => !ydChecks[m.name] || (!medCheckIsDone(ydChecks[m.name]) && !medCheckSkipped(ydChecks[m.name])));
-    const ydSkipped = activeMeds.filter(m => medCheckSkipped(ydChecks[m.name]));
+    // Only slots that applied yesterday — not before the med's start or tracking (Maren S-8).
+    const _ydTrack = medChecks._trackingSince || ydKey;
+    const ydApplies = activeMeds.filter(m => ydKey >= _ydTrack && medSlotApplies(m, ydKey, m.doseSlot));
+    const ydMissed = ydApplies.filter(m => { const r = medDoseRecord(m, ydKey); return !r || (!medCheckIsDone(r) && !medCheckSkipped(r)); });
+    const ydSkipped = ydApplies.filter(m => medCheckSkipped(medDoseRecord(m, ydKey)));
 
     if (ydMissed.length > 0) {
       medPrev.innerHTML = `<div class="info-strip is-danger">
         <span><svg class="zi"><use href="#zi-siren"/></svg></span>
         <div><strong class="tc-danger">Yesterday's meds not logged</strong>
-        <div class="t-sub">${ydMissed.map(m => m.name).join(', ')} · ${formatDate(ydKey)}</div></div>
+        <div class="t-sub">${ydMissed.map(m => escHtml(m.label || m.name)).join(', ')} · ${formatDate(ydKey)}</div></div>
       </div>`;
     } else if (ydSkipped.length > 0) {
       medPrev.innerHTML = `<div class="info-strip is-warn">
         <span><svg class="zi"><use href="#zi-warn"/></svg></span>
         <div><strong class="tc-warn">Skipped yesterday</strong>
-        <div class="t-sub">${ydSkipped.map(m => m.name).join(', ')} · ${formatDate(ydKey)}</div></div>
+        <div class="t-sub">${ydSkipped.map(m => escHtml(m.label || m.name)).join(', ')} · ${formatDate(ydKey)}</div></div>
       </div>`;
     } else {
       // Show today's status
       // V-K-66: schema-aware via medCheckIsDone.
-      const todayDone = activeMeds.filter(m => medCheckIsDone(todayChecks[m.name]));
-      if (todayDone.length === activeMeds.length && activeMeds.length > 0) {
+      // Today counts only doses already due (or already logged) — not tonight's (Vela V-V-270-11).
+      const todayRel = activeMeds.filter(m => medSlotApplies(m, today(), m.doseSlot) && (medSlotDueNow(m) || medDoseRecord(m, today())));
+      const todayDone = todayRel.filter(m => medCheckIsDone(medDoseRecord(m, today())));
+      if (todayDone.length === todayRel.length && todayRel.length > 0) {
         medPrev.innerHTML = `<div class="info-strip is-sage">
           <span><svg class="zi"><use href="#zi-check"/></svg></span>
-          <div><strong class="tc-sage">All meds given today</strong>
-          <div class="t-sub">${todayDone.map(m => m.name).join(', ')}</div></div>
+          <div><strong class="tc-sage">All meds due so far are given</strong>
+          <div class="t-sub">${todayDone.map(m => escHtml(m.label || m.name)).join(', ')}</div></div>
+        </div>`;
+      } else if (activeMeds.length > 0 && todayRel.length === 0) {
+        medPrev.innerHTML = `<div class="info-strip is-sky">
+          <span><svg class="zi"><use href="#zi-pill"/></svg></span>
+          <div class="t-mid">Today's doses start in the morning</div>
         </div>`;
       } else if (activeMeds.length > 0) {
         medPrev.innerHTML = `<div class="info-strip is-sky">
           <span><svg class="zi"><use href="#zi-pill"/></svg></span>
-          <div><strong class="tc-sky">${todayDone.length}/${activeMeds.length} given today</strong>
-          <div class="t-sub">Pending: ${activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).map(m => escHtml(m.name)).join(', ') || 'None'}</div></div>
+          <div><strong class="tc-sky">${todayDone.length}/${todayRel.length} given so far today</strong>
+          <div class="t-sub">Pending: ${todayRel.filter(m => { const r = medDoseRecord(m, today()); return !medCheckIsDone(r) && !medCheckSkipped(r); }).map(m => escHtml(m.label || m.name)).join(', ') || 'None'}</div></div>
         </div>`;
       } else {
         medPrev.innerHTML = `<div class="info-strip is-neutral">
@@ -39621,12 +39761,15 @@ const CALCIUM_D3_KNOWLEDGE = {
   dos: [
     'Shake the bottle well before every dose — the minerals settle at the bottom of a suspension.',
     'Measure with the dosing cup or an oral syringe, not a kitchen spoon.',
-    'Space the doses through the day (for example after breakfast and after dinner), at about the same times each day.',
+    'Space the doses through the day — for example after breakfast, and with her evening milk or a curd snack — at about the same times each day.',
     'Give it with or after a meal or a milk or curd snack — Vitamin D absorbs better with a little fat.',
+    // Spacing: calcium lowers non-heme iron absorption at the same meal (Hallberg, AJCN 1991);
+    // ~2 h from iron products is standard label guidance. Ceres/Maren-audited 2026-09-24.
     'If she is given iron drops, keep them about 2 hours apart from this dose.',
+    'If she gets constipated, vomits, or goes off her feeds after starting it, tell her doctor.',
   ],
   donts: [
-    'Try not to give it with her main iron meal (dal with palak, rajma) — calcium lowers how much iron she absorbs from it.',
+    'Try not to give it with her main iron meal (masoor dal, rajma or chana) — calcium lowers how much iron she absorbs from it.',
     'Don\'t add separate Vitamin D drops unless the doctor asks — this already contains Vitamin D3.',
     'Don\'t double up if a dose is missed — just give the next one at its usual time.',
     'Don\'t change the dose or stop it without checking with her doctor.',
@@ -39645,13 +39788,18 @@ function getEscalatedTip(alertId, overrideTip) {
   return tips[tierIndex];
 }
 
-function getD3Tip(streak) {
+function getD3Tip(streak, m) {
+  // The supplement's own guidance (Ceres V-C-270-14): a calcium + D3 suspension never
+  // gets the drops copy ("drop onto the nipple", an IU "standard" that invites re-adding drops).
+  const kb = (m && isCalciumSupplement(m)) ? CALCIUM_D3_KNOWLEDGE : D3_KNOWLEDGE;
   // Rotate through dos/don'ts based on context
-  const allTips = [...D3_KNOWLEDGE.dos, ...D3_KNOWLEDGE.donts];
+  const allTips = [...kb.dos, ...kb.donts];
   const idx = Math.floor(Date.now() / 86400000) % allTips.length; // rotate daily
   const mainTip = allTips[idx];
-  if (streak >= 7) return zi('check') + ' ' + D3_KNOWLEDGE.dos[Math.floor(Date.now() / 86400000) % D3_KNOWLEDGE.dos.length];
-  return zi('bulb') + ' ' + mainTip;
+  // Plain text: the alert renderer escapes `tip` and draws its own bulb icon (an embedded
+  // zi() here used to surface as literal SVG markup).
+  if (streak >= 7) return kb.dos[Math.floor(Date.now() / 86400000) % kb.dos.length];
+  return mainTip;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -39998,15 +40146,15 @@ function computeAlerts() {
     // V-K-66: schema-aware "yesterday missed" check — handles both string and object shapes.
     const ydDone = medCheckIsDone(ydStatus);
     const ydSkipped = medCheckSkipped(ydStatus);
-    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydDone && (ydSkipped || !ydStatus));
+    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydDone && (ydSkipped || !ydStatus || parseMedCheck(ydStatus).status === 'partial'));
     // Count how long the prior streak was before it broke
     if (wasMissedYd && streak === 0) {
       let priorStreak = 0;
       for (let i = 2; i < 60; i++) {
         const d = new Date(); d.setDate(d.getDate() - i);
         const ds = toDateStr(d);
-        const dl = medChecks[ds] || {};
-        if (medCheckIsDone(dl[m.name])) priorStreak++;
+        // Whole-day status (a twice-daily med keys its doses per slot) — Ceres pair-note.
+        if (medCheckIsDone(medDayVal(m, ds))) priorStreak++;
         else break;
       }
       if (priorStreak >= 3) {
@@ -40330,18 +40478,21 @@ function computeAlerts() {
     const streak = bl['suppStreak_' + mKey] || 0;
     if (streak >= 7) {
       const milestoneLabel = streak >= 30 ? 'A full month' : streak >= 14 ? '2 weeks straight' : '1 week';
-      const milestoneMsg = streak >= 30
-        ? 'Vitamin D consistency is key for bone development and calcium absorption.'
+      // Vitamin D framing only for her Vitamin D supplement; no adequacy claim (Ceres V-C-270-14).
+      const vd = isVitDSupplement(m);
+      const milestoneMsg = !vd ? 'Every dose given as prescribed.'
+        : streak >= 30
+        ? 'Steady Vitamin D supports her bones and how she uses calcium.'
         : streak >= 14
-        ? 'Ziva\'s calcium absorption is well-supported with consistent D3.'
-        : 'Building strong bones with daily D3!';
+        ? 'Two weeks of every dose, just as prescribed.'
+        : 'Building strong bones, one dose at a time.';
       const key = 'positive-supp-' + mKey + '-' + Math.floor(streak / 7);
       alerts.push({
         id: 'supp-streak', key,
         severity: 'positive', icon: zi('pill'),
         title: milestoneLabel + ' of consistent ' + m.name + '!',
         body: streak + '-day streak. ' + milestoneMsg,
-        tip: getD3Tip(streak),
+        tip: vd ? getD3Tip(streak, m) : '',
         action: null, tab: 'medical'      });
     }
   });
@@ -40810,7 +40961,7 @@ function renderTodayPlan() {
   const d3Med = vitDSupplement();
   const _pushSuppRows = (labels) => {
     if (!d3Med) return;
-    const _slotTime = { '': '9 AM', morning: '9 AM', afternoon: '1 PM', evening: '7 PM' };
+    const _slotTime = { '': 'After breakfast', morning: 'After breakfast', afternoon: 'After lunch', evening: 'Evening' };
     medDoseSlots(d3Med).filter(sl => labels.indexOf(sl.label) !== -1).forEach(sl => {
       const d3Parsed = parseMedCheck(medChecks[todayStr] && medChecks[todayStr][sl.key]);
       const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
@@ -40824,23 +40975,28 @@ function renderTodayPlan() {
         const fatPart = d3Fat ? ' · with ' + escHtml(d3Fat) : '';
         doneDetail = '<svg class="zi"><use href="#zi-check"/></svg> Done' + timePart + latePart + fatPart;
       } else {
-        doneDetail = (d3Med.dose ? d3Med.dose + ' — ' : '') + 'give with or after a meal for best absorption';
+        // A calcium + D3 evening dose goes with milk or curd, not her dal/rajma meal (Ceres V-C-270-15).
+        doneDetail = (d3Med.dose ? d3Med.dose + ' — ' : '')
+          + (isCalciumSupplement(d3Med) && sl.label === 'evening' ? 'with her evening milk or a curd snack, not with a dal or rajma meal'
+             : 'give with or after a meal for best absorption');
       }
       items.push({
-        time: _slotTime[sl.label] || '9 AM', icon: zi('pill'), title: sl.key,
+        time: _slotTime[sl.label] || 'After breakfast', icon: zi('pill'),
+        title: sl.label ? sl.label.charAt(0).toUpperCase() + sl.label.slice(1) + ' dose · ' + d3Med.name : d3Med.name,
         detail: doneDetail,
         tag: 'med', done: d3Done, htmlDetail: d3Done
       });
     });
   };
-  _pushSuppRows(['', 'morning']);
-
   // Breakfast
   const bfDone = isRealMeal(todayEntry.breakfast);
   const bfNutrientGap = bl.nutrientDays ? KEY_NUTRIENTS.filter(n => (bl.nutrientDays[n] || 0) < 2) : [];
+  // A calcium supplement dose sits by breakfast: keep her iron meal for lunch (Ceres V-C-270-16).
+  const _calcSupp = d3Med && isCalciumSupplement(d3Med);
   let bfSuggestion = '';
   if (!bfDone) {
-    if (bfNutrientGap.includes('iron')) bfSuggestion = 'Try ragi porridge — excellent iron source for this age';
+    if (bfNutrientGap.includes('iron') && _calcSupp) bfSuggestion = 'Milk or curd with fruit here — save her iron meal (masoor dal, rajma) for lunch, away from her calcium dose';
+    else if (bfNutrientGap.includes('iron')) bfSuggestion = 'Try ragi porridge — excellent iron source for this age';
     else if (bfNutrientGap.includes('calcium')) bfSuggestion = 'Ragi or almond porridge for calcium boost';
     else if (bfNutrientGap.includes('protein')) bfSuggestion = 'Add almond paste or dal water to porridge for protein';
     else bfSuggestion = 'Porridge (ragi/oats/dalia) with ghee is a balanced start';
@@ -40851,6 +41007,7 @@ function renderTodayPlan() {
     tag: 'food', done: bfDone, htmlDetail: bfDone,
     action: bfDone ? null : '_qlMeal="breakfast";_qlMealExplicit=true;openQuickModal("feed")'
   });
+  _pushSuppRows(['', 'morning']);   // after breakfast — the dose goes with or after a meal (Vela V-V-270-8)
 
   // Morning nap
   const todaySleep = sleepData.filter(e => e.date === todayStr);
@@ -41013,6 +41170,7 @@ function renderTodayPlan() {
     tag: 'food', done: dnDone, htmlDetail: dnDone,
     action: dnDone ? null : '_qlMeal="dinner";_qlMealExplicit=true;openQuickModal("feed")'
   });
+  _pushSuppRows(['evening']);
 
   // Snack
   const skDone = isRealMeal(todayEntry.snack);
@@ -41023,7 +41181,6 @@ function renderTodayPlan() {
     action: skDone ? null : '_qlMeal="snack";_qlMealExplicit=true;openQuickModal("feed")'
   });
 
-  _pushSuppRows(['evening']);
   // Bedtime routine
   const lastNights = sleepData.filter(e => e.type === 'night').sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   let avgBedtime = null;
@@ -41287,7 +41444,32 @@ function renderTrendChips() {
   // CR-9: 12h display formatter for parent-facing time.
   // CR-15: surface 'logged late' marker so chip and event-detail agree on status.
   // CR-5: also render explicit "Skipped today" rather than "Pending" when status:'skipped'.
-  if (d3Med) {
+  if (d3Med && medDoseSlots(d3Med).length > 1) {
+    // Twice-daily supplement: say where each dose stands, never one merged time (Vela V-V-270-3 —
+    // "Done at 9 AM" after both doses read as "only the morning one"). Amber only when a dose
+    // is actually due or unlogged; a dose not due yet is calm.
+    const _sts = medSlotStates(d3Med);
+    const _fromTxt = { morning: 'from 5 AM', afternoon: 'from 12 PM', evening: 'from 4 PM' };
+    const _cap = w => w.charAt(0).toUpperCase() + w.slice(1);
+    const allDone = _sts.every(x => x.state === 'na' || (x.parsed && (x.parsed.status === 'done' || x.parsed.status === 'late')));
+    let valueText, deltaText, cls;
+    if (allDone) {
+      const times = _sts.filter(x => x.parsed && x.parsed.givenAt).map(x => _formatTime12h(x.parsed.givenAt));
+      valueText = 'All doses given' + (times.length ? ' · ' + escHtml(times.join(', ')) : '');
+      deltaText = zi('check'); cls = 'tc-good';
+    } else {
+      valueText = _sts.filter(x => x.state !== 'na').map(x => {
+        const L = _cap(x.label);
+        if (x.state === 'resolved') return x.parsed.status === 'skipped' ? L + ' skipped' : L + ' given';
+        if (x.state === 'later') return L + ' ' + (_fromTxt[x.label] || 'later');
+        if (x.state === 'unlogged') return L + ' not logged';
+        return L + ' due';
+      }).join(' · ');
+      const needsAction = _sts.some(x => x.state === 'due' || x.state === 'unlogged');
+      deltaText = needsAction ? 'due' : ''; cls = needsAction ? 'tc-warn' : '';
+    }
+    chips.push({ icon:zi('sun'), label:'Vitamin D', value: valueText, delta: deltaText, cls: cls, tab:'medical' });
+  } else if (d3Med) {
     const todayStr = today();
     const d3Val = medDayVal(d3Med, todayStr);   // a twice-daily med: 'done' only once both doses are in
     const d3Parsed = parseMedCheck(d3Val);
@@ -41305,12 +41487,6 @@ function renderTrendChips() {
     } else if (d3Skipped) {
       valueText = 'Skipped today';
       deltaText = 'skipped';
-      cls = 'tc-warn';
-    } else if (d3Parsed && d3Parsed.status === 'partial') {
-      const nSlots = medDoseSlots(d3Med).length;
-      const nDone = medDoseSlots(d3Med).filter(sl => medCheckIsDone(medChecks[todayStr] && medChecks[todayStr][sl.key])).length;
-      valueText = nDone + ' of ' + nSlots + ' doses given';
-      deltaText = 'pending';
       cls = 'tc-warn';
     } else {
       valueText = 'Pending';
@@ -45902,11 +46078,14 @@ function checkFoodCombo() {
     benefits.push('Iron + Vitamin C pairing — absorption boosted up to 3×!');
   }
   // Iron + Calcium conflict
-  const hasIron = tags.includes('iron-rich');
-  const hasCalcium = tags.includes('bone-health') && (nutrients.includes('calcium') || rawFoods.some(f => ['paneer','cheese','curd','yogurt','dahi','sesame','til','ragi'].includes(f)));
-  if (hasIron && hasCalcium && rawFoods.length > 1) {
-    if (verdict === 'safe') { verdict = 'caution'; verdictEmoji = zi('warn'); }
-    warnings.push('Iron + calcium in same meal can reduce iron absorption. Consider spacing them 2 hours apart.');
+  // Proportionate (Ceres V-C-270-18): only when the iron and the calcium come from DIFFERENT
+  // foods (ragi alone carries both), and as a gentle note, not a caution verdict — a single
+  // meal's effect is real (Hallberg 1991) but longer-term iron status is not changed
+  // (Ames 1999, young children). Everyday dal with a little curd is fine.
+  const _ironFoods = rawFoods.filter(f => getFoodTags([f]).tags.includes('iron-rich'));
+  const _calcFoods = rawFoods.filter(f => ['paneer','cheese','curd','yogurt','dahi','milk'].includes(f));
+  if (_ironFoods.some(f => _calcFoods.indexOf(f) === -1) && _calcFoods.some(f => _ironFoods.indexOf(f) === -1)) {
+    warnings.push('For her main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
   }
   // Brain health combo
   if (tags.includes('brain-health') || tags.includes('omega-3')) {
@@ -54780,6 +54959,7 @@ function renderMeds() {
         <div class="med-detail">
           ${m.dose ? `<span>${zi('pill')} ${escHtml(m.dose)}</span>` : ''}
           ${m.freq ? ` &nbsp;·&nbsp; <span>${zi('clock')} ${escHtml(m.freq)}</span>` : ''}
+          ${m.active && medDosesPerDay(m) > 1 ? ` &nbsp;·&nbsp; <span>Logged as ${medDosesPerDay(m)} doses a day: ${escHtml(medDoseSlots(m).map(sl => sl.label).join(', '))}</span>` : ''}
           ${m.start ? ` &nbsp;·&nbsp; <span>${zi('clock')} Since ${formatDate(m.start)}</span>` : ''}
         </div>
         ${m.brand ? `<div class="med-brand">${zi('target')} ${escHtml(m.brand)}</div>` : ''}
@@ -54837,7 +55017,9 @@ function renderMedD3PatternCard() {
   // that excludes it from the streak walk — otherwise the card reads "Adherence: 13/14
   // (93%)" beside "Streak through yesterday: 13 days," reproducing the very three-line
   // incoherence T2-A.1 was authored to eliminate, just at a different boundary.
-  const excludeToday = (!todayParsed || todayParsed.status === 'skipped') && lastDayIsToday;
+  // A twice-daily day still in progress ('partial') is pending, not a miss (Maren S-5 / V-K-270-24).
+  const todayPending = !todayParsed || todayParsed.status === 'skipped' || todayParsed.status === 'partial';
+  const excludeToday = todayPending && lastDayIsToday;
   const adherenceWindow = excludeToday ? eligibleDays.slice(0, -1) : eligibleDays;
   const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
   const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
@@ -54881,7 +55063,7 @@ function renderMedD3PatternCard() {
   // doesn't see its streak punished by pre-activation no-data rows.
   let streak = 0;
   let streakLabel = 'Current streak';
-  const todayIsSkippedOrUnlogged = !todayParsed || todayParsed.status === 'skipped';
+  const todayIsSkippedOrUnlogged = todayPending;
   const startIdx = todayIsSkippedOrUnlogged ? eligibleDays.length - 2 : eligibleDays.length - 1;
   if (todayIsSkippedOrUnlogged) streakLabel = 'Streak through yesterday';
   for (let i = startIdx; i >= 0; i--) {
@@ -54929,10 +55111,13 @@ function renderMedD3PatternCard() {
     } else if (d.parsed.status === 'skipped') {
       row = `<span class="tc-warn">Skipped</span>`;
     } else if (d.parsed.status === 'partial') {
-      // A twice-daily supplement with one dose in: say so, never "Done".
-      const nSl = medDoseSlots(d3Med).length;
-      const nIn = medDoseSlots(d3Med).filter(sl => medCheckIsDone(medChecks[d.date] && medChecks[d.date][sl.key])).length;
-      row = `<span class="tc-warn">${nIn} of ${nSl} doses</span>`;
+      // A twice-daily supplement with one dose in: say so, never "Done". Today, while the
+      // remaining doses are simply not due yet, it reads neutrally (Maren S-5).
+      const slotsD = medDoseSlots(d3Med);
+      const nIn = slotsD.filter(sl => medCheckIsDone(medSlotRecord(d3Med, d.date, sl.key))).length;
+      const laterOnly = d.date === todayStr && medSlotStates(d3Med).every(x => x.state === 'resolved' || x.state === 'later' || x.state === 'na');
+      row = laterOnly ? `<span class="t-sub">${nIn} of ${slotsD.length} given · the rest later today</span>`
+        : `<span class="tc-warn">${nIn} of ${slotsD.length} doses</span>`;
     } else {
       // CR-9 + CR-15: 12h display, surface 'logged late' marker consistently.
       const isLate = d.parsed.status === 'late';
@@ -54966,6 +55151,7 @@ function openMedModal() {
   document.getElementById('medFreq').value  = '';
   document.getElementById('medStart').value = today();
   document.getElementById('medNotes').value = '';
+  const _dz = document.getElementById('medDoses'); if (_dz) _dz.value = '';
   activateBtn('medSaveBtn', false);
   openModal('medModal');
 }
@@ -54973,7 +55159,9 @@ function openMedModal() {
 function saveMed() {
   const name = document.getElementById('medName').value.trim();
   if (!name) return;
-  meds.push({
+  const _dz = document.getElementById('medDoses');
+  const dosesPerDay = _dz && _dz.value ? parseInt(_dz.value, 10) : null;
+  const med = {
     name,
     dose:  document.getElementById('medDose').value.trim(),
     brand: document.getElementById('medBrand').value.trim(),
@@ -54981,10 +55169,24 @@ function saveMed() {
     start: document.getElementById('medStart').value,
     notes: document.getElementById('medNotes').value.trim(),
     active: true,
-  });
+  };
+  // The explicit doses-a-day choice wins over reading free text (Kael V-K-270-17).
+  if (dosesPerDay >= 1 && dosesPerDay <= 3) med.dosesPerDay = dosesPerDay;
+  // Added today: slots whose window already closed don't count as missed (Maren S-8).
+  if (med.start === today()) med.createdAt = String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0');
+  // A second Vitamin D source (Maren S-4 / Kael V-K-270-20): offer to stop the old one.
+  const oldVd = isVitDSupplement(med) ? meds.filter(m => m.active && isVitDSupplement(m)) : [];
+  meds.push(med);
   closeModal('medModal');
   _islMarkDirty('medical');
   renderMeds();
+  if (oldVd.length) {
+    // confirmAction renders msg as HTML — escape the parent-typed names (HR-4).
+    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if her doctor asked for both.', () => {
+      oldVd.forEach(m => { m.active = false; });
+      renderMeds();
+    }, 'Stop');
+  }
 }
 
 function toggleMed(i) {
@@ -60305,7 +60507,7 @@ function computeSupplementAdherence(windowDays) {
 
   activeMeds.forEach(function(med) {
     var medStart = med.start || trackingSince || todayStr;
-    var doneCount = 0, skippedCount = 0, missedCount = 0, lateCount = 0;
+    var doneCount = 0, skippedCount = 0, missedCount = 0, lateCount = 0, partialCount = 0;
     var times = []; // minutes since midnight
     var streakCurrent = 0, streakLongest = 0, streakRunning = true;
     var dayOfWeekMisses = [0,0,0,0,0,0,0]; // Sun-Sat
@@ -60344,8 +60546,13 @@ function computeSupplementAdherence(windowDays) {
         calStatus = 'skipped';
         dayOfWeekMisses[dow]++;
       } else if (ds === todayStr) {
-        // Today with no entry yet — don't count as missed, skip entirely
+        // Today still in progress (nothing yet, or a twice-daily med part-way) — not counted.
         continue;
+      } else if (parsedStatus && parsedStatus.status === 'partial') {
+        // Some doses given, not all (Maren S-6): its own status — never shown as "missed".
+        partialCount++;
+        calStatus = 'partial';
+        dayOfWeekMisses[dow]++;
       } else {
         missedCount++;
         calStatus = 'missed';
@@ -60382,7 +60589,7 @@ function computeSupplementAdherence(windowDays) {
       }
     }
 
-    var totalDays = doneCount + skippedCount + missedCount;
+    var totalDays = doneCount + skippedCount + missedCount + partialCount;
     var adherenceRate = totalDays > 0 ? Math.round((doneCount / totalDays) * 100) : 0;
     var onTimeRate = totalDays > 0 ? Math.round(((doneCount - lateCount) / totalDays) * 100) : 0;
 
@@ -60429,6 +60636,7 @@ function computeSupplementAdherence(windowDays) {
       doneCount: doneCount,
       skippedCount: skippedCount,
       missedCount: missedCount,
+      partialCount: partialCount,
       lateCount: lateCount,
       currentStreak: streakCurrent,
       longestStreak: streakLongest,
@@ -60508,7 +60716,7 @@ function renderInfoSupplementAdherence() {
     var calSorted = med.calendar.slice().reverse(); // oldest first
     calSorted.forEach(function(c) {
       var cls = 'mi-adh-' + c.status;
-      var sym = c.status === 'done' ? zi('check') : (c.status === 'skipped' ? '–' : (c.status === 'late' ? zi('check') : '—'));
+      var sym = c.status === 'done' ? zi('check') : (c.status === 'skipped' ? '–' : (c.status === 'late' ? zi('check') : (c.status === 'partial' ? '½' : '—')));
       var dateLabel = new Date(c.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
       html += '<div class="mi-adherence-dot ' + cls + '" title="' + dateLabel + ': ' + c.status + '">' + sym + '</div>';
     });
@@ -60519,6 +60727,7 @@ function renderInfoSupplementAdherence() {
     html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-missed dot-10" ></div> Missed</div>';
     html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-skipped dot-10" ></div> Skipped</div>';
     html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-late dot-10" ></div> Late</div>';
+    if (med.partialCount) html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-partial dot-10" ></div> Some doses</div>';
     html += '</div>';
     calEl.innerHTML = html;
   }
@@ -62119,6 +62328,7 @@ function _islMedicalData(startDate, endDate) {
   var dates = _islDateRange(startDate, endDate);
   var activeMeds = (meds || []).filter(function(m) { return m.active !== false; });
   var suppDays = 0;
+  var suppPartial = 0;
   var suppTotal = 0;
   var d3Times = [];
 
@@ -62151,7 +62361,13 @@ function _islMedicalData(startDate, endDate) {
           }
         }
       });
-      if (anyDone) suppDays++;
+      // A day counts only when her Vitamin D supplement's EVERY dose was given (Kael V-K-270-22);
+      // a twice-daily day part-way is 'partial', never a full day.
+      if (vdMed) {
+        var dv = parseMedCheck(medDayVal(vdMed, ds));
+        if (dv && (dv.status === 'done' || dv.status === 'late')) suppDays++;
+        else if (dv && dv.status === 'partial') suppPartial++;
+      } else if (anyDone) suppDays++;
     }
     suppTotal++;
   });
@@ -62192,6 +62408,7 @@ function _islMedicalData(startDate, endDate) {
   return {
     suppAdherence: suppTotal > 0 ? Math.round((suppDays / suppTotal) * 100) : null,
     suppDays: suppDays,
+    suppPartial: suppPartial,
     suppTotal: suppTotal,
     d3Times: d3Times,
     d3WithFat: d3WithFat,
@@ -62456,9 +62673,11 @@ function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
   // Medical highlights — D3 adherence
   if (md.suppTotal > 0) {
     if (md.suppDays > 0) {
-      highlights.push({ domain: 'medical', text: 'Vit D3 given' + (md.d3Times.length > 0 ? ' at ' + _formatTime12h(md.d3Times[0]) : ''), signal: 'good' }); // T1-5: CR-9's _formatTime12h sweep missed this site; daily/range summary rendered 24h while every other surface rendered 12h.
+      highlights.push({ domain: 'medical', text: 'Vitamin D given' + (md.d3Times.length === 1 ? ' at ' + _formatTime12h(md.d3Times[0]) : (md.d3Times.length > 1 ? ' — all doses' : '')), signal: 'good' }); // T1-5: CR-9's _formatTime12h sweep missed this site; daily/range summary rendered 24h while every other surface rendered 12h.
+    } else if (md.suppPartial > 0) {
+      highlights.push({ domain: 'medical', text: 'Vitamin D: some doses given', signal: 'neutral' });
     } else {
-      concerns.push({ domain: 'medical', text: 'Vit D3 missed', signal: 'warn' });
+      concerns.push({ domain: 'medical', text: 'Vitamin D not logged', signal: 'warn' });
     }
   }
 
@@ -65290,7 +65509,7 @@ function _qaRoutine() {
 
   var md = getDomainData('medical', _offsetDateStr(today(), -6), today());
   if (md.suppAdherence !== null) {
-    var d3Text = 'Vit D3: ' + md.suppAdherence + '% adherence';
+    var d3Text = 'Vitamin D: ' + md.suppAdherence + '% adherence';
     if (md.d3FatRate !== null && (md.d3WithFat + md.d3WithoutFat) >= 3) {
       d3Text += ' · ' + md.d3FatRate + '% with fat';
     }
@@ -67037,7 +67256,7 @@ function _qaNutrientTips(nutrient) {
       { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
     ],
     'calcium': [
-      { text: 'Vitamin D3 helps calcium absorption \u2014 ensure daily D3 drops', signal: 'info' },
+      { text: 'Vitamin D helps her absorb calcium \u2014 keep her Vitamin D supplement as prescribed', signal: 'info' },
       { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
     ],
     'protein': [
@@ -68045,6 +68264,23 @@ function qaAnswerSupplement(intentId) {
         actionItems.push({ text: 'Set extra reminders for ' + s.flaggedDays.join(', '), signal: 'action' });
       }
 
+      // A twice-daily med: one line per dose from its slot state, so "not given yet" never
+      // follows two logged doses (Kael V-K-270-18) and an unlogged earlier dose is never a
+      // "don't forget" (that invites a double dose).
+      var sMed = (meds || []).filter(function(mm) { return mm.active && mm.name === s.name; })[0];
+      if (sMed && medDoseSlots(sMed).length > 1) {
+        medSlotStates(sMed).forEach(function(x) {
+          if (x.state === 'na') return;
+          var L = x.label.charAt(0).toUpperCase() + x.label.slice(1) + ' dose';
+          if (x.state === 'resolved') {
+            if (x.parsed.status === 'skipped') actionItems.push({ text: L + ': skipped', signal: 'info' });
+            else actionItems.push({ text: L + ': given' + (x.parsed.givenAt ? ' at ' + _formatTime12h(x.parsed.givenAt) : ''), signal: 'good' });
+          } else if (x.state === 'later') actionItems.push({ text: L + ': later today', signal: 'info' });
+          else if (x.state === 'due') actionItems.push({ text: L + ': due now', signal: 'action' });
+          else actionItems.push({ text: L + ': not logged — record whether it was given; don\'t double up', signal: 'action' });
+        });
+        return;
+      }
       // Today's status — CR-1: schema-aware via parseMedCheck (handles both legacy string + new object).
       var todayEntry = (medChecks || {})[today()];
       var todayStatus = todayEntry ? todayEntry[s.name] : undefined;
@@ -74018,7 +74254,8 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
     if (ev.type === 'feed') counts.meal++;
     else if (ev.type === 'nap') counts.nap++;
     else if (ev.type === 'sleep') counts.night++;
-    else if (ev.type === 'med') counts.med++;
+    // Only a GIVEN dose counts as logged — never a skip (Vela V-V-270-2).
+    else if (ev.type === 'med') { if (ev.parsed && (ev.parsed.status === 'done' || ev.parsed.status === 'late')) counts.med++; }
     else if (ev.type === 'poop') counts.poop++;
     else if (ev.type === 'activity') counts.activity++;
     else if (ev.type === 'ct' || ev.type === 'careticket') counts.ct++;
@@ -74033,7 +74270,15 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
   if (counts.meal > 0) parts.push(num(counts.meal, 'meal', 'meals'));
   if (counts.night > 0) parts.push('night sleep');
   if (counts.nap > 0) parts.push(num(counts.nap, 'nap', 'naps'));
-  if (counts.med > 0) parts.push('D3 logged');
+  if (counts.med > 0) {
+    // Name the supplement's actual state: a twice-daily dose half-done must not read as done.
+    const _vd = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+    const _vdSlots = _vd ? medDoseSlots(_vd) : [];
+    if (_vdSlots.length > 1) {
+      const nIn = _vdSlots.filter(function(sl) { return medCheckIsDone(medSlotRecord(_vd, today(), sl.key)); }).length;
+      parts.push(nIn === _vdSlots.length ? 'all supplement doses given' : nIn + ' of ' + _vdSlots.length + ' supplement doses given');
+    } else parts.push(counts.med === 1 ? 'supplement given' : counts.med + ' supplements given');
+  }
   if (counts.poop > 0) parts.push(num(counts.poop, 'poop', 'poops'));
   // V-K-91 (Kael synth-fold): activity + careticket counts are taxonomy
   // citizens. "care-note" is the soft surface word — neither "ticket"
@@ -74677,7 +74922,11 @@ function renderTodaySoFar() {
   const anchor = _tsfGetAnchor();
   const nudges = _tsfGetNudges();
   const patterns = _tsfPatternCache || [];
-  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0;
+  // Never "All caught up" while a med dose is due or unlogged (Vela V-V-270-2).
+  const _medOpen = (typeof medSlotStates === 'function') && (meds || []).some(function(m) {
+    return m.active && medSlotStates(m).some(function(x) { return x.state === 'due' || x.state === 'unlogged'; });
+  });
+  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0 && !_medOpen;
 
   // Mark cache as clean
   _tsfCacheDirty = false;

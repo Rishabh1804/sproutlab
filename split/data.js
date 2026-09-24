@@ -1671,6 +1671,7 @@ const DEFAULT_MEDS = [
     dose:    '2.5 ml',
     brand:   'Mankind',
     freq:    'Twice daily',
+    dosesPerDay: 2,
     start:   '2026-09-24',
     notes:   'Calcium, phosphorus, magnesium, zinc & Vitamin D3 suspension (replaces the D3 drops)',
     active:  true,
@@ -3095,7 +3096,7 @@ const ALLERGENS = {
 // ── COMBINATION LOGIC ──
 const COMBO_RULES = [
   { foods:['iron','calcium'], type:'caution', title:'Iron + Calcium compete for absorption',
-    detail:'Calcium can reduce iron absorption by 30-50%. Don\'t serve ragi (iron) with paneer (calcium) in the same meal. Space iron-rich and calcium-rich foods at least 2 hours apart.' },
+    detail:'Calcium lowers iron absorption at the same meal. For her main iron meal, keep big dairy portions and any calcium supplement dose apart; a little curd with dal is fine.' },
   { foods:['iron','vitamin c'], type:'boost', title:'Iron + Vitamin C = absorption boost',
     detail:'Vitamin C increases iron absorption by up to 3×. This is an excellent combination! Pair ragi/dal with lemon, tomato, orange, or mango.' },
   { foods:['iron','tea'], type:'avoid', title:'Tea blocks iron absorption',
@@ -5591,9 +5592,9 @@ const ESCALATING_TIPS = {
     'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
   ],
   'supp-streak-broken': [
-    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s drops as usual; there is no need to double up for the missed day.',
-    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking the drops to the morning feed makes them hard to forget.',
-    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the drops next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
+    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
+    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking each dose to a meal or her milk makes it hard to forget.',
+    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
   ],
   'low-iron': [
     'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',

@@ -856,7 +856,7 @@
       <!-- VIT D3 14-DAY PATTERN -->
       <div class="card card-info col-full" id="medD3PatternCard">
         <div class="card-header">
-          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-sun"/></svg></div> Vitamin D3 · 14-day pattern</div>
+          <div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-sun"/></svg></div> Vitamin D supplement · 14-day pattern</div>
         </div>
         <div id="medD3PatternBody"></div>
       </div>
@@ -3282,15 +3282,21 @@
   <div class="modal">
     <h3><svg class="zi" aria-hidden="true"><use href="#zi-pill"/></svg> Add Medication / Supplement</h3>
     <div class="fx-col g8">
-      <input type="text" id="medName" class="modal-input">
-      <input type="text" id="medDose" class="modal-input">
-      <input type="text" id="medBrand" class="modal-input">
-      <input type="text" id="medFreq" class="modal-input">
+      <input type="text" id="medName" class="modal-input" placeholder="Name (e.g. Caldikind-P NF)" aria-label="Name">
+      <input type="text" id="medDose" class="modal-input" placeholder="Dose (e.g. 2.5 ml)" aria-label="Dose">
+      <input type="text" id="medBrand" class="modal-input" placeholder="Brand" aria-label="Brand">
+      <input type="text" id="medFreq" class="modal-input" placeholder="How often (e.g. Twice daily)" aria-label="How often">
+      <select id="medDoses" class="modal-input" aria-label="Doses a day">
+        <option value="">Doses a day — read from "How often"</option>
+        <option value="1">Once a day</option>
+        <option value="2">Twice a day (morning + evening)</option>
+        <option value="3">Three times a day</option>
+      </select>
       <div class="settings-row">
         <label style="font-size:var(--fs-base);color:var(--mid);">Started:</label>
         <input type="date" id="medStart" style="flex:1;padding:7px 10px;border-radius:var(--r-lg);border:1.5px solid var(--sky-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sky-light);outline:none;">
       </div>
-      <input type="text" id="medNotes" class="modal-input">
+      <input type="text" id="medNotes" class="modal-input" placeholder="Notes" aria-label="Notes">
     </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" data-close-modal="medModal">Cancel</button>
