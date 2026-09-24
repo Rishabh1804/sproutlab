@@ -17403,7 +17403,8 @@ const DEFAULT_VACC = [
 // seasonal:'flu': timed by season, not age — due Apr–Jul (pre-monsoon) when no flu dose
 //   was logged in the last ~10 months; never 'missing', never scored (vaccDueState).
 // 2026-09-24 reconciliation (12–24 m PR 2): removed OPV-2 @9 m, PCV Booster-2 @15 m,
-//   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025 or the UIP
+//   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025, nor in the UIP at
+//   those ages (the UIP's own OPV booster is at 16–24 m)
 //   (IAP: one PCV booster at 12–15 m; TCV has no booster; the 4–6 y polio dose is IPV-B2).
 // Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
 // consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
@@ -17414,6 +17415,9 @@ const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3
   '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
   '18-19 months':18, '2 years':24, '1-2 years':12, '2-3 years':24, '3-4 years':36, '4-5 years':48,
   '4-6 years':48, '9-14 years':108, '16-18 years':192 };
+
+// Doses the schedule used to list; a stored entry with one of these names is told so.
+const VACC_RETIRED = ['OPV-2', 'PCV Booster-2', 'Typhoid Booster', 'OPV Booster'];
 
 const VACC_SCHEDULE = [
   // ── BIRTH ──
@@ -24600,7 +24604,7 @@ function calcMedicalScore() {
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
       // Routine doses inside their window and not yet given (not scored; shown as "due now").
-      vaccDueNow: VACC_SCHEDULE.filter(v => !vaccIsConditional(v, givenNames) && v.type !== 'private' && vaccDueState(v, mo) === 'due' && !vaccIsGiven(v, givenNames, givenList)).length,
+      vaccDueNow: VACC_SCHEDULE.filter(v => !vaccIsConditional(v, givenNames) && vaccDueState(v, mo) === 'due' && !vaccIsGiven(v, givenNames, givenList)).length,
       suppDays: activeMeds.length > 0 ? Math.round(suppScore / 100 * 7) : null, suppTotal: 7,
       daysSinceGrowth: daysSinceGrowth,
       hasBothMeasures: growthData.length > 0 && !!(growthData[growthData.length-1].wt && growthData[growthData.length-1].ht)
@@ -52767,9 +52771,9 @@ function renderVaccInfoPanel(vaccName) {
         <div class="t-sub" style="font-size:var(--fs-base);margin-top:2px;">${escHtml(schedInfo.age)} · ${escHtml(schedInfo.notes)}</div>
       </div>
     </div>`;
-  } else {
-    // A stored dose the IAP 2023 schedule no longer lists (e.g. Typhoid Booster,
-    // PCV Booster-2, OPV Booster) — say so rather than show nothing.
+  } else if (VACC_RETIRED.some(n => normVacc(n) === normVacc(vaccName))) {
+    // Only doses this schedule actually retired — a parent's own wording ("Flu
+    // vaccine", "Hep A") must never read as "may not be needed" (Cipher E-V 1).
     html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask her doctor whether it is still needed.</div></div></div>`;
   }
 
@@ -53319,7 +53323,7 @@ function renderVaccCoverage() {
     const start = ageMap[v.age];
     if (vaccIsGiven(v, givenNorm, givenList)) {
       if (mo >= start && vaccDueState(v, mo) === 'future') { givenCount++; given.push(v); }
-    } else if (vaccDueState(v, mo) === 'future' && _moAtSeason >= start && _moAtSeason < v.windowEnd && _fluYear >= _now.getFullYear()) {
+    } else if (vaccDueState(v, mo) === 'future' && _moAtSeason >= start && _moAtSeason < v.windowEnd) {
       upcoming.push(Object.assign({}, v, { age: 'May–June ' + _fluYear }));
     }
   });

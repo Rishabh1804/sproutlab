@@ -37,6 +37,10 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
   - *Toddler safe-sleep tier (Maren V-M-269-15):* the Safe Sleep tips are infant-only (SIDS, nothing in the crib); toddler items (crib climbing, lowering the mattress, blind cords, when a light blanket is fine) belong on the 12-month checklist.
   - *Vaccine score predicate (Kael V-K-269-10):* the routine-dose rule is re-derived in `calcMedicalScore`, its `vaccDueNow` detail and `renderVaccCoverage`; extract one helper.
   - *Kael Region headroom:* ≈ 29.3K after #269 (≈ 700 to the 30K trigger). Refresh the CLAUDE.md jurisdiction summary and scope the Kael split before PR 3's data additions.
+  - *Next PR first item (Cipher E-V 3):* Home picks the first upcoming entry in array order while Medical picks the earliest date — `getNextUpcomingVacc()` unifies them.
+  - *Engine tests (Cipher E-V 11):* add a regression spec for `vaccDueState` season cases (Sep → future, Apr–Jul → due, flu dose within 300 days → future), follow-on gating, the conditional → check path, and `getSleepTargets` anchors. When the shared vaccine helper is extracted (V-K-269-10), move the vaccine helpers from core.js to medical.js (≈ 50 lines of Kael headroom) and pass `givenList`/`now` explicitly (Cipher E-V 5–6).
+  - *UIP OPV booster (Cipher E-V 12, Maren call):* the UIP gives an OPV booster at 16–24 m; her record mixes UIP and private doses (OPV-0/1 logged). Decide whether to list it.
+  - *SLEEP_STANDARDS anchors (Cipher E-V 7):* 13, 15, 19, 30 and 36 repeat the key below them in every field but naps; prune or move to a band table.
   - *Small copy:* the under-12 m nap tips still say the 2→1 shift is "usually around 12–15 months" (12–18 elsewhere); the 7-day sleep pill's sage threshold is the standard's target, stricter than the tip's "11–14 h is normal" (Vela V-V-269-13); `intelligence-quicklog.js` hard-codes a 720-minute target (Kael pair-note).
 
 #### P1 — MILESTONE_STANDARDS stop at 12 months (data.js)

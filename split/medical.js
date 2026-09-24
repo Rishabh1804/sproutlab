@@ -3638,9 +3638,9 @@ function renderVaccInfoPanel(vaccName) {
         <div class="t-sub" style="font-size:var(--fs-base);margin-top:2px;">${escHtml(schedInfo.age)} · ${escHtml(schedInfo.notes)}</div>
       </div>
     </div>`;
-  } else {
-    // A stored dose the IAP 2023 schedule no longer lists (e.g. Typhoid Booster,
-    // PCV Booster-2, OPV Booster) — say so rather than show nothing.
+  } else if (VACC_RETIRED.some(n => normVacc(n) === normVacc(vaccName))) {
+    // Only doses this schedule actually retired — a parent's own wording ("Flu
+    // vaccine", "Hep A") must never read as "may not be needed" (Cipher E-V 1).
     html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask her doctor whether it is still needed.</div></div></div>`;
   }
 
@@ -4190,7 +4190,7 @@ function renderVaccCoverage() {
     const start = ageMap[v.age];
     if (vaccIsGiven(v, givenNorm, givenList)) {
       if (mo >= start && vaccDueState(v, mo) === 'future') { givenCount++; given.push(v); }
-    } else if (vaccDueState(v, mo) === 'future' && _moAtSeason >= start && _moAtSeason < v.windowEnd && _fluYear >= _now.getFullYear()) {
+    } else if (vaccDueState(v, mo) === 'future' && _moAtSeason >= start && _moAtSeason < v.windowEnd) {
       upcoming.push(Object.assign({}, v, { age: 'May–June ' + _fluYear }));
     }
   });

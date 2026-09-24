@@ -1563,7 +1563,8 @@ const DEFAULT_VACC = [
 // seasonal:'flu': timed by season, not age — due Apr–Jul (pre-monsoon) when no flu dose
 //   was logged in the last ~10 months; never 'missing', never scored (vaccDueState).
 // 2026-09-24 reconciliation (12–24 m PR 2): removed OPV-2 @9 m, PCV Booster-2 @15 m,
-//   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025 or the UIP
+//   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025, nor in the UIP at
+//   those ages (the UIP's own OPV booster is at 16–24 m)
 //   (IAP: one PCV booster at 12–15 m; TCV has no booster; the 4–6 y polio dose is IPV-B2).
 // Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
 // consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
@@ -1574,6 +1575,9 @@ const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3
   '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
   '18-19 months':18, '2 years':24, '1-2 years':12, '2-3 years':24, '3-4 years':36, '4-5 years':48,
   '4-6 years':48, '9-14 years':108, '16-18 years':192 };
+
+// Doses the schedule used to list; a stored entry with one of these names is told so.
+const VACC_RETIRED = ['OPV-2', 'PCV Booster-2', 'Typhoid Booster', 'OPV Booster'];
 
 const VACC_SCHEDULE = [
   // ── BIRTH ──
