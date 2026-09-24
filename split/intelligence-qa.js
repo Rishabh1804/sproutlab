@@ -1081,7 +1081,7 @@ function qaHandleFoodSafety(classified) {
   rawFoods.forEach(function(food) {
     var base = _baseFoodName(food);
     var gateR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(food) : null;
-    if (gateR && (mo < gateR.minMonth || gateR.after)) return;   // V-V-270-13 (see diet.js)
+    if (gateR && (mo < gateR.minMonth || gateR.limit)) return;   // V-V-270-13 (see diet.js)
     if (!introducedSet.has(base) && food.length > 2) {
       newFoods.push(food);
     }

@@ -906,7 +906,7 @@ function _recipeSafetySummary(r, ageMonths) {
   if (watch.length) lead.push(`Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.`);
   if (choke.length) {
     const c = [...new Set(choke)];
-    lead.push(`${c.join(', ')} — cut ${c.length > 1 ? 'them' : 'it'} as shown in "Make it safe to chew" below.`);
+    lead.push(`${c.join(', ')} — cut as shown in "Make it safe to chew" below.`);
   }
   if (lead.length) return { level: 'caution', icon: 'note', text: lead.join(' ') };
   return { level: 'safe', icon: 'check',
@@ -1675,8 +1675,15 @@ function renderLibShelves() {
   var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
   if (!FE) { root.innerHTML = ''; return; }
   var groups = { encourage: [], conditional: [], warn: [], inform: [] };
+  // Age-framed records (Cipher A1): the shelf title matches the pop-up it opens; a record
+  // past its window (honey from 2) leaves the shelves — search still reaches it.
+  var mo = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
+  var framed = {};
   Object.keys(FE).forEach(function(k) {
-    var pol = (typeof _effPolarity === 'function') ? _effPolarity(FE[k]) : 'inform';
+    var e = (typeof foodEffectForAge === 'function') ? foodEffectForAge(FE[k], mo) : FE[k];
+    if (!e) return;
+    framed[k] = e;
+    var pol = (typeof _effPolarity === 'function') ? _effPolarity(e) : 'inform';
     (groups[pol] || groups.inform).push(k);
   });
   var html = _libLeadHtml();
@@ -1690,7 +1697,7 @@ function renderLibShelves() {
       '<span class="lib-group-count">' + keys.length + '</span>' +
       '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
       '<div class="lib-shelf-row">';
-    keys.forEach(function(k) { html += _libBookHtml(k, FE[k], s.pol); });
+    keys.forEach(function(k) { html += _libBookHtml(k, framed[k], s.pol); });
     html += '</div></div>';
   });
   root.innerHTML = html;
@@ -2027,7 +2034,9 @@ function _libLookupRow(name) {
   var feKey = _libFEKeyFor(name);
   var action = feKey ? 'libOpenBook' : 'libOpenCorpus';
   var arg = feKey || name;
-  var disp = feKey ? _libDisplayName(feKey, FOOD_EFFECTS[feKey]) : _libTitleCase(name);
+  var feAged = (feKey && typeof foodEffectForAge === 'function' && typeof getAgeInMonths === 'function')
+    ? foodEffectForAge(FOOD_EFFECTS[feKey], getAgeInMonths()) : (feKey ? FOOD_EFFECTS[feKey] : null);
+  var disp = feKey ? _libDisplayName(feKey, feAged) : _libTitleCase(name);
   var grp = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
   var dt = (grp && grp.group) ? ' dt-' + grp.group : '';
   var j = _libJourney(name);
@@ -3405,7 +3414,7 @@ function checkFoodCombo() {
     // Not "introduce it alone for 3 days" for a food she should wait on, or a limit-food like
     // salt or juice (Vela V-V-270-13) — the gate / after line already speaks for those.
     const gateR = _fdAgeRule(food);
-    if (gateR && (mo < gateR.minMonth || gateR.after)) return;
+    if (gateR && (mo < gateR.minMonth || gateR.limit)) return;
     if (!isIntroduced && food.length > 2) {
       newFoods.push(food);
     }

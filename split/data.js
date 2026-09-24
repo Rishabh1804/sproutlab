@@ -2443,7 +2443,7 @@ const NUTRITION = {
 const AGE_RULES = {
   // 24 m, not 12 (Cipher A2, 2026-09-24): botulism is the under-1 reason, and from 1 honey is a free
   // sugar (WHO; US DGA) under the same 24 m added-sugar gate — so every surface says one thing.
-  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2', after:'A small amount now and then — honey is an added sugar, so keep it occasional, like jaggery.' },
+  'honey':    { limit:true, minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2', after:'A small amount now and then — honey is an added sugar, so keep it occasional, like jaggery.' },
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
@@ -2460,7 +2460,7 @@ const AGE_RULES = {
   'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
   'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
   // after: shown once the gate has passed (V-C-266-10), so 'Fine from 12 months' never hides the limit.
-  'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
+  'salt':     { limit:true, minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
   // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
   // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
   // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
@@ -2473,7 +2473,7 @@ const AGE_RULES = {
   'tea':      { minMonth:24, aliases:['chai','chay','milk tea','masala chai','doodh chai','kadak chai','green tea','black tea'], reason:'Tannins block iron absorption. Caffeine is harmful for babies and toddlers.' },
   'coffee':   { minMonth:24, aliases:['cold coffee','filter coffee','kaapi'], reason:'Caffeine is harmful for infants and toddlers.' },
   // 12–24 m PR 3: AAP 2017 — no juice under 1; ≤ 4 oz (120 ml) 100% juice a day at 1–3 y; WHO 2023 'limit'.
-  'juice':    { minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.', after:'Whole fruit is better. If you give 100% juice: at most 120 ml a day, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks wait until 2.' },
+  'juice':    { limit:true, minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.', after:'Whole fruit is better. If you give 100% juice: at most 120 ml a day, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks wait until 2.' },
   'whole nut': { minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   'whole nuts':{ minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   // food-effects-v2 (P1a-β): peanut + tree nut are SOFT floors (introduce-early,
