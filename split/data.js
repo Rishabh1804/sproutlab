@@ -1664,14 +1664,25 @@ const VACC_SCHEDULE = [
 ];
 
 const DEFAULT_MEDS = [
+  // 2026-09-24: prescribed in place of the D3 drops. Twice daily → logged as morning + evening
+  // dose slots (core.js medDoseSlots); recognised as her Vitamin D supplement by its contents.
+  {
+    name:    'Caldikind-P NF',
+    dose:    '2.5 ml',
+    brand:   'Mankind',
+    freq:    'Twice daily',
+    start:   '2026-09-24',
+    notes:   'Calcium, phosphorus, magnesium, zinc & Vitamin D3 suspension (replaces the D3 drops)',
+    active:  true,
+  },
   {
     name:    'Vitamin D3 Drops',
     dose:    '0.5 ml · 800 IU',
     brand:   'Ultra D3 by Meyer Vitabiotics',
     freq:    'Once daily',
     start:   '2025-09-04',
-    notes:   '',
-    active:  true,
+    notes:   'Replaced by Caldikind-P NF on 2026-09-24',
+    active:  false,
   },
 ];
 
@@ -1949,7 +1960,7 @@ const EVENT_ACTIVITIES = {
   },
   vacation: [
     { icon:zi('baby'), text:'Pack familiar foods — maintain her meal routine even while travelling' },
-    { icon:zi('pill'), text:'Don\'t forget Vitamin D drops — travel disrupts routines' },
+    { icon:zi('pill'), text:'Don\'t forget her Vitamin D supplement — travel disrupts routines' },
     { icon:zi('baby'), text:'Carry baby sunscreen + mosquito repellent if going outdoors' },
     { icon:zi('spoon'), text:'Pre-make ragi/dal powder in small zip bags — just add water for instant meals' },
     { icon:zi('moon'), text:'Try to keep nap and bedtime consistent — sleep routine matters more than location' },
@@ -5591,7 +5602,7 @@ const ESCALATING_TIPS = {
   ],
   'low-calcium': [
     'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
-    'Calcium and Vitamin D work together for bone health. Since Ziva takes D3 drops, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
+    'Calcium and Vitamin D work together for bone health. Since Ziva takes a Vitamin D supplement, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
     'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
   ],
   'low-protein': [

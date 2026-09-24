@@ -7521,10 +7521,10 @@ function renderInsightsD3() { /* v2.4: DORMANT — insights cards replaced by tr
   if (!el) return;
 
   const bl = computeBaselines();
-  const d3Med = meds.find(m => m.active && m.name.toLowerCase().includes('d3'));
+  const d3Med = vitDSupplement();   // by contents — drops, or a calcium + D3 suspension
   if (!d3Med) {
-    if (prevEl) prevEl.innerHTML = '<div class="ins-preview"><span class="ins-preview-pill ipp-neutral">No active D3 supplement</span></div>';
-    el.innerHTML = '<div class="t-sub fe-center-action" >No active Vitamin D3 supplement being tracked.</div>';
+    if (prevEl) prevEl.innerHTML = '<div class="ins-preview"><span class="ins-preview-pill ipp-neutral">No active Vitamin D supplement</span></div>';
+    el.innerHTML = '<div class="t-sub fe-center-action" >No active Vitamin D supplement being tracked.</div>';
     return;
   }
 
@@ -7578,7 +7578,7 @@ function renderInsightsD3() { /* v2.4: DORMANT — insights cards replaced by tr
       <div class="ir-icon">${zi('drop')}</div>
       <div class="ir-body">
         <div class="ir-label">Dose</div>
-        <div class="ir-value">${escHtml(d3Med.dose)} · ${escHtml(d3Med.freq || 'Once daily')}</div>
+        <div class="ir-value">${escHtml(d3Med.dose)} · ${escHtml(d3Med.freq || (medDosesPerDay(d3Med) > 1 ? medDosesPerDay(d3Med) + ' times a day' : 'Once daily'))}</div>
       </div>
     </div>`;
   }
@@ -7586,11 +7586,13 @@ function renderInsightsD3() { /* v2.4: DORMANT — insights cards replaced by tr
   // Dos & Don'ts
   html += '<div style="margin-top:8px;">';
   html += '<div class="ir-label" style="margin-bottom:6px;font-weight:600;">' + zi('check') + ' Dos</div>';
-  D3_KNOWLEDGE.dos.forEach(tip => {
+  // A calcium + D3 suspension has its own guidance (shake, space doses, iron spacing).
+  const _kb = isCalciumSupplement(d3Med) ? CALCIUM_D3_KNOWLEDGE : D3_KNOWLEDGE;
+  _kb.dos.forEach(tip => {
     html += `<div style="font-size:var(--fs-sm);color:var(--mid);padding:3px 0 3px 16px;line-height:var(--lh-normal);">• ${escHtml(tip)}</div>`;
   });
   html += '<div class="ir-label" style="margin-top:8px;margin-bottom:6px;font-weight:600;">' + zi('warn') + ' Don\'ts</div>';
-  D3_KNOWLEDGE.donts.forEach(tip => {
+  _kb.donts.forEach(tip => {
     html += `<div style="font-size:var(--fs-sm);color:var(--mid);padding:3px 0 3px 16px;line-height:var(--lh-normal);">• ${escHtml(tip)}</div>`;
   });
   html += '</div>';

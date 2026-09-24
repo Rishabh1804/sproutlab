@@ -2701,9 +2701,15 @@ function _tsfDetectPatterns() {
     { key: 'afternoon-nap', type: 'nap', minDays: 4, wStart: 750, wEnd: 990, label: 'Afternoon nap usually ~{time}', icon: zi('zzz'), color: 'lav', nudgeAction: 'nap' },
     { key: 'snack', type: 'feed', meal: 'snack', minDays: 4, wStart: 840, wEnd: 1020, label: 'Snack usually around {time}', icon: zi('spoon'), color: 'amber', nudgeAction: 'feed', nudgeMeal: 'snack' },
     { key: 'dinner', type: 'feed', meal: 'dinner', minDays: 5, wStart: 1020, wEnd: 1230, label: 'Dinner usually around {time}', icon: zi('moon'), color: 'lav', nudgeAction: 'feed', nudgeMeal: 'dinner' },
-    { key: 'afternoon-poop', type: 'poop', minDays: 3, wStart: 720, wEnd: 1020, label: 'Poop usually around {time}', icon: zi('diaper'), color: 'amber', nudgeAction: 'poop' },
-    { key: 'med-Vitamin D3 Drops', type: 'med', medName: 'Vitamin D3 Drops', minDays: 5, wStart: 0, wEnd: 1440, label: 'Vit D3 usually by {time}', icon: zi('pill'), color: 'sky', nudgeAction: 'med' }
+    { key: 'afternoon-poop', type: 'poop', minDays: 3, wStart: 720, wEnd: 1020, label: 'Poop usually around {time}', icon: zi('diaper'), color: 'amber', nudgeAction: 'poop' }
   ];
+  // Her Vitamin D supplement, one pattern per dose slot (was a hard-coded 'Vitamin D3 Drops'
+  // key, which a renamed or twice-daily supplement never matched).
+  const _vdPat = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+  if (_vdPat) medDoseSlots(_vdPat).forEach(function(sl) {
+    patternDefs.push({ key: 'med-' + sl.key, type: 'med', medName: sl.key, minDays: 5, wStart: 0, wEnd: 1440,
+      label: sl.key + ' usually by {time}', icon: zi('pill'), color: 'sky', nudgeAction: 'med' });
+  });
 
   const patterns = [];
 

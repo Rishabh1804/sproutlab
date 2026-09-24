@@ -737,6 +737,11 @@ function _islMedicalData(startDate, endDate) {
   var d3WithFat = 0;
   var d3WithoutFat = 0;
   var d3FatFoods = [];
+  // The Vitamin D supplement's own dose-slot keys (a calcium + D3 suspension such as
+  // Caldikind-P NF has no "d3" in its name); the regex still catches past drops history.
+  var vdKeys = {};
+  var vdMed = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+  if (vdMed) medDoseSlots(vdMed).forEach(function(sl) { vdKeys[sl.key] = true; });
   dates.forEach(function(ds) {
     var dayChecks = medChecks[ds];
     if (dayChecks) {
@@ -745,7 +750,7 @@ function _islMedicalData(startDate, endDate) {
         var parsed = parseMedCheck(dayChecks[name]);
         if (parsed && (parsed.status === 'done' || parsed.status === 'late')) {
           anyDone = true;
-          if (/d3|vitamin d/i.test(name)) {
+          if (vdKeys[name] || /d3|vitamin d/i.test(name)) {
             if (parsed.givenAt) d3Times.push(parsed.givenAt);
             if (parsed.withFat === true) {
               d3WithFat++;

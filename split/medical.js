@@ -2292,7 +2292,7 @@ function orderMedicalCards() {
 
   // Today's med status
   const todayKey = today();
-  const activeMeds = meds.filter(m => m.active);
+  const activeMeds = activeMedDoses().filter(m => medSlotDueNow(m));   // per dose already due
   const todayChecks = medChecks[todayKey] || {};
   // T1-6 / T3-14: schema-aware pending check. Raw truthy missed (a) corrupted partial-write
   // records and (b) the T1-6 `cleared` sentinel that an undone-skip produces — both leave a
@@ -4409,7 +4409,8 @@ function renderMedD3PatternCard() {
   const card = document.getElementById('medD3PatternCard');
   const body = document.getElementById('medD3PatternBody');
   if (!card || !body) return;
-  const d3Med = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().indexOf('d3') >= 0);
+  // Her Vitamin D supplement by what it contains (drops, or a calcium + D3 suspension).
+  const d3Med = vitDSupplement();
   if (!d3Med) { card.style.display = 'none'; return; }
   card.style.display = '';
   const todayStr = today();
@@ -4419,7 +4420,7 @@ function renderMedD3PatternCard() {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    const parsed = parseMedCheck(medChecks[ds] && medChecks[ds][d3Med.name]);
+    const parsed = parseMedCheck(medDayVal(d3Med, ds));
     days.push({ date: ds, parsed: parsed });
   }
   // CR-6: adherence denominator must respect d3Med.start AND medChecks._trackingSince —
@@ -4532,10 +4533,16 @@ function renderMedD3PatternCard() {
       row = `<span class="tc-warn">Not logged</span>`;
     } else if (d.parsed.status === 'skipped') {
       row = `<span class="tc-warn">Skipped</span>`;
+    } else if (d.parsed.status === 'partial') {
+      // A twice-daily supplement with one dose in: say so, never "Done".
+      const nSl = medDoseSlots(d3Med).length;
+      const nIn = medDoseSlots(d3Med).filter(sl => medCheckIsDone(medChecks[d.date] && medChecks[d.date][sl.key])).length;
+      row = `<span class="tc-warn">${nIn} of ${nSl} doses</span>`;
     } else {
       // CR-9 + CR-15: 12h display, surface 'logged late' marker consistently.
       const isLate = d.parsed.status === 'late';
-      const t = d.parsed.givenAt
+      const t = medDoseSlots(d3Med).length > 1 ? (isLate ? 'All doses (logged late)' : 'All doses given')
+        : d.parsed.givenAt
         ? 'Done at ' + escHtml(_formatTime12h(d.parsed.givenAt)) + (isLate ? ' (late)' : '')
         : (isLate ? 'Done (logged late)' : 'Done');
       const fat = d.parsed.withFat === true && d.parsed.fatFood
@@ -9917,8 +9924,8 @@ function computeSupplementAdherence(windowDays) {
       var ds = toDateStr(d);
       if (ds < medStart) continue;
       if (ds > todayStr) continue;
-      var dayEntry = medChecks ? medChecks[ds] : null;
-      var status = dayEntry ? dayEntry[med.name] : undefined;
+      // Whole-day status: a twice-daily med is 'done' only when every dose was given.
+      var status = medDayVal(med, ds);
       var dow = d.getDay();
 
       var calStatus = 'missed';

@@ -153,6 +153,73 @@ function medCheckGivenAt(val) {
   return p ? p.givenAt : null;
 }
 
+// ── Dose slots + the Vitamin D supplement (2026-09-24, Caldikind-P NF 2.5 ml twice daily) ──
+// A med taken N times a day is logged as N independent slots — medChecks[date][slotKey] —
+// so the existing Done / Done at / Skip / Adjust flow works per dose unchanged. Once-daily
+// meds keep their bare name as the key (full back-compat with the Vit D3 drops history).
+function medDosesPerDay(m) {
+  if (!m) return 1;
+  if (m.dosesPerDay >= 1 && m.dosesPerDay <= 3) return Math.floor(m.dosesPerDay);
+  var t = ((m.freq || '') + ' ' + (m.dose || '')).toLowerCase();
+  if (/\b(thrice|three times|3 times|tds|tid)\b|\bx\s*3\b|\b3\s*x\b/.test(t)) return 3;
+  if (/\b(twice|two times|2 times|bd|bid)\b|\bx\s*2\b|\b2\s*x\b/.test(t)) return 2;
+  return 1;
+}
+function medDoseSlots(m) {
+  var n = medDosesPerDay(m);
+  if (n === 1) return [{ key: m.name, label: '' }];
+  var labels = n === 2 ? ['morning', 'evening'] : ['morning', 'afternoon', 'evening'];
+  return labels.map(function(l) { return { key: m.name + ' · ' + l, label: l }; });
+}
+// Active meds expanded to one entry per dose slot: `name` is the medChecks key (and reads
+// as "Caldikind-P NF · evening"), `baseName` the med itself.
+function activeMedDoses() {
+  var out = [];
+  (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).forEach(function(m) {
+    if (!m.active) return;
+    medDoseSlots(m).forEach(function(s) { out.push(Object.assign({}, m, { name: s.key, doseSlot: s.label, baseName: m.name })); });
+  });
+  return out;
+}
+// A slot is due from its part of the day on (morning always; afternoon from 12; evening from 16).
+function medSlotDueNow(slot, hour) {
+  if (hour === undefined) hour = new Date().getHours();
+  return !slot || !slot.doseSlot || slot.doseSlot === 'morning' || hour >= (slot.doseSlot === 'afternoon' ? 12 : 16);
+}
+// One day's record for a whole med, in the med-check object shape (parseMedCheck-compatible):
+// once-daily → the raw value; multi-dose → 'done'/'late' only when EVERY slot is given,
+// 'skipped' when every slot was skipped, 'partial' otherwise (neither done nor skipped).
+function medDayVal(m, ds) {
+  var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+  var slots = medDoseSlots(m);
+  if (slots.length === 1) return day ? day[m.name] : undefined;
+  var ps = slots.map(function(s) { return parseMedCheck(day && day[s.key]); });
+  if (ps.every(function(p) { return !p; })) return undefined;
+  var done = ps.filter(function(p) { return p && (p.status === 'done' || p.status === 'late'); });
+  if (done.length === ps.length) {
+    var fat = done.filter(function(p) { return p.withFat === true; })[0];
+    return { status: done.some(function(p) { return p.status === 'late'; }) ? 'late' : 'done', givenAt: done[0].givenAt,
+      withFat: fat ? true : (done.every(function(p) { return p.withFat === false; }) ? false : null),
+      fatFood: fat ? fat.fatFood : null, fatDelta: fat ? fat.fatDelta : null };
+  }
+  if (ps.every(function(p) { return p && p.status === 'skipped'; })) return { status: 'skipped' };
+  return { status: 'partial', givenAt: done.length ? done[0].givenAt : null };
+}
+// Her Vitamin D supplement — by what it contains, not only a "D3" name (a calcium + D3
+// suspension such as Caldikind-P NF replaced the drops on 2026-09-24).
+function isVitDSupplement(m) {
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '') + ' ' + (m.notes || '')) : '';
+  return /\bd3\b|vitamin\s*d\b|\bvit\.?\s*d\b|cholecalciferol|caldikind/i.test(t);
+}
+function vitDSupplement() {
+  return (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).find(function(m) { return m.active && isVitDSupplement(m); }) || null;
+}
+// A calcium-bearing supplement (calcium + D3 combos) — drives the iron-spacing guidance.
+function isCalciumSupplement(m) {
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '') + ' ' + (m.notes || '')) : '';
+  return /calci|caldikind/i.test(t);
+}
+
 // Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
 // the C-1.5 factuality work flows through automatically — no second source of truth.
 var _fatBearingFoodNamesCache = null;
