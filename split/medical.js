@@ -6162,6 +6162,9 @@ function renderSleepTips() {
         { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If she needs rocking/feeding to sleep, she\'ll need it at every wake-up.' },
       ] : [
         { icon:zi('bars'), title:'About 11–14 hours a day', text:'Across 24 hours, including naps, 1–2 year olds need about 11–14 hours (AASM, WHO). Night sleep is usually 10–12 hours.' },
+        // src: AAPD policy on early childhood caries (no bottle in bed; milk before brushing);
+        // Diet tab milk guide (diet.js: open cup, ~500 ml/day cap from 12 m; breastfeeding to 2 y).
+        { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on her teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
         { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
         { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
         { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, gasps or pauses in her breathing, or sleeping with her neck stretched back (AAP).' },  // milestone-source-ok: sleep-apnoea tip citation (AAP 2012 guideline), not a milestone band

@@ -2242,6 +2242,8 @@ function calcMedicalScore() {
     components: { vaccination: vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
+      // Routine doses inside their window and not yet given (not scored; shown as "due now").
+      vaccDueNow: VACC_SCHEDULE.filter(v => !v.conditional && v.type !== 'private' && vaccDueState(v, mo) === 'due' && !givenNames.has(normVacc(v.name))).length,
       suppDays: activeMeds.length > 0 ? Math.round(suppScore / 100 * 7) : null, suppTotal: 7,
       daysSinceGrowth: daysSinceGrowth,
       hasBothMeasures: growthData.length > 0 && !!(growthData[growthData.length-1].wt && growthData[growthData.length-1].ht)
