@@ -672,7 +672,7 @@ function renderDoctorPrep() {
     <div class="fx-wrap g8">
       <div class="diet-stat ds-rose" data-tab="growth">
         <div class="diet-stat-icon"><svg class="zi"><use href="#zi-baby"/></svg></div>
-        <div class="diet-stat-val ds-val-sm">${months}m ${days}d</div>
+        <div class="diet-stat-val ds-val-sm">${fmtAgeShort(months, days)}</div>
         <div class="diet-stat-label">Age</div>
       </div>
       ${(() => { const lwp = getLatestWeight(); if (!lwp) return ''; const ww = getGrowthRef(ageMonthsAt(lwp.date)); return `<div class="diet-stat ds-rose" data-tab="growth">
@@ -720,7 +720,7 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY Ziva Jain · ' + months + ' months, ' + days + ' days old');
+  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old');
   lines.push('BORN Born 4 Sep 2025 · Jamshedpur');
   lines.push('');
 
@@ -817,7 +817,7 @@ function showFullDoctorSummary() {
       </style></head><body>`);
     
     printWin.document.write(`<h1>${zi('steth')} Paediatrician Visit Summary</h1>`);
-    printWin.document.write(`<div class="meta">Ziva Jain · ${months}m ${days}d · Generated ${formatDate(today())}</div>`);
+    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)} · Generated ${formatDate(today())}</div>`);
     printWin.document.write(`<div class="actions">`);
     printWin.document.write(`<button class="btn-print" data-action="printDashboard">${zi('note')} Print</button>`);
     printWin.document.write(`<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('raw').textContent).then(()=>this.textContent='Copied!')">${zi('note')} Copy</button>`);
@@ -958,7 +958,8 @@ function getZivaMonthDays() {
     d.setMonth(d.getMonth() + m);
     const dateStr = toDateStr(d);
     if (m === 12) continue; // skip — covered by "1st Birthday" in INDIAN_HOLIDAYS
-    events.push({ date:dateStr, title:`Ziva turns ${m} months`, type:'birthday', icon:zi('sprout'), auto:true });
+    if (m === 24) { events.push({ date:dateStr, title:"Ziva's 2nd Birthday", type:'birthday', icon:zi('party'), auto:true }); continue; }
+    events.push({ date:dateStr, title:`Ziva turns ${fmtAgeMonths(m)}`, type:'birthday', icon:zi('sprout'), auto:true });
   }
   return events;
 }
@@ -2093,7 +2094,7 @@ function renderGrowthHero() {
   const lastWtE = getLatestWeight();
   const lastHtE = getLatestHeight();
   const { months, days } = preciseAge();
-  const ageStr = `${months}m ${days}d`;
+  const ageStr = fmtAgeShort(months, days);
 
   // Compute percentiles
   let wtPct = null, htPct = null, wtVal = '—', htVal = '—', wtUnit = 'kg', htUnit = '';
@@ -4530,7 +4531,14 @@ function deleteMed(i) {
 function msStatus(keyword) {
   const kw = keyword.toLowerCase();
   const match = milestones.find(m => m.text.toLowerCase().includes(kw));
-  return match ? match.status : 'unknown';
+  if (!match) return 'unknown';
+  // The activity conditions below speak the legacy 'done' / 'in_progress'
+  // vocabulary; stored statuses are mastered/consistent/practicing/emerging
+  // (migrateMilestoneStatus). Map back so the gates work: without this every
+  // `!== 'done'` was always true and every `=== 'in_progress'` always false.
+  if (isMsDone(match)) return 'done';
+  if (isMsActive(match)) return 'in_progress';
+  return match.status;
 }
 
 const DYNAMIC_ACTIVITIES = [
@@ -4541,7 +4549,7 @@ const DYNAMIC_ACTIVITIES = [
 
   { type:'motor', icon:zi('baby'), title:'Supported sitting practice',
     desc:'Sit her with pillows around for safety and let her balance. Reaching for toys while sitting builds core stability.',
-    condition: (mo) => msStatus('sit') !== 'done' && mo >= 5 },
+    condition: (mo) => msStatus('sit') !== 'done' && mo >= 5 && mo <= 9 },
 
   { type:'motor', icon:zi('baby'), title:'Object transfer hand to hand',
     desc:'Give a toy in one hand and encourage passing to the other. Builds bilateral brain coordination.',
@@ -4549,23 +4557,23 @@ const DYNAMIC_ACTIVITIES = [
 
   { type:'motor', icon:zi('baby'), title:'Encourage crawling',
     desc:'Place a favourite toy just out of reach during tummy time. Creates motivation to move forward — belly crawling counts!',
-    condition: (mo) => msStatus('crawl') === 'in_progress' || (msStatus('crawl') !== 'done' && mo >= 6) },
+    condition: (mo) => mo < 12 && (msStatus('crawl') === 'in_progress' || (msStatus('crawl') !== 'done' && mo >= 6)) },
 
   { type:'motor', icon:zi('run'), title:'Supported standing',
     desc:'She\'s already pulling to stand — encourage brief standing at a stable surface. Builds leg strength and balance for cruising.',
-    condition: (mo) => msStatus('pull') === 'done' && msStatus('cruis') !== 'done' },
+    condition: (mo) => msStatus('pull') === 'done' && msStatus('cruis') !== 'done' && mo < 15 },
 
   { type:'motor', icon:zi('run'), title:'Cruising practice',
     desc:'Place toys along furniture to encourage stepping sideways while holding on. This bridges standing and walking.',
-    condition: (mo) => msStatus('cruis') === 'in_progress' || (msStatus('pull') === 'done' && msStatus('walk') !== 'done' && mo >= 7) },
+    condition: (mo) => mo < 15 && (msStatus('cruis') === 'in_progress' || (msStatus('pull') === 'done' && msStatus('walks independently') !== 'done' && mo >= 7)) },
 
   { type:'motor', icon:zi('run'), title:'Supported walking',
     desc:'Hold both hands and let her step forward. Gradually shift to one hand as confidence builds.',
-    condition: (mo) => msStatus('cruis') === 'done' && msStatus('walk') !== 'done' },
+    condition: (mo) => msStatus('cruis') === 'done' && msStatus('walks independently') !== 'done' && mo < 18 },
 
   { type:'motor', icon:zi('baby'), title:'Stack & knock blocks',
     desc:'Stack 2–3 soft blocks and let her knock them down. Builds spatial understanding and cause-effect learning.',
-    condition: (mo) => msStatus('stack') !== 'done' && mo >= 7 },
+    condition: (mo) => msStatus('stack') !== 'done' && mo >= 7 && mo < 12 },
 
   { type:'motor', icon:zi('note'), title:'Banging & dropping toys',
     desc:'Let her bang safe objects together or drop them from the highchair. She is learning cause-and-effect.',
@@ -4574,32 +4582,32 @@ const DYNAMIC_ACTIVITIES = [
   // ── MOTOR: Fine motor ──
   { type:'motor', icon:zi('baby'), title:'Pincer grasp practice',
     desc:'Offer small soft foods (puffs, peas) or safe objects to pick up with thumb and forefinger. Key fine motor milestone.',
-    condition: (mo) => msStatus('pincer') !== 'done' && mo >= 7 },
+    condition: (mo) => msStatus('pincer') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'motor', icon:zi('spoon'), title:'Self-feeding with spoon',
     desc:'Let her hold a pre-loaded spoon during meals. It will be messy but builds oral motor skills and independence.',
-    condition: (mo) => mo >= 7 && msStatus('finger feed') !== 'done' },
+    condition: (mo) => mo >= 7 && mo < 12 && msStatus('finger feed') !== 'done' },
 
   { type:'motor', icon:zi('spoon'), title:'Finger food practice',
     desc:'Offer soft finger foods she can grasp. Builds pincer grasp, hand-to-mouth coordination, and chewing skills.',
-    condition: (mo) => msStatus('finger feed') === 'in_progress' || (msStatus('finger feed') !== 'done' && mo >= 6) },
+    condition: (mo) => mo < 12 && (msStatus('finger feed') === 'in_progress' || (msStatus('finger feed') !== 'done' && mo >= 6)) },
 
   // ── LANGUAGE ──
   { type:'language', icon:zi('chat'), title:'Talk and narrate constantly',
     desc:'Describe everything you do — "Now we\'re putting on your shirt." Quantity and variety of words drive language circuits.',
-    condition: (mo) => mo <= 12 },
+    condition: (mo) => mo <= 24 },
 
   { type:'language', icon:zi('book'), title:'Read picture books daily',
     desc:'Simple high-contrast or cloth books with faces and objects. Point and name things. Builds visual tracking and vocabulary.',
-    condition: (mo) => mo >= 5 },
+    condition: (mo) => mo >= 5 && mo < 12 },
 
   { type:'language', icon:zi('chat'), title:'Name body parts',
     desc:'Touch her nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
-    condition: (mo) => mo >= 6 && msStatus('understand') !== 'done' },
+    condition: (mo) => mo >= 6 && mo < 18 && msStatus('understand') !== 'done' },
 
   { type:'language', icon:zi('chat'), title:'Imitation games — copy her sounds',
     desc:'Repeat her babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
-    condition: (mo) => msStatus('babbl') === 'done' || msStatus('babbl') === 'in_progress' },
+    condition: (mo) => mo < 15 && (msStatus('babbl') === 'done' || msStatus('babbl') === 'in_progress') },
 
   { type:'language', icon:zi('target'), title:'Respond to name — reinforce it',
     desc:'Call her name from different positions and reward with a smile when she turns. Strengthens name recognition.',
@@ -4612,7 +4620,7 @@ const DYNAMIC_ACTIVITIES = [
   // ── SENSORY ──
   { type:'sensory', icon:zi('star'), title:'Music & rhythm time',
     desc:'Sing nursery rhymes, clap rhythms, or play gentle music. Babies are highly responsive to rhythm — it stimulates auditory processing.',
-    condition: (mo) => mo <= 12 },
+    condition: (mo) => mo <= 24 },
 
   { type:'sensory', icon:zi('sprout'), title:'Texture exploration',
     desc:'Let her touch different safe textures — soft cloth, smooth spoon, cool bowl, bumpy ball. Sensory variety accelerates brain development.',
@@ -4637,15 +4645,15 @@ const DYNAMIC_ACTIVITIES = [
 
   { type:'social', icon:zi('baby'), title:'Peek-a-boo',
     desc:'Classic for a reason — builds object permanence and anticipation. Try variations: hide behind a cloth, under a box.',
-    condition: (mo) => mo >= 5 && msStatus('object perm') !== 'done' },
+    condition: (mo) => mo >= 5 && mo < 12 && msStatus('object perm') !== 'done' },
 
   { type:'social', icon:zi('baby'), title:'Practise waving bye-bye',
     desc:'Model waving every time someone leaves. She\'ll start imitating — a key social communication milestone.',
-    condition: (mo) => msStatus('wave') !== 'done' && mo >= 6 },
+    condition: (mo) => msStatus('wave') !== 'done' && mo >= 6 && mo < 15 },
 
   { type:'social', icon:zi('baby'), title:'Clapping games',
     desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
-    condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 },
+    condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'social', icon:zi('shy'), title:'Manage stranger anxiety gently',
     desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
@@ -4653,7 +4661,176 @@ const DYNAMIC_ACTIVITIES = [
 
   { type:'social', icon:zi('baby'), title:'Pointing practice',
     desc:'Point at objects and name them. Encourage her to point too — "Where\'s the dog?" Pointing is a major communication milestone.',
-    condition: (mo) => msStatus('point') !== 'done' && mo >= 8 },
+    condition: (mo) => msStatus('point') !== 'done' && mo >= 8 && mo < 18 },
+  // ═══ TODDLER, 12–24 months (2026-09-24) ═══
+  // Sources (fetched 2026-09-24): CDC "What You Can Do" tips at
+  // cdc.gov/act-early/milestones/{1-year,15-months,18-months,2-years};
+  // AAP HealthyChildren "The Active Toddler"; NHS Best Start in Life "First
+  // words and little sentences, 1 to 2 years"; Zero to Three 12–24 m play
+  // pages; WHO 2019 physical-activity guideline (1–2 y). Keys in // src: lines.
+  // ── MOTOR: Toddler gross motor ──
+  { type:'motor', icon:zi('run'), title:'Push and pull toys',
+    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Skip baby walkers — they are not recommended.',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'")
+
+  { type:'motor', icon:zi('leaf'), title:'Child-led walks outside',
+    desc:'Let her lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: AAP-ACT ("Child-led walks ... let your toddler lead the way ... stay close"); WHO-PA (1–2 y: at least 180 min of varied physical activity; not restrained for more than 1 hour at a time)
+
+  { type:'motor', icon:zi('goal'), title:'Roll a ball back and forth',
+    desc:'Sit facing each other and roll a soft ball between you. Say "your turn, my turn". Builds aim, catching and turn-taking.',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: CDC-18M ("rolling balls back and forth"); ZTT-SP ("roll the ball back-and-forth ... a game that builds social skills like turn-taking")
+
+  { type:'motor', icon:zi('goal'), title:'Kick and throw',
+    desc:'Give her a soft ball to kick, throw and chase. Show her how to swing a leg to kick while you hold her hand for balance at first.',
+    condition: (mo) => mo >= 18 && mo <= 24 },
+    // src: CDC-2Y ("Give your child balls to kick, roll, and throw"); AAP-ACT 19–24 m (throwing and kicking a ball); ZTT-SP (balls of different sizes to roll, throw, and chase)
+
+  { type:'motor', icon:zi('run'), title:'Cushion obstacle course',
+    desc:'Make a soft course: crawl through a big box, climb over a cushion, bounce on folded blankets, then come to you for a hug. Stay beside her the whole time.',
+    condition: (mo) => mo >= 15 && mo <= 24 },
+    // src: ZTT-SP ("Create a toddler obstacle course where your child has a chance to crawl (through a moving box), climb (over a cushion), bounce (on a pile of blankets)"; stool climbing "with supervision"); ZTT-LP ("On a rainy day, try creating an obstacle course indoors")
+
+  { type:'motor', icon:zi('run'), title:'Stairs with a hand to hold',
+    desc:'Put a toy a few steps up. Hold her hand going up and down, singing "up, up, up" and "down, down, down". Keep stair gates closed at all other times.',
+    condition: (mo) => mo >= 18 && mo <= 24 },
+    // src: AAP-ACT 19–24 m ("Climbing stairs. Place a toy up a few steps ... hold their hand as they walk up and down ... sing 'up, up, up'"); AAP-MOV ("keep the stairs gated at all times")
+
+  // ── MOTOR: Fine motor & self-help ──
+  { type:'motor', icon:zi('target'), title:'Block towers',
+    desc:'Stack blocks together and let her knock them down, then take turns building. Towers of 3–4 blocks are a typical early-toddler goal.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: CDC-15M ("You can stack the blocks and she can knock them down"); CDC-2Y ("Take turns building towers and knocking them down"); AAP-ACT 12–18 m ("may be able to make a tower of 3 or 4 blocks")
+
+  { type:'motor', icon:zi('palette'), title:'First scribbles',
+    desc:'Tape paper to the table and offer chunky crayons, or a little finger paint to spread and dot. Talk about the colours, then put her art on the wall.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: CDC-2Y ("Give your child crayons or put some finger paint on paper ... Hang it on the wall or refrigerator"); AAP-ACT 12–18 m ("scribble on paper"); NHS-BSIL ("Draw simple pictures and encourage your child to add marks and colours")
+
+  { type:'motor', icon:zi('bowl'), title:'Fill and dump',
+    desc:'Give her a basket of soft balls or blocks and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: ZTT-PA ("Fill and Dump ... If the child is walking, place the baskets a few steps apart"); CDC-18M ("putting blocks or other items in and out of containers")
+
+  { type:'motor', icon:zi('bulb'), title:'Shape sorters and chunky puzzles',
+    desc:'Try a shape sorter or a chunky wooden puzzle together. Name each piece — shape, colour or animal — as she fits it in.',
+    condition: (mo) => mo >= 18 && mo <= 24 },
+    // src: CDC-2Y ("Help your child do simple puzzles with shapes, colors, or animals. Name each piece"); ZTT-SP (nesting cups, shape-sorters, chunky wooden puzzles)
+
+  { type:'motor', icon:zi('spoon'), title:'Open cup and spoon practice',
+    desc:'Let her drink from a small open cup (no lid) and scoop with her own spoon at every meal. Sit with her and expect spills — messy is how she learns.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: CDC-15M + CDC-18M ("Let your child use a cup without a lid for drinking and practice eating with a spoon. Learning to eat and drink is messy but fun!"); CDC-18M ("sit at the table with your child when she's eating")
+
+  { type:'motor', icon:zi('sparkle'), title:'Toothbrushing together',
+    desc:'Brush her teeth with a fluoride toothpaste as part of the bedtime routine, and let her have a turn holding the brush. Brushing in front of a mirror makes it a game.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: CDC-15M ("Create a calm, quiet bedtime ... brush his teeth, and read 1 or 2 books"); ZTT-TS ("Encourage your child to take on some self-care activities — combing hair, brushing teeth"); NHS-TEETH ("Start brushing your baby's teeth with fluoride toothpaste as soon as their first milk tooth breaks through")
+    // NOTE: toothpaste AMOUNT deliberately omitted — not in any fetched source; defer to dentist/Maren.
+    // NOTE: brushing frequency deliberately omitted — not stated in the fetched sources.
+
+  // ── LANGUAGE ──
+  { type:'language', icon:zi('chat'), title:'Build on her words',
+    desc:'When she says part of a word, say the whole thing back and add a little: "Ba" — "Ball! Yes, a big red ball." Early words are not complete, and that is fine.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: CDC-1Y ("Build on what your baby tries to say ... 'Yes, that's a big, blue truck'"); CDC-15M ("A child's early words are not complete. Repeat and add to what he says"); CDC-18M ("Teach your child more words by adding to the words she says")
+
+  { type:'language', icon:zi('target'), title:'Name it, then pause',
+    desc:'When she points at something, name it and wait a few seconds before handing it over. If she makes a sound, cheer and say the word again: "Yes! Cup."',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: CDC-15M ("Tell your child the names of objects when he points to them and wait a few seconds to see if he makes any sounds ... 'Yes! Cup.'"); CDC-1Y ("Respond with words when your baby points")
+
+  { type:'language', icon:zi('book'), title:'Toddler book time',
+    desc:'Let her pick the book and turn the pages. Point to pictures and ask "What\'s that?", giving her time to point or answer. Try a new book right after her favourite.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: CDC-1Y ("books with things they can feel or flaps they can lift"); CDC-15M ("Read a new book after a favorite one"); CDC-18M ("Ask ... 'What is that?'"; "Read books and talk about the pictures using simple words"); NHS-BSIL ("give your child time to point things out"); WHO-PA ("When sedentary, engaging in reading and storytelling with a caregiver is encouraged")
+
+  { type:'language', icon:zi('camera'), title:'Family photo book',
+    desc:'Make a little book of photos of family, pets and her. Look through it together and name each person — she will start to point and say names.',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: CDC-15M ("Make a 'book' with pictures of people and pets in your child's life. Name them ... Include a picture of your child")
+
+  { type:'language', icon:zi('baby'), title:'Body-part song',
+    desc:'Sing "Head, Shoulders, Knees and Toes" and touch each part. Point to her nose and yours: "Here\'s your nose, here\'s my nose." After a few rounds, pause and see if she sings a word.',
+    condition: (mo) => mo >= 18 && mo <= 24 },
+    // src: CDC-18M ("teach your child the names for body parts ... 'Here's your nose, here's my nose'"); CDC-2Y ("Sing songs, such as 'Head, Shoulders, Knees, and Toes' ... see if your child sings some of the words")
+
+  { type:'language', icon:zi('list'), title:'Offer simple choices',
+    desc:'Hold up two options — "Red shirt or blue shirt?", "Apple or banana?" — so she can point or say which. Choices grow words and independence.',
+    condition: (mo) => mo >= 15 && mo <= 24 },
+    // src: CDC-18M ("Give simple choices ... red or blue shirt"); NHS-BSIL ("Name objects and offer your child choices, for example, 'Do you want an apple or an orange?'")
+
+  { type:'language', icon:zi('sun'), title:'Sound walk',
+    desc:'Out and about, stop and listen: the car goes "vroom", the bird goes "cheep", the shop till goes "beep". Make the sound and see if she joins in.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: NHS-BSIL ("Out and about ... a car go 'vroom vroom' ... the till go 'beep beep' ... birds singing 'cheep cheep'. Make the sounds and see if your child joins in")
+
+  { type:'language', icon:zi('chat'), title:'Mealtime and dressing chat',
+    desc:'Describe as you go: "Crunchy toast", "cold yoghurt", "one arm in, two arms in". The same words every day help her match words to things and actions.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: NHS-BSIL (senses at mealtimes — "This yoghurt is sweet"; getting dressed — "1 arm in, 2 arms in"; "hear the same words every day ... matching words ... to things and actions")
+
+  // ── SENSORY ──
+  { type:'sensory', icon:zi('drop'), title:'Sand, scoop and pour',
+    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water.',
+    condition: (mo) => mo >= 15 && mo <= 24 },
+    // src: CDC-2Y ("Let your child play with sand toys or plastic containers, spoons, or a funnel in the tub or in a sandbox"); ZTT-PA ("Squishy Sponges ... it is critical to supervise children carefully as they play" with water)
+
+  { type:'sensory', icon:zi('leaf'), title:'Nature treasure hunt',
+    desc:'On a walk, collect leaves, flowers and big pebbles in a bag, then sort them at home — big and small, rough and smooth. Watch that small items stay out of her mouth.',
+    condition: (mo) => mo >= 15 && mo <= 24 },
+    // src: ZTT-TS ("Take walks and look for new objects to explore—pine cones, acorns, rocks, and leaves"; "Go for a nature walk and collect leaves, pine cones, and rocks in a bag. Then sort them when you get home")
+    // NOTE: the choking caveat is Lyra's safety framing, not from ZTT — Maren to confirm wording (toddler choking lens).
+
+  // ── SOCIAL ──
+  { type:'social', icon:zi('bubble'), title:'Bubble pop',
+    desc:'Blow bubbles and let her point, chase and pop them. Say "pop, pop!" each time — a simple game where you both have a part.',
+    condition: (mo) => mo >= 12 && mo <= 24 },
+    // src: CDC-15M + CDC-18M ("Blow bubbles and let your child pop them. Say things as she pops them, such as 'Pop, pop'"); AAP-ACT ("Bubble play ... practice pointing at the bubbles ... chase the bubbles to pop them")
+
+  { type:'social', icon:zi('mirror'), title:'Copy me',
+    desc:'Show her a hat: "What do you do with a hat? It goes on your head!" Put it on, then hand it to her. Try it with a cup, a comb, a book.',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: CDC-15M ("Show your child different things, such as a hat ... Put it on your head and then give it to him to see if he copies you. Do this with other objects, such as a book or a cup")
+
+  { type:'social', icon:zi('baby'), title:'Hide-and-find',
+    desc:'Let her watch you hide behind a chair, then wait for her to find you. Or hide a toy under a cup while she watches — then try two cups.',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: CDC-15M ("Play simple games, such as hide and seek. Let your child watch you hide behind a chair"); ZTT-PA ("Try the Classic Shell Game ... try it with two cups"); AAP-ACT 12–18 m ("Scavenger hunt. Hide a toy with one part sticking out")
+
+  { type:'social', icon:zi('heart'), title:'Teddy talks',
+    desc:'Make a soft toy "talk" to her, and see if she copies you or makes her own toy talk back. Early pretend play starts here.',
+    condition: (mo) => mo >= 12 && mo < 18 },
+    // src: CDC-15M ("'Pretend talk' to your child with a stuffed animal. See if your child tries to copy you or if he uses another stuffed animal to 'talk' with the one you are holding")
+
+  { type:'social', icon:zi('heart'), title:'Pretend play: feed the teddy',
+    desc:'Give her a spoon, cup and blanket and take turns feeding teddy, giving dolly a bath, or tucking teddy in to sleep. Talk about each step.',
+    condition: (mo) => mo >= 18 && mo <= 24 },
+    // src: CDC-18M ("Encourage 'pretend' play. Give your child a spoon so she can pretend to feed her stuffed animal. Take turns pretending"; "a doll and a baby blanket"); ZTT-PA ("Starting at about 18 months, children are just beginning to play pretend ... 'give Teddy a drink' or 'put Teddy to sleep'"); NHS-BSIL ("giving dolly a bath")
+
+  { type:'social', icon:zi('handshake'), title:'Little helper jobs',
+    desc:'Give her small real jobs: fetch her shoes, put socks in the basket, carry a cup to the table, tidy toys to a clean-up song. Thank her every time.',
+    condition: (mo) => mo >= 15 && mo <= 24 },
+    // src: CDC-15M ("Let her get her shoes ... put the socks in the basket"; "Make up a simple 'cleanup song'"); CDC-2Y ("letting him carry things to the table, such as plastic cups or napkins. Thank your child for helping"; "putting toys or laundry in a basket"); ZTT-TS ("Give your child the chance to help around the house")
+
+  { type:'social', icon:zi('heart'), title:'Name the feeling',
+    desc:'Say what you think she feels: "You\'re frustrated — the tower fell." Point out feelings in others too: "He looks sad." Tantrums are normal at this age.',
+    condition: (mo) => mo >= 15 && mo <= 24 },
+    // src: CDC-15M ("Say what you think your child is feeling (for example, sad, mad, frustrated, happy)"; "Expect tantrums. They are normal at this age"); CDC-18M ("when he sees a child who is sad, say 'He looks sad'")
+
+  { type:'social', icon:zi('phone'), title:'Video calls with family',
+    desc:'Video calls with grandparents and family are the one screen use advised under 2. Let her wave, show toys and hear familiar voices.',
+    condition: (mo) => mo >= 12 && mo < 24 },
+    // src: CDC-1Y / CDC-15M / CDC-18M ("Limit screen time (TV, tablets, phones, etc.) to video calling with loved ones. Screen time is not recommended for children younger than 2 years of age"); WHO-PA ("For 1-year-olds, sedentary screen time ... is not recommended")
+    // NOTE: at 24 m CDC-2Y shifts to "no more than 1 hour a day of a children's program with an adult present" — hence `mo < 24`.
+
+  { type:'social', icon:zi('handshake'), title:'Side-by-side play',
+    desc:'At playdates, toddlers play next to each other rather than together, and sharing is still hard. Stay close, model "my turn?" and "thank you", and help them take turns.',
+    condition: (mo) => mo >= 18 && mo <= 24 },
+    // src: CDC-2Y ("Watch your child closely during playdates. Children this age play next to each other, but do not know how to share ... helping her share, take turns"); ZTT-SP ("Model the words ... 'My turn?', and 'Thank you'")
 ];
 
 function getFilteredActivities() {
@@ -4735,7 +4912,8 @@ function toggleActivityCat(type) { toggleCatCard('act-cat-' + type, 'act-items-'
 // ── Milestone Standards ──
 
 function getUpcomingMilestones() {
-  return MILESTONE_STANDARDS[_referenceStandard] || MILESTONE_STANDARDS.who;
+  // Per-month WHO fallback: iap/eu/cn author 6–12 m; 13–24 m come from WHO.
+  return _msStandardFor(MILESTONE_STANDARDS, _referenceStandard) || MILESTONE_STANDARDS.who;
 }
 // @@INSERT_DATA_BLOCK_20@@
 
@@ -4781,6 +4959,7 @@ function renderUpcomingMilestones() {
     motor:     { icon:zi('run'), label:'Motor' },
     language:  { icon:zi('chat'), label:'Language' },
     social:    { icon:zi('handshake'), label:'Social' },
+    sensory:   { icon:zi('sparkle'), label:'Sensory' },
     cognitive: { icon:zi('brain'), label:'Cognitive' },
   };
 
@@ -4804,7 +4983,7 @@ function renderUpcomingMilestones() {
   });
 
   const stateOrder = ['pending', 'in_progress'];
-  const catOrder = ['motor', 'language', 'social', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  const catOrder = ['motor', 'language', 'social', 'sensory', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
 
   let html = '<div class="upcoming-cats">';
 
@@ -5937,7 +6116,7 @@ function renderSleepTips() {
       tips: [
         { icon:zi('brain'), title:'Sleep fuels growth', text:'Growth hormone is primarily released during deep sleep. Consistent, adequate sleep directly supports physical growth, brain development, and immune function.' },
         { icon:zi('warn'), title:'Overtiredness spiral', text:'An overtired baby produces cortisol and adrenaline, making it harder to fall asleep and stay asleep. Catch sleepy cues early — prevention is easier than correction.' },
-        { icon:zi('baby'), title:'Teething and sleep', text:'Teething can disrupt sleep for 2–3 days around each tooth. Offer a cold teether before bed. Pain relief (consult doctor) may help on rough nights — but don\'t blame every bad night on teething.' },
+        { icon:zi('baby'), title:'Teething and sleep', text:'Teething can unsettle sleep for a few nights as a tooth comes through. Offer a chilled (not frozen) teether before bed. Pain relief (consult doctor) may help on rough nights — but don\'t blame every bad night on teething.' },
         { icon:zi('chart'), title:'Developmental leaps', text:'Major motor milestones (crawling, standing, walking) temporarily disrupt sleep. She may practice new skills in her sleep. This is normal and passes in 1–2 weeks.' },
         { icon:zi('flame'), title:'Illness recovery', text:'After illness, sleep patterns may take 1–2 weeks to normalise. Return to the pre-illness routine as soon as she\'s recovered — don\'t create new habits during sick days.' },
       ]

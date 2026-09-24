@@ -60,6 +60,10 @@ const KEYS = {
   //   { entries, _meta } breaks 20+ existing Array.isArray consumers).
   milestoneSuppress: 'ziva_milestone_suppress',
   activityMeta:      'ziva_activity_meta',
+  // teeth: single-doc tooth-eruption record { [toothId]: { date:'YYYY-MM-DD'|null, ts:epochMs } }.
+  //   date:null is a tombstone (the parent removed a tooth), so a remote copy
+  //   can't resurrect it. Merged per tooth, newest ts wins (_postReceiveTeeth).
+  teeth:             'ziva_teeth',
 };
 
 function load(key, def) {
@@ -387,6 +391,8 @@ let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, m
 // milestoneSuppress: per-milestone suppress-until { [milestoneId]: epochMs }.
 // Both hydrated from localStorage in init flow alongside the other data globals.
 let activityMeta, milestoneSuppress;
+// teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
+let teethLog;
 
 // Per-key version tracking — only resets what actually changed
 // Bump individual key versions when their defaults change
@@ -650,6 +656,7 @@ function init() {
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
+    else if (action === 'teethTap' && typeof teethTap === 'function') teethTap(arg);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
     else if (action === 'confirmMsInWindow' && typeof confirmMsInWindow === 'function') confirmMsInWindow(btn);
     else if (action === 'practicingMsInWindow' && typeof practicingMsInWindow === 'function') practicingMsInWindow(btn);
@@ -1270,6 +1277,8 @@ function init() {
   if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) activityMeta = {};
   milestoneSuppress = load(KEYS.milestoneSuppress, null) || {};
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null || Array.isArray(milestoneSuppress)) milestoneSuppress = {};
+  teethLog = load(KEYS.teeth, null) || {};
+  if (typeof teethLog !== 'object' || teethLog === null || Array.isArray(teethLog)) teethLog = {};
 
   // Load tomorrow's planned meals
   _tomorrowPlanned = load(KEYS.tomorrowPlanned, null) || null;
@@ -2243,8 +2252,11 @@ function calcMilestoneScore() {
   // A. Evidence-based completion (35%) — auto-status of age-appropriate milestones
   const brackets = Object.keys(getUpcomingMilestones()).map(Number).sort((a, b) => a - b);
   let expectedItems = [];
+  // A trailing seven-month band of brackets (6–12 m at 12 m, 12–18 m at 18 m):
+  // at 12 m this is the whole 6–12 table as before; past it, the score tracks
+  // what is age-appropriate now instead of diluting over every earlier bracket.
   brackets.forEach(br => {
-    if (br <= ageMo) {
+    if (br <= ageMo && br > ageMo - 7) {
       const items = getUpcomingMilestones()[br] || [];
       expectedItems = expectedItems.concat(items.filter(it => !it.advanced));
     }
@@ -2728,7 +2740,7 @@ function renderScrapbook() {
       <div class="scrap-body">
         <div class="scrap-title">${escHtml(entry.title || 'Untitled')}</div>
         ${entry.desc ? `<div class="scrap-desc">${escHtml(entry.desc)}</div>` : ''}
-        <div class="scrap-meta">${dateStr} · ${months}m ${days}d old</div>
+        <div class="scrap-meta">${dateStr} · ${fmtAgeShort(months, days)} old</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:var(--sp-4);align-self:flex-start;flex-shrink:0;">
         <button class="note-btn" data-action="editScrapEntry" data-arg="${entry.id}" aria-label="Edit memory">Edit</button>
@@ -3029,7 +3041,7 @@ function openScrapPhoto(id) {
   document.getElementById('lbImage').src = entry.photo;
   const entryDate = entry.date || entry.ts.split('T')[0];
   const { months, days } = ageAtScrapDate(entryDate);
-  document.getElementById('lbSub').textContent = `${formatDate(entryDate)} · ${months}m ${days}d old`;
+  document.getElementById('lbSub').textContent = `${formatDate(entryDate)} · ${fmtAgeShort(months, days)} old`;
   lb.querySelector('.lb-name').textContent = entry.title || 'Memory';
   lb.classList.add('open');
   history.pushState({ overlay: 'lightbox' }, '');
@@ -3173,7 +3185,22 @@ function preciseAge() { return ageAt(); }
 function getAgeInMonths() { return ageAt().months; }
 function ageAtDate(dateStr) {
   const { months, days } = ageAt(dateStr);
-  return `${months}m ${days}d`;
+  return fmtAgeShort(months, days);
+}
+// Age copy that grows with her: "7 months" → "1 year 2 months"; short form
+// "7m 12d" → "1y 2m 12d". Callers pass whole months from ageAt().
+function fmtAgeMonths(months) {
+  months = Math.max(0, Math.floor(months || 0));
+  if (months < 12) return months + (months === 1 ? ' month' : ' months');
+  const y = Math.floor(months / 12), r = months % 12;
+  return y + (y === 1 ? ' year' : ' years') + (r ? ' ' + r + (r === 1 ? ' month' : ' months') : '');
+}
+function fmtAgeLong(months, days) {
+  return fmtAgeMonths(months) + ', ' + days + (days === 1 ? ' day' : ' days');
+}
+function fmtAgeShort(months, days) {
+  if (months < 12) return months + 'm ' + days + 'd';
+  return Math.floor(months / 12) + 'y ' + (months % 12) + 'm ' + days + 'd';
 }
 function daysBetween(d1, d2) {
   return Math.round(Math.abs(new Date(d2) - new Date(d1)) / 86400000);
@@ -3428,7 +3455,7 @@ function openAvatarLightbox() {
   const lb = document.getElementById('avatarLightbox');
   document.getElementById('lbImage').src = src;
   const { months, days } = preciseAge();
-  document.getElementById('lbSub').textContent = `${months} months, ${days} days old`;
+  document.getElementById('lbSub').textContent = fmtAgeLong(months, days) + ' old';
   lb.classList.add('open');
   history.pushState({ overlay: 'lightbox' }, '');
 }
@@ -4754,7 +4781,7 @@ function updateStorageUsage() {
     'Growth':      ['ziva_growth'],
     'Feeding':     ['ziva_feeding'],
     'Vaccines':    ['ziva_vacc'],
-    'Milestones':  ['ziva_milestones'],
+    'Milestones':  ['ziva_milestones', 'ziva_teeth'],
     'Foods':       ['ziva_foods'],
     'Notes':       ['ziva_notes'],
     'Scrapbook':   ['ziva_scrapbook'],
@@ -5863,7 +5890,7 @@ function getPulseNarrative() {
   }
 
   if (parts.length === 0) return 'Start logging data to see weekly insights here!';
-  return `This week at ${months}m ${days}d: ${parts.join(', ')}.`;
+  return `This week at ${fmtAgeShort(months, days)}: ${parts.join(', ')}.`;
 }
 
 // ── STAT PILL TREND UPDATER ──
@@ -6524,6 +6551,23 @@ function _getActiveStandard() {
   } catch (e) { return 'who'; }
 }
 
+// _msStandardFor — per-month fallback for MILESTONE_STANDARDS. A standard that
+// doesn't author a month borrows that month's rows from STANDARDS_FALLBACK_CHAIN
+// (WHO), so iap/eu/cn (authored 6–12 m) extend to 24 m through the WHO toddler
+// rows. Authored months always win. Returns null when the key itself is unknown.
+function _msStandardFor(standards, key) {
+  const spec = standards && standards[key];
+  if (!spec || typeof spec !== 'object') return null;
+  const merged = Object.assign({}, spec);
+  const chain = (typeof STANDARDS_FALLBACK_CHAIN !== 'undefined' && Array.isArray(STANDARDS_FALLBACK_CHAIN)) ? STANDARDS_FALLBACK_CHAIN : ['who'];
+  chain.forEach(function(fb) {
+    const f = standards[fb];
+    if (fb === key || !f || typeof f !== 'object') return;
+    Object.keys(f).forEach(function(k) { if (!(k in merged)) merged[k] = f[k]; });
+  });
+  return merged;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // milestone-engine-prep-v1 PR-A — 4 engine primitives (V-K-113 split).
 // Spec: docs/specs/milestone-engine-prep-v1.md §Primitive 1..3.
@@ -6543,8 +6587,8 @@ function _predictMilestoneWindow(milestoneId, opts) {
   const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
   if (!standards) return null;
   const standardKey = opts.standardKey || _getActiveStandard();
-  const standardSpec = standards[standardKey];
-  if (!standardSpec || typeof standardSpec !== 'object') return null;
+  const standardSpec = _msStandardFor(standards, standardKey);
+  if (!standardSpec) return null;
 
   // Walk brackets (integer month keys) to find the row whose slugify(text)
   // matches milestoneId. Match by slug per the DEFAULT_MILESTONES id
@@ -6587,8 +6631,9 @@ function _predictMilestoneWindow(milestoneId, opts) {
   } else if (typeof nextBracket === 'number') {
     endBracket = nextBracket;
   } else {
-    // Top bracket fallback per V-K-114
-    endBracket = 18;
+    // Top bracket fallback per V-K-114 (12 → 18). Once the table runs past 18
+    // (toddler rows to 24), the top bracket gets the usual one-month band.
+    endBracket = Math.max(18, matchedBracket + 1);
   }
   const expectedStart = effectiveStartBracket * 30.44;
   // For advanced rows, end is (K+2)*30.44 - 1 to honor the +1 bracket shift contract.
@@ -6655,8 +6700,8 @@ function _getInWindowMilestones(ageDays, n, opts) {
   const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
   if (!standards) return [];
   const standardKey = opts.standardKey || _getActiveStandard();
-  const standardSpec = standards[standardKey];
-  if (!standardSpec || typeof standardSpec !== 'object') return [];
+  const standardSpec = _msStandardFor(standards, standardKey);
+  if (!standardSpec) return [];
   const milestonesGlobal = opts.milestones || (typeof milestones !== 'undefined' ? milestones : []);
   const suppressMap = opts.suppressMap || (typeof milestoneSuppress !== 'undefined' ? milestoneSuppress : {});
   // V-K-118 floor: nowAgeDays derived via _zivaAgeInDays(today()), never millis arithmetic.
@@ -6697,7 +6742,7 @@ function _getInWindowMilestones(ageDays, n, opts) {
       if (typeof row.endMonth === 'number') endBr = row.endMonth;
       else if (row.advanced) endBr = bracket + 2;
       else if (typeof nextBracket === 'number') endBr = nextBracket;
-      else endBr = 18;
+      else endBr = Math.max(18, bracket + 1);
       const expectedStart = effStart * 30.44;
       const expectedEnd = (endBr * 30.44) - 1;
       if (ageDays < expectedStart || ageDays > expectedEnd) continue;

@@ -331,7 +331,7 @@ function _qaRoutine() {
     headline: 'Based on last 7 days avg',
     icon: 'clock',
     domain: 'indigo',
-    sections: [{ label: age.months + ' months ' + age.days + ' days old', icon: zi('baby'), items: items }]
+    sections: [{ label: fmtAgeLong(age.months, age.days) + ' old', icon: zi('baby'), items: items }]
   };
 }
 
@@ -532,7 +532,7 @@ function _qaDoctorPrep() {
   var items = [];
 
   // Age
-  items.push({ text: 'Age: ' + age.months + ' months ' + age.days + ' days', signal: 'neutral', icon: zi('baby') });
+  items.push({ text: 'Age: ' + fmtAgeLong(age.months, age.days), signal: 'neutral', icon: zi('baby') });
 
   // Growth
   var gd = getDomainData('medical', _offsetDateStr(today(), -30), today());
@@ -613,7 +613,7 @@ function _qaDoctorPrep() {
 
   return {
     title: 'Doctor Visit Prep',
-    headline: 'Ziva \u00b7 ' + age.months + ' months',
+    headline: 'Ziva \u00b7 ' + fmtAgeMonths(age.months),
     icon: 'steth',
     domain: 'sky',
     sections: sections,
@@ -697,7 +697,7 @@ function _qaShareToday() {
 function formatSummaryAsText(summary) {
   var age = ageAt();
   var lines = [];
-  lines.push('*Ziva (' + age.months + 'mo ' + age.days + 'd) \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
+  lines.push('*Ziva (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
   if (summary.scores && summary.scores.overall !== null) lines.push('Score: ' + summary.scores.overall + '/100');
   lines.push('');
 
@@ -739,7 +739,7 @@ function qaAnswerAge() {
 
   return {
     title: 'Ziva\'s Age',
-    headline: age.months + ' months ' + age.days + ' days old',
+    headline: fmtAgeLong(age.months, age.days) + ' old',
     icon: 'baby',
     domain: 'rose',
     sections: [{ label: 'Details', icon: zi('clock'), items: [
