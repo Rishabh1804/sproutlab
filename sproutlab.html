@@ -4716,6 +4716,8 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .section-label-danger { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-danger); margin-bottom:var(--sp-6); }
 .section-label-warn   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-warn); margin:var(--sp-12) 0 var(--sp-6); }
 .section-label-info   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin:var(--sp-12) 0 var(--sp-6); }
+.section-label-due    { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sky); margin-bottom:var(--sp-6); }
+.vacc-cond-note { font-size:var(--fs-sm); color:var(--tc-lav); margin-top:var(--sp-2); }
 
 /* ── M2 Migration: Insight/Guidance Boxes ── */
 .insight-box      { padding:var(--sp-8) var(--sp-12); border-radius:var(--r-md); font-size:var(--fs-sm); }
@@ -17384,8 +17386,16 @@ const DEFAULT_VACC = [
   { name:'MCV-1', date:'2026-06-04', upcoming:true },
 ];
 
-// ── MASTER VACCINATION SCHEDULE (IAP 2024 + card schedule) ──
+// ── MASTER VACCINATION SCHEDULE (IAP-ACVIP 2023, Indian Pediatr Jan 2024; the 2025 revision,
+//    Indian Pediatr May 2026, is identical for 9 m–6 y) + card schedule ──
 // type: 'iap' = IAP mandatory, 'iap-rec' = IAP recommended, 'private' = optional/private
+// windowEnd (months): the IAP window closes here; a dose inside [age, windowEnd] reads
+//   "due now", never "missing" (V-M-266-7). No windowEnd = the window is the age itself.
+// conditional: doses that don't apply to every child (vaccine brand, endemic area, special
+//   situations). Never "missing" and never scored; shown as "check with her doctor".
+// 2026-09-24 reconciliation (12–24 m PR 2): removed OPV-2 @9 m, PCV Booster-2 @15 m,
+//   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025 or the UIP
+//   (IAP: one PCV booster at 12–15 m; TCV has no booster; the 4–6 y polio dose is IPV-B2).
 // Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
 // consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
 // carry private copies that lacked '13 months' and '18-19 months', so JE-2, Hep A-2 and
@@ -17393,7 +17403,8 @@ const DEFAULT_VACC = [
 // Every VACC_SCHEDULE `age` label MUST appear here — build gate: split/audit-vacc-age-map-v1.sh.
 const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
   '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
-  '18-19 months':18, '2 years':24, '4-6 years':48, '9-14 years':108, '16-18 years':192 };
+  '18-19 months':18, '2 years':24, '1-2 years':12, '2-3 years':24, '3-4 years':36, '4-5 years':48,
+  '4-6 years':48, '9-14 years':108, '16-18 years':192 };
 
 const VACC_SCHEDULE = [
   // ── BIRTH ──
@@ -17427,48 +17438,48 @@ const VACC_SCHEDULE = [
   { name:'PCV-3', age:'14 weeks', type:'iap', protects:'Pneumococcal disease', notes:'Third dose.' },
 
   // ── 6 MONTHS ──
-  { name:'TCV', age:'6 months', type:'iap-rec', protects:'Typhoid fever', notes:'Typhoid Conjugate Vaccine. Can be given from 6 months. IAP recommends 9-12 months.' },
-  { name:'Influenza-1', age:'6 months', type:'iap-rec', protects:'Seasonal Influenza (Flu)', notes:'First dose. Needs a second dose 4 weeks later. Then annual.' },
+  { name:'TCV', age:'6 months', type:'iap-rec', protects:'Typhoid fever', notes:'Typhoid Conjugate Vaccine. One dose at 6–9 months (IAP 2023). IAP does not recommend a booster.' },
+  { name:'Influenza-1', age:'6 months', type:'iap-rec', protects:'Seasonal Influenza (Flu)', notes:'First dose. A child under 9 getting flu vaccine for the first time needs a second dose 4 weeks later. Then once a year until 5 years, before the monsoon (May–June).' },
 
   // ── 7 MONTHS ──
-  { name:'Influenza-2', age:'7 months', type:'iap-rec', protects:'Seasonal Influenza', notes:'Second dose, 4 weeks after first. Annual booster thereafter.' },
+  { name:'Influenza-2', age:'7 months', type:'iap-rec', protects:'Seasonal Influenza', notes:'Second dose, 4 weeks after the first. Then one dose every year until 5 years, before the monsoon (May–June).' },
 
   // ── 9 MONTHS ──
   { name:'MMR-1', age:'9 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Critical vaccine. Measles remains a leading cause of child mortality in India.' },
-  { name:'MCV-1', age:'9 months', type:'private', protects:'Meningococcal meningitis', notes:'Meningococcal Conjugate Vaccine. 2 doses (9 and 12 months). Recommended for travel/outbreak areas.' },
-  { name:'OPV-2', age:'9 months', type:'iap', protects:'Poliomyelitis', notes:'OPV booster dose.' },
+  { name:'MCV-1', age:'9 months', type:'private', conditional:'Special situations only (travel, outbreaks, some medical conditions).', protects:'Meningococcal meningitis', notes:'MenACWY (meningococcal conjugate), not the measles vaccine. Special situations only: 2 doses between 9 and 23 months, at least 3 months apart.' },
 
   // ── 12 MONTHS ──
-  { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. Booster at 18 months. Killed vaccine (2 doses) or live vaccine (1 dose).' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', protects:'Japanese Encephalitis', notes:'Live attenuated vaccine. Important in endemic areas (eastern UP, Bihar, Jharkhand, Assam, West Bengal).' },
-  { name:'MCV-2', age:'12 months', type:'private', protects:'Meningococcal meningitis', notes:'Second dose if first given at 9 months.' },
-  { name:'PCV Booster', age:'12 months', type:'iap', protects:'Pneumococcal disease', notes:'Booster after primary 3-dose series.' },
+  { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Only in JE-endemic districts (parts of Jharkhand, Bihar, UP, Assam, West Bengal). Ask her doctor or the local vaccination centre.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'MCV-2', age:'12 months', type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
+  { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 
   // ── 13 MONTHS ──
-  { name:'JE-2', age:'13 months', type:'iap-rec', protects:'Japanese Encephalitis', notes:'Second dose, 4 weeks after first. Completes primary JE series.' },
+  { name:'JE-2', age:'13 months', type:'iap-rec', conditional:'Only if JE-1 was given (endemic areas).', protects:'Japanese Encephalitis', notes:'Second dose, 28 days after the first. Completes the JE series.' },
 
   // ── 15 MONTHS ──
   { name:'MMR-2', age:'15 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Second dose for full protection.' },
-  { name:'Varicella-1', age:'15 months', type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose at 18-19 months. Not in UIP — private only.' },
-  { name:'PCV Booster-2', age:'15 months', type:'iap', protects:'Pneumococcal disease', notes:'Additional booster if using PCV-10.' },
+  { name:'Varicella-1', age:'15 months', type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose 3–6 months later, at 18–19 months. Not in UIP — private only.' },
 
   // ── 16-18 MONTHS ──
-  { name:'DTwP/DTaP-B1', age:'16-18 months', type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'First booster after primary 3-dose series.' },
-  { name:'Hib-B1', age:'16-18 months', type:'iap', protects:'Haemophilus influenzae B', notes:'Booster dose.' },
-  { name:'IPV-B1', age:'16-18 months', type:'iap', protects:'Poliomyelitis', notes:'IPV booster dose.' },
+  { name:'DTwP/DTaP-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'First booster after primary 3-dose series.' },
+  { name:'Hib-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Haemophilus influenzae B', notes:'Booster dose.' },
+  { name:'IPV-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Poliomyelitis', notes:'IPV booster dose.' },
 
   // ── 18-19 MONTHS ──
-  { name:'Hep A-2', age:'18-19 months', type:'iap-rec', protects:'Hepatitis A', notes:'Second dose (if killed vaccine used).' },
-  { name:'Varicella-2', age:'18-19 months', type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
+  { name:'Hep A-2', age:'18-19 months', windowEnd:19, type:'iap-rec', conditional:'Only if Hep A-1 was the inactivated (killed) vaccine; the live vaccine is a single dose.', protects:'Hepatitis A', notes:'Second dose of the inactivated vaccine, at least 6 months after the first.' },
+  { name:'Varicella-2', age:'18-19 months', windowEnd:19, type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
 
-  // ── 2 YEARS ──
-  { name:'Typhoid Booster', age:'2 years', type:'iap-rec', protects:'Typhoid fever', notes:'Booster if TCV given earlier.' },
+  // ── YEARLY FLU, 1–5 YEARS (IAP: every year until 5, before the monsoon, May–June) ──
+  { name:'Influenza yearly (1-2 y)', age:'1-2 years', windowEnd:24, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
+  { name:'Influenza yearly (2-3 y)', age:'2-3 years', windowEnd:36, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
+  { name:'Influenza yearly (3-4 y)', age:'3-4 years', windowEnd:48, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
+  { name:'Influenza yearly (4-5 y)', age:'4-5 years', windowEnd:60, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
 
   // ── 4-6 YEARS ──
-  { name:'DTwP/DTaP-B2', age:'4-6 years', type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'Second booster at school entry.' },
-  { name:'IPV-B2', age:'4-6 years', type:'iap', protects:'Poliomyelitis', notes:'IPV booster at school entry.' },
-  { name:'MMR-3', age:'4-6 years', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Third dose at school entry.' },
-  { name:'OPV Booster', age:'4-6 years', type:'iap', protects:'Poliomyelitis', notes:'Final OPV booster.' },
+  { name:'DTwP/DTaP-B2', age:'4-6 years', windowEnd:72, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'Second booster at school entry.' },
+  { name:'IPV-B2', age:'4-6 years', windowEnd:72, type:'iap', protects:'Poliomyelitis', notes:'IPV booster at school entry.' },
+  { name:'MMR-3', age:'4-6 years', windowEnd:72, type:'iap', protects:'Measles, Mumps, Rubella', notes:'Third dose at school entry.' },
 
   // ── 9-14 YEARS ──
   { name:'Tdap', age:'9-14 years', type:'iap', protects:'Tetanus, Diphtheria, Pertussis (adolescent)', notes:'Adolescent booster.' },
@@ -17815,8 +17826,11 @@ const VACC_SERIES = {
   'IPV': ['IPV-1', 'IPV-2', 'IPV-3'],
   'PCV': ['PCV-1', 'PCV-2', 'PCV-3'],
   'Rotavirus': ['Rotavirus-1', 'Rotavirus-2', 'Rotavirus-3'],
-  'Influenza': ['Influenza-1', 'Influenza-2'],
-  'MMR': ['MMR-1'],
+  'Influenza': ['Influenza-1', 'Influenza-2', 'Influenza yearly (1-2 y)', 'Influenza yearly (2-3 y)', 'Influenza yearly (3-4 y)', 'Influenza yearly (4-5 y)'],
+  'MMR': ['MMR-1', 'MMR-2', 'MMR-3'],
+  'Hep A': ['Hep A-1', 'Hep A-2'],
+  'Varicella': ['Varicella-1', 'Varicella-2'],
+  'JE': ['JE-1', 'JE-2'],
 };
 // @@DATA_BLOCK_6_END@@
 
@@ -20183,41 +20197,49 @@ const MILESTONE_STANDARDS = {
 // @@DATA_BLOCK_21_START@@ SLEEP_STANDARDS
 
 // ── Sleep Standards per reference ──
+// Toddler keys 13–36 m (2026-09-24, 12–24 m PR 2) are ANCHORS read by nearest-lower-key
+// lookup (getSleepTargets, medical.js). Sources: AASM 2016 (Paruthi, JCSM 12:785) and WHO 2019
+// under-5 guideline: 1–2 y 11–14 h per 24 h incl. naps; NSF 2015 (reaffirmed Jun 2026); Galland
+// 2012 (Sleep Med Rev 16:213) 1–2 y 12.6 h (10.0–15.2), 2–3 y 12.0 h (9.7–14.2); Iglowstein 2003
+// (Pediatrics 111:302) 2→1 nap shift by ~18 m; Staton 2020: <2.5% stop napping before 2 y, 33% by
+// 3 y (so naps [1,2] to 24 m, [1,1] to 30, [0,1] after); IAP 2022 (Indian Pediatr 59:235) 24–59 m
+// 10–14 h. Floors/targets are derived from these ranges; EU/CN toddler values and every bedtime
+// window are unverified (EU mirrors WHO, CN keeps its offsets).
 const SLEEP_STANDARDS = {
   who: { // WHO sleep guidelines
-    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600 },  // 10h floor
-    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:630, 11:630, 12:630 }, // 11h / 10.5h
-    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:780 }, // 14h / 13h
-    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:480 }, // 9h / 8h
+    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },  // 10h floor
+    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:630, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 }, // 11h / 10.5h
+    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:780, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 }, // 14h / 13h
+    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:480, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 }, // 9h / 8h
     bedtimeStart: 19, bedtimeEnd: 20, // 7–8 PM
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'WHO'
   },
   iap: { // IAP (India) — slightly more flexible on bedtime, adjusted for Indian routines
-    nightMin:  { 6:570, 7:570, 8:570, 9:570, 10:570, 11:570, 12:570 },  // 9.5h floor
-    nightTarget: { 6:660, 7:660, 8:660, 9:630, 10:630, 11:630, 12:600 }, // 11h / 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:750 }, // 14h → 12.5h
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:450 },
+    nightMin:  { 6:570, 7:570, 8:570, 9:570, 10:570, 11:570, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:540, 30:540, 31:540, 36:540 },  // 9.5h floor
+    nightTarget: { 6:660, 7:660, 8:660, 9:630, 10:630, 11:630, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 11h / 10.5h / 10h
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:750, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 }, // 14h → 12.5h
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:450, 13:570, 15:570, 18:570, 19:570, 24:570, 25:600, 30:600, 31:600, 36:600 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Indian households tend later)
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[1,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[1,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'IAP'
   },
   eu: { // European norms — similar to WHO with slight variations
-    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:570 },
-    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:660, 11:630, 12:630 },
-    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:780 },
-    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:480 },
+    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:570, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
+    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:660, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 },
+    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:780, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 },
+    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:480, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 19, bedtimeEnd: 20,
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'EU'
   },
   cn: { // Chinese (CIP) — tends to expect slightly less night sleep, more naps
-    nightMin:  { 6:570, 7:570, 8:570, 9:540, 10:540, 11:540, 12:540 },  // 9.5h / 9h
-    nightTarget: { 6:630, 7:630, 8:630, 9:600, 10:600, 11:600, 12:600 }, // 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:750 },
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:450 },
+    nightMin:  { 6:570, 7:570, 8:570, 9:540, 10:540, 11:540, 12:540, 13:540, 15:540, 18:540, 19:540, 24:540, 25:540, 30:540, 31:540, 36:540 },  // 9.5h / 9h
+    nightTarget: { 6:630, 7:630, 8:630, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 10.5h / 10h
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:750, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 },
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:450, 13:570, 15:570, 18:570, 19:570, 24:570, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Chinese households tend later)
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,3], 10:[2,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,3], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'CIP'
   },
 };
@@ -20511,11 +20533,12 @@ const VACC_GUIDANCE = {
     note: 'IPV is the injectable polio vaccine. Along with OPV (oral), provides complete protection against all three poliovirus types.',
   },
   'influenza': {
-    dos: ['First time: two doses 4 weeks apart, then annual booster', 'Best given before flu season (Sep–Nov in India)'],
+    dos: ['First time: two doses 4 weeks apart, then one dose every year until 5 years', 'Best given before the monsoon (May–June), as IAP advises for India'],
     donts: ['Don\'t skip the second dose if this is the first year', 'Don\'t assume flu is harmless for babies — complications can be serious'],
     note: 'IAP recommended (not mandatory). Protects against seasonal influenza which can be severe in babies under 2.',
   },
-  'hep': {
+  // 'hep b' (not 'hep'): a bare 'hep' matched "Hep A-1" and served Hep B birth-dose advice.
+  'hep b': {
     dos: ['Birth dose is critical — should be given within 24 hours', 'No special precautions needed after this vaccine'],
     donts: ['Don\'t delay the birth dose — early protection against hepatitis B is essential'],
     note: 'Hepatitis B can cause chronic liver disease. The birth dose prevents mother-to-child transmission.',
@@ -20531,9 +20554,24 @@ const VACC_GUIDANCE = {
     note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
   },
   'mcv': {
-    dos: ['Critical for preventing meningococcal meningitis', 'Can be given at 9 months with MMR'],
-    donts: ['Don\'t skip — meningococcal disease progresses very rapidly'],
-    note: 'Protects against Neisseria meningitidis which causes bacterial meningitis and septicaemia.',
+    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask her doctor', 'Two doses between 9 and 23 months, at least 3 months apart'],
+    donts: ['Don\'t confuse it with the measles vaccine (in India "MCV" often means measles-containing vaccine)'],
+    note: 'MenACWY protects against meningococcal meningitis and septicaemia. IAP lists it for special situations, not routine use.',
+  },
+  'hep a': {
+    dos: ['First dose from 12 months', 'Live vaccine: one dose is enough. Inactivated vaccine: a second dose 6 months or more later'],
+    donts: ['Don\'t book a second dose until you know which vaccine was used for the first'],
+    note: 'Hepatitis A spreads through contaminated food and water. IAP routine from 12 months.',
+  },
+  'varicella': {
+    dos: ['First dose at 15 months, second 3–6 months later', 'A few spots near the injection site a week or two later can be normal'],
+    donts: ['Don\'t give aspirin in the weeks after this vaccine'],
+    note: 'Protects against chickenpox. Not in the government programme, so usually given privately.',
+  },
+  'je': {
+    dos: ['Only in JE-endemic districts — ask her doctor or the local vaccination centre', 'Two doses 28 days apart (private inactivated vaccine)'],
+    donts: ['Don\'t skip it if you live in an endemic district — JE can cause lasting brain damage'],
+    note: 'Japanese encephalitis spreads through mosquito bites in rural, rice-growing areas.',
   },
   'opv': {
     dos: ['Oral drops — easy and painless', 'Continue giving OPV even during pulse polio campaigns'],
@@ -21611,14 +21649,18 @@ const RECOMMENDATION_ROSTER = {
         // Nap-count guidance by age band — calibrated to the WHO/AAP nap-consolidation arc.
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
-        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        // 12–36 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] from 12 m). A single-nap day is met, not "one short".
+        { startMo: 12, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       iap: { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
-        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        // 12–36 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] from 12 m). A single-nap day is met, not "one short".
+        { startMo: 12, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       eu:  { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
@@ -21630,8 +21672,9 @@ const RECOMMENDATION_ROSTER = {
       ]},
     },
     severityMessages: {
-      gentle: { strength: 'one-short',  text: 'One nap short of the usual count today — a calm afternoon helps.' },
-      firm:   { strength: 'two-short',  text: 'Two naps short today. A quieter morning tomorrow could rebuild.' },
+      // Severity follows days since naps were last on target, not how many are missing.
+      gentle: { strength: 'one-short',  text: 'Fewer naps than usual today — a calm afternoon helps.' },
+      firm:   { strength: 'two-short',  text: 'Naps have been short two days running. A quieter morning tomorrow could help.' },
       urgent: { strength: 'no-naps',    text: 'No naps logged today at this age. Watch for evening overtiredness.' },
     },
     successorOnExpiry: null,
@@ -24457,9 +24500,15 @@ function calcMedicalScore() {
   const mo = (new Date() - DOB) / (30.44 * 86400000);
 
   // A. Vaccination coverage (40%)
-  const ageMap = VACC_AGE_MONTHS;
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo); // no look-ahead (V-M-266-7)
+  // Scored doses: routine (not private, not conditional) doses that are given or
+  // overdue. A dose still inside its window neither helps nor hurts until it
+  // is given or its window closes (V-M-266-7).
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
+  const dueNow = VACC_SCHEDULE.filter(v => {
+    if (v.conditional || v.type === 'private') return false;
+    const st = vaccDueState(v, mo);
+    return st === 'overdue' || (st === 'due' && givenNames.has(normVacc(v.name)));
+  });
   const vaccBookedData = load(KEYS.vaccBooked, null);
   let vaccGiven = 0;
   dueNow.forEach(v => {
@@ -25440,6 +25489,18 @@ function escHtml(s) {
 // leak class V-M-9/V-M-10/V-M-16 surfaced across PR #74-#75.
 function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+// vaccDueState — where a scheduled dose sits at an age in fractional months:
+// 'future' (window not open yet), 'due' (inside [age, windowEnd] plus a grace
+// month), 'overdue' (past that). The grace month is an app convention, not
+// IAP: a dose reads "due now" before it ever reads "missing" (V-M-266-7).
+const VACC_DUE_GRACE_MONTHS = 1;
+function vaccDueState(v, mo) {
+  const start = VACC_AGE_MONTHS[v.age];
+  if (typeof start !== 'number' || mo < start) return 'future';
+  const end = (typeof v.windowEnd === 'number' ? v.windowEnd : start) + VACC_DUE_GRACE_MONTHS;
+  return mo <= end ? 'due' : 'overdue';
+}
 
 // _renderAttribution — PR-19.5 (per-entry attribution). Returns an HTML
 // fragment for the "by Bhavna" tagline shown on history-tab rows. Reads
@@ -39635,11 +39696,20 @@ function renderTodayPlan() {
   const hasMorningNap = todaySleep.some(e => e.type === 'nap' && e.bedtime && parseInt(e.bedtime) < 12);
   const napWindowStart = ageM <= 7 ? '9:00' : '9:30';
   const napDuration = ageM <= 7 ? '1–1.5 hours' : '45 min – 1 hour';
-  items.push({
-    time: '9:30', icon: zi('zzz'), title: 'Morning nap',
-    detail: hasMorningNap ? zi('check') + ' Logged' : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.',
-    tag: 'sleep', done: hasMorningNap, htmlDetail: hasMorningNap
-  });
+  // From 12 m one or two naps are normal (SLEEP_STANDARDS via getSleepTargets); once
+  // the standard says one nap, the plan shows a single midday nap.
+  const napIdealToday = (typeof getSleepTargets === 'function') ? getSleepTargets(ageM).napIdeal : [2, 3];
+  const oneNapAge = napIdealToday[1] <= 1;
+  const toddlerNaps = ageM >= 12 && !oneNapAge;
+  if (!oneNapAge) {
+    items.push({
+      time: '9:30', icon: zi('zzz'), title: toddlerNaps ? 'Morning nap (if she still takes one)' : 'Morning nap',
+      detail: hasMorningNap ? zi('check') + ' Logged'
+        : (toddlerNaps ? 'Many toddlers drop this nap between 12 and 18 months. If she takes it, about ' + napDuration + '.'
+          : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.'),
+      tag: 'sleep', done: hasMorningNap, htmlDetail: hasMorningNap
+    });
+  }
 
   // Tummy time / motor activity — check if already logged today
   const acts = typeof getFilteredActivities === 'function' ? getFilteredActivities() : [];
@@ -39703,8 +39773,8 @@ function renderTodayPlan() {
   // Afternoon nap
   const hasAfternoonNap = todaySleep.some(e => e.type === 'nap' && e.bedtime && parseInt(e.bedtime) >= 12);
   items.push({
-    time: '1:30', icon: zi('zzz'), title: 'Afternoon nap',
-    detail: hasAfternoonNap ? '' + zi('check') + ' Logged' : 'Usually the longest nap. Dim the room, white noise helps.',
+    time: oneNapAge ? '12:30' : '1:30', icon: zi('zzz'), title: oneNapAge ? 'Midday nap' : 'Afternoon nap',
+    detail: hasAfternoonNap ? '' + zi('check') + ' Logged' : (oneNapAge ? 'One nap after lunch. End it by about 3:30 PM to protect bedtime.' : 'Usually the longest nap. Dim the room, white noise helps.'),
     tag: 'sleep', done: hasAfternoonNap, htmlDetail: hasAfternoonNap
   });
 
@@ -52697,7 +52767,8 @@ function addVacc() {
   const date = document.getElementById('vDate').value;
   const upcoming = document.getElementById('vUpcoming').checked;
   if (!name || !date) return;
-  if (upcoming) vaccData.forEach(v => v.upcoming = false);
+  // A new upcoming entry used to flip every other pending dose to "given"
+  // (vaccData.forEach(v => v.upcoming = false)), silently marking doses done.
   vaccData.push({ name, date, upcoming });
   _islMarkDirty('medical');
   closeModal('vaccModal');
@@ -52936,8 +53007,13 @@ function renderVaccTimeline() {
   if (!el) return;
 
   // Build IAP age groups from VACC_SCHEDULE
-  var ageOrder = ['Birth', '6 weeks', '10 weeks', '14 weeks', '6 months', '7 months', '9 months',
-    '12 months', '13 months', '15 months', '16-18 months', '18-19 months', '2 years', '4-6 years'];
+  // Age rows derive from the schedule itself (ordered by VACC_AGE_MONTHS), so a new
+  // age label can never be silently dropped from the timeline.
+  var ageOrder = [];
+  VACC_SCHEDULE.forEach(function(s) { if (ageOrder.indexOf(s.age) === -1) ageOrder.push(s.age); });
+  ageOrder = ageOrder.map(function(a, i) { return { a: a, i: i }; })
+    .sort(function(x, y) { return ((VACC_AGE_MONTHS[x.a] ?? 999) - (VACC_AGE_MONTHS[y.a] ?? 999)) || (x.i - y.i); })
+    .map(function(x) { return x.a; });
   var ageGroups = {};
   ageOrder.forEach(function(age) { ageGroups[age] = []; });
   VACC_SCHEDULE.forEach(function(s) {
@@ -53135,13 +53211,12 @@ function renderVaccCoverage() {
   const mo = (new Date() - DOB) / (30.44 * 86400000);
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => v.name.toLowerCase()));
 
-  // Determine which scheduled vaccines are due by now
+  // Status per dose (vaccDueState, core.js): 'future' → Coming up; 'due' → Due now
+  // (inside its IAP window plus a grace month — never "missing", V-M-266-7);
+  // 'overdue' → Missing by type. Conditional doses (brand, endemic area, special
+  // situations) never read missing: they sit under "Check with her doctor".
   const ageMap = VACC_AGE_MONTHS;
-
-  // Due = the schedule age has been REACHED. The old +0.5-month look-ahead labelled a dose
-  // "Missing" two weeks before it was due (JE-2 at 12.5 m — Maren V-M-266-7); look-ahead doses
-  // belong under "Next up", never in missingCount or the score.
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo);
+  const dueNow = VACC_SCHEDULE.filter(v => vaccDueState(v, mo) !== 'future');
   const upcoming = VACC_SCHEDULE.filter(v => {
     const am = ageMap[v.age] ?? 99;
     return am > mo && am <= mo + 6;
@@ -53154,10 +53229,14 @@ function renderVaccCoverage() {
   let givenCount = 0, missingCount = 0, optionalMissing = 0;
   const missing = [];
   const given = [];
+  const dueList = [];
+  const checkList = [];
 
   dueNow.forEach(v => {
     const isGiven = givenNorm.has(normVacc(v.name));
     if (isGiven) { givenCount++; given.push(v); }
+    else if (v.conditional) checkList.push(v);
+    else if (vaccDueState(v, mo) === 'due') dueList.push(v);
     else {
       if (v.type === 'private') optionalMissing++;
       else missingCount++;
@@ -53165,7 +53244,8 @@ function renderVaccCoverage() {
     }
   });
 
-  const totalDue = dueNow.length;
+  // Schedule pill: given out of the routine doses whose window has opened.
+  const totalDue = givenCount + missingCount + optionalMissing + dueList.length;
   const pastCount = vaccData.filter(v => !v.upcoming).length;
   const pct = totalDue > 0 ? Math.round((givenCount / totalDue) * 100) : 100;
 
@@ -53195,6 +53275,10 @@ function renderVaccCoverage() {
       <div class="diet-stat-val">${pvtMissing.length}</div>
       <div class="diet-stat-label">Optional</div>
     </div>` : ''}
+    ${dueList.length > 0 ? `<div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
+      <div class="diet-stat-val">${dueList.length}</div>
+      <div class="diet-stat-label">Due now</div>
+    </div>` : ''}
     <div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
       <div class="diet-stat-val">${upcoming.length}</div>
       <div class="diet-stat-label">Next up</div>
@@ -53203,6 +53287,12 @@ function renderVaccCoverage() {
 
   // Full content
   let html = '';
+
+  // Due now — inside the IAP window (plus a grace month); not missing yet.
+  if (dueList.length > 0) {
+    html += `<div class="section-label-due">${zi('clock')} Due now</div>`;
+    dueList.forEach(v => { html += renderVaccItem(v, 'due'); });
+  }
 
   // Missing mandatory
   if (mandatoryMissing.length > 0) {
@@ -53226,6 +53316,12 @@ function renderVaccCoverage() {
     pvtMissing.forEach(v => {
       html += renderVaccItem(v, 'optional');
     });
+  }
+
+  // Conditional doses — not for every child; never counted as missing.
+  if (checkList.length > 0) {
+    html += `<div class="section-label-info">${zi('steth')} Check with her doctor</div>`;
+    checkList.forEach(v => { html += renderVaccItem(v, 'check'); });
   }
 
   // Given vaccines
@@ -53259,11 +53355,13 @@ function renderVaccItem(v, status) {
     recommended: { bg:'var(--surface-warn)', border:'#ffc107', badge:'#fff8e1', badgeText:'#856404', badgeLabel:'RECOMMENDED' },
     optional: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--lav-light)', badgeText:'var(--tc-lav)', badgeLabel:'OPTIONAL' },
     upcoming: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--sky-light)', badgeText:'#3a7090', badgeLabel:v.age },
+    due: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--white)', badgeText:'var(--tc-sky)', badgeLabel:'DUE NOW' },
+    check: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--white)', badgeText:'var(--tc-lav)', badgeLabel:'IF NEEDED' },
   };
   const c = colors[status];
   // Show booking status for upcoming vaccines
   let bookingHtml = '';
-  if (status === 'upcoming' || status === 'missing') {
+  if (status === 'upcoming' || status === 'missing' || status === 'due') {
     const bookedData = load(KEYS.vaccBooked, null);
     const isBooked = bookedData && bookedData.vaccName === v.name;
     if (isBooked) {
@@ -53275,9 +53373,10 @@ function renderVaccItem(v, status) {
   }
   return `<div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:8px 10px;border-radius:var(--r-lg);background:${c.bg};border-left:var(--accent-w) solid ${c.border};margin-bottom:4px;">
     <div class="flex-1-min">
-      <div class="t-title fw-600">${v.name} <span style="font-size:var(--fs-xs);padding:1px 6px;border-radius:var(--r-md);background:${c.badge};color:${c.badgeText};font-weight:700;">${c.badgeLabel}</span></div>
-      <div class="t-sub mt-2">${zi('shield')} ${v.protects}</div>
-      <div style="font-size:var(--fs-sm);color:var(--light);margin-top:1px;">Due: ${v.age} · ${v.notes}</div>
+      <div class="t-title fw-600">${escHtml(v.name)} <span style="font-size:var(--fs-xs);padding:1px 6px;border-radius:var(--r-md);background:${c.badge};color:${c.badgeText};font-weight:700;">${escHtml(c.badgeLabel)}</span></div>
+      <div class="t-sub mt-2">${zi('shield')} ${escHtml(v.protects)}</div>
+      ${v.conditional ? `<div class="vacc-cond-note">${escHtml(v.conditional)}</div>` : ''}
+      <div style="font-size:var(--fs-sm);color:var(--light);margin-top:1px;">Due: ${escHtml(v.age)} · ${escHtml(v.notes)}</div>
       ${bookingHtml}
     </div>
   </div>`;
@@ -54173,17 +54272,26 @@ function getWakeCount(entry) {
 }
 // @@INSERT_DATA_BLOCK_21@@
 
+// Month keys are anchors (6–12 monthly; toddler anchors 13, 15, 18, 19, 24, 25,
+// 30, 31, 36): each field reads the nearest defined key at or below the age, so a
+// toddler never falls through to the infant defaults. Completed months (floor), so
+// a new band starts on the month birthday, not two weeks early.
+function _sleepStdAt(map, m) {
+  let best = null;
+  Object.keys(map || {}).forEach(k => { const n = +k; if (n <= m && (best === null || n > best)) best = n; });
+  return best === null ? undefined : map[best];
+}
 function getSleepTargets(ageMonths) {
   const std = SLEEP_STANDARDS[_referenceStandard] || SLEEP_STANDARDS.who;
-  const m = Math.max(6, Math.min(12, Math.round(ageMonths)));
+  const m = Math.max(6, Math.min(36, Math.floor(ageMonths)));
   return {
-    nightTarget: std.nightTarget[m] || 660,
-    nightMin: std.nightMin[m] || 600,
-    totalTarget: std.totalTarget[m] || 840,
-    totalFloor: std.totalFloor[m] || 540,
+    nightTarget: _sleepStdAt(std.nightTarget, m) || 660,
+    nightMin: _sleepStdAt(std.nightMin, m) || 600,
+    totalTarget: _sleepStdAt(std.totalTarget, m) || 840,
+    totalFloor: _sleepStdAt(std.totalFloor, m) || 540,
     bedtimeStart: std.bedtimeStart,
     bedtimeEnd: std.bedtimeEnd,
-    napIdeal: std.naps[m] || [2,3],
+    napIdeal: _sleepStdAt(std.naps, m) || [2,3],
     label: std.label,
   };
 }
@@ -54808,11 +54916,13 @@ function renderSleepStats() {
   const napTotalMin = todayNaps.reduce((sum, n) => sum + calcSleepDuration(n.bedtime, n.wakeTime).total, 0);
   const napH = Math.floor(napTotalMin / 60);
   const napM = napTotalMin % 60;
-  const idealNaps = ageM <= 8 ? [2, 3] : [2];
+  // Nap range from the same standards the sleep score uses (1–2 naps from 12 m).
+  const napRange = getSleepTargets(ageM).napIdeal;
   let napColor = 'hsp-indigo';
   if (todayNaps.length > 0) {
-    napColor = idealNaps.includes(todayNaps.length) ? 'hsp-sage' :
-      (todayNaps.length === 1 || todayNaps.length === 4) ? 'hsp-peach' : 'hsp-rose';
+    const n = todayNaps.length;
+    napColor = (n >= napRange[0] && n <= napRange[1]) ? 'hsp-sage' :
+      (n === napRange[0] - 1 || n === napRange[1] + 1) ? 'hsp-peach' : 'hsp-rose';
   }
 
   // --- 7-day avg pill ---
@@ -54820,8 +54930,9 @@ function renderSleepStats() {
   const avgM2 = avgMin % 60;
   let avgColor = 'hsp-indigo';
   if (avgMin > 0) {
-    const targetTotal = ageM <= 8 ? 780 : 720; // 13h / 12h
-    const okTotal = ageM <= 8 ? 600 : 540;     // 10h / 9h
+    const stTot = getSleepTargets(ageM);
+    const targetTotal = stTot.totalTarget;
+    const okTotal = stTot.totalFloor;
     avgColor = avgMin >= targetTotal ? 'hsp-sage' : avgMin >= okTotal ? 'hsp-peach' : 'hsp-rose';
   }
 
@@ -55042,9 +55153,10 @@ function drawSleepChart() {
     } else {
       const h = Math.floor(avg / 60);
       const m = avg % 60;
-      const target = 14 * 60; // 14 hours recommended for 6-8 months
+      const target = getSleepTargets(ageAt().months).totalTarget; // age-aware (was a fixed 14 h)
       const pct = Math.round((avg / target) * 100);
-      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of recommended ~14h total for this age)`;
+      const tH = Math.floor(target / 60), tM = target % 60;
+      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for her age)`;
     }
   }
 }
@@ -55064,11 +55176,16 @@ function renderSleepTips() {
         { icon:zi('clock'), title:'Ideal bedtime: 6:30–8:00 PM', text:'Most babies this age do best with an early bedtime. Watch for sleepy cues (eye rubbing, yawning, fussiness) — catching the window matters more than the clock.' },
         { icon:zi('moon'), title:'Screen-free zone', text:'No screens for at least 1 hour before bed. Blue light suppresses melatonin production even in infants.' },
         { icon:zi('star'), title:'Consistent sleep cue', text:'A specific lullaby, white noise pattern, or phrase ("time to sleep") used every night builds a strong association over time.' },
-      ] : [
+      ] : ageM < 12 ? [
         { icon:zi('moon'), title:'Keep the routine consistent', text:'At 9–12 months, separation anxiety peaks. A strong, predictable routine provides security — same time ±15 minutes, same sequence.' },
         { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if she gets past her sleep window, cortisol spikes make falling asleep harder.' },
         { icon:zi('book'), title:'Add a short book', text:'Board books before bed build both sleep associations and early literacy. 1–2 short books is perfect.' },
         { icon:zi('baby'), title:'Goodbye ritual', text:'A brief, warm goodbye ritual ("goodnight, I love you, see you in the morning") helps with separation anxiety at this age.' },
+      ] : [
+        { icon:zi('moon'), title:'Same wind-down, same time', text:'Toddlers thrive on a predictable routine: bath, teeth, one or two books, lights out. Regular sleep and wake times matter more than the exact hour (WHO 2019).' },
+        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If she fights sleep, a slightly earlier bedtime often helps more than a later one.' },
+        { icon:zi('moon'), title:'Screens off', text:'No screen time under 2 years apart from video calls with family (WHO, IAP), and none in the hour before bed.' },
+        { icon:zi('baby'), title:'Short, warm goodnight', text:'A brief goodnight ritual helps with separation worries, which often flare again around 18 months.' },
       ]
     },
     {
@@ -55088,10 +55205,15 @@ function renderSleepTips() {
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
         { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
-      ] : [
+      ] : ageM < 12 ? [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
         { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
+        { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
+      ] : [
+        { icon:zi('list'), title:'One or two naps are both normal', text:'Between 12 and 18 months most toddlers move from two naps to one, and by about 18 months most take one midday nap. Some keep two until nearer 2 years.' },
+        { icon:zi('eye'), title:'Signs she is ready for one nap', text:'Refusing one of her naps most days for a week or two, or the second nap pushing bedtime late.' },
+        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while she adjusts.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
@@ -55102,11 +55224,16 @@ function renderSleepTips() {
         { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
         { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
-      ] : [
+      ] : ageM < 12 ? [
         { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If she still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep of 11–12 hours. Early morning waking (before 6 AM) often means bedtime is too late or too early — experiment in 15-min increments.' },
         { icon:zi('hourglass'), title:'Sleep regressions', text:'The 8–10 month regression is real — linked to crawling, pulling up, separation anxiety. It\'s temporary (2–4 weeks). Stay consistent with the routine.' },
         { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If she needs rocking/feeding to sleep, she\'ll need it at every wake-up.' },
+      ] : [
+        { icon:zi('bars'), title:'About 11–14 hours a day', text:'Across 24 hours, including naps, 1–2 year olds need about 11–14 hours (AASM, WHO). Night sleep is usually 10–12 hours.' },
+        { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
+        { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
+        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, gasps or pauses in her breathing, or sleeping with her neck stretched back (AAP).' },  // milestone-source-ok: sleep-apnoea tip citation (AAP 2012 guideline), not a milestone band
       ]
     },
     {
@@ -65142,13 +65269,15 @@ function qaAnswerNaps(intentId) {
   var napCounts = scores.filter(function(s) { return s.napCount !== undefined && s.napCount !== null; }).map(function(s) { return s.napCount; });
   var avgNaps = napCounts.length > 0 ? _qaAvg(napCounts) : null;
 
-  // Expected naps by age
-  var expectedNaps = ageMo < 4 ? '3-4' : ageMo < 9 ? '2-3' : ageMo < 15 ? '2' : '1';
+  // Expected naps by age — one source with the sleep score (SLEEP_STANDARDS via
+  // getSleepTargets): from 12 m one or two naps are both on track.
+  var napIdeal = (ageMo >= 6 && typeof getSleepTargets === 'function') ? getSleepTargets(ageMo).napIdeal : null;
+  var expectedMin = napIdeal ? napIdeal[0] : (ageMo < 4 ? 3 : 2);
+  var expectedMax = napIdeal ? napIdeal[1] : (ageMo < 4 ? 4 : 3);
+  var expectedNaps = expectedMin === expectedMax ? String(expectedMin) : expectedMin + '-' + expectedMax;
   var headline = avgNaps !== null ? 'Avg ' + avgNaps.toFixed(1) + ' naps/day (expected: ' + expectedNaps + ')' : 'Nap Analysis';
 
   if (avgNaps !== null) {
-    var expectedMin = ageMo < 4 ? 3 : ageMo < 9 ? 2 : ageMo < 15 ? 2 : 1;
-    var expectedMax = ageMo < 4 ? 4 : ageMo < 9 ? 3 : ageMo < 15 ? 2 : 1;
     if (avgNaps >= expectedMin && avgNaps <= expectedMax + 0.5) {
       dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + fmtAgeMonths(ageMo), signal: 'good' });
     } else if (avgNaps < expectedMin) {
@@ -65185,8 +65314,8 @@ function qaAnswerNaps(intentId) {
   // Transition guidance
   if (ageMo >= 7 && ageMo <= 9) {
     actionItems.push({ text: 'Approaching 3-to-2 nap transition — watch for longer wake windows', signal: 'info' });
-  } else if (ageMo >= 13 && ageMo <= 16) {
-    actionItems.push({ text: 'Approaching 2-to-1 nap transition — if resisting second nap, try one longer midday nap', signal: 'info' });
+  } else if (ageMo >= 12 && ageMo < 18) {
+    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if she resists the second nap, try one longer midday nap', signal: 'info' });
   }
 
   actionItems.push({ text: 'Keep nap environment dark and consistent', signal: 'action' });
@@ -71810,6 +71939,8 @@ function _qlSleepInsight() {
     var todayStr = today();
     var todayNaps = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'nap'; });
     if (todayNaps.length === 2) return '2 naps today \u2014 solid rest.';
+    // From 12 m one nap is on track too (SLEEP_STANDARDS naps [1,2]).
+    if (todayNaps.length === 1 && getAgeInMonths() >= 12) return '1 nap today \u2014 one or two is normal at her age.';
 
     var lastNap = todayNaps[todayNaps.length - 1];
     if (lastNap && lastNap.bedtime && lastNap.wakeTime) {

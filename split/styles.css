@@ -4701,6 +4701,8 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .section-label-danger { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-danger); margin-bottom:var(--sp-6); }
 .section-label-warn   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-warn); margin:var(--sp-12) 0 var(--sp-6); }
 .section-label-info   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin:var(--sp-12) 0 var(--sp-6); }
+.section-label-due    { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sky); margin-bottom:var(--sp-6); }
+.vacc-cond-note { font-size:var(--fs-sm); color:var(--tc-lav); margin-top:var(--sp-2); }
 
 /* ── M2 Migration: Insight/Guidance Boxes ── */
 .insight-box      { padding:var(--sp-8) var(--sp-12); border-radius:var(--r-md); font-size:var(--fs-sm); }

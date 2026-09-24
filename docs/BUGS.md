@@ -33,11 +33,11 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Fix shape:** add 13–24 m rows from CDC Learn the Signs (15/18/24 m), the WHO Motor Development Study windows and IAP. The source work is Maren-primary.
 - **Live now (2026-09-24):** the parents' checklist shows she already meets every 12 m and 15 m marker (walking since ~10 m, 3+ words at 12 m). So the empty "upcoming milestones" state and the frozen milestone score are what they see today. **Fixed in #268** (see Progress above).
 
-#### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree
+#### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree (fixed in 12–24 m PR 2)
 - **Symptom:** `getSleepTargets` clamps at 12. The `napCount` recommendation (WHO/IAP 9–18 m) expects at least 2 naps, the Q&A expects 2 before 15 m, while `SLEEP_STANDARDS` allows [1,2] and quicklog says the 2→1 transition from 12 m is normal. So a 1-nap day reads "One nap short".
 - **Fix shape:** add 12–24 m rows and reconcile the nap floor (1–2 from 12 m). Kael + Vela.
 
-#### P1 — VACC_SCHEDULE content review against IAP 2023
+#### P1 — VACC_SCHEDULE content review against IAP 2023 (reconciled in 12–24 m PR 2; next-dose auto-scheduling still open)
 - **Symptom:** no annual influenza after 12 m. The PCV booster sits at 12 m where IAP says 12–15 m, and "PCV Booster-2 @15m" is non-standard. VACC_SERIES has no Hep A / Varicella / JE / MMR-2 series. Nothing auto-schedules the next dose after `_vaccMarkDone`.
 - **Fix shape:** a line-by-line IAP 2023 reconciliation. Maren-primary. (The age-map half of this is fixed and gated by `audit-vacc-age-map-v1.sh`.)
 

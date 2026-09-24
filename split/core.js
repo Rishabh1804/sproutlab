@@ -2157,9 +2157,15 @@ function calcMedicalScore() {
   const mo = (new Date() - DOB) / (30.44 * 86400000);
 
   // A. Vaccination coverage (40%)
-  const ageMap = VACC_AGE_MONTHS;
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo); // no look-ahead (V-M-266-7)
+  // Scored doses: routine (not private, not conditional) doses that are given or
+  // overdue. A dose still inside its window neither helps nor hurts until it
+  // is given or its window closes (V-M-266-7).
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
+  const dueNow = VACC_SCHEDULE.filter(v => {
+    if (v.conditional || v.type === 'private') return false;
+    const st = vaccDueState(v, mo);
+    return st === 'overdue' || (st === 'due' && givenNames.has(normVacc(v.name)));
+  });
   const vaccBookedData = load(KEYS.vaccBooked, null);
   let vaccGiven = 0;
   dueNow.forEach(v => {
@@ -3140,6 +3146,18 @@ function escHtml(s) {
 // leak class V-M-9/V-M-10/V-M-16 surfaced across PR #74-#75.
 function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+// vaccDueState — where a scheduled dose sits at an age in fractional months:
+// 'future' (window not open yet), 'due' (inside [age, windowEnd] plus a grace
+// month), 'overdue' (past that). The grace month is an app convention, not
+// IAP: a dose reads "due now" before it ever reads "missing" (V-M-266-7).
+const VACC_DUE_GRACE_MONTHS = 1;
+function vaccDueState(v, mo) {
+  const start = VACC_AGE_MONTHS[v.age];
+  if (typeof start !== 'number' || mo < start) return 'future';
+  const end = (typeof v.windowEnd === 'number' ? v.windowEnd : start) + VACC_DUE_GRACE_MONTHS;
+  return mo <= end ? 'due' : 'overdue';
+}
 
 // _renderAttribution — PR-19.5 (per-entry attribution). Returns an HTML
 // fragment for the "by Bhavna" tagline shown on history-tab rows. Reads

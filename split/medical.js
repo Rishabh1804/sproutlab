@@ -3698,7 +3698,8 @@ function addVacc() {
   const date = document.getElementById('vDate').value;
   const upcoming = document.getElementById('vUpcoming').checked;
   if (!name || !date) return;
-  if (upcoming) vaccData.forEach(v => v.upcoming = false);
+  // A new upcoming entry used to flip every other pending dose to "given"
+  // (vaccData.forEach(v => v.upcoming = false)), silently marking doses done.
   vaccData.push({ name, date, upcoming });
   _islMarkDirty('medical');
   closeModal('vaccModal');
@@ -3937,8 +3938,13 @@ function renderVaccTimeline() {
   if (!el) return;
 
   // Build IAP age groups from VACC_SCHEDULE
-  var ageOrder = ['Birth', '6 weeks', '10 weeks', '14 weeks', '6 months', '7 months', '9 months',
-    '12 months', '13 months', '15 months', '16-18 months', '18-19 months', '2 years', '4-6 years'];
+  // Age rows derive from the schedule itself (ordered by VACC_AGE_MONTHS), so a new
+  // age label can never be silently dropped from the timeline.
+  var ageOrder = [];
+  VACC_SCHEDULE.forEach(function(s) { if (ageOrder.indexOf(s.age) === -1) ageOrder.push(s.age); });
+  ageOrder = ageOrder.map(function(a, i) { return { a: a, i: i }; })
+    .sort(function(x, y) { return ((VACC_AGE_MONTHS[x.a] ?? 999) - (VACC_AGE_MONTHS[y.a] ?? 999)) || (x.i - y.i); })
+    .map(function(x) { return x.a; });
   var ageGroups = {};
   ageOrder.forEach(function(age) { ageGroups[age] = []; });
   VACC_SCHEDULE.forEach(function(s) {
@@ -4136,13 +4142,12 @@ function renderVaccCoverage() {
   const mo = (new Date() - DOB) / (30.44 * 86400000);
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => v.name.toLowerCase()));
 
-  // Determine which scheduled vaccines are due by now
+  // Status per dose (vaccDueState, core.js): 'future' → Coming up; 'due' → Due now
+  // (inside its IAP window plus a grace month — never "missing", V-M-266-7);
+  // 'overdue' → Missing by type. Conditional doses (brand, endemic area, special
+  // situations) never read missing: they sit under "Check with her doctor".
   const ageMap = VACC_AGE_MONTHS;
-
-  // Due = the schedule age has been REACHED. The old +0.5-month look-ahead labelled a dose
-  // "Missing" two weeks before it was due (JE-2 at 12.5 m — Maren V-M-266-7); look-ahead doses
-  // belong under "Next up", never in missingCount or the score.
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo);
+  const dueNow = VACC_SCHEDULE.filter(v => vaccDueState(v, mo) !== 'future');
   const upcoming = VACC_SCHEDULE.filter(v => {
     const am = ageMap[v.age] ?? 99;
     return am > mo && am <= mo + 6;
@@ -4155,10 +4160,14 @@ function renderVaccCoverage() {
   let givenCount = 0, missingCount = 0, optionalMissing = 0;
   const missing = [];
   const given = [];
+  const dueList = [];
+  const checkList = [];
 
   dueNow.forEach(v => {
     const isGiven = givenNorm.has(normVacc(v.name));
     if (isGiven) { givenCount++; given.push(v); }
+    else if (v.conditional) checkList.push(v);
+    else if (vaccDueState(v, mo) === 'due') dueList.push(v);
     else {
       if (v.type === 'private') optionalMissing++;
       else missingCount++;
@@ -4166,7 +4175,8 @@ function renderVaccCoverage() {
     }
   });
 
-  const totalDue = dueNow.length;
+  // Schedule pill: given out of the routine doses whose window has opened.
+  const totalDue = givenCount + missingCount + optionalMissing + dueList.length;
   const pastCount = vaccData.filter(v => !v.upcoming).length;
   const pct = totalDue > 0 ? Math.round((givenCount / totalDue) * 100) : 100;
 
@@ -4196,6 +4206,10 @@ function renderVaccCoverage() {
       <div class="diet-stat-val">${pvtMissing.length}</div>
       <div class="diet-stat-label">Optional</div>
     </div>` : ''}
+    ${dueList.length > 0 ? `<div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
+      <div class="diet-stat-val">${dueList.length}</div>
+      <div class="diet-stat-label">Due now</div>
+    </div>` : ''}
     <div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
       <div class="diet-stat-val">${upcoming.length}</div>
       <div class="diet-stat-label">Next up</div>
@@ -4204,6 +4218,12 @@ function renderVaccCoverage() {
 
   // Full content
   let html = '';
+
+  // Due now — inside the IAP window (plus a grace month); not missing yet.
+  if (dueList.length > 0) {
+    html += `<div class="section-label-due">${zi('clock')} Due now</div>`;
+    dueList.forEach(v => { html += renderVaccItem(v, 'due'); });
+  }
 
   // Missing mandatory
   if (mandatoryMissing.length > 0) {
@@ -4227,6 +4247,12 @@ function renderVaccCoverage() {
     pvtMissing.forEach(v => {
       html += renderVaccItem(v, 'optional');
     });
+  }
+
+  // Conditional doses — not for every child; never counted as missing.
+  if (checkList.length > 0) {
+    html += `<div class="section-label-info">${zi('steth')} Check with her doctor</div>`;
+    checkList.forEach(v => { html += renderVaccItem(v, 'check'); });
   }
 
   // Given vaccines
@@ -4260,11 +4286,13 @@ function renderVaccItem(v, status) {
     recommended: { bg:'var(--surface-warn)', border:'#ffc107', badge:'#fff8e1', badgeText:'#856404', badgeLabel:'RECOMMENDED' },
     optional: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--lav-light)', badgeText:'var(--tc-lav)', badgeLabel:'OPTIONAL' },
     upcoming: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--sky-light)', badgeText:'#3a7090', badgeLabel:v.age },
+    due: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--white)', badgeText:'var(--tc-sky)', badgeLabel:'DUE NOW' },
+    check: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--white)', badgeText:'var(--tc-lav)', badgeLabel:'IF NEEDED' },
   };
   const c = colors[status];
   // Show booking status for upcoming vaccines
   let bookingHtml = '';
-  if (status === 'upcoming' || status === 'missing') {
+  if (status === 'upcoming' || status === 'missing' || status === 'due') {
     const bookedData = load(KEYS.vaccBooked, null);
     const isBooked = bookedData && bookedData.vaccName === v.name;
     if (isBooked) {
@@ -4276,9 +4304,10 @@ function renderVaccItem(v, status) {
   }
   return `<div style="display:flex;align-items:flex-start;gap:var(--sp-8);padding:8px 10px;border-radius:var(--r-lg);background:${c.bg};border-left:var(--accent-w) solid ${c.border};margin-bottom:4px;">
     <div class="flex-1-min">
-      <div class="t-title fw-600">${v.name} <span style="font-size:var(--fs-xs);padding:1px 6px;border-radius:var(--r-md);background:${c.badge};color:${c.badgeText};font-weight:700;">${c.badgeLabel}</span></div>
-      <div class="t-sub mt-2">${zi('shield')} ${v.protects}</div>
-      <div style="font-size:var(--fs-sm);color:var(--light);margin-top:1px;">Due: ${v.age} · ${v.notes}</div>
+      <div class="t-title fw-600">${escHtml(v.name)} <span style="font-size:var(--fs-xs);padding:1px 6px;border-radius:var(--r-md);background:${c.badge};color:${c.badgeText};font-weight:700;">${escHtml(c.badgeLabel)}</span></div>
+      <div class="t-sub mt-2">${zi('shield')} ${escHtml(v.protects)}</div>
+      ${v.conditional ? `<div class="vacc-cond-note">${escHtml(v.conditional)}</div>` : ''}
+      <div style="font-size:var(--fs-sm);color:var(--light);margin-top:1px;">Due: ${escHtml(v.age)} · ${escHtml(v.notes)}</div>
       ${bookingHtml}
     </div>
   </div>`;
@@ -5174,17 +5203,26 @@ function getWakeCount(entry) {
 }
 // @@INSERT_DATA_BLOCK_21@@
 
+// Month keys are anchors (6–12 monthly; toddler anchors 13, 15, 18, 19, 24, 25,
+// 30, 31, 36): each field reads the nearest defined key at or below the age, so a
+// toddler never falls through to the infant defaults. Completed months (floor), so
+// a new band starts on the month birthday, not two weeks early.
+function _sleepStdAt(map, m) {
+  let best = null;
+  Object.keys(map || {}).forEach(k => { const n = +k; if (n <= m && (best === null || n > best)) best = n; });
+  return best === null ? undefined : map[best];
+}
 function getSleepTargets(ageMonths) {
   const std = SLEEP_STANDARDS[_referenceStandard] || SLEEP_STANDARDS.who;
-  const m = Math.max(6, Math.min(12, Math.round(ageMonths)));
+  const m = Math.max(6, Math.min(36, Math.floor(ageMonths)));
   return {
-    nightTarget: std.nightTarget[m] || 660,
-    nightMin: std.nightMin[m] || 600,
-    totalTarget: std.totalTarget[m] || 840,
-    totalFloor: std.totalFloor[m] || 540,
+    nightTarget: _sleepStdAt(std.nightTarget, m) || 660,
+    nightMin: _sleepStdAt(std.nightMin, m) || 600,
+    totalTarget: _sleepStdAt(std.totalTarget, m) || 840,
+    totalFloor: _sleepStdAt(std.totalFloor, m) || 540,
     bedtimeStart: std.bedtimeStart,
     bedtimeEnd: std.bedtimeEnd,
-    napIdeal: std.naps[m] || [2,3],
+    napIdeal: _sleepStdAt(std.naps, m) || [2,3],
     label: std.label,
   };
 }
@@ -5809,11 +5847,13 @@ function renderSleepStats() {
   const napTotalMin = todayNaps.reduce((sum, n) => sum + calcSleepDuration(n.bedtime, n.wakeTime).total, 0);
   const napH = Math.floor(napTotalMin / 60);
   const napM = napTotalMin % 60;
-  const idealNaps = ageM <= 8 ? [2, 3] : [2];
+  // Nap range from the same standards the sleep score uses (1–2 naps from 12 m).
+  const napRange = getSleepTargets(ageM).napIdeal;
   let napColor = 'hsp-indigo';
   if (todayNaps.length > 0) {
-    napColor = idealNaps.includes(todayNaps.length) ? 'hsp-sage' :
-      (todayNaps.length === 1 || todayNaps.length === 4) ? 'hsp-peach' : 'hsp-rose';
+    const n = todayNaps.length;
+    napColor = (n >= napRange[0] && n <= napRange[1]) ? 'hsp-sage' :
+      (n === napRange[0] - 1 || n === napRange[1] + 1) ? 'hsp-peach' : 'hsp-rose';
   }
 
   // --- 7-day avg pill ---
@@ -5821,8 +5861,9 @@ function renderSleepStats() {
   const avgM2 = avgMin % 60;
   let avgColor = 'hsp-indigo';
   if (avgMin > 0) {
-    const targetTotal = ageM <= 8 ? 780 : 720; // 13h / 12h
-    const okTotal = ageM <= 8 ? 600 : 540;     // 10h / 9h
+    const stTot = getSleepTargets(ageM);
+    const targetTotal = stTot.totalTarget;
+    const okTotal = stTot.totalFloor;
     avgColor = avgMin >= targetTotal ? 'hsp-sage' : avgMin >= okTotal ? 'hsp-peach' : 'hsp-rose';
   }
 
@@ -6043,9 +6084,10 @@ function drawSleepChart() {
     } else {
       const h = Math.floor(avg / 60);
       const m = avg % 60;
-      const target = 14 * 60; // 14 hours recommended for 6-8 months
+      const target = getSleepTargets(ageAt().months).totalTarget; // age-aware (was a fixed 14 h)
       const pct = Math.round((avg / target) * 100);
-      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of recommended ~14h total for this age)`;
+      const tH = Math.floor(target / 60), tM = target % 60;
+      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for her age)`;
     }
   }
 }
@@ -6065,11 +6107,16 @@ function renderSleepTips() {
         { icon:zi('clock'), title:'Ideal bedtime: 6:30–8:00 PM', text:'Most babies this age do best with an early bedtime. Watch for sleepy cues (eye rubbing, yawning, fussiness) — catching the window matters more than the clock.' },
         { icon:zi('moon'), title:'Screen-free zone', text:'No screens for at least 1 hour before bed. Blue light suppresses melatonin production even in infants.' },
         { icon:zi('star'), title:'Consistent sleep cue', text:'A specific lullaby, white noise pattern, or phrase ("time to sleep") used every night builds a strong association over time.' },
-      ] : [
+      ] : ageM < 12 ? [
         { icon:zi('moon'), title:'Keep the routine consistent', text:'At 9–12 months, separation anxiety peaks. A strong, predictable routine provides security — same time ±15 minutes, same sequence.' },
         { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if she gets past her sleep window, cortisol spikes make falling asleep harder.' },
         { icon:zi('book'), title:'Add a short book', text:'Board books before bed build both sleep associations and early literacy. 1–2 short books is perfect.' },
         { icon:zi('baby'), title:'Goodbye ritual', text:'A brief, warm goodbye ritual ("goodnight, I love you, see you in the morning") helps with separation anxiety at this age.' },
+      ] : [
+        { icon:zi('moon'), title:'Same wind-down, same time', text:'Toddlers thrive on a predictable routine: bath, teeth, one or two books, lights out. Regular sleep and wake times matter more than the exact hour (WHO 2019).' },
+        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If she fights sleep, a slightly earlier bedtime often helps more than a later one.' },
+        { icon:zi('moon'), title:'Screens off', text:'No screen time under 2 years apart from video calls with family (WHO, IAP), and none in the hour before bed.' },
+        { icon:zi('baby'), title:'Short, warm goodnight', text:'A brief goodnight ritual helps with separation worries, which often flare again around 18 months.' },
       ]
     },
     {
@@ -6089,10 +6136,15 @@ function renderSleepTips() {
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
         { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
-      ] : [
+      ] : ageM < 12 ? [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
         { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
+        { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
+      ] : [
+        { icon:zi('list'), title:'One or two naps are both normal', text:'Between 12 and 18 months most toddlers move from two naps to one, and by about 18 months most take one midday nap. Some keep two until nearer 2 years.' },
+        { icon:zi('eye'), title:'Signs she is ready for one nap', text:'Refusing one of her naps most days for a week or two, or the second nap pushing bedtime late.' },
+        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while she adjusts.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
@@ -6103,11 +6155,16 @@ function renderSleepTips() {
         { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
         { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
-      ] : [
+      ] : ageM < 12 ? [
         { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If she still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep of 11–12 hours. Early morning waking (before 6 AM) often means bedtime is too late or too early — experiment in 15-min increments.' },
         { icon:zi('hourglass'), title:'Sleep regressions', text:'The 8–10 month regression is real — linked to crawling, pulling up, separation anxiety. It\'s temporary (2–4 weeks). Stay consistent with the routine.' },
         { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If she needs rocking/feeding to sleep, she\'ll need it at every wake-up.' },
+      ] : [
+        { icon:zi('bars'), title:'About 11–14 hours a day', text:'Across 24 hours, including naps, 1–2 year olds need about 11–14 hours (AASM, WHO). Night sleep is usually 10–12 hours.' },
+        { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
+        { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
+        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, gasps or pauses in her breathing, or sleeping with her neck stretched back (AAP).' },  // milestone-source-ok: sleep-apnoea tip citation (AAP 2012 guideline), not a milestone band
       ]
     },
     {

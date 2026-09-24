@@ -1606,6 +1606,8 @@ function _qlSleepInsight() {
     var todayStr = today();
     var todayNaps = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'nap'; });
     if (todayNaps.length === 2) return '2 naps today \u2014 solid rest.';
+    // From 12 m one nap is on track too (SLEEP_STANDARDS naps [1,2]).
+    if (todayNaps.length === 1 && getAgeInMonths() >= 12) return '1 nap today \u2014 one or two is normal at her age.';
 
     var lastNap = todayNaps[todayNaps.length - 1];
     if (lastNap && lastNap.bedtime && lastNap.wakeTime) {
