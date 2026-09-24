@@ -30,7 +30,33 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 #### P2 — Age copy and helpers still speak "infant"
 - Hero reads "12 months, 20 days" rather than "1 year" (home.js hero, Q&A header).
 - `getZivaMonthDays` has no second-birthday entry. The CareTicket target text says "set for 6–12 months" (intelligence-caretickets.js). DYNAMIC_ACTIVITIES drops talk/music tips after 12 m and has no 12 m+ tips. Teething lookouts miss the 13–19 m molars. The variety target and texture ladder top out at "finger". The template.html help text is written for 6–8 months. The poop-frequency guide caps at 9–12 m.
-- **Kitchen suggestion:** home.js still suggests "Jaggery ragi porridge" as a new food, which contradicts the 24 m added-sugar gate. Swap it for a date- or fruit-sweetened version (Maren + Ceres).
+
+#### P1 — Growth-velocity bands are still hand-copied at ~11 sites (Maren V-M-266-4)
+- **Symptom:** the 12–24 m band is shared (`GROWTH_VELOCITY_12_24`), but each site still carries its own ternary chain for 0–12 m. Some sites key on today's age, and `computeGrowthVelocity` keys on the measurement's (rounded) age.
+- **Fix shape:** add one `growthVelocityBand(ageMo)` helper in core.js holding every band, called with the measurement's age, and replace the chains. This is the same consolidation `VACC_AGE_MONTHS` did for vaccines. Kael co-sign.
+
+#### P1 — 24-month reference horizon (Kael V-K-266-9 / Maren V-M-266-14)
+- **Symptom:** `getInterpolatedWHO` clamps to the 24-month row. From 4 Sep 2027 every reading would silently compare against month 24, which is the same drift this PR fixed at 12 m. WHO also switches from recumbent length to standing height at 24 m (about 0.7 cm lower).
+- **Fix shape:** before Jul 2027, extend with the WHO 2–5 y tables (height-for-age, with the length/height adjustment), and add a build-time horizon warning when DOB + table-end is within 90 days.
+
+#### P2 — Deferred Governor NITs from PR #266 (12-month audit)
+- **Vaccines (Maren V-M-266-7, rest):**
+  - range labels ('16-18 months', '18-19 months') should flag Missing only after the window END plus a grace period;
+  - compute JE-2 as JE-1 date + 28 days once JE-1 is logged;
+  - add a "not needed for our vaccine" dismiss for conditional doses (Hep A-2, PCV Booster-2).
+
+  The +0.5-month look-ahead that labelled JE-2 "Missing" early is fixed.
+- **Honey reasons (Ceres V-C-266-5):** the combo checker's honey 'avoid' headline and the Library honey shelf still give the botulism reason at every age. From 12 m the reason is "added sugar, until 2".
+- **Salt verdict (Ceres V-C-266-10):** the Library shows "Fine from 12 months" and hides the reason. Add an optional `after` line to AGE_RULES salt ("lightly — under 2 g/day at 1–3 y").
+- **Tips:** two duplicate tips predate this PR ("Early allergen…" ×2, hydration ×2). "Ziva is here" in the First-foods guide could return as a dynamic age marker (Vela V-V-266-11).
+- **Chart legend (Vela V-V-266-10):** the shaded 3rd–97th band has no label. The help tip now explains it; a caption under the chart would be better.
+- **CPR completeness (Maren V-M-266-12):** add the landmark ("where the lowest ribs meet, one finger's width above"), "use both hands if you can't push 5 cm", and a 10-second breathing check. Paediatrician sign-off is still desirable.
+- **Settings select HR-2/HR-3 (Kael V-K-266-15, Maren):** the `#settingsRefStd` select has an inline `style=` and `onchange=` (pre-existing). The `.chart-filter-btn.active-india` / `.active-both` rules in styles.css are now dead CSS.
+- **Tests (Ceres V-C-266-9, Kael V-K-266-1):**
+  - add a 12.7-month e2e case: toddler tips present, infant tips absent, and jaggery reads 'avoid' even with a green result pre-seeded in the combo cache;
+  - add compound-name self-tests ("milk with sugar", "salt and sugar", "chocolate milk") to the resolver audit.
+
+  The e2e suite still can't launch in the remote container (Playwright 1.48 vs chromium-1194).
 
 #### P2 — 0–12 m velocity bands above the WHO median
 - **Symptom:** the 9–12 m band (8–13 g/day, 55–100 g/week) sits above the WHO median (~7.5 g/day at 10–12 m). Historical only now that she's past 12 m. The 12–24 m band is sourced (`GROWTH_VELOCITY_12_24`, core.js).

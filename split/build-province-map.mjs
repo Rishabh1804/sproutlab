@@ -20,7 +20,7 @@
 // HTML build. HR-1: no emoji anywhere (this source lives under split/).
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname  = dirname(fileURLToPath(import.meta.url));
@@ -80,14 +80,17 @@ const builtAt = String(g.built_at_commit || '(unknown commit)').slice(0, 12);
 // edge-direction concern (V-K-G2) affects only qa-route's ripple, not this count.
 const degree = new Map();
 const id2file = new Map();
-// Normalize source_file to a split/-relative module name. graphify <=0.9.x emitted
-// bare names ("core.js"); 0.9.67+ emits repo-relative ("split/core.js"). Without
-// this every module fell through to Opera Publica with 0 LOC (the 2026-09-24
-// regression: Kael's province rendered as 0 modules / 0 LOC).
+// Normalize source_file to a split/-relative module name. The prefix follows the directory
+// graphify runs from (build-graph.sh runs from the repo root → "split/core.js"), not the
+// version (Kael V-K-266-12). One rule, mirrored in qa-route.sh: backslashes → '/'; if
+// '/split/' occurs, keep what follows its LAST occurrence (absolute / drive-letter paths);
+// else strip leading './' and 'split/'. Unnormalized, every module fell through to Opera
+// Publica with 0 LOC (the 2026-09-24 regression).
 const modName = (f) => {
   if (!f) return f;
-  let r = String(f).replace(/\\/g, '/');
-  if (r.startsWith('/')) r = relative(__dirname, r).replace(/\\/g, '/');
+  const r = String(f).replace(/\\/g, '/');
+  const k = r.lastIndexOf('/split/');
+  if (k !== -1) return r.slice(k + '/split/'.length);
   return r.replace(/^(\.\/)+/, '').replace(/^split\//, '');
 };
 for (const n of nodes) n.source_file = modName(n.source_file);
@@ -195,10 +198,14 @@ let roadRows = crossRoads.slice(0, 12).map(r => {
 // log instead of rendering a reassuring "no coupling" row.
 const callCount = links.filter(e => e.relation === 'calls').length;
 const xfileCalls = links.filter(e => e.relation === 'calls' && id2file.get(e.source) !== id2file.get(e.target)).length;
-const resolutionBroken = callCount > 200 && xfileCalls === 0;
+// Baseline 2026-09-24 (graphifyy 0.9.6): 4,296 calls, 2,286 cross-file (53%). Broken = too few
+// calls to be a real extraction, OR cross-file share collapsed (partial loss too, not only zero —
+// Kael V-K-266-11). Constants mirrored in qa-route.sh.
+const RESOLUTION_MIN_CALLS = 500, RESOLUTION_MIN_XFILE_SHARE = 0.15;
+const resolutionBroken = callCount < RESOLUTION_MIN_CALLS || (xfileCalls / Math.max(1, callCount)) < RESOLUTION_MIN_XFILE_SHARE;
 if (resolutionBroken) {
-  console.error(`[province-map] WARNING: ${callCount} calls edges but 0 cross-file — graphify is not resolving cross-module calls (pin graphifyy==0.9.6; see session-start.sh). Coupling table is NOT trustworthy.`);
-  roadRows = '<tr><td colspan="4">Cross-file call resolution is BROKEN in this graph build (0 of ' + callCount + ' calls cross a file). Coupling unknown &mdash; not absent. Rebuild with the pinned graphify.</td></tr>';
+  console.error(`[province-map] WARNING: ${callCount} calls edges, ${xfileCalls} cross-file — graphify is not resolving cross-module calls (pin graphifyy==0.9.6; see session-start.sh). Coupling table is NOT trustworthy.`);
+  roadRows = '<tr><td colspan="4">Cross-file call resolution is BROKEN in this graph build (' + xfileCalls + ' of ' + callCount + ' calls cross a file). Coupling unknown &mdash; not absent. Rebuild with the pinned graphify.</td></tr>';
 }
 if (!roadRows) roadRows = '<tr><td colspan="4">No cross-province coupling detected.</td></tr>';
 

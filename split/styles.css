@@ -2197,6 +2197,8 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .growth-fact.positive { background:var(--sage-light); border-color:var(--sage); }
 .growth-fact.info     { background:var(--sky-light); border-color:var(--sky); }
+/* One-time dismissible fact (the WHO-growth change note, 2026-09-24): room for the × (.ctx-alert-dismiss). */
+.growth-fact.has-dismiss { position:relative; padding-right:var(--sp-32); }
 .growth-fact-icon { font-size:var(--icon-md); flex-shrink:0; }
 .growth-fact-body strong { font-size:var(--fs-md); font-weight:700; display:block; color:var(--text); }
 .growth-fact-body span   { font-size:var(--fs-base); font-weight:400; color:var(--mid); line-height:var(--lh-relaxed); }

@@ -1662,9 +1662,11 @@ function renderRecoFood() {
     { icon:zi('drop'), name:'Chia seed pudding', reason:'Omega-3 + calcium + fibre — tiny superfood', newFood:'chia seeds',
       recipe:'1. Soak 1 tsp chia seeds in ¼ cup milk/water for 2 hrs (or overnight).\n2. Seeds form a gel — mash any clumps.\n3. Mix with mashed fruit + ghee.',
       tips:'{{OK}} Omega-3 content rivals flaxseed.\n{{OK}} Pre-soaking is essential — seeds expand 10×.\n{{NO}} Never give dry — swelling can cause choking.\n{{NO}} Start with ½ tsp — very high fibre.' },
-    { icon:zi('spoon'), name:'Jaggery ragi porridge', reason:'Iron + natural sweetener — traditional combo', newFood:'jaggery',
-      recipe:'1. Cook 1 tbsp ragi in ½ cup water (5 min).\n2. Dissolve ½ tsp organic jaggery powder in warm water, strain.\n3. Mix into porridge + ghee.',
-      tips:'{{OK}} Natural iron source — much better than sugar.\n{{OK}} Traditional sweetener for baby food in India.\n{{NO}} Don\'t use before 8 months.\n{{NO}} Use organic — commercial jaggery may have chemicals.\n{{NO}} Very small amount — still a sugar.' },
+    // Was "Jaggery ragi porridge" (newFood jaggery) — jaggery is added sugar, gated to 24 m
+    // (Ceres V-C-266-7 / Maren V-M-266-10). Fruit sweetens instead; ragi is the iron.
+    { icon:zi('spoon'), name:'Date-sweetened ragi porridge', reason:'Iron from ragi, sweetness from fruit — no added sugar', newFood:'date',
+      recipe:'1. Cook 1 tbsp ragi in ½ cup water (5 min).\n2. Soak 1 pitted date in warm water 10 min, then mash to a smooth paste.\n3. Stir the date paste into the porridge + ghee.',
+      tips:'{{OK}} Ragi is one of the richest plant sources of iron and calcium.\n{{OK}} Date sweetens with whole fruit — no added sugar before 2 years.\n{{NO}} Always pit and mash dates — a whole date is a choking risk.\n{{NO}} Keep it to 1 date — fruit sugar still counts.' },
     { icon:zi('sprout'), name:'Saffron milk rice', reason:'Brain tonic + immunity — Ayurvedic tradition', newFood:'saffron',
       recipe:'1. Soak 1–2 saffron strands in 1 tsp warm milk for 10 min.\n2. Cook 1 tbsp rice until mushy.\n3. Mix saffron milk into rice + ghee.',
       tips:'{{OK}} Traditional brain tonic in Ayurveda.\n{{OK}} Anti-inflammatory + immunity booster.\n{{NO}} Use only 1–2 strands — very potent.\n{{NO}} Use genuine saffron — fakes are common.' },
@@ -1744,7 +1746,14 @@ function renderRecoFood() {
   }
 
   // Pick 1 new dish — food NOT yet introduced
-  const newEligible = NEW_DISH_POOL.filter(n => !introduced.has(n.newFood.toLowerCase()));
+  // Age-gated too (Ceres V-C-266-7 / Maren V-M-266-10): never suggest a dish whose new food she is
+  // still too young for — the pool is suggestions, the AGE_RULES gate is the floor.
+  const _poolAgeM = getAgeInMonths();
+  const newEligible = NEW_DISH_POOL.filter(n => {
+    if (introduced.has(n.newFood.toLowerCase())) return false;
+    const r = (typeof _fdAgeRule === 'function') ? _fdAgeRule(n.newFood) : null;
+    return !(r && typeof r.minMonth === 'number' && r.minMonth > _poolAgeM);
+  });
   if (newEligible.length > 0) {
     const newPick = newEligible[doy % newEligible.length];
     const id = 'reco-recipe-' + (recoIdx++);

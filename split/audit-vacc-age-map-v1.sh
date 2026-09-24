@@ -20,8 +20,13 @@ if (!mapM || !schM) { console.error('audit-vacc-age-map-v1: ENGINE — VACC_AGE_
 let map;
 try { map = eval('(' + mapM[1] + ')'); }
 catch (e) { console.error('audit-vacc-age-map-v1: ENGINE — eval failed: ' + e.message); process.exit(2); }
-const ages = [...new Set([...schM[0].matchAll(/age:\s*'([^']+)'/g)].map(x => x[1]))];
+const ageHits = [...schM[0].matchAll(/age:\s*'([^']+)'/g)];
+const ages = [...new Set(ageHits.map(x => x[1]))];
 if (ages.length === 0) { console.error('audit-vacc-age-map-v1: ENGINE — no schedule ages parsed (green-but-empty guard)'); process.exit(2); }
+// Count guard (Kael V-K-266-10): every `age:` key must be a single-quoted literal we parsed —
+// a double-quoted / template-literal label would otherwise be skipped silently.
+const ageKeys = (schM[0].match(/\bage\s*:/g) || []).length;
+if (ageKeys !== ageHits.length) { console.error('audit-vacc-age-map-v1: ENGINE — ' + ageKeys + ' age: keys but ' + ageHits.length + ' parsed single-quoted labels (non-literal age label?)'); process.exit(2); }
 const missing = ages.filter(a => typeof map[a] !== 'number');
 if (missing.length) {
   console.error('audit-vacc-age-map-v1: UNMAPPED — schedule age label(s) with no month value (dose would never come due): ' + missing.join(', '));

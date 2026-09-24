@@ -880,7 +880,7 @@ function renderGrowthFacts() {
     const vb = GROWTH_VELOCITY_12_24;
     if (mo >= 12) {
       if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
-        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`From her first birthday growth slows down a lot — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. Ziva is growing steadily.` });
+        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. Ziva is growing steadily.` });
       }
     } else if (gPerDay >= 15 && gPerDay <= 40) {
       facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. Ziva is growing beautifully.` });
@@ -912,20 +912,41 @@ function renderGrowthFacts() {
   if (lwFact) {
     const birth = growthData.find(r => r.wt != null);
     const totalGain = (lwFact.wt - birth.wt).toFixed(2);
-    facts.push({ type:'positive', icon:zi('sprout'), title:`Gained ${totalGain} kg since birth`, body:`From ${birth.wt} kg at birth to ${lwFact.wt} kg now — more than doubled her birth weight, which is a classic healthy 6-month milestone.` });
+    // The multiple is computed, not asserted (Vela V-V-266-12): babies roughly triple birth weight by 1 year.
+    const mult = birth.wt > 0 ? lwFact.wt / birth.wt : 0;
+    const multText = mult >= 2.9 ? 'about triple her birth weight — the classic first-year marker'
+      : mult >= 2 ? 'more than double her birth weight' : 'steady gain since birth';
+    facts.push({ type:'positive', icon:zi('sprout'), title:`Gained ${totalGain} kg since birth`, body:`From ${birth.wt} kg at birth to ${lwFact.wt} kg now — ${multText}.` });
+  }
+
+  // One-time note on the growth-reference change (Maren V-M-266-5 / Vela V-V-266-3, 2026-09-24).
+  // The default "India" table read her ~20–30 percentile points high and every post-12 m reading was
+  // compared to the 12-month row — so her percentiles drop when this lands. Own the correction up
+  // front, so a tired parent doesn't read a changed ruler as faltering growth. Dismiss persists
+  // per device (localStorage; not synced — each parent sees it once).
+  let _whoNoteSeen = false;
+  try { _whoNoteSeen = localStorage.getItem('ziva_growth_who_note_seen') === '1'; } catch (e) { _whoNoteSeen = false; }
+  if (!_whoNoteSeen && lwFact) {
+    facts.unshift({ type:'info', icon:zi('info'), dismiss:'dismissGrowthWhoNote',
+      title:'Growth now uses the WHO charts for every reading',
+      body:'IAP, India’s paediatric academy, recommends the WHO charts for children under 5, and they now run to 2 years. Her percentile may read lower than before — her growth hasn’t changed, only the measuring stick has.' });
   }
 
   // WHO context
   facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of Ziva\'s health — a single reading means less than the pattern across visits. Keep logging!` });
 
   el.innerHTML = facts.map(f => `
-    <div class="growth-fact ${f.type}">
+    <div class="growth-fact ${f.type}${f.dismiss ? ' has-dismiss' : ''}">${f.dismiss ? `<button class="ctx-alert-dismiss" data-action="${f.dismiss}" aria-label="Dismiss">&times;</button>` : ''}
       <div class="growth-fact-icon">${f.icon}</div>
       <div class="growth-fact-body">
         <strong>${f.title}</strong>
         <span>${f.body}</span>
       </div>
     </div>`).join('');
+}
+function dismissGrowthWhoNote() {
+  try { localStorage.setItem('ziva_growth_who_note_seen', '1'); } catch (e) { /* private mode: note reappears */ }
+  renderGrowthFacts();
 }
 // @@INSERT_DATA_BLOCK_3@@
 
@@ -1329,7 +1350,8 @@ function getGrowthRef(moExact) {
 // clipped every measurement taken after her first birthday off the chart.
 function _growthChartMaxMonth() {
   const last = WHO_W50.length - 1;
-  return Math.min(last, Math.max(12, Math.ceil(ageMonthsAt(today())) + 1));
+  // ageAt() is the timezone-safe calendar age (HR-12; Maren V-M-266-15), not a UTC-parsed date string.
+  return Math.min(last, Math.max(12, ageAt().months + 2));
 }
 
 function setReferenceStandard(std) {
@@ -1487,7 +1509,9 @@ function drawChart(canvasId) {
   renderChartContext('wt', zoom);
 
   // Compute axis bounds
-  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 2, yMax = Math.ceil(WHO_W97[xMax] + 0.5);
+  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 2;
+  // Headroom for a reading above P97 so it is never drawn off-canvas (Maren V-M-266-13).
+  let yMax = Math.max(Math.ceil(WHO_W97[xMax] + 0.5), zivaPoints.length ? Math.ceil(Math.max(...zivaPoints.map(p => p.y)) + 0.5) : 0);
   if (zoom && zivaPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
     xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
@@ -1563,7 +1587,8 @@ function drawHeightChart(canvasId) {
   renderChartContext('ht', zoom);
 
   // Compute axis bounds
-  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 44, yMax = Math.ceil((WHO_H97[xMax] + 2) / 2) * 2;
+  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 44;
+  let yMax = Math.max(Math.ceil((WHO_H97[xMax] + 2) / 2) * 2, zivaHtPoints.length ? Math.ceil(Math.max(...zivaHtPoints.map(p => p.y)) + 2) : 0);
   if (zoom && zivaHtPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
     xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
@@ -1645,7 +1670,7 @@ function renderVelocity() {
   const wtColor = (gPerDay >= expectedMin && gPerDay <= expectedMax * 1.3) ? 'var(--tc-sage)' : gPerDay < expectedMin ? 'var(--tc-caution)' : 'var(--tc-sky)';
 
   // Position relative to reference 50th
-  const wtPct = calcPercentile(lastWt.wt, ref.w3, ref.w50, ref.w97);
+  const wtPct = calcPercentile(lastWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85); // 5-point, matches the badge (V-M-266-16)
 
   let html = '<div class="velocity-gauges">';
 
@@ -1655,7 +1680,7 @@ function renderVelocity() {
       <div class="vg-info">
         <div><span class="vg-value" style="color:${wtColor};">${gPerDay}</span><span class="vg-unit">g/day</span></div>
         <div class="vg-label">Gain rate</div>
-        <div class="vg-context">Expected: ${expectedMin}–${expectedMax}</div>
+        <div class="vg-context">Expected: ${expectedMin}–${expectedMax} g/day</div>
       </div>
     </div>`;
 
@@ -4113,10 +4138,13 @@ function renderVaccCoverage() {
   // Determine which scheduled vaccines are due by now
   const ageMap = VACC_AGE_MONTHS;
 
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo + 0.5);
+  // Due = the schedule age has been REACHED. The old +0.5-month look-ahead labelled a dose
+  // "Missing" two weeks before it was due (JE-2 at 12.5 m — Maren V-M-266-7); look-ahead doses
+  // belong under "Next up", never in missingCount or the score.
+  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo);
   const upcoming = VACC_SCHEDULE.filter(v => {
     const am = ageMap[v.age] ?? 99;
-    return am > mo + 0.5 && am <= mo + 6;
+    return am > mo && am <= mo + 6;
   });
 
   // Match given vaccines to schedule using normalized names
@@ -10129,18 +10157,29 @@ function computeGrowthVelocity() {
   var weightResult = null;
   if (weightEntries.length >= 2) {
     var wLatest = weightEntries[weightEntries.length - 1];
+    // Band age = the measurement's age, rounded — so a weigh-in on (or just before) her birthday
+    // takes the same 12–24 m band the Growth gauge uses (Maren V-M-266-4).
+    var ageMo = ageMonthsAt(wLatest.date);
+    var bandMo = Math.round(ageMo);
+    // From 12 m, judge velocity over >= 28 days (Maren V-M-266-3 / Kael V-K-266-7): a toddler's
+    // two-week gain (~90 g at the median) is the size of home-scale noise, and WHO publishes
+    // 12–24 m velocity only in 2-month steps. Use the latest weigh-in at least 28 days back.
     var wPrev = weightEntries[weightEntries.length - 2];
+    if (bandMo >= 12) {
+      for (var wi = weightEntries.length - 2; wi >= 0; wi--) {
+        if ((new Date(wLatest.date) - new Date(weightEntries[wi].date)) / 86400000 >= 28) { wPrev = weightEntries[wi]; break; }
+      }
+    }
     var wDaysBetween = Math.max(1, Math.round((new Date(wLatest.date) - new Date(wPrev.date)) / 86400000));
     var wGainG = Math.round((wLatest.wt - wPrev.wt) * 1000);
     var gPerDay = Math.round(wGainG / wDaysBetween * 10) / 10;
 
     // Expected velocity by age
-    var ageMo = ageMonthsAt(wLatest.date);
     var expectedRange;
-    if (ageMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
-    else if (ageMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
-    else if (ageMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
-    else if (ageMo < 12) expectedRange = { min: 8, max: 13, label: '9–12 months' };
+    if (bandMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
+    else if (bandMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
+    else if (bandMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
+    else if (bandMo < 12) expectedRange = { min: 8, max: 13, label: '9–12 months' };
     else expectedRange = { min: GROWTH_VELOCITY_12_24.wGDayMin, max: GROWTH_VELOCITY_12_24.wGDayMax, label: GROWTH_VELOCITY_12_24.label };
 
     var wStatus;
@@ -10149,13 +10188,18 @@ function computeGrowthVelocity() {
     else if (gPerDay > expectedRange.max * 1.3) wStatus = 'fast';
     else wStatus = 'on-track';
 
-    // Plateau detection
-    var isPlateau = wGainG < 50 && wDaysBetween >= 14;
+    // Plateau detection — scaled to the age band (was a fixed infant-era 50 g / 14 d floor that
+    // overrode the toddler band: 45 g over 15 d is on track at 12 m+, not a plateau).
+    var isPlateau = wDaysBetween >= 14 && wGainG < expectedRange.min * 0.5 * wDaysBetween;
     if (isPlateau) wStatus = 'plateau';
 
-    // Freshness
+    // Too short an interval to judge a toddler: no verdict either way (tooShort lets renderers say so).
+    var wTooShort = bandMo >= 12 && wDaysBetween < 28;
+    if (wTooShort) { wStatus = 'on-track'; isPlateau = false; }
+
+    // Freshness — toddlers are weighed about monthly, so "stale" moves from 3 to 5 weeks at 12 m+.
     var daysSinceWeight = Math.round((new Date(todayStr) - new Date(wLatest.date)) / 86400000);
-    var weightStale = daysSinceWeight > 21;
+    var weightStale = daysSinceWeight > (bandMo >= 12 ? 35 : 21);
 
     // Total gain since birth
     var birthWeight = weightEntries[0].wt;
@@ -10170,6 +10214,7 @@ function computeGrowthVelocity() {
       expectedRange: expectedRange,
       status: wStatus,
       isPlateau: isPlateau,
+      tooShort: wTooShort,
       daysSince: daysSinceWeight,
       stale: weightStale,
       totalGainG: totalGainG
@@ -10181,14 +10226,22 @@ function computeGrowthVelocity() {
   var heightResult = null;
   if (heightEntries.length >= 2) {
     var hLatest = heightEntries[heightEntries.length - 1];
+    var hBandMo = Math.round(ageMonthsAt(hLatest.date));
     var hPrev = heightEntries[heightEntries.length - 2];
+    if (hBandMo >= 12) { // same >= 28-day lookback as weight
+      for (var hi = heightEntries.length - 2; hi >= 0; hi--) {
+        if ((new Date(hLatest.date) - new Date(heightEntries[hi].date)) / 86400000 >= 28) { hPrev = heightEntries[hi]; break; }
+      }
+    }
     var hDaysBetween = Math.max(1, Math.round((new Date(hLatest.date) - new Date(hPrev.date)) / 86400000));
     var cmGain = Math.round((hLatest.ht - hPrev.ht) * 10) / 10;
     var cmPerMonth = Math.round(cmGain / hDaysBetween * 30.44 * 10) / 10;
 
-    var hAgeMo = ageMonthsAt(hLatest.date);
-    var hExpected = (hAgeMo < 6) ? { min: 2.0, max: 3.5 } : { min: 1.0, max: 2.5 };
+    // 12–24 m band from the shared WHO constant (Maren V-M-266-2 — this site was missed).
+    var hExpected = hBandMo >= 12 ? { min: GROWTH_VELOCITY_12_24.hCmMoMin, max: GROWTH_VELOCITY_12_24.hCmMoMax }
+      : (hBandMo < 6) ? { min: 2.0, max: 3.5 } : { min: 1.0, max: 2.5 };
     var hStatus = cmPerMonth < hExpected.min ? 'slow' : (cmPerMonth > hExpected.max ? 'fast' : 'on-track');
+    if (hBandMo >= 12 && hDaysBetween < 28) hStatus = 'on-track';
 
     var daysSinceHeight = Math.round((new Date(todayStr) - new Date(hLatest.date)) / 86400000);
 
@@ -10210,8 +10263,10 @@ function computeGrowthVelocity() {
   weightEntries.forEach(function(we) {
     var ageMo = ageMonthsAt(we.date);
     var ref = getGrowthRef(ageMo);
-    if (ref && ref.wt) {
-      var pctResult = calcPercentile(we.wt, ref.wt.p3, ref.wt.p50, ref.wt.p97, ref.wt.p15, ref.wt.p85);
+    // getGrowthRef returns flat {w3,w50,w97,w15,w85,h*}; this read `ref.wt.p3` and was always
+    // undefined, so percentile history / crossings / proportionFlag never fired (V-K-266-8 / V-M-266-17).
+    if (ref && ref.w50) {
+      var pctResult = calcPercentile(we.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85);
       percentiles.push({ date: we.date, weight: we.wt, percentile: pctResult.pct });
     }
   });
@@ -10238,8 +10293,8 @@ function computeGrowthVelocity() {
     var hLatestEntry = heightEntries[heightEntries.length - 1];
     var hAgeMo2 = ageMonthsAt(hLatestEntry.date);
     var hRef = getGrowthRef(hAgeMo2);
-    if (hRef && hRef.ht) {
-      var hPctResult = calcPercentile(hLatestEntry.ht, hRef.ht.p3, hRef.ht.p50, hRef.ht.p97, hRef.ht.p15, hRef.ht.p85);
+    if (hRef && hRef.h50) {
+      var hPctResult = calcPercentile(hLatestEntry.ht, hRef.h3, hRef.h50, hRef.h97, hRef.h15, hRef.h85);
       if (Math.abs(latestPercentile - hPctResult.pct) > 30) {
         proportionFlag = { weightPct: latestPercentile, heightPct: hPctResult.pct };
       }
@@ -10345,7 +10400,9 @@ function renderInfoGrowthVelocity() {
     var iHtml = '';
     if (data.weight) {
       var w2 = data.weight;
-      if (w2.status === 'on-track') {
+      if (w2.tooShort) {
+        iHtml += '<div class="si-insight si-insight-info">Her last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
+      } else if (w2.status === 'on-track') {
         iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + w2.expectedRange.label + '.</div>';
       } else if (w2.status === 'slow') {
         iHtml += '<div class="si-insight si-insight-warn">Weight gain has slowed to ' + w2.gPerDay + 'g/day — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. Review caloric intake.</div>';

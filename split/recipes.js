@@ -15,7 +15,8 @@
 // they lack the structured slot/age/citation fields the catalog renders.
 //
 // SAFETY INVARIANTS baked in (RECIPE_RESEARCH.md, cross-verified ≥2 sources):
-//   • No honey / added salt / added sugar < 12 m (fruit sweetens).
+//   • No honey / added salt < 12 m; no added sugar — honey included — < 24 m (fruit sweetens;
+//     WHO free sugars + DGA 2020–25 count honey as added sugar; 2026-09-24 12-month audit).
 //   • Allergens (egg, fish, nuts, dairy, sesame) introduced early ~6 m, one
 //     at a time — never laundered as a prevention claim.
 //   • Nuts NEVER whole — ground fine / smooth paste (choking).
@@ -400,19 +401,21 @@ const RECIPES = [
     source: ['icmr', 'iap'],
   },
 
-  // ─── 12 m+ catalog item — age-gated, never suggested for an under-1 (honey) ───
+  // ─── 2 y+ catalog item — age-gated. Honey clears the botulism gate at 12 m but it is a free
+  //     sugar, so like jaggery it waits for the 24 m added-sugar gate (Ceres V-C-266-5). Withheld
+  //     from Suggested until then; shown in the catalog with its age badge. ───
   {
-    id: 'banana-honey-toast', title: 'Banana & Honey Toast (12 m+)', slot: 'snack', minAgeMonths: 12, prepMinutes: 5,
-    ingredients: [{ name: 'bread', qty: '1 slice, soft', g: 25 }, { name: 'banana', qty: '½, mashed', g: 25 }, { name: 'honey', qty: '½ tsp (12 m+ only)', g: 5 }],
+    id: 'banana-honey-toast', title: 'Banana & Honey Toast (2 y+)', slot: 'snack', minAgeMonths: 24, prepMinutes: 5,
+    ingredients: [{ name: 'bread', qty: '1 slice, soft', g: 25 }, { name: 'banana', qty: '½, mashed', g: 25 }, { name: 'honey', qty: '½ tsp (2 y+ only)', g: 5 }],
     foodGroups: ['grains', 'fruits'], cuisine: 'Global',
     steps: [
       'Lightly toast a soft slice of whole-wheat bread, remove crusts, cut into soft fingers.',
       'Spread with mashed banana.',
-      'For ONE-YEAR-OLDS AND OVER ONLY, drizzle ½ tsp honey.',
+      'From 2 years only, drizzle ½ tsp honey. Before that, the banana is sweet enough.',
       'Serve as soft fingers.',
     ],
-    dos: ['Only from the first birthday — honey is for 12 m+', 'Soft fingers suit self-feeding toddlers', 'Whole-wheat bread adds fibre'],
-    donts: ['NEVER give honey before 12 months — risk of infant botulism', 'No honey of any kind for a baby — raw, cooked, or baked', 'Cut bread into soft, manageable fingers'],
+    dos: ['Honey only from 2 years — it is an added sugar', 'Soft fingers suit self-feeding toddlers', 'Whole-wheat bread adds fibre'],
+    donts: ['NEVER give honey before 12 months — risk of infant botulism', 'No added sugar, honey included, before 2 years', 'Cut bread into soft, manageable fingers'],
     source: ['who', 'nhs'],
   },
 ];

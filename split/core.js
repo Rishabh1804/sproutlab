@@ -714,7 +714,7 @@ function init() {
       const hit = comboHistory.find(x => x.q === arg);
       // M-R1-1: a stale (pre-R1-schema) cached result lacks the emergency floor —
       // never render it directly; recompute so the floor stays reachable.
-      if (hit && hit.result && hit.result._schema === COMBO_RESULT_SCHEMA) {
+      if (hit && _comboCacheValid(hit.result)) {
         renderComboResult(hit.result);
       } else if (typeof checkFoodCombo === 'function') {
         checkFoodCombo();
@@ -1044,6 +1044,7 @@ function init() {
     else if (action === 'feHomeBannerLog') feHomeBannerLog();
     else if (action === 'deLogStoolQuick') deLogStoolQuick(arg);
     else if (action === 'dismissAlert') dismissAlert(arg, arg2);
+    else if (action === 'dismissGrowthWhoNote') dismissGrowthWhoNote();
     else if (action === 'acknowledgeAlert') acknowledgeAlert(arg, arg2);
     else if (action === 'snoozeAlert') snoozeAlert(arg, arg2);
     else if (action === 'gotoCard') gotoCard(arg, arg2);
@@ -2147,7 +2148,7 @@ function calcMedicalScore() {
 
   // A. Vaccination coverage (40%)
   const ageMap = VACC_AGE_MONTHS;
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo + 0.5);
+  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo); // no look-ahead (V-M-266-7)
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
   const vaccBookedData = load(KEYS.vaccBooked, null);
   let vaccGiven = 0;
@@ -4204,6 +4205,28 @@ function _lookupByFoodName(table, name) {
   return byAlias || null;
 }
 
+// Every record a food name resolves to — the same exact / de-plural / word-boundary key /
+// alias tiers and the same negation guard as _lookupByFoodName, but ALL matches instead of
+// the first. For the AGE GATE only (V-K-266-1, 2026-09-24): first-match resolution picks by
+// table insertion order, so "milk with sugar" / "salt and sugar" / "chocolate milk" resolved to
+// milk@12 or salt@12 and read green at 12–24 months, silently bypassing the added-sugar gate@24.
+// _fdAgeRule takes the strictest (highest minMonth) of these. The FOOD_EFFECTS card keeps the
+// single-match resolver (one card per food).
+function _lookupAllByFoodName(table, name) {
+  if (!table || !name) return [];
+  const n = String(name).toLowerCase().trim();
+  const out = [];
+  const add = (v) => { if (v && out.indexOf(v) === -1) out.push(v); };
+  add(table[n]);
+  add(table[n.replace(/s$/, '')]);
+  const wb = (token) => new RegExp('\\b' + String(token).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n);
+  Object.entries(table).forEach(([k, v]) => { if (wb(k) && !_foodNameNegated(n, k)) add(v); });
+  Object.values(table).forEach(v => {
+    if (v && Array.isArray(v.aliases) && v.aliases.some(a => wb(a) && !_foodNameNegated(n, a))) add(v);
+  });
+  return out;
+}
+
 // food-effects-v2 P1c (Cipher Edict-V, M-F-1 completion). The fish record is reached by the
 // bare 'fish' KEY, which word-boundary-matches the trailing word of a "<species> fish" host —
 // so "seer fish" / "shark fish" (documented HIGH-MERCURY species in the record's safeForm.never)
@@ -4259,7 +4282,18 @@ function getFoodEffect(name) {
 // it directly would drop the floor — the silent-floor-drop §10 names worse than
 // the legacy verdict. Stamp every fresh result with this tag; both read paths
 // (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
-const COMBO_RESULT_SCHEMA = 'r1-fe';
+// 'r1-fe-a24' (2026-09-24, Ceres V-C-266-1): bumped when the added-sugar gates moved 12 → 24 m, so
+// every result cached under the old gates (jaggery / sugar "safe" at 12 m) is recomputed once.
+// Bump it again whenever an AGE_RULES gate tightens.
+const COMBO_RESULT_SCHEMA = 'r1-fe-a24';
+
+// A cached combo result is reusable only if it carries the current schema AND was computed at her
+// current age in whole months — verdicts are age-gated, so a result from last month can be wrong
+// today (a gate that opened or, after a rules change, closed). Both read paths use this.
+function _comboCacheValid(result) {
+  return !!(result && result._schema === COMBO_RESULT_SCHEMA
+    && result._mo === Math.floor(getAgeInMonths()));
+}
 
 // foodClass membership test (food-effects v2 §3.0, M-S-5/K-S-4). foodClass is
 // multi-valued (peanut/tree nut carry ['allergen-introduce-early','choking-by-form'];
@@ -5461,7 +5495,7 @@ function getGrowthVelocity() {
 // Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
 // later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
 // the 0–12 m bands at each site are unchanged.
-const GROWTH_VELOCITY_12_24 = { wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85,
+const GROWTH_VELOCITY_12_24 = { wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
   hCmMoMin: 0.6, hCmMoMax: 1.6, hCmWk: '0.15–0.35', label: '12–24 months' };
 
 function getGrowthNarrative(velocity) {
@@ -5801,7 +5835,7 @@ function getPulseNarrative() {
   if (latestWt) {
     const moExact = ageMonthsAt(latestWt.date);
     const ref = getGrowthRef(moExact);
-    const pct = calcPercentile(latestWt.wt, ref.w3, ref.w50, ref.w97);
+    const pct = calcPercentile(latestWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85);
     parts.push(`weight at ${latestWt.wt} kg (${pct.text} percentile)`);
   }
 

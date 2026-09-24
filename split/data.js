@@ -2436,7 +2436,10 @@ const AGE_RULES = {
   // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
   // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
   // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
-  'sugar':    { minMonth:24, reason:'No added sugar before 2 years (WHO, AAP). Use fruit for natural sweetness.' },
+  // aliases (Ceres V-C-266-4 / Kael V-K-266-2): the everyday Indian names for added sugar, so
+  // mishri (with saunf), chini, khand, batasha, mithai and date syrup gate at 24 m too.
+  'sugar':    { minMonth:24, aliases:['mishri','misri','rock sugar','chini','cheeni','khand','shakkar','batasha','mithai','sweets','toffee','date syrup'],
+                reason:'No added sugar before 2 years (WHO, AAP). Use fruit for natural sweetness.' },
   'jaggery':  { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
   'gur':      { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
   'tea':      { minMonth:24, reason:'Tannins block iron absorption. Caffeine is harmful for babies.' },
@@ -2456,10 +2459,10 @@ const AGE_RULES = {
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
   'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
   'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
-  'biscuit':  { minMonth:10, reason:'Most contain sugar, salt, and maida. If giving, choose sugar-free, whole grain.' },
+  'biscuit':  { minMonth:10, reason:'Most contain added sugar, salt, and maida. Only sugar-free, whole-grain ones — no added sugar before 2 years.' },
   'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
   'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
-  'kheer':    { minMonth:10, reason:'Often made with cow milk and sugar. Use breast milk/formula and fruit instead.' },
+  'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
   // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
   // mirror the FOOD_EFFECTS record so the gate and the consequence card agree per name
   // (one-resolver doctrine, V-M-205-B1). A vegetarian/Jain household not giving fish is valid.
@@ -3095,7 +3098,7 @@ const COMBO_RECIPES = {
   'blueberry avocado':{ recipe:'1. Steam 10 blueberries 2 min, mash.\n2. Scoop 2 tbsp avocado.\n3. Mix together.\n4. Serve immediately.', dos:['Brain fats + antioxidants','No cooking needed','Rich purple colour'], donts:['Don\'t give whole blueberries','Both oxidise fast — serve immediately','Stains heavily — bib essential'] },
   'spinach khichdi':  { recipe:'1. Blanch 5-6 spinach leaves 2 min, puree.\n2. Cook 1 tbsp rice + ½ tbsp dal — 3 whistles.\n3. Mix spinach puree + ghee + lemon.', dos:['Triple iron — spinach + dal + lemon for absorption','Blanch spinach first to reduce oxalates','Complete meal'], donts:['Don\'t reheat spinach dishes','Don\'t skip blanching','Make fresh each time'] },
   'honey':            { recipe:'', dos:[], donts:['NEVER give honey before 12 months','Risk of infant botulism — can be fatal','No form of honey is safe — raw, cooked, or baked'] },
-  'salt':             { recipe:'', dos:[], donts:['No added salt before 12 months','Baby\'s kidneys cannot process it','Natural sodium in food is sufficient'] },
+  'salt':             { recipe:'', dos:[], donts:['None added before 12 months — baby kidneys cannot process it','From 1 year keep it light: no more than 2 g a day up to age 3 (NHS)','Skip pickles, papad and namkeen'] },
   'sugar':            { recipe:'', dos:[], donts:['No added sugar before 2 years','Use fruit for natural sweetness','Includes jaggery and gur'] },
 };
 // @@DATA_BLOCK_14_END@@
@@ -4763,7 +4766,7 @@ const SYMPTOM_DB = [
       'Keep Ziva upright.',
       'Clear her nose with saline drops and a nasal aspirator.',
       'Stay calm so she stays calm.',
-      'Count her breaths for a full minute while she is calm (normal at 1–2 years: about 24–40). 40 or more at rest is fast breathing — call the doctor.'
+      'Count her breaths for a full minute while she is calm (normal at 1–2 years: under 40, usually about 24–39). 40 or more at rest is fast breathing — call the doctor.'
     ],
     precautions: [
       'Watch for the chest retracting (sucking in) with each breath.',
@@ -5162,6 +5165,7 @@ const SYMPTOM_DB = [
       'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
       'Still stuck? Kneel behind her, make a fist between her belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
       'Repeat back blows and abdominal thrusts until the object comes out or she starts breathing.',
+      'If she goes limp or unresponsive: lay her on a firm, flat surface, call 112 on speakerphone, remove an object only if you can clearly see and grasp it, and start CPR.',
       'Call emergency services as soon as possible — ideally have someone call while you do first aid.'
     ],
     precautions: [
@@ -5210,6 +5214,8 @@ const SYMPTOM_DB = [
     ],
     emergency: [
       'Loss of consciousness, even briefly',
+      'A fall from higher than 1 metre or down 5 or more stairs',
+      'Behaviour change — more irritable, distracted, or losing interest in things',
       'Vomiting more than once',
       'Seizure',
       'Clear fluid from the nose or ears',
@@ -5225,12 +5231,12 @@ const SYMPTOM_DB = [
     keywords: ['unconscious','unresponsive','passed out','fainted','won\'t wake up','limp','not responding','no response','collapsed'],
     severity: 'emergency',
     title: 'Unresponsive / Unconscious',
-    summary: 'Check breathing, place on side if breathing, start infant CPR if not, call 108',
+    summary: 'Check breathing, place on side if breathing, start child CPR if not (5 breaths, then 30 compressions : 2 breaths), call 112',
     whatToDo: [
-      'Shout her name and gently tap the bottom of her foot to see if she responds.',
-      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek.',
-      'If she is breathing, place her on her side (recovery position) and call emergency services.',
-      'If she is not breathing, call emergency services immediately — the dispatcher will guide you through chest compressions while help is on the way.',
+      'Tap her arm and call her name loudly to see if she responds.',
+      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek, for up to 10 seconds. Gasping is not breathing.',
+      'If she is breathing, place her on her side (recovery position) and call 112 on speakerphone.',
+      'If she is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? They call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
       'Stay with her until help arrives.'
     ],
     precautions: [
@@ -5239,7 +5245,7 @@ const SYMPTOM_DB = [
       'Note her colour — pale, blue, or grey is a serious sign.'
     ],
     doNot: [
-      { text: 'Give water, milk, or medication to an unresponsive baby', critical: true },
+      { text: 'Give water, milk, or medication to her while she is unresponsive', critical: true },
       { text: 'Shake her to try to wake her', critical: true },
       { text: 'Leave her alone to find help (call from where she is)', critical: false }
     ],

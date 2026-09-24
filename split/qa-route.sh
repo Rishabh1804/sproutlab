@@ -109,14 +109,15 @@ ripple_note = []
 if graph_path:
     try:
         g = json.load(open(graph_path))
-        # Normalize source_file to a split/-relative module name: graphify <=0.9.x
-        # emitted "core.js", 0.9.67+ emits "split/core.js". Unnormalized, no ripple
-        # edge ever matched `changed` and the oracle SILENTLY reported
-        # "jurisdiction-local" (2026-09-24 regression) — the under-summon class.
+        # Normalize source_file to a split/-relative module name. The prefix follows the directory
+        # graphify runs from (repo root -> "split/core.js"), not its version. Unnormalized, no ripple
+        # edge ever matched `changed` and the oracle SILENTLY reported "jurisdiction-local"
+        # (2026-09-24 regression) — the under-summon class.
+        # Same rule as build-province-map.mjs modName (V-K-266-12).
         def modname(f):
             f = str(f or "?").replace("\\", "/")
-            if f.startswith("/") and "/split/" in f:
-                f = f.rsplit("/split/", 1)[1]
+            if "/split/" in f:
+                return f.rsplit("/split/", 1)[1]
             while f.startswith("./"):
                 f = f[2:]
             return f[len("split/"):] if f.startswith("split/") else f
@@ -145,8 +146,9 @@ if graph_path:
         # fail-safe as V-K-G2: widen to ALL Governors rather than trust silence.
         calls = [e for e in g.get("links", []) if e.get("relation") == "calls"]
         xfile = sum(1 for e in calls if id2mod.get(e.get("source")) != id2mod.get(e.get("target")))
-        if len(calls) > 200 and xfile == 0:
-            ripple_note.append(f"  !! CROSS-FILE RESOLUTION BROKEN: {len(calls)} calls edges, 0 cross-file;")
+        # Baseline 2026-09-24: 4,296 calls / 2,286 cross-file (53%). Mirrors build-province-map.mjs.
+        if len(calls) < 500 or xfile / max(1, len(calls)) < 0.15:
+            ripple_note.append(f"  !! CROSS-FILE RESOLUTION BROKEN: {len(calls)} calls edges, {xfile} cross-file;")
             ripple_note.append("     ripple is blind (pin graphifyy==0.9.6). FAIL-SAFE: summoning ALL Governors.")
             for gname in ("Maren", "Ceres", "Kael", "Vela"):
                 add(gname, "fail-safe: graph cross-file call resolution broken")
