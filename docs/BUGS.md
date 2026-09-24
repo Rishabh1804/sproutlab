@@ -18,6 +18,7 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 #### P1 — MILESTONE_STANDARDS stop at 12 months (data.js)
 - **Symptom:** All four standards (who/iap/eu/cn) have keys 6–12 only. From 13 m, `renderUpcomingMilestones` says "No upcoming milestones data for this age range". The home next-milestone card returns nothing (`br < mo`), the "Expected at 12 months" copy stays pinned, and the milestone score completion freezes.
 - **Fix shape:** add 13–24 m rows from CDC Learn the Signs (15/18/24 m), the WHO Motor Development Study windows and IAP. The source work is Maren-primary.
+- **Live now (2026-09-24):** the parents' checklist shows she already meets every 12 m and 15 m marker (walking since ~10 m, 3+ words at 12 m). So the empty "upcoming milestones" state and the frozen milestone score are what they see today. **Next product priority.**
 
 #### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree
 - **Symptom:** `getSleepTargets` clamps at 12. The `napCount` recommendation (WHO/IAP 9–18 m) expects at least 2 naps, the Q&A expects 2 before 15 m, while `SLEEP_STANDARDS` allows [1,2] and quicklog says the 2→1 transition from 12 m is normal. So a 1-nap day reads "One nap short".
