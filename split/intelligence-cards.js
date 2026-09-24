@@ -1149,8 +1149,11 @@ function renderInfoIllnessImpact() {
   var mostImpacted = null, worstDelta = 0;
 
   episodes.forEach(function(ep) {
-    var startDate = ep.startedAt.slice(0, 10);
-    var endDate = ep.resolvedAt ? ep.resolvedAt.slice(0, 10) : today();
+    // Local calendar days (Vela V-V-267-1 / Ceres V-C-267-3): the UTC slice put a 3 AM IST start on
+    // the previous day, so this card disagreed with the (now local) history rows and the
+    // during-illness diet/sleep windows covered the wrong days.
+    var startDate = toDateStr(new Date(ep.startedAt));
+    var endDate = ep.resolvedAt ? toDateStr(new Date(ep.resolvedAt)) : today();
     var duration = _episodeDurationDays(ep);
     totalSickDays += duration;
 

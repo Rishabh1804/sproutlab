@@ -3560,13 +3560,23 @@ function _epNowTimeStr() { return new Date().toTimeString().slice(0, 5); }
 function _epTimeToISO(timeStr, baseISO) {
   if (!timeStr || !timeStr.includes(':')) return baseISO || new Date().toISOString();
   const [h, m] = timeStr.split(':').map(Number);
-  // Editing an existing entry keeps its own (local) calendar day; only a brand-new entry
-  // lands on today. Before 2026-09-25 every edit re-dated the entry to today, so fixing a
-  // day-1 reading of a 3-day fever silently moved it to day 3.
+  // Editing an existing entry: the new time goes on whichever of the entry's own local day, the
+  // day before or the day after lands CLOSEST to its original time (and not in the future). Before
+  // 2026-09-25 every edit was re-dated to today (a day-1 reading of a 3-day fever jumped to day 3);
+  // a same-day-only rule would instead throw a 23:50 → 00:05 correction back ~24 h (Kael V-K-267-1).
   const base = baseISO ? new Date(baseISO) : null;
-  const d = (base && !isNaN(base.getTime())) ? new Date(base.getFullYear(), base.getMonth(), base.getDate(), h, m, 0, 0) : new Date();
-  if (!base || isNaN(base.getTime())) d.setHours(h, m, 0, 0);
-  // If the selected time is >2h in the future, assume they meant yesterday
+  if (base && !isNaN(base.getTime())) {
+    const now = Date.now(), b = base.getTime();
+    let best = null;
+    [-1, 0, 1].forEach(off => {
+      const c = new Date(base.getFullYear(), base.getMonth(), base.getDate() + off, h, m, 0, 0).getTime();
+      if (c <= now + 60000 && (best === null || Math.abs(c - b) < Math.abs(best - b))) best = c;
+    });
+    return new Date(best !== null ? best : b).toISOString();
+  }
+  // A new entry lands today; >2h in the future means they meant yesterday.
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
   if (d.getTime() > Date.now() + 7200000) d.setDate(d.getDate() - 1);
   return d.toISOString();
 }
@@ -3579,8 +3589,7 @@ function _epLocalTimeStr(iso) {
 }
 function _epLocalDateStr(iso) {
   const d = iso ? new Date(iso) : new Date();
-  const x = isNaN(d.getTime()) ? new Date() : d;
-  return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  return toDateStr(isNaN(d.getTime()) ? new Date() : d); // core.js local 'YYYY-MM-DD' (V-K-267-7)
 }
 // Build an ISO timestamp from local 'YYYY-MM-DD' + 'HH:MM' by components (HR-12 timezone-safe).
 function _epLocalToISO(dateStr, timeStr) {
@@ -3633,7 +3642,7 @@ function _epEditEntry(opts) {
       const timeVal = f.value ? (typeof f.value === 'string' && f.value.includes('T') ? _epLocalTimeStr(f.value) : f.value) : _epNowTimeStr();
       fieldsHTML += '<input type="time" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(timeVal) + '">';
     } else if (f.type === 'date') {
-      fieldsHTML += '<input type="date" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(f.value || _epLocalDateStr()) + '"' + (f.max ? ' max="' + escHtml(f.max) + '"' : '') + '>';
+      fieldsHTML += '<input type="date" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(f.value || _epLocalDateStr()) + '"' + (f.min ? ' min="' + escHtml(f.min) + '"' : '') + (f.max ? ' max="' + escHtml(f.max) + '"' : '') + '>';
     } else if (f.type === 'select' && f.options) {
       fieldsHTML += '<select class="ep-edit-input" id="epEdit_' + f.id + '">';
       f.options.forEach(o => {
@@ -3651,9 +3660,9 @@ function _epEditEntry(opts) {
 
   overlay.innerHTML = '<div class="ep-edit-sheet">' +
     '<div class="ep-edit-title">' + escHtml(opts.title || 'Edit Entry') + '</div>' +
-    fieldsHTML +
     (opts.hint ? '<div class="ep-edit-hint">' + escHtml(opts.hint) + '</div>' : '') +
-    '<div class="ep-edit-err" id="epEditErr" hidden></div>' +
+    fieldsHTML +
+    '<div class="ep-edit-err" id="epEditErr" role="alert" hidden></div>' +
     '<div class="ep-edit-btns">' +
     (opts.onDelete ? '<button class="btn btn-rose" id="epEditDelete">Delete</button>' : '') +
     '<button class="btn btn-ghost" id="epEditCancel">Cancel</button>' +
@@ -3663,6 +3672,7 @@ function _epEditEntry(opts) {
   document.body.appendChild(overlay);
 
   overlay.querySelector('#epEditCancel').onclick = () => overlay.remove();
+  overlay.addEventListener('input', () => { const err = overlay.querySelector('#epEditErr'); if (err) err.hidden = true; });
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
   const delBtn = overlay.querySelector('#epEditDelete');
@@ -3680,7 +3690,9 @@ function _epEditEntry(opts) {
       if (el) values[f.id] = el.value;
     });
     // onSave may return an error string to keep the sheet open (validation); anything else closes it.
-    const res = opts.onSave ? opts.onSave(values) : undefined;
+    let res;
+    try { res = opts.onSave ? opts.onSave(values) : undefined; }
+    catch (e) { console.warn('[epEdit] save failed', e); res = 'Could not save. Please try again.'; }
     if (typeof res === 'string' && res) {
       const err = overlay.querySelector('#epEditErr');
       if (err) { err.textContent = res; err.hidden = false; }
