@@ -1117,7 +1117,7 @@ function renderDietRecipes() {
 
   // ── (b) Browsable catalog grouped by meal slot ──
   html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
-  html += `<p class="recipes-sub-note">A small, cited collection for 6–12 months — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
+  html += `<p class="recipes-sub-note">A small, cited collection from the first-foods year (6–12 months) — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
   for (const slot of RECIPE_SLOT_ORDER) {
     const inSlot = surfaced.filter(r => r.slot === slot);
     if (!inSlot.length) continue;
@@ -1775,7 +1775,7 @@ function _libPopHtml(key, eff, pol, j) {
   // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
   var floorCaution = isChoke || !acute;
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
-  var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTitle = isChoke ? 'If she is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
   var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
@@ -2360,9 +2360,9 @@ function renderLibGuides() {
       body: '<p class="lib-guide-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
         '<div><div class="lib-guide-h">Change the form</div><div class="lib-guide-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
     { pol: 'sky', icon: 'info', t: 'Milk & drinks',
-      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1. <b>From 1 year</b>, whole cow&rsquo;s milk can be a main drink, from an open cup — not so much that it crowds out food. No skimmed or 1% milk under 5.</p>' },
     { pol: 'lav', icon: 'clock', t: 'First foods, by age',
-      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods · <b>12 mo+</b> family food (lightly salted, still no added sugar), whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
   ];
 
   root.innerHTML = guides.map(function(g) {
@@ -2707,9 +2707,9 @@ function renderDietChokingIntro() {
 
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
-  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
-  // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
-  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If your baby is choking, it\'s an emergency');
+  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
+  // thrusts (child 1y+ technique since Ziva turned one) + "NO adrenaline".
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).
@@ -2868,24 +2868,39 @@ const ALL_TIPS = [
     body:'Avocado, ghee, coconut, paneer, and nut butters are key for brain & nerve development at this age. Include daily.',
     condition: d => countFoodsInDiary(d, ['avocado','ghee','coconut','coconut oil','paneer','butter','almonds','walnut','cashew']) < 3,
   },
-  // ── AVOID (always show) ──
+  // ── AVOID (always show, or age-gated) ──
+  // The under-1 rules (honey, cow's milk as a drink) are gated to < 12 months; from 1 year they
+  // retire and the salt/sugar tip turns into its toddler form (2026-09-24 12-month audit — they had
+  // shown "always", contradicting the unlocked Library gates).
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 12 months. Natural sweetness from fruit is fine.',
-    condition: () => true,
+    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    type:'avoid', icon:zi('warn'),
+    title:'Keep salt light — still no added sugar',
+    body:'Family food is fine now, but cook hers lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery or sweets until 2 years; fruit is her sweetener.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('spoon'),
     title:'No honey before 12 months',
     body:'Honey carries risk of infant botulism regardless of form. Strictly avoid until 1 year.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
   },
   {
     type:'avoid', icon:zi('drop'),
     title:'No cow\'s milk as main drink yet',
     body:'Cow\'s milk lacks iron and can stress infant kidneys. Curd and paneer are fine, but milk as a drink should wait until 12 months.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    type:'add', icon:zi('drop'),
+    title:'Whole milk from a cup',
+    body:'From 1 year, full-fat cow\'s milk can be a main drink — offer it in an open cup with or after meals, not a bottle. Too much milk fills her up and crowds out iron-rich food. Skip skimmed and 1% milk until 5.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('drop'),
@@ -3156,7 +3171,8 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    chips.push({ text:'cow milk', cls:'chip-avoid' });
+    // cow milk flips from avoid to safe at 12 months (AGE_RULES 'cow milk' minMonth 12) — 2026-09-24 audit
+    chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-safe' : 'chip-avoid' });
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });
     chips.push({ text:'idli + sambar', cls:'chip-safe' });
@@ -3608,7 +3624,8 @@ function generateDonts(foodList, tags, mo) {
   const classified = foodList.map(f => ({ name:f, info:classifyFood(f) })).filter(c => c.info);
   const subcats = new Set(classified.map(c => c.info.subcat));
 
-  donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  if (mo < 12) donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  else donts.push('Go light on salt and skip added sugar or jaggery — still none before 2 years');
   if (mo < 8) donts.push('Puree or mash very smooth — no chunks yet at this age');
   else if (mo < 10) donts.push('Keep pieces soft and small — gag reflex is still developing');
 

@@ -1,11 +1,41 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-09-18 (unsynced-write ledger follow-ups logged from PR #265 chain)
+**Last updated:** 2026-09-24 (12-month audit — Tier-1 fixes landed, Tier-2 age-step gaps logged below)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
+
+### 12-month age step — Tier-2 gaps (logged 2026-09-24, monthly-update session)
+
+Ziva turned one on 2026-09-04. A scout survey found every surface keyed to an age table
+that stops at 12 months. The **Tier-1** items (unsafe or wrong) were fixed in the monthly-update PR:
+child choking/CPR protocols, the fast-breathing threshold, WHO growth 0–24 m with IAP→WHO, the
+12–24 m velocity bands, the vaccine age map (JE-2 / Hep A-2 / Varicella-2), added sugar gated to 2 y,
+and the age-aware diet tips. The **Tier-2** items below are stale or empty rather than unsafe:
+
+#### P1 — MILESTONE_STANDARDS stop at 12 months (data.js)
+- **Symptom:** All four standards (who/iap/eu/cn) have keys 6–12 only. From 13 m, `renderUpcomingMilestones` says "No upcoming milestones data for this age range". The home next-milestone card returns nothing (`br < mo`), the "Expected at 12 months" copy stays pinned, and the milestone score completion freezes.
+- **Fix shape:** add 13–24 m rows from CDC Learn the Signs (15/18/24 m), the WHO Motor Development Study windows and IAP. The source work is Maren-primary.
+
+#### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree
+- **Symptom:** `getSleepTargets` clamps at 12. The `napCount` recommendation (WHO/IAP 9–18 m) expects at least 2 naps, the Q&A expects 2 before 15 m, while `SLEEP_STANDARDS` allows [1,2] and quicklog says the 2→1 transition from 12 m is normal. So a 1-nap day reads "One nap short".
+- **Fix shape:** add 12–24 m rows and reconcile the nap floor (1–2 from 12 m). Kael + Vela.
+
+#### P1 — VACC_SCHEDULE content review against IAP 2023
+- **Symptom:** no annual influenza after 12 m. The PCV booster sits at 12 m where IAP says 12–15 m, and "PCV Booster-2 @15m" is non-standard. VACC_SERIES has no Hep A / Varicella / JE / MMR-2 series. Nothing auto-schedules the next dose after `_vaccMarkDone`.
+- **Fix shape:** a line-by-line IAP 2023 reconciliation. Maren-primary. (The age-map half of this is fixed and gated by `audit-vacc-age-map-v1.sh`.)
+
+#### P2 — Age copy and helpers still speak "infant"
+- Hero reads "12 months, 20 days" rather than "1 year" (home.js hero, Q&A header).
+- `getZivaMonthDays` has no second-birthday entry. The CareTicket target text says "set for 6–12 months" (intelligence-caretickets.js). DYNAMIC_ACTIVITIES drops talk/music tips after 12 m and has no 12 m+ tips. Teething lookouts miss the 13–19 m molars. The variety target and texture ladder top out at "finger". The template.html help text is written for 6–8 months. The poop-frequency guide caps at 9–12 m.
+- **Kitchen suggestion:** home.js still suggests "Jaggery ragi porridge" as a new food, which contradicts the 24 m added-sugar gate. Swap it for a date- or fruit-sweetened version (Maren + Ceres).
+
+#### P2 — 0–12 m velocity bands above the WHO median
+- **Symptom:** the 9–12 m band (8–13 g/day, 55–100 g/week) sits above the WHO median (~7.5 g/day at 10–12 m). Historical only now that she's past 12 m. The 12–24 m band is sourced (`GROWTH_VELOCITY_12_24`, core.js).
+
+---
 
 ### Home Tab
 

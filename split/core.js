@@ -2146,8 +2146,7 @@ function calcMedicalScore() {
   const mo = (new Date() - DOB) / (30.44 * 86400000);
 
   // A. Vaccination coverage (40%)
-  const ageMap = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
-    '9 months':9, '12 months':12, '15 months':15, '16-18 months':16, '18 months':18, '2 years':24 };
+  const ageMap = VACC_AGE_MONTHS;
   const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo + 0.5);
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
   const vaccBookedData = load(KEYS.vaccBooked, null);
@@ -5453,6 +5452,18 @@ function getGrowthVelocity() {
 }
 
 // Growth velocity interpretation
+// ── Growth-velocity band, 12–24 months (girls) ──
+// From WHO Child Growth Standards velocity tables (cdn.who.int, fetched 2026-09-24):
+//   weight, 2-month increments 12–24 m: P15 ≈ 140→39 g, P50 ≈ 428→367 g, P85 ≈ 736→723 g
+//     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
+//   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
+//     → band 0.6–1.6 cm/month, ≈ 0.15–0.35 cm/week.
+// Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
+// later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
+// the 0–12 m bands at each site are unchanged.
+const GROWTH_VELOCITY_12_24 = { wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85,
+  hCmMoMin: 0.6, hCmMoMax: 1.6, hCmWk: '0.15–0.35', label: '12–24 months' };
+
 function getGrowthNarrative(velocity) {
   const lines = [];
   const ageM = ageAt().months;
@@ -5460,8 +5471,8 @@ function getGrowthNarrative(velocity) {
   if (velocity.wtGPerWeek != null) {
     const gw = velocity.wtGPerWeek;
     // WHO-based expected ranges by age (girls, g/week)
-    const expectedMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expectedMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
     let interp;
     if (gw >= expectedMin && gw <= expectedMax) {
       interp = `gaining ${gw}g/week — healthy pace for ${ageM} months`;
@@ -5476,8 +5487,8 @@ function getGrowthNarrative(velocity) {
 
   if (velocity.htCmPerMonth != null) {
     const cm = velocity.htCmPerMonth;
-    const expectedMin = ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
-    const expectedMax = ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMin : ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMax : ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
     let interp;
     if (cm >= expectedMin && cm <= expectedMax) {
       interp = `growing ${cm} cm/month — on track`;

@@ -1552,6 +1552,15 @@ const DEFAULT_VACC = [
 
 // ── MASTER VACCINATION SCHEDULE (IAP 2024 + card schedule) ──
 // type: 'iap' = IAP mandatory, 'iap-rec' = IAP recommended, 'private' = optional/private
+// Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
+// consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
+// carry private copies that lacked '13 months' and '18-19 months', so JE-2, Hep A-2 and
+// Varicella-2 defaulted to 99 and silently never came due (2026-09-24 12-month audit).
+// Every VACC_SCHEDULE `age` label MUST appear here — build gate: split/audit-vacc-age-map-v1.sh.
+const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
+  '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
+  '18-19 months':18, '2 years':24, '4-6 years':48, '9-14 years':108, '16-18 years':192 };
+
 const VACC_SCHEDULE = [
   // ── BIRTH ──
   { name:'BCG', age:'Birth', type:'iap', protects:'Tuberculosis (TB)', notes:'Single dose, left upper arm. Small scar is normal.' },
@@ -1941,18 +1950,24 @@ const EVENT_ACTIVITIES = {
 // ─────────────────────────────────────────
 // GROWTH
 // ─────────────────────────────────────────
-// WHO Girls 50th percentile weight/height by month
-const WHO_W50 = [3.2,4.2,5.1,5.8,6.4,6.9,7.3,7.6,7.9,8.2,8.5,8.7,8.9];
-const WHO_H50 = [49.1,53.7,57.1,59.8,62.1,64.0,65.7,67.3,68.7,70.1,71.5,72.8,74.0];
-const WHO_W3  = [2.4,3.2,3.9,4.5,4.9,5.3,5.7,6.0,6.3,6.5,6.7,6.9,7.0];
-const WHO_W97 = [4.2,5.5,6.6,7.5,8.2,8.8,9.3,9.8,10.2,10.5,10.9,11.2,11.5];
-const WHO_H3  = [45.6,49.8,52.8,55.5,57.8,59.6,61.2,62.7,64.0,65.3,66.5,67.6,68.6];
-const WHO_H97 = [52.7,57.6,61.4,64.4,66.8,68.8,70.5,72.1,73.7,75.2,76.6,78.0,79.2];
-// WHO P15 and P85 for better mid-range accuracy (girls, 0-12 months)
-const WHO_W15 = [2.7,3.6,4.4,5.1,5.6,6.1,6.5,6.8,7.1,7.3,7.5,7.7,7.9];
-const WHO_W85 = [3.7,4.9,5.9,6.7,7.3,7.9,8.3,8.7,9.0,9.4,9.7,10.0,10.2];
-const WHO_H15 = [47.0,51.4,54.6,57.3,59.6,61.5,63.1,64.6,66.0,67.4,68.6,69.8,71.0];
-const WHO_H85 = [51.3,56.1,59.7,62.5,64.8,66.8,68.5,70.1,71.6,73.0,74.4,75.7,76.9];
+// WHO Child Growth Standards — GIRLS, months 0–24 (index = completed month).
+// Weight-for-age (kg): tab_wfa_girls_p_0_5.xlsx · Length-for-age (cm, recumbent): tab_lhfa_girls_p_0_2.xlsx
+// (cdn.who.int, fetched 2026-09-24). Rewritten in the 12-month audit: the tables used to stop at 12
+// months (every later measurement was compared to the 12-month row, so percentiles drifted high), and
+// the old "P3/P97" rows were actually WHO's −2 SD / +2 SD columns (≈2.3rd / 97.7th). Values below are
+// the true percentile columns. WHO is the only growth reference: IAP 2015 recommends the WHO 2006
+// standards for children under 5 (Indian Pediatrics 2015;52:47–55).
+const WHO_W50 = [3.2,4.2,5.1,5.8,6.4,6.9,7.3,7.6,7.9,8.2,8.5,8.7,8.9,9.2,9.4,9.6,9.8,10.0,10.2,10.4,10.6,10.9,11.1,11.3,11.5];
+const WHO_H50 = [49.1,53.7,57.1,59.8,62.1,64.0,65.7,67.3,68.7,70.1,71.5,72.8,74.0,75.2,76.4,77.5,78.6,79.7,80.7,81.7,82.7,83.7,84.6,85.5,86.4];
+const WHO_W3  = [2.4,3.2,4.0,4.6,5.1,5.5,5.8,6.1,6.3,6.6,6.8,7.0,7.1,7.3,7.5,7.7,7.8,8.0,8.2,8.3,8.5,8.7,8.8,9.0,9.2];
+const WHO_W97 = [4.2,5.4,6.5,7.4,8.1,8.7,9.2,9.6,10.0,10.4,10.7,11.0,11.3,11.6,11.9,12.2,12.5,12.7,13.0,13.3,13.5,13.8,14.1,14.3,14.6];
+const WHO_H3  = [45.6,50.0,53.2,55.8,58.0,59.9,61.5,62.9,64.3,65.6,66.8,68.0,69.2,70.3,71.3,72.4,73.3,74.3,75.2,76.2,77.0,77.9,78.7,79.6,80.3];
+const WHO_H97 = [52.7,57.4,60.9,63.8,66.2,68.2,70.0,71.6,73.2,74.7,76.1,77.5,78.9,80.2,81.4,82.7,83.9,85.0,86.2,87.3,88.4,89.4,90.5,91.5,92.5];
+// P15 / P85 for mid-range accuracy
+const WHO_W15 = [2.8,3.6,4.5,5.1,5.6,6.1,6.4,6.7,7.0,7.3,7.5,7.7,7.9,8.1,8.3,8.5,8.7,8.8,9.0,9.2,9.4,9.6,9.8,9.9,10.1];
+const WHO_W85 = [3.7,4.8,5.9,6.7,7.3,7.8,8.3,8.7,9.0,9.3,9.6,9.9,10.2,10.4,10.7,10.9,11.2,11.4,11.6,11.9,12.1,12.4,12.6,12.8,13.1];
+const WHO_H15 = [47.2,51.7,55.0,57.6,59.8,61.7,63.4,64.9,66.3,67.6,68.9,70.2,71.3,72.5,73.6,74.7,75.7,76.7,77.7,78.7,79.6,80.5,81.4,82.2,83.1];
+const WHO_H85 = [51.1,55.7,59.2,62.0,64.3,66.3,68.1,69.7,71.2,72.6,74.0,75.4,76.7,77.9,79.2,80.3,81.5,82.6,83.7,84.8,85.8,86.8,87.8,88.8,89.8];
 // @@DATA_BLOCK_5_END@@
 
 // @@DATA_BLOCK_6_START@@ VACC_SERIES
@@ -2418,9 +2433,12 @@ const AGE_RULES = {
   'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
   'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
   'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.' },
-  'sugar':    { minMonth:12, reason:'No added sugar before 12 months. Use fruit for natural sweetness.' },
-  'jaggery':  { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
-  'gur':      { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
+  // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
+  // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
+  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
+  'sugar':    { minMonth:24, reason:'No added sugar before 2 years (WHO, AAP). Use fruit for natural sweetness.' },
+  'jaggery':  { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
+  'gur':      { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
   'tea':      { minMonth:24, reason:'Tannins block iron absorption. Caffeine is harmful for babies.' },
   'coffee':   { minMonth:24, reason:'Caffeine is harmful for infants and toddlers.' },
   'juice':    { minMonth:8, reason:'Whole fruit is better. If juice, limit to 2-3 tsp diluted in an open cup, never a bottle.' },
@@ -2437,10 +2455,10 @@ const AGE_RULES = {
                 reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
   'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
-  'chocolate':{ minMonth:12, reason:'Contains sugar and caffeine. Avoid before 12 months.' },
+  'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
   'biscuit':  { minMonth:10, reason:'Most contain sugar, salt, and maida. If giving, choose sugar-free, whole grain.' },
   'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
-  'ice cream':{ minMonth:12, reason:'Contains sugar and cow milk. Avoid before 12 months.' },
+  'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
   'kheer':    { minMonth:10, reason:'Often made with cow milk and sugar. Use breast milk/formula and fruit instead.' },
   // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
   // mirror the FOOD_EFFECTS record so the gate and the consequence card agree per name
@@ -2851,7 +2869,7 @@ const FOOD_EFFECTS = {
   // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
   // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
   // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
-  // chest-thrusts + call-112 (NEVER abdominal thrusts under 1, NEVER adrenaline).
+  // abdominal-thrusts + call-112 (child 1y+ technique since Ziva turned one; NEVER adrenaline).
   // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
   // gate doesn't apply).
   // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
@@ -2901,8 +2919,9 @@ const FOOD_EFFECTS = {
     // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
     severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
-    // the hazard, milk-spec §9). Under-1: 5 back blows + 5 chest thrusts, NEVER abdominal thrusts.
-    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or they can\'t breathe — BABY UNDER 1: alternate 5 back blows (face-down along your forearm, head lower than the body, between the shoulder blades) and 5 chest thrusts (2 fingers, middle of the chest just below the nipple line); NEVER abdominal thrusts (Heimlich) under 1 — risk of organ damage. CHILD OVER 1: 5 back blows, then 5 abdominal thrusts. No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if they become unresponsive → start CPR.',
+    // the hazard, milk-spec §9). Child 1y+ (Ziva turned one 2026-09-04): 5 back blows + 5 abdominal
+    // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
+    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
     culturalNote:'Whole GROUNDNUT (peanut) is the single most common aspirated food in Indian children (≈67.5% in one ENT series), often handed loose to toddlers to console them — grind it or thin the butter. SUPARI / areca nut is a double danger (in airways AND acutely toxic — seizures, liver injury) — keep it away from children. Other Indian hazards: chana / roasted gram, hard sev / namkeen / murukku, whole makhana, ber (jujube) pits.',
     confidence: 'high',
@@ -2952,16 +2971,16 @@ const EMERGENCY_PROTOCOL = {
     ],
     steps: [
       '**Can she cough or cry?** Encourage coughing — don’t intervene.',
-      '**Silent / can’t breathe → 5 back blows** — face-down along your forearm, head low, between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
-      '**Then 5 chest thrusts** — two fingers, middle of the chest. **Never abdominal thrusts under 1.**',
-      '**Alternate** back blows + chest thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
+      '**Silent / can’t breathe → 5 back blows** — face-down across your lap, head low (or leaning forward), between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
+      '**Then 5 abdominal thrusts** — from behind, fist between the belly button and the ribs, pull **inwards and upwards**. Keep off the lower ribs.',
+      '**Alternate** back blows + abdominal thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
     ],
-    after: [ 'Even once cleared, get her checked — a retained fragment or airway irritation can follow.' ],
+    after: [ 'Even once cleared, get her checked — a retained fragment, airway irritation, or injury from the abdominal thrusts can follow.' ],
     doc: {
       suspected: 'Choking',
       stamps: [ { id: 'reaction', label: 'Time it happened' } ],
-      action: { label: 'Back blows / chest thrusts given · object cleared', value: 'Yes / No' },
-      forTeam: 'choking on {food}; back blows + chest thrusts given; see the “cleared” line above.',
+      action: { label: 'Back blows / abdominal thrusts given · object cleared', value: 'Yes / No' },
+      forTeam: 'choking on {food}; back blows + abdominal thrusts given; see the “cleared” line above.',
     },
   },
   botulism: {
@@ -3077,7 +3096,7 @@ const COMBO_RECIPES = {
   'spinach khichdi':  { recipe:'1. Blanch 5-6 spinach leaves 2 min, puree.\n2. Cook 1 tbsp rice + ½ tbsp dal — 3 whistles.\n3. Mix spinach puree + ghee + lemon.', dos:['Triple iron — spinach + dal + lemon for absorption','Blanch spinach first to reduce oxalates','Complete meal'], donts:['Don\'t reheat spinach dishes','Don\'t skip blanching','Make fresh each time'] },
   'honey':            { recipe:'', dos:[], donts:['NEVER give honey before 12 months','Risk of infant botulism — can be fatal','No form of honey is safe — raw, cooked, or baked'] },
   'salt':             { recipe:'', dos:[], donts:['No added salt before 12 months','Baby\'s kidneys cannot process it','Natural sodium in food is sufficient'] },
-  'sugar':            { recipe:'', dos:[], donts:['No added sugar before 12 months','Use fruit for natural sweetness','Includes jaggery and gur'] },
+  'sugar':            { recipe:'', dos:[], donts:['No added sugar before 2 years','Use fruit for natural sweetness','Includes jaggery and gur'] },
 };
 // @@DATA_BLOCK_14_END@@
 
@@ -3125,7 +3144,7 @@ const FOOD_SUBCATS = {
   seed:        { match:['sesame','til','flaxseed','alsi','chia','pumpkin seed','sunflower seed','makhana','fox nut'], cook:'roast+powder', time:'3–5 min', method:'Dry roast on low, cool, grind to fine powder' },
   // Spices
   spice:       { match:['turmeric','jeera','cumin','ajwain','cinnamon','cardamom','nutmeg','pepper','hing','saffron','fennel','mint','curry leaves','bay leaf','ginger'], cook:'temper', time:'30 sec', method:'Add tiny pinch to cooked food or temper in ghee' },
-  sweetener:   { match:['jaggery','gur','mishri','date syrup'], cook:'dissolve', time:'1 min', method:'Dissolve small amount in warm food — avoid before 12 months' },
+  sweetener:   { match:['jaggery','gur','mishri','date syrup'], cook:'dissolve', time:'1 min', method:'Dissolve small amount in warm food — avoid before 2 years' },
   // Oils
   oil:         { match:['coconut oil','sesame oil','mustard oil','olive oil','groundnut oil'], cook:'none', time:'0 min', method:'Add ½ tsp to cooked food for healthy fats' },
   // Non-veg
@@ -4744,7 +4763,7 @@ const SYMPTOM_DB = [
       'Keep Ziva upright.',
       'Clear her nose with saline drops and a nasal aspirator.',
       'Stay calm so she stays calm.',
-      'Count her breaths per minute (normal: 30–50 for 6–12 months).'
+      'Count her breaths for a full minute while she is calm (normal at 1–2 years: about 24–40). 40 or more at rest is fast breathing — call the doctor.'
     ],
     precautions: [
       'Watch for the chest retracting (sucking in) with each breath.',
@@ -5136,31 +5155,31 @@ const SYMPTOM_DB = [
     keywords: ['choking','choke','airway','blocked airway','food stuck','swallowed','object in mouth','can\'t breathe','gagging','coughing food'],
     severity: 'emergency',
     title: 'Choking',
-    summary: 'If she can cough, let her. If silent and not breathing, back blows then chest thrusts',
+    summary: 'If she can cough, let her. If silent and not breathing, back blows then abdominal thrusts',
     whatToDo: [
       'If Ziva is coughing forcefully, let her keep coughing — do not interfere.',
-      'If she cannot cry, cough, or breathe, place her face-down along your forearm with her head lower than her chest.',
+      'If she cannot cry, cough, or breathe, lay her face-down across your lap with her head low, or support her leaning forward.',
       'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
-      'Turn her face-up; give 5 chest thrusts using 2 fingers on the breastbone.',
-      'Repeat back blows and chest thrusts until the object comes out or she starts breathing.',
+      'Still stuck? Kneel behind her, make a fist between her belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
+      'Repeat back blows and abdominal thrusts until the object comes out or she starts breathing.',
       'Call emergency services as soon as possible — ideally have someone call while you do first aid.'
     ],
     precautions: [
       'Stay calm — your composure helps the rescue work.',
       'Look in her mouth only if you can clearly see the object and remove it with one finger sweep.',
-      'After the object comes out, she still needs to be checked by a doctor.'
+      'After the object comes out, she still needs to be checked by a doctor — abdominal thrusts can cause internal injury.'
     ],
     doNot: [
       { text: 'Do a blind finger sweep inside her mouth (it can push the object deeper)', critical: true },
       { text: 'Give water, food, or medication during a choking episode', critical: true },
-      { text: 'Perform abdominal thrusts (Heimlich) on babies under 1 year', critical: true },
+      { text: 'Press on her lower ribs during abdominal thrusts (it can cause injury)', critical: true },
       { text: 'Hold her upside down by the ankles', critical: false }
     ],
     emergency: [
       'Cannot cry, cough, or breathe',
       'Lips or face turning blue',
       'Becomes limp or loses consciousness',
-      'Object remains stuck after 5 cycles of back blows and chest thrusts',
+      'Object remains stuck after cycles of back blows and abdominal thrusts',
       'Severe coughing or gagging lasts more than a minute'
     ],
     lifeThreat: true,

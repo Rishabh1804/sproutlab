@@ -875,7 +875,14 @@ function renderGrowthFacts() {
     const wtGain = ((wtLast.wt - wtPrev.wt) * 1000).toFixed(0);
     const daysDiff = Math.max(1, Math.round((new Date(wtLast.date) - new Date(wtPrev.date)) / 86400000));
     const gPerDay = Math.round(wtGain / daysDiff);
-    if (gPerDay >= 15 && gPerDay <= 40) {
+    // From 1 year the WHO band is ~3–12 g/day (GROWTH_VELOCITY_12_24); the 15–30 g/day line
+    // is the early-infancy rate and must not be quoted to a toddler (2026-09-24 audit).
+    const vb = GROWTH_VELOCITY_12_24;
+    if (mo >= 12) {
+      if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
+        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`From her first birthday growth slows down a lot — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. Ziva is growing steadily.` });
+      }
+    } else if (gPerDay >= 15 && gPerDay <= 40) {
       facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. Ziva is growing beautifully.` });
     } else if (gPerDay > 40) {
       facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage as she is establishing her growth curve on solids.` });
@@ -1159,12 +1166,14 @@ function calcPercentile(val, p3, p50, p97, p15, p85) {
   return { text: clamped + suffix, pct: clamped };
 }
 
+// WHO tables run 0–24 months (data.js). Clamp to the table's own last index — never a
+// hard-coded month — so extending the table can't be silently undone by a stale constant.
 function getInterpolatedWHO(moExact) {
-  const lo = Math.floor(moExact);
-  const hi = Math.min(lo + 1, 12);
-  const frac = moExact - lo;
-  const li = Math.min(lo, 12);
-  const hi2 = Math.min(hi, 12);
+  const last = WHO_W50.length - 1;
+  const lo = Math.max(0, Math.floor(moExact));
+  const li = Math.min(lo, last);
+  const hi2 = Math.min(li + 1, last);
+  const frac = lo >= last ? 0 : moExact - lo;
   return {
     w3:  WHO_W3[li]  + (WHO_W3[hi2]  - WHO_W3[li])  * frac,
     w50: WHO_W50[li] + (WHO_W50[hi2] - WHO_W50[li]) * frac,
@@ -1299,60 +1308,28 @@ function renderGrowth() {
   renderGrowthInsightsPreview();
 }
 
-// Indian Synthetic Growth Reference (Khadilkar 2019) — Girls, 0-12 months
-// Based on NFHS/ICMR data representing typical Indian infant growth
-// P50 values are approximately WHO 25th-30th percentile
-const IND_W50 = [3.0,3.9,4.7,5.4,5.9,6.4,6.7,7.0,7.3,7.5,7.8,8.0,8.2];
-const IND_W3  = [2.2,2.9,3.5,4.0,4.4,4.8,5.1,5.4,5.6,5.8,6.0,6.2,6.3];
-const IND_W97 = [3.9,5.1,6.1,7.0,7.7,8.3,8.7,9.1,9.5,9.8,10.1,10.4,10.7];
-const IND_H50 = [48.0,52.5,55.8,58.5,60.8,62.7,64.3,65.8,67.2,68.5,69.8,71.0,72.2];
-const IND_H3  = [44.5,48.6,51.5,54.0,56.2,58.0,59.6,61.0,62.3,63.5,64.7,65.8,66.8];
-const IND_H97 = [51.5,56.4,60.1,63.0,65.4,67.4,69.0,70.6,72.1,73.5,74.9,76.2,77.4];
-
-// Euro-Growth Study (Haschke et al. 2000) — European girls, months 0–12
-const EU_W50 = [3.3,4.3,5.2,5.9,6.5,7.0,7.4,7.7,8.0,8.3,8.6,8.8,9.1];
-const EU_W3  = [2.5,3.3,4.0,4.6,5.1,5.5,5.8,6.1,6.4,6.6,6.8,7.0,7.2];
-const EU_W97 = [4.3,5.6,6.7,7.6,8.3,8.9,9.4,9.9,10.3,10.7,11.0,11.3,11.6];
-const EU_H50 = [49.5,54.0,57.4,60.2,62.4,64.3,66.0,67.5,69.0,70.4,71.7,73.0,74.3];
-const EU_H3  = [46.0,50.2,53.2,55.8,58.0,59.9,61.5,63.0,64.4,65.7,66.9,68.0,69.1];
-const EU_H97 = [53.0,57.8,61.6,64.6,66.8,68.7,70.5,72.0,73.6,75.1,76.5,78.0,79.5];
-
-// Chinese National Growth Standards (Li et al. 2009, Capital Institute of Pediatrics) — girls, months 0–12
-const CN_W50 = [3.2,4.2,5.1,5.8,6.3,6.8,7.2,7.5,7.8,8.1,8.4,8.6,8.8];
-const CN_W3  = [2.4,3.1,3.8,4.4,4.8,5.2,5.5,5.8,6.1,6.3,6.5,6.7,6.9];
-const CN_W97 = [4.1,5.4,6.5,7.4,8.1,8.7,9.2,9.6,10.0,10.4,10.7,11.0,11.3];
-const CN_H50 = [49.0,53.5,56.9,59.6,61.8,63.7,65.4,66.9,68.3,69.7,71.0,72.2,73.4];
-const CN_H3  = [45.4,49.5,52.5,55.0,57.2,59.0,60.6,62.0,63.4,64.7,65.9,67.0,68.1];
-const CN_H97 = [52.6,57.5,61.3,64.2,66.4,68.4,70.2,71.8,73.2,74.7,76.1,77.4,78.7];
+// Growth reference = WHO only (2026-09-24, 12-month audit, Architect decision). The former
+// "India (IAP)", Euro-Growth and China overlay tables were retired: the India table did not match
+// the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading Ziva high), the China
+// table matched neither Li 2009 nor WS/T 423-2022, and the Euro-Growth source could not be verified.
+// IAP 2015 itself recommends the WHO 2006 standards under 5. `_referenceStandard` still selects the
+// MILESTONE and SLEEP standards; it no longer changes growth percentiles.
 
 // Chart filter state
 let _referenceStandard = localStorage.getItem('ziva_reference_standard') || 'iap';
 // Migrate old 'india' key to 'iap'
 if (_referenceStandard === 'india') { _referenceStandard = 'iap'; localStorage.setItem('ziva_reference_standard', 'iap'); }
 
-function getInterpolatedEU(moExact) {
-  const lo = Math.floor(moExact), hi = Math.min(lo+1,12), f = moExact-lo;
-  const li = Math.min(lo,12), h2 = Math.min(hi,12);
-  return {
-    w3:EU_W3[li]+(EU_W3[h2]-EU_W3[li])*f, w50:EU_W50[li]+(EU_W50[h2]-EU_W50[li])*f, w97:EU_W97[li]+(EU_W97[h2]-EU_W97[li])*f,
-    h3:EU_H3[li]+(EU_H3[h2]-EU_H3[li])*f, h50:EU_H50[li]+(EU_H50[h2]-EU_H50[li])*f, h97:EU_H97[li]+(EU_H97[h2]-EU_H97[li])*f,
-  };
-}
-
-function getInterpolatedCN(moExact) {
-  const lo = Math.floor(moExact), hi = Math.min(lo+1,12), f = moExact-lo;
-  const li = Math.min(lo,12), h2 = Math.min(hi,12);
-  return {
-    w3:CN_W3[li]+(CN_W3[h2]-CN_W3[li])*f, w50:CN_W50[li]+(CN_W50[h2]-CN_W50[li])*f, w97:CN_W97[li]+(CN_W97[h2]-CN_W97[li])*f,
-    h3:CN_H3[li]+(CN_H3[h2]-CN_H3[li])*f, h50:CN_H50[li]+(CN_H50[h2]-CN_H50[li])*f, h97:CN_H97[li]+(CN_H97[h2]-CN_H97[li])*f,
-  };
-}
-
 function getGrowthRef(moExact) {
-  if (_referenceStandard === 'iap') return getInterpolatedIND(moExact);
-  if (_referenceStandard === 'eu') return getInterpolatedEU(moExact);
-  if (_referenceStandard === 'cn') return getInterpolatedCN(moExact);
   return getInterpolatedWHO(moExact);
+}
+
+// Default (un-zoomed) growth-chart x-range: 0 → one month past her current age, never less than
+// the first year and never past the WHO table (24 months). Replaces the fixed 0–12 axis, which
+// clipped every measurement taken after her first birthday off the chart.
+function _growthChartMaxMonth() {
+  const last = WHO_W50.length - 1;
+  return Math.min(last, Math.max(12, Math.ceil(ageMonthsAt(today())) + 1));
 }
 
 function setReferenceStandard(std) {
@@ -1385,7 +1362,7 @@ function updatePercentileBadges() {
   if (!lwBadge) return;
   const moExact = ageMonthsAt(lwBadge.date);
   const ref = getGrowthRef(moExact);
-  const stdLabel = _referenceStandard === 'iap' ? 'India' : _referenceStandard === 'eu' ? 'EU' : _referenceStandard === 'cn' ? 'China' : 'WHO';
+  const stdLabel = 'WHO';
 
   // Weight percentile
   const wtBadge = document.getElementById('pbadge-wtpct');
@@ -1427,7 +1404,7 @@ function setChartZoom(chart, range) {
 
 function getChartZoomRange(chart) {
   const range = _chartZoom[chart] || 'all';
-  if (range === 'all') return null; // use default 0–12m
+  if (range === 'all') return null; // use the default age-following window (_growthChartMaxMonth)
 
   const now = new Date();
   let startDate;
@@ -1510,10 +1487,10 @@ function drawChart(canvasId) {
   renderChartContext('wt', zoom);
 
   // Compute axis bounds
-  let xMin = 0, xMax = 12, yMin = 2, yMax = 12;
+  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 2, yMax = Math.ceil(WHO_W97[xMax] + 0.5);
   if (zoom && zivaPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
-    xMax = Math.min(12, Math.ceil(zoom.max));
+    xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
     if (xMax - xMin < 1) xMax = xMin + 1;
     const vals = zivaPoints.map(p => p.y);
     const dataMin = Math.min(...vals);
@@ -1522,39 +1499,21 @@ function drawChart(canvasId) {
     yMin = Math.max(0, Math.floor((dataMin - padding) * 2) / 2);
     yMax = Math.ceil((dataMax + padding) * 2) / 2;
   }
-  const f = _referenceStandard;
   const datasets = [];
 
-  if (f === 'who') {
-    datasets.push({ label:'WHO 97th', data: WHO_W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'WHO 3rd',  data: WHO_W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'WHO 50th', data: WHO_W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
-  }
-  if (f === 'iap') {
-    datasets.push({ label:'India 97th', data: IND_W97.map((y,x)=>({x,y})), borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'India 3rd',  data: IND_W3.map((y,x)=>({x,y})),  borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(255,165,0,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'India 50th', data: IND_W50.map((y,x)=>({x,y})), borderColor:'rgba(255,140,0,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'eu') {
-    datasets.push({ label:'EU 97th', data: EU_W97.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'EU 3rd',  data: EU_W3.map((y,x)=>({x,y})),  borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(70,130,180,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'EU 50th', data: EU_W50.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'cn') {
-    datasets.push({ label:'CN 97th', data: CN_W97.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'CN 3rd',  data: CN_W3.map((y,x)=>({x,y})),  borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(220,60,60,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'CN 50th', data: CN_W50.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
+  datasets.push({ label:'WHO 97th', data: WHO_W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
+  datasets.push({ label:'WHO 3rd',  data: WHO_W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
+  datasets.push({ label:'WHO 50th', data: WHO_W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const wtPointR = zoom ? 7 : 5;
   const wtHoverR = zoom ? 10 : 7;
   datasets.push({ label:'Ziva', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = f === 'iap' ? ['India 50th','Ziva'] : f === 'eu' ? ['EU 50th','Ziva'] : f === 'cn' ? ['CN 50th','Ziva'] : ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','Ziva'];
   const _ct = getChartTheme();
 
   const _chartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
-    data:{ labels: Array.from({length:13}, (_,i) => i+'m'), datasets },
+    data:{ labels: Array.from({length:WHO_W50.length}, (_,i) => i+'m'), datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
@@ -1604,10 +1563,10 @@ function drawHeightChart(canvasId) {
   renderChartContext('ht', zoom);
 
   // Compute axis bounds
-  let xMin = 0, xMax = 12, yMin = 44, yMax = 80;
+  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 44, yMax = Math.ceil((WHO_H97[xMax] + 2) / 2) * 2;
   if (zoom && zivaHtPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
-    xMax = Math.min(12, Math.ceil(zoom.max));
+    xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
     if (xMax - xMin < 1) xMax = xMin + 1;
     const vals = zivaHtPoints.map(p => p.y);
     const dataMin = Math.min(...vals);
@@ -1617,39 +1576,21 @@ function drawHeightChart(canvasId) {
     yMax = Math.ceil(dataMax + padding);
   }
 
-  const f = _referenceStandard;
   const datasets = [];
 
-  if (f === 'who') {
-    datasets.push({ label:'WHO 97th', data: WHO_H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'WHO 3rd',  data: WHO_H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'WHO 50th', data: WHO_H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
-  }
-  if (f === 'iap') {
-    datasets.push({ label:'India 97th', data: IND_H97.map((y,x)=>({x,y})), borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'India 3rd',  data: IND_H3.map((y,x)=>({x,y})),  borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(255,165,0,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'India 50th', data: IND_H50.map((y,x)=>({x,y})), borderColor:'rgba(255,140,0,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'eu') {
-    datasets.push({ label:'EU 97th', data: EU_H97.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'EU 3rd',  data: EU_H3.map((y,x)=>({x,y})),  borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(70,130,180,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'EU 50th', data: EU_H50.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'cn') {
-    datasets.push({ label:'CN 97th', data: CN_H97.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'CN 3rd',  data: CN_H3.map((y,x)=>({x,y})),  borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(220,60,60,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'CN 50th', data: CN_H50.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
+  datasets.push({ label:'WHO 97th', data: WHO_H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
+  datasets.push({ label:'WHO 3rd',  data: WHO_H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
+  datasets.push({ label:'WHO 50th', data: WHO_H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const htPointR = zoom ? 7 : 5;
   const htHoverR = zoom ? 10 : 7;
   datasets.push({ label:'Ziva', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = f === 'iap' ? ['India 50th','Ziva'] : f === 'eu' ? ['EU 50th','Ziva'] : f === 'cn' ? ['CN 50th','Ziva'] : ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','Ziva'];
   const _ct = getChartTheme();
 
   const _hChartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
-    data:{ labels: Array.from({length:13}, (_,i) => i+'m'), datasets },
+    data:{ labels: Array.from({length:WHO_W50.length}, (_,i) => i+'m'), datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
@@ -1677,15 +1618,6 @@ function drawHeightChart(canvasId) {
 }
 
 // ── GROWTH VELOCITY ──
-function getInterpolatedIND(moExact) {
-  const lo = Math.floor(moExact), hi = Math.min(lo+1,12), f = moExact-lo;
-  const li = Math.min(lo,12), h2 = Math.min(hi,12);
-  return {
-    w3:IND_W3[li]+(IND_W3[h2]-IND_W3[li])*f, w50:IND_W50[li]+(IND_W50[h2]-IND_W50[li])*f, w97:IND_W97[li]+(IND_W97[h2]-IND_W97[li])*f,
-    h3:IND_H3[li]+(IND_H3[h2]-IND_H3[li])*f, h50:IND_H50[li]+(IND_H50[h2]-IND_H50[li])*f, h97:IND_H97[li]+(IND_H97[h2]-IND_H97[li])*f,
-  };
-}
-
 function renderVelocity() {
   const el = document.getElementById('velocityContent');
 
@@ -1701,14 +1633,14 @@ function renderVelocity() {
   const days = Math.max(1, Math.round((new Date(lastWt.date) - new Date(prevWt.date)) / 86400000));
   const mo = Math.round(getAgeInMonths());
   const moExact = ageMonthsAt(lastWt.date);
-  const ref = _referenceStandard === 'iap' ? getInterpolatedIND(moExact) : getGrowthRef(moExact);
-  const refLabel = _referenceStandard === 'iap' ? 'India' : _referenceStandard === 'eu' ? 'EU' : _referenceStandard === 'cn' ? 'China' : 'WHO';
+  const ref = getGrowthRef(moExact);
+  const refLabel = 'WHO';
 
   // Weight velocity
   const wtGainG = Math.round((lastWt.wt - prevWt.wt) * 1000);
   const gPerDay = Math.round(wtGainG / days);
-  const expectedMin = mo <= 3 ? 25 : mo <= 6 ? 15 : mo <= 9 ? 10 : 8;
-  const expectedMax = mo <= 3 ? 35 : mo <= 6 ? 25 : mo <= 9 ? 18 : 14;
+  const expectedMin = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMin : mo <= 3 ? 25 : mo <= 6 ? 15 : mo <= 9 ? 10 : 8;
+  const expectedMax = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMax : mo <= 3 ? 35 : mo <= 6 ? 25 : mo <= 9 ? 18 : 14;
   const wtPctFill = Math.min(100, Math.max(5, ((gPerDay - 0) / (expectedMax * 1.5)) * 100));
   const wtColor = (gPerDay >= expectedMin && gPerDay <= expectedMax * 1.3) ? 'var(--tc-sage)' : gPerDay < expectedMin ? 'var(--tc-caution)' : 'var(--tc-sky)';
 
@@ -1745,7 +1677,7 @@ function renderVelocity() {
     const htDays = Math.max(1, Math.round((new Date(htLast.date) - new Date(htPrev.date)) / 86400000));
     const htGainCm = (htLast.ht - htPrev.ht).toFixed(1);
     const cmPerWeek = ((htLast.ht - htPrev.ht) / (htDays / 7)).toFixed(1);
-    const expCmWk = mo <= 6 ? '0.4–0.6' : '0.2–0.4';
+    const expCmWk = mo >= 12 ? GROWTH_VELOCITY_12_24.hCmWk : mo <= 6 ? '0.4–0.6' : '0.2–0.4';
     const htColor = parseFloat(cmPerWeek) > 0 ? 'var(--tc-sky)' : 'var(--tc-caution)';
     html += `
       <div class="velocity-gauge vg-sky">
@@ -1903,11 +1835,9 @@ function renderSizeComparison() {
   // Fun fact based on percentile — uses active filter
   if (!wt) { el.innerHTML = html; return; }
   const moExact = ageMonthsAt(lwSize.date);
-  const ref = _referenceStandard === 'iap' ? getInterpolatedIND(moExact) : getGrowthRef(moExact);
-  const refLabel = _referenceStandard === 'iap' ? 'Indian national' : _referenceStandard === 'eu' ? 'Euro-Growth' : _referenceStandard === 'cn' ? 'Chinese national' : 'WHO';
-  const pctArgs = _referenceStandard === 'iap'
-    ? [wt, ref.w3, ref.w50, ref.w97]
-    : [wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85];
+  const ref = getGrowthRef(moExact);
+  const refLabel = 'WHO';
+  const pctArgs = [wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85];
   const pctResult = calcPercentile(...pctArgs);
   const pctVal = pctResult.pct;
   let funFact = '';
@@ -4181,8 +4111,7 @@ function renderVaccCoverage() {
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => v.name.toLowerCase()));
 
   // Determine which scheduled vaccines are due by now
-  const ageMap = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
-    '9 months':9, '12 months':12, '15 months':15, '16-18 months':16, '18 months':18, '2 years':24, '4-6 years':48 };
+  const ageMap = VACC_AGE_MONTHS;
 
   const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo + 0.5);
   const upcoming = VACC_SCHEDULE.filter(v => {
@@ -10211,7 +10140,8 @@ function computeGrowthVelocity() {
     if (ageMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
     else if (ageMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
     else if (ageMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
-    else expectedRange = { min: 8, max: 13, label: '9–12 months' };
+    else if (ageMo < 12) expectedRange = { min: 8, max: 13, label: '9–12 months' };
+    else expectedRange = { min: GROWTH_VELOCITY_12_24.wGDayMin, max: GROWTH_VELOCITY_12_24.wGDayMax, label: GROWTH_VELOCITY_12_24.label };
 
     var wStatus;
     if (gPerDay < expectedRange.min * 0.5) wStatus = 'plateau';
