@@ -2033,7 +2033,9 @@ function _libCorpusPopHtml(name, j) {
     (allerg ? _libPopRow('floor lib-prow--caution', 'warn', 'Allergen — introduce with care', 'watch the first few times',
       '<p class="lib-prow-p">' + escHtml(allerg) + '</p>', false) : '') +
     (aged ? _libPopRow('why', 'info', 'Why wait', '',
-      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '');
+      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '') +
+    (!aged && ageR && ageR.after ? _libPopRow('why', 'info', 'How to give it now', '',
+      '<p class="lib-prow-p">' + escHtml(ageR.after) + '</p>', false) : '');
   var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
   if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
@@ -3289,7 +3291,11 @@ function checkFoodCombo() {
     // the safe verdict and the collected floor are set in the same pass.
     if (eff && _effHasClass(eff, 'acute-toxin')) {
       verdict = 'avoid'; verdictEmoji = zi('warn');
-      toxin = { title: eff.title || '', why: eff.why || '' };
+      // From 12 m honey's reason is added sugar, not botulism (V-C-266-5): the
+      // headline must not read "before 12 months" to a toddler's parent.
+      const botulismPast = eff.effect === 'infant botulism' && mo >= 12;
+      toxin = { title: botulismPast ? 'Honey waits until 2 — it counts as added sugar' : (eff.title || ''),
+                why: botulismPast ? 'The botulism risk is gone after the first birthday, but honey is an added sugar — like jaggery, it waits until 2.' : (eff.why || '') };
     } else if (introEarlyOk) {
       if (verdict !== 'avoid') { verdict = 'safe'; verdictEmoji = zi('check'); }
       encourage = {

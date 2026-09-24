@@ -18295,7 +18295,8 @@ const AGE_RULES = {
   'oat milk':   { minMonth:12, reason:'Not a milk substitute before 12 months. From 12 months, unsweetened fortified oat milk can be part of a varied diet — not the only drink.' },
   'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
   'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
-  'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.' },
+  // after: shown once the gate has passed (V-C-266-10), so 'Fine from 12 months' never hides the limit.
+  'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
   // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
   // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
   // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
@@ -31515,8 +31516,8 @@ function renderRecoFood() {
       recipe:'1. Use homemade idli batter (rice + urad dal).\n2. Steam mini idlis 10 min.\n3. Mash with sambar water or curd.\n4. Add ghee.',
       tips:'{{OK}} Fermentation creates natural probiotics.\n{{OK}} Soft texture — easy for gums.\n{{NO}} Don\'t give with spicy sambar — use plain dal water.\n{{NO}} Homemade batter preferred — no preservatives.' },
     { icon:zi('spoon'), name:'Grape mash (seedless)', reason:'Vitamin C + antioxidants — juicy finger food', newFood:'grapes',
-      recipe:'1. Wash 8–10 seedless grapes thoroughly.\n2. Cut each grape in half lengthwise (quarters for <9m).\n3. Mash lightly with fork or serve as halves for BLW.\n4. Can also blend into puree.',
-      tips:'{{OK}} Always cut lengthwise — round shape is a choking hazard.\n{{OK}} Green, black, or red — all equally nutritious.\n{{NO}} NEVER give whole grapes — always halve at minimum.\n{{NO}} Remove skin if baby struggles with texture.' },
+      recipe:'1. Wash 8–10 seedless grapes thoroughly.\n2. Cut each grape into quarters lengthwise (halves are still a choking risk).\n3. Mash lightly with fork or serve as halves for BLW.\n4. Can also blend into puree.',
+      tips:'{{OK}} Always cut lengthwise — round shape is a choking hazard.\n{{OK}} Green, black, or red — all equally nutritious.\n{{NO}} NEVER give whole or halved grapes — quarter them lengthwise until age 5.\n{{NO}} Remove skin if baby struggles with texture.' },
     { icon:zi('spoon'), name:'Strawberry mash', reason:'Vitamin C powerhouse — bright colour babies love', newFood:'strawberry',
       recipe:'1. Wash 3–4 ripe strawberries.\n2. Remove stems, mash with fork.\n3. Serve 1–2 tbsp — can mix with curd.\n4. For first time, serve alone to check reaction.',
       tips:'{{OK}} Highest Vit C of common berries.\n{{OK}} Natural sweetness — no sugar needed.\n{{NO}} Can cause mild rash around mouth — usually harmless.\n{{NO}} Wash very thoroughly — pesticide-prone fruit.' },
@@ -43390,7 +43391,9 @@ function _libCorpusPopHtml(name, j) {
     (allerg ? _libPopRow('floor lib-prow--caution', 'warn', 'Allergen — introduce with care', 'watch the first few times',
       '<p class="lib-prow-p">' + escHtml(allerg) + '</p>', false) : '') +
     (aged ? _libPopRow('why', 'info', 'Why wait', '',
-      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '');
+      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '') +
+    (!aged && ageR && ageR.after ? _libPopRow('why', 'info', 'How to give it now', '',
+      '<p class="lib-prow-p">' + escHtml(ageR.after) + '</p>', false) : '');
   var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
   if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
@@ -44646,7 +44649,11 @@ function checkFoodCombo() {
     // the safe verdict and the collected floor are set in the same pass.
     if (eff && _effHasClass(eff, 'acute-toxin')) {
       verdict = 'avoid'; verdictEmoji = zi('warn');
-      toxin = { title: eff.title || '', why: eff.why || '' };
+      // From 12 m honey's reason is added sugar, not botulism (V-C-266-5): the
+      // headline must not read "before 12 months" to a toddler's parent.
+      const botulismPast = eff.effect === 'infant botulism' && mo >= 12;
+      toxin = { title: botulismPast ? 'Honey waits until 2 — it counts as added sugar' : (eff.title || ''),
+                why: botulismPast ? 'The botulism risk is gone after the first birthday, but honey is an added sugar — like jaggery, it waits until 2.' : (eff.why || '') };
     } else if (introEarlyOk) {
       if (verdict !== 'avoid') { verdict = 'safe'; verdictEmoji = zi('check'); }
       encourage = {

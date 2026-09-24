@@ -2455,7 +2455,8 @@ const AGE_RULES = {
   'oat milk':   { minMonth:12, reason:'Not a milk substitute before 12 months. From 12 months, unsweetened fortified oat milk can be part of a varied diet — not the only drink.' },
   'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
   'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
-  'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.' },
+  // after: shown once the gate has passed (V-C-266-10), so 'Fine from 12 months' never hides the limit.
+  'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
   // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
   // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
   // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
