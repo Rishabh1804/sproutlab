@@ -2283,6 +2283,8 @@ const FOOD_SYNERGIES = [
 // per-100g chemistry, not per-serving care guidance. Downstream consumers
 // (chemRollup, the per-food chemistry sub-tab) should weight spice-tier
 // `nutrients[]` per serving, not per 100g.
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const NUTRITION = {
   // ── GRAINS & STAPLES ──
   'ragi':           { nutrients:['iron','calcium','fibre','protein','phosphorus'], tags:['iron-rich','bone-health','protein-rich','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates','tannins'], bioactives:['polyphenols'] } },
@@ -2436,10 +2438,12 @@ const NUTRITION = {
 // @@DATA_BLOCK_13_START@@ AGE_RULES + ALLERGENS + COMBO_RULES
 
 // ── AGE SAFETY RULES ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const AGE_RULES = {
   // 24 m, not 12 (Cipher A2, 2026-09-24): botulism is the under-1 reason, and from 1 honey is a free
   // sugar (WHO; US DGA) under the same 24 m added-sugar gate — so every surface says one thing.
-  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2' },
+  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2', after:'A small amount now and then — honey is an added sugar, so keep it occasional, like jaggery.' },
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
@@ -2469,7 +2473,7 @@ const AGE_RULES = {
   'tea':      { minMonth:24, aliases:['chai','chay','milk tea','masala chai','doodh chai','kadak chai','green tea','black tea'], reason:'Tannins block iron absorption. Caffeine is harmful for babies and toddlers.' },
   'coffee':   { minMonth:24, aliases:['cold coffee','filter coffee','kaapi'], reason:'Caffeine is harmful for infants and toddlers.' },
   // 12–24 m PR 3: AAP 2017 — no juice under 1; ≤ 4 oz (120 ml) 100% juice a day at 1–3 y; WHO 2023 'limit'.
-  'juice':    { minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.' },
+  'juice':    { minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.', after:'Whole fruit is better. If you give 100% juice: at most 120 ml a day, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks wait until 2.' },
   'whole nut': { minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   'whole nuts':{ minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   // food-effects-v2 (P1a-β): peanut + tree nut are SOFT floors (introduce-early,
@@ -2482,7 +2486,7 @@ const AGE_RULES = {
   'tree nut': { minMonth:6, aliases:['tree nuts','almond','almonds','badam','walnut','walnuts','akhrot','cashew','cashews','kaju','pistachio','pista','hazelnut','pecan','almond butter','almond paste'],
                 reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
-  'raw salad':{ minMonth:12, reason:'From 1, soft raw foods are fine grated or sliced very thin (cucumber, tomato, grated carrot). Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.' },
+  'raw salad':{ minMonth:12, reason:'From 1, soft raw foods are fine grated or sliced very thin (cucumber, tomato, grated carrot). Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.', after:'Grate or thin-slice raw foods. Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.' },
   'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
   // 12–24 m PR 3: was 10 while its own reason said 'no added sugar before 2'; ICMR-NIN 2024 lists biscuits as HFSS to avoid; matches rusk (24).
   'biscuit':  { minMonth:24, reason:'Most biscuits carry added sugar, salt and refined flour — no added sugar before 2 (WHO, ICMR-NIN). Offer soft roti, fruit or plain home snacks instead.' },
@@ -2508,7 +2512,7 @@ const AGE_RULES = {
   'chana':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'chole':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'mushroom': { minMonth:10, reason:'Can introduce after 10 months — always well-cooked, never raw.' },
-  'corn':     { minMonth:8, aliases:['bhutta','sweet corn','makki'], reason:'From 8 months as makki atta or well-mashed sweet corn. Whole kernels — cooked or raw, and bhutta off the cob — are a choking risk for young children, per the CDC; mash or blend them.' },
+  'corn':     { minMonth:8, aliases:['bhutta','sweet corn','makki'], reason:'From 8 months as makki atta or well-mashed sweet corn. Whole kernels — cooked or raw, and bhutta off the cob — are a choking risk for young children, per the CDC; mash or blend them.', after:'Makki atta is fine. Whole kernels and bhutta off the cob stay a choking risk — mash or blend them.' },
   'spinach':  { minMonth:7, reason:'Contains oxalates — blanch before use. Fine from 7 months in small amounts.' },
   'bajra':    { minMonth:7, reason:'Well-cooked bajra porridge or soft roti is fine from about 7 months — an iron-rich millet (IFCT 2017: 6.4 mg iron per 100 g).' },
   // food-effects-v2 Phase δ allergen gates (egg already above). minMonth:6 follows
@@ -2523,6 +2527,18 @@ const AGE_RULES = {
                 // resolves to wheat via 'suji', correctly.
                 reason:'Fine from around 6 months — as smooth tahini thinned into food, not whole seeds.' },
   // food-effects-v2 P1c (the choking set): the gate the choking-by-form card hangs off.
+  // 12–24 m hazard gates (Kael V-K-270-2 / V-K-270-4) — here, not in the recipes.js overlay, so the
+  // source-reading audits see them. The strictest gate a name reaches wins (_fdAgeRule).
+  'whole chana': { minMonth:48, aliases:['roasted chana','bhuna chana','roasted gram'], reason:'Whole or roasted chana is hard and round — a choking risk until about 4, per the AAP. Mash it, or grind it into food.' },
+  // Hard jaggery/sugar brittle: added sugar (24) AND hard-candy choking (AAP-CH keeps hard candy until 4) → 48. UNCONFIRMED-by-analogy.
+  'chikki':      { minMonth:48, aliases:['gajak','til chikki','peanut chikki','rewri','revdi','til patti','tilkut','til laddoo','til ladoo'],
+                   reason:'Chikki, gajak and til laddoo are hard jaggery brittles — added sugar (wait until 2) and too hard to chew safely until about 4, per the AAP. Give sesame or peanut ground into food instead.' },
+  // SPROUT: children should avoid raw or lightly cooked sprouts. minMonth 60 is an app floor (UNCONFIRMED cutoff).
+  'raw sprouts': { minMonth:60, aliases:['raw moong sprouts','sprout salad','sprouts salad','kachche sprouts','uncooked sprouts'],
+                   reason:'Raw or lightly cooked sprouts can carry salmonella and E. coli — health agencies advise children not to eat them. Steam or cook sprouts until soft.' },
+  // NHS-AV (raw shellfish); shellfish is a major allergen. Cooked shellfish from ~6 m (NHS). No FOOD_EFFECTS record exists.
+  'shellfish':   { minMonth:6, aliases:['prawn','prawns','shrimp','jhinga','chingri','crab','kekda','lobster'],
+                   reason:'Well-cooked prawns or crab are fine from around 6 months — never raw or lightly cooked (food poisoning). Shellfish is a major allergen: first taste at home, watch about 2 hours.' },
   // Required for the P0.1 sync-gate Check 3 (every FOOD_EFFECTS key resolves vs AGE_RULES);
   // 'choking hazards' resolves here by EXACT KEY. minMonth:6 frames the form-gate (modified
   // forms from solids start), and the reason carries the chokingUntilYears:5 whole-form rule.
@@ -2917,7 +2933,7 @@ const FOOD_EFFECTS = {
   'choking hazards': {
     foodClass:  'choking-by-form',     // PRIMARY (first standalone) — the form IS the hazard
     severity:   'caution',             // amber conditional chrome; the floor renders via severeSigns
-    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum', 'whole corn', 'corn kernels', 'bhutta', 'chikki', 'gajak', 'whole litchi', 'whole lychee', 'chivda', 'bhujia', 'mathri', 'jelly cubes', 'dry coconut pieces', 'whole makhana', 'roasted makhana'],
+    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum', 'whole corn', 'corn kernels', 'bhutta', 'chikki', 'gajak', 'whole litchi', 'whole lychee', 'litchi', 'lychee', 'chivda', 'bhujia sev', 'mathri', 'jelly cubes', 'dry coconut pieces', 'whole makhana', 'roasted makhana'],
     effect:     'airway obstruction (choking) by food form',
     title:      'Choking hazards — cut it to make it safe; whole forms wait until ~5',
     why:        'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Round (grape, whole nut) and coin/cylindrical (hot-dog round) shapes plug a small airway; hard foods can\'t be chewed without grinding molars (which a baby has none of until ~16–29 months). Change the form: cut to ≤½ inch (a child\'s small fingernail), cook soft, grind, or thin.',
@@ -3034,6 +3050,8 @@ const EMERGENCY_PROTOCOL = {
 window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 
 // ── ALLERGEN FLAGS ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const ALLERGENS = {
   'peanut':    'Legume allergen (not a tree nut). Give ground or as thinly spread butter, never whole. Watch for rash, swelling or vomiting for about 2 hours.',
   'almond':    'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
@@ -3083,6 +3101,8 @@ const COMBO_RULES = [
 // @@DATA_BLOCK_14_START@@ COMBO_RECIPES
 
 // ── RECIPE DATABASE (120+ combinations) ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const COMBO_RECIPES = {
   // ── SINGLE INGREDIENTS ──
   'banana':       { recipe:'1. Peel ¼ ripe banana.\n2. Mash with fork until smooth.\n3. Serve immediately.', dos:['Use ripe bananas with brown spots','Great quick energy snack','Can mix with ragi or curd'], donts:['Don\'t overfeed if stools are firm','Avoid green/unripe bananas','Don\'t store mashed — turns brown'] },

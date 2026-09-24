@@ -432,6 +432,7 @@ function _iqRenderPicker() {
       var matches = [];
       Object.keys(NUTRITION).forEach(function(food) {
         if (introSet.has(food)) return; // Already introduced
+        if (!(typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food))) return; // diet-preference gate (V-K-270-3)
         if (food.indexOf(query) !== -1) {
           matches.push(food);
         }
@@ -1036,6 +1037,7 @@ function qaHandleFoodSafety(classified) {
   var severeFloors = [];   // {food, eff} per food carrying a floor (Invariant 1, per-food)
   var toxin = null;        // {title, why}                — acute-toxin (honey)
   var encourage = null;    // {title, whyGood, safeFormNote} — age-appropriate allergen
+  var afterNotes = [];
   rawFoods.forEach(function(food) {
     // V-K-266-1: the strictest gate the token reaches ("milk with sugar" waits for sugar@24), via
     // the shared _fdAgeRule (diet.js) so Q&A and the combo checker / Library agree.
@@ -1044,9 +1046,11 @@ function qaHandleFoodSafety(classified) {
     if (belowFloor) {
       verdict = 'avoid';
       warnings.push(food + ': ' + rule.reason);
+    } else if (rule && rule.after) {
+      afterNotes.push(food + ': ' + rule.after);   // past the gate: how to give it now (V-V-270-4)
     }
 
-    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(food) : null;
+    var eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(food), mo) : null;
     if (eff && ((eff.severeSigns && eff.severeSigns.length) ||
                 (eff.watchFor && eff.watchFor.length) || eff.seekCare)) {
       severeFloors.push({ food: food, eff: eff });
@@ -1076,6 +1080,8 @@ function qaHandleFoodSafety(classified) {
   // 3. Introduction status
   rawFoods.forEach(function(food) {
     var base = _baseFoodName(food);
+    var gateR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(food) : null;
+    if (gateR && (mo < gateR.minMonth || gateR.after)) return;   // V-V-270-13 (see diet.js)
     if (!introducedSet.has(base) && food.length > 2) {
       newFoods.push(food);
     }
@@ -1152,6 +1158,7 @@ function qaHandleFoodSafety(classified) {
   safetyItems.push({ text: verdictText + ' for ' + mo + '-month-old', signal: verdictSignal });
   warnings.forEach(function(w) { safetyItems.push({ text: w, signal: 'warn' }); });
   allergenNotes.forEach(function(a) { safetyItems.push({ text: a, signal: 'warn' }); });
+  afterNotes.forEach(function(a) { safetyItems.push({ text: a, signal: 'info' }); });
   if (newFoods.length === 1) {
     safetyItems.push({ text: newFoods[0] + ' is new \u2014 introduce alone and watch for 3 days', signal: 'info' });
   }

@@ -173,6 +173,8 @@ function _getFatBearingFoodNames() {
   }
   // Indian-prep augmentation: paratha carries ghee in default preparation.
   if (out.indexOf('paratha') < 0) out.push('paratha');
+  // Plain "milk" — the word parents actually log — carries fat like whole milk (V-K-270-11).
+  if (out.indexOf('milk') < 0) out.push('milk');
   _fatBearingFoodNamesCache = out;
   return out;
 }
@@ -4372,6 +4374,20 @@ function getFoodEffect(name) {
   return eff;
 }
 
+// Age-aware view of a FOOD_EFFECTS record for RENDER surfaces (Ceres V-C-270-9 /
+// Maren M-S2 / Kael V-K-270-12). From 12 m honey's botulism risk falls to very low and
+// its remaining reason is added sugar, so the "before 12 months" headline and the
+// botulism watch-floor must not reach a toddler's parent. From 24 m the sugar gate has
+// passed: no card at all (null) — honey is an ordinary food with an AGE_RULES `after`
+// line. Every other record, and honey under 12 m, is returned unchanged (same object).
+function foodEffectForAge(eff, mo) {
+  if (!eff || typeof FOOD_EFFECTS === 'undefined' || eff !== FOOD_EFFECTS['honey'] || !(mo >= 12)) return eff;
+  if (mo >= 24) return null;
+  return Object.assign({}, eff, { watchFor: [], severeSigns: [], seekCare: '',
+    title: 'Honey waits until 2 — it counts as added sugar',
+    why: 'After the first birthday the botulism risk falls to very low, but honey is an added sugar — like jaggery, it waits until 2.' });
+}
+
 // Combo-result schema tag (food-effects v2 R1, M-R1-1). The combo checker caches
 // results in localStorage (comboHistory, unversioned). A result cached BEFORE R1
 // lacks the emergency-floor fields (toxin / severe_floors / encourage); rendering
@@ -4380,8 +4396,10 @@ function getFoodEffect(name) {
 // (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
 // 'r1-fe-a24' (2026-09-24, Ceres V-C-266-1): bumped when the added-sugar gates moved 12 → 24 m, so
 // every result cached under the old gates (jaggery / sugar "safe" at 12 m) is recomputed once.
+// 'r1-fe-a24-t3' (Maren #270 B2): bumped for the 12–24 m food-library gates (gajak/chikki 48,
+// ragi biscuit 24, juice 12, chai/namkeen/papad/sharbat 24) and the age-aware honey framing.
 // Bump it again whenever an AGE_RULES gate tightens.
-const COMBO_RESULT_SCHEMA = 'r1-fe-a24';
+const COMBO_RESULT_SCHEMA = 'r1-fe-a24-t3';
 
 // A cached combo result is reusable only if it carries the current schema AND was computed at her
 // current age in whole months — verdicts are age-gated, so a result from last month can be wrong
@@ -4799,14 +4817,18 @@ const DIET_PREF_LABEL = {
 // synonyms the combo-checker sees (lamb/pork/beef → meat; crab → seafood) so the gate classifies
 // every animal food the app references from one source.
 const NONVEG_TOKEN_SID = {
-  egg: 'eggs',
-  chicken: 'poultry',
+  egg: 'eggs', eggs: 'eggs', anda: 'eggs', omelette: 'eggs',
+  chicken: 'poultry', murgi: 'poultry', murga: 'poultry',
   fish: 'fish', prawn: 'fish', shrimp: 'fish', crab: 'fish', seafood: 'fish',
-  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat',
+  // 12–24 m vocabulary (Kael V-K-270-10): Indian fish + shellfish names parents log.
+  shellfish: 'fish', prawns: 'fish', jhinga: 'fish', chingri: 'fish', kekda: 'fish', lobster: 'fish',
+  rohu: 'fish', katla: 'fish', pomfret: 'fish', bangda: 'fish', hilsa: 'fish', ilish: 'fish',
+  sardine: 'fish', salmon: 'fish', machli: 'fish', machhli: 'fish',
+  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat', keema: 'meat',
 };
 // Resolve a food NAME to its non-veg sid, or null if it is not a non-veg food. WORD-BOUNDARY
 // matched (not substring) so "Egg yolk"/"Chicken (puree)" classify but "eggplant" does NOT, and
-// "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
+// "shellfish" does NOT match \bfish\b — it has its own token above (a pescatarian set allows it).
 function _dietNonvegSid(name) {
   const n = String(name || '').toLowerCase();
   // First-match-wins (K-214-1): intentional and surfacing-safe. The nonveg-category items this

@@ -18124,6 +18124,8 @@ const FOOD_SYNERGIES = [
 // per-100g chemistry, not per-serving care guidance. Downstream consumers
 // (chemRollup, the per-food chemistry sub-tab) should weight spice-tier
 // `nutrients[]` per serving, not per 100g.
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const NUTRITION = {
   // ── GRAINS & STAPLES ──
   'ragi':           { nutrients:['iron','calcium','fibre','protein','phosphorus'], tags:['iron-rich','bone-health','protein-rich','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates','tannins'], bioactives:['polyphenols'] } },
@@ -18277,10 +18279,12 @@ const NUTRITION = {
 // @@DATA_BLOCK_13_START@@ AGE_RULES + ALLERGENS + COMBO_RULES
 
 // ── AGE SAFETY RULES ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const AGE_RULES = {
   // 24 m, not 12 (Cipher A2, 2026-09-24): botulism is the under-1 reason, and from 1 honey is a free
   // sugar (WHO; US DGA) under the same 24 m added-sugar gate — so every surface says one thing.
-  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2' },
+  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2', after:'A small amount now and then — honey is an added sugar, so keep it occasional, like jaggery.' },
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
@@ -18310,7 +18314,7 @@ const AGE_RULES = {
   'tea':      { minMonth:24, aliases:['chai','chay','milk tea','masala chai','doodh chai','kadak chai','green tea','black tea'], reason:'Tannins block iron absorption. Caffeine is harmful for babies and toddlers.' },
   'coffee':   { minMonth:24, aliases:['cold coffee','filter coffee','kaapi'], reason:'Caffeine is harmful for infants and toddlers.' },
   // 12–24 m PR 3: AAP 2017 — no juice under 1; ≤ 4 oz (120 ml) 100% juice a day at 1–3 y; WHO 2023 'limit'.
-  'juice':    { minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.' },
+  'juice':    { minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.', after:'Whole fruit is better. If you give 100% juice: at most 120 ml a day, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks wait until 2.' },
   'whole nut': { minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   'whole nuts':{ minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   // food-effects-v2 (P1a-β): peanut + tree nut are SOFT floors (introduce-early,
@@ -18323,7 +18327,7 @@ const AGE_RULES = {
   'tree nut': { minMonth:6, aliases:['tree nuts','almond','almonds','badam','walnut','walnuts','akhrot','cashew','cashews','kaju','pistachio','pista','hazelnut','pecan','almond butter','almond paste'],
                 reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
-  'raw salad':{ minMonth:12, reason:'From 1, soft raw foods are fine grated or sliced very thin (cucumber, tomato, grated carrot). Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.' },
+  'raw salad':{ minMonth:12, reason:'From 1, soft raw foods are fine grated or sliced very thin (cucumber, tomato, grated carrot). Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.', after:'Grate or thin-slice raw foods. Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.' },
   'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
   // 12–24 m PR 3: was 10 while its own reason said 'no added sugar before 2'; ICMR-NIN 2024 lists biscuits as HFSS to avoid; matches rusk (24).
   'biscuit':  { minMonth:24, reason:'Most biscuits carry added sugar, salt and refined flour — no added sugar before 2 (WHO, ICMR-NIN). Offer soft roti, fruit or plain home snacks instead.' },
@@ -18349,7 +18353,7 @@ const AGE_RULES = {
   'chana':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'chole':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'mushroom': { minMonth:10, reason:'Can introduce after 10 months — always well-cooked, never raw.' },
-  'corn':     { minMonth:8, aliases:['bhutta','sweet corn','makki'], reason:'From 8 months as makki atta or well-mashed sweet corn. Whole kernels — cooked or raw, and bhutta off the cob — are a choking risk for young children, per the CDC; mash or blend them.' },
+  'corn':     { minMonth:8, aliases:['bhutta','sweet corn','makki'], reason:'From 8 months as makki atta or well-mashed sweet corn. Whole kernels — cooked or raw, and bhutta off the cob — are a choking risk for young children, per the CDC; mash or blend them.', after:'Makki atta is fine. Whole kernels and bhutta off the cob stay a choking risk — mash or blend them.' },
   'spinach':  { minMonth:7, reason:'Contains oxalates — blanch before use. Fine from 7 months in small amounts.' },
   'bajra':    { minMonth:7, reason:'Well-cooked bajra porridge or soft roti is fine from about 7 months — an iron-rich millet (IFCT 2017: 6.4 mg iron per 100 g).' },
   // food-effects-v2 Phase δ allergen gates (egg already above). minMonth:6 follows
@@ -18364,6 +18368,18 @@ const AGE_RULES = {
                 // resolves to wheat via 'suji', correctly.
                 reason:'Fine from around 6 months — as smooth tahini thinned into food, not whole seeds.' },
   // food-effects-v2 P1c (the choking set): the gate the choking-by-form card hangs off.
+  // 12–24 m hazard gates (Kael V-K-270-2 / V-K-270-4) — here, not in the recipes.js overlay, so the
+  // source-reading audits see them. The strictest gate a name reaches wins (_fdAgeRule).
+  'whole chana': { minMonth:48, aliases:['roasted chana','bhuna chana','roasted gram'], reason:'Whole or roasted chana is hard and round — a choking risk until about 4, per the AAP. Mash it, or grind it into food.' },
+  // Hard jaggery/sugar brittle: added sugar (24) AND hard-candy choking (AAP-CH keeps hard candy until 4) → 48. UNCONFIRMED-by-analogy.
+  'chikki':      { minMonth:48, aliases:['gajak','til chikki','peanut chikki','rewri','revdi','til patti','tilkut','til laddoo','til ladoo'],
+                   reason:'Chikki, gajak and til laddoo are hard jaggery brittles — added sugar (wait until 2) and too hard to chew safely until about 4, per the AAP. Give sesame or peanut ground into food instead.' },
+  // SPROUT: children should avoid raw or lightly cooked sprouts. minMonth 60 is an app floor (UNCONFIRMED cutoff).
+  'raw sprouts': { minMonth:60, aliases:['raw moong sprouts','sprout salad','sprouts salad','kachche sprouts','uncooked sprouts'],
+                   reason:'Raw or lightly cooked sprouts can carry salmonella and E. coli — health agencies advise children not to eat them. Steam or cook sprouts until soft.' },
+  // NHS-AV (raw shellfish); shellfish is a major allergen. Cooked shellfish from ~6 m (NHS). No FOOD_EFFECTS record exists.
+  'shellfish':   { minMonth:6, aliases:['prawn','prawns','shrimp','jhinga','chingri','crab','kekda','lobster'],
+                   reason:'Well-cooked prawns or crab are fine from around 6 months — never raw or lightly cooked (food poisoning). Shellfish is a major allergen: first taste at home, watch about 2 hours.' },
   // Required for the P0.1 sync-gate Check 3 (every FOOD_EFFECTS key resolves vs AGE_RULES);
   // 'choking hazards' resolves here by EXACT KEY. minMonth:6 frames the form-gate (modified
   // forms from solids start), and the reason carries the chokingUntilYears:5 whole-form rule.
@@ -18758,7 +18774,7 @@ const FOOD_EFFECTS = {
   'choking hazards': {
     foodClass:  'choking-by-form',     // PRIMARY (first standalone) — the form IS the hazard
     severity:   'caution',             // amber conditional chrome; the floor renders via severeSigns
-    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum', 'whole corn', 'corn kernels', 'bhutta', 'chikki', 'gajak', 'whole litchi', 'whole lychee', 'chivda', 'bhujia', 'mathri', 'jelly cubes', 'dry coconut pieces', 'whole makhana', 'roasted makhana'],
+    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum', 'whole corn', 'corn kernels', 'bhutta', 'chikki', 'gajak', 'whole litchi', 'whole lychee', 'litchi', 'lychee', 'chivda', 'bhujia sev', 'mathri', 'jelly cubes', 'dry coconut pieces', 'whole makhana', 'roasted makhana'],
     effect:     'airway obstruction (choking) by food form',
     title:      'Choking hazards — cut it to make it safe; whole forms wait until ~5',
     why:        'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Round (grape, whole nut) and coin/cylindrical (hot-dog round) shapes plug a small airway; hard foods can\'t be chewed without grinding molars (which a baby has none of until ~16–29 months). Change the form: cut to ≤½ inch (a child\'s small fingernail), cook soft, grind, or thin.',
@@ -18875,6 +18891,8 @@ const EMERGENCY_PROTOCOL = {
 window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 
 // ── ALLERGEN FLAGS ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const ALLERGENS = {
   'peanut':    'Legume allergen (not a tree nut). Give ground or as thinly spread butter, never whole. Watch for rash, swelling or vomiting for about 2 hours.',
   'almond':    'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
@@ -18924,6 +18942,8 @@ const COMBO_RULES = [
 // @@DATA_BLOCK_14_START@@ COMBO_RECIPES
 
 // ── RECIPE DATABASE (120+ combinations) ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const COMBO_RECIPES = {
   // ── SINGLE INGREDIENTS ──
   'banana':       { recipe:'1. Peel ¼ ripe banana.\n2. Mash with fork until smooth.\n3. Serve immediately.', dos:['Use ripe bananas with brown spots','Great quick energy snack','Can mix with ragi or curd'], donts:['Don\'t overfeed if stools are firm','Avoid green/unripe bananas','Don\'t store mashed — turns brown'] },
@@ -21778,8 +21798,8 @@ const RECOMMENDATION_ROSTER = {
 //   "egg" → eggs (not "egg"≠eggplant); "rohu fish" → fish (low-mercury, not
 //   the bare-fish green leak); honey → acute-toxin avoid (never suggested).
 //
-// Jurisdiction: Kael (file/engine — concat + window export), Maren (CONTENT —
-// sources, age gates, allergen/choking forms; clinically audited at the gate).
+// Jurisdiction: Ceres (Nutrition — the corpus CONTENT: sources, age gates,
+// allergen/choking forms, portions), audited at the canon-cc-008 gate.
 // ═══════════════════════════════════════════════════════════════════════
 
 // Source shorthand — the Tier-1 authoritative bodies from RECIPE_RESEARCH.md.
@@ -22246,7 +22266,7 @@ const RECIPES = [
     id: 'veg-poha-ground-peanut', title: 'Veg Poha with Ground Peanut', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 12,
     texture: 'family', portion: '¾ medium katori (≈ 40 g poha, raw)',
     ingredients: [{ name: 'poha', qty: '4 tbsp thin poha (40 g)', g: 40 }, { name: 'peas', qty: '1 tbsp, cooked & squashed', g: 15 }, { name: 'carrot', qty: '1 tbsp, finely grated', g: 15 }, { name: 'peanut', qty: '1 tsp, roasted & ground to powder', g: 5 }, { name: 'lemon', qty: 'a few drops', g: 2 }, { name: 'oil', qty: '1 tsp', g: 5 }],
-    foodGroups: ['grains', 'vegs', 'nuts'], mddGroups: ['grains', 'vitA', 'otherFV'], allergens: ['peanut'], choking: ['NEVER whole peanuts (the usual poha topping) — grind to a powder', 'Squash each pea', 'Remove curry leaves and mustard seeds if she gags on them'],
+    foodGroups: ['grains', 'vegs', 'nuts'], mddGroups: ['grains', 'vitA', 'otherFV'], allergens: ['peanut'], choking: ['NEVER whole peanuts (the usual poha topping) — grind to a powder', 'Squash each pea', 'Remove curry leaves and mustard seeds from her portion'],
     cuisine: 'Indian',
     steps: [
       'Rinse thin poha until soft; drain.',
@@ -22287,13 +22307,13 @@ const RECIPES = [
       'Serve with soft roti strips. Take her share out before any salt or chilli goes into the family pan.',
     ],
     dos: ['Egg is an animal-source food, which WHO advises daily (meat, fish or egg)', 'Cook until both white and yolk are set', 'Keep offering egg regularly once it is tolerated'],
-    donts: ['Never runny or undercooked egg', 'No salt or green chilli in her portion', 'Hidden unless the diet preference includes egg'],
+    donts: ['Never runny or undercooked egg', 'No salt or green chilli in her portion', 'If egg is new to her, offer it on its own first and watch for 3 days'],
     source: ['who', 'nhs', 'icmr'],
   },
   {
     id: 'ragi-oats-milk-porridge-pear', title: 'Ragi–Oats Milk Porridge with Pear', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 12,
     texture: 'family', portion: '¾ medium katori (uses ~100 ml of her daily milk)',
-    ingredients: [{ name: 'ragi', qty: '1 tbsp flour (12 g)', g: 12 }, { name: 'oats', qty: '1 tbsp (12 g)', g: 12 }, { name: 'milk', qty: '½ cup whole milk (100 ml)', g: 100 }, { name: 'pear', qty: '2 tbsp, ripe, peeled, soft-diced', g: 25 }],
+    ingredients: [{ name: 'ragi', qty: '1 tbsp flour (12 g)', g: 12 }, { name: 'oats', qty: '1 tbsp (12 g)', g: 12 }, { name: 'milk', qty: '100 ml whole milk (a little under ½ cup)', g: 100 }, { name: 'pear', qty: '2 tbsp, ripe, peeled, soft-diced', g: 25 }],
     foodGroups: ['grains', 'dairy', 'fruits'], mddGroups: ['grains', 'dairy', 'otherFV'], allergens: ['cow milk'], choking: ['Use very ripe pear or stew it soft; dice small'],
     cuisine: 'Indian',
     steps: [
@@ -22375,7 +22395,7 @@ const RECIPES = [
   {
     id: 'chana-sweet-potato-rice', title: 'Soft Chana & Sweet Potato with Rice', slot: 'lunch', minAgeMonths: 12, prepMinutes: 40,
     texture: 'family', portion: '¾ medium katori (rice + 2 tbsp chana-shakarkandi mash)',
-    ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'chana', qty: '1 tbsp dry kabuli chana, soaked (15 g)', g: 15 }, { name: 'sweet potato', qty: '2 tbsp, diced (35 g)', g: 35 }, { name: 'tomato', qty: '1 tbsp', g: 15 }, { name: 'ghee', qty: '1 tsp', g: 5 }, { name: 'cumin', qty: 'a pinch', g: 1 }],
+    ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'chana', qty: '1 tbsp dry kabuli chana, soaked (15 g)', g: 15 }, { name: 'sweet potato', qty: '2 tbsp orange-fleshed, diced (35 g)', g: 35 }, { name: 'tomato', qty: '1 tbsp', g: 15 }, { name: 'ghee', qty: '1 tsp', g: 5 }, { name: 'cumin', qty: 'a pinch', g: 1 }],
     foodGroups: ['grains', 'vegs', 'dairy', 'spices'], mddGroups: ['grains', 'pulses', 'vitA', 'otherFV'], allergens: [], choking: ['Squash every chickpea flat — whole chana is on the app’s choking list', 'Peel chickpea skins if she gags on them'],
     cuisine: 'Indian',
     steps: [
@@ -22408,7 +22428,7 @@ const RECIPES = [
     id: 'rohu-fish-curry-rice', title: 'Rohu Fish Curry with Rice', slot: 'lunch', minAgeMonths: 12, prepMinutes: 25,
     texture: 'family', portion: '¾ medium katori rice + 1 tbsp flaked fish (≈ 25 g) in gravy',
     ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'rohu fish', qty: '1 small piece, deboned (25 g)', g: 25 }, { name: 'tomato', qty: '2 tbsp, puréed', g: 35 }, { name: 'bottle gourd', qty: '2 tbsp, diced', g: 25 }, { name: 'oil', qty: '1 tsp mustard oil, well heated', g: 5 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
-    foodGroups: ['grains', 'nonveg', 'vegs', 'spices'], mddGroups: ['grains', 'flesh', 'otherFV'], allergens: ['fish'], choking: ['Rohu has many fine Y-bones — flake by hand and check twice', 'Take the flesh from the thick middle cut, which has fewer small bones'],
+    foodGroups: ['grains', 'nonveg', 'vegs', 'spices'], mddGroups: ['grains', 'flesh', 'otherFV'], allergens: ['fish'], choking: ['Rohu has many fine Y-bones — flake by hand and check twice', 'Use the belly piece (peti) — it has only a few large rib bones, while the back cut (gada) is full of fine Y-bones'],
     cuisine: 'Indian (Bengal/Jharkhand)',
     steps: [
       'Rub the fish with turmeric; poach it in the gravy rather than frying.',
@@ -22417,7 +22437,7 @@ const RECIPES = [
       'Mash the flaked fish and lauki into soft rice with a little gravy. Take her portion out before salt or chilli.',
     ],
     dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'The local jhol, made mild'],
-    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'Hidden unless the diet preference includes fish'],
+    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new to her, watch her for about 2 hours after the first meal'],
     source: ['icmr', 'nhsbsl', 'who'],
   },
   {
@@ -22499,7 +22519,7 @@ const RECIPES = [
       'Serve over soft rice.',
     ],
     dos: ['Matches the ICMR-NIN 1–3 y chart ("egg ½")', 'Both white and yolk cooked firm', 'Egg gives iron and vitamin B12, which vegetarian diets can run short of'],
-    donts: ['No runny yolk', 'No salt or garam masala in her portion', 'Hidden unless the diet preference includes egg'],
+    donts: ['No runny yolk', 'No salt or garam masala in her portion', 'If egg is new to her, offer it on its own first and watch for 3 days'],
     source: ['icmr', 'who', 'nhs'],
   },
   {
@@ -22569,7 +22589,7 @@ const RECIPES = [
   {
     id: 'steamed-veg-sticks-chana-til-dip', title: 'Steamed Veg Sticks with Chana–Til Dip', slot: 'snack', minAgeMonths: 12, prepMinutes: 20,
     texture: 'family', portion: '4–5 soft sticks + 2 tbsp dip',
-    ingredients: [{ name: 'carrot', qty: '3–4 batons, steamed soft', g: 30 }, { name: 'sweet potato', qty: '2 batons, steamed soft', g: 25 }, { name: 'chana', qty: '2 tbsp cooked kabuli chana, puréed', g: 30 }, { name: 'sesame', qty: '½ tsp, ground (til paste)', g: 3 }, { name: 'curd', qty: '1 tbsp, to loosen', g: 20 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
+    ingredients: [{ name: 'carrot', qty: '3–4 batons, steamed soft', g: 30 }, { name: 'sweet potato', qty: '2 batons orange-fleshed, steamed soft', g: 25 }, { name: 'chana', qty: '2 tbsp cooked kabuli chana, puréed', g: 30 }, { name: 'sesame', qty: '½ tsp, ground (til paste)', g: 3 }, { name: 'curd', qty: '1 tbsp, to loosen', g: 20 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
     foodGroups: ['vegs', 'grains', 'nuts', 'dairy'], mddGroups: ['vitA', 'pulses', 'dairy'], allergens: ['sesame', 'cow milk'], choking: ['Steam carrot until a baton squashes between finger and thumb — raw carrot is a named choking food', 'Batons about finger size, not coins'],
     cuisine: 'Indian-fusion',
     steps: [
@@ -22584,7 +22604,7 @@ const RECIPES = [
   {
     id: 'sweet-potato-jeera-bites', title: 'Sweet Potato Jeera Bites', slot: 'snack', minAgeMonths: 12, prepMinutes: 15,
     texture: 'family', portion: '½ medium katori soft cubes',
-    ingredients: [{ name: 'sweet potato', qty: '½ small, cubed (50 g)', g: 50 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'cumin', qty: 'a pinch, roasted & ground', g: 1 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
+    ingredients: [{ name: 'sweet potato', qty: '½ small orange-fleshed, cubed (50 g)', g: 50 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'cumin', qty: 'a pinch, roasted & ground', g: 1 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
     foodGroups: ['vegs', 'dairy', 'spices'], mddGroups: ['vitA'], allergens: [], choking: ['Steam until fork-soft; cubes no bigger than a fingertip, or thick fingers she can bite'],
     cuisine: 'Indian',
     steps: [
@@ -22825,7 +22845,7 @@ function _recipeServing(slot, ageMonths) {
 
 
 // ── Toddler (12–24 m) feeding reference. Each fact carries source keys that point into
-//    RECIPE_SOURCES ∪ RECIPE_SOURCES_12_24. Frame everything as responsive feeding:
+//    RECIPE_SOURCES. Frame everything as responsive feeding:
 //    amounts are what to OFFER, never targets.
 const TODDLER_FEEDING = {
   ageBand: { minMonth: 12, maxMonth: 23 },
@@ -22876,8 +22896,8 @@ const TODDLER_FEEDING = {
       'Remove every bone from fish and meat',
       'Offer textured food and finger foods; keep moving her on from purées',
     ],
-    teethNote: 'First molars usually come in around 12 months, canines around 18 months and second molars around 24 months. ' +
-               'Until then, keep pieces soft enough to mash with her gums.',
+    teethNote: 'First molars usually come in between about 13 and 19 months, canines around 16–23 months and second molars around 23–33 months, per the ADA. ' +
+               'Until her molars are in, keep pieces soft enough to mash with her gums.',
     source: ['whopaho', 'iap16', 'nhsbsl', 'nhsteeth'],
   },
 
@@ -22900,7 +22920,7 @@ const TODDLER_FEEDING = {
       'Pulses, nuts and seeds often, especially when meat/fish/eggs or vegetables are limited (e.g. vegetarian days)',
     ],
     indiaFive: 'ICMR-NIN (India) version: 5 foods every day — cereals/millets · pulses/egg/meat · nuts & oilseeds · breast milk/milk & milk products · vegetables/greens & fruit',
-    vegetarianNote: 'On a vegetarian day she can still reach 5 of 8 without flesh or eggs: breast milk + grains + pulses + dairy + both fruit/veg groups = 6.',
+    vegetarianNote: 'On a vegetarian day she can still reach 5 of 8 without flesh or eggs: grains + pulses + dairy + both fruit/veg groups = 5, or 6 with breast milk.',
     source: ['whoiycf', 'who', 'icmr'],
   },
 
@@ -22909,7 +22929,7 @@ const TODDLER_FEEDING = {
     breastfeeding: 'Continue breastfeeding to 2 years or beyond',
     cowMilk: 'From 12 months, pasteurised whole cow’s (or buffalo) milk can be her main drink alongside breast milk and water; curd and plain yoghurt also count',
     amount: 'About 350 ml/day of milk/curd (ICMR-NIN). If she is not breastfed, ~300–500 ml/day, or ~200–400 ml if she eats other animal foods regularly, per WHO guidance',
-    ceiling: 'Keep total cow’s milk to about 500 ml/day or less so it does not displace iron-rich foods (synthesised ceiling — see flag F1)',
+    ceiling: 'Keep total cow’s milk to about 500 ml/day or less so it does not displace iron-rich foods (a synthesised ceiling)',
     cup: 'Offer it in an open or free-flow cup, not a bottle — move off bottles after 1',
     fullFat: 'Whole (full-fat) milk and dairy until 2',
     avoid: [
@@ -22939,9 +22959,8 @@ const TODDLER_FEEDING = {
 // (diet.js _foodTaxFlat / _FD_SEARCH_INDEX, home.js _synergyIndex), so no cache
 // invalidation is needed. Corrections to EXISTING rules and every FOOD_EFFECTS
 // change live in data.js itself (the source-reading safety gates read them there).
-//  DRAFT — Food Library expansion for 12–24 months (Ceres jurisdiction)
-//  Status: RESEARCH DRAFT, not wired. Proposed home: split/recipes.js (Ceres),
-//  merged into the data.js tables at parse time by _mergeFoodLib1224() below.
+//  Food Library expansion for 12–24 months (Ceres jurisdiction), merged into the
+//  data.js tables at parse time by _mergeFoodLib1224() below.
 //  Drafted 2026-09-24 for Ziva (12.7 mo, 4 teeth, Jamshedpur).
 // 
 //  ── SOURCES (all fetched 2026-09-24) ─────────────────────────────────────
@@ -23096,9 +23115,6 @@ const NUTRITION_ADD_12_24 = {
   'bathua':         { nutrients:['calcium','fibre'], tags:['bone-health','digestive'], chem:{ fibre:'mixed', antiNutrients:['oxalates'] } },
 };
 
-// Reference numbers (per 100 g edible portion, IFCT 2017). NOT merged — for the Ceres/Maren review and a
-// possible future quantitative field. [code, protein g, calcium mg, iron mg]; verify:true = re-read the page.
-
 const FOOD_ALIASES_ADD_12_24 = {
   'palak': 'spinach',
   'methi leaves': 'methi', 'fenugreek leaves': 'methi', 'methi saag': 'methi',
@@ -23143,10 +23159,10 @@ const FOOD_TAX_KEYS_ADD_12_24 = {
   'grains.millets':   ['kodo', 'little millet', 'foxtail millet', 'barnyard millet'],
   'grains.dals':      ['besan'],
   'grains.prepared':  ['chilla', 'dhokla', 'appam'],
-  'vegs.leafy':       ['chaulai', 'lal saag', 'saag'],
+  'vegs.leafy':       ['amaranth leaves', 'saag'],  // chaulai / lal saag are amaranth-leaf aliases, not new foods (V-V-270-5)
   'dairy.dairy':      ['cow milk', 'buffalo milk'],
   'nonveg.fish':      ['rohu', 'katla', 'pomfret', 'bangda', 'hilsa', 'ilish'],
-  'nonveg.meat':      ['goat'],
+  // No goat/meat key: the taxonomy's substring pass would file "oat" under meat (V-V-270-9); mutton covers it.
 };
 
 // ── 4. AGE_RULES — NEW keys only (add-if-absent). Shape: { minMonth, reason, aliases? } ─
@@ -23155,19 +23171,24 @@ const FOOD_TAX_KEYS_ADD_12_24 = {
 // 'sev' does not hit 'sevai'; 'cake' does not hit 'pancake'; 'achar' does not hit 'achari paneer'.
 const AGE_RULES_ADD_12_24 = {
   // WHO23 Rec 5b (SSBs should not be consumed); NIN24 (no added sugar <2; commercial juices avoided); AAP-DR.
-  'fruit drink': { minMonth:24, aliases:['juice drink','packaged juice','tetra pack juice','boxed juice','mango drink','fruit nectar','fruit squash','squash drink','sharbat','sherbet','cold drink','soft drink','fizzy drink','aerated drink','cola','soda drink','energy drink','sports drink','glucose drink','flavoured milk','flavored milk'],
+  'fruit drink': { minMonth:24, aliases:['juice drink','packaged juice','tetra pack juice','boxed juice','mango drink','mango juice','frooti','maaza','fruit nectar','fruit squash','squash drink','sharbat','sherbet','cold drink','soft drink','fizzy drink','aerated drink','cola','soda drink','sports drink','glucose drink','flavoured milk','flavored milk'],
                    reason:'Packaged juices, fruit drinks, squash, sharbat, cold drinks and flavoured milk are sugary drinks — not for under-2s (WHO, ICMR-NIN). Water and plain milk are her drinks.' },
-  // AAP-DR (toddler milks + added sugars); NIN24 no added sugar <2. Brand names deliberately not keyed.
-  'health drink':{ minMonth:24, aliases:['malt drink','malted drink','malted milk','health drink powder','chocolate drink powder','milk additive powder'],
+  // Caffeine + stimulants: not for children at any age (AAP). Kept apart so the 24-month
+  // sugary-drink gate never opens it (V-C-270-12).
+  'energy drink':{ minMonth:216, aliases:['energy drinks','caffeinated drink'],
+                   reason:'Energy drinks carry caffeine and other stimulants, plus a lot of sugar — not for children at any age.' },
+  // AAP-DR (toddler milks + added sugars); NIN24 no added sugar <2. The brand names parents
+  // actually log are keyed as aliases (V-C-270-11) — a gate that misses "Horlicks" misses the food.
+  'health drink':{ minMonth:24, aliases:['horlicks','bournvita','complan','malt drink','malted drink','malted milk','health drink powder','chocolate drink powder','milk additive powder'],
                    reason:'Most malted "health drink" powders add a lot of sugar. Plain whole milk is enough — no powder needed before 2.' },
   // WHO23 Rec 5a (high salt / trans fat); NIN24 HFSS "must be avoided (example: biscuits, chips)"; CDC-CH (snack foods choke).
-  'namkeen':     { minMonth:24, aliases:['bhujia','sev','chivda','chiwda','farsan','mathri','dalmoth','packaged snacks','crisps','fried snacks'],
+  'namkeen':     { minMonth:24, aliases:['bhujia sev','namkeen bhujia','bikaneri bhujia','sev','chivda','farsan','mathri','dalmoth','packaged snacks','crisps','fried snacks'],
                    reason:'Very salty and fried, and hard pieces are a choking risk. Not for under-2s (WHO, ICMR-NIN); later, only rarely.' },
   'papad':       { minMonth:24, aliases:['papadum','papadam','papar','khichiya'],
                    reason:'Very high in salt, and crisp shards are hard for a toddler to chew. Wait until 2.' },
   'pickle':      { minMonth:24, aliases:['achar','achaar','aachar'],
                    reason:'Pickle is mostly salt, oil and chilli. Keep it off her plate before 2 (WHO: high-salt foods should not be given 6–23 months).' },
-  'instant noodles': { minMonth:24, aliases:['cup noodles','noodle masala'],
+  'instant noodles': { minMonth:24, aliases:['maggi','cup noodles','noodle masala'],
                    reason:'The seasoning makes instant noodles very salty. Not for under-2s; plain home noodles or sevai with vegetables are fine.' },
   'ketchup':     { minMonth:24, aliases:['tomato ketchup'],
                    reason:'Ketchup has added sugar and salt. Wait until 2; a little fresh tomato chutney without sugar is a better dip.' },
@@ -23177,15 +23198,8 @@ const AGE_RULES_ADD_12_24 = {
   // Indian sweets not already aliased on AGE_RULES.sugar (which carries mishri/chini/mithai/sweets/toffee…).
   'indian sweets': { minMonth:24, aliases:['jalebi','gulab jamun','rasgulla','rosogolla','rasmalai','barfi','burfi','peda','sandesh','mishti doi','shrikhand','sweet lassi','jam','candy'],
                    reason:'Mithai, sweet curds and jams are made with sugar — no added sugar before 2 (WHO, ICMR-NIN). Sweeten with mashed fruit or dates instead.' },
-  // Hard jaggery/sugar brittle: added sugar (24) AND hard-candy choking (AAP-CH keeps hard candy until 4) → 48. UNCONFIRMED-by-analogy.
-  'chikki':      { minMonth:48, aliases:['gajak','til chikki','peanut chikki','rewri','revdi','til patti','tilkut','til laddoo','til ladoo'],
-                   reason:'Chikki, gajak and til laddoo are hard jaggery brittles — added sugar (wait until 2) and too hard to chew safely until about 4, per the AAP. Give sesame or peanut ground into food instead.' },
-  // SPROUT: children should avoid raw or lightly cooked sprouts. minMonth 60 is an app floor (UNCONFIRMED cutoff).
-  'raw sprouts': { minMonth:60, aliases:['raw moong sprouts','sprout salad','sprouts salad','kachche sprouts','uncooked sprouts'],
-                   reason:'Raw or lightly cooked sprouts can carry salmonella and E. coli — health agencies advise children not to eat them. Steam or cook sprouts until soft.' },
-  // NHS-AV (raw shellfish); shellfish is a major allergen. Cooked shellfish from ~6 m (NHS). No FOOD_EFFECTS record exists.
-  'shellfish':   { minMonth:6, aliases:['prawn','prawns','shrimp','jhinga','chingri','crab','kekda','lobster'],
-                   reason:'Well-cooked prawns or crab are fine from around 6 months — never raw or lightly cooked (food poisoning). Shellfish is a major allergen: first taste at home, watch about 2 hours.' },
+  // chikki / raw sprouts / shellfish are HAZARD gates, not sugar/salt gates — they live in
+  // data.js AGE_RULES where the source-reading safety audits see them (Kael V-K-270-4).
 };
 
 // ── 5. ALLERGENS — NEW keys only (terse browse note, string values) ─
@@ -23214,18 +23228,18 @@ const ALLERGENS_ADD_12_24 = {
 };
 
 // ── 6. COMBO_RECIPES — NEW keys, exact shape { recipe, dos[], donts[] } (toddler, 12–24 m, 4 teeth) ─
-// No salt beyond a pinch, no sugar/jaggery/honey (NIN24, WHO23). Pieces ≤ ½ inch or soft strips (AAP-CH).
+// No salt in her portion, no sugar/jaggery/honey (NIN24, WHO23). Pieces ≤ ½ inch or soft strips (AAP-CH).
 const COMBO_RECIPES_ADD_12_24 = {
-  'chilla':        { recipe:'1. Whisk 2 tbsp besan with water to a thin, lump-free batter.\n2. Stir in grated carrot or finely chopped palak, a pinch of turmeric and ajwain.\n3. Spread thin on a tawa with ½ tsp ghee; cook both sides on low until soft and cooked through.\n4. Cut into soft strips she can hold.', dos:['Protein + iron from besan','Squeeze lemon or serve with tomato for vitamin C','Soft strips suit self-feeding with 4 teeth'], donts:['No salt beyond a pinch before 2','Don\'t cook crisp — crisp edges can shatter','Don\'t add green chilli'] },
+  'chilla':        { recipe:'1. Whisk 2 tbsp besan with water to a thin, lump-free batter.\n2. Stir in grated carrot or finely chopped palak, a pinch of turmeric and ajwain.\n3. Spread thin on a tawa with ½ tsp ghee; cook both sides on low until soft and cooked through.\n4. Cut into soft strips she can hold.', dos:['Protein + iron from besan','Squeeze lemon or serve with tomato for vitamin C','Soft strips suit self-feeding with 4 teeth'], donts:['No salt in her portion — take it out before salting','Don\'t cook crisp — crisp edges can shatter','Don\'t add green chilli'] },
   'moong sprouts': { recipe:'1. Sprout whole moong for 1–2 days, rinsing twice a day.\n2. Steam or pressure-cook until very soft (1–2 whistles).\n3. Mash lightly, or mix into khichdi or a soft tikki.\n4. Add a squeeze of lemon.', dos:['Sprouting improves iron and zinc absorption','Always cook until soft','Lemon adds vitamin C'], donts:['Never raw or lightly cooked sprouts — food-poisoning risk for children','Don\'t serve whole firm sprouts — mash or split them (whole beans are a choking risk)','No salt'] },
   'dhokla':        { recipe:'1. Make home besan batter with curd and water; ferment 4–6 hours.\n2. Steam 12–15 min until a toothpick comes out clean.\n3. Cool, cut into soft ½-inch cubes.\n4. Temper lightly with ghee and mustard seeds only if she handles them.', dos:['Fermented — soft and easy on gums','Home-made lets you skip sugar and extra salt','Good finger food'], donts:['Skip the sugar-water syrup poured over shop khaman','No green chilli tempering','Avoid instant mixes — high in salt and soda'] },
   'makhana':       { recipe:'1. Dry-roast ¼ cup makhana on low until crisp.\n2. Cool and grind to a fine powder.\n3. Stir 1–2 tsp into porridge, kheer (unsweetened) or khichdi.', dos:['Powdered makhana is a safe way to include it','Or simmer in milk until fully soft and mash','Store powder airtight'], donts:['Never whole roasted makhana for a toddler — a choking hazard','No sugar or salt coating','Don\'t give flavoured packet makhana'] },
   'kodo':          { recipe:'1. Wash and soak 2 tbsp kodo millet 2–4 hours.\n2. Pressure cook with 1 tbsp moong dal and 1 cup water, pinch of turmeric — 4 whistles.\n3. Mash well, add ½ tsp ghee and a boiled vegetable.', dos:['Swap for rice a few times a week (ICMR-NIN: millets for children)','Millet + dal = complete protein','Soaking softens it and lowers phytates'], donts:['Buy clean, well-stored grain — discard any mouldy or musty kodo','Don\'t serve loose dry grains — mash or bind them','No salt'] },
   'egg':           { recipe:'1. Beat 1 egg with 1 tbsp milk.\n2. Scramble in ½ tsp ghee on low heat, stirring until fully set — no runny parts.\n3. Break into small soft pieces; add a pinch of pepper if she likes.', dos:['Complete protein, choline and B12','WHO: an animal-source food every day','Hard-boiled egg chopped small also works'], donts:['Never runny or raw egg','Don\'t add salt','Don\'t give large chunks of hard-boiled white'] },
-  'cow milk':      { recipe:'1. Boil or use pasteurised full-fat milk; cool to warm.\n2. Offer in an open cup or straw cup with meals or snacks.\n3. Aim for about 350–500 ml a day across milk, curd and paneer.', dos:['Whole (full-fat) milk up to age 2','Offer in a cup, not a bottle','Milk is rich in calcium but low in iron — keep iron foods in her meals'], donts:['Don\'t go above about 500 ml a day — it crowds out iron-rich food','No sugar, malt or "health drink" powders','No skimmed or toned milk as her main drink before 2'] },
-  'mustard greens':{ recipe:'1. Wash sarson (with a little palak or bathua) 3–4 times.\n2. Pressure cook until very soft; blend.\n3. Temper with ½ tsp ghee, a pinch of garlic; thicken with 1 tsp makki atta.\n4. Serve with soft roti torn small.', dos:['Calcium and vitamin A from greens','Ghee helps absorb vitamin A','Cook thoroughly and blend smooth'], donts:['Keep salt to a pinch','Skip the heavy butter topping for her','No green chilli'] },
-  'methi':         { recipe:'1. Wash and finely chop 2 tbsp methi leaves.\n2. Knead into atta dough with a little ghee and curd.\n3. Roll thin, cook soft on the tawa.\n4. Tear into small pieces.', dos:['Iron + calcium from methi (IFCT)','Pair with curd — pleasant with the slight bitterness','Chop leaves very fine'], donts:['Don\'t cook the thepla crisp','Keep salt to a pinch','Introduce in small amounts — bitter taste'] },
-  'guava':         { recipe:'1. Pick a ripe, soft guava.\n2. Peel if the skin is tough; cut in half and scoop out ALL the seeds.\n3. Serve thin slices, or steam 3–4 min and mash.', dos:['Very high vitamin C — boosts iron from dal or ragi in the same meal (ICMR-NIN)','Ripe fruit is softer','Pair with a millet or dal meal'], donts:['Never give the hard seeds','Avoid hard, unripe guava chunks — a choking risk','No chaat masala or salt'] },
+  'cow milk':      { recipe:'1. Boil or use pasteurised full-fat milk; cool to warm.\n2. Offer in an open cup or straw cup with meals or snacks.\n3. Aim for about 350–500 ml a day across milk, curd and paneer.', dos:['Whole (full-fat) milk up to age 2','Offer in a cup, not a bottle','Milk is rich in calcium but low in iron — keep iron foods in her meals'], donts:['Don\'t go above about 500 ml a day — it crowds out iron-rich food','No sugar, malt or "health drink" powders','No skimmed or double-toned milk as her main drink before 2'] },
+  'mustard greens':{ recipe:'1. Wash sarson (with a little palak or bathua) 3–4 times.\n2. Pressure cook until very soft; blend.\n3. Temper with ½ tsp ghee, a pinch of garlic; thicken with 1 tsp makki atta.\n4. Serve with soft roti torn small.', dos:['Calcium and vitamin A from greens','Ghee helps absorb vitamin A','Cook thoroughly and blend smooth'], donts:['No salt in her portion — take it out before salting','Skip the heavy butter topping for her','No green chilli'] },
+  'methi':         { recipe:'1. Wash and finely chop 2 tbsp methi leaves.\n2. Knead into atta dough with a little ghee and curd.\n3. Roll thin, cook soft on the tawa.\n4. Tear into small pieces.', dos:['Iron + calcium from methi (IFCT)','Pair with curd — pleasant with the slight bitterness','Chop leaves very fine'], donts:['Don\'t cook the thepla crisp','No salt in her portion — take it out before salting','Introduce in small amounts — bitter taste'] },
+  'guava':         { recipe:'1. Pick a ripe, soft guava.\n2. Peel if the skin is tough; cut in half and scoop out ALL the seeds.\n3. Serve very ripe, soft pieces, or steam 3–4 min and mash.', dos:['Very high vitamin C — boosts iron from dal or ragi in the same meal (ICMR-NIN)','Ripe fruit is softer','Pair with a millet or dal meal'], donts:['Never give the hard seeds','Avoid hard, unripe guava chunks — a choking risk','No chaat masala or salt'] },
   'litchi':        { recipe:'1. Peel a ripe litchi.\n2. Remove the seed completely.\n3. Cut the flesh into small pieces, lengthwise.\n4. Serve only after she has eaten a meal.', dos:['Ripe fruit only','A few pieces at a time','Seasonal treat (May–June)'], donts:['Never whole — round and slippery, it can block the airway','Never on an empty stomach, and never many — litchi-linked illness in Bihar affected children who skipped meals','Never unripe litchi or the seed'] },
   'uttapam':       { recipe:'1. Use home idli/dosa batter.\n2. Spread thick on the tawa; top with finely grated carrot and tomato.\n3. Cook covered on low until soft on both sides.\n4. Cut into strips.', dos:['Fermented and soft — good with 4 teeth','Add vegetables for colour and vitamins','Serve with plain curd or mild sambar'], donts:['Don\'t make it crisp','Keep sambar low in salt and spice','No store-bought ready batter with added salt'] },
 };
@@ -23257,17 +23271,15 @@ const FOOD_SYNERGIES_ADD_12_24 = [
 const SEASONAL_AVAILABILITY_ADD_12_24 = {
   'chiku':          { months:[0,1,2,3,9,10,11], availability:'peak', other:'available' },
   'custard apple':  { months:[7,8,9,10], availability:'peak' },
-  'sitaphal':       { months:[7,8,9,10], availability:'peak' },
   'mustard greens': { months:[10,11,0,1], availability:'peak' },
   'bathua':         { months:[11,0,1], availability:'peak' },
   'methi':          { months:[10,11,0,1,2], availability:'peak', other:'available' },
   'amaranth leaves':{ months:[2,3,4,5,6,7,8], availability:'peak', other:'available' },
 };
 
-// ── 10. SAFE FORM (choking) for a 4-tooth, 12–24 m toddler — PROPOSED sidecar ─
-// Same shape as FOOD_EFFECTS[*].safeForm {glance, ok[], never[]} so a later Library card can render it.
-// No runtime consumer exists yet — until one does, the key lines are folded into COMBO_RECIPES dos/donts
-// above (which already render). Molars (for grinding) arrive ~16–29 m (data.js choking record); with 4
+// ── 10. SAFE FORM (choking) for a 4-tooth, 12–24 m toddler ─
+// A per-food safe-form sidecar is deferred (docs/BUGS.md); the key lines live in the COMBO_RECIPES
+// dos/donts above and each toddler recipe's choking[] list, which render today. Molars (for grinding) arrive ~16–29 m (data.js choking record); with 4
 // incisors she bites but cannot grind, so the rule is: soft enough to squash between finger and thumb,
 // ≤ ½ inch (AAP-CH), round foods quartered lengthwise, hard foods grated/cooked soft/ground.
 
@@ -23304,9 +23316,6 @@ function _mergeFoodLib1224() {
   });
   return added;
 }
-// In recipes.js the call would be a bare top-level statement after the declarations:
-//   window._FOOD_LIB_1224_MERGE = _mergeFoodLib1224();   // the return value is a debug/audit record
-
 const _FOOD_LIB_1224_MERGE = _mergeFoodLib1224();  // debug/audit record of what was added
 
 // Export on window — mirrors the data.js `window.CURATED_COMBOS = …` pattern so
@@ -23493,6 +23502,8 @@ function _getFatBearingFoodNames() {
   }
   // Indian-prep augmentation: paratha carries ghee in default preparation.
   if (out.indexOf('paratha') < 0) out.push('paratha');
+  // Plain "milk" — the word parents actually log — carries fat like whole milk (V-K-270-11).
+  if (out.indexOf('milk') < 0) out.push('milk');
   _fatBearingFoodNamesCache = out;
   return out;
 }
@@ -27692,6 +27703,20 @@ function getFoodEffect(name) {
   return eff;
 }
 
+// Age-aware view of a FOOD_EFFECTS record for RENDER surfaces (Ceres V-C-270-9 /
+// Maren M-S2 / Kael V-K-270-12). From 12 m honey's botulism risk falls to very low and
+// its remaining reason is added sugar, so the "before 12 months" headline and the
+// botulism watch-floor must not reach a toddler's parent. From 24 m the sugar gate has
+// passed: no card at all (null) — honey is an ordinary food with an AGE_RULES `after`
+// line. Every other record, and honey under 12 m, is returned unchanged (same object).
+function foodEffectForAge(eff, mo) {
+  if (!eff || typeof FOOD_EFFECTS === 'undefined' || eff !== FOOD_EFFECTS['honey'] || !(mo >= 12)) return eff;
+  if (mo >= 24) return null;
+  return Object.assign({}, eff, { watchFor: [], severeSigns: [], seekCare: '',
+    title: 'Honey waits until 2 — it counts as added sugar',
+    why: 'After the first birthday the botulism risk falls to very low, but honey is an added sugar — like jaggery, it waits until 2.' });
+}
+
 // Combo-result schema tag (food-effects v2 R1, M-R1-1). The combo checker caches
 // results in localStorage (comboHistory, unversioned). A result cached BEFORE R1
 // lacks the emergency-floor fields (toxin / severe_floors / encourage); rendering
@@ -27700,8 +27725,10 @@ function getFoodEffect(name) {
 // (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
 // 'r1-fe-a24' (2026-09-24, Ceres V-C-266-1): bumped when the added-sugar gates moved 12 → 24 m, so
 // every result cached under the old gates (jaggery / sugar "safe" at 12 m) is recomputed once.
+// 'r1-fe-a24-t3' (Maren #270 B2): bumped for the 12–24 m food-library gates (gajak/chikki 48,
+// ragi biscuit 24, juice 12, chai/namkeen/papad/sharbat 24) and the age-aware honey framing.
 // Bump it again whenever an AGE_RULES gate tightens.
-const COMBO_RESULT_SCHEMA = 'r1-fe-a24';
+const COMBO_RESULT_SCHEMA = 'r1-fe-a24-t3';
 
 // A cached combo result is reusable only if it carries the current schema AND was computed at her
 // current age in whole months — verdicts are age-gated, so a result from last month can be wrong
@@ -28119,14 +28146,18 @@ const DIET_PREF_LABEL = {
 // synonyms the combo-checker sees (lamb/pork/beef → meat; crab → seafood) so the gate classifies
 // every animal food the app references from one source.
 const NONVEG_TOKEN_SID = {
-  egg: 'eggs',
-  chicken: 'poultry',
+  egg: 'eggs', eggs: 'eggs', anda: 'eggs', omelette: 'eggs',
+  chicken: 'poultry', murgi: 'poultry', murga: 'poultry',
   fish: 'fish', prawn: 'fish', shrimp: 'fish', crab: 'fish', seafood: 'fish',
-  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat',
+  // 12–24 m vocabulary (Kael V-K-270-10): Indian fish + shellfish names parents log.
+  shellfish: 'fish', prawns: 'fish', jhinga: 'fish', chingri: 'fish', kekda: 'fish', lobster: 'fish',
+  rohu: 'fish', katla: 'fish', pomfret: 'fish', bangda: 'fish', hilsa: 'fish', ilish: 'fish',
+  sardine: 'fish', salmon: 'fish', machli: 'fish', machhli: 'fish',
+  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat', keema: 'meat',
 };
 // Resolve a food NAME to its non-veg sid, or null if it is not a non-veg food. WORD-BOUNDARY
 // matched (not substring) so "Egg yolk"/"Chicken (puree)" classify but "eggplant" does NOT, and
-// "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
+// "shellfish" does NOT match \bfish\b — it has its own token above (a pescatarian set allows it).
 function _dietNonvegSid(name) {
   const n = String(name || '').toLowerCase();
   // First-match-wins (K-214-1): intentional and surfacing-safe. The nonveg-category items this
@@ -32439,16 +32470,16 @@ function renderRecoFood() {
       tips:'{{OK}} Gluten-free — safe for sensitive babies.\n{{OK}} Higher protein than rice.\n{{NO}} Stir continuously to prevent lumps.\n{{NO}} Don\'t make too thick — should be pourable.' },
     { icon:zi('bowl'), name:'Bajra porridge', reason:'Iron + zinc rich millet — great for growth', newFood:'bajra',
       recipe:'1. Dry roast 1 tbsp bajra flour 2 min.\n2. Add ½ cup water, stir well.\n3. Cook 5–6 min on low.\n4. Add ghee + jaggery-free date paste for sweetness.',
-      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Warming food — great for winter.\n{{NO}} Don\'t give in very hot weather — it\'s heating.\n{{NO}} Introduce after 7 months.' },
+      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Pair with amla, lemon or tomato — vitamin C helps her absorb the iron.\n{{NO}} Cook it well — raw or lumpy millet is hard to digest.\n{{NO}} Introduce after 7 months.' },
     { icon:zi('spoon'), name:'Chiku puree', reason:'Natural sweetness + iron + calcium', newFood:'chiku',
       recipe:'1. Choose a ripe, soft chiku.\n2. Peel, remove seeds, scoop out 2–3 tbsp flesh.\n3. Mash smooth with fork.\n4. Serve immediately.',
       tips:'{{OK}} Naturally one of the sweetest fruits.\n{{OK}} Contains iron — unusual for a fruit.\n{{NO}} Always remove ALL seeds — choking hazard.\n{{NO}} Only use very ripe ones — unripe causes irritation.' },
     { icon:zi('drop'), name:'Watermelon juice (sips)', reason:'Hydrating + Vit C — refreshing on warm days', newFood:'watermelon',
       recipe:'1. Cut 3–4 small cubes of seedless watermelon.\n2. Mash through a strainer to extract juice.\n3. Offer 2–3 tsp in a cup — not a bottle.',
       tips:'{{OK}} Best hydration food in hot weather.\n{{OK}} Natural electrolytes.\n{{NO}} Don\'t give in large quantities — mostly water.\n{{NO}} Remove every seed — choking risk.' },
-    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Iron + Vit C — boosts haemoglobin', newFood:'pomegranate',
+    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Vitamin C — helps her absorb iron from the meal', newFood:'pomegranate',
       recipe:'1. Extract seeds from ¼ pomegranate.\n2. Blend lightly and strain for juice.\n3. Offer 2–3 tsp diluted with equal water.',
-      tips:'{{OK}} One of the best iron + Vit C combos.\n{{OK}} Helps with anaemia prevention.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Dilute for babies — pure juice is too strong.' },
+      tips:'{{OK}} Vitamin C helps her absorb iron from the same meal.\n{{OK}} Offer it in an open cup with a meal, never a bottle.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Whole fruit is better — keep juice to a few spoonfuls.' },
     { icon:zi('spoon'), name:'Kiwi mash', reason:'Vitamin C powerhouse — great iron-absorption booster', newFood:'kiwi',
       recipe:'1. Peel 1 ripe kiwi, scoop flesh.\n2. Mash with fork — seeds are fine to eat.\n3. Serve 1–2 tbsp.',
       tips:'{{OK}} Highest Vit C per gram of any common fruit.\n{{OK}} Serve after ragi/dal meals for iron boost.\n{{NO}} May cause mouth tingling — start small.\n{{NO}} Avoid if family has allergy history.' },
@@ -32477,7 +32508,7 @@ function renderRecoFood() {
       recipe:'1. Use homemade idli batter (rice + urad dal).\n2. Steam mini idlis 10 min.\n3. Mash with sambar water or curd.\n4. Add ghee.',
       tips:'{{OK}} Fermentation creates natural probiotics.\n{{OK}} Soft texture — easy for gums.\n{{NO}} Don\'t give with spicy sambar — use plain dal water.\n{{NO}} Homemade batter preferred — no preservatives.' },
     { icon:zi('spoon'), name:'Grape mash (seedless)', reason:'Vitamin C + antioxidants — juicy finger food', newFood:'grapes',
-      recipe:'1. Wash 8–10 seedless grapes thoroughly.\n2. Cut each grape into quarters lengthwise (halves are still a choking risk).\n3. Mash lightly with fork or serve as halves for BLW.\n4. Can also blend into puree.',
+      recipe:'1. Wash 8–10 seedless grapes thoroughly.\n2. Cut each grape into quarters lengthwise (halves are still a choking risk).\n3. Serve the quarters as finger food, or mash lightly with a fork.\n4. Can also blend into puree.',
       tips:'{{OK}} Always cut lengthwise — round shape is a choking hazard.\n{{OK}} Green, black, or red — all equally nutritious.\n{{NO}} NEVER give whole or halved grapes — quarter them lengthwise until age 5.\n{{NO}} Remove skin if baby struggles with texture.' },
     { icon:zi('spoon'), name:'Strawberry mash', reason:'Vitamin C powerhouse — bright colour babies love', newFood:'strawberry',
       recipe:'1. Wash 3–4 ripe strawberries.\n2. Remove stems, mash with fork.\n3. Serve 1–2 tbsp — can mix with curd.\n4. For first time, serve alone to check reaction.',
@@ -35907,8 +35938,10 @@ function parseMealNutrition(mealStr) {
   const lower = mealStr.toLowerCase();
   const matched = [];
   // Check built-in database
+  // Whole words (Kael V-K-270-5): "egg" must not score inside "veggies" or "eggplant",
+  // nor "fish" inside "shellfish" — false protein credit hides a real gap.
   Object.entries(NUTRITION).forEach(([key, val]) => {
-    if (lower.includes(key)) matched.push({ food:key, ...val });
+    if (_foodWordHit(lower, key)) matched.push({ food:key, ...val });
   });
   // Also check cached AI lookups
   Object.entries(nutritionCache).forEach(([key, val]) => {
@@ -42411,13 +42444,10 @@ function _categorizeFoods() {
     const base = _baseFoodName(lower);
     let placed = false;
     // Try exact key match first, then base food match, then substring
-    for (const { key, pid, sid } of _foodTaxFlat) {
-      if (lower === key || base === key || lower.includes(key) || key.includes(base)) {
-        grouped[pid][sid].push({ ...f, _i: i });
-        placed = true;
-        break;
-      }
-    }
+    // Exact passes run over the WHOLE taxonomy before any substring pass (Kael V-K-270-7).
+    const hit = _foodTaxFlat.find(t => lower === t.key || base === t.key)
+             || _foodTaxFlat.find(t => lower.includes(t.key) || t.key.includes(base));
+    if (hit) { grouped[hit.pid][hit.sid].push({ ...f, _i: i }); placed = true; }
     if (!placed && cachedCats[lower]) {
       const cat = cachedCats[lower];
       if (grouped[cat]) {
@@ -42805,8 +42835,13 @@ function _fdIsFoodTried(name) {
 // (getFoodEffect) — one food-name matching rule across the project, not two.
 // Word-boundary (not substring) retires the honeydew-class door: a name only
 // matches an ALLERGENS key on a whole word (V-K-30 word-boundary doctrine).
+// Memoised by name (Kael V-K-270-14): the tables are fixed once the recipes.js overlay has
+// merged at parse time, and the Library's age filter resolves ~200 names per tap.
 function _fdAllergenNote(name) {
-  return _lookupByFoodName(ALLERGENS, name);
+  const memo = _fdAllergenNote._m || (_fdAllergenNote._m = new Map());
+  const k = String(name);
+  if (!memo.has(k)) memo.set(k, _lookupByFoodName(ALLERGENS, name));
+  return memo.get(k);
 }
 
 // Resolve an age-gate rule {minMonth, reason} for a food name — the STRICTEST gate the name
@@ -42815,12 +42850,16 @@ function _fdAllergenNote(name) {
 // ever tightens a resolved gate: a name the guards below deliberately null out (high-mercury
 // fish) stays null rather than inheriting a looser companion gate.
 function _fdAgeRule(name) {
+  const memo = _fdAgeRule._m || (_fdAgeRule._m = new Map());   // memoised — see _fdAllergenNote
+  const k = String(name);
+  if (memo.has(k)) return memo.get(k);
   const rule = _fdAgeRuleFirst(name);
-  if (!rule || typeof _lookupAllByFoodName !== 'function') return rule;
+  if (!rule || typeof _lookupAllByFoodName !== 'function') { memo.set(k, rule); return rule; }
   let strictest = rule;
   _lookupAllByFoodName(AGE_RULES, name).forEach(r => {
     if (r && typeof r.minMonth === 'number' && r.minMonth > strictest.minMonth) strictest = r;
   });
+  memo.set(k, strictest);
   return strictest;
 }
 
@@ -42866,7 +42905,10 @@ function _fdAgeRuleFirst(name) {
     const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(name) : null;
     const fc = eff && eff.foodClass;
     const isChokingForm = Array.isArray(fc) ? fc.indexOf('choking-by-form') !== -1 : fc === 'choking-by-form';
-    if (isChokingForm) return _lookupByFoodName(AGE_RULES, 'whole nut') || rule;
+    // Nuts only (V-C-270-8): "whole corn" / "whole chana" are choking-by-form too,
+    // but must keep their own rule, never the nut reason.
+    const isNut = eff === FOOD_EFFECTS['peanut'] || eff === FOOD_EFFECTS['tree nut'];
+    if (isChokingForm && isNut) return _lookupByFoodName(AGE_RULES, 'whole nut') || rule;
   }
   return rule;
 }
@@ -43165,7 +43207,7 @@ function _recipeIngredientSafety(name, ageMonths) {
   const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
   const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
   const aged = ageR && ageR.minMonth > ageMonths;
-  const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+  const eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), ageMonths) : null;
   const floor = (eff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(eff) : '';
   let h = '';
   if (floor) {
@@ -43189,15 +43231,19 @@ function _recipeIngredientSafety(name, ageMonths) {
 // Safety row expands (age-gate ▸ allergen/severe-floor ▸ clear), so the summary
 // and the detail can never drift. Maren jurisdiction. Returns { level, icon, text }.
 function _recipeSafetySummary(r, ageMonths) {
-  const aged = []; const gates = new Set(); let agedMin = 0; const watch = [];
+  const aged = []; const gates = new Set(); let agedMin = 0; const watch = []; const choke = [];
   for (const ing of (r.ingredients || [])) {
     const lower = String(ing.name).toLowerCase().trim();
     const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
     if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); gates.add(ageR.minMonth); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
-    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+    const eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), ageMonths) : null;
     const hasFloor = !!(eff && typeof _severeFloorHtml === 'function' && _severeFloorHtml(eff));
     const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
-    if (hasFloor || allerg) watch.push(ing.name);
+    // A food whose hazard is its SHAPE (grapes) needs cutting, not the allergen
+    // ladder's "watch for 3 days" (V-C-270-2 / M-S3).
+    const shapeOnly = !allerg && eff && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
+    if (shapeOnly) choke.push(ing.name);
+    else if (hasFloor || allerg) watch.push(ing.name);
   }
   if (aged.length) {
     const names = [...new Set(aged)].join(', ');
@@ -43208,8 +43254,13 @@ function _recipeSafetySummary(r, ageMonths) {
       : `not before ${agedMin} months. See Safety below for the full guidance`;
     return { level: 'flag', icon: 'warn', text: `${names} — ${tail}.` };
   }
-  if (watch.length) return { level: 'caution', icon: 'note',
-    text: `Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.` };
+  const lead = [];
+  if (watch.length) lead.push(`Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.`);
+  if (choke.length) {
+    const c = [...new Set(choke)];
+    lead.push(`${c.join(', ')} — cut ${c.length > 1 ? 'them' : 'it'} as shown in "Make it safe to chew" below.`);
+  }
+  if (lead.length) return { level: 'caution', icon: 'note', text: lead.join(' ') };
   return { level: 'safe', icon: 'check',
     text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
 }
@@ -43258,19 +43309,26 @@ function _recipeDetailHtml(r, ageMonths) {
     const effMin = _recipeEffectiveMinAge(r);
     const gated = effMin && effMin > ageNow;
     const servAge = gated ? effMin : ageNow;
-    // Toddler recipes carry their own portion (household measures); others use the age band.
-    const serving = (!gated && r.portion) ? r.portion : _recipeServing(r.slot, servAge);
+    // Toddler recipes carry their own portion (household measures, ICMR-NIN 1–3 y chart);
+    // the age-band amount (WHO/PAHO · IAP) rides alongside so the two never read as one
+    // figure (V-C-270-5 / M-S5). Others use the age band alone.
+    const own = !gated && r.portion;
+    const band = _recipeServing(r.slot, servAge);
+    const serving = own ? `${r.portion}. A toddler ${r.slot === 'snack' ? 'snack' : 'meal'} is ${band}` : band;
     const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
-    // M-1 (Maren): the amount is a WHO/PAHO/IAP figure — anchor its OWN source on
-    // the line, independent of the recipe's r.source (which often cites other bodies).
-    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">WHO/PAHO · IAP</span></span></div>`;
+    // M-1 (Maren): anchor the amount's OWN source on the line, independent of r.source.
+    const src = own ? 'ICMR-NIN · WHO/PAHO · IAP' : 'WHO/PAHO · IAP';
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
   }
   // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
   let rows = '';
   // Toddler recipes: how to make each piece safe to chew for a toddler without molars.
   if (Array.isArray(r.choking) && r.choking.length) {
-    const body = `<div class="combo-dos">${r.choking.map(c => `<div class="do">${zi('check')} ${escHtml(c)}</div>`).join('')}</div>`;
-    rows += _recipeProw('chew', 'shield', 'Make it safe to chew', `${r.choking.length} prep ${r.choking.length === 1 ? 'step' : 'steps'}`, body, false);
+    // Neutral numbered prep list (never a green tick beside "never …", M-S4), a tooth
+    // glyph distinct from the Safety row (N7), and open by default — choking prep is
+    // safety content, not something to find behind a tap (V-C-270-3 / M-S3).
+    const body = `<ol class="recipe-steps">${r.choking.map(c => `<li>${escHtml(c)}</li>`).join('')}</ol>`;
+    rows += _recipeProw('chew', 'tooth', 'Make it safe to chew', `${r.choking.length} prep ${r.choking.length === 1 ? 'step' : 'steps'}`, body, true);
   }
   if (r.steps && r.steps.length) {
     const body = `<ol class="recipe-steps">${r.steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>`;
@@ -43395,7 +43453,10 @@ function _recipeSuggestForZiva(surfaced, ageMonths) {
   const gapGroups = new Set(gaps.map(g => g.group));
   const subGapGroups = new Set(subGaps.map(g => g.group));
   const gapWhy = {};
-  gaps.forEach(g => { gapWhy[g.group] = g.suggestion || ('More ' + (g.label || g.group).toLowerCase() + ' this week'); });
+  // From 1 the infant-era group suggestions ("try carrot purée…") would caption a family
+  // recipe wrongly (Vela V-V-270-8) — say which gap the recipe fills instead.
+  gaps.forEach(g => { gapWhy[g.group] = (ageMonths >= 12 || !g.suggestion)
+    ? ('Fills this week\'s ' + (g.label || g.group).toLowerCase() + ' gap') : g.suggestion; });
   const untried = (typeof getUntriedSuggestions === 'function') ? (getUntriedSuggestions(8) || []) : [];
   const untriedNames = new Set(untried.map(u => (u.name || '').toLowerCase()));
   const untriedWhy = {};
@@ -43417,6 +43478,11 @@ function _recipeSuggestForZiva(surfaced, ageMonths) {
     }
     // age-fit tiebreak: a recipe close to Ziva's age scores a hair higher
     score += Math.max(0, 1 - Math.abs(ageMonths - (r.minAgeMonths || ageMonths)) * 0.05);
+    // From 1, lead with family food and keep moving her on from purées (V-C-270-6).
+    if (ageMonths >= 12) {
+      if (r.texture === 'family') score += 2;
+      else if ((r.minAgeMonths || 0) <= 8) score -= 1;
+    }
     if (!why) why = r.steps && r.steps.length ? null : '';
     return { r, score, why };
   });
@@ -43521,15 +43587,27 @@ function _recipeStepsText(r) {
 // Count how many query foods appear in a recipe's ingredient names.
 function _recipeQueryOverlap(r, rawFoods) {
   let n = 0;
+  const title = String(r.title || '').toLowerCase();
   for (const q of rawFoods) {
     const qn = String(q).toLowerCase().trim();
     if (!qn) continue;
-    if ((r.ingredients || []).some(ing => {
+    // Whole words, and the dish name counts (V-V-270-7): "idli" finds the idli
+    // recipe; "dal" no longer lands on Dalia.
+    if (_foodWordHit(title, qn) || (r.ingredients || []).some(ing => {
       const inm = ing.name.toLowerCase();
-      return inm.indexOf(qn) !== -1 || qn.indexOf(inm) !== -1;
+      return _foodWordHit(inm, qn) || _foodWordHit(qn, inm);
     })) n++;
   }
   return n;
+}
+
+// Tie-break among equal-overlap recipes (V-V-270-7): the query in the dish name
+// first, then the recipe written closest to her age (a toddler gets the family
+// version, not the 7-month purée).
+function _recipeFitRank(r, rawFoods, ageMonths) {
+  const title = String(r.title || '').toLowerCase();
+  const tHits = rawFoods.filter(q => _foodWordHit(title, String(q).toLowerCase().trim())).length;
+  return tHits * 100 - Math.abs(ageMonths - (r.minAgeMonths || 0));
 }
 
 // Best corpus recipe where EVERY query food maps to an ingredient — age- and
@@ -43537,12 +43615,14 @@ function _recipeQueryOverlap(r, rawFoods) {
 function _recipeCorpusMatch(rawFoods) {
   const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
   const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
-  let best = null; let bestScore = 0;
+  let best = null; let bestScore = 0; let bestRank = -Infinity;
   for (const r of corpus) {
     if (!_recipeAllowedForHousehold(r)) continue;
     if (_recipeEffectiveMinAge(r) > ageMonths) continue;
     const overlap = _recipeQueryOverlap(r, rawFoods);
-    if (overlap >= rawFoods.length && overlap > bestScore) { best = r; bestScore = overlap; }
+    if (overlap < rawFoods.length) continue;
+    const rank = _recipeFitRank(r, rawFoods, ageMonths);
+    if (overlap > bestScore || (overlap === bestScore && rank > bestRank)) { best = r; bestScore = overlap; bestRank = rank; }
   }
   return best;
 }
@@ -43551,12 +43631,14 @@ function _recipeCorpusMatch(rawFoods) {
 function _recipeNearest(rawFoods) {
   const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
   const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
-  let best = null; let bestScore = 0;
+  let best = null; let bestScore = 0; let bestRank = -Infinity;
   for (const r of corpus) {
     if (!_recipeAllowedForHousehold(r)) continue;
     if (_recipeEffectiveMinAge(r) > ageMonths) continue;
     const overlap = _recipeQueryOverlap(r, rawFoods);
-    if (overlap > bestScore) { best = r; bestScore = overlap; }
+    if (!overlap) continue;
+    const rank = _recipeFitRank(r, rawFoods, ageMonths);
+    if (overlap > bestScore || (overlap === bestScore && rank > bestRank)) { best = r; bestScore = overlap; bestRank = rank; }
   }
   return (best && bestScore > 0) ? { id: best.id, title: best.title } : null;
 }
@@ -43606,7 +43688,7 @@ function renderFoodDetailSheet(name) {
   // the combo result, and here). Fall back to the terse legacy string only when
   // no record exists. (Render depth — inline vs link to the γ card — is Vela's
   // Q-3 call; the severe floor's presence is the non-negotiable, M-S-6.)
-  const fdEff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+  const fdEff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), getAgeInMonths()) : null;
   const fdFloor = (fdEff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(fdEff) : '';
   // Polarity (food-effects-v2 P1c, K-6): the banner cosmetic switches off the SHARED
   // _effPolarity resolver (core.js, milk-spec §3-bis), NOT a two-state encourage/avoid
@@ -43649,6 +43731,8 @@ function renderFoodDetailSheet(name) {
   }
   if (aged) {
     html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
+  } else if (ageR && ageR.after) {
+    html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>How to give it now.</strong> ${escHtml(ageR.after)}</span></div>`;
   }
   // V-M-201: absence of an allergen note must NOT read as "cleared". When no
   // specific note AND no record floor are on file, surface the universal
@@ -43730,7 +43814,7 @@ function foodLibToggleTried(name) {
     // happened, and the record + watch-for guidance matter more than refusal.
     const _ageR = _fdAgeRule(lower);
     if (_ageR && _ageR.minMonth > getAgeInMonths()) {
-      const _eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+      const _eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), getAgeInMonths()) : null;
       foodConsequenceCard(_eff ? {
         severity: _eff.severity || 'critical', title: _eff.title, why: _eff.why,
         watchFor: _eff.watchFor, severeSigns: _eff.severeSigns, seekCare: _eff.seekCare
@@ -44182,6 +44266,17 @@ function libOpenBook(btn) {
   if (!eff) return;
   var ov = document.getElementById('libPopOv');
   if (!ov) return;
+  // Age-framed record (foodEffectForAge): past its window (honey from 2) the book
+  // opens as an ordinary food — gate + "how to give it now" — not a warning card.
+  if (typeof foodEffectForAge === 'function' && typeof getAgeInMonths === 'function') {
+    eff = foodEffectForAge(eff, getAgeInMonths());
+    if (!eff) {
+      ov.innerHTML = _libCorpusPopHtml(key, _libJourney(key));
+      ov.classList.add('open');
+      document.body.classList.add('lib-overlay-open');
+      return;
+    }
+  }
   var pol = (typeof _effPolarity === 'function') ? _effPolarity(eff) : 'inform';
   var j = _libJourney(key);
   ov.innerHTML = _libPopHtml(key, eff, pol, j);
@@ -44220,7 +44315,7 @@ function libLogServing(btn) {
   };
   var ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(key) : null;
   if (ageR && typeof getAgeInMonths === 'function' && ageR.minMonth > getAgeInMonths() && typeof foodConsequenceCard === 'function') {
-    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(key) : null;
+    var eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(key), getAgeInMonths()) : null;
     foodConsequenceCard(eff ? {
       severity: eff.severity || 'critical', title: eff.title, why: eff.why,
       watchFor: eff.watchFor, severeSigns: eff.severeSigns, seekCare: eff.seekCare
@@ -44351,8 +44446,10 @@ function _libCorpusPopHtml(name, j) {
 
   // ── 6-second body: a concrete verdict leads, then disclosure rows ──
   var verClass, verHead;
-  if (aged) { verClass = 'wait'; verHead = 'Wait — from ' + ageR.minMonth + ' months'; }
-  else if (ageR && ageR.minMonth) { verClass = 'yes'; verHead = 'Fine from ' + ageR.minMonth + ' months'; }
+  // Whole-year gates read as years ("from 5 years", not "from 60 months").
+  var gateAge = ageR ? ((ageR.minMonth >= 24 && ageR.minMonth % 12 === 0) ? (ageR.minMonth / 12) + ' years' : ageR.minMonth + ' months') : '';
+  if (aged) { verClass = 'wait'; verHead = 'Wait — from ' + gateAge; }
+  else if (ageR && ageR.minMonth) { verClass = 'yes'; verHead = 'Fine from ' + gateAge; }
   else { verClass = 'info'; verHead = 'Good to know'; }
   var rows =
     (allerg ? _libPopRow('floor lib-prow--caution', 'warn', 'Allergen — introduce with care', 'watch the first few times',
@@ -44360,7 +44457,7 @@ function _libCorpusPopHtml(name, j) {
     (aged ? _libPopRow('why', 'info', 'Why wait', '',
       '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '') +
     (!aged && ageR && ageR.after ? _libPopRow('why', 'info', 'How to give it now', '',
-      '<p class="lib-prow-p">' + escHtml(ageR.after) + '</p>', false) : '');
+      '<p class="lib-prow-p">' + escHtml(ageR.after) + '</p>', true) : '');
   var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
   if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
@@ -45283,13 +45380,13 @@ const ALL_TIPS = [
   {
     type:'info', icon:zi('bowl'),
     title:'3–4 meals and 1–2 snacks',
-    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 katori a meal. Offer, then let her appetite decide — no forcing (WHO, IAP).',
+    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 cup (a big katori, 190–250 ml) a meal. Offer, then let her appetite decide — no forcing (WHO, IAP).',
     condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'info', icon:zi('leaf'),
     title:'Five food groups a day',
-    body:'Aim for at least 5 of these 8 groups each day: breast milk · grains · dals, nuts and seeds · milk, curd and paneer · meat or fish · eggs · orange and green fruit and veg · other fruit and veg. A vegetarian day can still reach 6 (WHO/UNICEF).',
+    body:'Aim for at least 5 of these 8 groups each day: breast milk · grains · dals, nuts and seeds · milk, curd and paneer · meat or fish · eggs · orange and green fruit and veg · other fruit and veg. A vegetarian day can still reach 5 without eggs or meat — 6 with breast milk (WHO/UNICEF).',
     condition: () => getAgeInMonths() >= 12,
   },
   // ── ALLERGEN INTRODUCTION ──
@@ -45428,7 +45525,7 @@ const ALL_TIPS = [
   {
     type:'add', icon:zi('spoon'),
     title:'Expand the fruit basket',
-    body:'Beyond banana and apple, try grapes (halved!), strawberry, peach, chiku, papaya, fig, and pomegranate. Different colours = different antioxidants. Aim for 3+ fruit varieties per week.',
+    body:'Beyond banana and apple, try grapes (quartered lengthwise!), strawberry, peach, chiku, papaya, fig, and pomegranate. Different colours = different antioxidants. Aim for 3+ fruit varieties per week.',
     condition: d => {
       const fruits = ['banana','apple','pear','mango','papaya','grapes','strawberry','chiku','pomegranate','blueberry','peach','kiwi','fig','watermelon','orange'];
       const used = fruits.filter(f => countFoodsInDiary(d, [f]) > 0);
@@ -45583,6 +45680,7 @@ function checkFoodCombo() {
   let recipeText = '';
   let dos = [];
   let donts = [];
+  const afterNotes = [];
   let pairsWellWith = '';
   let nutritionHighlights = '';
 
@@ -45596,6 +45694,10 @@ function checkFoodCombo() {
       verdict = 'avoid';
       verdictEmoji = zi('warn');
       warnings.push(`${food}: ${rule.reason}`);
+    } else if (rule && rule.after) {
+      // Past the gate: the "how to give it now" line (V-C-270-7 / M-S1) — the
+      // 120 ml juice cap, whole corn kernels — never changes the verdict.
+      afterNotes.push(rule.after);
     }
   });
 
@@ -45612,7 +45714,7 @@ function checkFoodCombo() {
   let toxin = null;          // {title, why}                — acute-toxin (honey)
   let encourage = null;      // {title, whyGood, safeFormNote} — age-appropriate allergen
   rawFoods.forEach(food => {
-    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(food) : null;
+    const eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(food), mo) : null;
     const rule = _fdAgeRule(food);
     const belowFloor = !!(rule && mo < rule.minMonth);
 
@@ -45635,11 +45737,9 @@ function checkFoodCombo() {
     // the safe verdict and the collected floor are set in the same pass.
     if (eff && _effHasClass(eff, 'acute-toxin')) {
       verdict = 'avoid'; verdictEmoji = zi('warn');
-      // From 12 m honey's reason is added sugar, not botulism (V-C-266-5): the
-      // headline must not read "before 12 months" to a toddler's parent.
-      const botulismPast = eff.effect === 'infant botulism' && mo >= 12;
-      toxin = { title: botulismPast ? 'Honey waits until 2 — it counts as added sugar' : (eff.title || ''),
-                why: botulismPast ? 'The botulism risk is gone after the first birthday, but honey is an added sugar — like jaggery, it waits until 2.' : (eff.why || '') };
+      // eff is already age-framed (foodEffectForAge): from 12 m honey reads as added
+      // sugar, not "before 12 months"; from 24 m it is no longer an acute-toxin.
+      toxin = { title: eff.title || '', why: eff.why || '' };
     } else if (introEarlyOk) {
       if (verdict !== 'avoid') { verdict = 'safe'; verdictEmoji = zi('check'); }
       encourage = {
@@ -45654,6 +45754,10 @@ function checkFoodCombo() {
   rawFoods.forEach(food => {
     const norm = normalizeFoodName(food);
     const isIntroduced = introducedNormSet.has(norm) || [...introducedSet].some(f => f.includes(food) || food.includes(f));
+    // Not "introduce it alone for 3 days" for a food she should wait on, or a limit-food like
+    // salt or juice (Vela V-V-270-13) — the gate / after line already speaks for those.
+    const gateR = _fdAgeRule(food);
+    if (gateR && (mo < gateR.minMonth || gateR.after)) return;
     if (!isIntroduced && food.length > 2) {
       newFoods.push(food);
     }
@@ -45707,10 +45811,15 @@ function checkFoodCombo() {
   if (!recipeMatch && rawFoods.length === 1) recipeMatch = COMBO_RECIPES[rawFoods[0]];
   // Try partial key match
   if (!recipeMatch) {
+    // Whole-word hits (plural-tolerant), never substrings (V-C-270-13): "eggplant"
+    // must not pull the "egg" scramble, nor "eggless" an egg recipe.
+    const _tokHit = (f, kp) => _foodWordHit(f, kp) || _foodWordHit(kp, f);
     const key = Object.keys(COMBO_RECIPES).find(k => {
       const kParts = k.split(' ');
-      return rawFoods.every(f => kParts.some(kp => kp.includes(f) || f.includes(kp))) ||
-             kParts.every(kp => rawFoods.some(f => f.includes(kp) || kp.includes(f)));
+      // A query food matches a key only when EVERY word of it is in the key (Kael V-K-270-6):
+      // "oat milk" / "coconut milk" must not take the "cow milk" recipe.
+      return rawFoods.every(f => f.split(/\s+/).every(w => kParts.some(kp => _tokHit(w, kp)))) ||
+             kParts.every(kp => rawFoods.some(f => _tokHit(f, kp)));
     });
     if (key) recipeMatch = COMBO_RECIPES[key];
   }
@@ -45801,6 +45910,7 @@ function checkFoodCombo() {
   recipeText = _recAns ? _recAns.recipe : '';
   dos = _recAns ? _recAns.dos : [];
   donts = _recAns ? _recAns.donts : [];
+  if (afterNotes.length) donts = [...new Set(afterNotes)].concat(donts);
   const _recipeId = (_recAns && _recAns.kind === 'recipe') ? _recAns.recipeId : null;
   const _nearestRecipe = (_recAns && _recAns.kind === 'suggest') ? _recAns.nearest : null;
 
@@ -46156,6 +46266,22 @@ function renderComboHistory() {
   el.innerHTML = html;
 }
 
+// Whole-word food match (plural-tolerant) for the synergy pairers (Vela V-V-270-2):
+// "egg" must not hit "eggplant", while "roti" still hits "soft roti".
+// Compiled patterns are memoised per term (the meal parser runs it per NUTRITION key).
+// The cache hangs off the function itself, so an early caller never meets a TDZ binding.
+function _foodWordHit(text, term) {
+  if (!text || !term) return false;
+  const k = String(term).toLowerCase();
+  const cache = _foodWordHit._re || (_foodWordHit._re = new Map());
+  let re = cache.get(k);
+  if (!re) {
+    re = new RegExp('(^|[^a-z])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(e?s)?($|[^a-z])');
+    cache.set(k, re);
+  }
+  return re.test(String(text).toLowerCase());
+}
+
 function renderTips() {
   const list = document.getElementById('tipsList');
   const countEl = document.getElementById('tipsCount');
@@ -46183,11 +46309,13 @@ function renderTips() {
     todayFoods.forEach(food => {
       FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
         let match = null, partner = null;
-        if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
-        else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+        if (_foodWordHit(food, f1) || _foodWordHit(f1, food)) { match = f1; partner = f2; }
+        else if (_foodWordHit(food, f2) || _foodWordHit(f2, food)) { match = f2; partner = f1; }
         if (!match || !partner) return;
+        // Never push a food the household's diet preference excludes (V-M-19 / V-V-270-2).
+        if (typeof _dietAllowsFood === 'function' && !_dietAllowsFood(partner)) return;
         // Check partner not already in today's meals
-        const partnerUsed = todayFoods.some(tf => tf.includes(partner) || partner.includes(tf));
+        const partnerUsed = todayFoods.some(tf => _foodWordHit(tf, partner) || _foodWordHit(partner, tf));
         if (partnerUsed) return;
         const key = match + '|' + partner;
         if (seen.has(key)) return;
@@ -46272,6 +46400,18 @@ const _foodGroupCache = {};
 function classifyFoodToGroup(foodName) {
   const key = foodName.toLowerCase().trim();
   if (_foodGroupCache[key]) return _foodGroupCache[key];
+  // Exact / canonical-base pass first (Kael V-K-270-7): "amaranth leaves" is a leafy
+  // green, not the grain its substring "amaranth" would file it under.
+  const base = (typeof _baseFoodName === 'function') ? _baseFoodName(key) : key;
+  for (const [gid, group] of Object.entries(FOOD_TAX)) {
+    for (const [sid, sub] of Object.entries(group.subs)) {
+      if (sub.keys.indexOf(key) !== -1 || sub.keys.indexOf(base) !== -1) {
+        const result = { group: gid, sub: sid, groupLabel: group.label, subLabel: sub.label };
+        _foodGroupCache[key] = result;
+        return result;
+      }
+    }
+  }
   for (const [gid, group] of Object.entries(FOOD_TAX)) {
     for (const [sid, sub] of Object.entries(group.subs)) {
       for (const k of sub.keys) {
@@ -62790,6 +62930,7 @@ function _iqRenderPicker() {
       var matches = [];
       Object.keys(NUTRITION).forEach(function(food) {
         if (introSet.has(food)) return; // Already introduced
+        if (!(typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food))) return; // diet-preference gate (V-K-270-3)
         if (food.indexOf(query) !== -1) {
           matches.push(food);
         }
@@ -63394,6 +63535,7 @@ function qaHandleFoodSafety(classified) {
   var severeFloors = [];   // {food, eff} per food carrying a floor (Invariant 1, per-food)
   var toxin = null;        // {title, why}                — acute-toxin (honey)
   var encourage = null;    // {title, whyGood, safeFormNote} — age-appropriate allergen
+  var afterNotes = [];
   rawFoods.forEach(function(food) {
     // V-K-266-1: the strictest gate the token reaches ("milk with sugar" waits for sugar@24), via
     // the shared _fdAgeRule (diet.js) so Q&A and the combo checker / Library agree.
@@ -63402,9 +63544,11 @@ function qaHandleFoodSafety(classified) {
     if (belowFloor) {
       verdict = 'avoid';
       warnings.push(food + ': ' + rule.reason);
+    } else if (rule && rule.after) {
+      afterNotes.push(food + ': ' + rule.after);   // past the gate: how to give it now (V-V-270-4)
     }
 
-    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(food) : null;
+    var eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(food), mo) : null;
     if (eff && ((eff.severeSigns && eff.severeSigns.length) ||
                 (eff.watchFor && eff.watchFor.length) || eff.seekCare)) {
       severeFloors.push({ food: food, eff: eff });
@@ -63434,6 +63578,8 @@ function qaHandleFoodSafety(classified) {
   // 3. Introduction status
   rawFoods.forEach(function(food) {
     var base = _baseFoodName(food);
+    var gateR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(food) : null;
+    if (gateR && (mo < gateR.minMonth || gateR.after)) return;   // V-V-270-13 (see diet.js)
     if (!introducedSet.has(base) && food.length > 2) {
       newFoods.push(food);
     }
@@ -63510,6 +63656,7 @@ function qaHandleFoodSafety(classified) {
   safetyItems.push({ text: verdictText + ' for ' + mo + '-month-old', signal: verdictSignal });
   warnings.forEach(function(w) { safetyItems.push({ text: w, signal: 'warn' }); });
   allergenNotes.forEach(function(a) { safetyItems.push({ text: a, signal: 'warn' }); });
+  afterNotes.forEach(function(a) { safetyItems.push({ text: a, signal: 'info' }); });
   if (newFoods.length === 1) {
     safetyItems.push({ text: newFoods[0] + ' is new \u2014 introduce alone and watch for 3 days', signal: 'info' });
   }
@@ -66660,7 +66807,9 @@ function _qaDeepNutrientCard(nutrient) {
     var entry = NUTRITION[food];
     var hasNutrient = (entry.nutrients || []).some(function(n) { return n.toLowerCase() === nutrient; });
     var hasTag = (entry.tags || []).some(function(t) { return t.toLowerCase().indexOf(nutrient.replace(/\s+/g, '-')) !== -1; });
-    if (hasNutrient || hasTag) {
+    // Diet-preference surfacing gate (V-K-270-3): the first non-veg NUTRITION keys
+    // (egg / fish / chicken / mutton) must not be suggested to a veg household.
+    if ((hasNutrient || hasTag) && (typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food))) {
       allRichFoods.push(food);
     }
   });
@@ -66799,7 +66948,7 @@ function _qaGenericNutrientGaps() {
         // Show which foods could fill the gap
         var richFoods = [];
         Object.keys(NUTRITION).forEach(function(food) {
-          if ((NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
+          if ((typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food)) && (NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
             richFoods.push(food);
           }
         });
@@ -75106,6 +75255,10 @@ function computeIntroductionRate() {
 function getUntriedSuggestions(n) {
   n = n || 5;
   const introduced = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  // Canonical bases too (Vela V-V-270-5): a synonym key ("palak" once spinach is in) is not new.
+  const _base = n => (typeof _baseFoodName === 'function') ? _baseFoodName(n) : n;
+  const introducedBase = new Set([...introduced].map(_base));
+  const offeredBase = new Set();
   const ageM = ageAt().months;
   // V-M-19 amendment: respect the user's diet preference — non-veg foods outside the
   // preference must not surface as "Foods to Try Next." A parent who set a dietary boundary
@@ -75118,6 +75271,8 @@ function getUntriedSuggestions(n) {
   _foodTaxFlat.forEach(item => {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
+    const kb = _base(key);
+    if (introducedBase.has(kb) || offeredBase.has(kb)) return;
     // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
     // is in the current preference's allowed set. hasGate is fail-OPEN by design (V-V-31): this is
   // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
@@ -75136,6 +75291,7 @@ function getUntriedSuggestions(n) {
     const sub = group?.subs?.[item.sid];
     const nutrition = getNutrition(key);
 
+    offeredBase.add(kb);
     candidates.push({
       name: item.key,
       group: item.pid,
@@ -79894,13 +80050,13 @@ function computeSmartPairings() {
 
   FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
     // Check if both synergy foods are introduced (using normalized names)
-    const f1Introduced = introducedNormSet.has(f1) || [...introducedSet].some(f => f.includes(f1) || f1.includes(f));
-    const f2Introduced = introducedNormSet.has(f2) || [...introducedSet].some(f => f.includes(f2) || f2.includes(f));
+    const f1Introduced = introducedNormSet.has(f1) || [...introducedSet].some(f => _foodWordHit(f, f1) || _foodWordHit(f1, f));
+    const f2Introduced = introducedNormSet.has(f2) || [...introducedSet].some(f => _foodWordHit(f, f2) || _foodWordHit(f2, f));
     if (!f1Introduced || !f2Introduced) return;
 
     // Find display names for the matched foods
-    const f1Match = [...introducedSet].find(f => normalizeFoodName(f) === f1 || f.includes(f1) || f1.includes(f)) || f1;
-    const f2Match = [...introducedSet].find(f => normalizeFoodName(f) === f2 || f.includes(f2) || f2.includes(f)) || f2;
+    const f1Match = [...introducedSet].find(f => normalizeFoodName(f) === f1 || _foodWordHit(f, f1) || _foodWordHit(f1, f)) || f1;
+    const f2Match = [...introducedSet].find(f => normalizeFoodName(f) === f2 || _foodWordHit(f, f2) || _foodWordHit(f2, f)) || f2;
 
     const paired = usedSynergyKeys.has(f1 + '|' + f2);
 
@@ -80231,16 +80387,20 @@ function getSynergyPairings(rawFoods) {
   rawFoods.forEach(food => {
     FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
       let match = null, partner = null;
-      if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
-      else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+      // Whole-word matches (V-V-270-2): "eggplant" is not "egg".
+      if (_foodWordHit(food, f1) || _foodWordHit(f1, food)) { match = f1; partner = f2; }
+      else if (_foodWordHit(food, f2) || _foodWordHit(f2, food)) { match = f2; partner = f1; }
       if (!match || !partner) return;
+      if (typeof _dietAllowsFood === 'function' && !_dietAllowsFood(partner)) return;
       // Don't suggest if partner is already in the query
-      if (rawFoods.some(rf => rf.includes(partner) || partner.includes(rf))) return;
+      if (rawFoods.some(rf => _foodWordHit(rf, partner) || _foodWordHit(partner, rf))) return;
       // Age-safety check
-      const rule = AGE_RULES[partner] || AGE_RULES[partner.replace(/s$/, '')] || Object.entries(AGE_RULES).find(([k]) => partner.includes(k))?.[1];
+      // The shared strictest-gate resolver (Kael V-K-270-16), not a substring scan of AGE_RULES keys.
+      const rule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(partner)
+        : (AGE_RULES[partner] || AGE_RULES[partner.replace(/s$/, '')]);
       if (rule && mo < rule.minMonth) return;
       // Must be already introduced
-      if (![...introducedSet].some(f => f.includes(partner) || partner.includes(f))) return;
+      if (![...introducedSet].some(f => _foodWordHit(f, partner) || _foodWordHit(partner, f))) return;
       const key = partner;
       if (seen.has(key)) return;
       seen.add(key);

@@ -3664,6 +3664,10 @@ function computeIntroductionRate() {
 function getUntriedSuggestions(n) {
   n = n || 5;
   const introduced = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  // Canonical bases too (Vela V-V-270-5): a synonym key ("palak" once spinach is in) is not new.
+  const _base = n => (typeof _baseFoodName === 'function') ? _baseFoodName(n) : n;
+  const introducedBase = new Set([...introduced].map(_base));
+  const offeredBase = new Set();
   const ageM = ageAt().months;
   // V-M-19 amendment: respect the user's diet preference — non-veg foods outside the
   // preference must not surface as "Foods to Try Next." A parent who set a dietary boundary
@@ -3676,6 +3680,8 @@ function getUntriedSuggestions(n) {
   _foodTaxFlat.forEach(item => {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
+    const kb = _base(key);
+    if (introducedBase.has(kb) || offeredBase.has(kb)) return;
     // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
     // is in the current preference's allowed set. hasGate is fail-OPEN by design (V-V-31): this is
   // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
@@ -3694,6 +3700,7 @@ function getUntriedSuggestions(n) {
     const sub = group?.subs?.[item.sid];
     const nutrition = getNutrition(key);
 
+    offeredBase.add(kb);
     candidates.push({
       name: item.key,
       group: item.pid,

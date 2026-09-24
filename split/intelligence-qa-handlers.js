@@ -1976,7 +1976,9 @@ function _qaDeepNutrientCard(nutrient) {
     var entry = NUTRITION[food];
     var hasNutrient = (entry.nutrients || []).some(function(n) { return n.toLowerCase() === nutrient; });
     var hasTag = (entry.tags || []).some(function(t) { return t.toLowerCase().indexOf(nutrient.replace(/\s+/g, '-')) !== -1; });
-    if (hasNutrient || hasTag) {
+    // Diet-preference surfacing gate (V-K-270-3): the first non-veg NUTRITION keys
+    // (egg / fish / chicken / mutton) must not be suggested to a veg household.
+    if ((hasNutrient || hasTag) && (typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food))) {
       allRichFoods.push(food);
     }
   });
@@ -2115,7 +2117,7 @@ function _qaGenericNutrientGaps() {
         // Show which foods could fill the gap
         var richFoods = [];
         Object.keys(NUTRITION).forEach(function(food) {
-          if ((NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
+          if ((typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food)) && (NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
             richFoods.push(food);
           }
         });

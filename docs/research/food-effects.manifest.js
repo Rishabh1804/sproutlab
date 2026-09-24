@@ -436,7 +436,7 @@ window.FOOD_EFFECTS_MANIFEST = [
     // Only the unambiguous whole/roasted forms are hazards. The spine matches the shipped data.js
     // record so a future regen cannot re-seed the bare-'chana' leak. (Bare 'carrot'/'tomato'/'corn'
     // are likewise NOT aliased — only 'raw carrot'/'whole carrot' / 'cherry tomato'.)
-    aliases:       ['grape','grapes','whole grape','cherry tomato','cherry tomatoes','popcorn','hot dog','hotdog','sausage','hard candy','boiled sweet','lollipop','marshmallow','whole carrot','raw carrot','roasted chana','whole chana','roasted gram','bhuna chana','sev','namkeen','murukku','chakli','supari','areca nut','betel nut','makhana','fox nuts','ber','jujube','raisin','raisins','chewing gum','whole corn','corn kernels','bhutta','chikki','gajak','whole litchi','whole lychee','chivda','bhujia','mathri','jelly cubes','dry coconut pieces','whole makhana','roasted makhana'],
+    aliases:       ['grape','grapes','whole grape','cherry tomato','cherry tomatoes','popcorn','hot dog','hotdog','sausage','hard candy','boiled sweet','lollipop','marshmallow','whole carrot','raw carrot','roasted chana','whole chana','roasted gram','bhuna chana','sev','namkeen','murukku','chakli','supari','areca nut','betel nut','makhana','fox nuts','ber','jujube','raisin','raisins','chewing gum','whole corn','corn kernels','bhutta','chikki','gajak','whole litchi','whole lychee','litchi','lychee','chivda','bhujia sev','mathri','jelly cubes','dry coconut pieces','whole makhana','roasted makhana'],
     foodClass:     'choking-by-form',      // PRIMARY (first standalone) — the form IS the hazard
     severity:      'caution',              // amber card chrome; the emergency floor renders via severeSigns
     category:      'choking-hazard',

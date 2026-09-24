@@ -34,8 +34,8 @@
 //   "egg" → eggs (not "egg"≠eggplant); "rohu fish" → fish (low-mercury, not
 //   the bare-fish green leak); honey → acute-toxin avoid (never suggested).
 //
-// Jurisdiction: Kael (file/engine — concat + window export), Maren (CONTENT —
-// sources, age gates, allergen/choking forms; clinically audited at the gate).
+// Jurisdiction: Ceres (Nutrition — the corpus CONTENT: sources, age gates,
+// allergen/choking forms, portions), audited at the canon-cc-008 gate.
 // ═══════════════════════════════════════════════════════════════════════
 
 // Source shorthand — the Tier-1 authoritative bodies from RECIPE_RESEARCH.md.
@@ -502,7 +502,7 @@ const RECIPES = [
     id: 'veg-poha-ground-peanut', title: 'Veg Poha with Ground Peanut', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 12,
     texture: 'family', portion: '¾ medium katori (≈ 40 g poha, raw)',
     ingredients: [{ name: 'poha', qty: '4 tbsp thin poha (40 g)', g: 40 }, { name: 'peas', qty: '1 tbsp, cooked & squashed', g: 15 }, { name: 'carrot', qty: '1 tbsp, finely grated', g: 15 }, { name: 'peanut', qty: '1 tsp, roasted & ground to powder', g: 5 }, { name: 'lemon', qty: 'a few drops', g: 2 }, { name: 'oil', qty: '1 tsp', g: 5 }],
-    foodGroups: ['grains', 'vegs', 'nuts'], mddGroups: ['grains', 'vitA', 'otherFV'], allergens: ['peanut'], choking: ['NEVER whole peanuts (the usual poha topping) — grind to a powder', 'Squash each pea', 'Remove curry leaves and mustard seeds if she gags on them'],
+    foodGroups: ['grains', 'vegs', 'nuts'], mddGroups: ['grains', 'vitA', 'otherFV'], allergens: ['peanut'], choking: ['NEVER whole peanuts (the usual poha topping) — grind to a powder', 'Squash each pea', 'Remove curry leaves and mustard seeds from her portion'],
     cuisine: 'Indian',
     steps: [
       'Rinse thin poha until soft; drain.',
@@ -543,13 +543,13 @@ const RECIPES = [
       'Serve with soft roti strips. Take her share out before any salt or chilli goes into the family pan.',
     ],
     dos: ['Egg is an animal-source food, which WHO advises daily (meat, fish or egg)', 'Cook until both white and yolk are set', 'Keep offering egg regularly once it is tolerated'],
-    donts: ['Never runny or undercooked egg', 'No salt or green chilli in her portion', 'Hidden unless the diet preference includes egg'],
+    donts: ['Never runny or undercooked egg', 'No salt or green chilli in her portion', 'If egg is new to her, offer it on its own first and watch for 3 days'],
     source: ['who', 'nhs', 'icmr'],
   },
   {
     id: 'ragi-oats-milk-porridge-pear', title: 'Ragi–Oats Milk Porridge with Pear', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 12,
     texture: 'family', portion: '¾ medium katori (uses ~100 ml of her daily milk)',
-    ingredients: [{ name: 'ragi', qty: '1 tbsp flour (12 g)', g: 12 }, { name: 'oats', qty: '1 tbsp (12 g)', g: 12 }, { name: 'milk', qty: '½ cup whole milk (100 ml)', g: 100 }, { name: 'pear', qty: '2 tbsp, ripe, peeled, soft-diced', g: 25 }],
+    ingredients: [{ name: 'ragi', qty: '1 tbsp flour (12 g)', g: 12 }, { name: 'oats', qty: '1 tbsp (12 g)', g: 12 }, { name: 'milk', qty: '100 ml whole milk (a little under ½ cup)', g: 100 }, { name: 'pear', qty: '2 tbsp, ripe, peeled, soft-diced', g: 25 }],
     foodGroups: ['grains', 'dairy', 'fruits'], mddGroups: ['grains', 'dairy', 'otherFV'], allergens: ['cow milk'], choking: ['Use very ripe pear or stew it soft; dice small'],
     cuisine: 'Indian',
     steps: [
@@ -631,7 +631,7 @@ const RECIPES = [
   {
     id: 'chana-sweet-potato-rice', title: 'Soft Chana & Sweet Potato with Rice', slot: 'lunch', minAgeMonths: 12, prepMinutes: 40,
     texture: 'family', portion: '¾ medium katori (rice + 2 tbsp chana-shakarkandi mash)',
-    ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'chana', qty: '1 tbsp dry kabuli chana, soaked (15 g)', g: 15 }, { name: 'sweet potato', qty: '2 tbsp, diced (35 g)', g: 35 }, { name: 'tomato', qty: '1 tbsp', g: 15 }, { name: 'ghee', qty: '1 tsp', g: 5 }, { name: 'cumin', qty: 'a pinch', g: 1 }],
+    ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'chana', qty: '1 tbsp dry kabuli chana, soaked (15 g)', g: 15 }, { name: 'sweet potato', qty: '2 tbsp orange-fleshed, diced (35 g)', g: 35 }, { name: 'tomato', qty: '1 tbsp', g: 15 }, { name: 'ghee', qty: '1 tsp', g: 5 }, { name: 'cumin', qty: 'a pinch', g: 1 }],
     foodGroups: ['grains', 'vegs', 'dairy', 'spices'], mddGroups: ['grains', 'pulses', 'vitA', 'otherFV'], allergens: [], choking: ['Squash every chickpea flat — whole chana is on the app’s choking list', 'Peel chickpea skins if she gags on them'],
     cuisine: 'Indian',
     steps: [
@@ -664,7 +664,7 @@ const RECIPES = [
     id: 'rohu-fish-curry-rice', title: 'Rohu Fish Curry with Rice', slot: 'lunch', minAgeMonths: 12, prepMinutes: 25,
     texture: 'family', portion: '¾ medium katori rice + 1 tbsp flaked fish (≈ 25 g) in gravy',
     ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'rohu fish', qty: '1 small piece, deboned (25 g)', g: 25 }, { name: 'tomato', qty: '2 tbsp, puréed', g: 35 }, { name: 'bottle gourd', qty: '2 tbsp, diced', g: 25 }, { name: 'oil', qty: '1 tsp mustard oil, well heated', g: 5 }, { name: 'turmeric', qty: 'a pinch', g: 1 }],
-    foodGroups: ['grains', 'nonveg', 'vegs', 'spices'], mddGroups: ['grains', 'flesh', 'otherFV'], allergens: ['fish'], choking: ['Rohu has many fine Y-bones — flake by hand and check twice', 'Take the flesh from the thick middle cut, which has fewer small bones'],
+    foodGroups: ['grains', 'nonveg', 'vegs', 'spices'], mddGroups: ['grains', 'flesh', 'otherFV'], allergens: ['fish'], choking: ['Rohu has many fine Y-bones — flake by hand and check twice', 'Use the belly piece (peti) — it has only a few large rib bones, while the back cut (gada) is full of fine Y-bones'],
     cuisine: 'Indian (Bengal/Jharkhand)',
     steps: [
       'Rub the fish with turmeric; poach it in the gravy rather than frying.',
@@ -673,7 +673,7 @@ const RECIPES = [
       'Mash the flaked fish and lauki into soft rice with a little gravy. Take her portion out before salt or chilli.',
     ],
     dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'The local jhol, made mild'],
-    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'Hidden unless the diet preference includes fish'],
+    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new to her, watch her for about 2 hours after the first meal'],
     source: ['icmr', 'nhsbsl', 'who'],
   },
   {
@@ -755,7 +755,7 @@ const RECIPES = [
       'Serve over soft rice.',
     ],
     dos: ['Matches the ICMR-NIN 1–3 y chart ("egg ½")', 'Both white and yolk cooked firm', 'Egg gives iron and vitamin B12, which vegetarian diets can run short of'],
-    donts: ['No runny yolk', 'No salt or garam masala in her portion', 'Hidden unless the diet preference includes egg'],
+    donts: ['No runny yolk', 'No salt or garam masala in her portion', 'If egg is new to her, offer it on its own first and watch for 3 days'],
     source: ['icmr', 'who', 'nhs'],
   },
   {
@@ -825,7 +825,7 @@ const RECIPES = [
   {
     id: 'steamed-veg-sticks-chana-til-dip', title: 'Steamed Veg Sticks with Chana–Til Dip', slot: 'snack', minAgeMonths: 12, prepMinutes: 20,
     texture: 'family', portion: '4–5 soft sticks + 2 tbsp dip',
-    ingredients: [{ name: 'carrot', qty: '3–4 batons, steamed soft', g: 30 }, { name: 'sweet potato', qty: '2 batons, steamed soft', g: 25 }, { name: 'chana', qty: '2 tbsp cooked kabuli chana, puréed', g: 30 }, { name: 'sesame', qty: '½ tsp, ground (til paste)', g: 3 }, { name: 'curd', qty: '1 tbsp, to loosen', g: 20 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
+    ingredients: [{ name: 'carrot', qty: '3–4 batons, steamed soft', g: 30 }, { name: 'sweet potato', qty: '2 batons orange-fleshed, steamed soft', g: 25 }, { name: 'chana', qty: '2 tbsp cooked kabuli chana, puréed', g: 30 }, { name: 'sesame', qty: '½ tsp, ground (til paste)', g: 3 }, { name: 'curd', qty: '1 tbsp, to loosen', g: 20 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
     foodGroups: ['vegs', 'grains', 'nuts', 'dairy'], mddGroups: ['vitA', 'pulses', 'dairy'], allergens: ['sesame', 'cow milk'], choking: ['Steam carrot until a baton squashes between finger and thumb — raw carrot is a named choking food', 'Batons about finger size, not coins'],
     cuisine: 'Indian-fusion',
     steps: [
@@ -840,7 +840,7 @@ const RECIPES = [
   {
     id: 'sweet-potato-jeera-bites', title: 'Sweet Potato Jeera Bites', slot: 'snack', minAgeMonths: 12, prepMinutes: 15,
     texture: 'family', portion: '½ medium katori soft cubes',
-    ingredients: [{ name: 'sweet potato', qty: '½ small, cubed (50 g)', g: 50 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'cumin', qty: 'a pinch, roasted & ground', g: 1 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
+    ingredients: [{ name: 'sweet potato', qty: '½ small orange-fleshed, cubed (50 g)', g: 50 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'cumin', qty: 'a pinch, roasted & ground', g: 1 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
     foodGroups: ['vegs', 'dairy', 'spices'], mddGroups: ['vitA'], allergens: [], choking: ['Steam until fork-soft; cubes no bigger than a fingertip, or thick fingers she can bite'],
     cuisine: 'Indian',
     steps: [
@@ -1081,7 +1081,7 @@ function _recipeServing(slot, ageMonths) {
 
 
 // ── Toddler (12–24 m) feeding reference. Each fact carries source keys that point into
-//    RECIPE_SOURCES ∪ RECIPE_SOURCES_12_24. Frame everything as responsive feeding:
+//    RECIPE_SOURCES. Frame everything as responsive feeding:
 //    amounts are what to OFFER, never targets.
 const TODDLER_FEEDING = {
   ageBand: { minMonth: 12, maxMonth: 23 },
@@ -1132,8 +1132,8 @@ const TODDLER_FEEDING = {
       'Remove every bone from fish and meat',
       'Offer textured food and finger foods; keep moving her on from purées',
     ],
-    teethNote: 'First molars usually come in around 12 months, canines around 18 months and second molars around 24 months. ' +
-               'Until then, keep pieces soft enough to mash with her gums.',
+    teethNote: 'First molars usually come in between about 13 and 19 months, canines around 16–23 months and second molars around 23–33 months, per the ADA. ' +
+               'Until her molars are in, keep pieces soft enough to mash with her gums.',
     source: ['whopaho', 'iap16', 'nhsbsl', 'nhsteeth'],
   },
 
@@ -1156,7 +1156,7 @@ const TODDLER_FEEDING = {
       'Pulses, nuts and seeds often, especially when meat/fish/eggs or vegetables are limited (e.g. vegetarian days)',
     ],
     indiaFive: 'ICMR-NIN (India) version: 5 foods every day — cereals/millets · pulses/egg/meat · nuts & oilseeds · breast milk/milk & milk products · vegetables/greens & fruit',
-    vegetarianNote: 'On a vegetarian day she can still reach 5 of 8 without flesh or eggs: breast milk + grains + pulses + dairy + both fruit/veg groups = 6.',
+    vegetarianNote: 'On a vegetarian day she can still reach 5 of 8 without flesh or eggs: grains + pulses + dairy + both fruit/veg groups = 5, or 6 with breast milk.',
     source: ['whoiycf', 'who', 'icmr'],
   },
 
@@ -1165,7 +1165,7 @@ const TODDLER_FEEDING = {
     breastfeeding: 'Continue breastfeeding to 2 years or beyond',
     cowMilk: 'From 12 months, pasteurised whole cow’s (or buffalo) milk can be her main drink alongside breast milk and water; curd and plain yoghurt also count',
     amount: 'About 350 ml/day of milk/curd (ICMR-NIN). If she is not breastfed, ~300–500 ml/day, or ~200–400 ml if she eats other animal foods regularly, per WHO guidance',
-    ceiling: 'Keep total cow’s milk to about 500 ml/day or less so it does not displace iron-rich foods (synthesised ceiling — see flag F1)',
+    ceiling: 'Keep total cow’s milk to about 500 ml/day or less so it does not displace iron-rich foods (a synthesised ceiling)',
     cup: 'Offer it in an open or free-flow cup, not a bottle — move off bottles after 1',
     fullFat: 'Whole (full-fat) milk and dairy until 2',
     avoid: [
@@ -1195,9 +1195,8 @@ const TODDLER_FEEDING = {
 // (diet.js _foodTaxFlat / _FD_SEARCH_INDEX, home.js _synergyIndex), so no cache
 // invalidation is needed. Corrections to EXISTING rules and every FOOD_EFFECTS
 // change live in data.js itself (the source-reading safety gates read them there).
-//  DRAFT — Food Library expansion for 12–24 months (Ceres jurisdiction)
-//  Status: RESEARCH DRAFT, not wired. Proposed home: split/recipes.js (Ceres),
-//  merged into the data.js tables at parse time by _mergeFoodLib1224() below.
+//  Food Library expansion for 12–24 months (Ceres jurisdiction), merged into the
+//  data.js tables at parse time by _mergeFoodLib1224() below.
 //  Drafted 2026-09-24 for Ziva (12.7 mo, 4 teeth, Jamshedpur).
 // 
 //  ── SOURCES (all fetched 2026-09-24) ─────────────────────────────────────
@@ -1352,9 +1351,6 @@ const NUTRITION_ADD_12_24 = {
   'bathua':         { nutrients:['calcium','fibre'], tags:['bone-health','digestive'], chem:{ fibre:'mixed', antiNutrients:['oxalates'] } },
 };
 
-// Reference numbers (per 100 g edible portion, IFCT 2017). NOT merged — for the Ceres/Maren review and a
-// possible future quantitative field. [code, protein g, calcium mg, iron mg]; verify:true = re-read the page.
-
 const FOOD_ALIASES_ADD_12_24 = {
   'palak': 'spinach',
   'methi leaves': 'methi', 'fenugreek leaves': 'methi', 'methi saag': 'methi',
@@ -1399,10 +1395,10 @@ const FOOD_TAX_KEYS_ADD_12_24 = {
   'grains.millets':   ['kodo', 'little millet', 'foxtail millet', 'barnyard millet'],
   'grains.dals':      ['besan'],
   'grains.prepared':  ['chilla', 'dhokla', 'appam'],
-  'vegs.leafy':       ['chaulai', 'lal saag', 'saag'],
+  'vegs.leafy':       ['amaranth leaves', 'saag'],  // chaulai / lal saag are amaranth-leaf aliases, not new foods (V-V-270-5)
   'dairy.dairy':      ['cow milk', 'buffalo milk'],
   'nonveg.fish':      ['rohu', 'katla', 'pomfret', 'bangda', 'hilsa', 'ilish'],
-  'nonveg.meat':      ['goat'],
+  // No goat/meat key: the taxonomy's substring pass would file "oat" under meat (V-V-270-9); mutton covers it.
 };
 
 // ── 4. AGE_RULES — NEW keys only (add-if-absent). Shape: { minMonth, reason, aliases? } ─
@@ -1411,19 +1407,24 @@ const FOOD_TAX_KEYS_ADD_12_24 = {
 // 'sev' does not hit 'sevai'; 'cake' does not hit 'pancake'; 'achar' does not hit 'achari paneer'.
 const AGE_RULES_ADD_12_24 = {
   // WHO23 Rec 5b (SSBs should not be consumed); NIN24 (no added sugar <2; commercial juices avoided); AAP-DR.
-  'fruit drink': { minMonth:24, aliases:['juice drink','packaged juice','tetra pack juice','boxed juice','mango drink','fruit nectar','fruit squash','squash drink','sharbat','sherbet','cold drink','soft drink','fizzy drink','aerated drink','cola','soda drink','energy drink','sports drink','glucose drink','flavoured milk','flavored milk'],
+  'fruit drink': { minMonth:24, aliases:['juice drink','packaged juice','tetra pack juice','boxed juice','mango drink','mango juice','frooti','maaza','fruit nectar','fruit squash','squash drink','sharbat','sherbet','cold drink','soft drink','fizzy drink','aerated drink','cola','soda drink','sports drink','glucose drink','flavoured milk','flavored milk'],
                    reason:'Packaged juices, fruit drinks, squash, sharbat, cold drinks and flavoured milk are sugary drinks — not for under-2s (WHO, ICMR-NIN). Water and plain milk are her drinks.' },
-  // AAP-DR (toddler milks + added sugars); NIN24 no added sugar <2. Brand names deliberately not keyed.
-  'health drink':{ minMonth:24, aliases:['malt drink','malted drink','malted milk','health drink powder','chocolate drink powder','milk additive powder'],
+  // Caffeine + stimulants: not for children at any age (AAP). Kept apart so the 24-month
+  // sugary-drink gate never opens it (V-C-270-12).
+  'energy drink':{ minMonth:216, aliases:['energy drinks','caffeinated drink'],
+                   reason:'Energy drinks carry caffeine and other stimulants, plus a lot of sugar — not for children at any age.' },
+  // AAP-DR (toddler milks + added sugars); NIN24 no added sugar <2. The brand names parents
+  // actually log are keyed as aliases (V-C-270-11) — a gate that misses "Horlicks" misses the food.
+  'health drink':{ minMonth:24, aliases:['horlicks','bournvita','complan','malt drink','malted drink','malted milk','health drink powder','chocolate drink powder','milk additive powder'],
                    reason:'Most malted "health drink" powders add a lot of sugar. Plain whole milk is enough — no powder needed before 2.' },
   // WHO23 Rec 5a (high salt / trans fat); NIN24 HFSS "must be avoided (example: biscuits, chips)"; CDC-CH (snack foods choke).
-  'namkeen':     { minMonth:24, aliases:['bhujia','sev','chivda','chiwda','farsan','mathri','dalmoth','packaged snacks','crisps','fried snacks'],
+  'namkeen':     { minMonth:24, aliases:['bhujia sev','namkeen bhujia','bikaneri bhujia','sev','chivda','farsan','mathri','dalmoth','packaged snacks','crisps','fried snacks'],
                    reason:'Very salty and fried, and hard pieces are a choking risk. Not for under-2s (WHO, ICMR-NIN); later, only rarely.' },
   'papad':       { minMonth:24, aliases:['papadum','papadam','papar','khichiya'],
                    reason:'Very high in salt, and crisp shards are hard for a toddler to chew. Wait until 2.' },
   'pickle':      { minMonth:24, aliases:['achar','achaar','aachar'],
                    reason:'Pickle is mostly salt, oil and chilli. Keep it off her plate before 2 (WHO: high-salt foods should not be given 6–23 months).' },
-  'instant noodles': { minMonth:24, aliases:['cup noodles','noodle masala'],
+  'instant noodles': { minMonth:24, aliases:['maggi','cup noodles','noodle masala'],
                    reason:'The seasoning makes instant noodles very salty. Not for under-2s; plain home noodles or sevai with vegetables are fine.' },
   'ketchup':     { minMonth:24, aliases:['tomato ketchup'],
                    reason:'Ketchup has added sugar and salt. Wait until 2; a little fresh tomato chutney without sugar is a better dip.' },
@@ -1433,15 +1434,8 @@ const AGE_RULES_ADD_12_24 = {
   // Indian sweets not already aliased on AGE_RULES.sugar (which carries mishri/chini/mithai/sweets/toffee…).
   'indian sweets': { minMonth:24, aliases:['jalebi','gulab jamun','rasgulla','rosogolla','rasmalai','barfi','burfi','peda','sandesh','mishti doi','shrikhand','sweet lassi','jam','candy'],
                    reason:'Mithai, sweet curds and jams are made with sugar — no added sugar before 2 (WHO, ICMR-NIN). Sweeten with mashed fruit or dates instead.' },
-  // Hard jaggery/sugar brittle: added sugar (24) AND hard-candy choking (AAP-CH keeps hard candy until 4) → 48. UNCONFIRMED-by-analogy.
-  'chikki':      { minMonth:48, aliases:['gajak','til chikki','peanut chikki','rewri','revdi','til patti','tilkut','til laddoo','til ladoo'],
-                   reason:'Chikki, gajak and til laddoo are hard jaggery brittles — added sugar (wait until 2) and too hard to chew safely until about 4, per the AAP. Give sesame or peanut ground into food instead.' },
-  // SPROUT: children should avoid raw or lightly cooked sprouts. minMonth 60 is an app floor (UNCONFIRMED cutoff).
-  'raw sprouts': { minMonth:60, aliases:['raw moong sprouts','sprout salad','sprouts salad','kachche sprouts','uncooked sprouts'],
-                   reason:'Raw or lightly cooked sprouts can carry salmonella and E. coli — health agencies advise children not to eat them. Steam or cook sprouts until soft.' },
-  // NHS-AV (raw shellfish); shellfish is a major allergen. Cooked shellfish from ~6 m (NHS). No FOOD_EFFECTS record exists.
-  'shellfish':   { minMonth:6, aliases:['prawn','prawns','shrimp','jhinga','chingri','crab','kekda','lobster'],
-                   reason:'Well-cooked prawns or crab are fine from around 6 months — never raw or lightly cooked (food poisoning). Shellfish is a major allergen: first taste at home, watch about 2 hours.' },
+  // chikki / raw sprouts / shellfish are HAZARD gates, not sugar/salt gates — they live in
+  // data.js AGE_RULES where the source-reading safety audits see them (Kael V-K-270-4).
 };
 
 // ── 5. ALLERGENS — NEW keys only (terse browse note, string values) ─
@@ -1470,18 +1464,18 @@ const ALLERGENS_ADD_12_24 = {
 };
 
 // ── 6. COMBO_RECIPES — NEW keys, exact shape { recipe, dos[], donts[] } (toddler, 12–24 m, 4 teeth) ─
-// No salt beyond a pinch, no sugar/jaggery/honey (NIN24, WHO23). Pieces ≤ ½ inch or soft strips (AAP-CH).
+// No salt in her portion, no sugar/jaggery/honey (NIN24, WHO23). Pieces ≤ ½ inch or soft strips (AAP-CH).
 const COMBO_RECIPES_ADD_12_24 = {
-  'chilla':        { recipe:'1. Whisk 2 tbsp besan with water to a thin, lump-free batter.\n2. Stir in grated carrot or finely chopped palak, a pinch of turmeric and ajwain.\n3. Spread thin on a tawa with ½ tsp ghee; cook both sides on low until soft and cooked through.\n4. Cut into soft strips she can hold.', dos:['Protein + iron from besan','Squeeze lemon or serve with tomato for vitamin C','Soft strips suit self-feeding with 4 teeth'], donts:['No salt beyond a pinch before 2','Don\'t cook crisp — crisp edges can shatter','Don\'t add green chilli'] },
+  'chilla':        { recipe:'1. Whisk 2 tbsp besan with water to a thin, lump-free batter.\n2. Stir in grated carrot or finely chopped palak, a pinch of turmeric and ajwain.\n3. Spread thin on a tawa with ½ tsp ghee; cook both sides on low until soft and cooked through.\n4. Cut into soft strips she can hold.', dos:['Protein + iron from besan','Squeeze lemon or serve with tomato for vitamin C','Soft strips suit self-feeding with 4 teeth'], donts:['No salt in her portion — take it out before salting','Don\'t cook crisp — crisp edges can shatter','Don\'t add green chilli'] },
   'moong sprouts': { recipe:'1. Sprout whole moong for 1–2 days, rinsing twice a day.\n2. Steam or pressure-cook until very soft (1–2 whistles).\n3. Mash lightly, or mix into khichdi or a soft tikki.\n4. Add a squeeze of lemon.', dos:['Sprouting improves iron and zinc absorption','Always cook until soft','Lemon adds vitamin C'], donts:['Never raw or lightly cooked sprouts — food-poisoning risk for children','Don\'t serve whole firm sprouts — mash or split them (whole beans are a choking risk)','No salt'] },
   'dhokla':        { recipe:'1. Make home besan batter with curd and water; ferment 4–6 hours.\n2. Steam 12–15 min until a toothpick comes out clean.\n3. Cool, cut into soft ½-inch cubes.\n4. Temper lightly with ghee and mustard seeds only if she handles them.', dos:['Fermented — soft and easy on gums','Home-made lets you skip sugar and extra salt','Good finger food'], donts:['Skip the sugar-water syrup poured over shop khaman','No green chilli tempering','Avoid instant mixes — high in salt and soda'] },
   'makhana':       { recipe:'1. Dry-roast ¼ cup makhana on low until crisp.\n2. Cool and grind to a fine powder.\n3. Stir 1–2 tsp into porridge, kheer (unsweetened) or khichdi.', dos:['Powdered makhana is a safe way to include it','Or simmer in milk until fully soft and mash','Store powder airtight'], donts:['Never whole roasted makhana for a toddler — a choking hazard','No sugar or salt coating','Don\'t give flavoured packet makhana'] },
   'kodo':          { recipe:'1. Wash and soak 2 tbsp kodo millet 2–4 hours.\n2. Pressure cook with 1 tbsp moong dal and 1 cup water, pinch of turmeric — 4 whistles.\n3. Mash well, add ½ tsp ghee and a boiled vegetable.', dos:['Swap for rice a few times a week (ICMR-NIN: millets for children)','Millet + dal = complete protein','Soaking softens it and lowers phytates'], donts:['Buy clean, well-stored grain — discard any mouldy or musty kodo','Don\'t serve loose dry grains — mash or bind them','No salt'] },
   'egg':           { recipe:'1. Beat 1 egg with 1 tbsp milk.\n2. Scramble in ½ tsp ghee on low heat, stirring until fully set — no runny parts.\n3. Break into small soft pieces; add a pinch of pepper if she likes.', dos:['Complete protein, choline and B12','WHO: an animal-source food every day','Hard-boiled egg chopped small also works'], donts:['Never runny or raw egg','Don\'t add salt','Don\'t give large chunks of hard-boiled white'] },
-  'cow milk':      { recipe:'1. Boil or use pasteurised full-fat milk; cool to warm.\n2. Offer in an open cup or straw cup with meals or snacks.\n3. Aim for about 350–500 ml a day across milk, curd and paneer.', dos:['Whole (full-fat) milk up to age 2','Offer in a cup, not a bottle','Milk is rich in calcium but low in iron — keep iron foods in her meals'], donts:['Don\'t go above about 500 ml a day — it crowds out iron-rich food','No sugar, malt or "health drink" powders','No skimmed or toned milk as her main drink before 2'] },
-  'mustard greens':{ recipe:'1. Wash sarson (with a little palak or bathua) 3–4 times.\n2. Pressure cook until very soft; blend.\n3. Temper with ½ tsp ghee, a pinch of garlic; thicken with 1 tsp makki atta.\n4. Serve with soft roti torn small.', dos:['Calcium and vitamin A from greens','Ghee helps absorb vitamin A','Cook thoroughly and blend smooth'], donts:['Keep salt to a pinch','Skip the heavy butter topping for her','No green chilli'] },
-  'methi':         { recipe:'1. Wash and finely chop 2 tbsp methi leaves.\n2. Knead into atta dough with a little ghee and curd.\n3. Roll thin, cook soft on the tawa.\n4. Tear into small pieces.', dos:['Iron + calcium from methi (IFCT)','Pair with curd — pleasant with the slight bitterness','Chop leaves very fine'], donts:['Don\'t cook the thepla crisp','Keep salt to a pinch','Introduce in small amounts — bitter taste'] },
-  'guava':         { recipe:'1. Pick a ripe, soft guava.\n2. Peel if the skin is tough; cut in half and scoop out ALL the seeds.\n3. Serve thin slices, or steam 3–4 min and mash.', dos:['Very high vitamin C — boosts iron from dal or ragi in the same meal (ICMR-NIN)','Ripe fruit is softer','Pair with a millet or dal meal'], donts:['Never give the hard seeds','Avoid hard, unripe guava chunks — a choking risk','No chaat masala or salt'] },
+  'cow milk':      { recipe:'1. Boil or use pasteurised full-fat milk; cool to warm.\n2. Offer in an open cup or straw cup with meals or snacks.\n3. Aim for about 350–500 ml a day across milk, curd and paneer.', dos:['Whole (full-fat) milk up to age 2','Offer in a cup, not a bottle','Milk is rich in calcium but low in iron — keep iron foods in her meals'], donts:['Don\'t go above about 500 ml a day — it crowds out iron-rich food','No sugar, malt or "health drink" powders','No skimmed or double-toned milk as her main drink before 2'] },
+  'mustard greens':{ recipe:'1. Wash sarson (with a little palak or bathua) 3–4 times.\n2. Pressure cook until very soft; blend.\n3. Temper with ½ tsp ghee, a pinch of garlic; thicken with 1 tsp makki atta.\n4. Serve with soft roti torn small.', dos:['Calcium and vitamin A from greens','Ghee helps absorb vitamin A','Cook thoroughly and blend smooth'], donts:['No salt in her portion — take it out before salting','Skip the heavy butter topping for her','No green chilli'] },
+  'methi':         { recipe:'1. Wash and finely chop 2 tbsp methi leaves.\n2. Knead into atta dough with a little ghee and curd.\n3. Roll thin, cook soft on the tawa.\n4. Tear into small pieces.', dos:['Iron + calcium from methi (IFCT)','Pair with curd — pleasant with the slight bitterness','Chop leaves very fine'], donts:['Don\'t cook the thepla crisp','No salt in her portion — take it out before salting','Introduce in small amounts — bitter taste'] },
+  'guava':         { recipe:'1. Pick a ripe, soft guava.\n2. Peel if the skin is tough; cut in half and scoop out ALL the seeds.\n3. Serve very ripe, soft pieces, or steam 3–4 min and mash.', dos:['Very high vitamin C — boosts iron from dal or ragi in the same meal (ICMR-NIN)','Ripe fruit is softer','Pair with a millet or dal meal'], donts:['Never give the hard seeds','Avoid hard, unripe guava chunks — a choking risk','No chaat masala or salt'] },
   'litchi':        { recipe:'1. Peel a ripe litchi.\n2. Remove the seed completely.\n3. Cut the flesh into small pieces, lengthwise.\n4. Serve only after she has eaten a meal.', dos:['Ripe fruit only','A few pieces at a time','Seasonal treat (May–June)'], donts:['Never whole — round and slippery, it can block the airway','Never on an empty stomach, and never many — litchi-linked illness in Bihar affected children who skipped meals','Never unripe litchi or the seed'] },
   'uttapam':       { recipe:'1. Use home idli/dosa batter.\n2. Spread thick on the tawa; top with finely grated carrot and tomato.\n3. Cook covered on low until soft on both sides.\n4. Cut into strips.', dos:['Fermented and soft — good with 4 teeth','Add vegetables for colour and vitamins','Serve with plain curd or mild sambar'], donts:['Don\'t make it crisp','Keep sambar low in salt and spice','No store-bought ready batter with added salt'] },
 };
@@ -1513,17 +1507,15 @@ const FOOD_SYNERGIES_ADD_12_24 = [
 const SEASONAL_AVAILABILITY_ADD_12_24 = {
   'chiku':          { months:[0,1,2,3,9,10,11], availability:'peak', other:'available' },
   'custard apple':  { months:[7,8,9,10], availability:'peak' },
-  'sitaphal':       { months:[7,8,9,10], availability:'peak' },
   'mustard greens': { months:[10,11,0,1], availability:'peak' },
   'bathua':         { months:[11,0,1], availability:'peak' },
   'methi':          { months:[10,11,0,1,2], availability:'peak', other:'available' },
   'amaranth leaves':{ months:[2,3,4,5,6,7,8], availability:'peak', other:'available' },
 };
 
-// ── 10. SAFE FORM (choking) for a 4-tooth, 12–24 m toddler — PROPOSED sidecar ─
-// Same shape as FOOD_EFFECTS[*].safeForm {glance, ok[], never[]} so a later Library card can render it.
-// No runtime consumer exists yet — until one does, the key lines are folded into COMBO_RECIPES dos/donts
-// above (which already render). Molars (for grinding) arrive ~16–29 m (data.js choking record); with 4
+// ── 10. SAFE FORM (choking) for a 4-tooth, 12–24 m toddler ─
+// A per-food safe-form sidecar is deferred (docs/BUGS.md); the key lines live in the COMBO_RECIPES
+// dos/donts above and each toddler recipe's choking[] list, which render today. Molars (for grinding) arrive ~16–29 m (data.js choking record); with 4
 // incisors she bites but cannot grind, so the rule is: soft enough to squash between finger and thumb,
 // ≤ ½ inch (AAP-CH), round foods quartered lengthwise, hard foods grated/cooked soft/ground.
 
@@ -1560,9 +1552,6 @@ function _mergeFoodLib1224() {
   });
   return added;
 }
-// In recipes.js the call would be a bare top-level statement after the declarations:
-//   window._FOOD_LIB_1224_MERGE = _mergeFoodLib1224();   // the return value is a debug/audit record
-
 const _FOOD_LIB_1224_MERGE = _mergeFoodLib1224();  // debug/audit record of what was added
 
 // Export on window — mirrors the data.js `window.CURATED_COMBOS = …` pattern so

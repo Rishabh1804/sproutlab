@@ -1562,16 +1562,16 @@ function renderRecoFood() {
       tips:'{{OK}} Gluten-free — safe for sensitive babies.\n{{OK}} Higher protein than rice.\n{{NO}} Stir continuously to prevent lumps.\n{{NO}} Don\'t make too thick — should be pourable.' },
     { icon:zi('bowl'), name:'Bajra porridge', reason:'Iron + zinc rich millet — great for growth', newFood:'bajra',
       recipe:'1. Dry roast 1 tbsp bajra flour 2 min.\n2. Add ½ cup water, stir well.\n3. Cook 5–6 min on low.\n4. Add ghee + jaggery-free date paste for sweetness.',
-      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Warming food — great for winter.\n{{NO}} Don\'t give in very hot weather — it\'s heating.\n{{NO}} Introduce after 7 months.' },
+      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Pair with amla, lemon or tomato — vitamin C helps her absorb the iron.\n{{NO}} Cook it well — raw or lumpy millet is hard to digest.\n{{NO}} Introduce after 7 months.' },
     { icon:zi('spoon'), name:'Chiku puree', reason:'Natural sweetness + iron + calcium', newFood:'chiku',
       recipe:'1. Choose a ripe, soft chiku.\n2. Peel, remove seeds, scoop out 2–3 tbsp flesh.\n3. Mash smooth with fork.\n4. Serve immediately.',
       tips:'{{OK}} Naturally one of the sweetest fruits.\n{{OK}} Contains iron — unusual for a fruit.\n{{NO}} Always remove ALL seeds — choking hazard.\n{{NO}} Only use very ripe ones — unripe causes irritation.' },
     { icon:zi('drop'), name:'Watermelon juice (sips)', reason:'Hydrating + Vit C — refreshing on warm days', newFood:'watermelon',
       recipe:'1. Cut 3–4 small cubes of seedless watermelon.\n2. Mash through a strainer to extract juice.\n3. Offer 2–3 tsp in a cup — not a bottle.',
       tips:'{{OK}} Best hydration food in hot weather.\n{{OK}} Natural electrolytes.\n{{NO}} Don\'t give in large quantities — mostly water.\n{{NO}} Remove every seed — choking risk.' },
-    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Iron + Vit C — boosts haemoglobin', newFood:'pomegranate',
+    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Vitamin C — helps her absorb iron from the meal', newFood:'pomegranate',
       recipe:'1. Extract seeds from ¼ pomegranate.\n2. Blend lightly and strain for juice.\n3. Offer 2–3 tsp diluted with equal water.',
-      tips:'{{OK}} One of the best iron + Vit C combos.\n{{OK}} Helps with anaemia prevention.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Dilute for babies — pure juice is too strong.' },
+      tips:'{{OK}} Vitamin C helps her absorb iron from the same meal.\n{{OK}} Offer it in an open cup with a meal, never a bottle.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Whole fruit is better — keep juice to a few spoonfuls.' },
     { icon:zi('spoon'), name:'Kiwi mash', reason:'Vitamin C powerhouse — great iron-absorption booster', newFood:'kiwi',
       recipe:'1. Peel 1 ripe kiwi, scoop flesh.\n2. Mash with fork — seeds are fine to eat.\n3. Serve 1–2 tbsp.',
       tips:'{{OK}} Highest Vit C per gram of any common fruit.\n{{OK}} Serve after ragi/dal meals for iron boost.\n{{NO}} May cause mouth tingling — start small.\n{{NO}} Avoid if family has allergy history.' },
@@ -1600,7 +1600,7 @@ function renderRecoFood() {
       recipe:'1. Use homemade idli batter (rice + urad dal).\n2. Steam mini idlis 10 min.\n3. Mash with sambar water or curd.\n4. Add ghee.',
       tips:'{{OK}} Fermentation creates natural probiotics.\n{{OK}} Soft texture — easy for gums.\n{{NO}} Don\'t give with spicy sambar — use plain dal water.\n{{NO}} Homemade batter preferred — no preservatives.' },
     { icon:zi('spoon'), name:'Grape mash (seedless)', reason:'Vitamin C + antioxidants — juicy finger food', newFood:'grapes',
-      recipe:'1. Wash 8–10 seedless grapes thoroughly.\n2. Cut each grape into quarters lengthwise (halves are still a choking risk).\n3. Mash lightly with fork or serve as halves for BLW.\n4. Can also blend into puree.',
+      recipe:'1. Wash 8–10 seedless grapes thoroughly.\n2. Cut each grape into quarters lengthwise (halves are still a choking risk).\n3. Serve the quarters as finger food, or mash lightly with a fork.\n4. Can also blend into puree.',
       tips:'{{OK}} Always cut lengthwise — round shape is a choking hazard.\n{{OK}} Green, black, or red — all equally nutritious.\n{{NO}} NEVER give whole or halved grapes — quarter them lengthwise until age 5.\n{{NO}} Remove skin if baby struggles with texture.' },
     { icon:zi('spoon'), name:'Strawberry mash', reason:'Vitamin C powerhouse — bright colour babies love', newFood:'strawberry',
       recipe:'1. Wash 3–4 ripe strawberries.\n2. Remove stems, mash with fork.\n3. Serve 1–2 tbsp — can mix with curd.\n4. For first time, serve alone to check reaction.',
@@ -5030,8 +5030,10 @@ function parseMealNutrition(mealStr) {
   const lower = mealStr.toLowerCase();
   const matched = [];
   // Check built-in database
+  // Whole words (Kael V-K-270-5): "egg" must not score inside "veggies" or "eggplant",
+  // nor "fish" inside "shellfish" — false protein credit hides a real gap.
   Object.entries(NUTRITION).forEach(([key, val]) => {
-    if (lower.includes(key)) matched.push({ food:key, ...val });
+    if (_foodWordHit(lower, key)) matched.push({ food:key, ...val });
   });
   // Also check cached AI lookups
   Object.entries(nutritionCache).forEach(([key, val]) => {
