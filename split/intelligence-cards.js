@@ -956,18 +956,27 @@ function renderInfoGrowthDiet() {
     return;
   }
 
-  var sorted = [...growthData].sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-  var last = sorted[sorted.length - 1];
-  var prev = sorted[sorted.length - 2];
-
-  var daysBetweenMeasurements = Math.max(1, Math.round((new Date(last.date) - new Date(prev.date)) / 86400000));
-  var wtDiffG = Math.round((last.wt - prev.wt) * 1000);
-  var velocity = Math.round((wtDiffG / daysBetweenMeasurements) * 100) / 100;
-
-  // Velocity assessment (WHO guidance for 6-12 months: ~10-15 g/day is normal)
-  var velLabel = 'normal';
-  if (velocity < 5) velLabel = 'slow';
-  else if (velocity > 20) velLabel = 'rapid';
+  // Velocity + verdict come from ONE source — computeGrowthVelocity().weight (medical.js) — so this
+  // card can never disagree with the Growth tab (Vela V-V-266-1, 2026-09-24). It had its own fixed
+  // 5–20 g/day band (an infant-era "6-12 months" comment) and sorted ALL growthData rows, so a
+  // height-only latest entry (wt:null) read as a ~-8,500 g loss. The shared path filters to weight
+  // rows, uses the age-appropriate band and the >= 28-day toddler interval.
+  var gvW = (typeof computeGrowthVelocity === 'function') ? (computeGrowthVelocity() || {}).weight : null;
+  if (!gvW) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 2 weight measurements for growth-diet analysis</div>';
+    if (perEl) perEl.innerHTML = '';
+    if (nutEl) nutEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    _setCardPriority('infoGrowthDietCard', 'ambient');
+    return;
+  }
+  var last = gvW.latest;
+  var prev = gvW.prev;
+  var daysBetweenMeasurements = gvW.daysBetween;
+  var velocity = gvW.gPerDay;
+  var velLabel = gvW.tooShort ? 'normal'
+    : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
+    : gvW.status === 'fast' ? 'rapid' : 'normal';
 
   // Diet metrics during the growth period
   var periodDates = [];

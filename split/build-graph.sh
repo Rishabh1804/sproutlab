@@ -52,6 +52,15 @@ fi
 
 cd "$REPO_ROOT"
 
+# Version check (Kael V-K-266-13): graphifyy 0.9.7+ drops cross-file `calls` for our script-global
+# JS. The session-start hook pins 0.9.6 in the remote container; a local run may not be pinned.
+GRAPHIFY_WANT="0.9.6"
+GRAPHIFY_GOT="$("$GRAPHIFY" --version 2>/dev/null | awk '{print $NF}')"
+if [ "$GRAPHIFY_GOT" != "$GRAPHIFY_WANT" ]; then
+  echo "[build-graph] WARNING: graphify $GRAPHIFY_GOT (want $GRAPHIFY_WANT) — cross-file calls may not resolve;" >&2
+  echo "[build-graph] install with: uv tool install --force 'graphifyy[mcp]==$GRAPHIFY_WANT'" >&2
+fi
+
 # Pick the richest backend we can actually authenticate. extract = thorough
 # (AST + semantic); update = code-only (AST, no LLM). Both target
 # split/graphify-out/.

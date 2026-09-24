@@ -1,11 +1,75 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-09-18 (unsynced-write ledger follow-ups logged from PR #265 chain)
+**Last updated:** 2026-09-24 (12-month audit — Tier-1 fixes landed, Tier-2 age-step gaps logged below)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
+
+### 12-month age step — Tier-2 gaps (logged 2026-09-24, monthly-update session)
+
+Ziva turned one on 2026-09-04. A scout survey found every surface keyed to an age table
+that stops at 12 months. The **Tier-1** items (unsafe or wrong) were fixed in the monthly-update PR:
+child choking/CPR protocols, the fast-breathing threshold, WHO growth 0–24 m with IAP→WHO (the Architect's call, 2026-09-24), the
+12–24 m velocity bands, the vaccine age map (JE-2 / Hep A-2 / Varicella-2), added sugar gated to 2 y,
+and the age-aware diet tips. The **Tier-2** items below are stale or empty rather than unsafe:
+
+#### P1 — MILESTONE_STANDARDS stop at 12 months (data.js)
+- **Symptom:** All four standards (who/iap/eu/cn) have keys 6–12 only. From 13 m, `renderUpcomingMilestones` says "No upcoming milestones data for this age range". The home next-milestone card returns nothing (`br < mo`), the "Expected at 12 months" copy stays pinned, and the milestone score completion freezes.
+- **Fix shape:** add 13–24 m rows from CDC Learn the Signs (15/18/24 m), the WHO Motor Development Study windows and IAP. The source work is Maren-primary.
+- **Live now (2026-09-24):** the parents' checklist shows she already meets every 12 m and 15 m marker (walking since ~10 m, 3+ words at 12 m). So the empty "upcoming milestones" state and the frozen milestone score are what they see today. **Next product priority.**
+
+#### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree
+- **Symptom:** `getSleepTargets` clamps at 12. The `napCount` recommendation (WHO/IAP 9–18 m) expects at least 2 naps, the Q&A expects 2 before 15 m, while `SLEEP_STANDARDS` allows [1,2] and quicklog says the 2→1 transition from 12 m is normal. So a 1-nap day reads "One nap short".
+- **Fix shape:** add 12–24 m rows and reconcile the nap floor (1–2 from 12 m). Kael + Vela.
+
+#### P1 — VACC_SCHEDULE content review against IAP 2023
+- **Symptom:** no annual influenza after 12 m. The PCV booster sits at 12 m where IAP says 12–15 m, and "PCV Booster-2 @15m" is non-standard. VACC_SERIES has no Hep A / Varicella / JE / MMR-2 series. Nothing auto-schedules the next dose after `_vaccMarkDone`.
+- **Fix shape:** a line-by-line IAP 2023 reconciliation. Maren-primary. (The age-map half of this is fixed and gated by `audit-vacc-age-map-v1.sh`.)
+
+#### P2 — Age copy and helpers still speak "infant"
+- Hero reads "12 months, 20 days" rather than "1 year" (home.js hero, Q&A header).
+- `getZivaMonthDays` has no second-birthday entry. The CareTicket target text says "set for 6–12 months" (intelligence-caretickets.js). DYNAMIC_ACTIVITIES drops talk/music tips after 12 m and has no 12 m+ tips. Teething lookouts miss the 13–19 m molars. The variety target and texture ladder top out at "finger". The template.html help text is written for 6–8 months. The poop-frequency guide caps at 9–12 m.
+
+#### P1 — Growth-velocity bands are still hand-copied at ~11 sites (Maren V-M-266-4)
+- **Symptom:** the 12–24 m band is shared (`GROWTH_VELOCITY_12_24`), but each site still carries its own ternary chain for 0–12 m. Some sites key on today's age, and `computeGrowthVelocity` keys on the measurement's (rounded) age.
+- **Fix shape:** add one `growthVelocityBand(ageMo)` helper in core.js holding every band, called with the measurement's age, and replace the chains. This is the same consolidation `VACC_AGE_MONTHS` did for vaccines. Kael co-sign.
+
+#### P1 — 24-month reference horizon (Kael V-K-266-9 / Maren V-M-266-14)
+- **Symptom:** `getInterpolatedWHO` clamps to the 24-month row. From 4 Sep 2027 every reading would silently compare against month 24, which is the same drift this PR fixed at 12 m. WHO also switches from recumbent length to standing height at 24 m (about 0.7 cm lower).
+- **Fix shape:** before Jul 2027, extend with the WHO 2–5 y tables (height-for-age, with the length/height adjustment), and add a build-time horizon warning when DOB + table-end is within 90 days.
+
+#### P2 — Deferred Governor NITs from PR #266 (12-month audit)
+- **Vaccines (Maren V-M-266-7, rest):**
+  - range labels ('16-18 months', '18-19 months') should flag Missing only after the window END plus a grace period;
+  - compute JE-2 as JE-1 date + 28 days once JE-1 is logged;
+  - add a "not needed for our vaccine" dismiss for conditional doses (Hep A-2, PCV Booster-2).
+
+  The +0.5-month look-ahead that labelled JE-2 "Missing" early is fixed.
+- **Honey reasons (Ceres V-C-266-5):** the combo checker's honey 'avoid' headline and the Library honey shelf still give the botulism reason at every age. From 12 m the reason is "added sugar, until 2".
+- **Salt verdict (Ceres V-C-266-10):** the Library shows "Fine from 12 months" and hides the reason. Add an optional `after` line to AGE_RULES salt ("lightly — under 2 g/day at 1–3 y").
+- **Tips:** two duplicate tips predate this PR ("Early allergen…" ×2, hydration ×2). "Ziva is here" in the First-foods guide could return as a dynamic age marker (Vela V-V-266-11).
+- **Chart legend (Vela V-V-266-10):** the shaded 3rd–97th band has no label. The help tip now explains it; a caption under the chart would be better.
+- **CPR completeness (Maren V-M-266-12):** add the landmark ("where the lowest ribs meet, one finger's width above"), "use both hands if you can't push 5 cm", and a 10-second breathing check. Paediatrician sign-off is still desirable.
+- **Settings select HR-2/HR-3 (Kael V-K-266-15, Maren):** the `#settingsRefStd` select has an inline `style=` and `onchange=` (pre-existing). The `.chart-filter-btn.active-india` / `.active-both` rules in styles.css are now dead CSS.
+- **Tests (Ceres V-C-266-9, Kael V-K-266-1):**
+  - add a 12.7-month e2e case: toddler tips present, infant tips absent, and jaggery reads 'avoid' even with a green result pre-seeded in the combo cache;
+  - add compound-name self-tests ("milk with sugar", "salt and sugar", "chocolate milk") to the resolver audit.
+
+  The e2e suite still can't launch in the remote container (Playwright 1.48 vs chromium-1194).
+
+#### P2 — Cipher Edict V nits from PR #266
+- `renderInfoGrowthDiet` shows "normal" with a check when the weight interval is too short to judge. It should be neutral. This is practically unreachable once a birth weight is on file.
+- `_fdAgeRule` lives in diet.js (Ceres), but qa, quicklog and home call it behind `typeof` fallbacks. Move it next to `_lookupAllByFoodName` in core.js so one resolver owns the boundary.
+- Pre-existing: "shark fish with salt" matches salt@12 first, so the high-mercury guard is skipped (the null guard keys on the first match being fish). "sugar snap peas" now reads 24; that's stricter, so the safe direction.
+- GRAPHIFY_INTEGRATION.md gives 2,843 cross-file calls for 0.9.6 (bisect probe, raw `source_file`) and 2,286 (live baseline, normalized). Normalize the probe and restate a single figure.
+- SYMPTOM_DB breathing: "More than 60 breaths per minute" is the infant emergency line. It is coherent with the new ≥ 40 "fast" line, but Maren should confirm the toddler emergency threshold.
+
+#### P2 — 0–12 m velocity bands above the WHO median
+- **Symptom:** the 9–12 m band (8–13 g/day, 55–100 g/week) sits above the WHO median (~7.5 g/day at 10–12 m). Historical only now that she's past 12 m. The 12–24 m band is sourced (`GROWTH_VELOCITY_12_24`, core.js).
+
+---
 
 ### Home Tab
 

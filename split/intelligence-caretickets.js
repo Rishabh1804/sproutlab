@@ -127,8 +127,16 @@ var CT_TEMPLATES = {
       { id: 'notes', type: 'text', label: 'Any dietary changes?' }
     ],
     resolutionCriteria: {
+      // Age-aware (Kael V-K-266-3, 2026-09-24): 80 g/week is ~WHO P85 at 12–24 m, so a toddler
+      // gaining normally never auto-resolved. From 12 m resolve at the WHO median
+      // (GROWTH_VELOCITY_12_24.wGWkMedian, ~45 g/week) — a weight goal closes on typical gain,
+      // not on the bottom edge of normal.
       type: 'threshold_met', metric: 'wtGPerWeek',
-      operator: '>=', value: 80, confirmAfterDays: 14
+      operator: '>=', confirmAfterDays: 14,
+      value: function() {
+        return (typeof ageAt === 'function' && ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined')
+          ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
+      }
     },
     escalationTriggers: [],
     autoDataSources: ['growth'],
@@ -217,6 +225,7 @@ function ctNextDueTime(ticket) {
 
 function ctCompare(val, operator, threshold) {
   if (val === null || val === undefined || isNaN(val)) return false;
+  if (typeof threshold === 'function') threshold = threshold(); // age-aware thresholds (V-K-266-3)
   switch (operator) {
     case '>=': return val >= threshold;
     case '>':  return val > threshold;

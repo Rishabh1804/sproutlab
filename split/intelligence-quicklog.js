@@ -3668,7 +3668,11 @@ function getUntriedSuggestions(n) {
   // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
   // hides a safety signal. Fail-closed could falsely declare the taxonomy complete.
     if (item.pid === 'nonveg' && hasGate && !_dietAllowsNonvegSid(item.sid)) return;
-    // Age gate: skip nuts for <8m (whole), skip honey for <12m
+    // Age gate: the shared strictest AGE_RULES gate (Vela V-V-266-4) — so jaggery / gur / mishri
+    // (added sugar, 24 m) never surface as "try next" while the Library says wait. The hand-coded
+    // lines below stay as a fallback if diet.js's resolver is ever absent.
+    const _ageRule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(key) : null;
+    if (_ageRule && typeof _ageRule.minMonth === 'number' && ageM < _ageRule.minMonth) return;
     if (key === 'honey' && ageM < 12) return;
     if (key === 'peanut' && ageM < 8) return;
     if (key === 'whole egg' && ageM < 8) return;

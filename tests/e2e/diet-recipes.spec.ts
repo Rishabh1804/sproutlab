@@ -74,12 +74,13 @@ test.describe('Diet → Recipes sub-tab', () => {
     expect(r.fishEffect).toBe(true);     // Pass B never gated
   });
 
-  // 4 — recipe-level age (Ziva ~9mo): an age-gated recipe is withheld from
+  // 4 — recipe-level age: the honey toast is gated to 24 m (added-sugar gate, 2026-09-24), so it
+  // stays withheld at Ziva's real age until Sep 2027. An age-gated recipe is withheld from
   // "Suggested" but shown in the catalog WITH an age badge + .fd-flag-aged detail
   test('honey recipe withheld from Suggested, age-flagged in catalog detail', async ({ page }) => {
     await setPref(page, 'nonveg');
     const html = await renderInto(page);
-    // The honey (12m+) recipe must NOT be the featured hero (Ziva is ~9mo).
+    // The honey (2 y+) recipe must NOT be the featured hero (Ziva is under 2).
     const heroBlock = html.split('Browse recipes')[0];
     expect(heroBlock).not.toContain('Banana &amp; Honey Toast');
     // It IS in the catalog, carrying the age badge + the aged safety flag.

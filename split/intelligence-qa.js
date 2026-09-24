@@ -1037,7 +1037,9 @@ function qaHandleFoodSafety(classified) {
   var toxin = null;        // {title, why}                — acute-toxin (honey)
   var encourage = null;    // {title, whyGood, safeFormNote} — age-appropriate allergen
   rawFoods.forEach(function(food) {
-    var rule = _lookupByFoodName(AGE_RULES, food);
+    // V-K-266-1: the strictest gate the token reaches ("milk with sugar" waits for sugar@24), via
+    // the shared _fdAgeRule (diet.js) so Q&A and the combo checker / Library agree.
+    var rule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(food) : _lookupByFoodName(AGE_RULES, food);
     var belowFloor = !!(rule && mo < rule.minMonth);
     if (belowFloor) {
       verdict = 'avoid';

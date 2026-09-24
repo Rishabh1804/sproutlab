@@ -164,6 +164,18 @@ if ! bash audit-emergency-floor-v1.sh >&2; then
   echo "BUILD ABORTED: emergency-floor never-cross audit failed. An Emergency Card step names the wrong first-aid (see above)." >&2
   exit 1
 fi
+# First-aid age gate (2026-09-24, Kael V-K-266-4): every choking / CPR surface (config.js +
+# data.js, six in all) must teach the child (1 year+) technique — no infant copy anywhere.
+if ! bash audit-first-aid-age-v1.sh >&2; then
+  echo "BUILD ABORTED: first-aid age audit failed. A choking/CPR surface teaches the infant technique (see above)." >&2
+  exit 1
+fi
+# Vaccine age-map totality gate (2026-09-24, 12-month audit): every VACC_SCHEDULE age label
+# must resolve in VACC_AGE_MONTHS, or that dose silently never comes due (the ?? 99 fallback).
+if ! bash audit-vacc-age-map-v1.sh >&2; then
+  echo "BUILD ABORTED: vaccine age-map audit failed. A schedule dose would never come due (see above)." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

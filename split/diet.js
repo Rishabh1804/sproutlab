@@ -490,8 +490,23 @@ function _fdAllergenNote(name) {
   return _lookupByFoodName(ALLERGENS, name);
 }
 
-// Resolve an age-gate rule {minMonth, reason} for a food name.
+// Resolve an age-gate rule {minMonth, reason} for a food name — the STRICTEST gate the name
+// reaches (V-K-266-1). A compound name ("milk with sugar", "salt and sugar", "chocolate milk")
+// must wait for its latest-opening ingredient, not whichever AGE_RULES key comes first. Only
+// ever tightens a resolved gate: a name the guards below deliberately null out (high-mercury
+// fish) stays null rather than inheriting a looser companion gate.
 function _fdAgeRule(name) {
+  const rule = _fdAgeRuleFirst(name);
+  if (!rule || typeof _lookupAllByFoodName !== 'function') return rule;
+  let strictest = rule;
+  _lookupAllByFoodName(AGE_RULES, name).forEach(r => {
+    if (r && typeof r.minMonth === 'number' && r.minMonth > strictest.minMonth) strictest = r;
+  });
+  return strictest;
+}
+
+// First-match gate with the plant-milk / high-mercury / whole-nut guards (pre-V-K-266-1 body).
+function _fdAgeRuleFirst(name) {
   // V-M-205-B1: route through the shared word-boundary resolver (core.js) so
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
@@ -1117,7 +1132,7 @@ function renderDietRecipes() {
 
   // ── (b) Browsable catalog grouped by meal slot ──
   html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
-  html += `<p class="recipes-sub-note">A small, cited collection for 6–12 months — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
+  html += `<p class="recipes-sub-note">A small, cited collection from the first-foods year (6–12 months) — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
   for (const slot of RECIPE_SLOT_ORDER) {
     const inSlot = surfaced.filter(r => r.slot === slot);
     if (!inSlot.length) continue;
@@ -1775,7 +1790,7 @@ function _libPopHtml(key, eff, pol, j) {
   // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
   var floorCaution = isChoke || !acute;
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
-  var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTitle = isChoke ? 'If she is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
   var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
@@ -2360,9 +2375,9 @@ function renderLibGuides() {
       body: '<p class="lib-guide-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
         '<div><div class="lib-guide-h">Change the form</div><div class="lib-guide-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
     { pol: 'sky', icon: 'info', t: 'Milk & drinks',
-      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1. <b>From 1 year</b>, full-cream cow&rsquo;s milk can be a main drink, from an open cup — about 500 ml (2 cups) a day at most, since more is linked to iron deficiency. Not toned, double-toned or skimmed. Breastfeeding can carry on alongside — WHO recommends it to 2 years and beyond.</p>' },
     { pol: 'lav', icon: 'clock', t: 'First foods, by age',
-      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods · <b>12 mo+</b> family food (lightly salted, still no added sugar), whole cow&rsquo;s milk as a drink. Honey is no longer a botulism risk, but it is a sugar — like jaggery, it waits until 2.</p>' }
   ];
 
   root.innerHTML = guides.map(function(g) {
@@ -2658,7 +2673,7 @@ function _libBuildGuide(severeSigns, seekCare, scopeHeader) {
 // form" over an amber gate "whole forms wait until ~5"), the cut-it-this-way safeForm block,
 // then the PINNED emergency floor.
 // THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): the severe
-// strip carries the QUIET-choking signs + the back-blows/chest-thrusts seekCare, under a
+// strip carries the QUIET-choking signs + the back-blows/abdominal-thrusts seekCare, under a
 // choking-scoped header (never "allergic reaction"). All copy is FOOD_EFFECTS-sourced; the only
 // hardcoded strings are the polarity-keyed band/section HEADINGS (render copy, not reusable).
 function renderDietChokingIntro() {
@@ -2707,9 +2722,9 @@ function renderDietChokingIntro() {
 
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
-  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
-  // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
-  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If your baby is choking, it\'s an emergency');
+  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
+  // thrusts (child 1y+ technique since Ziva turned one) + "NO adrenaline".
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).
@@ -2744,8 +2759,9 @@ const ALL_TIPS = [
   // ── IRON (highest priority at 6–9 months) ──
   {
     type:'info', icon:zi('dot-red'),
-    title:'Iron window — act before 9 months',
-    body:'Ziva\'s birth iron stores deplete around 8–9 months. Ensure ragi, masoor dal, beetroot, or spinach appear at least 4–5 times a week.',
+    // Retitled for 12 m+ (Vela V-V-266-11): the 9-month "deadline" framing reads as missed.
+    title:'Iron-rich foods, most days',
+    body:'Toddlers need about 7 mg of iron a day, and too much milk crowds it out. Aim for ragi, masoor dal, rajma, beetroot, or spinach at least 4–5 times a week, with a vitamin C food (amla, lemon, orange) alongside.',
     condition: d => {
       const ironFoods = ['ragi','masoor dal','beetroot','beans','moong dal','spinach','bajra','jowar','poha','toor dal','chana dal','rajma','pumpkin seeds'];
       return countFoodsInDiary(d, ironFoods) < 4;
@@ -2868,24 +2884,42 @@ const ALL_TIPS = [
     body:'Avocado, ghee, coconut, paneer, and nut butters are key for brain & nerve development at this age. Include daily.',
     condition: d => countFoodsInDiary(d, ['avocado','ghee','coconut','coconut oil','paneer','butter','almonds','walnut','cashew']) < 3,
   },
-  // ── AVOID (always show) ──
+  // ── AVOID (always show, or age-gated) ──
+  // The under-1 rules (honey, cow's milk as a drink) are gated to < 12 months; from 1 year they
+  // retire and the salt/sugar tip turns into its toddler form (2026-09-24 12-month audit — they had
+  // shown "always", contradicting the unlocked Library gates).
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 12 months. Natural sweetness from fruit is fine.',
-    condition: () => true,
+    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    type:'avoid', icon:zi('warn'),
+    title:'Keep salt light — still no added sugar',
+    body:'Family food is fine now, but cook hers lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery, honey or sweets until 2 years; fruit is her sweetener.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('spoon'),
     title:'No honey before 12 months',
     body:'Honey carries risk of infant botulism regardless of form. Strictly avoid until 1 year.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
   },
   {
     type:'avoid', icon:zi('drop'),
     title:'No cow\'s milk as main drink yet',
     body:'Cow\'s milk lacks iron and can stress infant kidneys. Curd and paneer are fine, but milk as a drink should wait until 12 months.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    // type 'info', not 'add' (Vela V-V-266-11): the toddler milk risk is too MUCH. The 500 ml cap is
+    // the in-repo verified figure (FOOD_EFFECTS['cow milk']; docs/research/cow-milk-plant-milks-
+    // infant-safety.md Axis 3 — AAP ~2 cups, ESPGHAN <500 ml) — Ceres V-C-266-6.
+    type:'info', icon:zi('drop'),
+    title:'Whole milk — from a cup, not too much',
+    body:'From 1 year, full-cream cow\'s milk can be a main drink — in an open cup, with or after meals, not a bottle. About 500 ml (2 cups) a day at most: more fills her up and is linked to iron deficiency. Use full-cream, not toned, double-toned or skimmed.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('drop'),
@@ -2900,7 +2934,7 @@ const ALL_TIPS = [
     body:'At 6.5+ months, start moving from smooth purees to slightly mashed food. Tiny soft lumps help develop chewing muscles and prevent texture aversion later.',
     condition: () => {
       const mo = getAgeInMonths();
-      return mo >= 6.5;
+      return mo >= 6.5 && mo < 12; // 12 m+: family-food textures
     }
   },
   {
@@ -2909,7 +2943,7 @@ const ALL_TIPS = [
     body:'By 7–8 months, soft finger foods like steamed carrot sticks, banana pieces, or soft idli strips help develop pincer grasp and self-feeding skills.',
     condition: () => {
       const mo = getAgeInMonths();
-      return mo >= 7;
+      return mo >= 7 && mo < 12;   // 12 m+: finger foods are already here
     }
   },
   // ── ALLERGEN INTRODUCTION ──
@@ -3070,9 +3104,9 @@ const ALL_TIPS = [
   {
     type:'add', icon:zi('star'),
     title:'Indian superfoods for babies',
-    body:'Makhana (calcium), sattu (protein), jaggery (iron), saffron (brain), drumstick (calcium + iron), and amla (Vit C) are traditional Indian baby superfoods. Try adding one new one this week.',
+    body:'Makhana (calcium), sattu (protein), halim / garden cress (iron), saffron (brain), drumstick (calcium + iron), and amla (Vit C) are traditional Indian baby superfoods. Try adding one new one this week.',
     condition: d => {
-      const superfoods = ['makhana','sattu','jaggery','saffron','drumstick','amla'];
+      const superfoods = ['makhana','sattu','halim','saffron','drumstick','amla']; // jaggery out: added sugar (V-C-266-2)
       return countFoodsInDiary(d, superfoods) === 0;
     }
   },
@@ -3156,7 +3190,8 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    chips.push({ text:'cow milk', cls:'chip-avoid' });
+    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 2026-09-24 audit
+    chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-caution' : 'chip-avoid' }); // checker returns caution (ALLERGENS) at 12 m+
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });
     chips.push({ text:'idli + sambar', cls:'chip-safe' });
@@ -3182,8 +3217,8 @@ function checkFoodCombo() {
   const cachedIdx = comboHistory.findIndex(h => h.q.toLowerCase() === query.toLowerCase());
   if (cachedIdx !== -1) {
     const cached = comboHistory[cachedIdx];
-    if (cached.result && cached.result._schema === COMBO_RESULT_SCHEMA) { renderComboResult(cached.result); return; }
-    comboHistory.splice(cachedIdx, 1); // stale schema → recompute below
+    if (_comboCacheValid(cached.result)) { renderComboResult(cached.result); return; }
+    comboHistory.splice(cachedIdx, 1); // stale schema or computed at a different age → recompute below
   }
 
   // Parse foods from query
@@ -3437,6 +3472,7 @@ function checkFoodCombo() {
     toxin,
     encourage,
     _schema: COMBO_RESULT_SCHEMA,   // M-R1-1: marks an R1-floor-bearing result
+    _mo: Math.floor(mo),            // V-C-266-1: the age the verdict was computed at (cache key)
   };
 
   // Cache
@@ -3608,7 +3644,8 @@ function generateDonts(foodList, tags, mo) {
   const classified = foodList.map(f => ({ name:f, info:classifyFood(f) })).filter(c => c.info);
   const subcats = new Set(classified.map(c => c.info.subcat));
 
-  donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  if (mo < 12) donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  else donts.push('Go light on salt. No added sugar, jaggery or honey until 2 years');
   if (mo < 8) donts.push('Puree or mash very smooth — no chunks yet at this age');
   else if (mo < 10) donts.push('Keep pieces soft and small — gag reflex is still developing');
 
@@ -3618,7 +3655,7 @@ function generateDonts(foodList, tags, mo) {
   if (subcats.has('leafy')) donts.push('Don\'t give leafy greens daily — 2–3 times/week is ideal (nitrate/oxalate content)');
   if (subcats.has('curd')) donts.push('Don\'t heat curd/yogurt — kills beneficial bacteria. Room temperature only');
   if (subcats.has('spice')) donts.push('Use barely a pinch — baby portions need 1/10th of adult amounts');
-  if (subcats.has('sweetener')) donts.push('Avoid jaggery/gur before 12 months — treated as added sugar by paediatricians');
+  if (subcats.has('sweetener')) donts.push('Avoid jaggery, gur, mishri and syrups before 2 years — they are added sugar');
   if (subcats.has('egg')) donts.push('Avoid egg white initially — introduce yolk only for the first few times');
   if (subcats.has('fish')) donts.push('Check every flake for tiny bones — even "boneless" fillets can have pin bones');
   if (subcats.has('legume')) donts.push('Soak overnight and cook very well — undercooked legumes cause gas and bloating');
@@ -3755,7 +3792,11 @@ function renderComboHistory() {
   if (!el || comboHistory.length === 0) { if (el) el.innerHTML = ''; return; }
 
   let html = `<div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:6px;">Recent checks</div>`;
-  comboHistory.slice(0, 5).forEach(h => {
+  // Only rows still valid for her age + the current rules (Cipher A1): a pre-PR "jaggery: safe" row
+  // must not keep showing a green check here. Invalid rows are recomputed when re-queried.
+  const validRows = comboHistory.filter(h => typeof _comboCacheValid === 'function' ? _comboCacheValid(h.result) : true);
+  if (validRows.length === 0) { el.innerHTML = ''; return; }
+  validRows.slice(0, 5).forEach(h => {
     const emoji = h.result.verdict === 'safe' ? zi('check') : h.result.verdict === 'caution' ? zi('warn') : zi('warn');
     html += `<div class="combo-hist-item" data-action="showComboHistory" data-arg="${escHtml(h.q)}">
       <div class="combo-hist-q">${emoji} ${escHtml(h.q)}</div>

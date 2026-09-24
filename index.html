@@ -2212,6 +2212,8 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .growth-fact.positive { background:var(--sage-light); border-color:var(--sage); }
 .growth-fact.info     { background:var(--sky-light); border-color:var(--sky); }
+/* One-time dismissible fact (the WHO-growth change note, 2026-09-24): room for the × (.ctx-alert-dismiss). */
+.growth-fact.has-dismiss { position:relative; padding-right:var(--sp-32); }
 .growth-fact-icon { font-size:var(--icon-md); flex-shrink:0; }
 .growth-fact-body strong { font-size:var(--fs-md); font-weight:700; display:block; color:var(--text); }
 .growth-fact-body span   { font-size:var(--fs-base); font-weight:400; color:var(--mid); line-height:var(--lh-relaxed); }
@@ -12712,7 +12714,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-chart"/></svg></div> Weight Chart <button class="help-btn" aria-label="Help" data-help="help-chart-filter"><span class="t-sm">ⓘ</span></button></div>
           <span class="collapse-chevron" id="weightChartChevron" style="transform:rotate(180deg);"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
-        <div class="help-tip" id="help-chart-filter"><strong><svg class="zi" aria-hidden="true"><use href="#zi-target"/></svg> WHO</strong> — the global gold standard, based on healthy breastfed babies from 6 countries. IAP recommends this for under-5 children.<br><strong><svg class="zi" aria-hidden="true"><use href="#zi-star"/></svg> India</strong> — based on Indian national survey data (Khadilkar 2019). Indian babies typically track slightly lower than WHO, so Ziva's Indian percentile will be higher. Both are valid — WHO for global context, India for local context.</div>
+        <div class="help-tip" id="help-chart-filter"><strong><svg class="zi" aria-hidden="true"><use href="#zi-target"/></svg> WHO</strong> — the global standard, built from healthy breastfed children in 6 countries; India&rsquo;s paediatric academy (IAP) recommends it for children under age 5. The shaded band is the healthy range (3rd–97th percentile); the dashed line is the WHO average (50th). The chart runs to 2 years.</div>
         <div id="weightChartBody" class="collapse-body open">
           <div class="chart-zoom-row" id="wtChartZoom">
             <span class="chart-zoom-label">Range:</span>
@@ -15008,7 +15010,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="d-flex items-center justify-between">
               <div>
                 <div class="t-md">Reference standard</div>
-                <div class="t-sub">Growth, milestones & sleep norms</div>
+                <div class="t-sub">Milestone &amp; sleep norms · growth always uses WHO (as IAP advises under age 5)</div>
               </div>
               <select id="settingsRefStd" onchange="setReferenceStandard(this.value)" style="padding:6px 10px;border-radius:var(--r-lg);border:1.5px solid var(--peach-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--card-bg);color:var(--text);outline:none;">
                 <option value="iap">India (IAP)</option>
@@ -15563,6 +15565,17 @@ if (typeof window !== 'undefined') {
 //     resuscitation authority) for that line, not NHS. Pediatrician
 //     sign-off remains desirable but is no longer a blocking uncertainty.
 //
+// AGE STEP — 1 year+ (2026-09-24, the 12-month audit): Ziva turned one on
+//   2026-09-04, so the INFANT techniques above are retired from this registry.
+//   `unresponsive` and `choking` now carry the CHILD (1 year to puberty) protocol,
+//   verified against the live NHS pages: "How to resuscitate a child" (mod.
+//   2026-08-07: 5 rescue breaths, heel of 1 hand on the lower third of the
+//   breastbone, 5 cm, 30:2, lone rescuer ~1 min before calling) and "How to stop
+//   a child from choking" (mod. 2025-09-24: back blows then abdominal thrusts,
+//   fist between navel and ribs, inwards and upwards, keep off the lower ribs).
+//   Head injury: the under-1 bruise/swelling line is dropped, and the NHS all-ages criteria (fall >1 m or
+//   5 stairs, behaviour change, walking/balance, black eye) are added (Maren V-M-266-1).
+//
 // Render policy:
 //   severity 'critical' → pinned-open, hottest, exempt from the accordion
 //                         (one item per the locked §5.3 wireframe).
@@ -15596,8 +15609,10 @@ const GENERAL_EMERGENCIES = [
     severity: 'critical', callLead: true,
     immediate: [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
-      'Head to neutral, clear any obvious blockage, then give 5 rescue breaths — seal your mouth over baby’s mouth and nose and blow gently over 1 second until the chest rises.',
-      '30 chest compressions: both thumbs together on the centre of the breastbone, hands encircling the chest, push about 4 cm deep (a third of the way) and fast (100–120 a minute) — then 2 breaths. Keep the 30:2 cycle going until help arrives.'
+      // Child (1 year+) technique since Ziva turned one (2026-09-24 12-month audit): mouth-to-mouth
+      // with the nose pinched, heel of ONE hand, 5 cm — NHS 'How to resuscitate a child' (mod. 2026-08-07).
+      'Tilt the head back slightly and lift the chin, clear any obvious blockage, then give 5 rescue breaths — pinch her nose, seal your mouth over hers and blow steadily for about 1 second until the chest rises.',
+      '30 chest compressions: heel of one hand on the lower third of the breastbone, arm straight, push down 5 cm (a third of the chest depth) and fast (100–120 a minute) — then 2 breaths. Keep the 30:2 cycle going until help arrives.'
     ],
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
@@ -15607,7 +15622,7 @@ const GENERAL_EMERGENCIES = [
       suspected: 'Not breathing / unresponsive',
       stamps: [ { id: 'collapse', label: 'Found unresponsive at' }, { id: 'cpr', label: 'CPR started at' } ],
       action: { label: 'Rescue breaths + compressions given', value: 'Yes / No' },
-      forTeam: 'infant found unresponsive; rescue breaths and chest compressions given from the time above; please assess airway, breathing, circulation.'
+      forTeam: 'child (1 year+) found unresponsive; rescue breaths and chest compressions given from the time above; please assess airway, breathing, circulation.'
     }
   },
   {
@@ -15616,7 +15631,7 @@ const GENERAL_EMERGENCIES = [
     immediate: [
       // Hold-time: EpiPen delivers in ≤3s; parent-facing copy says "slowly count to 10" so a panicking parent guarantees the dose without arbitrating 3-vs-10 (Maren V-M-237). Kept consistent with the food-room anaphylaxis card (data.js EMERGENCY_PROTOCOL.anaphylaxis).
       'If an adrenaline auto-injector (e.g. EpiPen) has been prescribed, use it now — into the outer thigh and hold it in place; slowly count to 10 to be sure. Most families won’t have one — if not, go straight to the next step.',
-      'Call 112 and say “anaphylaxis”. Lay baby down and raise their legs; if breathing is hard, raise the shoulders or sit them up slightly instead; if vomiting, lay them on their side. Never stand or walk them.',
+      'Call 112 and say “anaphylaxis”. Lay her down and raise her legs; if breathing is hard, raise her shoulders or sit her up slightly instead; if vomiting, lay her on her side. Never stand or walk her.',
       'No better after 5 minutes, or getting worse? Give a second auto-injector — in the other thigh — if you have one.'
     ],
     call112When: [
@@ -15637,31 +15652,35 @@ const GENERAL_EMERGENCIES = [
     id: 'choking', icon: 'warn', name: 'Choking (object)',
     severity: 'urgent', callLead: true,
     immediate: [
-      'Lay baby face-down along your forearm, head low. Give up to 5 sharp back blows between the shoulder blades with the heel of your hand — check the mouth after each.',
-      'Still stuck? Turn baby face-up, both thumbs together on the breastbone just below the nipple line (hands around the chest), give up to 5 sharp chest thrusts — check the mouth after each.',
-      'Never use abdominal thrusts on a baby, and do not sweep the mouth blindly. Repeat 5 back blows + 5 chest thrusts; call 112 if it does not clear. Even once it clears, get baby checked — chest thrusts can injure inside.'
+      // Child (1 year+) technique since Ziva turned one: back blows then ABDOMINAL thrusts —
+      // NHS 'How to stop a child from choking' (mod. 2025-09-24). Infant chest thrusts retired.
+      // Action-first wording (Vela V-V-266-5); "shout for help" first and ONE round before calling
+      // (Maren V-M-266-8 — NHS: call 999 if it doesn't come out after back blows + thrusts).
+      'Shout for help. Lay her face-down across your lap, head low — or support her leaning forward. Up to 5 sharp back blows between the shoulder blades with the heel of your hand; check the mouth after each.',
+      'Still stuck? Up to 5 abdominal thrusts: kneel behind her, arms under her armpits and around her tummy. Fist just above the belly button (below the ribs), other hand over it, pull sharply in and up. Check the mouth after each. Keep off the lower ribs.',
+      'Not out after one round? Call 112 (speakerphone), then keep repeating 5 back blows + 5 abdominal thrusts until help arrives. No blind finger sweeps. Once it clears, get her checked — abdominal thrusts can injure inside.'
     ],
     call112When: [
-      'The blockage does not clear after the first cycles',
-      'Baby becomes limp, silent, or stops breathing → start CPR (top of this list)'
+      'It does not come out after one round of back blows + abdominal thrusts — call, then keep going',
+      'She becomes limp, silent, or stops breathing → start CPR (top of this list)'
     ],
     xlink: { label: 'Choking on food? →', room: 'food', hazard: 'choking' },
     source: 'Resuscitation Council UK 2025 · NHS · British Red Cross',
-    teaser: '5 back blows + 5 chest thrusts',
+    teaser: '5 back blows + 5 abdominal thrusts',
     doc: {
       suspected: 'Choking (airway obstruction)',
       stamps: [ { id: 'reaction', label: 'Choking started at' }, { id: 'call', label: '112 called at' } ],
-      action: { label: 'Back blows + chest thrusts given · cleared', value: 'Yes / No' },
-      forTeam: 'infant choking; back blows and chest thrusts given; please assess the airway and for injury from the thrusts.'
+      action: { label: 'Back blows + abdominal thrusts given · cleared', value: 'Yes / No' },
+      forTeam: 'child (1 year+) choking; back blows and abdominal thrusts given; please assess the airway and for abdominal injury from the thrusts.'
     }
   },
   {
     id: 'seizure', icon: 'bolt', name: 'Seizure / fit',
     severity: 'urgent', callLead: true,
     immediate: [
-      'Note the time it starts. Cushion the head and pad around them with something soft; move hard objects away. Do not lift or move baby unless they are in danger.',
-      'Do not restrain them and do not put anything in their mouth.',
-      'When it stops, turn baby onto their side (recovery position) and check nothing is blocking the mouth.'
+      'Note the time it starts. Cushion her head and pad around her with something soft; move hard objects away. Do not lift or move her unless she is in danger.',
+      'Do not restrain her and do not put anything in her mouth.',
+      'When it stops, turn her onto her side (recovery position) and check nothing is blocking the mouth.'
     ],
     call112When: [
       'It is the first seizure, or it lasts more than 5 minutes',
@@ -15674,7 +15693,7 @@ const GENERAL_EMERGENCIES = [
       suspected: 'Seizure / fit',
       stamps: [ { id: 'start', label: 'Seizure started at' }, { id: 'stop', label: 'Seizure stopped at' } ],
       action: { label: 'First seizure', value: 'Yes / No' },
-      forTeam: 'infant seizure; note the start and stop times above; please assess.'
+      forTeam: 'child (1 year+) seizure; note the start and stop times above; please assess.'
     }
   },
   {
@@ -15682,13 +15701,20 @@ const GENERAL_EMERGENCIES = [
     severity: 'serious', callLead: false,
     immediate: [
       'Hold something cold (e.g. frozen veg in a tea towel) to the bump for up to 20 minutes.',
-      'Keep baby calm and resting; a responsible adult should stay with them and check closely for at least the first 24 hours.'
+      'Keep her calm and resting; a responsible adult should stay with her and check closely for at least the first 24 hours.',
+      'Any vomiting at all? Call your doctor (or 108) for advice now.'
     ],
+    // Child (1 year+) criteria — NHS 'Head injury and concussion' "Call 999 if" list (mod.
+    // 2026-06-01), which applies at every age. Maren V-M-266-1: dropping the under-1 line had
+    // also dropped the only fall-height and behaviour-change coverage; they are restored here as
+    // the all-ages NHS criteria. The bruise/swelling/cut line stays NHS's under-1-only criterion.
     call112When: [
       'Was knocked out, even briefly, or is hard to wake / very drowsy',
-      'Repeated vomiting, a fit, or fluid or blood from the nose or ears',
-      'A tense or bulging soft spot (fontanelle), or any swelling or cut on the head in a baby',
-      'Under 1 year with any vomiting, a worsening or high-pitched cry, or a fall from any height (off a bed, sofa, or changing table, or from your arms)'
+      'Fell from higher than 1 metre or down 5 or more stairs',
+      'Her behaviour has changed — more irritable, crying more than usual, distracted, or losing interest in things around her',
+      'New trouble walking, crawling or balancing, or a black eye where she did not hit her eye',
+      'Repeated vomiting, a fit, or clear fluid or blood from the nose or ears',
+      'A tense or bulging soft spot (fontanelle — it can stay open until about 18 months)'
     ],
     source: 'NHS · British Red Cross · NICE NG232',
     teaser: 'Cold compress · watch closely 24h',
@@ -15696,7 +15722,7 @@ const GENERAL_EMERGENCIES = [
       suspected: 'Head injury (fall)',
       stamps: [ { id: 'fall', label: 'Time of the fall' } ],
       action: { label: 'Knocked out / any vomiting', value: 'Yes / No' },
-      forTeam: 'infant head injury from a fall; note any loss of consciousness, vomiting, or change in behaviour; please assess.'
+      forTeam: 'child (1 year+) head injury from a fall; note any loss of consciousness, vomiting, or change in behaviour; please assess.'
     }
   },
   {
@@ -15704,12 +15730,12 @@ const GENERAL_EMERGENCIES = [
     severity: 'serious', callLead: false,
     immediate: [
       'Press firmly on the wound with a clean (non-fluffy) cloth or dressing and keep pressing — do not lift to check.',
-      'Lay baby down and keep pressing. If baby looks pale, cold, or floppy, raise their legs to help with shock — but never stop pressing on the wound to do it.',
+      'Lay her down and keep pressing. If she looks pale, cold, or floppy, raise her legs to help with shock — but never stop pressing on the wound to do it.',
       'Do not wash a heavily-bleeding wound; if an object is embedded, press around it — do not pull it out.'
     ],
     call112When: [
       'Bleeding is severe or will not slow with firm pressure',
-      'Blood soaks through, or baby becomes pale, cold, or floppy'
+      'Blood soaks through, or she becomes pale, cold, or floppy'
     ],
     source: 'British Red Cross · St John Ambulance',
     teaser: 'Press firmly · don’t lift to check',
@@ -15724,14 +15750,14 @@ const GENERAL_EMERGENCIES = [
     id: 'burn', icon: 'flame', name: 'Burn or scald',
     severity: 'serious', callLead: false,
     immediate: [
-      'Cool the burn under cool running water for 20 minutes — start now. Keep the rest of baby warm (a blanket or clothing) and stop if they shiver — babies lose heat fast.',
+      'Cool the burn under cool running water for 20 minutes — start now. Keep the rest of her warm (a blanket or clothing) and stop if she shivers — little ones lose heat fast.',
       'Gently remove clothing or anything tight near the burn — but not anything stuck to it.',
       'After cooling, loosely cover with cling film or a clean plastic bag. No creams, ice, butter, or fluffy dressings.'
     ],
     call112When: [
       'The burn is large or deep, or on the face, hands, or genitals',
       'It was caused by chemicals or electricity — or you are unsure',
-      'Always seek medical advice for any burn on a baby'
+      'Always seek medical advice for any burn on a baby or young child'
     ],
     source: 'NHS · British Red Cross',
     teaser: 'Cool under water 20 min · keep warm',
@@ -15739,14 +15765,14 @@ const GENERAL_EMERGENCIES = [
       suspected: 'Burn / scald',
       stamps: [ { id: 'burn', label: 'Time of the burn' }, { id: 'cool', label: 'Cooling started at' } ],
       action: { label: 'Cause (heat / chemical / electrical)', value: '____' },
-      forTeam: 'infant burn or scald; cooled under running water; note the cause and the site; please assess depth and area.'
+      forTeam: 'child (1 year+) burn or scald; cooled under running water; note the cause and the site; please assess depth and area.'
     }
   },
   {
     id: 'poison', icon: 'flask', name: 'Swallowed something / poison',
     severity: 'urgent', callLead: true,
     immediate: [
-      'Call 112 now. Do not make baby sick — it can cause more harm.',
+      'Call 112 now. Do not make her sick — it can cause more harm.',
       'Find what they swallowed; keep the packaging, container, or a sample to show the doctors.',
       'If drowsy but breathing, lay them on their side; do not give any food or drink — not even water or milk.'
     ],
@@ -15757,7 +15783,7 @@ const GENERAL_EMERGENCIES = [
       suspected: 'Swallowed something / possible poison',
       stamps: [ { id: 'swallow', label: 'Swallowed / found at' } ],
       action: { label: 'What was swallowed', value: '____' },
-      forTeam: 'infant swallowed a possible poison; packaging kept; vomiting NOT induced; please advise and assess.'
+      forTeam: 'child (1 year+) swallowed a possible poison; packaging kept; vomiting NOT induced; please advise and assess.'
     }
   }
 ];
@@ -17315,6 +17341,15 @@ const DEFAULT_VACC = [
 
 // ── MASTER VACCINATION SCHEDULE (IAP 2024 + card schedule) ──
 // type: 'iap' = IAP mandatory, 'iap-rec' = IAP recommended, 'private' = optional/private
+// Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
+// consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
+// carry private copies that lacked '13 months' and '18-19 months', so JE-2, Hep A-2 and
+// Varicella-2 defaulted to 99 and silently never came due (2026-09-24 12-month audit).
+// Every VACC_SCHEDULE `age` label MUST appear here — build gate: split/audit-vacc-age-map-v1.sh.
+const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
+  '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
+  '18-19 months':18, '2 years':24, '4-6 years':48, '9-14 years':108, '16-18 years':192 };
+
 const VACC_SCHEDULE = [
   // ── BIRTH ──
   { name:'BCG', age:'Birth', type:'iap', protects:'Tuberculosis (TB)', notes:'Single dose, left upper arm. Small scar is normal.' },
@@ -17704,18 +17739,24 @@ const EVENT_ACTIVITIES = {
 // ─────────────────────────────────────────
 // GROWTH
 // ─────────────────────────────────────────
-// WHO Girls 50th percentile weight/height by month
-const WHO_W50 = [3.2,4.2,5.1,5.8,6.4,6.9,7.3,7.6,7.9,8.2,8.5,8.7,8.9];
-const WHO_H50 = [49.1,53.7,57.1,59.8,62.1,64.0,65.7,67.3,68.7,70.1,71.5,72.8,74.0];
-const WHO_W3  = [2.4,3.2,3.9,4.5,4.9,5.3,5.7,6.0,6.3,6.5,6.7,6.9,7.0];
-const WHO_W97 = [4.2,5.5,6.6,7.5,8.2,8.8,9.3,9.8,10.2,10.5,10.9,11.2,11.5];
-const WHO_H3  = [45.6,49.8,52.8,55.5,57.8,59.6,61.2,62.7,64.0,65.3,66.5,67.6,68.6];
-const WHO_H97 = [52.7,57.6,61.4,64.4,66.8,68.8,70.5,72.1,73.7,75.2,76.6,78.0,79.2];
-// WHO P15 and P85 for better mid-range accuracy (girls, 0-12 months)
-const WHO_W15 = [2.7,3.6,4.4,5.1,5.6,6.1,6.5,6.8,7.1,7.3,7.5,7.7,7.9];
-const WHO_W85 = [3.7,4.9,5.9,6.7,7.3,7.9,8.3,8.7,9.0,9.4,9.7,10.0,10.2];
-const WHO_H15 = [47.0,51.4,54.6,57.3,59.6,61.5,63.1,64.6,66.0,67.4,68.6,69.8,71.0];
-const WHO_H85 = [51.3,56.1,59.7,62.5,64.8,66.8,68.5,70.1,71.6,73.0,74.4,75.7,76.9];
+// WHO Child Growth Standards — GIRLS, months 0–24 (index = completed month).
+// Weight-for-age (kg): tab_wfa_girls_p_0_5.xlsx · Length-for-age (cm, recumbent): tab_lhfa_girls_p_0_2.xlsx
+// (cdn.who.int, fetched 2026-09-24). Rewritten in the 12-month audit: the tables used to stop at 12
+// months (every later measurement was compared to the 12-month row, so percentiles drifted high), and
+// the old "P3/P97" rows were actually WHO's −2 SD / +2 SD columns (≈2.3rd / 97.7th). Values below are
+// the true percentile columns. WHO is the only growth reference: IAP 2015 recommends the WHO 2006
+// standards for children under 5 (Indian Pediatrics 2015;52:47–55).
+const WHO_W50 = [3.2,4.2,5.1,5.8,6.4,6.9,7.3,7.6,7.9,8.2,8.5,8.7,8.9,9.2,9.4,9.6,9.8,10.0,10.2,10.4,10.6,10.9,11.1,11.3,11.5];
+const WHO_H50 = [49.1,53.7,57.1,59.8,62.1,64.0,65.7,67.3,68.7,70.1,71.5,72.8,74.0,75.2,76.4,77.5,78.6,79.7,80.7,81.7,82.7,83.7,84.6,85.5,86.4];
+const WHO_W3  = [2.4,3.2,4.0,4.6,5.1,5.5,5.8,6.1,6.3,6.6,6.8,7.0,7.1,7.3,7.5,7.7,7.8,8.0,8.2,8.3,8.5,8.7,8.8,9.0,9.2];
+const WHO_W97 = [4.2,5.4,6.5,7.4,8.1,8.7,9.2,9.6,10.0,10.4,10.7,11.0,11.3,11.6,11.9,12.2,12.5,12.7,13.0,13.3,13.5,13.8,14.1,14.3,14.6];
+const WHO_H3  = [45.6,50.0,53.2,55.8,58.0,59.9,61.5,62.9,64.3,65.6,66.8,68.0,69.2,70.3,71.3,72.4,73.3,74.3,75.2,76.2,77.0,77.9,78.7,79.6,80.3];
+const WHO_H97 = [52.7,57.4,60.9,63.8,66.2,68.2,70.0,71.6,73.2,74.7,76.1,77.5,78.9,80.2,81.4,82.7,83.9,85.0,86.2,87.3,88.4,89.4,90.5,91.5,92.5];
+// P15 / P85 for mid-range accuracy
+const WHO_W15 = [2.8,3.6,4.5,5.1,5.6,6.1,6.4,6.7,7.0,7.3,7.5,7.7,7.9,8.1,8.3,8.5,8.7,8.8,9.0,9.2,9.4,9.6,9.8,9.9,10.1];
+const WHO_W85 = [3.7,4.8,5.9,6.7,7.3,7.8,8.3,8.7,9.0,9.3,9.6,9.9,10.2,10.4,10.7,10.9,11.2,11.4,11.6,11.9,12.1,12.4,12.6,12.8,13.1];
+const WHO_H15 = [47.2,51.7,55.0,57.6,59.8,61.7,63.4,64.9,66.3,67.6,68.9,70.2,71.3,72.5,73.6,74.7,75.7,76.7,77.7,78.7,79.6,80.5,81.4,82.2,83.1];
+const WHO_H85 = [51.1,55.7,59.2,62.0,64.3,66.3,68.1,69.7,71.2,72.6,74.0,75.4,76.7,77.9,79.2,80.3,81.5,82.6,83.7,84.8,85.8,86.8,87.8,88.8,89.8];
 // @@DATA_BLOCK_5_END@@
 
 // @@DATA_BLOCK_6_START@@ VACC_SERIES
@@ -18164,7 +18205,9 @@ const NUTRITION = {
 
 // ── AGE SAFETY RULES ──
 const AGE_RULES = {
-  'honey':    { minMonth:12, reason:'Risk of infant botulism — strictly avoid until 12 months' },
+  // 24 m, not 12 (Cipher A2, 2026-09-24): botulism is the under-1 reason, and from 1 honey is a free
+  // sugar (WHO; US DGA) under the same 24 m added-sugar gate — so every surface says one thing.
+  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2' },
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
@@ -18181,9 +18224,15 @@ const AGE_RULES = {
   'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
   'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
   'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.' },
-  'sugar':    { minMonth:12, reason:'No added sugar before 12 months. Use fruit for natural sweetness.' },
-  'jaggery':  { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
-  'gur':      { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
+  // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
+  // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
+  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
+  // aliases (Ceres V-C-266-4 / Kael V-K-266-2): the everyday Indian names for added sugar, so
+  // mishri (with saunf), chini, khand, batasha, mithai and date syrup gate at 24 m too.
+  'sugar':    { minMonth:24, aliases:['mishri','misri','rock sugar','chini','cheeni','khand','shakkar','batasha','mithai','sweets','toffee','date syrup'],
+                reason:'No added sugar before 2 years (WHO, AAP). Use fruit for natural sweetness.' },
+  'jaggery':  { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
+  'gur':      { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
   'tea':      { minMonth:24, reason:'Tannins block iron absorption. Caffeine is harmful for babies.' },
   'coffee':   { minMonth:24, reason:'Caffeine is harmful for infants and toddlers.' },
   'juice':    { minMonth:8, reason:'Whole fruit is better. If juice, limit to 2-3 tsp diluted in an open cup, never a bottle.' },
@@ -18200,11 +18249,11 @@ const AGE_RULES = {
                 reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
   'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
-  'chocolate':{ minMonth:12, reason:'Contains sugar and caffeine. Avoid before 12 months.' },
-  'biscuit':  { minMonth:10, reason:'Most contain sugar, salt, and maida. If giving, choose sugar-free, whole grain.' },
+  'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
+  'biscuit':  { minMonth:10, reason:'Most contain added sugar, salt, and maida. Only sugar-free, whole-grain ones — no added sugar before 2 years.' },
   'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
-  'ice cream':{ minMonth:12, reason:'Contains sugar and cow milk. Avoid before 12 months.' },
-  'kheer':    { minMonth:10, reason:'Often made with cow milk and sugar. Use breast milk/formula and fruit instead.' },
+  'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
+  'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
   // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
   // mirror the FOOD_EFFECTS record so the gate and the consequence card agree per name
   // (one-resolver doctrine, V-M-205-B1). A vegetarian/Jain household not giving fish is valid.
@@ -18261,7 +18310,7 @@ const FOOD_EFFECTS = {
     severity:   'critical',      // render chrome (rose); decoupled from foodClass per A-4
     effect:     'infant botulism',
     title:      'Honey before 12 months',
-    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
+    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. From the first birthday the botulism risk is gone, but honey is an added sugar — like jaggery, it waits until 2.',
     watchFor:   ['constipation', 'a weak cry or weak suck', 'unusual floppiness'],
     seekCare:   'If your baby has already had some and any of these appear, see a doctor promptly.',
     confidence: 'high',
@@ -18614,7 +18663,7 @@ const FOOD_EFFECTS = {
   // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
   // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
   // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
-  // chest-thrusts + call-112 (NEVER abdominal thrusts under 1, NEVER adrenaline).
+  // abdominal-thrusts + call-112 (child 1y+ technique since Ziva turned one; NEVER adrenaline).
   // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
   // gate doesn't apply).
   // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
@@ -18664,8 +18713,9 @@ const FOOD_EFFECTS = {
     // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
     severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
-    // the hazard, milk-spec §9). Under-1: 5 back blows + 5 chest thrusts, NEVER abdominal thrusts.
-    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or they can\'t breathe — BABY UNDER 1: alternate 5 back blows (face-down along your forearm, head lower than the body, between the shoulder blades) and 5 chest thrusts (2 fingers, middle of the chest just below the nipple line); NEVER abdominal thrusts (Heimlich) under 1 — risk of organ damage. CHILD OVER 1: 5 back blows, then 5 abdominal thrusts. No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if they become unresponsive → start CPR.',
+    // the hazard, milk-spec §9). Child 1y+ (Ziva turned one 2026-09-04): 5 back blows + 5 abdominal
+    // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
+    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
     culturalNote:'Whole GROUNDNUT (peanut) is the single most common aspirated food in Indian children (≈67.5% in one ENT series), often handed loose to toddlers to console them — grind it or thin the butter. SUPARI / areca nut is a double danger (in airways AND acutely toxic — seizures, liver injury) — keep it away from children. Other Indian hazards: chana / roasted gram, hard sev / namkeen / murukku, whole makhana, ber (jujube) pits.',
     confidence: 'high',
@@ -18715,16 +18765,16 @@ const EMERGENCY_PROTOCOL = {
     ],
     steps: [
       '**Can she cough or cry?** Encourage coughing — don’t intervene.',
-      '**Silent / can’t breathe → 5 back blows** — face-down along your forearm, head low, between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
-      '**Then 5 chest thrusts** — two fingers, middle of the chest. **Never abdominal thrusts under 1.**',
-      '**Alternate** back blows + chest thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
+      '**Silent / can’t breathe → 5 back blows** — face-down across your lap, head low (or leaning forward), between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
+      '**Then 5 abdominal thrusts** — from behind, fist between the belly button and the ribs, pull **inwards and upwards**. Keep off the lower ribs.',
+      '**Alternate** back blows + abdominal thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
     ],
-    after: [ 'Even once cleared, get her checked — a retained fragment or airway irritation can follow.' ],
+    after: [ 'Even once cleared, get her checked — a retained fragment, airway irritation, or injury from the abdominal thrusts can follow.' ],
     doc: {
       suspected: 'Choking',
       stamps: [ { id: 'reaction', label: 'Time it happened' } ],
-      action: { label: 'Back blows / chest thrusts given · object cleared', value: 'Yes / No' },
-      forTeam: 'choking on {food}; back blows + chest thrusts given; see the “cleared” line above.',
+      action: { label: 'Back blows / abdominal thrusts given · object cleared', value: 'Yes / No' },
+      forTeam: 'choking on {food}; back blows + abdominal thrusts given; see the “cleared” line above.',
     },
   },
   botulism: {
@@ -18839,8 +18889,8 @@ const COMBO_RECIPES = {
   'blueberry avocado':{ recipe:'1. Steam 10 blueberries 2 min, mash.\n2. Scoop 2 tbsp avocado.\n3. Mix together.\n4. Serve immediately.', dos:['Brain fats + antioxidants','No cooking needed','Rich purple colour'], donts:['Don\'t give whole blueberries','Both oxidise fast — serve immediately','Stains heavily — bib essential'] },
   'spinach khichdi':  { recipe:'1. Blanch 5-6 spinach leaves 2 min, puree.\n2. Cook 1 tbsp rice + ½ tbsp dal — 3 whistles.\n3. Mix spinach puree + ghee + lemon.', dos:['Triple iron — spinach + dal + lemon for absorption','Blanch spinach first to reduce oxalates','Complete meal'], donts:['Don\'t reheat spinach dishes','Don\'t skip blanching','Make fresh each time'] },
   'honey':            { recipe:'', dos:[], donts:['NEVER give honey before 12 months','Risk of infant botulism — can be fatal','No form of honey is safe — raw, cooked, or baked'] },
-  'salt':             { recipe:'', dos:[], donts:['No added salt before 12 months','Baby\'s kidneys cannot process it','Natural sodium in food is sufficient'] },
-  'sugar':            { recipe:'', dos:[], donts:['No added sugar before 12 months','Use fruit for natural sweetness','Includes jaggery and gur'] },
+  'salt':             { recipe:'', dos:[], donts:['None added before 12 months — baby kidneys cannot process it','From 1 year keep it light: no more than 2 g a day up to age 3 (NHS)','Skip pickles, papad and namkeen'] },
+  'sugar':            { recipe:'', dos:[], donts:['No added sugar before 2 years','Use fruit for natural sweetness','Includes jaggery and gur'] },
 };
 // @@DATA_BLOCK_14_END@@
 
@@ -18888,7 +18938,7 @@ const FOOD_SUBCATS = {
   seed:        { match:['sesame','til','flaxseed','alsi','chia','pumpkin seed','sunflower seed','makhana','fox nut'], cook:'roast+powder', time:'3–5 min', method:'Dry roast on low, cool, grind to fine powder' },
   // Spices
   spice:       { match:['turmeric','jeera','cumin','ajwain','cinnamon','cardamom','nutmeg','pepper','hing','saffron','fennel','mint','curry leaves','bay leaf','ginger'], cook:'temper', time:'30 sec', method:'Add tiny pinch to cooked food or temper in ghee' },
-  sweetener:   { match:['jaggery','gur','mishri','date syrup'], cook:'dissolve', time:'1 min', method:'Dissolve small amount in warm food — avoid before 12 months' },
+  sweetener:   { match:['jaggery','gur','mishri','date syrup'], cook:'dissolve', time:'1 min', method:'Dissolve small amount in warm food — avoid before 2 years' },
   // Oils
   oil:         { match:['coconut oil','sesame oil','mustard oil','olive oil','groundnut oil'], cook:'none', time:'0 min', method:'Add ½ tsp to cooked food for healthy fats' },
   // Non-veg
@@ -20507,7 +20557,7 @@ const SYMPTOM_DB = [
       'Keep Ziva upright.',
       'Clear her nose with saline drops and a nasal aspirator.',
       'Stay calm so she stays calm.',
-      'Count her breaths per minute (normal: 30–50 for 6–12 months).'
+      'Count her breaths for a full minute while she is calm (normal at 1–2 years: under 40, usually about 24–39). 40 or more at rest is fast breathing — call the doctor.'
     ],
     precautions: [
       'Watch for the chest retracting (sucking in) with each breath.',
@@ -20899,31 +20949,32 @@ const SYMPTOM_DB = [
     keywords: ['choking','choke','airway','blocked airway','food stuck','swallowed','object in mouth','can\'t breathe','gagging','coughing food'],
     severity: 'emergency',
     title: 'Choking',
-    summary: 'If she can cough, let her. If silent and not breathing, back blows then chest thrusts',
+    summary: 'If she can cough, let her. If silent and not breathing, back blows then abdominal thrusts',
     whatToDo: [
       'If Ziva is coughing forcefully, let her keep coughing — do not interfere.',
-      'If she cannot cry, cough, or breathe, place her face-down along your forearm with her head lower than her chest.',
+      'If she cannot cry, cough, or breathe, lay her face-down across your lap with her head low, or support her leaning forward.',
       'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
-      'Turn her face-up; give 5 chest thrusts using 2 fingers on the breastbone.',
-      'Repeat back blows and chest thrusts until the object comes out or she starts breathing.',
+      'Still stuck? Kneel behind her, make a fist between her belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
+      'Repeat back blows and abdominal thrusts until the object comes out or she starts breathing.',
+      'If she goes limp or unresponsive: lay her on a firm, flat surface, call 112 on speakerphone, remove an object only if you can clearly see and grasp it, and start CPR.',
       'Call emergency services as soon as possible — ideally have someone call while you do first aid.'
     ],
     precautions: [
       'Stay calm — your composure helps the rescue work.',
       'Look in her mouth only if you can clearly see the object and remove it with one finger sweep.',
-      'After the object comes out, she still needs to be checked by a doctor.'
+      'After the object comes out, she still needs to be checked by a doctor — abdominal thrusts can cause internal injury.'
     ],
     doNot: [
       { text: 'Do a blind finger sweep inside her mouth (it can push the object deeper)', critical: true },
       { text: 'Give water, food, or medication during a choking episode', critical: true },
-      { text: 'Perform abdominal thrusts (Heimlich) on babies under 1 year', critical: true },
+      { text: 'Press on her lower ribs during abdominal thrusts (it can cause injury)', critical: true },
       { text: 'Hold her upside down by the ankles', critical: false }
     ],
     emergency: [
       'Cannot cry, cough, or breathe',
       'Lips or face turning blue',
       'Becomes limp or loses consciousness',
-      'Object remains stuck after 5 cycles of back blows and chest thrusts',
+      'Object remains stuck after cycles of back blows and abdominal thrusts',
       'Severe coughing or gagging lasts more than a minute'
     ],
     lifeThreat: true,
@@ -20954,6 +21005,8 @@ const SYMPTOM_DB = [
     ],
     emergency: [
       'Loss of consciousness, even briefly',
+      'A fall from higher than 1 metre or down 5 or more stairs',
+      'Behaviour change — more irritable, distracted, or losing interest in things',
       'Vomiting more than once',
       'Seizure',
       'Clear fluid from the nose or ears',
@@ -20969,12 +21022,12 @@ const SYMPTOM_DB = [
     keywords: ['unconscious','unresponsive','passed out','fainted','won\'t wake up','limp','not responding','no response','collapsed'],
     severity: 'emergency',
     title: 'Unresponsive / Unconscious',
-    summary: 'Check breathing, place on side if breathing, start infant CPR if not, call 108',
+    summary: 'Check breathing, place on side if breathing, start child CPR if not (5 breaths, then 30 compressions : 2 breaths), call 112',
     whatToDo: [
-      'Shout her name and gently tap the bottom of her foot to see if she responds.',
-      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek.',
-      'If she is breathing, place her on her side (recovery position) and call emergency services.',
-      'If she is not breathing, call emergency services immediately — the dispatcher will guide you through chest compressions while help is on the way.',
+      'Tap her arm and call her name loudly to see if she responds.',
+      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek, for up to 10 seconds. Gasping is not breathing.',
+      'If she is breathing, place her on her side (recovery position) and call 112 on speakerphone.',
+      'If she is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? They call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
       'Stay with her until help arrives.'
     ],
     precautions: [
@@ -20983,7 +21036,7 @@ const SYMPTOM_DB = [
       'Note her colour — pale, blue, or grey is a serious sign.'
     ],
     doNot: [
-      { text: 'Give water, milk, or medication to an unresponsive baby', critical: true },
+      { text: 'Give water, milk, or medication to her while she is unresponsive', critical: true },
       { text: 'Shake her to try to wake her', critical: true },
       { text: 'Leave her alone to find help (call from where she is)', critical: false }
     ],
@@ -21437,7 +21490,8 @@ const RECOMMENDATION_ROSTER = {
 // they lack the structured slot/age/citation fields the catalog renders.
 //
 // SAFETY INVARIANTS baked in (RECIPE_RESEARCH.md, cross-verified ≥2 sources):
-//   • No honey / added salt / added sugar < 12 m (fruit sweetens).
+//   • No honey / added salt < 12 m; no added sugar — honey included — < 24 m (fruit sweetens;
+//     WHO free sugars + DGA 2020–25 count honey as added sugar; 2026-09-24 12-month audit).
 //   • Allergens (egg, fish, nuts, dairy, sesame) introduced early ~6 m, one
 //     at a time — never laundered as a prevention claim.
 //   • Nuts NEVER whole — ground fine / smooth paste (choking).
@@ -21822,19 +21876,21 @@ const RECIPES = [
     source: ['icmr', 'iap'],
   },
 
-  // ─── 12 m+ catalog item — age-gated, never suggested for an under-1 (honey) ───
+  // ─── 2 y+ catalog item — age-gated. Honey clears the botulism gate at 12 m but it is a free
+  //     sugar, so like jaggery it waits for the 24 m added-sugar gate (Ceres V-C-266-5). Withheld
+  //     from Suggested until then; shown in the catalog with its age badge. ───
   {
-    id: 'banana-honey-toast', title: 'Banana & Honey Toast (12 m+)', slot: 'snack', minAgeMonths: 12, prepMinutes: 5,
-    ingredients: [{ name: 'bread', qty: '1 slice, soft', g: 25 }, { name: 'banana', qty: '½, mashed', g: 25 }, { name: 'honey', qty: '½ tsp (12 m+ only)', g: 5 }],
+    id: 'banana-honey-toast', title: 'Banana & Honey Toast (2 y+)', slot: 'snack', minAgeMonths: 24, prepMinutes: 5,
+    ingredients: [{ name: 'bread', qty: '1 slice, soft', g: 25 }, { name: 'banana', qty: '½, mashed', g: 25 }, { name: 'honey', qty: '½ tsp (2 y+ only)', g: 5 }],
     foodGroups: ['grains', 'fruits'], cuisine: 'Global',
     steps: [
       'Lightly toast a soft slice of whole-wheat bread, remove crusts, cut into soft fingers.',
       'Spread with mashed banana.',
-      'For ONE-YEAR-OLDS AND OVER ONLY, drizzle ½ tsp honey.',
+      'From 2 years only, drizzle ½ tsp honey. Before that, the banana is sweet enough.',
       'Serve as soft fingers.',
     ],
-    dos: ['Only from the first birthday — honey is for 12 m+', 'Soft fingers suit self-feeding toddlers', 'Whole-wheat bread adds fibre'],
-    donts: ['NEVER give honey before 12 months — risk of infant botulism', 'No honey of any kind for a baby — raw, cooked, or baked', 'Cut bread into soft, manageable fingers'],
+    dos: ['Honey only from 2 years — it is an added sugar', 'Soft fingers suit self-feeding toddlers', 'Whole-wheat bread adds fibre'],
+    donts: ['NEVER give honey before 12 months — risk of infant botulism', 'No added sugar, honey included, before 2 years', 'Cut bread into soft, manageable fingers'],
     source: ['who', 'nhs'],
   },
 ];
@@ -21956,8 +22012,8 @@ const RECIPE_EP = {
   fish:{eps:['tender','omega-rich'],noun:'fish',fold:'boneless'}, chicken:{eps:['lean','tender'],noun:'chicken',fold:'shredded'},
   prawn:{eps:['tender','sweet'],noun:'prawn'}, mutton:{eps:['rich','tender'],noun:'mutton',fold:'soft-cooked'},
   // fats & sweeteners
-  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'go easy — added sugar'},
-  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 1'}, oil:{eps:['light'],noun:'oil'},
+  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'no added sugar before 2'},
+  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 2 (added sugar)'}, oil:{eps:['light'],noun:'oil'},
   // spices & herbs
   turmeric:{eps:['golden','earthy'],noun:'turmeric'}, cinnamon:{eps:['warm','sweet'],noun:'cinnamon'},
   cumin:{eps:['warm','earthy'],noun:'cumin'}, coriander:{eps:['fresh','herby'],noun:'coriander'},
@@ -22751,7 +22807,7 @@ function init() {
       const hit = comboHistory.find(x => x.q === arg);
       // M-R1-1: a stale (pre-R1-schema) cached result lacks the emergency floor —
       // never render it directly; recompute so the floor stays reachable.
-      if (hit && hit.result && hit.result._schema === COMBO_RESULT_SCHEMA) {
+      if (hit && _comboCacheValid(hit.result)) {
         renderComboResult(hit.result);
       } else if (typeof checkFoodCombo === 'function') {
         checkFoodCombo();
@@ -23081,6 +23137,7 @@ function init() {
     else if (action === 'feHomeBannerLog') feHomeBannerLog();
     else if (action === 'deLogStoolQuick') deLogStoolQuick(arg);
     else if (action === 'dismissAlert') dismissAlert(arg, arg2);
+    else if (action === 'dismissGrowthWhoNote') dismissGrowthWhoNote();
     else if (action === 'acknowledgeAlert') acknowledgeAlert(arg, arg2);
     else if (action === 'snoozeAlert') snoozeAlert(arg, arg2);
     else if (action === 'gotoCard') gotoCard(arg, arg2);
@@ -24183,9 +24240,8 @@ function calcMedicalScore() {
   const mo = (new Date() - DOB) / (30.44 * 86400000);
 
   // A. Vaccination coverage (40%)
-  const ageMap = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
-    '9 months':9, '12 months':12, '15 months':15, '16-18 months':16, '18 months':18, '2 years':24 };
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo + 0.5);
+  const ageMap = VACC_AGE_MONTHS;
+  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo); // no look-ahead (V-M-266-7)
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
   const vaccBookedData = load(KEYS.vaccBooked, null);
   let vaccGiven = 0;
@@ -26242,6 +26298,28 @@ function _lookupByFoodName(table, name) {
   return byAlias || null;
 }
 
+// Every record a food name resolves to — the same exact / de-plural / word-boundary key /
+// alias tiers and the same negation guard as _lookupByFoodName, but ALL matches instead of
+// the first. For the AGE GATE only (V-K-266-1, 2026-09-24): first-match resolution picks by
+// table insertion order, so "milk with sugar" / "salt and sugar" / "chocolate milk" resolved to
+// milk@12 or salt@12 and read green at 12–24 months, silently bypassing the added-sugar gate@24.
+// _fdAgeRule takes the strictest (highest minMonth) of these. The FOOD_EFFECTS card keeps the
+// single-match resolver (one card per food).
+function _lookupAllByFoodName(table, name) {
+  if (!table || !name) return [];
+  const n = String(name).toLowerCase().trim();
+  const out = [];
+  const add = (v) => { if (v && out.indexOf(v) === -1) out.push(v); };
+  add(table[n]);
+  add(table[n.replace(/s$/, '')]);
+  const wb = (token) => new RegExp('\\b' + String(token).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n);
+  Object.entries(table).forEach(([k, v]) => { if (wb(k) && !_foodNameNegated(n, k)) add(v); });
+  Object.values(table).forEach(v => {
+    if (v && Array.isArray(v.aliases) && v.aliases.some(a => wb(a) && !_foodNameNegated(n, a))) add(v);
+  });
+  return out;
+}
+
 // food-effects-v2 P1c (Cipher Edict-V, M-F-1 completion). The fish record is reached by the
 // bare 'fish' KEY, which word-boundary-matches the trailing word of a "<species> fish" host —
 // so "seer fish" / "shark fish" (documented HIGH-MERCURY species in the record's safeForm.never)
@@ -26297,7 +26375,18 @@ function getFoodEffect(name) {
 // it directly would drop the floor — the silent-floor-drop §10 names worse than
 // the legacy verdict. Stamp every fresh result with this tag; both read paths
 // (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
-const COMBO_RESULT_SCHEMA = 'r1-fe';
+// 'r1-fe-a24' (2026-09-24, Ceres V-C-266-1): bumped when the added-sugar gates moved 12 → 24 m, so
+// every result cached under the old gates (jaggery / sugar "safe" at 12 m) is recomputed once.
+// Bump it again whenever an AGE_RULES gate tightens.
+const COMBO_RESULT_SCHEMA = 'r1-fe-a24';
+
+// A cached combo result is reusable only if it carries the current schema AND was computed at her
+// current age in whole months — verdicts are age-gated, so a result from last month can be wrong
+// today (a gate that opened or, after a rules change, closed). Both read paths use this.
+function _comboCacheValid(result) {
+  return !!(result && result._schema === COMBO_RESULT_SCHEMA
+    && result._mo === Math.floor(getAgeInMonths()));
+}
 
 // foodClass membership test (food-effects v2 §3.0, M-S-5/K-S-4). foodClass is
 // multi-valued (peanut/tree nut carry ['allergen-introduce-early','choking-by-form'];
@@ -27490,6 +27579,18 @@ function getGrowthVelocity() {
 }
 
 // Growth velocity interpretation
+// ── Growth-velocity band, 12–24 months (girls) ──
+// From WHO Child Growth Standards velocity tables (cdn.who.int, fetched 2026-09-24):
+//   weight, 2-month increments 12–24 m: P15 ≈ 140→39 g, P50 ≈ 428→367 g, P85 ≈ 736→723 g
+//     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
+//   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
+//     → band 0.6–1.6 cm/month, ≈ 0.15–0.35 cm/week.
+// Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
+// later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
+// the 0–12 m bands at each site are unchanged.
+const GROWTH_VELOCITY_12_24 = { wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
+  hCmMoMin: 0.6, hCmMoMax: 1.6, hCmWk: '0.15–0.35', label: '12–24 months' };
+
 function getGrowthNarrative(velocity) {
   const lines = [];
   const ageM = ageAt().months;
@@ -27497,8 +27598,8 @@ function getGrowthNarrative(velocity) {
   if (velocity.wtGPerWeek != null) {
     const gw = velocity.wtGPerWeek;
     // WHO-based expected ranges by age (girls, g/week)
-    const expectedMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expectedMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
     let interp;
     if (gw >= expectedMin && gw <= expectedMax) {
       interp = `gaining ${gw}g/week — healthy pace for ${ageM} months`;
@@ -27513,8 +27614,8 @@ function getGrowthNarrative(velocity) {
 
   if (velocity.htCmPerMonth != null) {
     const cm = velocity.htCmPerMonth;
-    const expectedMin = ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
-    const expectedMax = ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMin : ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMax : ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
     let interp;
     if (cm >= expectedMin && cm <= expectedMax) {
       interp = `growing ${cm} cm/month — on track`;
@@ -27827,7 +27928,7 @@ function getPulseNarrative() {
   if (latestWt) {
     const moExact = ageMonthsAt(latestWt.date);
     const ref = getGrowthRef(moExact);
-    const pct = calcPercentile(latestWt.wt, ref.w3, ref.w50, ref.w97);
+    const pct = calcPercentile(latestWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85);
     parts.push(`weight at ${latestWt.wt} kg (${pct.text} percentile)`);
   }
 
@@ -31085,9 +31186,11 @@ function renderRecoFood() {
     { icon:zi('drop'), name:'Chia seed pudding', reason:'Omega-3 + calcium + fibre — tiny superfood', newFood:'chia seeds',
       recipe:'1. Soak 1 tsp chia seeds in ¼ cup milk/water for 2 hrs (or overnight).\n2. Seeds form a gel — mash any clumps.\n3. Mix with mashed fruit + ghee.',
       tips:'{{OK}} Omega-3 content rivals flaxseed.\n{{OK}} Pre-soaking is essential — seeds expand 10×.\n{{NO}} Never give dry — swelling can cause choking.\n{{NO}} Start with ½ tsp — very high fibre.' },
-    { icon:zi('spoon'), name:'Jaggery ragi porridge', reason:'Iron + natural sweetener — traditional combo', newFood:'jaggery',
-      recipe:'1. Cook 1 tbsp ragi in ½ cup water (5 min).\n2. Dissolve ½ tsp organic jaggery powder in warm water, strain.\n3. Mix into porridge + ghee.',
-      tips:'{{OK}} Natural iron source — much better than sugar.\n{{OK}} Traditional sweetener for baby food in India.\n{{NO}} Don\'t use before 8 months.\n{{NO}} Use organic — commercial jaggery may have chemicals.\n{{NO}} Very small amount — still a sugar.' },
+    // Was "Jaggery ragi porridge" (newFood jaggery) — jaggery is added sugar, gated to 24 m
+    // (Ceres V-C-266-7 / Maren V-M-266-10). Fruit sweetens instead; ragi is the iron.
+    { icon:zi('spoon'), name:'Date-sweetened ragi porridge', reason:'Iron from ragi, sweetness from fruit — no added sugar', newFood:'date',
+      recipe:'1. Cook 1 tbsp ragi in ½ cup water (5 min).\n2. Soak 1 pitted date in warm water 10 min, then mash to a smooth paste.\n3. Stir the date paste into the porridge + ghee.',
+      tips:'{{OK}} Ragi is one of the richest plant sources of iron and calcium.\n{{OK}} Date sweetens with whole fruit — no added sugar before 2 years.\n{{NO}} Always pit and mash dates — a whole date is a choking risk.\n{{NO}} Keep it to 1 date — fruit sugar still counts.' },
     { icon:zi('sprout'), name:'Saffron milk rice', reason:'Brain tonic + immunity — Ayurvedic tradition', newFood:'saffron',
       recipe:'1. Soak 1–2 saffron strands in 1 tsp warm milk for 10 min.\n2. Cook 1 tbsp rice until mushy.\n3. Mix saffron milk into rice + ghee.',
       tips:'{{OK}} Traditional brain tonic in Ayurveda.\n{{OK}} Anti-inflammatory + immunity booster.\n{{NO}} Use only 1–2 strands — very potent.\n{{NO}} Use genuine saffron — fakes are common.' },
@@ -31167,7 +31270,14 @@ function renderRecoFood() {
   }
 
   // Pick 1 new dish — food NOT yet introduced
-  const newEligible = NEW_DISH_POOL.filter(n => !introduced.has(n.newFood.toLowerCase()));
+  // Age-gated too (Ceres V-C-266-7 / Maren V-M-266-10): never suggest a dish whose new food she is
+  // still too young for — the pool is suggestions, the AGE_RULES gate is the floor.
+  const _poolAgeM = getAgeInMonths();
+  const newEligible = NEW_DISH_POOL.filter(n => {
+    if (introduced.has(n.newFood.toLowerCase())) return false;
+    const r = (typeof _fdAgeRule === 'function') ? _fdAgeRule(n.newFood) : null;
+    return !(r && typeof r.minMonth === 'number' && r.minMonth > _poolAgeM);
+  });
   if (newEligible.length > 0) {
     const newPick = newEligible[doy % newEligible.length];
     const id = 'reco-recipe-' + (recoIdx++);
@@ -37809,8 +37919,8 @@ function computeBaselines() {
   b.wtInHealthyRange = false;
   if (velocity.wtGPerWeek != null) {
     const ageM = ageAt().months;
-    const expMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+    const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
     b.wtInHealthyRange = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
     // Check if healthy for 4+ weeks
     b.growthConsistentWeeks = velocity.wtEntryCount >= 3 ? Math.min(Math.floor(velocity.wtSpanDays / 7), 8) : 0;
@@ -39423,8 +39533,8 @@ function renderTrendChips() {
 
   // Growth
   if (velocity.wtGPerWeek != null) {
-    const expMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+    const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
     const ok = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
     chips.push({ icon:zi('chart'), label:'Growth', value: velocity.wtGPerWeek + 'g/wk', delta: ok ? zi('check') + ' healthy' : zi('warn') + ' check', cls: ok ? 'tc-good' : 'tc-warn', tab:'growth' });
   } else {
@@ -39541,8 +39651,8 @@ function renderInsightsStats() { /* v2.4: DORMANT — insights cards replaced by
   // Growth velocity pill
   const velVal = velocity.wtGPerWeek != null ? velocity.wtGPerWeek + 'g' : '—';
   const ageM = ageAt().months;
-  const expMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-  const expMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+  const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+  const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
   const velInRange = velocity.wtGPerWeek != null && velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
   const velColor = velocity.wtGPerWeek != null ? (velInRange ? 'hsp-sage' : 'hsp-peach') : 'hsp-rose';
 
@@ -39652,8 +39762,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
     const ageM = ageAt().months;
     let pills = '';
     if (velocity.wtGPerWeek != null) {
-      const expMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-      const expMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+      const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+      const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
       const ok = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
       pills += `<span class="ins-preview-pill ${ok ? 'ipp-good' : 'ipp-warn'}">${zi('scale')} ${velocity.wtGPerWeek}g/wk</span>`;
     }
@@ -39671,8 +39781,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
 
   // Velocity rows
   if (velocity.wtGPerWeek != null) {
-    const expectedMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expectedMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
     const inRange = velocity.wtGPerWeek >= expectedMin && velocity.wtGPerWeek <= expectedMax;
     const cls = inRange ? 'trend-up' : velocity.wtGPerWeek < expectedMin ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">
@@ -39685,8 +39795,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
   }
 
   if (velocity.htCmPerMonth != null) {
-    const expectedMin = ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
-    const expectedMax = ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMin : ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMax : ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
     const inRange = velocity.htCmPerMonth >= expectedMin && velocity.htCmPerMonth <= expectedMax;
     const cls = inRange ? 'trend-up' : velocity.htCmPerMonth < expectedMin ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">
@@ -41136,8 +41246,23 @@ function _fdAllergenNote(name) {
   return _lookupByFoodName(ALLERGENS, name);
 }
 
-// Resolve an age-gate rule {minMonth, reason} for a food name.
+// Resolve an age-gate rule {minMonth, reason} for a food name — the STRICTEST gate the name
+// reaches (V-K-266-1). A compound name ("milk with sugar", "salt and sugar", "chocolate milk")
+// must wait for its latest-opening ingredient, not whichever AGE_RULES key comes first. Only
+// ever tightens a resolved gate: a name the guards below deliberately null out (high-mercury
+// fish) stays null rather than inheriting a looser companion gate.
 function _fdAgeRule(name) {
+  const rule = _fdAgeRuleFirst(name);
+  if (!rule || typeof _lookupAllByFoodName !== 'function') return rule;
+  let strictest = rule;
+  _lookupAllByFoodName(AGE_RULES, name).forEach(r => {
+    if (r && typeof r.minMonth === 'number' && r.minMonth > strictest.minMonth) strictest = r;
+  });
+  return strictest;
+}
+
+// First-match gate with the plant-milk / high-mercury / whole-nut guards (pre-V-K-266-1 body).
+function _fdAgeRuleFirst(name) {
   // V-M-205-B1: route through the shared word-boundary resolver (core.js) so
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
@@ -41763,7 +41888,7 @@ function renderDietRecipes() {
 
   // ── (b) Browsable catalog grouped by meal slot ──
   html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
-  html += `<p class="recipes-sub-note">A small, cited collection for 6–12 months — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
+  html += `<p class="recipes-sub-note">A small, cited collection from the first-foods year (6–12 months) — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
   for (const slot of RECIPE_SLOT_ORDER) {
     const inSlot = surfaced.filter(r => r.slot === slot);
     if (!inSlot.length) continue;
@@ -42421,7 +42546,7 @@ function _libPopHtml(key, eff, pol, j) {
   // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
   var floorCaution = isChoke || !acute;
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
-  var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTitle = isChoke ? 'If she is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
   var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
@@ -43006,9 +43131,9 @@ function renderLibGuides() {
       body: '<p class="lib-guide-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
         '<div><div class="lib-guide-h">Change the form</div><div class="lib-guide-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
     { pol: 'sky', icon: 'info', t: 'Milk & drinks',
-      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1. <b>From 1 year</b>, full-cream cow&rsquo;s milk can be a main drink, from an open cup — about 500 ml (2 cups) a day at most, since more is linked to iron deficiency. Not toned, double-toned or skimmed. Breastfeeding can carry on alongside — WHO recommends it to 2 years and beyond.</p>' },
     { pol: 'lav', icon: 'clock', t: 'First foods, by age',
-      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods · <b>12 mo+</b> family food (lightly salted, still no added sugar), whole cow&rsquo;s milk as a drink. Honey is no longer a botulism risk, but it is a sugar — like jaggery, it waits until 2.</p>' }
   ];
 
   root.innerHTML = guides.map(function(g) {
@@ -43304,7 +43429,7 @@ function _libBuildGuide(severeSigns, seekCare, scopeHeader) {
 // form" over an amber gate "whole forms wait until ~5"), the cut-it-this-way safeForm block,
 // then the PINNED emergency floor.
 // THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): the severe
-// strip carries the QUIET-choking signs + the back-blows/chest-thrusts seekCare, under a
+// strip carries the QUIET-choking signs + the back-blows/abdominal-thrusts seekCare, under a
 // choking-scoped header (never "allergic reaction"). All copy is FOOD_EFFECTS-sourced; the only
 // hardcoded strings are the polarity-keyed band/section HEADINGS (render copy, not reusable).
 function renderDietChokingIntro() {
@@ -43353,9 +43478,9 @@ function renderDietChokingIntro() {
 
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
-  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
-  // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
-  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If your baby is choking, it\'s an emergency');
+  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
+  // thrusts (child 1y+ technique since Ziva turned one) + "NO adrenaline".
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).
@@ -43390,8 +43515,9 @@ const ALL_TIPS = [
   // ── IRON (highest priority at 6–9 months) ──
   {
     type:'info', icon:zi('dot-red'),
-    title:'Iron window — act before 9 months',
-    body:'Ziva\'s birth iron stores deplete around 8–9 months. Ensure ragi, masoor dal, beetroot, or spinach appear at least 4–5 times a week.',
+    // Retitled for 12 m+ (Vela V-V-266-11): the 9-month "deadline" framing reads as missed.
+    title:'Iron-rich foods, most days',
+    body:'Toddlers need about 7 mg of iron a day, and too much milk crowds it out. Aim for ragi, masoor dal, rajma, beetroot, or spinach at least 4–5 times a week, with a vitamin C food (amla, lemon, orange) alongside.',
     condition: d => {
       const ironFoods = ['ragi','masoor dal','beetroot','beans','moong dal','spinach','bajra','jowar','poha','toor dal','chana dal','rajma','pumpkin seeds'];
       return countFoodsInDiary(d, ironFoods) < 4;
@@ -43514,24 +43640,42 @@ const ALL_TIPS = [
     body:'Avocado, ghee, coconut, paneer, and nut butters are key for brain & nerve development at this age. Include daily.',
     condition: d => countFoodsInDiary(d, ['avocado','ghee','coconut','coconut oil','paneer','butter','almonds','walnut','cashew']) < 3,
   },
-  // ── AVOID (always show) ──
+  // ── AVOID (always show, or age-gated) ──
+  // The under-1 rules (honey, cow's milk as a drink) are gated to < 12 months; from 1 year they
+  // retire and the salt/sugar tip turns into its toddler form (2026-09-24 12-month audit — they had
+  // shown "always", contradicting the unlocked Library gates).
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 12 months. Natural sweetness from fruit is fine.',
-    condition: () => true,
+    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    type:'avoid', icon:zi('warn'),
+    title:'Keep salt light — still no added sugar',
+    body:'Family food is fine now, but cook hers lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery, honey or sweets until 2 years; fruit is her sweetener.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('spoon'),
     title:'No honey before 12 months',
     body:'Honey carries risk of infant botulism regardless of form. Strictly avoid until 1 year.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
   },
   {
     type:'avoid', icon:zi('drop'),
     title:'No cow\'s milk as main drink yet',
     body:'Cow\'s milk lacks iron and can stress infant kidneys. Curd and paneer are fine, but milk as a drink should wait until 12 months.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    // type 'info', not 'add' (Vela V-V-266-11): the toddler milk risk is too MUCH. The 500 ml cap is
+    // the in-repo verified figure (FOOD_EFFECTS['cow milk']; docs/research/cow-milk-plant-milks-
+    // infant-safety.md Axis 3 — AAP ~2 cups, ESPGHAN <500 ml) — Ceres V-C-266-6.
+    type:'info', icon:zi('drop'),
+    title:'Whole milk — from a cup, not too much',
+    body:'From 1 year, full-cream cow\'s milk can be a main drink — in an open cup, with or after meals, not a bottle. About 500 ml (2 cups) a day at most: more fills her up and is linked to iron deficiency. Use full-cream, not toned, double-toned or skimmed.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('drop'),
@@ -43546,7 +43690,7 @@ const ALL_TIPS = [
     body:'At 6.5+ months, start moving from smooth purees to slightly mashed food. Tiny soft lumps help develop chewing muscles and prevent texture aversion later.',
     condition: () => {
       const mo = getAgeInMonths();
-      return mo >= 6.5;
+      return mo >= 6.5 && mo < 12; // 12 m+: family-food textures
     }
   },
   {
@@ -43555,7 +43699,7 @@ const ALL_TIPS = [
     body:'By 7–8 months, soft finger foods like steamed carrot sticks, banana pieces, or soft idli strips help develop pincer grasp and self-feeding skills.',
     condition: () => {
       const mo = getAgeInMonths();
-      return mo >= 7;
+      return mo >= 7 && mo < 12;   // 12 m+: finger foods are already here
     }
   },
   // ── ALLERGEN INTRODUCTION ──
@@ -43716,9 +43860,9 @@ const ALL_TIPS = [
   {
     type:'add', icon:zi('star'),
     title:'Indian superfoods for babies',
-    body:'Makhana (calcium), sattu (protein), jaggery (iron), saffron (brain), drumstick (calcium + iron), and amla (Vit C) are traditional Indian baby superfoods. Try adding one new one this week.',
+    body:'Makhana (calcium), sattu (protein), halim / garden cress (iron), saffron (brain), drumstick (calcium + iron), and amla (Vit C) are traditional Indian baby superfoods. Try adding one new one this week.',
     condition: d => {
-      const superfoods = ['makhana','sattu','jaggery','saffron','drumstick','amla'];
+      const superfoods = ['makhana','sattu','halim','saffron','drumstick','amla']; // jaggery out: added sugar (V-C-266-2)
       return countFoodsInDiary(d, superfoods) === 0;
     }
   },
@@ -43802,7 +43946,8 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    chips.push({ text:'cow milk', cls:'chip-avoid' });
+    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 2026-09-24 audit
+    chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-caution' : 'chip-avoid' }); // checker returns caution (ALLERGENS) at 12 m+
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });
     chips.push({ text:'idli + sambar', cls:'chip-safe' });
@@ -43828,8 +43973,8 @@ function checkFoodCombo() {
   const cachedIdx = comboHistory.findIndex(h => h.q.toLowerCase() === query.toLowerCase());
   if (cachedIdx !== -1) {
     const cached = comboHistory[cachedIdx];
-    if (cached.result && cached.result._schema === COMBO_RESULT_SCHEMA) { renderComboResult(cached.result); return; }
-    comboHistory.splice(cachedIdx, 1); // stale schema → recompute below
+    if (_comboCacheValid(cached.result)) { renderComboResult(cached.result); return; }
+    comboHistory.splice(cachedIdx, 1); // stale schema or computed at a different age → recompute below
   }
 
   // Parse foods from query
@@ -44083,6 +44228,7 @@ function checkFoodCombo() {
     toxin,
     encourage,
     _schema: COMBO_RESULT_SCHEMA,   // M-R1-1: marks an R1-floor-bearing result
+    _mo: Math.floor(mo),            // V-C-266-1: the age the verdict was computed at (cache key)
   };
 
   // Cache
@@ -44254,7 +44400,8 @@ function generateDonts(foodList, tags, mo) {
   const classified = foodList.map(f => ({ name:f, info:classifyFood(f) })).filter(c => c.info);
   const subcats = new Set(classified.map(c => c.info.subcat));
 
-  donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  if (mo < 12) donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  else donts.push('Go light on salt. No added sugar, jaggery or honey until 2 years');
   if (mo < 8) donts.push('Puree or mash very smooth — no chunks yet at this age');
   else if (mo < 10) donts.push('Keep pieces soft and small — gag reflex is still developing');
 
@@ -44264,7 +44411,7 @@ function generateDonts(foodList, tags, mo) {
   if (subcats.has('leafy')) donts.push('Don\'t give leafy greens daily — 2–3 times/week is ideal (nitrate/oxalate content)');
   if (subcats.has('curd')) donts.push('Don\'t heat curd/yogurt — kills beneficial bacteria. Room temperature only');
   if (subcats.has('spice')) donts.push('Use barely a pinch — baby portions need 1/10th of adult amounts');
-  if (subcats.has('sweetener')) donts.push('Avoid jaggery/gur before 12 months — treated as added sugar by paediatricians');
+  if (subcats.has('sweetener')) donts.push('Avoid jaggery, gur, mishri and syrups before 2 years — they are added sugar');
   if (subcats.has('egg')) donts.push('Avoid egg white initially — introduce yolk only for the first few times');
   if (subcats.has('fish')) donts.push('Check every flake for tiny bones — even "boneless" fillets can have pin bones');
   if (subcats.has('legume')) donts.push('Soak overnight and cook very well — undercooked legumes cause gas and bloating');
@@ -44401,7 +44548,11 @@ function renderComboHistory() {
   if (!el || comboHistory.length === 0) { if (el) el.innerHTML = ''; return; }
 
   let html = `<div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:6px;">Recent checks</div>`;
-  comboHistory.slice(0, 5).forEach(h => {
+  // Only rows still valid for her age + the current rules (Cipher A1): a pre-PR "jaggery: safe" row
+  // must not keep showing a green check here. Invalid rows are recomputed when re-queried.
+  const validRows = comboHistory.filter(h => typeof _comboCacheValid === 'function' ? _comboCacheValid(h.result) : true);
+  if (validRows.length === 0) { el.innerHTML = ''; return; }
+  validRows.slice(0, 5).forEach(h => {
     const emoji = h.result.verdict === 'safe' ? zi('check') : h.result.verdict === 'caution' ? zi('warn') : zi('warn');
     html += `<div class="combo-hist-item" data-action="showComboHistory" data-arg="${escHtml(h.q)}">
       <div class="combo-hist-q">${emoji} ${escHtml(h.q)}</div>
@@ -49256,7 +49407,14 @@ function renderGrowthFacts() {
     const wtGain = ((wtLast.wt - wtPrev.wt) * 1000).toFixed(0);
     const daysDiff = Math.max(1, Math.round((new Date(wtLast.date) - new Date(wtPrev.date)) / 86400000));
     const gPerDay = Math.round(wtGain / daysDiff);
-    if (gPerDay >= 15 && gPerDay <= 40) {
+    // From 1 year the WHO band is ~3–12 g/day (GROWTH_VELOCITY_12_24); the 15–30 g/day line
+    // is the early-infancy rate and must not be quoted to a toddler (2026-09-24 audit).
+    const vb = GROWTH_VELOCITY_12_24;
+    if (mo >= 12) {
+      if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
+        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. Ziva is growing steadily.` });
+      }
+    } else if (gPerDay >= 15 && gPerDay <= 40) {
       facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. Ziva is growing beautifully.` });
     } else if (gPerDay > 40) {
       facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage as she is establishing her growth curve on solids.` });
@@ -49286,20 +49444,41 @@ function renderGrowthFacts() {
   if (lwFact) {
     const birth = growthData.find(r => r.wt != null);
     const totalGain = (lwFact.wt - birth.wt).toFixed(2);
-    facts.push({ type:'positive', icon:zi('sprout'), title:`Gained ${totalGain} kg since birth`, body:`From ${birth.wt} kg at birth to ${lwFact.wt} kg now — more than doubled her birth weight, which is a classic healthy 6-month milestone.` });
+    // The multiple is computed, not asserted (Vela V-V-266-12): babies roughly triple birth weight by 1 year.
+    const mult = birth.wt > 0 ? lwFact.wt / birth.wt : 0;
+    const multText = mult >= 2.9 ? 'about triple her birth weight — the classic first-year marker'
+      : mult >= 2 ? 'more than double her birth weight' : 'steady gain since birth';
+    facts.push({ type:'positive', icon:zi('sprout'), title:`Gained ${totalGain} kg since birth`, body:`From ${birth.wt} kg at birth to ${lwFact.wt} kg now — ${multText}.` });
+  }
+
+  // One-time note on the growth-reference change (Maren V-M-266-5 / Vela V-V-266-3, 2026-09-24).
+  // The default "India" table read her ~20–30 percentile points high and every post-12 m reading was
+  // compared to the 12-month row — so her percentiles drop when this lands. Own the correction up
+  // front, so a tired parent doesn't read a changed ruler as faltering growth. Dismiss persists
+  // per device (localStorage; not synced — each parent sees it once).
+  let _whoNoteSeen = false;
+  try { _whoNoteSeen = localStorage.getItem('ziva_growth_who_note_seen') === '1'; } catch (e) { _whoNoteSeen = false; }
+  if (!_whoNoteSeen && lwFact) {
+    facts.unshift({ type:'info', icon:zi('info'), dismiss:'dismissGrowthWhoNote',
+      title:'Growth now uses the WHO charts for every reading',
+      body:'IAP, India’s paediatric academy, recommends the WHO charts for children under 5, and they now run to 2 years. Her percentile may read lower than before — her growth hasn’t changed, only the measuring stick has.' });
   }
 
   // WHO context
   facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of Ziva\'s health — a single reading means less than the pattern across visits. Keep logging!` });
 
   el.innerHTML = facts.map(f => `
-    <div class="growth-fact ${f.type}">
+    <div class="growth-fact ${f.type}${f.dismiss ? ' has-dismiss' : ''}">${f.dismiss ? `<button class="ctx-alert-dismiss" data-action="${f.dismiss}" aria-label="Dismiss">&times;</button>` : ''}
       <div class="growth-fact-icon">${f.icon}</div>
       <div class="growth-fact-body">
         <strong>${f.title}</strong>
         <span>${f.body}</span>
       </div>
     </div>`).join('');
+}
+function dismissGrowthWhoNote() {
+  try { localStorage.setItem('ziva_growth_who_note_seen', '1'); } catch (e) { /* private mode: note reappears */ }
+  renderGrowthFacts();
 }
 // @@INSERT_DATA_BLOCK_3@@
 
@@ -49540,12 +49719,14 @@ function calcPercentile(val, p3, p50, p97, p15, p85) {
   return { text: clamped + suffix, pct: clamped };
 }
 
+// WHO tables run 0–24 months (data.js). Clamp to the table's own last index — never a
+// hard-coded month — so extending the table can't be silently undone by a stale constant.
 function getInterpolatedWHO(moExact) {
-  const lo = Math.floor(moExact);
-  const hi = Math.min(lo + 1, 12);
-  const frac = moExact - lo;
-  const li = Math.min(lo, 12);
-  const hi2 = Math.min(hi, 12);
+  const last = WHO_W50.length - 1;
+  const lo = Math.max(0, Math.floor(moExact));
+  const li = Math.min(lo, last);
+  const hi2 = Math.min(li + 1, last);
+  const frac = lo >= last ? 0 : moExact - lo;
   return {
     w3:  WHO_W3[li]  + (WHO_W3[hi2]  - WHO_W3[li])  * frac,
     w50: WHO_W50[li] + (WHO_W50[hi2] - WHO_W50[li]) * frac,
@@ -49680,60 +49861,29 @@ function renderGrowth() {
   renderGrowthInsightsPreview();
 }
 
-// Indian Synthetic Growth Reference (Khadilkar 2019) — Girls, 0-12 months
-// Based on NFHS/ICMR data representing typical Indian infant growth
-// P50 values are approximately WHO 25th-30th percentile
-const IND_W50 = [3.0,3.9,4.7,5.4,5.9,6.4,6.7,7.0,7.3,7.5,7.8,8.0,8.2];
-const IND_W3  = [2.2,2.9,3.5,4.0,4.4,4.8,5.1,5.4,5.6,5.8,6.0,6.2,6.3];
-const IND_W97 = [3.9,5.1,6.1,7.0,7.7,8.3,8.7,9.1,9.5,9.8,10.1,10.4,10.7];
-const IND_H50 = [48.0,52.5,55.8,58.5,60.8,62.7,64.3,65.8,67.2,68.5,69.8,71.0,72.2];
-const IND_H3  = [44.5,48.6,51.5,54.0,56.2,58.0,59.6,61.0,62.3,63.5,64.7,65.8,66.8];
-const IND_H97 = [51.5,56.4,60.1,63.0,65.4,67.4,69.0,70.6,72.1,73.5,74.9,76.2,77.4];
-
-// Euro-Growth Study (Haschke et al. 2000) — European girls, months 0–12
-const EU_W50 = [3.3,4.3,5.2,5.9,6.5,7.0,7.4,7.7,8.0,8.3,8.6,8.8,9.1];
-const EU_W3  = [2.5,3.3,4.0,4.6,5.1,5.5,5.8,6.1,6.4,6.6,6.8,7.0,7.2];
-const EU_W97 = [4.3,5.6,6.7,7.6,8.3,8.9,9.4,9.9,10.3,10.7,11.0,11.3,11.6];
-const EU_H50 = [49.5,54.0,57.4,60.2,62.4,64.3,66.0,67.5,69.0,70.4,71.7,73.0,74.3];
-const EU_H3  = [46.0,50.2,53.2,55.8,58.0,59.9,61.5,63.0,64.4,65.7,66.9,68.0,69.1];
-const EU_H97 = [53.0,57.8,61.6,64.6,66.8,68.7,70.5,72.0,73.6,75.1,76.5,78.0,79.5];
-
-// Chinese National Growth Standards (Li et al. 2009, Capital Institute of Pediatrics) — girls, months 0–12
-const CN_W50 = [3.2,4.2,5.1,5.8,6.3,6.8,7.2,7.5,7.8,8.1,8.4,8.6,8.8];
-const CN_W3  = [2.4,3.1,3.8,4.4,4.8,5.2,5.5,5.8,6.1,6.3,6.5,6.7,6.9];
-const CN_W97 = [4.1,5.4,6.5,7.4,8.1,8.7,9.2,9.6,10.0,10.4,10.7,11.0,11.3];
-const CN_H50 = [49.0,53.5,56.9,59.6,61.8,63.7,65.4,66.9,68.3,69.7,71.0,72.2,73.4];
-const CN_H3  = [45.4,49.5,52.5,55.0,57.2,59.0,60.6,62.0,63.4,64.7,65.9,67.0,68.1];
-const CN_H97 = [52.6,57.5,61.3,64.2,66.4,68.4,70.2,71.8,73.2,74.7,76.1,77.4,78.7];
+// Growth reference = WHO only (2026-09-24, 12-month audit, Architect decision). The former
+// "India (IAP)", Euro-Growth and China overlay tables were retired: the India table did not match
+// the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading Ziva high), the China
+// table matched neither Li 2009 nor WS/T 423-2022, and the Euro-Growth source could not be verified.
+// IAP 2015 itself recommends the WHO 2006 standards under 5. `_referenceStandard` still selects the
+// MILESTONE and SLEEP standards; it no longer changes growth percentiles.
 
 // Chart filter state
 let _referenceStandard = localStorage.getItem('ziva_reference_standard') || 'iap';
 // Migrate old 'india' key to 'iap'
 if (_referenceStandard === 'india') { _referenceStandard = 'iap'; localStorage.setItem('ziva_reference_standard', 'iap'); }
 
-function getInterpolatedEU(moExact) {
-  const lo = Math.floor(moExact), hi = Math.min(lo+1,12), f = moExact-lo;
-  const li = Math.min(lo,12), h2 = Math.min(hi,12);
-  return {
-    w3:EU_W3[li]+(EU_W3[h2]-EU_W3[li])*f, w50:EU_W50[li]+(EU_W50[h2]-EU_W50[li])*f, w97:EU_W97[li]+(EU_W97[h2]-EU_W97[li])*f,
-    h3:EU_H3[li]+(EU_H3[h2]-EU_H3[li])*f, h50:EU_H50[li]+(EU_H50[h2]-EU_H50[li])*f, h97:EU_H97[li]+(EU_H97[h2]-EU_H97[li])*f,
-  };
-}
-
-function getInterpolatedCN(moExact) {
-  const lo = Math.floor(moExact), hi = Math.min(lo+1,12), f = moExact-lo;
-  const li = Math.min(lo,12), h2 = Math.min(hi,12);
-  return {
-    w3:CN_W3[li]+(CN_W3[h2]-CN_W3[li])*f, w50:CN_W50[li]+(CN_W50[h2]-CN_W50[li])*f, w97:CN_W97[li]+(CN_W97[h2]-CN_W97[li])*f,
-    h3:CN_H3[li]+(CN_H3[h2]-CN_H3[li])*f, h50:CN_H50[li]+(CN_H50[h2]-CN_H50[li])*f, h97:CN_H97[li]+(CN_H97[h2]-CN_H97[li])*f,
-  };
-}
-
 function getGrowthRef(moExact) {
-  if (_referenceStandard === 'iap') return getInterpolatedIND(moExact);
-  if (_referenceStandard === 'eu') return getInterpolatedEU(moExact);
-  if (_referenceStandard === 'cn') return getInterpolatedCN(moExact);
   return getInterpolatedWHO(moExact);
+}
+
+// Default (un-zoomed) growth-chart x-range: 0 → one month past her current age, never less than
+// the first year and never past the WHO table (24 months). Replaces the fixed 0–12 axis, which
+// clipped every measurement taken after her first birthday off the chart.
+function _growthChartMaxMonth() {
+  const last = WHO_W50.length - 1;
+  // ageAt() is the timezone-safe calendar age (HR-12; Maren V-M-266-15), not a UTC-parsed date string.
+  return Math.min(last, Math.max(12, ageAt().months + 2));
 }
 
 function setReferenceStandard(std) {
@@ -49766,7 +49916,7 @@ function updatePercentileBadges() {
   if (!lwBadge) return;
   const moExact = ageMonthsAt(lwBadge.date);
   const ref = getGrowthRef(moExact);
-  const stdLabel = _referenceStandard === 'iap' ? 'India' : _referenceStandard === 'eu' ? 'EU' : _referenceStandard === 'cn' ? 'China' : 'WHO';
+  const stdLabel = 'WHO';
 
   // Weight percentile
   const wtBadge = document.getElementById('pbadge-wtpct');
@@ -49808,7 +49958,7 @@ function setChartZoom(chart, range) {
 
 function getChartZoomRange(chart) {
   const range = _chartZoom[chart] || 'all';
-  if (range === 'all') return null; // use default 0–12m
+  if (range === 'all') return null; // use the default age-following window (_growthChartMaxMonth)
 
   const now = new Date();
   let startDate;
@@ -49891,10 +50041,12 @@ function drawChart(canvasId) {
   renderChartContext('wt', zoom);
 
   // Compute axis bounds
-  let xMin = 0, xMax = 12, yMin = 2, yMax = 12;
+  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 2;
+  // Headroom for a reading above P97 so it is never drawn off-canvas (Maren V-M-266-13).
+  let yMax = Math.max(Math.ceil(WHO_W97[xMax] + 0.5), zivaPoints.length ? Math.ceil(Math.max(...zivaPoints.map(p => p.y)) + 0.5) : 0);
   if (zoom && zivaPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
-    xMax = Math.min(12, Math.ceil(zoom.max));
+    xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
     if (xMax - xMin < 1) xMax = xMin + 1;
     const vals = zivaPoints.map(p => p.y);
     const dataMin = Math.min(...vals);
@@ -49903,39 +50055,21 @@ function drawChart(canvasId) {
     yMin = Math.max(0, Math.floor((dataMin - padding) * 2) / 2);
     yMax = Math.ceil((dataMax + padding) * 2) / 2;
   }
-  const f = _referenceStandard;
   const datasets = [];
 
-  if (f === 'who') {
-    datasets.push({ label:'WHO 97th', data: WHO_W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'WHO 3rd',  data: WHO_W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'WHO 50th', data: WHO_W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
-  }
-  if (f === 'iap') {
-    datasets.push({ label:'India 97th', data: IND_W97.map((y,x)=>({x,y})), borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'India 3rd',  data: IND_W3.map((y,x)=>({x,y})),  borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(255,165,0,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'India 50th', data: IND_W50.map((y,x)=>({x,y})), borderColor:'rgba(255,140,0,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'eu') {
-    datasets.push({ label:'EU 97th', data: EU_W97.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'EU 3rd',  data: EU_W3.map((y,x)=>({x,y})),  borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(70,130,180,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'EU 50th', data: EU_W50.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'cn') {
-    datasets.push({ label:'CN 97th', data: CN_W97.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'CN 3rd',  data: CN_W3.map((y,x)=>({x,y})),  borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(220,60,60,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'CN 50th', data: CN_W50.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
+  datasets.push({ label:'WHO 97th', data: WHO_W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
+  datasets.push({ label:'WHO 3rd',  data: WHO_W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
+  datasets.push({ label:'WHO 50th', data: WHO_W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const wtPointR = zoom ? 7 : 5;
   const wtHoverR = zoom ? 10 : 7;
   datasets.push({ label:'Ziva', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = f === 'iap' ? ['India 50th','Ziva'] : f === 'eu' ? ['EU 50th','Ziva'] : f === 'cn' ? ['CN 50th','Ziva'] : ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','Ziva'];
   const _ct = getChartTheme();
 
   const _chartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
-    data:{ labels: Array.from({length:13}, (_,i) => i+'m'), datasets },
+    data:{ labels: Array.from({length:WHO_W50.length}, (_,i) => i+'m'), datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
@@ -49985,10 +50119,11 @@ function drawHeightChart(canvasId) {
   renderChartContext('ht', zoom);
 
   // Compute axis bounds
-  let xMin = 0, xMax = 12, yMin = 44, yMax = 80;
+  let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 44;
+  let yMax = Math.max(Math.ceil((WHO_H97[xMax] + 2) / 2) * 2, zivaHtPoints.length ? Math.ceil(Math.max(...zivaHtPoints.map(p => p.y)) + 2) : 0);
   if (zoom && zivaHtPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
-    xMax = Math.min(12, Math.ceil(zoom.max));
+    xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
     if (xMax - xMin < 1) xMax = xMin + 1;
     const vals = zivaHtPoints.map(p => p.y);
     const dataMin = Math.min(...vals);
@@ -49998,39 +50133,21 @@ function drawHeightChart(canvasId) {
     yMax = Math.ceil(dataMax + padding);
   }
 
-  const f = _referenceStandard;
   const datasets = [];
 
-  if (f === 'who') {
-    datasets.push({ label:'WHO 97th', data: WHO_H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'WHO 3rd',  data: WHO_H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'WHO 50th', data: WHO_H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
-  }
-  if (f === 'iap') {
-    datasets.push({ label:'India 97th', data: IND_H97.map((y,x)=>({x,y})), borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'India 3rd',  data: IND_H3.map((y,x)=>({x,y})),  borderColor:'rgba(255,165,0,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(255,165,0,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'India 50th', data: IND_H50.map((y,x)=>({x,y})), borderColor:'rgba(255,140,0,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'eu') {
-    datasets.push({ label:'EU 97th', data: EU_H97.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'EU 3rd',  data: EU_H3.map((y,x)=>({x,y})),  borderColor:'rgba(70,130,180,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(70,130,180,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'EU 50th', data: EU_H50.map((y,x)=>({x,y})), borderColor:'rgba(70,130,180,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
-  if (f === 'cn') {
-    datasets.push({ label:'CN 97th', data: CN_H97.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-    datasets.push({ label:'CN 3rd',  data: CN_H3.map((y,x)=>({x,y})),  borderColor:'rgba(220,60,60,0.25)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(220,60,60,0.06)', fill:'-1', tension:0.4 });
-    datasets.push({ label:'CN 50th', data: CN_H50.map((y,x)=>({x,y})), borderColor:'rgba(220,60,60,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[6,3], tension:0.4 });
-  }
+  datasets.push({ label:'WHO 97th', data: WHO_H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
+  datasets.push({ label:'WHO 3rd',  data: WHO_H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
+  datasets.push({ label:'WHO 50th', data: WHO_H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const htPointR = zoom ? 7 : 5;
   const htHoverR = zoom ? 10 : 7;
   datasets.push({ label:'Ziva', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = f === 'iap' ? ['India 50th','Ziva'] : f === 'eu' ? ['EU 50th','Ziva'] : f === 'cn' ? ['CN 50th','Ziva'] : ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','Ziva'];
   const _ct = getChartTheme();
 
   const _hChartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
-    data:{ labels: Array.from({length:13}, (_,i) => i+'m'), datasets },
+    data:{ labels: Array.from({length:WHO_W50.length}, (_,i) => i+'m'), datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
@@ -50058,15 +50175,6 @@ function drawHeightChart(canvasId) {
 }
 
 // ── GROWTH VELOCITY ──
-function getInterpolatedIND(moExact) {
-  const lo = Math.floor(moExact), hi = Math.min(lo+1,12), f = moExact-lo;
-  const li = Math.min(lo,12), h2 = Math.min(hi,12);
-  return {
-    w3:IND_W3[li]+(IND_W3[h2]-IND_W3[li])*f, w50:IND_W50[li]+(IND_W50[h2]-IND_W50[li])*f, w97:IND_W97[li]+(IND_W97[h2]-IND_W97[li])*f,
-    h3:IND_H3[li]+(IND_H3[h2]-IND_H3[li])*f, h50:IND_H50[li]+(IND_H50[h2]-IND_H50[li])*f, h97:IND_H97[li]+(IND_H97[h2]-IND_H97[li])*f,
-  };
-}
-
 function renderVelocity() {
   const el = document.getElementById('velocityContent');
 
@@ -50082,19 +50190,19 @@ function renderVelocity() {
   const days = Math.max(1, Math.round((new Date(lastWt.date) - new Date(prevWt.date)) / 86400000));
   const mo = Math.round(getAgeInMonths());
   const moExact = ageMonthsAt(lastWt.date);
-  const ref = _referenceStandard === 'iap' ? getInterpolatedIND(moExact) : getGrowthRef(moExact);
-  const refLabel = _referenceStandard === 'iap' ? 'India' : _referenceStandard === 'eu' ? 'EU' : _referenceStandard === 'cn' ? 'China' : 'WHO';
+  const ref = getGrowthRef(moExact);
+  const refLabel = 'WHO';
 
   // Weight velocity
   const wtGainG = Math.round((lastWt.wt - prevWt.wt) * 1000);
   const gPerDay = Math.round(wtGainG / days);
-  const expectedMin = mo <= 3 ? 25 : mo <= 6 ? 15 : mo <= 9 ? 10 : 8;
-  const expectedMax = mo <= 3 ? 35 : mo <= 6 ? 25 : mo <= 9 ? 18 : 14;
+  const expectedMin = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMin : mo <= 3 ? 25 : mo <= 6 ? 15 : mo <= 9 ? 10 : 8;
+  const expectedMax = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMax : mo <= 3 ? 35 : mo <= 6 ? 25 : mo <= 9 ? 18 : 14;
   const wtPctFill = Math.min(100, Math.max(5, ((gPerDay - 0) / (expectedMax * 1.5)) * 100));
   const wtColor = (gPerDay >= expectedMin && gPerDay <= expectedMax * 1.3) ? 'var(--tc-sage)' : gPerDay < expectedMin ? 'var(--tc-caution)' : 'var(--tc-sky)';
 
   // Position relative to reference 50th
-  const wtPct = calcPercentile(lastWt.wt, ref.w3, ref.w50, ref.w97);
+  const wtPct = calcPercentile(lastWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85); // 5-point, matches the badge (V-M-266-16)
 
   let html = '<div class="velocity-gauges">';
 
@@ -50104,7 +50212,7 @@ function renderVelocity() {
       <div class="vg-info">
         <div><span class="vg-value" style="color:${wtColor};">${gPerDay}</span><span class="vg-unit">g/day</span></div>
         <div class="vg-label">Gain rate</div>
-        <div class="vg-context">Expected: ${expectedMin}–${expectedMax}</div>
+        <div class="vg-context">Expected: ${expectedMin}–${expectedMax} g/day</div>
       </div>
     </div>`;
 
@@ -50126,7 +50234,7 @@ function renderVelocity() {
     const htDays = Math.max(1, Math.round((new Date(htLast.date) - new Date(htPrev.date)) / 86400000));
     const htGainCm = (htLast.ht - htPrev.ht).toFixed(1);
     const cmPerWeek = ((htLast.ht - htPrev.ht) / (htDays / 7)).toFixed(1);
-    const expCmWk = mo <= 6 ? '0.4–0.6' : '0.2–0.4';
+    const expCmWk = mo >= 12 ? GROWTH_VELOCITY_12_24.hCmWk : mo <= 6 ? '0.4–0.6' : '0.2–0.4';
     const htColor = parseFloat(cmPerWeek) > 0 ? 'var(--tc-sky)' : 'var(--tc-caution)';
     html += `
       <div class="velocity-gauge vg-sky">
@@ -50284,11 +50392,9 @@ function renderSizeComparison() {
   // Fun fact based on percentile — uses active filter
   if (!wt) { el.innerHTML = html; return; }
   const moExact = ageMonthsAt(lwSize.date);
-  const ref = _referenceStandard === 'iap' ? getInterpolatedIND(moExact) : getGrowthRef(moExact);
-  const refLabel = _referenceStandard === 'iap' ? 'Indian national' : _referenceStandard === 'eu' ? 'Euro-Growth' : _referenceStandard === 'cn' ? 'Chinese national' : 'WHO';
-  const pctArgs = _referenceStandard === 'iap'
-    ? [wt, ref.w3, ref.w50, ref.w97]
-    : [wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85];
+  const ref = getGrowthRef(moExact);
+  const refLabel = 'WHO';
+  const pctArgs = [wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85];
   const pctResult = calcPercentile(...pctArgs);
   const pctVal = pctResult.pct;
   let funFact = '';
@@ -52562,13 +52668,15 @@ function renderVaccCoverage() {
   const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => v.name.toLowerCase()));
 
   // Determine which scheduled vaccines are due by now
-  const ageMap = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
-    '9 months':9, '12 months':12, '15 months':15, '16-18 months':16, '18 months':18, '2 years':24, '4-6 years':48 };
+  const ageMap = VACC_AGE_MONTHS;
 
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo + 0.5);
+  // Due = the schedule age has been REACHED. The old +0.5-month look-ahead labelled a dose
+  // "Missing" two weeks before it was due (JE-2 at 12.5 m — Maren V-M-266-7); look-ahead doses
+  // belong under "Next up", never in missingCount or the score.
+  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo);
   const upcoming = VACC_SCHEDULE.filter(v => {
     const am = ageMap[v.age] ?? 99;
-    return am > mo + 0.5 && am <= mo + 6;
+    return am > mo && am <= mo + 6;
   });
 
   // Match given vaccines to schedule using normalized names
@@ -58581,18 +58689,30 @@ function computeGrowthVelocity() {
   var weightResult = null;
   if (weightEntries.length >= 2) {
     var wLatest = weightEntries[weightEntries.length - 1];
+    // Band age = the measurement's age, rounded — so a weigh-in on (or just before) her birthday
+    // takes the same 12–24 m band the Growth gauge uses (Maren V-M-266-4).
+    var ageMo = ageMonthsAt(wLatest.date);
+    var bandMo = Math.round(ageMo);
+    // From 12 m, judge velocity over >= 28 days (Maren V-M-266-3 / Kael V-K-266-7): a toddler's
+    // two-week gain (~90 g at the median) is the size of home-scale noise, and WHO publishes
+    // 12–24 m velocity only in 2-month steps. Use the latest weigh-in at least 28 days back.
     var wPrev = weightEntries[weightEntries.length - 2];
+    if (bandMo >= 12) {
+      for (var wi = weightEntries.length - 2; wi >= 0; wi--) {
+        if ((new Date(wLatest.date) - new Date(weightEntries[wi].date)) / 86400000 >= 28) { wPrev = weightEntries[wi]; break; }
+      }
+    }
     var wDaysBetween = Math.max(1, Math.round((new Date(wLatest.date) - new Date(wPrev.date)) / 86400000));
     var wGainG = Math.round((wLatest.wt - wPrev.wt) * 1000);
     var gPerDay = Math.round(wGainG / wDaysBetween * 10) / 10;
 
     // Expected velocity by age
-    var ageMo = ageMonthsAt(wLatest.date);
     var expectedRange;
-    if (ageMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
-    else if (ageMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
-    else if (ageMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
-    else expectedRange = { min: 8, max: 13, label: '9–12 months' };
+    if (bandMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
+    else if (bandMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
+    else if (bandMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
+    else if (bandMo < 12) expectedRange = { min: 8, max: 13, label: '9–12 months' };
+    else expectedRange = { min: GROWTH_VELOCITY_12_24.wGDayMin, max: GROWTH_VELOCITY_12_24.wGDayMax, label: GROWTH_VELOCITY_12_24.label };
 
     var wStatus;
     if (gPerDay < expectedRange.min * 0.5) wStatus = 'plateau';
@@ -58600,13 +58720,18 @@ function computeGrowthVelocity() {
     else if (gPerDay > expectedRange.max * 1.3) wStatus = 'fast';
     else wStatus = 'on-track';
 
-    // Plateau detection
-    var isPlateau = wGainG < 50 && wDaysBetween >= 14;
+    // Plateau detection — scaled to the age band (was a fixed infant-era 50 g / 14 d floor that
+    // overrode the toddler band: 45 g over 15 d is on track at 12 m+, not a plateau).
+    var isPlateau = wDaysBetween >= 14 && wGainG < expectedRange.min * 0.5 * wDaysBetween;
     if (isPlateau) wStatus = 'plateau';
 
-    // Freshness
+    // Too short an interval to judge a toddler: no verdict either way (tooShort lets renderers say so).
+    var wTooShort = bandMo >= 12 && wDaysBetween < 28;
+    if (wTooShort) { wStatus = 'on-track'; isPlateau = false; }
+
+    // Freshness — toddlers are weighed about monthly, so "stale" moves from 3 to 5 weeks at 12 m+.
     var daysSinceWeight = Math.round((new Date(todayStr) - new Date(wLatest.date)) / 86400000);
-    var weightStale = daysSinceWeight > 21;
+    var weightStale = daysSinceWeight > (bandMo >= 12 ? 35 : 21);
 
     // Total gain since birth
     var birthWeight = weightEntries[0].wt;
@@ -58621,6 +58746,7 @@ function computeGrowthVelocity() {
       expectedRange: expectedRange,
       status: wStatus,
       isPlateau: isPlateau,
+      tooShort: wTooShort,
       daysSince: daysSinceWeight,
       stale: weightStale,
       totalGainG: totalGainG
@@ -58632,14 +58758,22 @@ function computeGrowthVelocity() {
   var heightResult = null;
   if (heightEntries.length >= 2) {
     var hLatest = heightEntries[heightEntries.length - 1];
+    var hBandMo = Math.round(ageMonthsAt(hLatest.date));
     var hPrev = heightEntries[heightEntries.length - 2];
+    if (hBandMo >= 12) { // same >= 28-day lookback as weight
+      for (var hi = heightEntries.length - 2; hi >= 0; hi--) {
+        if ((new Date(hLatest.date) - new Date(heightEntries[hi].date)) / 86400000 >= 28) { hPrev = heightEntries[hi]; break; }
+      }
+    }
     var hDaysBetween = Math.max(1, Math.round((new Date(hLatest.date) - new Date(hPrev.date)) / 86400000));
     var cmGain = Math.round((hLatest.ht - hPrev.ht) * 10) / 10;
     var cmPerMonth = Math.round(cmGain / hDaysBetween * 30.44 * 10) / 10;
 
-    var hAgeMo = ageMonthsAt(hLatest.date);
-    var hExpected = (hAgeMo < 6) ? { min: 2.0, max: 3.5 } : { min: 1.0, max: 2.5 };
+    // 12–24 m band from the shared WHO constant (Maren V-M-266-2 — this site was missed).
+    var hExpected = hBandMo >= 12 ? { min: GROWTH_VELOCITY_12_24.hCmMoMin, max: GROWTH_VELOCITY_12_24.hCmMoMax }
+      : (hBandMo < 6) ? { min: 2.0, max: 3.5 } : { min: 1.0, max: 2.5 };
     var hStatus = cmPerMonth < hExpected.min ? 'slow' : (cmPerMonth > hExpected.max ? 'fast' : 'on-track');
+    if (hBandMo >= 12 && hDaysBetween < 28) hStatus = 'on-track';
 
     var daysSinceHeight = Math.round((new Date(todayStr) - new Date(hLatest.date)) / 86400000);
 
@@ -58661,8 +58795,10 @@ function computeGrowthVelocity() {
   weightEntries.forEach(function(we) {
     var ageMo = ageMonthsAt(we.date);
     var ref = getGrowthRef(ageMo);
-    if (ref && ref.wt) {
-      var pctResult = calcPercentile(we.wt, ref.wt.p3, ref.wt.p50, ref.wt.p97, ref.wt.p15, ref.wt.p85);
+    // getGrowthRef returns flat {w3,w50,w97,w15,w85,h*}; this read `ref.wt.p3` and was always
+    // undefined, so percentile history / crossings / proportionFlag never fired (V-K-266-8 / V-M-266-17).
+    if (ref && ref.w50) {
+      var pctResult = calcPercentile(we.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85);
       percentiles.push({ date: we.date, weight: we.wt, percentile: pctResult.pct });
     }
   });
@@ -58689,8 +58825,8 @@ function computeGrowthVelocity() {
     var hLatestEntry = heightEntries[heightEntries.length - 1];
     var hAgeMo2 = ageMonthsAt(hLatestEntry.date);
     var hRef = getGrowthRef(hAgeMo2);
-    if (hRef && hRef.ht) {
-      var hPctResult = calcPercentile(hLatestEntry.ht, hRef.ht.p3, hRef.ht.p50, hRef.ht.p97, hRef.ht.p15, hRef.ht.p85);
+    if (hRef && hRef.h50) {
+      var hPctResult = calcPercentile(hLatestEntry.ht, hRef.h3, hRef.h50, hRef.h97, hRef.h15, hRef.h85);
       if (Math.abs(latestPercentile - hPctResult.pct) > 30) {
         proportionFlag = { weightPct: latestPercentile, heightPct: hPctResult.pct };
       }
@@ -58796,7 +58932,9 @@ function renderInfoGrowthVelocity() {
     var iHtml = '';
     if (data.weight) {
       var w2 = data.weight;
-      if (w2.status === 'on-track') {
+      if (w2.tooShort) {
+        iHtml += '<div class="si-insight si-insight-info">Her last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
+      } else if (w2.status === 'on-track') {
         iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + w2.expectedRange.label + '.</div>';
       } else if (w2.status === 'slow') {
         iHtml += '<div class="si-insight si-insight-warn">Weight gain has slowed to ' + w2.gPerDay + 'g/day — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. Review caloric intake.</div>';
@@ -61376,7 +61514,9 @@ function qaHandleFoodSafety(classified) {
   var toxin = null;        // {title, why}                — acute-toxin (honey)
   var encourage = null;    // {title, whyGood, safeFormNote} — age-appropriate allergen
   rawFoods.forEach(function(food) {
-    var rule = _lookupByFoodName(AGE_RULES, food);
+    // V-K-266-1: the strictest gate the token reaches ("milk with sugar" waits for sugar@24), via
+    // the shared _fdAgeRule (diet.js) so Q&A and the combo checker / Library agree.
+    var rule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(food) : _lookupByFoodName(AGE_RULES, food);
     var belowFloor = !!(rule && mo < rule.minMonth);
     if (belowFloor) {
       verdict = 'avoid';
@@ -72888,7 +73028,11 @@ function getUntriedSuggestions(n) {
   // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
   // hides a safety signal. Fail-closed could falsely declare the taxonomy complete.
     if (item.pid === 'nonveg' && hasGate && !_dietAllowsNonvegSid(item.sid)) return;
-    // Age gate: skip nuts for <8m (whole), skip honey for <12m
+    // Age gate: the shared strictest AGE_RULES gate (Vela V-V-266-4) — so jaggery / gur / mishri
+    // (added sugar, 24 m) never surface as "try next" while the Library says wait. The hand-coded
+    // lines below stay as a fallback if diet.js's resolver is ever absent.
+    const _ageRule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(key) : null;
+    if (_ageRule && typeof _ageRule.minMonth === 'number' && ageM < _ageRule.minMonth) return;
     if (key === 'honey' && ageM < 12) return;
     if (key === 'peanut' && ageM < 8) return;
     if (key === 'whole egg' && ageM < 8) return;
@@ -75363,18 +75507,27 @@ function renderInfoGrowthDiet() {
     return;
   }
 
-  var sorted = [...growthData].sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-  var last = sorted[sorted.length - 1];
-  var prev = sorted[sorted.length - 2];
-
-  var daysBetweenMeasurements = Math.max(1, Math.round((new Date(last.date) - new Date(prev.date)) / 86400000));
-  var wtDiffG = Math.round((last.wt - prev.wt) * 1000);
-  var velocity = Math.round((wtDiffG / daysBetweenMeasurements) * 100) / 100;
-
-  // Velocity assessment (WHO guidance for 6-12 months: ~10-15 g/day is normal)
-  var velLabel = 'normal';
-  if (velocity < 5) velLabel = 'slow';
-  else if (velocity > 20) velLabel = 'rapid';
+  // Velocity + verdict come from ONE source — computeGrowthVelocity().weight (medical.js) — so this
+  // card can never disagree with the Growth tab (Vela V-V-266-1, 2026-09-24). It had its own fixed
+  // 5–20 g/day band (an infant-era "6-12 months" comment) and sorted ALL growthData rows, so a
+  // height-only latest entry (wt:null) read as a ~-8,500 g loss. The shared path filters to weight
+  // rows, uses the age-appropriate band and the >= 28-day toddler interval.
+  var gvW = (typeof computeGrowthVelocity === 'function') ? (computeGrowthVelocity() || {}).weight : null;
+  if (!gvW) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 2 weight measurements for growth-diet analysis</div>';
+    if (perEl) perEl.innerHTML = '';
+    if (nutEl) nutEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    _setCardPriority('infoGrowthDietCard', 'ambient');
+    return;
+  }
+  var last = gvW.latest;
+  var prev = gvW.prev;
+  var daysBetweenMeasurements = gvW.daysBetween;
+  var velocity = gvW.gPerDay;
+  var velLabel = gvW.tooShort ? 'normal'
+    : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
+    : gvW.status === 'fast' ? 'rapid' : 'normal';
 
   // Diet metrics during the growth period
   var periodDates = [];
@@ -78208,8 +78361,16 @@ var CT_TEMPLATES = {
       { id: 'notes', type: 'text', label: 'Any dietary changes?' }
     ],
     resolutionCriteria: {
+      // Age-aware (Kael V-K-266-3, 2026-09-24): 80 g/week is ~WHO P85 at 12–24 m, so a toddler
+      // gaining normally never auto-resolved. From 12 m resolve at the WHO median
+      // (GROWTH_VELOCITY_12_24.wGWkMedian, ~45 g/week) — a weight goal closes on typical gain,
+      // not on the bottom edge of normal.
       type: 'threshold_met', metric: 'wtGPerWeek',
-      operator: '>=', value: 80, confirmAfterDays: 14
+      operator: '>=', confirmAfterDays: 14,
+      value: function() {
+        return (typeof ageAt === 'function' && ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined')
+          ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
+      }
     },
     escalationTriggers: [],
     autoDataSources: ['growth'],
@@ -78298,6 +78459,7 @@ function ctNextDueTime(ticket) {
 
 function ctCompare(val, operator, threshold) {
   if (val === null || val === undefined || isNaN(val)) return false;
+  if (typeof threshold === 'function') threshold = threshold(); // age-aware thresholds (V-K-266-3)
   switch (operator) {
     case '>=': return val >= threshold;
     case '>':  return val > threshold;

@@ -56,6 +56,21 @@ graphify path "renderHeroScore" "FOOD_EFFECTS"
 graphify affected "computeScore"
 ```
 
+## Version pin — `graphifyy==0.9.6` (2026-09-24)
+
+The session-start hook installs **`graphifyy[mcp]==0.9.6`** and force-reinstalls on any other version. Unpinned, the container drifted to 0.9.67 and the graph went quietly wrong in two ways:
+
+- **Cross-file `calls` stopped resolving.** SproutLab's modules are script-globals (no `import`), and from **0.9.7** onward graphify resolves `calls` only within a file. Bisected on the same source: 0.8.39 / 0.9.2 / 0.9.5 → ~2,200 cross-file calls; **0.9.6 → 2,843**; 0.9.7 … 0.9.67 → **0**. Effect: the Province Map rendered "No cross-province coupling detected", and `qa-route`'s ripple reported every change as jurisdiction-local. That is a silent canon-cc-008 under-summon, the exact class V-K-G2 guards against.
+- **`source_file` is repo-relative** (`split/core.js` — the prefix follows the directory graphify runs from, which is the repo root) where the consumers keyed on bare names (`core.js`), so every module fell through to Opera Publica with 0 LOC.
+
+**Fixes:** both consumers now normalize `source_file` to a `split/`-relative name with one shared rule, and both carry a **resolution guard**. If a graph has fewer than 500 `calls` edges, or under 15% of them cross a file (baseline 2026-09-24: 4,296 calls, 53% cross-file), the map says coupling is *unknown, not absent*, and `qa-route` **fail-safes to all four Governors**. `build-graph.sh` warns when the installed graphify isn't 0.9.6.
+
+**Before bumping the pin**, rebuild on the candidate version and confirm cross-file calls are non-zero:
+
+```bash
+python3 -c "import json;g=json.load(open('split/graphify-out/graph.json'));f={n['id']:n.get('source_file') for n in g['nodes']};c=[e for e in g['links'] if e.get('relation')=='calls'];print(len(c),'calls,',sum(f.get(e['source'])!=f.get(e['target']) for e in c),'cross-file')"
+```
+
 ## Extraction modes
 
 `split/build-graph.sh` auto-selects:
