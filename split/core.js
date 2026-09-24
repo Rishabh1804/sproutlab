@@ -977,6 +977,7 @@ function init() {
     else if (action === 'sgToggleMore') sgToggleMore();
     else if (action === 'sgTapChip') sgTapChip(parseInt(arg));
     else if (action === 'feEditReading') feEditReading(parseInt(arg));
+    else if (action === 'epEditResolved') epEditResolved(arg, arg2);
     else if (action === 'feEditDose') feEditDose(parseInt(arg));
     else if (action === 'feEditAction') feEditAction(parseInt(arg));
     else if (action === 'deEditFluid') deEditFluid(parseInt(arg));

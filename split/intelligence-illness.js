@@ -484,7 +484,7 @@ function feEditReading(idx) {
     ],
     onSave: function(v) {
       ep.readings[idx].temp = parseFloat(v.temp) || r.temp;
-      ep.readings[idx].time = _epTimeToISO(v.time);
+      ep.readings[idx].time = _epTimeToISO(v.time, ep.readings[idx].time);
       ep.readings[idx].notes = v.notes || '';
       ep.peakTemp = Math.max(...ep.readings.map(x => x.temp));
       save(KEYS.feverEpisodes, _feverEpisodes);
@@ -515,7 +515,7 @@ function feEditDose(idx) {
     onSave: function(v) {
       ep.doses[idx].medicine = v.medicine || d.medicine;
       ep.doses[idx].dose = v.dose || d.dose;
-      ep.doses[idx].time = _epTimeToISO(v.time);
+      ep.doses[idx].time = _epTimeToISO(v.time, ep.doses[idx].time);
       save(KEYS.feverEpisodes, _feverEpisodes);
       renderFeverEpisodeCard();
       showQLToast(zi('pill') + ' Dose updated');
@@ -541,7 +541,7 @@ function feEditAction(idx) {
     ],
     onSave: function(v) {
       ep.actions[idx].action = v.action || a.action;
-      ep.actions[idx].time = _epTimeToISO(v.time);
+      ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
       save(KEYS.feverEpisodes, _feverEpisodes);
       renderFeverEpisodeCard();
       showQLToast('Action updated');
@@ -553,6 +553,70 @@ function feEditAction(idx) {
       showQLToast('Action deleted');
     }
   });
+}
+
+// ── Edit a resolved episode's end (all four illness histories) ──
+// A parent often taps Resolve late ("she was fine by Tuesday morning"), and resolvedAt was the
+// tap time with no way to change it, so the history's end date and duration were wrong for good.
+// Tapping a history row now opens the shared edit sheet on the resolved date, time and notes.
+// Guard rails: not before the episode started or before its last logged entry, not in the future.
+// No Delete here: removing a whole episode from history is not what this sheet is for.
+const _EP_RESOLVE_KINDS = {
+  fever:     { label: 'Fever',     list: () => _feverEpisodes,     key: 'feverEpisodes',     render: () => renderFeverHistory() },
+  diarrhoea: { label: 'Diarrhoea', list: () => _diarrhoeaEpisodes, key: 'diarrhoeaEpisodes', render: () => renderDiarrhoeaHistory() },
+  vomiting:  { label: 'Vomiting',  list: () => _vomitingEpisodes,  key: 'vomitingEpisodes',  render: () => renderVomitingHistory() },
+  cold:      { label: 'Cold',      list: () => _coldEpisodes,      key: 'coldEpisodes',      render: () => renderColdHistory() }
+};
+
+// Latest timestamp logged inside an episode (readings, doses, stools, actions…), or null.
+function _epLatestEntryTime(ep) {
+  let latest = null;
+  Object.keys(ep).forEach(k => {
+    const v = ep[k];
+    if (!Array.isArray(v)) return;
+    v.forEach(x => {
+      const t = x && x.time ? new Date(x.time).getTime() : NaN;
+      if (!isNaN(t) && (latest === null || t > latest)) latest = t;
+    });
+  });
+  return latest;
+}
+
+function epEditResolved(kind, id) {
+  const cfg = _EP_RESOLVE_KINDS[kind];
+  if (!cfg) return;
+  const ep = cfg.list().find(e => e.id === id && e.status === 'resolved');
+  if (!ep) return;
+  const started = new Date(ep.startedAt).getTime();
+  _epEditEntry({
+    title: 'Edit ' + cfg.label + ' Episode',
+    hint: 'Started ' + formatDate(_epLocalDateStr(ep.startedAt)) + ' at ' + _feverTimeShort(ep.startedAt) + '. Set when she was actually better.',
+    fields: [
+      { label: 'Resolved on', id: 'rdate', type: 'date', value: _epLocalDateStr(ep.resolvedAt), max: _epLocalDateStr() },
+      { label: 'Resolved at', id: 'rtime', type: 'time', value: ep.resolvedAt },
+      { label: 'Notes', id: 'rnotes', type: 'text', value: ep.resolvedNotes || '' }
+    ],
+    onSave: function(v) {
+      const iso = _epLocalToISO(v.rdate, v.rtime);
+      if (!iso) return 'Pick a date and a time.';
+      const t = new Date(iso).getTime();
+      if (t > Date.now() + 60000) return 'That time is in the future.';
+      if (!isNaN(started) && t < started) return 'That is before the episode started.';
+      const last = _epLatestEntryTime(ep);
+      if (last !== null && t < last) return 'That is before the last entry in this episode (' + formatDate(_epLocalDateStr(new Date(last).toISOString())) + ', ' + _feverTimeShort(new Date(last).toISOString()) + ').';
+      ep.resolvedAt = iso;
+      ep.resolvedNotes = v.rnotes || '';
+      save(KEYS[cfg.key], cfg.list());
+      cfg.render();
+      if (typeof renderHome === 'function') renderHome();
+      showQLToast(cfg.label + ' episode updated');
+      return undefined;
+    }
+  });
+}
+
+function _epHistoryEditTap(kind, ep) {
+  return ' ep-entry-tap" data-action="epEditResolved" data-arg="' + kind + '" data-arg2="' + escAttr(ep.id) + '"';
 }
 
 function feResolvePrompt() {
@@ -636,19 +700,19 @@ function renderFeverHistory() {
   card.style.display = '';
 
   const last = resolved[resolved.length - 1];
-  const lastDate = last.resolvedAt ? formatDate(last.resolvedAt.split('T')[0]) : '';
+  const lastDate = last.resolvedAt ? formatDate(_epLocalDateStr(last.resolvedAt)) : '';
   summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (lastDate ? ' · last: ' + lastDate : '') + '</div>';
 
   let html = '';
   resolved.slice().reverse().forEach(ep => {
-    const startD = formatDate(ep.startedAt.split('T')[0]);
-    const endD = ep.resolvedAt ? formatDate(ep.resolvedAt.split('T')[0]) : '';
+    const startD = formatDate(_epLocalDateStr(ep.startedAt));
+    const endD = ep.resolvedAt ? formatDate(_epLocalDateStr(ep.resolvedAt)) : '';
     const dur = _feverDurationStr(ep);
     const doseCount = ep.doses.length;
     const readingCount = ep.readings.length;
 
-    html += '<div class="fe-history-entry">';
-    html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + ' · Peak: ' + ep.peakTemp.toFixed(1) + '°F</div>';
+    html += '<div class="fe-history-entry' + _epHistoryEditTap('fever', ep) + '>';
+    html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + ' · Peak: ' + ep.peakTemp.toFixed(1) + '°F<span class="fe-history-edit">Edit</span></div>';
     html += '<div class="fe-history-detail">Duration: ' + dur + ' · ' + readingCount + ' reading' + (readingCount !== 1 ? 's' : '');
     if (doseCount > 0) html += ' · Crocin ×' + doseCount;
     html += '</div>';
@@ -1172,7 +1236,7 @@ function deEditStool(idx) {
     ],
     onSave: function(v) {
       ep.stools[idx].consistency = v.consistency || s.consistency;
-      ep.stools[idx].time = _epTimeToISO(v.time);
+      ep.stools[idx].time = _epTimeToISO(v.time, ep.stools[idx].time);
       ep.stools[idx].notes = v.notes || '';
       save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard(); renderHomeDiarrhoeaBanner();
@@ -1201,7 +1265,7 @@ function deEditFluid(idx) {
     onSave: function(v) {
       ep.fluids[idx].type = v.type || f.type;
       ep.fluids[idx].amount = v.amount || '';
-      ep.fluids[idx].time = _epTimeToISO(v.time);
+      ep.fluids[idx].time = _epTimeToISO(v.time, ep.fluids[idx].time);
       save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast(zi('drop') + ' Fluid entry updated');
@@ -1225,7 +1289,7 @@ function deEditWetDiaper(idx) {
       { label: 'Time', id: 'time', type: 'time', value: w.time }
     ],
     onSave: function(v) {
-      ep.wetDiapers[idx].time = _epTimeToISO(v.time);
+      ep.wetDiapers[idx].time = _epTimeToISO(v.time, ep.wetDiapers[idx].time);
       save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast(zi('diaper') + ' Wet diaper updated');
@@ -1251,7 +1315,7 @@ function deEditAction(idx) {
     ],
     onSave: function(v) {
       ep.actions[idx].action = v.action || a.action;
-      ep.actions[idx].time = _epTimeToISO(v.time);
+      ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
       save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast('Action updated');
@@ -1314,16 +1378,16 @@ function renderDiarrhoeaHistory() {
   card.style.display = '';
 
   const last = resolved[resolved.length - 1];
-  const lastDate = last.resolvedAt ? formatDate(last.resolvedAt.split('T')[0]) : '';
+  const lastDate = last.resolvedAt ? formatDate(_epLocalDateStr(last.resolvedAt)) : '';
   summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (lastDate ? ' · last: ' + lastDate : '') + '</div>';
 
   let html = '';
   resolved.slice().reverse().forEach(ep => {
-    const startD = formatDate(ep.startedAt.split('T')[0]);
-    const endD = ep.resolvedAt ? formatDate(ep.resolvedAt.split('T')[0]) : '';
+    const startD = formatDate(_epLocalDateStr(ep.startedAt));
+    const endD = ep.resolvedAt ? formatDate(_epLocalDateStr(ep.resolvedAt)) : '';
     const dur = _deDurationStr(ep);
-    html += '<div class="fe-history-entry">';
-    html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + '</div>';
+    html += '<div class="fe-history-entry' + _epHistoryEditTap('diarrhoea', ep) + '>';
+    html += '<div class="fe-history-date">' + startD + (endD && endD !== startD ? ' — ' + endD : '') + '<span class="fe-history-edit">Edit</span></div>';
     html += '<div class="fe-history-detail">Duration: ' + dur + ' · ' + ep.stools.length + ' stools · ' + ep.fluids.length + ' fluid entries · ' + ep.wetDiapers.length + ' wet diapers logged</div>';
     if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
     html += _renderAttribution(ep);
@@ -1626,7 +1690,7 @@ function voEditEntry(idx) {
     ],
     onSave: function(v) {
       ep.episodes[idx].type = v.type || e.type;
-      ep.episodes[idx].time = _epTimeToISO(v.time);
+      ep.episodes[idx].time = _epTimeToISO(v.time, ep.episodes[idx].time);
       ep.episodes[idx].notes = v.notes || '';
       save(KEYS.vomitingEpisodes, _vomitingEpisodes);
       renderVomitingEpisodeCard(); renderHomeVomitingBanner();
@@ -1653,7 +1717,7 @@ function voEditAction(idx) {
     ],
     onSave: function(v) {
       ep.actions[idx].action = v.action || a.action;
-      ep.actions[idx].time = _epTimeToISO(v.time);
+      ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
       save(KEYS.vomitingEpisodes, _vomitingEpisodes);
       renderVomitingEpisodeCard();
       showQLToast('Action updated');
@@ -1698,10 +1762,10 @@ function renderVomitingHistory() {
   if (resolved.length === 0) { card.style.display = 'none'; return; }
   card.style.display = '';
   const last = resolved[resolved.length - 1];
-  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (last.resolvedAt ? ' · last: ' + formatDate(last.resolvedAt.split('T')[0]) : '') + '</div>';
+  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (last.resolvedAt ? ' · last: ' + formatDate(_epLocalDateStr(last.resolvedAt)) : '') + '</div>';
   let html = '';
   resolved.slice().reverse().forEach(ep => {
-    html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + _feverDurationStr(ep) + '</div>';
+    html += '<div class="fe-history-entry' + _epHistoryEditTap('vomiting', ep) + '><div class="fe-history-date">' + formatDate(_epLocalDateStr(ep.startedAt)) + ' · ' + _feverDurationStr(ep) + '<span class="fe-history-edit">Edit</span></div>';
     html += '<div class="fe-history-detail">' + ep.episodes.length + ' episodes · ' + ep.fluids.length + ' fluids logged</div>';
     html += _renderAttribution(ep);
     html += '</div>';
@@ -1925,7 +1989,7 @@ function ceEditAction(idx) {
     ],
     onSave: function(v) {
       ep.actions[idx].action = v.action || a.action;
-      ep.actions[idx].time = _epTimeToISO(v.time);
+      ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
       save(KEYS.coldEpisodes, _coldEpisodes);
       renderColdEpisodeCard();
       showQLToast('Action updated');
@@ -1963,11 +2027,11 @@ function renderColdHistory() {
   if (resolved.length === 0) { card.style.display = 'none'; return; }
   card.style.display = '';
   const last = resolved[resolved.length - 1];
-  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (last.resolvedAt ? ' · last: ' + formatDate(last.resolvedAt.split('T')[0]) : '') + '</div>';
+  summary.innerHTML = '<div class="t-sm t-light">' + resolved.length + ' episode' + (resolved.length !== 1 ? 's' : '') + (last.resolvedAt ? ' · last: ' + formatDate(_epLocalDateStr(last.resolvedAt)) : '') + '</div>';
   let html = '';
   resolved.slice().reverse().forEach(ep => {
     const days = Math.ceil((new Date(ep.resolvedAt || Date.now()).getTime() - new Date(ep.startedAt).getTime()) / 86400000);
-    html += '<div class="fe-history-entry"><div class="fe-history-date">' + formatDate(ep.startedAt.split('T')[0]) + ' · ' + days + ' day' + (days !== 1 ? 's' : '') + '</div>';
+    html += '<div class="fe-history-entry' + _epHistoryEditTap('cold', ep) + '><div class="fe-history-date">' + formatDate(_epLocalDateStr(ep.startedAt)) + ' · ' + days + ' day' + (days !== 1 ? 's' : '') + '<span class="fe-history-edit">Edit</span></div>';
     html += '<div class="fe-history-detail">' + ep.dailyLogs.length + ' daily logs · ' + ep.actions.length + ' actions</div>';
     html += _renderAttribution(ep);
     html += '</div>';
