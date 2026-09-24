@@ -3325,6 +3325,11 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .fe-sparkline { display:block; margin:var(--sp-8) auto; }
 .fe-history-entry { padding:var(--sp-8) 0; border-bottom:1px solid rgba(0,0,0,0.04); }
 .fe-history-entry:last-child { border-bottom:none; }
+/* Tappable history rows (edit the resolved date — 2026-09-24): a quiet text affordance, no icon in the sprite.
+   Flex row so the label keeps a gap and stays top-right at every zoom (Vela V-V-267-4). */
+.ep-entry-tap > .fe-history-date { display:flex; justify-content:space-between; align-items:baseline; gap:var(--sp-8); }
+.fe-history-edit { flex-shrink:0; font-size:var(--fs-xs); font-weight:700; color:var(--tc-sky); letter-spacing:var(--ls-wide); text-transform:uppercase; }
+.fe-history-edited { font-style:italic; color:var(--light); }
 .fe-history-date { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
 .fe-history-detail { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); }
 .fe-home-banner { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); cursor:pointer; border-left:4px solid transparent; }
@@ -3466,7 +3471,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .pi-amount-track { background:rgba(255,255,255,0.06); }
 
 /* ── Episode Entry Edit System ── */
-.ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:var(--sp-4); padding-right:var(--sp-4); margin:0 -var(--sp-4); }
+.ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:var(--sp-4); padding-right:var(--sp-4); margin:0 calc(-1 * var(--sp-4)); }
 .ep-entry-tap:active { background:rgba(0,0,0,0.04); }
 [data-theme="dark"] .ep-entry-tap:active { background:rgba(255,255,255,0.04); }
 .ep-edit-overlay {
@@ -3487,6 +3492,8 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .ep-edit-label { font-size:var(--fs-xs); font-weight:600; color:var(--mid); text-transform:uppercase; letter-spacing:var(--ls-wide); margin-bottom:var(--sp-4); }
 .ep-edit-input { width:100%; padding:var(--sp-8) var(--sp-12); border:1px solid var(--border-subtle); border-radius:var(--r-md); font-size:var(--fs-sm); background:var(--warm); color:var(--text); box-sizing:border-box; }
 .ep-edit-input:focus { border-color:var(--indigo); outline:none; }
+.ep-edit-hint { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin-bottom:var(--sp-12); }
+.ep-edit-err { font-size:var(--fs-sm); font-weight:600; color:var(--tc-caution); margin-top:var(--sp-4); } /* a date correction, not an alarm (Maren V-M-267 nit) */
 .ep-edit-btns { display:flex; gap:var(--sp-8); justify-content:space-between; margin-top:var(--sp-16); }
 .ep-edit-btns .btn { flex:1; }
 .ep-time-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) 0; margin-bottom:var(--sp-4); }

@@ -3557,14 +3557,47 @@ function _epNowTimeStr() { return new Date().toTimeString().slice(0, 5); }
 /**
  * Converts a HH:MM time string to a full ISO string for today (or yesterday if time > now suggesting it was yesterday)
  */
-function _epTimeToISO(timeStr) {
-  if (!timeStr || !timeStr.includes(':')) return new Date().toISOString();
+function _epTimeToISO(timeStr, baseISO) {
+  if (!timeStr || !timeStr.includes(':')) return baseISO || new Date().toISOString();
   const [h, m] = timeStr.split(':').map(Number);
+  // Editing an existing entry: the new time goes on whichever of the entry's own local day, the
+  // day before or the day after lands CLOSEST to its original time (and not in the future). Before
+  // 2026-09-24 every edit was re-dated to today (a day-1 reading of a 3-day fever jumped to day 3);
+  // a same-day-only rule would instead throw a 23:50 → 00:05 correction back ~24 h (Kael V-K-267-1).
+  const base = baseISO ? new Date(baseISO) : null;
+  if (base && !isNaN(base.getTime())) {
+    const now = Date.now(), b = base.getTime();
+    let best = null;
+    [0, -1, 1].forEach(off => { // same day first, so an exact 12 h tie (the AM/PM slip) stays on its day — Cipher A2
+      const c = new Date(base.getFullYear(), base.getMonth(), base.getDate() + off, h, m, 0, 0).getTime();
+      if (c <= now + 60000 && (best === null || Math.abs(c - b) < Math.abs(best - b))) best = c;
+    });
+    return new Date(best !== null ? best : b).toISOString();
+  }
+  // A new entry lands today; >2h in the future means they meant yesterday.
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  // If the selected time is >2h in the future, assume they meant yesterday
   if (d.getTime() > Date.now() + 7200000) d.setDate(d.getDate() - 1);
   return d.toISOString();
+}
+
+// Local-time parts of a stored ISO timestamp (HR-12: never slice the ISO string — that is UTC).
+function _epLocalTimeStr(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return _epNowTimeStr();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+function _epLocalDateStr(iso) {
+  const d = iso ? new Date(iso) : new Date();
+  return toDateStr(isNaN(d.getTime()) ? new Date() : d); // core.js local 'YYYY-MM-DD' (V-K-267-7)
+}
+// Build an ISO timestamp from local 'YYYY-MM-DD' + 'HH:MM' by components (HR-12 timezone-safe).
+function _epLocalToISO(dateStr, timeStr) {
+  const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+  const tm = /^(\d{1,2}):(\d{2})/.exec(timeStr || '');
+  if (!dm || !tm) return null;
+  const d = new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3]), Number(tm[1]), Number(tm[2]), 0, 0);
+  return isNaN(d.getTime()) ? null : d.toISOString();
 }
 
 /**
@@ -3604,8 +3637,12 @@ function _epEditEntry(opts) {
     fieldsHTML += '<div class="ep-edit-field">';
     fieldsHTML += '<div class="ep-edit-label">' + escHtml(f.label) + '</div>';
     if (f.type === 'time') {
-      const timeVal = f.value ? (typeof f.value === 'string' && f.value.includes('T') ? f.value.split('T')[1].slice(0, 5) : f.value) : _epNowTimeStr();
-      fieldsHTML += '<input type="time" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + timeVal + '">';
+      // ISO values are shown in LOCAL time. This used to slice the ISO string, which is UTC:
+      // in IST a 10:00 reading opened as 04:30, and Save wrote it back 5.5 h early.
+      const timeVal = f.value ? (typeof f.value === 'string' && f.value.includes('T') ? _epLocalTimeStr(f.value) : f.value) : _epNowTimeStr();
+      fieldsHTML += '<input type="time" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(timeVal) + '">';
+    } else if (f.type === 'date') {
+      fieldsHTML += '<input type="date" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(f.value || _epLocalDateStr()) + '"' + (f.min ? ' min="' + escHtml(f.min) + '"' : '') + (f.max ? ' max="' + escHtml(f.max) + '"' : '') + '>';
     } else if (f.type === 'select' && f.options) {
       fieldsHTML += '<select class="ep-edit-input" id="epEdit_' + f.id + '">';
       f.options.forEach(o => {
@@ -3623,9 +3660,11 @@ function _epEditEntry(opts) {
 
   overlay.innerHTML = '<div class="ep-edit-sheet">' +
     '<div class="ep-edit-title">' + escHtml(opts.title || 'Edit Entry') + '</div>' +
+    (opts.hint ? '<div class="ep-edit-hint">' + escHtml(opts.hint) + '</div>' : '') +
     fieldsHTML +
+    '<div class="ep-edit-err" id="epEditErr" role="alert" hidden></div>' +
     '<div class="ep-edit-btns">' +
-    '<button class="btn btn-rose" id="epEditDelete">Delete</button>' +
+    (opts.onDelete ? '<button class="btn btn-rose" id="epEditDelete">Delete</button>' : '') +
     '<button class="btn btn-ghost" id="epEditCancel">Cancel</button>' +
     '<button class="btn btn-sky" id="epEditSave">Save</button>' +
     '</div></div>';
@@ -3633,9 +3672,11 @@ function _epEditEntry(opts) {
   document.body.appendChild(overlay);
 
   overlay.querySelector('#epEditCancel').onclick = () => overlay.remove();
+  overlay.addEventListener('input', () => { const err = overlay.querySelector('#epEditErr'); if (err) err.hidden = true; });
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
-  overlay.querySelector('#epEditDelete').onclick = () => {
+  const delBtn = overlay.querySelector('#epEditDelete');
+  if (delBtn) delBtn.onclick = () => {
     overlay.remove();
     if (opts.onDelete) {
       confirmAction('Delete this entry?', opts.onDelete, 'Delete');
@@ -3648,8 +3689,16 @@ function _epEditEntry(opts) {
       const el = document.getElementById('epEdit_' + f.id);
       if (el) values[f.id] = el.value;
     });
+    // onSave may return an error string to keep the sheet open (validation); anything else closes it.
+    let res;
+    try { res = opts.onSave ? opts.onSave(values) : undefined; }
+    catch (e) { console.warn('[epEdit] save failed', e); res = 'Could not save. Please try again.'; }
+    if (typeof res === 'string' && res) {
+      const err = overlay.querySelector('#epEditErr');
+      if (err) { err.textContent = res; err.hidden = false; }
+      return;
+    }
     overlay.remove();
-    if (opts.onSave) opts.onSave(values);
   };
 }
 

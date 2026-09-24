@@ -125,6 +125,27 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Fix shape:** Either a `_postReceive*` hook per episode key that reassigns the module array (the `_postReceiveMilestones` idiom), or have `getActive*Episode()` read through `load()`. Kael-primary; separate PR.
 - **Origin:** Kael V-K-3 on PR #263 (fever readings toggle), widened by Cipher Edict V ruling 5 from fever-only to all four illness-episode keys. Pre-existing; not introduced by #263.
 - **Files:** `split/sync.js` ~lines 244–247 (registrations), `split/intelligence-illness.js` ~lines 3–14 (`_feverEpisodes` hydration) and the diarrhoea / vomiting / cold module arrays.
+- **Raised again on PR #267 (Maren V-M-267-5, Kael V-K-267-3):** the new resolved-episode editor is a write path that saves the whole module array, so a device left open can revert the other parent's entries. #267 re-reads the stored list before editing (a minimal guard). The real fix above is still owed, and should add the `render*History` renderers to the episode keys' `SYNC_RENDER_DEPS`.
+
+#### P2 — Deferred from the PR #267 Governor round (illness edit + timezone)
+- **`_qaLastIllness` answers with "Invalid Date" / "Unknown" (Kael V-K-267-10).** `intelligence-qa-handlers.js` ~195–206 reads `ep.startDate` / `ep.type` / `ep.durationDays`, which no episode has (they carry `startedAt` / `illnessType` / `resolvedAt`). Its sort key is always `''`, so it returns the OLDEST episode. Fix: sort by `(resolvedAt || startedAt)` descending and read the real fields (`_episodeDurationDays`). Separate PR.
+- **More UTC-day slices on episode dates (Kael V-K-267-11, Ceres, Maren V-M-267-8):**
+  - `intelligence-isl.js` ~404 (the "since the fever" anchor) and ~777 (range illness filter) use `startedAt.substring(0,10)`;
+  - `medical.js` ~7982 buckets illness frequency by `startedAt.slice(0,7)` (a start before 05:30 IST on the 1st lands in the previous month);
+  - `home.js` milestone `doneAt` / notification timestamps are sliced at ~5069, 7004, 7035–7036, 7808, 7956, 8013, 9269, 9839.
+
+  Fix: use `toDateStr(new Date(x))`.
+- **`formatDate('YYYY-MM-DD')` parses as UTC midnight (Kael V-K-267-12, Maren V-M-267-8).** `core.js` ~4002. It is correct in IST but shows the previous day west of UTC. diet.js has the same `new Date('YYYY-MM-DD')` pattern at ~60, 3142, 3963, 4261, 4924 and 7524 (Ceres scan); it is safe while the family is in UTC+. Fix: parse by components. Every caller is affected, so do it in a separate PR.
+- **No timezone in the e2e config (Maren V-M-267-9).** `playwright.config.ts` runs in the container's UTC, which is why the edit-sheet UTC bug was never caught. Add a spec with `timezoneId: 'Asia/Kolkata'` and one negative-offset zone, covering: local pre-fill, day-preserving edits across midnight, and the resolved-edit guards (same-minute, next-episode, symptom-only floor).
+- **Attribution on edited episodes (Kael V-K-267-5).** The row's "by X" keeps the original logger after the other parent edits the end time. #267 adds an "End time edited" line; clearing `__sync_updatedBy` so the flush re-stamps the editor is still open.
+- **Tappable rows are plain `div`s** with no `role="button"` or `tabindex` (a gap across the whole `ep-entry-tap` pattern; Maren, Kael).
+- **Cipher Edict V nits on #267:**
+  - `_epLocalDateStr(invalid)` returns today. A corrupt timestamp would then display as today, and in `_deWetDiapersToday` / `_voWetToday` it adds a phantom diaper to today's count. Return `''` for invalid input when an argument was given.
+  - After an end-time edit, `renderMedicalStats` and the post-illness recovery view (`medical.js` ~8517) stay stale until the next tab switch.
+  - A `role="alert"` element may not re-announce identical text.
+  - If a render throws after `save()` succeeds, the sheet says "Could not save". Saving again is harmless.
+- **Entry sheets have no date field (Ceres V-C-267-4).** A time edit now lands on the nearest day to the original (±1). Moving an entry further than a day still means deleting it and re-logging.
+
 
 #### P1 — Unsynced-write ledger follow-ups (PR #265, 2026-09-18)
 - **Context:** PR #265 added the ledger after the September incident (six months of one phone's entries overwritten by a stale March cloud copy on reinstall). The Governor chain accepted the design with these follow-ups still open:
