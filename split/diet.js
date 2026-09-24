@@ -939,7 +939,8 @@ function _recipeDetailHtml(r, ageMonths) {
     const effMin = _recipeEffectiveMinAge(r);
     const gated = effMin && effMin > ageNow;
     const servAge = gated ? effMin : ageNow;
-    const serving = _recipeServing(r.slot, servAge);
+    // Toddler recipes carry their own portion (household measures); others use the age band.
+    const serving = (!gated && r.portion) ? r.portion : _recipeServing(r.slot, servAge);
     const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
     // M-1 (Maren): the amount is a WHO/PAHO/IAP figure — anchor its OWN source on
     // the line, independent of the recipe's r.source (which often cites other bodies).
@@ -947,6 +948,11 @@ function _recipeDetailHtml(r, ageMonths) {
   }
   // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
   let rows = '';
+  // Toddler recipes: how to make each piece safe to chew for a toddler without molars.
+  if (Array.isArray(r.choking) && r.choking.length) {
+    const body = `<div class="combo-dos">${r.choking.map(c => `<div class="do">${zi('check')} ${escHtml(c)}</div>`).join('')}</div>`;
+    rows += _recipeProw('chew', 'shield', 'Make it safe to chew', `${r.choking.length} prep ${r.choking.length === 1 ? 'step' : 'steps'}`, body, false);
+  }
   if (r.steps && r.steps.length) {
     const body = `<ol class="recipe-steps">${r.steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>`;
     const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
@@ -1132,7 +1138,7 @@ function renderDietRecipes() {
 
   // ── (b) Browsable catalog grouped by meal slot ──
   html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
-  html += `<p class="recipes-sub-note">A small, cited collection from the first-foods year (6–12 months) — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
+  html += `<p class="recipes-sub-note">A cited collection from first foods (6–12 months) to family food for toddlers (12–24 months) — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
   for (const slot of RECIPE_SLOT_ORDER) {
     const inSlot = surfaced.filter(r => r.slot === slot);
     if (!inSlot.length) continue;
