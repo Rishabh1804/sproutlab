@@ -2594,5 +2594,159 @@
   "solved": "Recorded what shipped (#244/#247/#248) and the carry-forwards so the next session resumes cleanly with no lost context.",
   "category": "Records / Session Close & Doc Refresh",
   "kind": "docs"
+ },
+ {
+  "number": 250,
+  "title": "feat(docs): PR Tree Dashboard (#1–#249) + App Evolution view — build-regenerated like the Province Map",
+  "date": "2026-06-10",
+  "merged": true,
+  "what": "Two build-regenerated views over one curated PR corpus (docs/pr-dashboard-data.json), plus an advisory curation-cadence guard in build-safe.sh.",
+  "achieved": "Shipped PR_TREE_DASHBOARD.html (sunburst + collapsible tree of 236 PRs) and APP_EVOLUTION.html (PR-dot river over 8 eras with chapter cards).",
+  "solved": "The PR history lived only in GitHub; there was no permanent, legible instrument for what each PR was, achieved, and solved.",
+  "category": "Platform / Build & Doc Tooling",
+  "kind": "build"
+ },
+ {
+  "number": 251,
+  "title": "docs: PROVINCE_MAP truth-up + F-6 Feeding Composer phase-spec (Log sub-tab + FAB parity)",
+  "date": "2026-06-10",
+  "merged": true,
+  "what": "Province Map truth-up after #250 plus the F-6 Feeding Composer phase-spec, taken through Ceres + Vela Mode-1 audits to v1.1.",
+  "achieved": "Ratified one structured feeding composer with two mounts (FAB Feed sheet + Diet→Log), save-on-action with atomic undo, and a retirement map.",
+  "solved": "Meal entry had diverged into two separately maintained implementations; the spec fixed the contract before any code was written.",
+  "category": "Product / Diet & Nutrition / Food Sub-Tab & Logging",
+  "kind": "design-spec"
+ },
+ {
+  "number": 252,
+  "title": "docs: session-close 2026-06-10 PM2 — PR-history instruments + F-6 Feeding Composer spec ratified",
+  "date": "2026-06-10",
+  "merged": true,
+  "what": "Session-close artifacts for the PR-history-instruments and F-6 planning session.",
+  "achieved": "Handoff + next-session target set P0 = F-6a implementation.",
+  "solved": "Kept the session thread recorded so the next session could start cold on F-6a.",
+  "category": "Records / Session Close & Doc Refresh",
+  "kind": "docs"
+ },
+ {
+  "number": 253,
+  "title": "F-6a — Feeding Composer (extraction + two mounts + visual refresh + R1-R8)",
+  "date": "2026-06-15",
+  "merged": true,
+  "what": "Implemented the F-6 spec: one shared structured feeding composer (diet.js _fc*) rendered into the FAB sheet and four Diet→Log slot cards.",
+  "achieved": "Save-on-action with burst choreography, a persistent saved cue, condensed-slot defaults, and retirements R1–R8 of the legacy meal-input cards.",
+  "solved": "Closed the meal-entry divergence structurally — one component in both surfaces instead of two kept in sync by discipline.",
+  "category": "Product / Diet & Nutrition / Food Sub-Tab & Logging",
+  "kind": "feature"
+ },
+ {
+  "number": 255,
+  "title": "docs+specs: Companion compass, north-star reframe, post-Borders roadmap, AoA reference",
+  "date": "2026-07-13",
+  "merged": true,
+  "what": "Added session-earned Compass sections to all seven Companion specs, reframed the design brief, and landed the post-Borders roadmap and AoA reference.",
+  "achieved": "North star ratified: 'a health intelligence system with the soul of a journal'; warmth promoted from brief to design law.",
+  "solved": "The 'cozy journal, not a clinical app' brief undersold the analytical engine; forward planning pointed at stale roadmaps.",
+  "category": "Governance / Canon & Province",
+  "kind": "governance"
+ },
+ {
+  "number": 256,
+  "title": "docs: session-close 2026-07-11 — handoff, next-target, compass synthesis",
+  "date": "2026-07-16",
+  "merged": true,
+  "what": "Close artifacts for the 2026-07-11 'Night of the Borders' session, including the compass-vs-north-star synthesis.",
+  "achieved": "Standing pointer set to Phase 1 Foundations (P0 two-layer benchmark → P1 chart rework + Chart.js vendoring).",
+  "solved": "Recorded a governance-heavy, code-free session so its doctrine survives into build sessions.",
+  "category": "Records / Session Close & Doc Refresh",
+  "kind": "docs"
+ },
+ {
+  "number": 258,
+  "title": "meridian: Ziva's Winter ONEderland — first birthday party artwork",
+  "date": "2026-08-25",
+  "merged": true,
+  "what": "Frozen-themed first-birthday party artwork: a 6×4 ft photo-wall backdrop and a 2×2 ft welcome board, with proofs and a gallery page.",
+  "achieved": "Print-ready PDFs from a deterministic render pipeline, with Lyra (Vega in gold) set in the sky as the birth-constellation motif.",
+  "solved": "The family needed print collateral for the 4 September party, made in-house and carrying the naming-lore.",
+  "category": "Lore / Keepsake",
+  "kind": "lore"
+ },
+ {
+  "number": 259,
+  "title": "meridian: frozen-theme first-birthday invite video (10s)",
+  "date": "2026-08-25",
+  "merged": true,
+  "what": "A 10-second frozen-theme invite video under meridian/first-birthday/: deterministic HTML/canvas animation, synthesized music-box audio, Playwright + ffmpeg render.",
+  "achieved": "WhatsApp-ready 1080×1920 MP4 (3.9 MB) with a reusable seekable-page → frame-stepped video pipeline.",
+  "solved": "Needed a shareable invite with no licensed audio or third-party templates.",
+  "category": "Lore / Keepsake",
+  "kind": "lore"
+ },
+ {
+  "number": 260,
+  "title": "meridian: frozen first-birthday invite — cartoon, character, and daylight rounds",
+  "date": "2026-08-25",
+  "merged": true,
+  "what": "Four Architect-directed rounds on the invite video — original characters, a redrawn queen, and a daylight cut — with a full council and four Cipher passes.",
+  "achieved": "Final daylight cut shipped with Cipher's standing IP constraint (house-idiom face, teal gown, no snowflake motifs, golden hair).",
+  "solved": "Brought the invite to family sign-off while keeping clear of a studio's protected character expression.",
+  "category": "Lore / Keepsake",
+  "kind": "lore"
+ },
+ {
+  "number": 261,
+  "title": "docs: session-close 2026-08-25 — birthday-artwork session",
+  "date": "2026-08-25",
+  "merged": true,
+  "what": "Close sequence for the Winter ONEderland artwork session.",
+  "achieved": "Handoff recorded #258 and registered the meridian print pipeline as candidate canon.",
+  "solved": "Kept the celebration arc recorded alongside the product thread.",
+  "category": "Records / Session Close & Doc Refresh",
+  "kind": "docs"
+ },
+ {
+  "number": 262,
+  "title": "docs: session-close 2026-08-25 PM — invite-video session",
+  "date": "2026-08-25",
+  "merged": true,
+  "what": "Second same-day close, recording #259 + #260 and superseding the AM next-session target.",
+  "achieved": "Logged the keepsake-video pipeline, the IP posture, and the new e2e container/Playwright mismatch as carry-forwards.",
+  "solved": "Recorded the invite-video QA chain and surfaced the unrunnable-e2e debt.",
+  "category": "Records / Session Close & Doc Refresh",
+  "kind": "docs"
+ },
+ {
+  "number": 263,
+  "title": "fix(fever): \"Show N earlier\" readings toggle never expanded",
+  "date": "2026-09-09",
+  "merged": true,
+  "what": "Made the Active Fever Episode card's 'Show N earlier' readings toggle actually expand, via a render-only _feShowAllReadings flag.",
+  "achieved": "Toggle now flips between the 5-reading cap and the full list, with a label and chevron that follow state; the flag resets on resolve.",
+  "solved": "Tapping 'Show 2 earlier' did nothing — the expand flag had never been implemented, so older fever readings were unreachable.",
+  "category": "Product / Medical & Care",
+  "kind": "fix"
+ },
+ {
+  "number": 264,
+  "title": "fix(pwa): emit manifest link + PWA meta tags in the built head (install option missing)",
+  "date": "2026-09-18",
+  "merged": true,
+  "what": "build.sh's head heredoc now emits the manifest link, theme-color, and apple-* PWA tags.",
+  "achieved": "The 'Install app' option returned on Android; Add to Home Screen works on iOS; the dark-mode theme-color rewrite finally has a meta to target.",
+  "solved": "The split build had never emitted the manifest link, so index.html had been non-installable since 2026-04-09.",
+  "category": "Product / Sync, PWA & Offline",
+  "kind": "fix"
+ },
+ {
+  "number": 265,
+  "title": "fix(sync): unsynced-write ledger — newer local data is never overwritten by a stale cloud copy",
+  "date": "2026-09-18",
+  "merged": true,
+  "what": "An unsynced-write ledger (sl_sync_dirty) that tracks local writes until the server acks them and pushes dirty keys in full on attach; sync failures surface in the pill.",
+  "achieved": "A stale cloud copy can no longer overwrite newer local data, and silent write failures are now visible. Also fixed the _syncFindHousehold uid ReferenceError.",
+  "solved": "After a reinstall the app showed March data: writes had silently stopped reaching Firestore, and the stale cloud copy would have clobbered six months of local entries.",
+  "category": "Product / Sync, PWA & Offline",
+  "kind": "fix"
  }
 ]
