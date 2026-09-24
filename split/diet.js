@@ -6639,12 +6639,12 @@ function _spGetDomainDefs(zs) {
         if (!r) return [{ name: 'No data', weight: '', score: 0, detail: 'Log sleep to see score breakdown' }];
         const ageM2 = ageAt().months;
         const st = getSleepTargets(ageM2);
-        const durTarget = st.totalTarget / 60;
         const totalMin = r.totalMin || (r.detail ? r.detail.totalMin : 0) || 0;
         const wakeVal = r.wakes !== undefined ? r.wakes : (r.detail ? r.detail.wakes : 0) || 0;
         const napVal = r.napCount !== undefined ? r.napCount : (r.detail ? r.detail.napCount : 0) || 0;
         const [napMin, napMax] = st.napIdeal;
-        const durDetail = totalMin ? (totalMin / 60).toFixed(1) + 'h total (target: ' + durTarget.toFixed(0) + 'h, ' + st.label + ')' : 'No data';
+        const tH = Math.floor(st.totalTarget / 60), tM = st.totalTarget % 60;
+        const durDetail = totalMin ? (totalMin / 60).toFixed(1) + 'h total (target: ' + tH + 'h' + (tM ? ' ' + tM + 'm' : '') + ', ' + st.label + ')' : 'No data';
         const comps = r.components || {};
         const durScore = comps.duration !== undefined ? comps.duration : (totalMin ? Math.round(Math.min(totalMin / st.totalTarget, 1) * 100) : 0);
         const wakeScoreVal = comps.wakeups !== undefined ? comps.wakeups : [100,85,70,50,30,15,0][Math.min(wakeVal, 6)];
@@ -6654,7 +6654,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Duration', weight: '40%', score: durScore, detail: durDetail, tab: 'sleep' },
           { name: 'Wake-ups', weight: '30%', score: wakeScoreVal, detail: wakeVal + ' wake-up' + (wakeVal !== 1 ? 's' : ''), tab: 'sleep' },
           { name: 'Bedtime', weight: '15%', score: bedScoreVal, detail: 'Ideal: ' + st.bedtimeStart + ':00–' + st.bedtimeEnd + ':00 (' + st.label + ')', tab: 'sleep' },
-          { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + napMin + '–' + napMax + ')', tab: 'sleep' },
+          { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + (napMin === napMax ? String(napMin) : napMin + '–' + napMax) + ')', tab: 'sleep' },
         ];
         if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
@@ -6729,7 +6729,7 @@ function _spGetDomainDefs(zs) {
         const d = r.detail || {};
         const items = [
           { name: 'Vaccines', weight: '40%', score: r.components.vaccination,
-            detail: (d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' age-due vaccines given', tab: 'medical' },
+            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
           { name: 'Supplements', weight: '25%', score: r.components.supplements,
             detail: d.suppDays !== null ? d.suppDays + '/7 days given this week' : 'No active supplements', tab: 'medical' },
           { name: 'Growth', weight: '20%', score: r.components.growth,

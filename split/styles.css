@@ -4701,6 +4701,12 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .section-label-danger { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-danger); margin-bottom:var(--sp-6); }
 .section-label-warn   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-warn); margin:var(--sp-12) 0 var(--sp-6); }
 .section-label-info   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin:var(--sp-12) 0 var(--sp-6); }
+.section-label-due    { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sky); margin:var(--sp-12) 0 var(--sp-6); }
+.section-label-check  { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-lav); margin:var(--sp-12) 0 var(--sp-6); }
+.vacc-cond-note { font-size:var(--fs-sm); color:var(--tc-lav); margin-top:var(--sp-2); }
+.vacc-other-label { margin-top:var(--sp-12); }
+.vacc-chip-row { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.vacc-chip-other { font-size:var(--fs-sm); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-lg); background:var(--warm); color:var(--mid); }
 
 /* ── M2 Migration: Insight/Guidance Boxes ── */
 .insight-box      { padding:var(--sp-8) var(--sp-12); border-radius:var(--r-md); font-size:var(--fs-sm); }

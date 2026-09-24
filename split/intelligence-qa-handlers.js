@@ -1694,13 +1694,15 @@ function qaAnswerNaps(intentId) {
   var napCounts = scores.filter(function(s) { return s.napCount !== undefined && s.napCount !== null; }).map(function(s) { return s.napCount; });
   var avgNaps = napCounts.length > 0 ? _qaAvg(napCounts) : null;
 
-  // Expected naps by age
-  var expectedNaps = ageMo < 4 ? '3-4' : ageMo < 9 ? '2-3' : ageMo < 15 ? '2' : '1';
+  // Expected naps by age — one source with the sleep score (SLEEP_STANDARDS via
+  // getSleepTargets): from 12 m one or two naps are both on track.
+  var napIdeal = (ageMo >= 6 && typeof getSleepTargets === 'function') ? getSleepTargets(ageMo).napIdeal : null;
+  var expectedMin = napIdeal ? napIdeal[0] : (ageMo < 4 ? 3 : 2);
+  var expectedMax = napIdeal ? napIdeal[1] : (ageMo < 4 ? 4 : 3);
+  var expectedNaps = expectedMin === expectedMax ? String(expectedMin) : expectedMin + '-' + expectedMax;
   var headline = avgNaps !== null ? 'Avg ' + avgNaps.toFixed(1) + ' naps/day (expected: ' + expectedNaps + ')' : 'Nap Analysis';
 
   if (avgNaps !== null) {
-    var expectedMin = ageMo < 4 ? 3 : ageMo < 9 ? 2 : ageMo < 15 ? 2 : 1;
-    var expectedMax = ageMo < 4 ? 4 : ageMo < 9 ? 3 : ageMo < 15 ? 2 : 1;
     if (avgNaps >= expectedMin && avgNaps <= expectedMax + 0.5) {
       dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + fmtAgeMonths(ageMo), signal: 'good' });
     } else if (avgNaps < expectedMin) {
@@ -1737,8 +1739,8 @@ function qaAnswerNaps(intentId) {
   // Transition guidance
   if (ageMo >= 7 && ageMo <= 9) {
     actionItems.push({ text: 'Approaching 3-to-2 nap transition — watch for longer wake windows', signal: 'info' });
-  } else if (ageMo >= 13 && ageMo <= 16) {
-    actionItems.push({ text: 'Approaching 2-to-1 nap transition — if resisting second nap, try one longer midday nap', signal: 'info' });
+  } else if (ageMo >= 12 && ageMo < 18) {
+    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if she resists the second nap, try one longer midday nap', signal: 'info' });
   }
 
   actionItems.push({ text: 'Keep nap environment dark and consistent', signal: 'action' });

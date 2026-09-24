@@ -9837,11 +9837,22 @@ function renderTodayPlan() {
   const hasMorningNap = todaySleep.some(e => e.type === 'nap' && e.bedtime && parseInt(e.bedtime) < 12);
   const napWindowStart = ageM <= 7 ? '9:00' : '9:30';
   const napDuration = ageM <= 7 ? '1–1.5 hours' : '45 min – 1 hour';
-  items.push({
-    time: '9:30', icon: zi('zzz'), title: 'Morning nap',
-    detail: hasMorningNap ? zi('check') + ' Logged' : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.',
-    tag: 'sleep', done: hasMorningNap, htmlDetail: hasMorningNap
-  });
+  // From 12 m one or two naps are normal (SLEEP_STANDARDS via getSleepTargets); once
+  // the standard says one nap, the plan shows a single midday nap.
+  const napIdealToday = (typeof getSleepTargets === 'function') ? getSleepTargets(ageM).napIdeal : [2, 3];
+  const oneNapAge = napIdealToday[1] <= 1;
+  const toddlerNaps = ageM >= 12 && !oneNapAge;
+  const _todayNapList = todaySleep.filter(e => e.type === 'nap' && e.bedtime);
+  const todayMainNapOnly = _todayNapList.length === 1 && parseInt(_todayNapList[0].bedtime) >= 11;
+  if (!oneNapAge) {
+    items.push({
+      time: '9:30', icon: zi('zzz'), title: toddlerNaps ? 'Morning nap (if she still takes one)' : 'Morning nap',
+      detail: hasMorningNap ? zi('check') + ' Logged'
+        : (toddlerNaps ? 'Many toddlers drop this nap between 12 and 18 months. If she takes it, about ' + napDuration + '.'
+          : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.'),
+      tag: 'sleep', done: hasMorningNap && !(toddlerNaps && todayMainNapOnly), htmlDetail: hasMorningNap && !(toddlerNaps && todayMainNapOnly)
+    });
+  }
 
   // Tummy time / motor activity — check if already logged today
   const acts = typeof getFilteredActivities === 'function' ? getFilteredActivities() : [];
@@ -9903,10 +9914,16 @@ function renderTodayPlan() {
   });
 
   // Afternoon nap
-  const hasAfternoonNap = todaySleep.some(e => e.type === 'nap' && e.bedtime && parseInt(e.bedtime) >= 12);
+  const todayNapsPlan = todaySleep.filter(e => e.type === 'nap' && e.bedtime);
+  // One-nap age: any logged nap is today's nap. Toddler on 1–2 naps: a single nap
+  // starting from 11:00 is her main nap, so the afternoon item counts it.
+  const hasAfternoonNap = oneNapAge ? todayNapsPlan.length > 0
+    : (todayNapsPlan.some(e => parseInt(e.bedtime) >= 12)
+      || (toddlerNaps && todayNapsPlan.length === 1 && parseInt(todayNapsPlan[0].bedtime) >= 11));
+  const napOptional = napIdealToday[0] === 0;
   items.push({
-    time: '1:30', icon: zi('zzz'), title: 'Afternoon nap',
-    detail: hasAfternoonNap ? '' + zi('check') + ' Logged' : 'Usually the longest nap. Dim the room, white noise helps.',
+    time: oneNapAge ? '12:30' : '1:30', icon: zi('zzz'), title: oneNapAge ? (napOptional ? 'Midday nap or quiet time' : 'Midday nap') : 'Afternoon nap',
+    detail: hasAfternoonNap ? '' + zi('check') + ' Logged' : (oneNapAge ? 'One nap after lunch. End it by about 3:30 PM to protect bedtime.' : 'Usually the longest nap. Dim the room, white noise helps.'),
     tag: 'sleep', done: hasAfternoonNap, htmlDetail: hasAfternoonNap
   });
 

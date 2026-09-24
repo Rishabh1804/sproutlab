@@ -28,16 +28,31 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
   - *Units (Vela V-V-278, Maren V-M-268-12):* hero/header speak years; windows, the Upcoming label ("12–15 months") and the in-window "Ziva is 12m 20d" narration (home.js, 30.44-day months) speak months. Doctor share/print now append total months. Decide one convention for the in-window narration.
   - *Pre-existing, surfaced:* `renderActivities` interpolates `a.title`/`a.desc` unescaped (static content, HR-4); the Activities list uses lavender for Sensory while milestones use amber; the curd "room temperature only" rule (data.js COMBO_RECIPES) has weak evidence (Ceres V-C-268-3, Kael to decide); `home.js` snack tip "ragi biscuit" (most contain sugar); the symptom guide lists 38.3 °C under emergency care, which over-escalates for a toddler (Maren V-M-268-1).
 
+#### Progress — 12–24 m expansion PR 2 (#269): sleep + vaccines
+- **Fixed in #269:** SLEEP_STANDARDS to 36 m with one nap source; IAP 2023 vaccine reconciliation (four non-IAP doses removed, due windows + grace, conditional doses, seasonal yearly flu, series completion for JE-2/MCV-2, word-boundary vaccine matching).
+- **Still open (Governor deferrals):**
+  - *Next upcoming vaccine (Maren V-M-269-8):* `addVacc` no longer flips other pending doses to given, so several `upcoming:true` entries can coexist. A dozen consumers use `vaccData.find(v => v.upcoming)` (first in array order, not earliest by date) — home card, 7–14-day reminder, day plan. Add `getNextUpcomingVacc()` (earliest by date, skip or flag past-dated) and route them through it.
+  - *Mark given / Not needed (Vela V-V-269-9/10):* no in-card action to mark a due dose given or a conditional dose not needed; free-text names still drive matching (yearly flu is matched by any flu entry in its band).
+  - *Next-dose auto-scheduling* after `_vaccMarkDone` (from the IAP 2023 review) is still open.
+  - *Toddler safe-sleep tier (Maren V-M-269-15):* the Safe Sleep tips are infant-only (SIDS, nothing in the crib); toddler items (crib climbing, lowering the mattress, blind cords, when a light blanket is fine) belong on the 12-month checklist.
+  - *Vaccine score predicate (Kael V-K-269-10):* the routine-dose rule is re-derived in `calcMedicalScore`, its `vaccDueNow` detail and `renderVaccCoverage`; extract one helper.
+  - *Kael Region headroom:* ≈ 29.3K after #269 (≈ 700 to the 30K trigger). Refresh the CLAUDE.md jurisdiction summary and scope the Kael split before PR 3's data additions.
+  - *Next PR first item (Cipher E-V 3):* Home picks the first upcoming entry in array order while Medical picks the earliest date — `getNextUpcomingVacc()` unifies them.
+  - *Engine tests (Cipher E-V 11):* add a regression spec for `vaccDueState` season cases (Sep → future, Apr–Jul → due, flu dose within 300 days → future), follow-on gating, the conditional → check path, and `getSleepTargets` anchors. When the shared vaccine helper is extracted (V-K-269-10), move the vaccine helpers from core.js to medical.js (≈ 50 lines of Kael headroom) and pass `givenList`/`now` explicitly (Cipher E-V 5–6).
+  - *UIP OPV booster (Cipher E-V 12, Maren call):* the UIP gives an OPV booster at 16–24 m; her record mixes UIP and private doses (OPV-0/1 logged). Decide whether to list it.
+  - *SLEEP_STANDARDS anchors (Cipher E-V 7):* 13, 15, 19, 30 and 36 repeat the key below them in every field but naps; prune or move to a band table.
+  - *Small copy:* the under-12 m nap tips still say the 2→1 shift is "usually around 12–15 months" (12–18 elsewhere); the 7-day sleep pill's sage threshold is the standard's target, stricter than the tip's "11–14 h is normal" (Vela V-V-269-13); `intelligence-quicklog.js` hard-codes a 720-minute target (Kael pair-note).
+
 #### P1 — MILESTONE_STANDARDS stop at 12 months (data.js)
 - **Symptom:** All four standards (who/iap/eu/cn) have keys 6–12 only. From 13 m, `renderUpcomingMilestones` says "No upcoming milestones data for this age range". The home next-milestone card returns nothing (`br < mo`), the "Expected at 12 months" copy stays pinned, and the milestone score completion freezes.
 - **Fix shape:** add 13–24 m rows from CDC Learn the Signs (15/18/24 m), the WHO Motor Development Study windows and IAP. The source work is Maren-primary.
 - **Live now (2026-09-24):** the parents' checklist shows she already meets every 12 m and 15 m marker (walking since ~10 m, 3+ words at 12 m). So the empty "upcoming milestones" state and the frozen milestone score are what they see today. **Fixed in #268** (see Progress above).
 
-#### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree
+#### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree (fixed in 12–24 m PR 2)
 - **Symptom:** `getSleepTargets` clamps at 12. The `napCount` recommendation (WHO/IAP 9–18 m) expects at least 2 naps, the Q&A expects 2 before 15 m, while `SLEEP_STANDARDS` allows [1,2] and quicklog says the 2→1 transition from 12 m is normal. So a 1-nap day reads "One nap short".
 - **Fix shape:** add 12–24 m rows and reconcile the nap floor (1–2 from 12 m). Kael + Vela.
 
-#### P1 — VACC_SCHEDULE content review against IAP 2023
+#### P1 — VACC_SCHEDULE content review against IAP 2023 (reconciled in 12–24 m PR 2; next-dose auto-scheduling still open)
 - **Symptom:** no annual influenza after 12 m. The PCV booster sits at 12 m where IAP says 12–15 m, and "PCV Booster-2 @15m" is non-standard. VACC_SERIES has no Hep A / Varicella / JE / MMR-2 series. Nothing auto-schedules the next dose after `_vaccMarkDone`.
 - **Fix shape:** a line-by-line IAP 2023 reconciliation. Maren-primary. (The age-map half of this is fixed and gated by `audit-vacc-age-map-v1.sh`.)
 

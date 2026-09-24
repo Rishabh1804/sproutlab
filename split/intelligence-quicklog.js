@@ -1601,17 +1601,30 @@ function _qlFeedInsight(foodArg) {
   return null;
 }
 
-function _qlSleepInsight() {
+// dateStr: the date the entry was logged for; kind: 'nap' | 'night'. The nap-count
+// lines speak only about today, only from a nap save, and only once the count is
+// a fair read of the day (a morning nap is not yet "the day's nap").
+function _qlSleepInsight(dateStr, kind) {
   try {
     var todayStr = today();
+    if (dateStr && dateStr !== todayStr) return null;
     var todayNaps = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'nap'; });
-    if (todayNaps.length === 2) return '2 naps today \u2014 solid rest.';
 
     var lastNap = todayNaps[todayNaps.length - 1];
     if (lastNap && lastNap.bedtime && lastNap.wakeTime) {
       var sP = lastNap.bedtime.split(':'), eP = lastNap.wakeTime.split(':');
       var durMin = (parseInt(eP[0]) * 60 + parseInt(eP[1])) - (parseInt(sP[0]) * 60 + parseInt(sP[1]));
       if (durMin > 120) return 'Long nap! Monitor bedtime \u2014 may shift later.';
+    }
+
+    if (kind !== 'night') {
+      var ideal = (typeof getSleepTargets === 'function') ? getSleepTargets(getAgeInMonths()).napIdeal : [2, 3];
+      var n = todayNaps.length;
+      var lateEnough = new Date().getHours() >= 15 || (lastNap && parseInt(lastNap.bedtime) >= 11);
+      if (n >= 1 && n >= ideal[0] && n <= ideal[1] && (n === ideal[1] || lateEnough)) {
+        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at her age.';
+        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for her age.';
+      }
     }
 
     var nightEntries = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'night'; });
@@ -1983,7 +1996,7 @@ function saveQLSleep() {
 
   _islMarkDirty('sleep');
   // Smart QL: compute insight BEFORE close
-  var qlInsight = _qlSleepInsight();
+  var qlInsight = _qlSleepInsight(entry.date, 'night');
   _qlLogAction('sleep', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -2020,7 +2033,7 @@ function saveQLNap() {
 
   _islMarkDirty('sleep');
   // Smart QL: compute insight BEFORE close
-  var qlNapInsight = _qlSleepInsight();
+  var qlNapInsight = _qlSleepInsight(entry.date, 'nap');
   _qlLogAction('nap', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -4180,10 +4193,15 @@ function computeWakeWindows() {
   const ageM = ageAt().months;
   // Age-appropriate ideal wake windows (minutes)
   let idealMin, idealMax;
+  // App convention (no guideline body publishes wake windows). From 12 m the band
+  // follows her actual nap pattern: a one-nap toddler has two long windows.
   if (ageM <= 6) { idealMin = 120; idealMax = 150; }
   else if (ageM <= 9) { idealMin = 135; idealMax = 180; }
-  else if (ageM <= 12) { idealMin = 150; idealMax = 210; }
-  else { idealMin = 180; idealMax = 300; }
+  else if (ageM < 12) { idealMin = 150; idealMax = 210; }
+  else {
+    const avgNapsWW = days.reduce((s, d) => s + (d.naps || 0), 0) / days.length;
+    if (avgNapsWW < 1.5) { idealMin = 240; idealMax = 360; } else { idealMin = 180; idealMax = 240; }
+  }
 
   const allWindows = days.flatMap(d => d.windows);
   const avgGap = Math.round(allWindows.reduce((s, w) => s + w.gapMin, 0) / allWindows.length);
@@ -4280,7 +4298,7 @@ function renderInfoSleepWakeWindows() {
   if (insightEl) {
     let html = '';
     if (data.avgLastGap > data.idealMax + 30) {
-      html += '<div class="si-insight si-insight-warn">Last wake window before bed is too long (' + Math.floor(data.avgLastGap / 60) + 'h ' + (data.avgLastGap % 60) + 'm). Try fitting an extra nap or moving bedtime earlier.</div>';
+      html += '<div class="si-insight si-insight-warn">Last wake window before bed is too long (' + Math.floor(data.avgLastGap / 60) + 'h ' + (data.avgLastGap % 60) + 'm). ' + (ageAt().months >= 12 ? 'Try moving bedtime a little earlier.' : 'Try fitting an extra nap or moving bedtime earlier.') + '</div>';
     }
     if (data.overtiredCount >= 3) {
       html += '<div class="si-insight si-insight-warn">' + data.overtiredCount + ' overtired windows detected this week — may cause harder settling.</div>';
@@ -4463,7 +4481,12 @@ function computeNapTransition() {
   const avgNaps = dayData.reduce((s, d) => s + d.napCount, 0) / 14;
 
   // Signal 1: Nap count dropping below target
-  const lowNapDays = dayData.filter(d => d.napCount < napMin && (d.naps.length > 0 || d.night)).length;
+  // While one or two naps are both normal (napMin < napMax), the transition shows as
+  // days with fewer naps than the upper bound (but not zero — that's signal 5).
+  const napRangeOpen = napMin < napMax;
+  const lowNapDays = napRangeOpen
+    ? dayData.filter(d => d.napCount > 0 && d.napCount < napMax).length
+    : dayData.filter(d => d.napCount < napMin && (d.naps.length > 0 || d.night)).length;
   const napCountDrop = lowNapDays >= 4;
 
   // Signal 2: Short naps (<30min) increasing
@@ -4496,7 +4519,7 @@ function computeNapTransition() {
   const napRefusal = napRefusalDays >= 3 && ageM >= 8;
 
   const signals = [
-    { label: 'Nap count below target', met: napCountDrop, detail: lowNapDays + '/14 days below ' + napMin + ' naps' },
+    { label: napRangeOpen ? 'Days with fewer naps' : 'Nap count below target', met: napCountDrop, detail: napRangeOpen ? lowNapDays + '/14 days with fewer than ' + napMax + ' naps' : lowNapDays + '/14 days below ' + napMin + ' nap' + (napMin === 1 ? '' : 's') },
     { label: 'Short naps increasing', met: shortNapsRising, detail: Math.round(shortNapRate * 100) + '% of naps <30min' },
     { label: 'Bedtime drifting later', met: bedtimeLater, detail: drift.insufficient ? 'Not enough data' : (drift.driftPerWeek > 0 ? '+' + drift.driftPerWeek + 'min/week' : 'Stable') },
     { label: 'Last nap ending late', met: lateLastNap, detail: lastNapEnds.length > 0 ? 'Avg end: ' + Math.floor(avgLastNapEnd / 60) + ':' + String(Math.round(avgLastNapEnd % 60)).padStart(2, '0') : 'No data' },
