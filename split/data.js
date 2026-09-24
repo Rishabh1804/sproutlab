@@ -2466,11 +2466,12 @@ const AGE_RULES = {
                 reason:'No added sugar before 2 years (WHO, AAP). Use fruit for natural sweetness.' },
   'jaggery':  { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
   'gur':      { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
-  'tea':      { minMonth:24, reason:'Tannins block iron absorption. Caffeine is harmful for babies.' },
-  'coffee':   { minMonth:24, reason:'Caffeine is harmful for infants and toddlers.' },
-  'juice':    { minMonth:8, reason:'Whole fruit is better. If juice, limit to 2-3 tsp diluted in an open cup, never a bottle.' },
-  'whole nut': { minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
-  'whole nuts':{ minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
+  'tea':      { minMonth:24, aliases:['chai','chay','milk tea','masala chai','doodh chai','kadak chai','green tea','black tea'], reason:'Tannins block iron absorption. Caffeine is harmful for babies and toddlers.' },
+  'coffee':   { minMonth:24, aliases:['cold coffee','filter coffee','kaapi'], reason:'Caffeine is harmful for infants and toddlers.' },
+  // 12–24 m PR 3: AAP 2017 — no juice under 1; ≤ 4 oz (120 ml) 100% juice a day at 1–3 y; WHO 2023 'limit'.
+  'juice':    { minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.' },
+  'whole nut': { minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
+  'whole nuts':{ minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   // food-effects-v2 (P1a-β): peanut + tree nut are SOFT floors (introduce-early,
   // ~6mo), NOT the 60mo 'whole nut' choking gate — that's the FORM, this is the
   // FOOD. aliases mirror the FOOD_EFFECTS records so the age GATE and the
@@ -2481,12 +2482,13 @@ const AGE_RULES = {
   'tree nut': { minMonth:6, aliases:['tree nuts','almond','almonds','badam','walnut','walnuts','akhrot','cashew','cashews','kaju','pistachio','pista','hazelnut','pecan','almond butter','almond paste'],
                 reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
-  'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
+  'raw salad':{ minMonth:12, reason:'From 1, soft raw foods are fine grated or sliced very thin (cucumber, tomato, grated carrot). Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.' },
   'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
-  'biscuit':  { minMonth:10, reason:'Most contain added sugar, salt, and maida. Only sugar-free, whole-grain ones — no added sugar before 2 years.' },
+  // 12–24 m PR 3: was 10 while its own reason said 'no added sugar before 2'; ICMR-NIN 2024 lists biscuits as HFSS to avoid; matches rusk (24).
+  'biscuit':  { minMonth:24, reason:'Most biscuits carry added sugar, salt and refined flour — no added sugar before 2 (WHO, ICMR-NIN). Offer soft roti, fruit or plain home snacks instead.' },
   // Rusk (Ceres V-C-268-6): the teething guide warns against rusks; the food log gates them too.
   'rusk':     { minMonth:24, aliases:['rusks','toast rusk','teething rusk','suji rusk','cake rusk'], reason:'Most rusks contain added sugar and break into hard chunks she can\'t chew yet (choking). Avoid before 2 years; offer soft bread or roti pieces instead.' },
-  'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
+  'chips':    { minMonth:24, reason:'Very salty and fried, and a choking risk. Not for under-2s (WHO: high-salt, trans-fat foods should not be given before 2).' },
   'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
   'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
   // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
@@ -2506,16 +2508,16 @@ const AGE_RULES = {
   'chana':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'chole':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'mushroom': { minMonth:10, reason:'Can introduce after 10 months — always well-cooked, never raw.' },
-  'corn':     { minMonth:8, reason:'Hard to digest whole. After 8 months, use corn flour or well-mashed sweet corn.' },
+  'corn':     { minMonth:8, aliases:['bhutta','sweet corn','makki'], reason:'From 8 months as makki atta or well-mashed sweet corn. Whole kernels — cooked or raw, and bhutta off the cob — are a choking risk for young children, per the CDC; mash or blend them.' },
   'spinach':  { minMonth:7, reason:'Contains oxalates — blanch before use. Fine from 7 months in small amounts.' },
-  'bajra':    { minMonth:7, reason:'A warming millet — better after 7 months, avoid in very hot weather.' },
+  'bajra':    { minMonth:7, reason:'Well-cooked bajra porridge or soft roti is fine from about 7 months — an iron-rich millet (IFCT 2017: 6.4 mg iron per 100 g).' },
   // food-effects-v2 Phase δ allergen gates (egg already above). minMonth:6 follows
   // AAP/NHS/ASCIA (~6mo, don't delay); each backs a FOOD_EFFECTS record below.
   'soy':      { minMonth:6, aliases:['soya','soybean','soya bean','tofu','edamame','soya chunks','soya granules','soya nuggets','soy milk','soya milk','tempeh','miso','natto','tamari'],
                 reason:'Fine from around 6 months — soft tofu or well-mashed soya. Whole edamame is a choking risk; mash it.' },
   'wheat':    { minMonth:6, aliases:['atta','maida','wheat flour','suji','sooji','rava','semolina','dalia','broken wheat','roti','chapati','phulka','paratha','naan','pasta','sevai','vermicelli','durum','couscous','bulgur','seitan'],
                 reason:'Fine from around 6 months — soft cereal or softened roti. Wheat allergy is separate from celiac disease.' },
-  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','gajak','til laddoo'],
+  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','til laddoo'],
                 // 'halva'/'halwa' deliberately NOT aliases — they collide with carrot/banana/
                 // ragi/suji halwa (Kael B-1); til-halwa is covered by 'til'. Suji halwa still
                 // resolves to wheat via 'suji', correctly.
@@ -2731,7 +2733,7 @@ const FOOD_EFFECTS = {
   'sesame': {
     foodClass:  'allergen-introduce-early',
     severity:   'caution',
-    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'gajak', 'til laddoo'],  // no 'halva'/'halwa' — collides with carrot/banana/ragi halwa (Kael B-1)
+    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'til laddoo'],  // no 'gajak' — a hard jaggery brittle, gated by the recipes.js 'chikki' rule + choking alias  // no 'halva'/'halwa' — collides with carrot/banana/ragi halwa (Kael B-1)
     effect:     'food allergy (often lifelong)',
     title:      'Sesame — introduce early, as thinned tahini',
     why:        'Around 6 months, sesame is good to introduce — best as smooth tahini (sesame paste) thinned into food, not whole seeds or a thick glob. There is no reason to delay it. Sesame allergy tends to be lifelong, so watch the first tastes closely and keep an eye out as you continue.',
@@ -2915,7 +2917,7 @@ const FOOD_EFFECTS = {
   'choking hazards': {
     foodClass:  'choking-by-form',     // PRIMARY (first standalone) — the form IS the hazard
     severity:   'caution',             // amber conditional chrome; the floor renders via severeSigns
-    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum'],
+    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum', 'whole corn', 'corn kernels', 'bhutta', 'chikki', 'gajak', 'whole litchi', 'whole lychee', 'chivda', 'bhujia', 'mathri', 'jelly cubes', 'dry coconut pieces', 'whole makhana', 'roasted makhana'],
     effect:     'airway obstruction (choking) by food form',
     title:      'Choking hazards — cut it to make it safe; whole forms wait until ~5',
     why:        'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Round (grape, whole nut) and coin/cylindrical (hot-dog round) shapes plug a small airway; hard foods can\'t be chewed without grinding molars (which a baby has none of until ~16–29 months). Change the form: cut to ≤½ inch (a child\'s small fingernail), cook soft, grind, or thin.',
@@ -3033,7 +3035,7 @@ window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 
 // ── ALLERGEN FLAGS ──
 const ALLERGENS = {
-  'peanut':    'Tree nut/legume allergen. Introduce alone for 3 days. Watch for rash, swelling, vomiting.',
+  'peanut':    'Legume allergen (not a tree nut). Give ground or as thinly spread butter, never whole. Watch for rash, swelling or vomiting for about 2 hours.',
   'almond':    'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
   'almonds':   'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
   'walnut':    'Tree nut allergen. Always grind to paste. Watch for reactions.',
@@ -3123,7 +3125,7 @@ const COMBO_RECIPES = {
   'ragi beetroot':    { recipe:'1. Grate 1 small beetroot, steam 5 min, puree.\n2. Cook 1 tbsp ragi in ½ cup water (5 min).\n3. Mix beetroot puree into ragi.\n4. Add ghee.', dos:['Double iron sources combined','Pair with lemon or mango for absorption','Rich colour — visually appealing'], donts:['Will stain everything pink','Don\'t add salt','Serve fresh'] },
   'blueberry avocado':{ recipe:'1. Steam 10 blueberries 2 min, mash.\n2. Scoop 2 tbsp avocado.\n3. Mix together.\n4. Serve immediately.', dos:['Brain fats + antioxidants','No cooking needed','Rich purple colour'], donts:['Don\'t give whole blueberries','Both oxidise fast — serve immediately','Stains heavily — bib essential'] },
   'spinach khichdi':  { recipe:'1. Blanch 5-6 spinach leaves 2 min, puree.\n2. Cook 1 tbsp rice + ½ tbsp dal — 3 whistles.\n3. Mix spinach puree + ghee + lemon.', dos:['Triple iron — spinach + dal + lemon for absorption','Blanch spinach first to reduce oxalates','Complete meal'], donts:['Don\'t reheat spinach dishes','Don\'t skip blanching','Make fresh each time'] },
-  'honey':            { recipe:'', dos:[], donts:['NEVER give honey before 12 months','Risk of infant botulism — can be fatal','No form of honey is safe — raw, cooked, or baked'] },
+  'honey':            { recipe:'', dos:[], donts:['Never before 12 months — risk of infant botulism, which can be fatal','From 1 it is an added sugar, so wait until 2','No form of honey is safe before 1 — raw, cooked, or baked'] },
   'salt':             { recipe:'', dos:[], donts:['None added before 12 months — baby kidneys cannot process it','From 1 year keep it light: no more than 2 g a day up to age 3 (NHS)','Skip pickles, papad and namkeen'] },
   'sugar':            { recipe:'', dos:[], donts:['No added sugar before 2 years','Use fruit for natural sweetness','Includes jaggery and gur'] },
 };

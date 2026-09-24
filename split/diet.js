@@ -2932,7 +2932,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('drop'),
     title:'No fruit juice in bottles',
-    body:'Juice in bottles causes tooth decay and reduces appetite for solids. If giving juice, use an open cup and limit to 2–3 tsp diluted.',
+    body:'Juice in a bottle causes tooth decay and blunts appetite. No juice under 1; from 1, whole fruit is better — if you give 100% juice, keep it to 120 ml a day, in an open cup with a meal. Packaged fruit drinks wait until 2.',
     condition: () => true,
   },
   // ── TEXTURE PROGRESSION ──
@@ -2953,6 +2953,25 @@ const ALL_TIPS = [
       const mo = getAgeInMonths();
       return mo >= 7 && mo < 12;   // 12 m+: finger foods are already here
     }
+  },
+  // ── TODDLER (12–24 m) — TODDLER_FEEDING in recipes.js carries the sources ──
+  {
+    type:'info', icon:zi('spoon'),
+    title:'Family food, adapted',
+    body:'From 1 year she can eat what the family eats, in small soft pieces she can squash between finger and thumb — she has no grinding molars yet. Take her portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
+    condition: () => getAgeInMonths() >= 12,
+  },
+  {
+    type:'info', icon:zi('bowl'),
+    title:'3–4 meals and 1–2 snacks',
+    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 katori a meal. Offer, then let her appetite decide — no forcing (WHO, IAP).',
+    condition: () => getAgeInMonths() >= 12,
+  },
+  {
+    type:'info', icon:zi('leaf'),
+    title:'Five food groups a day',
+    body:'Aim for at least 5 of these 8 groups each day: breast milk · grains · dals, nuts and seeds · milk, curd and paneer · meat or fish · eggs · orange and green fruit and veg · other fruit and veg. A vegetarian day can still reach 6 (WHO/UNICEF).',
+    condition: () => getAgeInMonths() >= 12,
   },
   // ── ALLERGEN INTRODUCTION ──
   {
@@ -6676,7 +6695,7 @@ function _spGetDomainDefs(zs) {
     },
     {
       key: 'diet', icon: zi('bowl'), name: 'Diet', tab: 'diet',
-      tip: 'Aim for 3 meals daily + snack as bonus with diverse foods across all food groups. Variety is key!',
+      tip: getAgeInMonths() >= 12 ? 'Aim for 3–4 meals and 1–2 snacks a day across at least 5 food groups. Variety is key!' : 'Aim for 3 meals daily + snack as bonus with diverse foods across all food groups. Variety is key!',
       components: () => {
         const r = zs.domains.diet.result;
         if (!r) return [];

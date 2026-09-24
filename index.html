@@ -18307,11 +18307,12 @@ const AGE_RULES = {
                 reason:'No added sugar before 2 years (WHO, AAP). Use fruit for natural sweetness.' },
   'jaggery':  { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
   'gur':      { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
-  'tea':      { minMonth:24, reason:'Tannins block iron absorption. Caffeine is harmful for babies.' },
-  'coffee':   { minMonth:24, reason:'Caffeine is harmful for infants and toddlers.' },
-  'juice':    { minMonth:8, reason:'Whole fruit is better. If juice, limit to 2-3 tsp diluted in an open cup, never a bottle.' },
-  'whole nut': { minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
-  'whole nuts':{ minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
+  'tea':      { minMonth:24, aliases:['chai','chay','milk tea','masala chai','doodh chai','kadak chai','green tea','black tea'], reason:'Tannins block iron absorption. Caffeine is harmful for babies and toddlers.' },
+  'coffee':   { minMonth:24, aliases:['cold coffee','filter coffee','kaapi'], reason:'Caffeine is harmful for infants and toddlers.' },
+  // 12–24 m PR 3: AAP 2017 — no juice under 1; ≤ 4 oz (120 ml) 100% juice a day at 1–3 y; WHO 2023 'limit'.
+  'juice':    { minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.' },
+  'whole nut': { minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
+  'whole nuts':{ minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   // food-effects-v2 (P1a-β): peanut + tree nut are SOFT floors (introduce-early,
   // ~6mo), NOT the 60mo 'whole nut' choking gate — that's the FORM, this is the
   // FOOD. aliases mirror the FOOD_EFFECTS records so the age GATE and the
@@ -18322,12 +18323,13 @@ const AGE_RULES = {
   'tree nut': { minMonth:6, aliases:['tree nuts','almond','almonds','badam','walnut','walnuts','akhrot','cashew','cashews','kaju','pistachio','pista','hazelnut','pecan','almond butter','almond paste'],
                 reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
-  'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
+  'raw salad':{ minMonth:12, reason:'From 1, soft raw foods are fine grated or sliced very thin (cucumber, tomato, grated carrot). Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.' },
   'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
-  'biscuit':  { minMonth:10, reason:'Most contain added sugar, salt, and maida. Only sugar-free, whole-grain ones — no added sugar before 2 years.' },
+  // 12–24 m PR 3: was 10 while its own reason said 'no added sugar before 2'; ICMR-NIN 2024 lists biscuits as HFSS to avoid; matches rusk (24).
+  'biscuit':  { minMonth:24, reason:'Most biscuits carry added sugar, salt and refined flour — no added sugar before 2 (WHO, ICMR-NIN). Offer soft roti, fruit or plain home snacks instead.' },
   // Rusk (Ceres V-C-268-6): the teething guide warns against rusks; the food log gates them too.
   'rusk':     { minMonth:24, aliases:['rusks','toast rusk','teething rusk','suji rusk','cake rusk'], reason:'Most rusks contain added sugar and break into hard chunks she can\'t chew yet (choking). Avoid before 2 years; offer soft bread or roti pieces instead.' },
-  'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
+  'chips':    { minMonth:24, reason:'Very salty and fried, and a choking risk. Not for under-2s (WHO: high-salt, trans-fat foods should not be given before 2).' },
   'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
   'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
   // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
@@ -18347,16 +18349,16 @@ const AGE_RULES = {
   'chana':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'chole':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'mushroom': { minMonth:10, reason:'Can introduce after 10 months — always well-cooked, never raw.' },
-  'corn':     { minMonth:8, reason:'Hard to digest whole. After 8 months, use corn flour or well-mashed sweet corn.' },
+  'corn':     { minMonth:8, aliases:['bhutta','sweet corn','makki'], reason:'From 8 months as makki atta or well-mashed sweet corn. Whole kernels — cooked or raw, and bhutta off the cob — are a choking risk for young children, per the CDC; mash or blend them.' },
   'spinach':  { minMonth:7, reason:'Contains oxalates — blanch before use. Fine from 7 months in small amounts.' },
-  'bajra':    { minMonth:7, reason:'A warming millet — better after 7 months, avoid in very hot weather.' },
+  'bajra':    { minMonth:7, reason:'Well-cooked bajra porridge or soft roti is fine from about 7 months — an iron-rich millet (IFCT 2017: 6.4 mg iron per 100 g).' },
   // food-effects-v2 Phase δ allergen gates (egg already above). minMonth:6 follows
   // AAP/NHS/ASCIA (~6mo, don't delay); each backs a FOOD_EFFECTS record below.
   'soy':      { minMonth:6, aliases:['soya','soybean','soya bean','tofu','edamame','soya chunks','soya granules','soya nuggets','soy milk','soya milk','tempeh','miso','natto','tamari'],
                 reason:'Fine from around 6 months — soft tofu or well-mashed soya. Whole edamame is a choking risk; mash it.' },
   'wheat':    { minMonth:6, aliases:['atta','maida','wheat flour','suji','sooji','rava','semolina','dalia','broken wheat','roti','chapati','phulka','paratha','naan','pasta','sevai','vermicelli','durum','couscous','bulgur','seitan'],
                 reason:'Fine from around 6 months — soft cereal or softened roti. Wheat allergy is separate from celiac disease.' },
-  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','gajak','til laddoo'],
+  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','til laddoo'],
                 // 'halva'/'halwa' deliberately NOT aliases — they collide with carrot/banana/
                 // ragi/suji halwa (Kael B-1); til-halwa is covered by 'til'. Suji halwa still
                 // resolves to wheat via 'suji', correctly.
@@ -18572,7 +18574,7 @@ const FOOD_EFFECTS = {
   'sesame': {
     foodClass:  'allergen-introduce-early',
     severity:   'caution',
-    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'gajak', 'til laddoo'],  // no 'halva'/'halwa' — collides with carrot/banana/ragi halwa (Kael B-1)
+    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'til laddoo'],  // no 'gajak' — a hard jaggery brittle, gated by the recipes.js 'chikki' rule + choking alias  // no 'halva'/'halwa' — collides with carrot/banana/ragi halwa (Kael B-1)
     effect:     'food allergy (often lifelong)',
     title:      'Sesame — introduce early, as thinned tahini',
     why:        'Around 6 months, sesame is good to introduce — best as smooth tahini (sesame paste) thinned into food, not whole seeds or a thick glob. There is no reason to delay it. Sesame allergy tends to be lifelong, so watch the first tastes closely and keep an eye out as you continue.',
@@ -18756,7 +18758,7 @@ const FOOD_EFFECTS = {
   'choking hazards': {
     foodClass:  'choking-by-form',     // PRIMARY (first standalone) — the form IS the hazard
     severity:   'caution',             // amber conditional chrome; the floor renders via severeSigns
-    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum'],
+    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum', 'whole corn', 'corn kernels', 'bhutta', 'chikki', 'gajak', 'whole litchi', 'whole lychee', 'chivda', 'bhujia', 'mathri', 'jelly cubes', 'dry coconut pieces', 'whole makhana', 'roasted makhana'],
     effect:     'airway obstruction (choking) by food form',
     title:      'Choking hazards — cut it to make it safe; whole forms wait until ~5',
     why:        'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Round (grape, whole nut) and coin/cylindrical (hot-dog round) shapes plug a small airway; hard foods can\'t be chewed without grinding molars (which a baby has none of until ~16–29 months). Change the form: cut to ≤½ inch (a child\'s small fingernail), cook soft, grind, or thin.',
@@ -18874,7 +18876,7 @@ window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 
 // ── ALLERGEN FLAGS ──
 const ALLERGENS = {
-  'peanut':    'Tree nut/legume allergen. Introduce alone for 3 days. Watch for rash, swelling, vomiting.',
+  'peanut':    'Legume allergen (not a tree nut). Give ground or as thinly spread butter, never whole. Watch for rash, swelling or vomiting for about 2 hours.',
   'almond':    'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
   'almonds':   'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
   'walnut':    'Tree nut allergen. Always grind to paste. Watch for reactions.',
@@ -18964,7 +18966,7 @@ const COMBO_RECIPES = {
   'ragi beetroot':    { recipe:'1. Grate 1 small beetroot, steam 5 min, puree.\n2. Cook 1 tbsp ragi in ½ cup water (5 min).\n3. Mix beetroot puree into ragi.\n4. Add ghee.', dos:['Double iron sources combined','Pair with lemon or mango for absorption','Rich colour — visually appealing'], donts:['Will stain everything pink','Don\'t add salt','Serve fresh'] },
   'blueberry avocado':{ recipe:'1. Steam 10 blueberries 2 min, mash.\n2. Scoop 2 tbsp avocado.\n3. Mix together.\n4. Serve immediately.', dos:['Brain fats + antioxidants','No cooking needed','Rich purple colour'], donts:['Don\'t give whole blueberries','Both oxidise fast — serve immediately','Stains heavily — bib essential'] },
   'spinach khichdi':  { recipe:'1. Blanch 5-6 spinach leaves 2 min, puree.\n2. Cook 1 tbsp rice + ½ tbsp dal — 3 whistles.\n3. Mix spinach puree + ghee + lemon.', dos:['Triple iron — spinach + dal + lemon for absorption','Blanch spinach first to reduce oxalates','Complete meal'], donts:['Don\'t reheat spinach dishes','Don\'t skip blanching','Make fresh each time'] },
-  'honey':            { recipe:'', dos:[], donts:['NEVER give honey before 12 months','Risk of infant botulism — can be fatal','No form of honey is safe — raw, cooked, or baked'] },
+  'honey':            { recipe:'', dos:[], donts:['Never before 12 months — risk of infant botulism, which can be fatal','From 1 it is an added sugar, so wait until 2','No form of honey is safe before 1 — raw, cooked, or baked'] },
   'salt':             { recipe:'', dos:[], donts:['None added before 12 months — baby kidneys cannot process it','From 1 year keep it light: no more than 2 g a day up to age 3 (NHS)','Skip pickles, papad and namkeen'] },
   'sugar':            { recipe:'', dos:[], donts:['No added sugar before 2 years','Use fruit for natural sweetness','Includes jaggery and gur'] },
 };
@@ -22928,6 +22930,385 @@ const TODDLER_FEEDING = {
   },
 };
 
+
+// ═══════════════════════════════════════════════════════════════════════
+// FOOD LIBRARY 12–24 m OVERLAY (2026-09-24, 12–24 m PR 3) — Ceres-owned additions
+// merged into the data.js tables at parse time (add-if-absent; data.js always
+// wins on a key collision). Lives here, not data.js, to spare the Kael Region's
+// 30K headroom. Runs BEFORE every parse-time index over these tables
+// (diet.js _foodTaxFlat / _FD_SEARCH_INDEX, home.js _synergyIndex), so no cache
+// invalidation is needed. Corrections to EXISTING rules and every FOOD_EFFECTS
+// change live in data.js itself (the source-reading safety gates read them there).
+//  DRAFT — Food Library expansion for 12–24 months (Ceres jurisdiction)
+//  Status: RESEARCH DRAFT, not wired. Proposed home: split/recipes.js (Ceres),
+//  merged into the data.js tables at parse time by _mergeFoodLib1224() below.
+//  Drafted 2026-09-24 for Ziva (12.7 mo, 4 teeth, Jamshedpur).
+// 
+//  ── SOURCES (all fetched 2026-09-24) ─────────────────────────────────────
+//  [WHO23]  https://iris.who.int/server/api/core/bitstreams/5abca011-4db2-4cf1-b959-45b756f7b600/content
+//           WHO Guideline for complementary feeding of infants and young children 6–23 months (2023),
+//           executive-summary PDF (ISBN 978-92-4-008186-4). Supports: Rec 2b (12–23 m: animal milk;
+//           follow-up formula not recommended); Rec 4a–c (animal-source foods daily; fruit/veg daily;
+//           pulses, nuts, seeds frequently, "in a form that does not pose a risk of choking");
+//           Rec 5a–d (foods high in sugar, salt, trans fats should not be consumed; SSBs should not be
+//           consumed; non-sugar sweeteners should not be consumed; 100% fruit juice should be limited).
+//           (NCBI mirror NBK596423 was captcha-blocked; ENN FEX-72 summary used as cross-check:
+//           https://www.ennonline.net/fex/72/who-guideline-complementary-feeding-infants-and-young-children-6-23-months-age)
+//  [NIN24]  https://nin.res.in/dietaryguidelines/pdfjs/locale/DGI_2024.pdf
+//           ICMR-NIN Dietary Guidelines for Indians 2024. Supports: Table 1.6 note "No added sugar for
+//           children <2 years old"; 1–3 y food groups (cereals/millets 100 g, milk/curd 350 ml, nuts 10 g,
+//           fats 20 g); Guideline 3 p.27–28: "Sugar or salt need not be added", "fruit juices and
+//           sugar-sweetened beverages should be avoided", "At about one year of age, a child should be
+//           introduced to the family diet ... milk, fruits, small amounts of nuts, oil seeds, oil/ghee",
+//           "HFSS must be avoided (example: biscuits, chips)", "avoid sugar and reduce salt intake to the
+//           bare minimum"; eggs/fish/meat "from eight months onwards"; iron bioavailability improved by
+//           "fermented and sprouted grains and foods rich in vitamin C such as guava, oranges"; "Milk is
+//           the best source of biologically available calcium but is a poor source of iron"; calcium-rich
+//           "milk, curd, sesame seeds, ragi and GLVs like amaranth" and "foxtail millet, finger millet";
+//           "commercially available fruit juices ... must be avoided"; 20% of cereals from millets for
+//           children up to 10 y; tea binds dietary iron.
+//  [IFCT17] https://www.nin.res.in/ebooks/IFCT2017.pdf
+//           Indian Food Composition Tables 2017 (ICMR-NIN). Supports: per-100 g protein (Table 1) and
+//           calcium / iron (Table 5) in IFCT_REF below. Text was machine-extracted; blank "below detection"
+//           cells collapse columns, so every value was sanity-read by column order (Al, As, Cd, Ca, Cr, Co,
+//           Cu, Fe …). Values marked `verify:true` need a human read of the printed page.
+//  [IAP16]  https://www.indianpediatrics.net/aug2016/703.pdf
+//           IAP Infant and Young Child Feeding Guidelines 2016 (Indian Pediatrics 53:703). Supports: 12–23 m
+//           "Family foods, 3–4 meals plus ... 3/4 to one 250 mL" bowl; "Avoid foods which can pose choking
+//           hazard"; avoid junk/commercial food high in sugar, salt, fat, additives. CONFLICT: advises energy
+//           density "by adding sugar / jaggery" — superseded by WHO23 / NIN24 (see CONFLICTS).
+//  [IAPP]   https://iapindia.org/pdf/Ch-040-IAP-Parental-Guideline-Complementary-Feeding.pdf
+//           IAP Parent Guideline — Complementary Feeding (Ch-040). Verified from search excerpt only.
+//           Supports: idli, dosa, dhokla, ragi, chapati as appropriate staples; "Sprouts, pulses, legumes,
+//           groundnuts, almonds, cashewnuts, raisins (Note: any nut should be well grinded ... solid
+//           pieces may cause choking)"; avoidable: biscuits, fruit juices and fruit drinks, commercial
+//           breakfast cereals, repeatedly fried foods.
+//  [CDC-CH] https://www.cdc.gov/infant-toddler-nutrition/foods-and-drinks/choking-hazards.html
+//           CDC Choking Hazards (updated 2026-03-11). Supports: cooked or raw whole corn kernels; uncut
+//           grapes/berries/cherries; hard raw veg/fruit pieces; uncooked dried fruit (raisins); whole or
+//           chopped nuts and seeds; chunks/spoonfuls of nut and seed butters; tough/large chunks of meat;
+//           large chunks of cheese; bones in meat or fish; whole beans; cookies; chips, popcorn and similar
+//           snack foods; round/hard/gummy candy, chewing gum, marshmallows.
+//  [AAP-CH] https://www.healthychildren.org/English/health-issues/injuries-emergencies/Pages/Choking-Prevention.aspx
+//           AAP Choking Prevention (2026-02-27). Supports: keep high-risk foods until 4 years; cut to
+//           ≤ ½ inch; list incl. nuts and seeds, whole grapes, raw carrot sticks, raw apple chunks, popcorn,
+//           thick chunks of nut butter, chunks of meat, chunks of cheese, hard/gooey/sticky candy.
+//  [AAP-DR] https://www.healthychildren.org/English/healthy-living/nutrition/Pages/recommended-drinks-for-young-children-ages-0-5.aspx
+//           AAP Recommended Drinks for Children 5 & Younger (2023-10-03). Supports: 12–24 m whole cow's
+//           milk ~16 oz (2 cups) a day, water 1–4 cups; avoid flavoured milk (no added sugar <2), toddler
+//           milks unnecessary, sugary drinks harmful, caffeine avoided; 100% juice ≤ 4 oz in 2–3 y.
+//  [AAP-JU] https://publications.aap.org/aapnews/news/14804/Weighing-in-on-fruit-juice-AAP-now-says-no-juice
+//           AAP News 2017-05-22 on policy doi:10.1542/peds.2017-0967. Supports: no juice < 1 y; max 4 oz
+//           100% juice/day at 1–3 y; not from bottles/covered cups, not at bedtime, not sipped all day.
+//  [NHS-YC] https://www.nhs.uk/baby/weaning-and-feeding/what-to-feed-young-children/
+//           NHS What to feed young children. Supports: whole cows' milk as main drink from 1; ≥ 350 ml milk
+//           or 2 dairy servings a day; full-fat dairy to 2; whole nuts incl. peanuts not under 5; dried fruit
+//           with meals not as snacks (teeth); rice drinks not under 5; no need to add salt.
+//  [NHS-AV] https://www.nhs.uk/baby/weaning-and-feeding/foods-to-avoid-giving-babies-and-young-children/
+//           NHS Foods to avoid giving babies and young children (reviewed 2026-02-18). Supports: honey not
+//           until over 1 and "Honey is a sugar"; eggs from ~6 m, cooked solid unless Lion-marked; whole nuts
+//           not under 5, nut butter spread not on its own; unpasteurised / mould-ripened cheese; raw jelly
+//           cubes choking; raw shellfish; shark/swordfish/marlin.
+//  [NHS-SA] https://www.nhs.uk/live-well/eat-well/food-types/salt-in-your-diet/
+//           NHS Salt in your diet. Supports: under 1 y < 1 g salt/day; 1–3 y no more than 2 g/day.
+//  [SPROUT] https://archive.cdc.gov/www_cdc_gov/salmonella/montevideo-01-18/advice.html  (+ Health Canada
+//           https://www.canada.ca/en/health-canada/services/food-safety-fruits-vegetables/sprouts.html)
+//           Verified from search excerpt only. Supports: "Children ... should avoid eating raw or lightly
+//           cooked sprouts of any kind"; do not eat raw or undercooked sprouts.
+//  [LITCHI] https://pubmed.ncbi.nlm.nih.gov/28153514/  (Shrivastava et al., Lancet Glob Health 2017)
+//           Verified from abstract excerpt only. Supports: litchi-associated acute toxic encephalopathy in
+//           Muzaffarpur (Bihar, bordering Jharkhand); "minimising litchi consumption, ensuring receipt of an
+//           evening meal".
+//  [FSSAI]  https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=India%27s%20FSSAI%20Sets%20Limit%20on%20the%20Use%20of%20Trans-fats%20in%20all%20Food%20Products_New%20Delhi_India_02-13-2021
+//           USDA FAS GAIN report on FSSAI regulation (SECONDARY — FSSAI gazette not fetched; excerpt only).
+//           Supports: industrial trans fat capped at 2% in oils/fats and in foods using them (from 2022) —
+//           context for "fried namkeen/biscuits"; the cap reduces, not removes, trans fat.
+// 
+//  ── UNCONFIRMED (flagged inline with `// UNCONFIRMED`) ───────────────────
+//    • makhana nutrients (not in IFCT 2017); foxtail + barnyard millet per-100 g values (IFCT millet rows
+//      have an inconsistent scientific-name print — Varagu shown as both Paspalum scrobiculatum and
+//      Setaria italica in different tables — so only kodo = Varagu/Paspalum and little millet = Samai are used).
+//    • egg / chicken / mutton calcium & iron (IFCT Table 5 egg/meat pages are rotated; text unparseable).
+//    • SEASONAL_AVAILABILITY_ADD months (regional knowledge; no source fetched).
+//    • 'raw sprouts' minMonth 60 is an app floor — the sources say "children" with no age cutoff.
+//    • 'chikki' minMonth 48 = AAP hard-candy age (until 4) applied by analogy to jaggery brittle.
+//    • kodo-millet mycotoxin note (cyclopiazonic acid in mouldy kodo) — known in Indian food-safety
+//      literature but NOT fetched this session.
+//    • custard-apple seed toxicity (seeds only; fruit flesh safe) — not fetched; framed as choking only.
+//  ═══════════════════════════════════════════════════════════════════════
+// 
+//  ── 1. NUTRITION — new keys only, exact data.js shape ─────────────────
+//  { nutrients:[], tags:[], chem:{ fibre, antiNutrients?, bioactives? } }
+//  Obeys the live runtime guards in tests/e2e/food-db-cleanup.spec.ts:
+//    iron-rich ⇔ 'iron' in nutrients (no new allowlist entries needed);
+//    bone-health ⇒ calcium | vitamin K | phosphorus; vitamin-A/C tag ⇒ matching vitamin.
+//  NB: entries carrying 'healthy fats' / 'omega-3' join _getFatBearingFoodNames (core.js) — this
+//  changes Vit D3 "with fat" detection (Kael must sign off; factually correct for milk/egg/fish).
+const NUTRITION_ADD_12_24 = {
+  // ── DAIRY / MILK AS A DRINK (12 m+) ──  IFCT L002 cow: protein 3.26 g, Ca 118 mg, Fe 0.15 mg; L001 buffalo: 3.68 g, 121 mg, 0.16 mg, fat 6.58 g
+  'cow milk':       { nutrients:['calcium','protein','vitamin B12','phosphorus','healthy fats','vitamin A'], tags:['bone-health','protein-rich','healthy-fats'], chem:{ fibre:'none' } },
+  'buffalo milk':   { nutrients:['calcium','protein','vitamin B12','phosphorus','healthy fats','vitamin A'], tags:['bone-health','protein-rich','healthy-fats','energy'], chem:{ fibre:'none' } },
+  'buttermilk':     { nutrients:['calcium','protein','probiotics','water'], tags:['hydrating','gut-health','cooling','fermented','bone-health'], chem:{ fibre:'none', bioactives:['probiotic cultures'] } },
+
+  // ── ANIMAL-SOURCE FOODS (WHO23 Rec 4a: daily) ──  IFCT M004 egg whole boiled: protein 13.43 g, fat 10.54 g
+  'egg':            { nutrients:['protein','choline','vitamin B12','vitamin D','selenium','vitamin A','healthy fats'], tags:['protein-rich','brain-health','healthy-fats'], chem:{ fibre:'none' } },
+  // IFCT N003 chicken breast skinless: protein 21.81 g. No 'iron' token: modest amount (heme) — below the iron-rich cohort.
+  'chicken':        { nutrients:['protein','zinc','vitamin B12','niacin','selenium'], tags:['protein-rich'], chem:{ fibre:'none' } },
+  // IFCT S006 rohu: protein 19.71 g, Ca 39.37 mg, Fe 1.04 mg. omega-3 is for OILY species (sardine, bangda, salmon) — rohu is lean.
+  'fish':           { nutrients:['protein','omega-3','vitamin D','vitamin B12','selenium','iodine'], tags:['protein-rich','brain-health','omega-3'], chem:{ fibre:'none' } },
+  // UNCONFIRMED (IFCT meat mineral pages unparsed); heme iron well absorbed per NHS-YC.
+  'mutton':         { nutrients:['protein','iron','zinc','vitamin B12'], tags:['protein-rich','iron-rich','blood-health'], chem:{ fibre:'none' } },
+
+  // ── MILLETS (NIN24: 20% of cereals from millets for children) ──
+  // IFCT A017 Varagu/kodo (Paspalum scrobiculatum): protein 8.92 g, Ca 15.27 mg, Fe 2.34 mg
+  'kodo':           { nutrients:['carbs','fibre','protein'], tags:['gluten-free','energy','digestive'], chem:{ fibre:'mixed', antiNutrients:['phytates','tannins'], bioactives:['polyphenols'] } },
+  // IFCT A016 Samai/little millet (Panicum miliare): protein 10.13 g, Ca 16.06 mg, Fe 1.26 mg
+  'little millet':  { nutrients:['carbs','fibre','protein'], tags:['gluten-free','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  // NIN24 names foxtail millet among calcium-rich foods; per-100 g value UNCONFIRMED (IFCT row ambiguous).
+  'foxtail millet': { nutrients:['carbs','fibre','protein','calcium'], tags:['gluten-free','energy','bone-health'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  // UNCONFIRMED values (common vrat grain: sanwa/samak). Kept to high-confidence tokens only.
+  'barnyard millet':{ nutrients:['carbs','fibre','protein'], tags:['gluten-free','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+
+  // ── PULSE-BASED / FERMENTED STAPLES ──
+  // IFCT B001 Bengal gram dal (besan proxy): protein 21.55 g, Ca 46.32 mg, Fe 6.08 mg
+  'besan':          { nutrients:['protein','iron','fibre','folate','carbs'], tags:['protein-rich','iron-rich','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates','lectins','saponins'] } },
+  'chilla':         { nutrients:['protein','iron','fibre','carbs'], tags:['protein-rich','iron-rich','energy'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+  'dhokla':         { nutrients:['protein','carbs','fibre'], tags:['fermented','protein-rich','energy','gut-health'], chem:{ fibre:'mixed' } },
+  'uttapam':        { nutrients:['carbs','protein'], tags:['energy','fermented','gut-health'], chem:{ fibre:'mixed' } },
+  'upma':           { nutrients:['carbs','protein','fibre'], tags:['energy'], chem:{ fibre:'minimal' } },
+  // Sprouted (hydrated) moong — NOT the dry-grain IFCT B011 values; sprouting lowers phytates (NIN24).
+  'moong sprouts':  { nutrients:['protein','vitamin C','folate','fibre'], tags:['protein-rich','vitamin-C','digestive'], chem:{ fibre:'mixed', antiNutrients:['phytates'] } },
+
+  // ── SEEDS / DRY FRUIT ──
+  // UNCONFIRMED (makhana/Euryale ferox is not in IFCT 2017) — minimal high-confidence tokens only.
+  'makhana':        { nutrients:['carbs','protein'], tags:['energy'], chem:{ fibre:'minimal' } },
+  // IFCT E005 dried apricot: protein 3.17 g, Ca 28.57 mg, Fe 2.50 mg (below iron-rich cohort → no iron token)
+  'apricot':        { nutrients:['fibre','potassium','vitamin A','beta-carotene','natural sugars'], tags:['digestive','vitamin-A','energy','constipation-relief'], chem:{ fibre:'mixed', bioactives:['carotenoids','sorbitol'] } },
+
+  // ── LOCAL GREENS (SAAG) — NIN24: GLVs like amaranth for calcium ──
+  // IFCT C020 fenugreek leaves: protein 3.68 g, Ca 274 mg, Fe 5.69 mg
+  'methi':          { nutrients:['iron','calcium','folate','vitamin K','fibre','vitamin A'], tags:['iron-rich','bone-health','blood-health'], chem:{ fibre:'mixed' } },
+  // IFCT C002 amaranth leaves, green: protein 3.29 g, Ca 330 mg, Fe 4.64 mg
+  'amaranth leaves':{ nutrients:['calcium','iron','vitamin A','vitamin C','folate','fibre'], tags:['iron-rich','bone-health','vitamin-A','vitamin-C'], chem:{ fibre:'mixed', antiNutrients:['oxalates'] } },
+  // IFCT C026 mustard leaves: protein 3.52 g, Ca 191 mg, Fe 2.84 mg (below iron-rich cohort → no iron token)
+  'mustard greens': { nutrients:['calcium','vitamin K','vitamin A','vitamin C','folate','fibre'], tags:['bone-health','vitamin-A','vitamin-C'], chem:{ fibre:'mixed', antiNutrients:['goitrogens'], bioactives:['glucosinolates'] } },
+  // IFCT C008 bathua: protein 2.50 g, Ca 211 mg, Fe 2.66 mg
+  'bathua':         { nutrients:['calcium','fibre'], tags:['bone-health','digestive'], chem:{ fibre:'mixed', antiNutrients:['oxalates'] } },
+};
+
+// Reference numbers (per 100 g edible portion, IFCT 2017). NOT merged — for the Ceres/Maren review and a
+// possible future quantitative field. [code, protein g, calcium mg, iron mg]; verify:true = re-read the page.
+
+const FOOD_ALIASES_ADD_12_24 = {
+  'palak': 'spinach',
+  'methi leaves': 'methi', 'fenugreek leaves': 'methi', 'methi saag': 'methi',
+  'chaulai': 'amaranth leaves', 'chaulai saag': 'amaranth leaves', 'lal saag': 'amaranth leaves',
+  'sarson': 'mustard greens', 'sarson ka saag': 'mustard greens', 'sarson saag': 'mustard greens',
+  'bathua leaves': 'bathua', 'bathua saag': 'bathua',
+  'doodh': 'cow milk', 'gaay ka doodh': 'cow milk', 'cow\'s milk': 'cow milk', 'whole milk': 'cow milk',
+  'bhains ka doodh': 'buffalo milk',
+  'chaas': 'buttermilk', 'mattha': 'buttermilk', 'chhaas': 'buttermilk',
+  'anda': 'egg', 'eggs': 'egg', 'boiled egg': 'egg', 'omelette': 'egg', 'omelet': 'egg',
+  'murgi': 'chicken',
+  'machli': 'fish', 'machhli': 'fish',
+  'kodo millet': 'kodo', 'kodra': 'kodo', 'varagu': 'kodo',
+  'kutki': 'little millet', 'samai': 'little millet', 'sava millet': 'little millet',
+  'kangni': 'foxtail millet', 'kakum': 'foxtail millet', 'thinai': 'foxtail millet', 'navane': 'foxtail millet',
+  'sanwa': 'barnyard millet', 'samak': 'barnyard millet', 'samak rice': 'barnyard millet', 'jhangora': 'barnyard millet',
+  'gram flour': 'besan', 'chickpea flour': 'besan',
+  'cheela': 'chilla', 'chila': 'chilla', 'pudla': 'chilla', 'besan chilla': 'chilla', 'moong chilla': 'chilla',
+  'khaman': 'dhokla', 'khaman dhokla': 'dhokla',
+  'uthappam': 'uttapam', 'uttappam': 'uttapam',
+  'sprouted moong': 'moong sprouts', 'moong sprout': 'moong sprouts', 'sprouts': 'moong sprouts',
+  'fox nuts': 'makhana', 'fox nut': 'makhana', 'phool makhana': 'makhana', 'lotus seeds': 'makhana',
+  'khubani': 'apricot', 'dried apricot': 'apricot',
+  'sapota': 'chiku', 'chikoo': 'chiku', 'cheeku': 'chiku',
+  'amrood': 'guava', 'amrud': 'guava', 'peru': 'guava',
+  'jamoon': 'jamun',
+  'khajoor': 'date', 'khajur': 'date',
+  'anjir': 'anjeer',
+  'nariyal': 'coconut',
+  'groundnut': 'peanut', 'moongphali': 'peanut', 'mungfali': 'peanut', 'peanut butter': 'peanut',
+  'badam': 'almonds', 'akhrot': 'walnut', 'kaju': 'cashew', 'alsi': 'flaxseed',
+};
+
+// ── 3. FOOD_TAX — keys appended into EXISTING subs only (no new subs: subs drive the accordion UI) ─
+// Junk / limit foods are deliberately NOT catalogued here: FOOD_TAX feeds classifyFoodToGroup and
+// the dietary-diversity score, so a logged "namkeen" must not earn a food-group point.
+// Short keys are avoided — _categorizeFoods matches by bidirectional SUBSTRING (e.g. 'sev' ⊂ 'sevai',
+// 'anda' ⊂ 'mandarin'). Pure synonyms are NOT added here: _categorizeFoods also tests
+// `_baseFoodName(name) === key`, so the §2 aliases (anda→egg, cheela→chilla, kangni→foxtail millet,
+// doodh→cow milk, machli→fish) already land in the right group.
+const FOOD_TAX_KEYS_ADD_12_24 = {
+  'grains.millets':   ['kodo', 'little millet', 'foxtail millet', 'barnyard millet'],
+  'grains.dals':      ['besan'],
+  'grains.prepared':  ['chilla', 'dhokla', 'appam'],
+  'vegs.leafy':       ['chaulai', 'lal saag', 'saag'],
+  'dairy.dairy':      ['cow milk', 'buffalo milk'],
+  'nonveg.fish':      ['rohu', 'katla', 'pomfret', 'bangda', 'hilsa', 'ilish'],
+  'nonveg.meat':      ['goat'],
+};
+
+// ── 4. AGE_RULES — NEW keys only (add-if-absent). Shape: { minMonth, reason, aliases? } ─
+// _fdAgeRule takes the STRICTEST gate a name reaches (V-K-266-1), so these only ever tighten.
+// Every alias below was checked against the live word-boundary resolver (see verify script):
+// 'sev' does not hit 'sevai'; 'cake' does not hit 'pancake'; 'achar' does not hit 'achari paneer'.
+const AGE_RULES_ADD_12_24 = {
+  // WHO23 Rec 5b (SSBs should not be consumed); NIN24 (no added sugar <2; commercial juices avoided); AAP-DR.
+  'fruit drink': { minMonth:24, aliases:['juice drink','packaged juice','tetra pack juice','boxed juice','mango drink','fruit nectar','fruit squash','squash drink','sharbat','sherbet','cold drink','soft drink','fizzy drink','aerated drink','cola','soda drink','energy drink','sports drink','glucose drink','flavoured milk','flavored milk'],
+                   reason:'Packaged juices, fruit drinks, squash, sharbat, cold drinks and flavoured milk are sugary drinks — not for under-2s (WHO, ICMR-NIN). Water and plain milk are her drinks.' },
+  // AAP-DR (toddler milks + added sugars); NIN24 no added sugar <2. Brand names deliberately not keyed.
+  'health drink':{ minMonth:24, aliases:['malt drink','malted drink','malted milk','health drink powder','chocolate drink powder','milk additive powder'],
+                   reason:'Most malted "health drink" powders add a lot of sugar. Plain whole milk is enough — no powder needed before 2.' },
+  // WHO23 Rec 5a (high salt / trans fat); NIN24 HFSS "must be avoided (example: biscuits, chips)"; CDC-CH (snack foods choke).
+  'namkeen':     { minMonth:24, aliases:['bhujia','sev','chivda','chiwda','farsan','mathri','dalmoth','packaged snacks','crisps','fried snacks'],
+                   reason:'Very salty and fried, and hard pieces are a choking risk. Not for under-2s (WHO, ICMR-NIN); later, only rarely.' },
+  'papad':       { minMonth:24, aliases:['papadum','papadam','papar','khichiya'],
+                   reason:'Very high in salt, and crisp shards are hard for a toddler to chew. Wait until 2.' },
+  'pickle':      { minMonth:24, aliases:['achar','achaar','aachar'],
+                   reason:'Pickle is mostly salt, oil and chilli. Keep it off her plate before 2 (WHO: high-salt foods should not be given 6–23 months).' },
+  'instant noodles': { minMonth:24, aliases:['cup noodles','noodle masala'],
+                   reason:'The seasoning makes instant noodles very salty. Not for under-2s; plain home noodles or sevai with vegetables are fine.' },
+  'ketchup':     { minMonth:24, aliases:['tomato ketchup'],
+                   reason:'Ketchup has added sugar and salt. Wait until 2; a little fresh tomato chutney without sugar is a better dip.' },
+  // NIN24 + AAP (no added sugar <2). 'cake' also hits "rice cake" (plain puffed rice cakes) — accepted, see CONFLICTS.
+  'cake':        { minMonth:24, aliases:['pastry','cupcake','muffin','cookie','cookies','doughnut','donut','brownie'],
+                   reason:'Cakes, cookies and pastries carry added sugar — no added sugar before 2 (WHO, ICMR-NIN). Cookies are also on the CDC choking list.' },
+  // Indian sweets not already aliased on AGE_RULES.sugar (which carries mishri/chini/mithai/sweets/toffee…).
+  'indian sweets': { minMonth:24, aliases:['jalebi','gulab jamun','rasgulla','rosogolla','rasmalai','barfi','burfi','peda','sandesh','mishti doi','shrikhand','sweet lassi','jam','candy'],
+                   reason:'Mithai, sweet curds and jams are made with sugar — no added sugar before 2 (WHO, ICMR-NIN). Sweeten with mashed fruit or dates instead.' },
+  // Hard jaggery/sugar brittle: added sugar (24) AND hard-candy choking (AAP-CH keeps hard candy until 4) → 48. UNCONFIRMED-by-analogy.
+  'chikki':      { minMonth:48, aliases:['gajak','til chikki','peanut chikki','rewri','revdi','til patti','tilkut','til laddoo','til ladoo'],
+                   reason:'Chikki, gajak and til laddoo are hard jaggery brittles — added sugar (wait until 2) and too hard to chew safely until about 4, per the AAP. Give sesame or peanut ground into food instead.' },
+  // SPROUT: children should avoid raw or lightly cooked sprouts. minMonth 60 is an app floor (UNCONFIRMED cutoff).
+  'raw sprouts': { minMonth:60, aliases:['raw moong sprouts','sprout salad','sprouts salad','kachche sprouts','uncooked sprouts'],
+                   reason:'Raw or lightly cooked sprouts can carry salmonella and E. coli — health agencies advise children not to eat them. Steam or cook sprouts until soft.' },
+  // NHS-AV (raw shellfish); shellfish is a major allergen. Cooked shellfish from ~6 m (NHS). No FOOD_EFFECTS record exists.
+  'shellfish':   { minMonth:6, aliases:['prawn','prawns','shrimp','jhinga','chingri','crab','kekda','lobster'],
+                   reason:'Well-cooked prawns or crab are fine from around 6 months — never raw or lightly cooked (food poisoning). Shellfish is a major allergen: first taste at home, watch about 2 hours.' },
+};
+
+// ── 5. ALLERGENS — NEW keys only (terse browse note, string values) ─
+// ALLERGENS values are strings (no `aliases`), so Hindi/regional names miss today: "badam", "rohu",
+// "anda", "tofu", "buffalo milk" get NO allergen note. Keys chosen so the word-boundary resolver
+// cannot fire on unrelated foods ('coconut milk' ≠ dairy; 'paneer bhurji' ≠ egg).
+// Deliberately NOT added: 'curd' / 'paneer' / 'atta' / 'roti' — she eats these daily; a caution chip on
+// every meal is noise (Ceres/Maren call — flagged).
+const _TREE_NUT_NOTE = 'Tree nut allergen. Give ground or as a smooth paste, never whole or chopped. Watch for rash, swelling or vomiting.';
+const _PEANUT_NOTE   = 'Legume allergen (not a tree nut). Give ground or as thinly spread butter, never whole. Watch for rash, swelling or vomiting.';
+const _FISH_NOTE     = 'Common allergen, often lifelong. Well-cooked, deboned, low-mercury fish; watch about 2 hours after a new kind.';
+const ALLERGENS_ADD_12_24 = {
+  'badam': _TREE_NUT_NOTE, 'kaju': _TREE_NUT_NOTE, 'akhrot': _TREE_NUT_NOTE, 'pista': _TREE_NUT_NOTE, 'pistachio': _TREE_NUT_NOTE,
+  'groundnut': _PEANUT_NOTE, 'moongphali': _PEANUT_NOTE, 'mungfali': _PEANUT_NOTE,
+  'anda': 'Common allergen. Cook until white and yolk are solid.',
+  'tofu': 'Soy allergen. Soft tofu is fine; watch for rash or repeated vomiting a few hours later.',
+  'tahini': 'Seed allergen (sesame). Thin it into food — never a thick glob.',
+  'gingelly': 'Seed allergen (sesame). Unrefined gingelly oil can carry the allergen.',
+  'rohu': _FISH_NOTE, 'katla': _FISH_NOTE, 'pomfret': _FISH_NOTE, 'bangda': _FISH_NOTE, 'sardine': _FISH_NOTE, 'salmon': _FISH_NOTE, 'machli': _FISH_NOTE, 'machhli': _FISH_NOTE, 'hilsa': _FISH_NOTE, 'ilish': _FISH_NOTE,
+  'prawn': 'Shellfish (crustacean) allergen — separate from finfish. Well-cooked only; watch about 2 hours.',
+  'shrimp': 'Shellfish (crustacean) allergen — separate from finfish. Well-cooked only; watch about 2 hours.',
+  'jhinga': 'Shellfish (crustacean) allergen — separate from finfish. Well-cooked only; watch about 2 hours.',
+  'chingri': 'Shellfish (crustacean) allergen — separate from finfish. Well-cooked only; watch about 2 hours.',
+  'crab': 'Shellfish (crustacean) allergen — separate from finfish. Well-cooked only; watch about 2 hours.',
+  'buffalo milk': 'Milk protein allergen — buffalo milk cross-reacts with cow\'s milk. A delayed reaction can be diarrhoea or blood in the stool.',
+};
+
+// ── 6. COMBO_RECIPES — NEW keys, exact shape { recipe, dos[], donts[] } (toddler, 12–24 m, 4 teeth) ─
+// No salt beyond a pinch, no sugar/jaggery/honey (NIN24, WHO23). Pieces ≤ ½ inch or soft strips (AAP-CH).
+const COMBO_RECIPES_ADD_12_24 = {
+  'chilla':        { recipe:'1. Whisk 2 tbsp besan with water to a thin, lump-free batter.\n2. Stir in grated carrot or finely chopped palak, a pinch of turmeric and ajwain.\n3. Spread thin on a tawa with ½ tsp ghee; cook both sides on low until soft and cooked through.\n4. Cut into soft strips she can hold.', dos:['Protein + iron from besan','Squeeze lemon or serve with tomato for vitamin C','Soft strips suit self-feeding with 4 teeth'], donts:['No salt beyond a pinch before 2','Don\'t cook crisp — crisp edges can shatter','Don\'t add green chilli'] },
+  'moong sprouts': { recipe:'1. Sprout whole moong for 1–2 days, rinsing twice a day.\n2. Steam or pressure-cook until very soft (1–2 whistles).\n3. Mash lightly, or mix into khichdi or a soft tikki.\n4. Add a squeeze of lemon.', dos:['Sprouting improves iron and zinc absorption','Always cook until soft','Lemon adds vitamin C'], donts:['Never raw or lightly cooked sprouts — food-poisoning risk for children','Don\'t serve whole firm sprouts — mash or split them (whole beans are a choking risk)','No salt'] },
+  'dhokla':        { recipe:'1. Make home besan batter with curd and water; ferment 4–6 hours.\n2. Steam 12–15 min until a toothpick comes out clean.\n3. Cool, cut into soft ½-inch cubes.\n4. Temper lightly with ghee and mustard seeds only if she handles them.', dos:['Fermented — soft and easy on gums','Home-made lets you skip sugar and extra salt','Good finger food'], donts:['Skip the sugar-water syrup poured over shop khaman','No green chilli tempering','Avoid instant mixes — high in salt and soda'] },
+  'makhana':       { recipe:'1. Dry-roast ¼ cup makhana on low until crisp.\n2. Cool and grind to a fine powder.\n3. Stir 1–2 tsp into porridge, kheer (unsweetened) or khichdi.', dos:['Powdered makhana is a safe way to include it','Or simmer in milk until fully soft and mash','Store powder airtight'], donts:['Never whole roasted makhana for a toddler — a choking hazard','No sugar or salt coating','Don\'t give flavoured packet makhana'] },
+  'kodo':          { recipe:'1. Wash and soak 2 tbsp kodo millet 2–4 hours.\n2. Pressure cook with 1 tbsp moong dal and 1 cup water, pinch of turmeric — 4 whistles.\n3. Mash well, add ½ tsp ghee and a boiled vegetable.', dos:['Swap for rice a few times a week (ICMR-NIN: millets for children)','Millet + dal = complete protein','Soaking softens it and lowers phytates'], donts:['Buy clean, well-stored grain — discard any mouldy or musty kodo','Don\'t serve loose dry grains — mash or bind them','No salt'] },
+  'egg':           { recipe:'1. Beat 1 egg with 1 tbsp milk.\n2. Scramble in ½ tsp ghee on low heat, stirring until fully set — no runny parts.\n3. Break into small soft pieces; add a pinch of pepper if she likes.', dos:['Complete protein, choline and B12','WHO: an animal-source food every day','Hard-boiled egg chopped small also works'], donts:['Never runny or raw egg','Don\'t add salt','Don\'t give large chunks of hard-boiled white'] },
+  'cow milk':      { recipe:'1. Boil or use pasteurised full-fat milk; cool to warm.\n2. Offer in an open cup or straw cup with meals or snacks.\n3. Aim for about 350–500 ml a day across milk, curd and paneer.', dos:['Whole (full-fat) milk up to age 2','Offer in a cup, not a bottle','Milk is rich in calcium but low in iron — keep iron foods in her meals'], donts:['Don\'t go above about 500 ml a day — it crowds out iron-rich food','No sugar, malt or "health drink" powders','No skimmed or toned milk as her main drink before 2'] },
+  'mustard greens':{ recipe:'1. Wash sarson (with a little palak or bathua) 3–4 times.\n2. Pressure cook until very soft; blend.\n3. Temper with ½ tsp ghee, a pinch of garlic; thicken with 1 tsp makki atta.\n4. Serve with soft roti torn small.', dos:['Calcium and vitamin A from greens','Ghee helps absorb vitamin A','Cook thoroughly and blend smooth'], donts:['Keep salt to a pinch','Skip the heavy butter topping for her','No green chilli'] },
+  'methi':         { recipe:'1. Wash and finely chop 2 tbsp methi leaves.\n2. Knead into atta dough with a little ghee and curd.\n3. Roll thin, cook soft on the tawa.\n4. Tear into small pieces.', dos:['Iron + calcium from methi (IFCT)','Pair with curd — pleasant with the slight bitterness','Chop leaves very fine'], donts:['Don\'t cook the thepla crisp','Keep salt to a pinch','Introduce in small amounts — bitter taste'] },
+  'guava':         { recipe:'1. Pick a ripe, soft guava.\n2. Peel if the skin is tough; cut in half and scoop out ALL the seeds.\n3. Serve thin slices, or steam 3–4 min and mash.', dos:['Very high vitamin C — boosts iron from dal or ragi in the same meal (ICMR-NIN)','Ripe fruit is softer','Pair with a millet or dal meal'], donts:['Never give the hard seeds','Avoid hard, unripe guava chunks — a choking risk','No chaat masala or salt'] },
+  'litchi':        { recipe:'1. Peel a ripe litchi.\n2. Remove the seed completely.\n3. Cut the flesh into small pieces, lengthwise.\n4. Serve only after she has eaten a meal.', dos:['Ripe fruit only','A few pieces at a time','Seasonal treat (May–June)'], donts:['Never whole — round and slippery, it can block the airway','Never on an empty stomach, and never many — litchi-linked illness in Bihar affected children who skipped meals','Never unripe litchi or the seed'] },
+  'uttapam':       { recipe:'1. Use home idli/dosa batter.\n2. Spread thick on the tawa; top with finely grated carrot and tomato.\n3. Cook covered on low until soft on both sides.\n4. Cut into strips.', dos:['Fermented and soft — good with 4 teeth','Add vegetables for colour and vitamins','Serve with plain curd or mild sambar'], donts:['Don\'t make it crisp','Keep sambar low in salt and spice','No store-bought ready batter with added salt'] },
+};
+
+// ── 7. FOOD_SUBCATS — append match tokens into existing subcats ─
+const FOOD_SUBCATS_MATCH_ADD_12_24 = {
+  porridge:  ['kodo', 'little millet', 'foxtail millet', 'barnyard millet'],
+  fermented: ['dhokla'],
+  leafy:     ['lal saag', 'sarson ka saag'],
+  curd:      ['mattha'],
+  fish:      ['rohu', 'katla', 'pomfret', 'bangda'],
+};
+
+// ── 8. FOOD_SYNERGIES — [food1, food2, reason, type] (NIN24: vitamin C and fermentation/sprouting help iron) ─
+const FOOD_SYNERGIES_ADD_12_24 = [
+  ['ragi', 'guava', 'Guava\'s vitamin C boosts iron absorption from ragi', 'absorption'],
+  ['bajra', 'guava', 'Guava\'s vitamin C boosts iron absorption from bajra', 'absorption'],
+  ['besan', 'lemon', 'Lemon\'s vitamin C boosts iron absorption from besan', 'absorption'],
+  ['chilla', 'tomato', 'Tomato\'s vitamin C boosts iron absorption from chilla', 'absorption'],
+  ['methi', 'lemon', 'Lemon\'s vitamin C boosts iron absorption from methi', 'absorption'],
+  ['amaranth leaves', 'lemon', 'Lemon\'s vitamin C boosts iron absorption from greens', 'absorption'],
+  ['moong sprouts', 'lemon', 'Sprouting plus vitamin C — both help iron absorption', 'absorption'],
+  ['kodo', 'moong dal', 'Complete protein — millet + dal cover the amino acids', 'complete'],
+  ['egg', 'roti', 'Egg protein and fats with whole-wheat energy — a balanced toddler meal', 'complete'],
+  ['mustard greens', 'ghee', 'Ghee helps absorb vitamin A from sarson', 'absorption'],
+];
+
+// ── 9. SEASONAL_AVAILABILITY — Jamshedpur (UNCONFIRMED regional knowledge; add-if-absent) ─
+const SEASONAL_AVAILABILITY_ADD_12_24 = {
+  'chiku':          { months:[0,1,2,3,9,10,11], availability:'peak', other:'available' },
+  'custard apple':  { months:[7,8,9,10], availability:'peak' },
+  'sitaphal':       { months:[7,8,9,10], availability:'peak' },
+  'mustard greens': { months:[10,11,0,1], availability:'peak' },
+  'bathua':         { months:[11,0,1], availability:'peak' },
+  'methi':          { months:[10,11,0,1,2], availability:'peak', other:'available' },
+  'amaranth leaves':{ months:[2,3,4,5,6,7,8], availability:'peak', other:'available' },
+};
+
+// ── 10. SAFE FORM (choking) for a 4-tooth, 12–24 m toddler — PROPOSED sidecar ─
+// Same shape as FOOD_EFFECTS[*].safeForm {glance, ok[], never[]} so a later Library card can render it.
+// No runtime consumer exists yet — until one does, the key lines are folded into COMBO_RECIPES dos/donts
+// above (which already render). Molars (for grinding) arrive ~16–29 m (data.js choking record); with 4
+// incisors she bites but cannot grind, so the rule is: soft enough to squash between finger and thumb,
+// ≤ ½ inch (AAP-CH), round foods quartered lengthwise, hard foods grated/cooked soft/ground.
+
+function _mergeFoodLib1224() {
+  const added = { NUTRITION:[], _FOOD_ALIASES:[], AGE_RULES:[], ALLERGENS:[], COMBO_RECIPES:[], SEASONAL_AVAILABILITY:[], FOOD_TAX:[], FOOD_SUBCATS:[], FOOD_SYNERGIES:[], skipped:[] };
+  const addMissing = (table, label, entries) => {
+    Object.keys(entries).forEach(k => {
+      if (Object.prototype.hasOwnProperty.call(table, k)) { added.skipped.push(label + ':' + k); return; }
+      table[k] = entries[k];
+      added[label].push(k);
+    });
+  };
+  addMissing(NUTRITION, 'NUTRITION', NUTRITION_ADD_12_24);
+  addMissing(_FOOD_ALIASES, '_FOOD_ALIASES', FOOD_ALIASES_ADD_12_24);
+  addMissing(AGE_RULES, 'AGE_RULES', AGE_RULES_ADD_12_24);
+  addMissing(ALLERGENS, 'ALLERGENS', ALLERGENS_ADD_12_24);
+  addMissing(COMBO_RECIPES, 'COMBO_RECIPES', COMBO_RECIPES_ADD_12_24);
+  addMissing(SEASONAL_AVAILABILITY, 'SEASONAL_AVAILABILITY', SEASONAL_AVAILABILITY_ADD_12_24);
+  Object.keys(FOOD_TAX_KEYS_ADD_12_24).forEach(path => {
+    const parts = path.split('.');
+    const grp = FOOD_TAX[parts[0]];
+    const sub = grp && grp.subs && grp.subs[parts[1]];
+    if (!sub) { added.skipped.push('FOOD_TAX:' + path); return; }
+    FOOD_TAX_KEYS_ADD_12_24[path].forEach(k => { if (sub.keys.indexOf(k) < 0) { sub.keys.push(k); added.FOOD_TAX.push(path + ':' + k); } });
+  });
+  Object.keys(FOOD_SUBCATS_MATCH_ADD_12_24).forEach(sc => {
+    const e = FOOD_SUBCATS[sc];
+    if (!e) { added.skipped.push('FOOD_SUBCATS:' + sc); return; }
+    FOOD_SUBCATS_MATCH_ADD_12_24[sc].forEach(t => { if (e.match.indexOf(t) < 0) { e.match.push(t); added.FOOD_SUBCATS.push(sc + ':' + t); } });
+  });
+  FOOD_SYNERGIES_ADD_12_24.forEach(row => {
+    const dup = FOOD_SYNERGIES.some(r => (r[0] === row[0] && r[1] === row[1]) || (r[0] === row[1] && r[1] === row[0]));
+    if (!dup) { FOOD_SYNERGIES.push(row); added.FOOD_SYNERGIES.push(row[0] + '|' + row[1]); }
+  });
+  return added;
+}
+// In recipes.js the call would be a bare top-level statement after the declarations:
+//   window._FOOD_LIB_1224_MERGE = _mergeFoodLib1224();   // the return value is a debug/audit record
+
+const _FOOD_LIB_1224_MERGE = _mergeFoodLib1224();  // debug/audit record of what was added
+
 // Export on window — mirrors the data.js `window.CURATED_COMBOS = …` pattern so
 // consumers (diet.js renderDietRecipes, core.js openRecipeInTab) read a global.
 window.RECIPES = RECIPES;
@@ -22936,6 +23317,7 @@ window.RECIPE_SOURCES = RECIPE_SOURCES;
 window.recipeFoodIcon = recipeFoodIcon;
 window._recipeComposeTagline = _recipeComposeTagline;
 window._recipeServing = _recipeServing;
+window._FOOD_LIB_1224_MERGE = _FOOD_LIB_1224_MERGE;
 // ─────────────────────────────────────────
 // SVG ICON HELPER — Ziva Sketch icon set
 // ─────────────────────────────────────────
@@ -40492,7 +40874,7 @@ function renderTodayPlan() {
   const skDone = isRealMeal(todayEntry.snack);
   items.push({
     time: '10–4', icon: zi('spoon'), title: 'Snack',
-    detail: skDone ? iconText('check', todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
+    detail: skDone ? iconText('check', todayEntry.snack) : 'A quick bite between meals — soft fruit, a soft roti or idli piece, or plain curd',
     tag: 'food', done: skDone, htmlDetail: skDone,
     action: skDone ? null : '_qlMeal="snack";_qlMealExplicit=true;openQuickModal("feed")'
   });
@@ -44869,7 +45251,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('drop'),
     title:'No fruit juice in bottles',
-    body:'Juice in bottles causes tooth decay and reduces appetite for solids. If giving juice, use an open cup and limit to 2–3 tsp diluted.',
+    body:'Juice in a bottle causes tooth decay and blunts appetite. No juice under 1; from 1, whole fruit is better — if you give 100% juice, keep it to 120 ml a day, in an open cup with a meal. Packaged fruit drinks wait until 2.',
     condition: () => true,
   },
   // ── TEXTURE PROGRESSION ──
@@ -44890,6 +45272,25 @@ const ALL_TIPS = [
       const mo = getAgeInMonths();
       return mo >= 7 && mo < 12;   // 12 m+: finger foods are already here
     }
+  },
+  // ── TODDLER (12–24 m) — TODDLER_FEEDING in recipes.js carries the sources ──
+  {
+    type:'info', icon:zi('spoon'),
+    title:'Family food, adapted',
+    body:'From 1 year she can eat what the family eats, in small soft pieces she can squash between finger and thumb — she has no grinding molars yet. Take her portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
+    condition: () => getAgeInMonths() >= 12,
+  },
+  {
+    type:'info', icon:zi('bowl'),
+    title:'3–4 meals and 1–2 snacks',
+    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 katori a meal. Offer, then let her appetite decide — no forcing (WHO, IAP).',
+    condition: () => getAgeInMonths() >= 12,
+  },
+  {
+    type:'info', icon:zi('leaf'),
+    title:'Five food groups a day',
+    body:'Aim for at least 5 of these 8 groups each day: breast milk · grains · dals, nuts and seeds · milk, curd and paneer · meat or fish · eggs · orange and green fruit and veg · other fruit and veg. A vegetarian day can still reach 6 (WHO/UNICEF).',
+    condition: () => getAgeInMonths() >= 12,
   },
   // ── ALLERGEN INTRODUCTION ──
   {
@@ -48613,7 +49014,7 @@ function _spGetDomainDefs(zs) {
     },
     {
       key: 'diet', icon: zi('bowl'), name: 'Diet', tab: 'diet',
-      tip: 'Aim for 3 meals daily + snack as bonus with diverse foods across all food groups. Variety is key!',
+      tip: getAgeInMonths() >= 12 ? 'Aim for 3–4 meals and 1–2 snacks a day across at least 5 food groups. Variety is key!' : 'Aim for 3 meals daily + snack as bonus with diverse foods across all food groups. Variety is key!',
       components: () => {
         const r = zs.domains.diet.result;
         if (!r) return [];

@@ -9997,7 +9997,7 @@ function renderTodayPlan() {
   const skDone = isRealMeal(todayEntry.snack);
   items.push({
     time: '10–4', icon: zi('spoon'), title: 'Snack',
-    detail: skDone ? iconText('check', todayEntry.snack) : 'A quick bite between meals — fruit mash, ragi biscuit, or curd',
+    detail: skDone ? iconText('check', todayEntry.snack) : 'A quick bite between meals — soft fruit, a soft roti or idli piece, or plain curd',
     tag: 'food', done: skDone, htmlDetail: skDone,
     action: skDone ? null : '_qlMeal="snack";_qlMealExplicit=true;openQuickModal("feed")'
   });
