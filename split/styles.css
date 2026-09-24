@@ -7072,6 +7072,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .tth-next { margin-top:var(--sp-16); padding:var(--sp-12); border-radius:var(--r-lg); background:var(--lav-light); }
 .tth-next-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--tc-lav); margin-bottom:var(--sp-4); }
 .tth-next-row { font-size:var(--fs-base); color:var(--text); }
+.tth-next-row + .tth-next-row { margin-top:var(--sp-6); }
 .tth-note { margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .ms-pediatric-prep-narration { font-family:'Fraunces',serif; font-size:var(--fs-md); line-height:1.6; color:var(--text); }
 .ms-pediatric-prep-section { margin-top:var(--sp-12); }

@@ -2265,8 +2265,10 @@ function calcMilestoneScore() {
   milestones.forEach(m => { msPctMap[m.text.toLowerCase().trim()] = MS_STAGE_META[m.status]?.pct || 0; });
   let expectedProgress = 0;
   let expectedMatchCount = 0;
+  // Stopwords keep toddler rows ("…with…", "…your…") from matching unrelated milestones.
+  const _msStop = { with:1, your:1, that:1, when:1, more:1, from:1, them:1, then:1, into:1, over:1, like:1, what:1, this:1, have:1, they:1, other:1, things:1, least:1 };
   expectedItems.forEach(it => {
-    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !_msStop[w]);
     let bestPct = 0;
     Object.entries(msPctMap).forEach(([text, pct]) => {
       if (keywords.some(kw => text.includes(kw)) && pct > bestPct) bestPct = pct;
@@ -3200,7 +3202,8 @@ function fmtAgeLong(months, days) {
 }
 function fmtAgeShort(months, days) {
   if (months < 12) return months + 'm ' + days + 'd';
-  return Math.floor(months / 12) + 'y ' + (months % 12) + 'm ' + days + 'd';
+  const r = months % 12;
+  return Math.floor(months / 12) + 'y ' + (r ? r + 'm ' : '') + days + 'd';
 }
 function daysBetween(d1, d2) {
   return Math.round(Math.abs(new Date(d2) - new Date(d1)) / 86400000);
@@ -6617,7 +6620,7 @@ function _predictMilestoneWindow(milestoneId, opts) {
   // V-K-116 — advanced-row derivation rule: advanced:true offsets by +1 bracket.
   // Treats the advanced flag as a clinical-band shift (matches row.desc intent
   // which often says "may appear here but typical is later").
-  const effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
+  let effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
   // Find the next bracket for the end-fallback. V-K-114: highest-bracket
   // (12m) default end is 18*30.44 ≈ 548 days when no explicit endMonth set.
   const startBracketIdx = bracketKeys.indexOf(matchedBracket);
@@ -6635,6 +6638,11 @@ function _predictMilestoneWindow(milestoneId, opts) {
     // (toddler rows to 24), the top bracket gets the usual one-month band.
     endBracket = Math.max(18, matchedBracket + 1);
   }
+  // Checkpoint rows ("most children by N months", CDC 75%+ / AAP "by two
+  // years"): the band is the three months leading up to N and ends at N, so
+  // a card never reads "typically N–N+1" for a by-N item.
+  const checkpoint = (typeof matchedRow.checkpoint === 'number') ? matchedRow.checkpoint : null;
+  if (checkpoint !== null) { effectiveStartBracket = checkpoint - 3; endBracket = checkpoint; }
   const expectedStart = effectiveStartBracket * 30.44;
   // For advanced rows, end is (K+2)*30.44 - 1 to honor the +1 bracket shift contract.
   // For non-advanced rows, end = endBracket * 30.44 - 1 to land at the bracket-end day.
@@ -6665,8 +6673,11 @@ function _predictMilestoneWindow(milestoneId, opts) {
   // V-V-57 — windowStatus (renamed from `status` to avoid collision with
   // _getInWindowMilestones[i].evidenceStatus). Three states.
   let windowStatus;
+  // Half-open at the end: day (endBracket * 30.44) is the next bracket's
+  // start, so no whole day falls between two windows (the fractional 30.44
+  // used to leave days like 365 and 395 in no window at all).
   if (ageDays < expectedStart) windowStatus = 'pre-window';
-  else if (ageDays > expectedEnd) windowStatus = 'post-window';
+  else if (ageDays >= endBracket * 30.44) windowStatus = 'post-window';
   else windowStatus = 'in-window';
 
   // V-M-114 floor — source defaults to 'unverified'. Never walk wrapping key.
@@ -6685,6 +6696,7 @@ function _predictMilestoneWindow(milestoneId, opts) {
     ageDaysRemainder: ageDaysRemainder,
     windowStatus: windowStatus,
     source: source,
+    checkpoint: checkpoint,
     standardKey: standardKey,
   };
 }
@@ -6737,15 +6749,17 @@ function _getInWindowMilestones(ageDays, n, opts) {
       // Suppression filter — entries whose suppress-until > now skip.
       if (suppressMap[milestoneId] && suppressMap[milestoneId] > nowMs) continue;
       // Derive window (mirror _predictMilestoneWindow logic).
-      const effStart = row.advanced ? (bracket + 1) : bracket;
+      let effStart = row.advanced ? (bracket + 1) : bracket;
       let endBr;
       if (typeof row.endMonth === 'number') endBr = row.endMonth;
       else if (row.advanced) endBr = bracket + 2;
       else if (typeof nextBracket === 'number') endBr = nextBracket;
       else endBr = Math.max(18, bracket + 1);
+      if (typeof row.checkpoint === 'number') { effStart = row.checkpoint - 3; endBr = row.checkpoint; }
       const expectedStart = effStart * 30.44;
       const expectedEnd = (endBr * 30.44) - 1;
-      if (ageDays < expectedStart || ageDays > expectedEnd) continue;
+      // Half-open end (see _predictMilestoneWindow): no gap day between brackets.
+      if (ageDays < expectedStart || ageDays >= endBr * 30.44) continue;
 
       // Evidence status — driven by the parent's milestones global.
       const ev = evidenceByText[milestoneId];
@@ -6805,7 +6819,7 @@ function _getInWindowMilestones(ageDays, n, opts) {
         window: (function() {
           var ws;
           if (ageDays < expectedStart) ws = 'pre-window';
-          else if (ageDays > expectedEnd) ws = 'post-window';
+          else if (ageDays >= endBr * 30.44) ws = 'post-window';
           else ws = 'in-window';
           return {
             expectedStart: expectedStart,
@@ -6820,6 +6834,7 @@ function _getInWindowMilestones(ageDays, n, opts) {
             ageDaysRemainder: Math.round(ageDays - (Math.floor(ageDays / 30.44) * 30.44)),
             windowStatus: ws,
             source: row.source || 'unverified',
+            checkpoint: (typeof row.checkpoint === 'number') ? row.checkpoint : null,
             standardKey: standardKey,
           };
         })(),

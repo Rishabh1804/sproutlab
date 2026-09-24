@@ -2462,6 +2462,8 @@ const AGE_RULES = {
   'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
   'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
   'biscuit':  { minMonth:10, reason:'Most contain added sugar, salt, and maida. Only sugar-free, whole-grain ones — no added sugar before 2 years.' },
+  // Rusk (Ceres V-C-268-6): the teething guide warns against rusks; the food log gates them too.
+  'rusk':     { minMonth:24, aliases:['rusks','toast rusk','teething rusk','suji rusk','cake rusk'], reason:'Most rusks contain added sugar and break into hard chunks she can\'t chew yet (choking). Avoid before 2 years; offer soft bread or roti pieces instead.' },
   'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
   'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
   'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
@@ -3996,7 +3998,10 @@ const MILESTONE_STANDARDS = {
   //   as desc context only. source:'CDC' = a CDC checklist item at its own
   //   checkpoint month; 'AAP' = AAP item whose [bracket, endMonth) sits inside
   //   AAP's stated timing; everything else 'unverified' (trailing comment names
-  //   the content origin for the curation arc).
+  //   the content origin for the curation arc). checkpoint:N marks a "most
+  //   children by N months" item (CDC 75%+; AAP "by two years"): the window is
+  //   the three months up to N and the card says "by N months", never a band
+  //   that starts at N.
   13: [
     { text:'Carries a book to you to read', icon:zi('book'), desc:'Brings a favourite board book and hands it over — a lovely early sign of shared attention and a love of stories.', advanced:false, domain:'social', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
     { text:'Understands far more words than she can say', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
@@ -4015,22 +4020,22 @@ const MILESTONE_STANDARDS = {
   ],
   15: [
     // CDC "Milestones by 15 Months" — Social/Emotional
-    { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Claps when excited', icon:zi('party'), desc:'Claps for herself or along with you when something delights her.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses of her own — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC' },
+    { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Claps when excited', icon:zi('party'), desc:'Claps for herself or along with you when something delights her.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses of her own — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     // CDC 15 m — Language/Communication
-    { text:'Tries to say 1–2 words besides mama or dada', icon:zi('chat'), desc:'Words are often partial — "ba" for ball, "da" for dog. Repeat the full word back warmly.', advanced:false, domain:'language', source:'CDC' },
-    { text:'Looks at a familiar object when you name it', icon:zi('eye'), desc:'You say "where\'s the cup?" and her eyes go straight to it — words are linking to things.', advanced:false, domain:'language', source:'CDC' },
-    { text:'Follows a direction given with words and a gesture', icon:zi('list'), desc:'Hands you the toy when you hold out your hand and say "give me the toy".', advanced:false, domain:'language', source:'CDC' },
-    { text:'Points to ask for something or for help', icon:zi('target'), desc:'Points at the shelf she cannot reach — asking with her finger before she has the words.', advanced:false, domain:'language', source:'CDC' },
+    { text:'Tries to say 1–2 words besides mama or dada', icon:zi('chat'), desc:'Words are often partial — "ba" for ball, "da" for dog. Repeat the full word back warmly.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Looks at a familiar object when you name it', icon:zi('eye'), desc:'You say "where\'s the cup?" and her eyes go straight to it — words are linking to things.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Follows a direction given with words and a gesture', icon:zi('list'), desc:'Hands you the toy when you hold out your hand and say "give me the toy".', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Points to ask for something or for help', icon:zi('target'), desc:'Points at the shelf she cannot reach — asking with her finger before she has the words.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
     // CDC 15 m — Cognitive
-    { text:'Tries to use things the right way (phone, cup, book)', icon:zi('phone'), desc:'Holds a phone to her ear, lifts a cup to drink, opens a book — she knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC' },
-    { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC' },
+    { text:'Uses everyday things the right way, like a phone or a book', icon:zi('phone'), desc:'Holds a phone to her ear, lifts a cup to drink, opens a book — she knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
+    { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     // CDC 15 m — Movement/Physical
-    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months.', advanced:false, domain:'motor', source:'CDC' }, // desc context: WHO-MGRS 8.2–17.6 m
-    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and feeds herself. Offer soft, bite-sized food and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
+    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
+    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and feeds herself. Offer soft, bite-sized food and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
     // AAP — explicit 15–18 m timing
     { text:'Says several single words', icon:zi('chat'), desc:'A small handful of real words used on purpose. The pace varies a lot from child to child.', advanced:false, domain:'language', source:'AAP', endMonth:18 }, // AAP-2Y "by fifteen to eighteen months"
     { text:'Uses a few simple signs or gestures (more, all done)', icon:zi('handshake'), desc:'Taps fingers for "more" or waves hands for "all done" — gestures bridge the gap before words.', advanced:true, domain:'language', source:'unverified' },
@@ -4038,7 +4043,7 @@ const MILESTONE_STANDARDS = {
   16: [
     { text:'Turns board-book pages, a few at a time', icon:zi('book'), desc:'Flips thick pages — often several at once. Hands and interest in books growing together.', advanced:false, domain:'motor', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
     { text:'Builds a tower of three blocks', icon:zi('star'), desc:'Stacks three before the happy crash — hand steadiness and patience growing.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1 towers in the second year
-    { text:'Pulls a toy along while walking', icon:zi('run'), desc:'Walks while tugging a pull-toy behind her — walking is now steady enough to multitask.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Walks while pulling a toy along', icon:zi('run'), desc:'Walks while tugging a pull-toy behind her — walking is now steady enough to multitask.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
     { text:'Knows the names of familiar people', icon:zi('chat'), desc:'Looks toward Nani or Papa when you say their name — a growing map of the people she loves.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
     { text:'Plays alongside other children', icon:zi('handshake'), desc:'Happy to play near another child — side-by-side play comes long before sharing.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
     { text:'Points to one body part when asked', icon:zi('eye'), desc:'Touches her nose when you ask "where\'s your nose?" — an early stretch toward naming body parts.', advanced:true, domain:'language', source:'unverified' },
@@ -4053,27 +4058,27 @@ const MILESTONE_STANDARDS = {
   ],
   18: [
     // CDC "Milestones by 18 Months" — Social/Emotional
-    { text:'Moves away from you but checks you are close by', icon:zi('eye'), desc:'Explores a little way off, then glances back to find you — you are her safe base.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Points to show you something interesting', icon:zi('target'), desc:'Points at the bird or the bus just to share the moment with you.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Puts hands out for you to wash them', icon:zi('drop'), desc:'Holds out her hands at the tap — joining in with daily routines.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Looks at a few pages in a book with you', icon:zi('book'), desc:'Sits for a few pages of a story together — shared reading time.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Helps with dressing by pushing an arm through or lifting a foot', icon:zi('handshake'), desc:'Pushes an arm through the sleeve or lifts a foot for a shoe — teamwork at dressing time.', advanced:false, domain:'social', source:'CDC' },
+    { text:'Moves away from you but checks you are close by', icon:zi('eye'), desc:'Explores a little way off, then glances back to find you — you are her safe base.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Points to show you something interesting', icon:zi('target'), desc:'Points at the bird or the bus just to share the moment with you.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Puts hands out for you to wash them', icon:zi('drop'), desc:'Holds out her hands at the tap — joining in with daily routines.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Looks at a few pages in a book with you', icon:zi('book'), desc:'Sits for a few pages of a story together — shared reading time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Helps with dressing by pushing an arm through or lifting a foot', icon:zi('handshake'), desc:'Pushes an arm through the sleeve or lifts a foot for a shoe — teamwork at dressing time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
     // CDC 18 m — Language/Communication
-    { text:'Tries to say three or more words besides mama or dada', icon:zi('chat'), desc:'A few real words beyond mama and dada, even if only you understand them yet.', advanced:false, domain:'language', source:'CDC' },
-    { text:'Follows a one-step direction without gestures', icon:zi('list'), desc:'Gives you the toy when you just say "give it to me" — no pointing needed.', advanced:false, domain:'language', source:'CDC' },
+    { text:'Tries to say three or more words besides mama or dada', icon:zi('chat'), desc:'A few real words beyond mama and dada, even if only you understand them yet.', advanced:false, domain:'language', source:'CDC', checkpoint:18 },
+    { text:'Follows a one-step direction without gestures', icon:zi('list'), desc:'Gives you the toy when you just say "give it to me" — no pointing needed.', advanced:false, domain:'language', source:'CDC', checkpoint:18 },
     // CDC 18 m — Cognitive
-    { text:'Copies you doing chores, like sweeping', icon:zi('mirror'), desc:'Pushes a broom or wipes the table like you do — learning by imitation.', advanced:false, domain:'cognitive', source:'CDC' },
-    { text:'Plays with toys in a simple way, like pushing a car', icon:zi('star'), desc:'Rolls a car along the floor, not just mouths or bangs it — playing with purpose.', advanced:false, domain:'cognitive', source:'CDC' },
+    { text:'Copies you doing chores, like sweeping', icon:zi('mirror'), desc:'Pushes a broom or wipes the table like you do — learning by imitation.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
+    { text:'Plays with toys in a simple way, like pushing a car', icon:zi('star'), desc:'Rolls a car along the floor, not just mouths or bangs it — playing with purpose.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
     // CDC 18 m — Movement/Physical
-    { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks on her own around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months.', advanced:false, domain:'motor', source:'CDC' }, // desc context: WHO-MGRS 99th pct 17.6 m
-    { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC' },
-    { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
-    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds her own meals. Keep offering soft, bite-sized pieces and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
-    { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for her mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
-    { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down by herself. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC' },
+    { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks on her own around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 }, // desc context: WHO-MGRS 99th pct 17.6 m
+    { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
+    { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds her own meals. Keep offering soft, bite-sized pieces and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for her mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down by herself. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     // AAP — explicit timing
     { text:'Starts using simple phrases', icon:zi('chat'), desc:'Short phrases like "ball up" or "drink milk" begin to appear somewhere in this stretch.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-2Y "by eighteen to twenty-four months"
-    { text:'Uses action and direction words (go, up, down)', icon:zi('chat'), desc:'Words like "go", "up", "down", "in" and "out" join her naming words.', advanced:false, domain:'language', source:'AAP' }, // AAP-LANG1 "by midyear" of the second year
+    { text:'Uses action and direction words (go, up, down)', icon:zi('chat'), desc:'Words like "go", "up", "down", "in" and "out" join her naming words.', advanced:false, domain:'language', source:'unverified' }, // AAP-LANG1 "by midyear" of the second year
     { text:'Walks backwards a few steps', icon:zi('run'), desc:'Steps backwards while pulling a toy or watching you — balance keeps refining.', advanced:true, domain:'motor', source:'unverified' },
   ],
   19: [
@@ -4116,25 +4121,25 @@ const MILESTONE_STANDARDS = {
   ],
   24: [
     // CDC "Milestones by 2 Years" — Social/Emotional
-    { text:'Notices when others are hurt or upset', icon:zi('heart'), desc:'Pauses or looks sad when someone is crying — the beginnings of empathy.', advanced:false, domain:'social', source:'CDC', endMonth:25 },
-    { text:'Looks at your face to see how to react in a new situation', icon:zi('eye'), desc:'Checks your expression before deciding if something new is safe or fun.', advanced:false, domain:'social', source:'CDC', endMonth:25 },
+    { text:'Notices when others are hurt or upset', icon:zi('heart'), desc:'Pauses or looks sad when someone is crying — the beginnings of empathy.', advanced:false, domain:'social', source:'CDC', checkpoint:24 },
+    { text:'Looks at your face to see how to react to something new', icon:zi('eye'), desc:'Checks your expression before deciding if something new is safe or fun.', advanced:false, domain:'social', source:'CDC', checkpoint:24 },
     // CDC 24 m — Language/Communication
-    { text:'Points to things in a book when you ask', icon:zi('book'), desc:'Finds the bear when you ask "where is the bear?" — understanding and pointing together.', advanced:false, domain:'language', source:'CDC', endMonth:25 },
-    { text:'Says at least two words together, like "more milk"', icon:zi('chat'), desc:'Two-word combinations appear — "more milk", "bye Papa", "big ball".', advanced:false, domain:'language', source:'CDC', endMonth:25 },
-    { text:'Points to at least two body parts when asked', icon:zi('target'), desc:'Shows you her nose, tummy or toes when you ask.', advanced:false, domain:'language', source:'CDC', endMonth:25 },
-    { text:'Uses gestures beyond waving and pointing', icon:zi('handshake'), desc:'Blows a kiss or nods yes — a richer set of gestures to go with her words.', advanced:false, domain:'language', source:'CDC', endMonth:25 },
+    { text:'Points to things in a book when you ask', icon:zi('book'), desc:'Finds the bear when you ask "where is the bear?" — understanding and pointing together.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Says at least two words together, like "more milk"', icon:zi('chat'), desc:'Two-word combinations appear — "more milk", "bye Papa", "big ball".', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Points to at least two body parts when asked', icon:zi('target'), desc:'Shows you her nose, tummy or toes when you ask.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Uses more gestures, like blowing a kiss or nodding yes', icon:zi('handshake'), desc:'Blows a kiss or nods yes — a richer set of gestures to go with her words.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
     // CDC 24 m — Cognitive
-    { text:'Holds something in one hand while using the other', icon:zi('bulb'), desc:'Holds a container steady and pulls the lid off with the other hand — two hands with two jobs.', advanced:false, domain:'cognitive', source:'CDC', endMonth:25 },
-    { text:'Tries to use switches, knobs or buttons on a toy', icon:zi('star'), desc:'Presses, twists and flips to make toys work — figuring out how things function.', advanced:false, domain:'cognitive', source:'CDC', endMonth:25 },
-    { text:'Plays with more than one toy at the same time', icon:zi('star'), desc:'Puts toy food on a toy plate — combining toys into a little story.', advanced:false, domain:'cognitive', source:'CDC', endMonth:25 },
+    { text:'Holds something in one hand while using the other', icon:zi('bulb'), desc:'Holds a container steady and pulls the lid off with the other hand — two hands with two jobs.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
+    { text:'Tries to use switches, knobs or buttons on a toy', icon:zi('star'), desc:'Presses, twists and flips to make toys work — figuring out how things function.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
+    { text:'Plays with more than one toy at the same time', icon:zi('star'), desc:'Puts toy food on a toy plate — combining toys into a little story.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
     // CDC 24 m — Movement/Physical
-    { text:'Kicks a ball', icon:zi('run'), desc:'Swings a leg and connects with a ball — balance on one foot for a moment.', advanced:false, domain:'motor', source:'CDC', endMonth:25 },
-    { text:'Runs', icon:zi('run'), desc:'Runs across the room or park — still a little stiff, and full of joy.', advanced:false, domain:'motor', source:'CDC', endMonth:25 },
-    { text:'Walks up a few stairs, with or without help', icon:zi('run'), desc:'Walks (not crawls) up a few steps, holding on or on her own. Gates stay up when you are not beside her.', advanced:false, domain:'motor', source:'CDC', endMonth:25 },
-    { text:'Eats with a spoon', icon:zi('spoon'), desc:'Feeds herself with a spoon for much of the meal. Seated, supervised meals remain the safest.', advanced:false, domain:'motor', source:'CDC', safetyTier:true, endMonth:25 },
+    { text:'Kicks a ball', icon:zi('run'), desc:'Swings a leg and connects with a ball — balance on one foot for a moment.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Runs', icon:zi('run'), desc:'Runs across the room or park — still a little stiff, and full of joy.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Walks up a few stairs, with or without help', icon:zi('run'), desc:'Walks (not crawls) up a few steps, holding on or on her own. Gates stay up when you are not beside her.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Eats with a spoon', icon:zi('spoon'), desc:'Feeds herself with a spoon for much of the meal. Seated, supervised meals remain the safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:24, safetyTier:true },
     // AAP — "by two years"
-    { text:'Builds a tower of four or more blocks', icon:zi('star'), desc:'Stacks four blocks or more before knocking them down — steady hands and focus.', advanced:false, domain:'cognitive', source:'AAP', endMonth:25 }, // AAP-2Y
-    { text:'May start to favour one hand', icon:zi('palette'), desc:'Might reach or scribble with one hand more often. Many children settle handedness later — both are normal.', advanced:false, domain:'motor', source:'AAP', endMonth:25 }, // AAP-2Y + AAP-HAND1
+    { text:'Builds a tower of four or more blocks', icon:zi('star'), desc:'Stacks four blocks or more before knocking them down — steady hands and focus.', advanced:false, domain:'cognitive', source:'AAP', checkpoint:24 }, // AAP-2Y
+    { text:'May start to favour one hand', icon:zi('palette'), desc:'Might reach or scribble with one hand more often. Many children settle handedness later — both are normal.', advanced:false, domain:'motor', source:'AAP', checkpoint:24 }, // AAP-2Y + AAP-HAND1
     // Stretch
     { text:'Uses the words "me" and "you"', icon:zi('chat'), desc:'Starts using "me" and "you" correctly — a sense of self showing up in language.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1
     { text:'Says around 50 words', icon:zi('chat'), desc:'A vocabulary of about fifty words — a wide range is normal, and understanding stays well ahead of speech.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1 (timing hedged: stretch)
@@ -4986,16 +4991,16 @@ const SYMPTOM_DB = [
     keywords: ['teething','teeth','gum','gums','drooling','biting','chewing','swollen gum'],
     severity: 'mild',
     title: 'Teething Discomfort',
-    summary: 'Chilled teether, gum massage, wipe drool, high fever is NOT teething',
+    summary: 'Chilled teether, gum massage, wipe drool — fever is NOT teething',
     whatToDo: [
       'Offer a clean, chilled (not frozen) teething ring.',
       'Gently massage gums with a clean finger.',
-      'Offer cold water in her cup, or soft chilled fruit like melon, with you sitting beside her.',
+      'Offer cold water in her cup, or soft ripe chilled fruit like melon in small pieces, with her sitting down and you beside her.',
       'Wipe drool frequently to prevent chin rash.'
     ],
     precautions: [
       // AAP (HealthyChildren "Teething Pain", 2025): fever is a false symptom of teething.
-      'Teething does not cause fever, diarrhoea or hours of crying. If she has a temperature, look for another cause.',
+      'Teething does not cause fever, diarrhoea or hours of crying. If she has any of these, it is something else: check her and call her doctor.',
       'Back teeth can be sorer and slower: first molars come through around 13–19 months, canines 16–23, second molars 23–33 (ADA).',
       'Watch for inconsolable crying lasting more than a couple of hours.',
       'Record each tooth on the Teeth chart (Milestones, Library) for the paediatrician or dentist.'
@@ -5005,10 +5010,10 @@ const SYMPTOM_DB = [
       { text: 'Give homeopathic teething tablets', critical: true },
       { text: 'Tie a teething necklace around her neck (strangulation risk)', critical: false },
       { text: 'Freeze a teething ring solid or use a liquid-filled teether', critical: false },
-      { text: 'Offer rusks or teething biscuits (most contain sugar)', critical: false }
+      { text: 'Offer rusks or teething biscuits (most contain sugar, and hard pieces can break off)', critical: false }
     ],
     emergency: [
-      'Fever exceeds 101°F (38.3°C) — teething alone does not cause high fever',
+      'Fever of 38.3°C (101°F) or more — this is not teething; look for another cause',
       'Gums bleed heavily or look infected',
       'Ziva is inconsolable for hours'
     ],

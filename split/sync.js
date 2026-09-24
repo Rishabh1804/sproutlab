@@ -614,11 +614,14 @@ function _postReceiveMilestoneSuppress(remoteMap, localMap) {
 function _postReceiveTeeth(remoteMap, localMap) {
   var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
   var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
-  var ok = function(v) { return v && typeof v === 'object' && typeof v.ts === 'number' && (v.date === null || typeof v.date === 'string'); };
+  var ok = function(k, v) {
+    return /^[A-T]$/.test(k) && v && typeof v === 'object' && typeof v.ts === 'number' && isFinite(v.ts) &&
+      (v.date === null || (typeof v.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.date)));
+  };
   var merged = {};
-  Object.keys(lm).forEach(function(k) { if (ok(lm[k])) merged[k] = lm[k]; });
+  Object.keys(lm).forEach(function(k) { if (ok(k, lm[k])) merged[k] = lm[k]; });
   Object.keys(rm).forEach(function(k) {
-    if (!ok(rm[k])) return;
+    if (!ok(k, rm[k])) return;
     if (!merged[k] || rm[k].ts > merged[k].ts) merged[k] = rm[k];
   });
   return merged;
@@ -1561,6 +1564,9 @@ function _syncUnionArrays(local, cloud, key) {
   return out;
 }
 function _syncMergeForPush(local, cloud, key) {
+  // Tooth chart: the push honours the same per-tooth newest-ts contract as the
+  // receive, so an offline or imported copy can't overwrite a newer cloud edit.
+  if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
   if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud, key) : local;
   if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
     var out = {};

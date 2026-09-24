@@ -7087,6 +7087,7 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .tth-next { margin-top:var(--sp-16); padding:var(--sp-12); border-radius:var(--r-lg); background:var(--lav-light); }
 .tth-next-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--tc-lav); margin-bottom:var(--sp-4); }
 .tth-next-row { font-size:var(--fs-base); color:var(--text); }
+.tth-next-row + .tth-next-row { margin-top:var(--sp-6); }
 .tth-note { margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .ms-pediatric-prep-narration { font-family:'Fraunces',serif; font-size:var(--fs-md); line-height:1.6; color:var(--text); }
 .ms-pediatric-prep-section { margin-top:var(--sp-12); }
@@ -18295,6 +18296,8 @@ const AGE_RULES = {
   'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
   'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
   'biscuit':  { minMonth:10, reason:'Most contain added sugar, salt, and maida. Only sugar-free, whole-grain ones — no added sugar before 2 years.' },
+  // Rusk (Ceres V-C-268-6): the teething guide warns against rusks; the food log gates them too.
+  'rusk':     { minMonth:24, aliases:['rusks','toast rusk','teething rusk','suji rusk','cake rusk'], reason:'Most rusks contain added sugar and break into hard chunks she can\'t chew yet (choking). Avoid before 2 years; offer soft bread or roti pieces instead.' },
   'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
   'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
   'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
@@ -19829,7 +19832,10 @@ const MILESTONE_STANDARDS = {
   //   as desc context only. source:'CDC' = a CDC checklist item at its own
   //   checkpoint month; 'AAP' = AAP item whose [bracket, endMonth) sits inside
   //   AAP's stated timing; everything else 'unverified' (trailing comment names
-  //   the content origin for the curation arc).
+  //   the content origin for the curation arc). checkpoint:N marks a "most
+  //   children by N months" item (CDC 75%+; AAP "by two years"): the window is
+  //   the three months up to N and the card says "by N months", never a band
+  //   that starts at N.
   13: [
     { text:'Carries a book to you to read', icon:zi('book'), desc:'Brings a favourite board book and hands it over — a lovely early sign of shared attention and a love of stories.', advanced:false, domain:'social', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
     { text:'Understands far more words than she can say', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
@@ -19848,22 +19854,22 @@ const MILESTONE_STANDARDS = {
   ],
   15: [
     // CDC "Milestones by 15 Months" — Social/Emotional
-    { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Claps when excited', icon:zi('party'), desc:'Claps for herself or along with you when something delights her.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses of her own — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC' },
+    { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Claps when excited', icon:zi('party'), desc:'Claps for herself or along with you when something delights her.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses of her own — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     // CDC 15 m — Language/Communication
-    { text:'Tries to say 1–2 words besides mama or dada', icon:zi('chat'), desc:'Words are often partial — "ba" for ball, "da" for dog. Repeat the full word back warmly.', advanced:false, domain:'language', source:'CDC' },
-    { text:'Looks at a familiar object when you name it', icon:zi('eye'), desc:'You say "where\'s the cup?" and her eyes go straight to it — words are linking to things.', advanced:false, domain:'language', source:'CDC' },
-    { text:'Follows a direction given with words and a gesture', icon:zi('list'), desc:'Hands you the toy when you hold out your hand and say "give me the toy".', advanced:false, domain:'language', source:'CDC' },
-    { text:'Points to ask for something or for help', icon:zi('target'), desc:'Points at the shelf she cannot reach — asking with her finger before she has the words.', advanced:false, domain:'language', source:'CDC' },
+    { text:'Tries to say 1–2 words besides mama or dada', icon:zi('chat'), desc:'Words are often partial — "ba" for ball, "da" for dog. Repeat the full word back warmly.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Looks at a familiar object when you name it', icon:zi('eye'), desc:'You say "where\'s the cup?" and her eyes go straight to it — words are linking to things.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Follows a direction given with words and a gesture', icon:zi('list'), desc:'Hands you the toy when you hold out your hand and say "give me the toy".', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Points to ask for something or for help', icon:zi('target'), desc:'Points at the shelf she cannot reach — asking with her finger before she has the words.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
     // CDC 15 m — Cognitive
-    { text:'Tries to use things the right way (phone, cup, book)', icon:zi('phone'), desc:'Holds a phone to her ear, lifts a cup to drink, opens a book — she knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC' },
-    { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC' },
+    { text:'Uses everyday things the right way, like a phone or a book', icon:zi('phone'), desc:'Holds a phone to her ear, lifts a cup to drink, opens a book — she knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
+    { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     // CDC 15 m — Movement/Physical
-    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months.', advanced:false, domain:'motor', source:'CDC' }, // desc context: WHO-MGRS 8.2–17.6 m
-    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and feeds herself. Offer soft, bite-sized food and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
+    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
+    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and feeds herself. Offer soft, bite-sized food and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
     // AAP — explicit 15–18 m timing
     { text:'Says several single words', icon:zi('chat'), desc:'A small handful of real words used on purpose. The pace varies a lot from child to child.', advanced:false, domain:'language', source:'AAP', endMonth:18 }, // AAP-2Y "by fifteen to eighteen months"
     { text:'Uses a few simple signs or gestures (more, all done)', icon:zi('handshake'), desc:'Taps fingers for "more" or waves hands for "all done" — gestures bridge the gap before words.', advanced:true, domain:'language', source:'unverified' },
@@ -19871,7 +19877,7 @@ const MILESTONE_STANDARDS = {
   16: [
     { text:'Turns board-book pages, a few at a time', icon:zi('book'), desc:'Flips thick pages — often several at once. Hands and interest in books growing together.', advanced:false, domain:'motor', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
     { text:'Builds a tower of three blocks', icon:zi('star'), desc:'Stacks three before the happy crash — hand steadiness and patience growing.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1 towers in the second year
-    { text:'Pulls a toy along while walking', icon:zi('run'), desc:'Walks while tugging a pull-toy behind her — walking is now steady enough to multitask.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Walks while pulling a toy along', icon:zi('run'), desc:'Walks while tugging a pull-toy behind her — walking is now steady enough to multitask.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
     { text:'Knows the names of familiar people', icon:zi('chat'), desc:'Looks toward Nani or Papa when you say their name — a growing map of the people she loves.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
     { text:'Plays alongside other children', icon:zi('handshake'), desc:'Happy to play near another child — side-by-side play comes long before sharing.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
     { text:'Points to one body part when asked', icon:zi('eye'), desc:'Touches her nose when you ask "where\'s your nose?" — an early stretch toward naming body parts.', advanced:true, domain:'language', source:'unverified' },
@@ -19886,27 +19892,27 @@ const MILESTONE_STANDARDS = {
   ],
   18: [
     // CDC "Milestones by 18 Months" — Social/Emotional
-    { text:'Moves away from you but checks you are close by', icon:zi('eye'), desc:'Explores a little way off, then glances back to find you — you are her safe base.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Points to show you something interesting', icon:zi('target'), desc:'Points at the bird or the bus just to share the moment with you.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Puts hands out for you to wash them', icon:zi('drop'), desc:'Holds out her hands at the tap — joining in with daily routines.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Looks at a few pages in a book with you', icon:zi('book'), desc:'Sits for a few pages of a story together — shared reading time.', advanced:false, domain:'social', source:'CDC' },
-    { text:'Helps with dressing by pushing an arm through or lifting a foot', icon:zi('handshake'), desc:'Pushes an arm through the sleeve or lifts a foot for a shoe — teamwork at dressing time.', advanced:false, domain:'social', source:'CDC' },
+    { text:'Moves away from you but checks you are close by', icon:zi('eye'), desc:'Explores a little way off, then glances back to find you — you are her safe base.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Points to show you something interesting', icon:zi('target'), desc:'Points at the bird or the bus just to share the moment with you.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Puts hands out for you to wash them', icon:zi('drop'), desc:'Holds out her hands at the tap — joining in with daily routines.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Looks at a few pages in a book with you', icon:zi('book'), desc:'Sits for a few pages of a story together — shared reading time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Helps with dressing by pushing an arm through or lifting a foot', icon:zi('handshake'), desc:'Pushes an arm through the sleeve or lifts a foot for a shoe — teamwork at dressing time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
     // CDC 18 m — Language/Communication
-    { text:'Tries to say three or more words besides mama or dada', icon:zi('chat'), desc:'A few real words beyond mama and dada, even if only you understand them yet.', advanced:false, domain:'language', source:'CDC' },
-    { text:'Follows a one-step direction without gestures', icon:zi('list'), desc:'Gives you the toy when you just say "give it to me" — no pointing needed.', advanced:false, domain:'language', source:'CDC' },
+    { text:'Tries to say three or more words besides mama or dada', icon:zi('chat'), desc:'A few real words beyond mama and dada, even if only you understand them yet.', advanced:false, domain:'language', source:'CDC', checkpoint:18 },
+    { text:'Follows a one-step direction without gestures', icon:zi('list'), desc:'Gives you the toy when you just say "give it to me" — no pointing needed.', advanced:false, domain:'language', source:'CDC', checkpoint:18 },
     // CDC 18 m — Cognitive
-    { text:'Copies you doing chores, like sweeping', icon:zi('mirror'), desc:'Pushes a broom or wipes the table like you do — learning by imitation.', advanced:false, domain:'cognitive', source:'CDC' },
-    { text:'Plays with toys in a simple way, like pushing a car', icon:zi('star'), desc:'Rolls a car along the floor, not just mouths or bangs it — playing with purpose.', advanced:false, domain:'cognitive', source:'CDC' },
+    { text:'Copies you doing chores, like sweeping', icon:zi('mirror'), desc:'Pushes a broom or wipes the table like you do — learning by imitation.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
+    { text:'Plays with toys in a simple way, like pushing a car', icon:zi('star'), desc:'Rolls a car along the floor, not just mouths or bangs it — playing with purpose.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
     // CDC 18 m — Movement/Physical
-    { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks on her own around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months.', advanced:false, domain:'motor', source:'CDC' }, // desc context: WHO-MGRS 99th pct 17.6 m
-    { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC' },
-    { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
-    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds her own meals. Keep offering soft, bite-sized pieces and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
-    { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for her mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', safetyTier:true },
-    { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down by herself. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC' },
+    { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks on her own around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 }, // desc context: WHO-MGRS 99th pct 17.6 m
+    { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
+    { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds her own meals. Keep offering soft, bite-sized pieces and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for her mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down by herself. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     // AAP — explicit timing
     { text:'Starts using simple phrases', icon:zi('chat'), desc:'Short phrases like "ball up" or "drink milk" begin to appear somewhere in this stretch.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-2Y "by eighteen to twenty-four months"
-    { text:'Uses action and direction words (go, up, down)', icon:zi('chat'), desc:'Words like "go", "up", "down", "in" and "out" join her naming words.', advanced:false, domain:'language', source:'AAP' }, // AAP-LANG1 "by midyear" of the second year
+    { text:'Uses action and direction words (go, up, down)', icon:zi('chat'), desc:'Words like "go", "up", "down", "in" and "out" join her naming words.', advanced:false, domain:'language', source:'unverified' }, // AAP-LANG1 "by midyear" of the second year
     { text:'Walks backwards a few steps', icon:zi('run'), desc:'Steps backwards while pulling a toy or watching you — balance keeps refining.', advanced:true, domain:'motor', source:'unverified' },
   ],
   19: [
@@ -19949,25 +19955,25 @@ const MILESTONE_STANDARDS = {
   ],
   24: [
     // CDC "Milestones by 2 Years" — Social/Emotional
-    { text:'Notices when others are hurt or upset', icon:zi('heart'), desc:'Pauses or looks sad when someone is crying — the beginnings of empathy.', advanced:false, domain:'social', source:'CDC', endMonth:25 },
-    { text:'Looks at your face to see how to react in a new situation', icon:zi('eye'), desc:'Checks your expression before deciding if something new is safe or fun.', advanced:false, domain:'social', source:'CDC', endMonth:25 },
+    { text:'Notices when others are hurt or upset', icon:zi('heart'), desc:'Pauses or looks sad when someone is crying — the beginnings of empathy.', advanced:false, domain:'social', source:'CDC', checkpoint:24 },
+    { text:'Looks at your face to see how to react to something new', icon:zi('eye'), desc:'Checks your expression before deciding if something new is safe or fun.', advanced:false, domain:'social', source:'CDC', checkpoint:24 },
     // CDC 24 m — Language/Communication
-    { text:'Points to things in a book when you ask', icon:zi('book'), desc:'Finds the bear when you ask "where is the bear?" — understanding and pointing together.', advanced:false, domain:'language', source:'CDC', endMonth:25 },
-    { text:'Says at least two words together, like "more milk"', icon:zi('chat'), desc:'Two-word combinations appear — "more milk", "bye Papa", "big ball".', advanced:false, domain:'language', source:'CDC', endMonth:25 },
-    { text:'Points to at least two body parts when asked', icon:zi('target'), desc:'Shows you her nose, tummy or toes when you ask.', advanced:false, domain:'language', source:'CDC', endMonth:25 },
-    { text:'Uses gestures beyond waving and pointing', icon:zi('handshake'), desc:'Blows a kiss or nods yes — a richer set of gestures to go with her words.', advanced:false, domain:'language', source:'CDC', endMonth:25 },
+    { text:'Points to things in a book when you ask', icon:zi('book'), desc:'Finds the bear when you ask "where is the bear?" — understanding and pointing together.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Says at least two words together, like "more milk"', icon:zi('chat'), desc:'Two-word combinations appear — "more milk", "bye Papa", "big ball".', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Points to at least two body parts when asked', icon:zi('target'), desc:'Shows you her nose, tummy or toes when you ask.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Uses more gestures, like blowing a kiss or nodding yes', icon:zi('handshake'), desc:'Blows a kiss or nods yes — a richer set of gestures to go with her words.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
     // CDC 24 m — Cognitive
-    { text:'Holds something in one hand while using the other', icon:zi('bulb'), desc:'Holds a container steady and pulls the lid off with the other hand — two hands with two jobs.', advanced:false, domain:'cognitive', source:'CDC', endMonth:25 },
-    { text:'Tries to use switches, knobs or buttons on a toy', icon:zi('star'), desc:'Presses, twists and flips to make toys work — figuring out how things function.', advanced:false, domain:'cognitive', source:'CDC', endMonth:25 },
-    { text:'Plays with more than one toy at the same time', icon:zi('star'), desc:'Puts toy food on a toy plate — combining toys into a little story.', advanced:false, domain:'cognitive', source:'CDC', endMonth:25 },
+    { text:'Holds something in one hand while using the other', icon:zi('bulb'), desc:'Holds a container steady and pulls the lid off with the other hand — two hands with two jobs.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
+    { text:'Tries to use switches, knobs or buttons on a toy', icon:zi('star'), desc:'Presses, twists and flips to make toys work — figuring out how things function.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
+    { text:'Plays with more than one toy at the same time', icon:zi('star'), desc:'Puts toy food on a toy plate — combining toys into a little story.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
     // CDC 24 m — Movement/Physical
-    { text:'Kicks a ball', icon:zi('run'), desc:'Swings a leg and connects with a ball — balance on one foot for a moment.', advanced:false, domain:'motor', source:'CDC', endMonth:25 },
-    { text:'Runs', icon:zi('run'), desc:'Runs across the room or park — still a little stiff, and full of joy.', advanced:false, domain:'motor', source:'CDC', endMonth:25 },
-    { text:'Walks up a few stairs, with or without help', icon:zi('run'), desc:'Walks (not crawls) up a few steps, holding on or on her own. Gates stay up when you are not beside her.', advanced:false, domain:'motor', source:'CDC', endMonth:25 },
-    { text:'Eats with a spoon', icon:zi('spoon'), desc:'Feeds herself with a spoon for much of the meal. Seated, supervised meals remain the safest.', advanced:false, domain:'motor', source:'CDC', safetyTier:true, endMonth:25 },
+    { text:'Kicks a ball', icon:zi('run'), desc:'Swings a leg and connects with a ball — balance on one foot for a moment.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Runs', icon:zi('run'), desc:'Runs across the room or park — still a little stiff, and full of joy.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Walks up a few stairs, with or without help', icon:zi('run'), desc:'Walks (not crawls) up a few steps, holding on or on her own. Gates stay up when you are not beside her.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Eats with a spoon', icon:zi('spoon'), desc:'Feeds herself with a spoon for much of the meal. Seated, supervised meals remain the safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:24, safetyTier:true },
     // AAP — "by two years"
-    { text:'Builds a tower of four or more blocks', icon:zi('star'), desc:'Stacks four blocks or more before knocking them down — steady hands and focus.', advanced:false, domain:'cognitive', source:'AAP', endMonth:25 }, // AAP-2Y
-    { text:'May start to favour one hand', icon:zi('palette'), desc:'Might reach or scribble with one hand more often. Many children settle handedness later — both are normal.', advanced:false, domain:'motor', source:'AAP', endMonth:25 }, // AAP-2Y + AAP-HAND1
+    { text:'Builds a tower of four or more blocks', icon:zi('star'), desc:'Stacks four blocks or more before knocking them down — steady hands and focus.', advanced:false, domain:'cognitive', source:'AAP', checkpoint:24 }, // AAP-2Y
+    { text:'May start to favour one hand', icon:zi('palette'), desc:'Might reach or scribble with one hand more often. Many children settle handedness later — both are normal.', advanced:false, domain:'motor', source:'AAP', checkpoint:24 }, // AAP-2Y + AAP-HAND1
     // Stretch
     { text:'Uses the words "me" and "you"', icon:zi('chat'), desc:'Starts using "me" and "you" correctly — a sense of self showing up in language.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1
     { text:'Says around 50 words', icon:zi('chat'), desc:'A vocabulary of about fifty words — a wide range is normal, and understanding stays well ahead of speech.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1 (timing hedged: stretch)
@@ -20819,16 +20825,16 @@ const SYMPTOM_DB = [
     keywords: ['teething','teeth','gum','gums','drooling','biting','chewing','swollen gum'],
     severity: 'mild',
     title: 'Teething Discomfort',
-    summary: 'Chilled teether, gum massage, wipe drool, high fever is NOT teething',
+    summary: 'Chilled teether, gum massage, wipe drool — fever is NOT teething',
     whatToDo: [
       'Offer a clean, chilled (not frozen) teething ring.',
       'Gently massage gums with a clean finger.',
-      'Offer cold water in her cup, or soft chilled fruit like melon, with you sitting beside her.',
+      'Offer cold water in her cup, or soft ripe chilled fruit like melon in small pieces, with her sitting down and you beside her.',
       'Wipe drool frequently to prevent chin rash.'
     ],
     precautions: [
       // AAP (HealthyChildren "Teething Pain", 2025): fever is a false symptom of teething.
-      'Teething does not cause fever, diarrhoea or hours of crying. If she has a temperature, look for another cause.',
+      'Teething does not cause fever, diarrhoea or hours of crying. If she has any of these, it is something else: check her and call her doctor.',
       'Back teeth can be sorer and slower: first molars come through around 13–19 months, canines 16–23, second molars 23–33 (ADA).',
       'Watch for inconsolable crying lasting more than a couple of hours.',
       'Record each tooth on the Teeth chart (Milestones, Library) for the paediatrician or dentist.'
@@ -20838,10 +20844,10 @@ const SYMPTOM_DB = [
       { text: 'Give homeopathic teething tablets', critical: true },
       { text: 'Tie a teething necklace around her neck (strangulation risk)', critical: false },
       { text: 'Freeze a teething ring solid or use a liquid-filled teether', critical: false },
-      { text: 'Offer rusks or teething biscuits (most contain sugar)', critical: false }
+      { text: 'Offer rusks or teething biscuits (most contain sugar, and hard pieces can break off)', critical: false }
     ],
     emergency: [
-      'Fever exceeds 101°F (38.3°C) — teething alone does not cause high fever',
+      'Fever of 38.3°C (101°F) or more — this is not teething; look for another cause',
       'Gums bleed heavily or look infected',
       'Ziva is inconsolable for hours'
     ],
@@ -24559,8 +24565,10 @@ function calcMilestoneScore() {
   milestones.forEach(m => { msPctMap[m.text.toLowerCase().trim()] = MS_STAGE_META[m.status]?.pct || 0; });
   let expectedProgress = 0;
   let expectedMatchCount = 0;
+  // Stopwords keep toddler rows ("…with…", "…your…") from matching unrelated milestones.
+  const _msStop = { with:1, your:1, that:1, when:1, more:1, from:1, them:1, then:1, into:1, over:1, like:1, what:1, this:1, have:1, they:1, other:1, things:1, least:1 };
   expectedItems.forEach(it => {
-    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !_msStop[w]);
     let bestPct = 0;
     Object.entries(msPctMap).forEach(([text, pct]) => {
       if (keywords.some(kw => text.includes(kw)) && pct > bestPct) bestPct = pct;
@@ -25494,7 +25502,8 @@ function fmtAgeLong(months, days) {
 }
 function fmtAgeShort(months, days) {
   if (months < 12) return months + 'm ' + days + 'd';
-  return Math.floor(months / 12) + 'y ' + (months % 12) + 'm ' + days + 'd';
+  const r = months % 12;
+  return Math.floor(months / 12) + 'y ' + (r ? r + 'm ' : '') + days + 'd';
 }
 function daysBetween(d1, d2) {
   return Math.round(Math.abs(new Date(d2) - new Date(d1)) / 86400000);
@@ -28911,7 +28920,7 @@ function _predictMilestoneWindow(milestoneId, opts) {
   // V-K-116 — advanced-row derivation rule: advanced:true offsets by +1 bracket.
   // Treats the advanced flag as a clinical-band shift (matches row.desc intent
   // which often says "may appear here but typical is later").
-  const effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
+  let effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
   // Find the next bracket for the end-fallback. V-K-114: highest-bracket
   // (12m) default end is 18*30.44 ≈ 548 days when no explicit endMonth set.
   const startBracketIdx = bracketKeys.indexOf(matchedBracket);
@@ -28929,6 +28938,11 @@ function _predictMilestoneWindow(milestoneId, opts) {
     // (toddler rows to 24), the top bracket gets the usual one-month band.
     endBracket = Math.max(18, matchedBracket + 1);
   }
+  // Checkpoint rows ("most children by N months", CDC 75%+ / AAP "by two
+  // years"): the band is the three months leading up to N and ends at N, so
+  // a card never reads "typically N–N+1" for a by-N item.
+  const checkpoint = (typeof matchedRow.checkpoint === 'number') ? matchedRow.checkpoint : null;
+  if (checkpoint !== null) { effectiveStartBracket = checkpoint - 3; endBracket = checkpoint; }
   const expectedStart = effectiveStartBracket * 30.44;
   // For advanced rows, end is (K+2)*30.44 - 1 to honor the +1 bracket shift contract.
   // For non-advanced rows, end = endBracket * 30.44 - 1 to land at the bracket-end day.
@@ -28959,8 +28973,11 @@ function _predictMilestoneWindow(milestoneId, opts) {
   // V-V-57 — windowStatus (renamed from `status` to avoid collision with
   // _getInWindowMilestones[i].evidenceStatus). Three states.
   let windowStatus;
+  // Half-open at the end: day (endBracket * 30.44) is the next bracket's
+  // start, so no whole day falls between two windows (the fractional 30.44
+  // used to leave days like 365 and 395 in no window at all).
   if (ageDays < expectedStart) windowStatus = 'pre-window';
-  else if (ageDays > expectedEnd) windowStatus = 'post-window';
+  else if (ageDays >= endBracket * 30.44) windowStatus = 'post-window';
   else windowStatus = 'in-window';
 
   // V-M-114 floor — source defaults to 'unverified'. Never walk wrapping key.
@@ -28979,6 +28996,7 @@ function _predictMilestoneWindow(milestoneId, opts) {
     ageDaysRemainder: ageDaysRemainder,
     windowStatus: windowStatus,
     source: source,
+    checkpoint: checkpoint,
     standardKey: standardKey,
   };
 }
@@ -29031,15 +29049,17 @@ function _getInWindowMilestones(ageDays, n, opts) {
       // Suppression filter — entries whose suppress-until > now skip.
       if (suppressMap[milestoneId] && suppressMap[milestoneId] > nowMs) continue;
       // Derive window (mirror _predictMilestoneWindow logic).
-      const effStart = row.advanced ? (bracket + 1) : bracket;
+      let effStart = row.advanced ? (bracket + 1) : bracket;
       let endBr;
       if (typeof row.endMonth === 'number') endBr = row.endMonth;
       else if (row.advanced) endBr = bracket + 2;
       else if (typeof nextBracket === 'number') endBr = nextBracket;
       else endBr = Math.max(18, bracket + 1);
+      if (typeof row.checkpoint === 'number') { effStart = row.checkpoint - 3; endBr = row.checkpoint; }
       const expectedStart = effStart * 30.44;
       const expectedEnd = (endBr * 30.44) - 1;
-      if (ageDays < expectedStart || ageDays > expectedEnd) continue;
+      // Half-open end (see _predictMilestoneWindow): no gap day between brackets.
+      if (ageDays < expectedStart || ageDays >= endBr * 30.44) continue;
 
       // Evidence status — driven by the parent's milestones global.
       const ev = evidenceByText[milestoneId];
@@ -29099,7 +29119,7 @@ function _getInWindowMilestones(ageDays, n, opts) {
         window: (function() {
           var ws;
           if (ageDays < expectedStart) ws = 'pre-window';
-          else if (ageDays > expectedEnd) ws = 'post-window';
+          else if (ageDays >= endBr * 30.44) ws = 'post-window';
           else ws = 'in-window';
           return {
             expectedStart: expectedStart,
@@ -29114,6 +29134,7 @@ function _getInWindowMilestones(ageDays, n, opts) {
             ageDaysRemainder: Math.round(ageDays - (Math.floor(ageDays / 30.44) * 30.44)),
             windowStatus: ws,
             source: row.source || 'unverified',
+            checkpoint: (typeof row.checkpoint === 'number') ? row.checkpoint : null,
             standardKey: standardKey,
           };
         })(),
@@ -32143,7 +32164,11 @@ function _renderMsInWindowCard(item, opts) {
   }
   const startM = (win.expectedStartMonths != null) ? String(win.expectedStartMonths) : '';
   const endM = (win.expectedEndMonths != null) ? String(win.expectedEndMonths) : '';
-  const bandText = (startM && endM) ? ('Typically ' + startM + '–' + endM + ' months' + sourcePart + '.') : '';
+  // Checkpoint rows are "most children by N months" claims (CDC 75%+ / AAP
+  // "by two years"); say that, not a band starting at N.
+  const bandText = (win.checkpoint != null)
+    ? ('Most children do this by ' + win.checkpoint + ' months' + sourcePart + '.')
+    : ((startM && endM) ? ('Typically ' + startM + '–' + endM + ' months' + sourcePart + '.') : '');
   const ageM = (win.ageMonths != null) ? String(win.ageMonths) : '?';
   const ageRem = (win.ageDaysRemainder != null) ? String(win.ageDaysRemainder) : '0';
   // V-V-72 fold: priority-mix framing. Window classification reads
@@ -33005,6 +33030,36 @@ function _tcToothSvg(t, i, ageMo) {
     '</g>';
 }
 
+// teethSummary — shared by the chart and Smart Q&A. count; latest recorded
+// tooth; next = the groups the diagram dashes as "any time now" (up to three,
+// earliest window first), or the earliest window when none is due yet.
+function teethSummary() {
+  const log = (teethLog && typeof teethLog === 'object') ? teethLog : {};
+  const ageMo = getAgeInMonths();
+  const inTeeth = PRIMARY_TEETH.filter(t => _tcErupted(t.id));
+  let latest = null;
+  inTeeth.forEach(t => { if (!latest || log[t.id].date > log[latest.id].date) latest = t; });
+  const pending = PRIMARY_TEETH.filter(t => !_tcErupted(t.id));
+  const next = [];
+  if (pending.length) {
+    const dueNow = pending.filter(t => ageMo >= t.from - 1);
+    const minFrom = Math.min.apply(null, pending.map(t => t.from));
+    const pool = (dueNow.length ? dueNow : pending.filter(t => t.from === minFrom)).slice().sort((a, b) => a.from - b.from);
+    const groups = {};
+    const order = [];
+    pool.forEach(t => {
+      const k = t.arch + t.type;
+      if (!groups[k]) { groups[k] = []; order.push(k); }
+      groups[k].push(t);
+    });
+    order.slice(0, 3).forEach(k => {
+      const g = groups[k];
+      next.push((g.length > 1 ? _tcToothName(g[0], true) : _tcToothName(g[0])) + ', usually ' + _tcWindow(g[0].from, g[0].to));
+    });
+  }
+  return { count: inTeeth.length, latest: latest ? { name: _tcToothName(latest), date: _tcFmtDate(log[latest.id].date) } : null, next: next };
+}
+
 function renderMsTeeth() {
   const el = document.getElementById('msTeethChart');
   if (!el) return;
@@ -33029,25 +33084,8 @@ function renderMsTeeth() {
       '<span class="tth-key"><span class="tth-swatch"></span>Not yet</span>' +
     '</div>';
 
-  // What's next: the same groups the diagram dashes as "any time now" (up to
-  // three, earliest window first); if none is due yet, the earliest window.
-  const pending = PRIMARY_TEETH.filter(t => !_tcErupted(t.id));
-  if (pending.length) {
-    const dueNow = pending.filter(t => ageMo >= t.from - 1);
-    const minFrom = Math.min.apply(null, pending.map(t => t.from));
-    const pool = (dueNow.length ? dueNow : pending.filter(t => t.from === minFrom)).slice().sort((a, b) => a.from - b.from);
-    const groups = {};
-    const order = [];
-    pool.forEach(t => {
-      const k = t.arch + t.type;
-      if (!groups[k]) { groups[k] = []; order.push(k); }
-      groups[k].push(t);
-    });
-    const nextRows = order.slice(0, 3).map(k => {
-      const g = groups[k];
-      const name = g.length > 1 ? _tcToothName(g[0], true) : _tcToothName(g[0]);
-      return name + ', usually ' + _tcWindow(g[0].from, g[0].to);
-    });
+  const nextRows = teethSummary().next;
+  if (nextRows.length) {
     html += '<div class="tth-next"><div class="tth-next-label">Coming next</div>' +
       nextRows.map(r => '<div class="tth-next-row">' + escHtml(r) + '</div>').join('') + '</div>';
   } else {
@@ -65106,7 +65144,7 @@ function qaAnswerNaps(intentId) {
     var expectedMin = ageMo < 4 ? 3 : ageMo < 9 ? 2 : ageMo < 15 ? 2 : 1;
     var expectedMax = ageMo < 4 ? 4 : ageMo < 9 ? 3 : ageMo < 15 ? 2 : 1;
     if (avgNaps >= expectedMin && avgNaps <= expectedMax + 0.5) {
-      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + ageMo + ' months', signal: 'good' });
+      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + fmtAgeMonths(ageMo), signal: 'good' });
     } else if (avgNaps < expectedMin) {
       dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — fewer than expected ' + expectedNaps + ' for this age', signal: 'warn' });
     } else {
@@ -65742,7 +65780,7 @@ function qaAnswerTexture(intentId) {
     if (currentIdx >= expectedIdx) {
       dataItems.push({ text: 'Texture is age-appropriate or ahead — great progress', signal: 'good' });
     } else {
-      dataItems.push({ text: 'Currently at ' + texLabels[tex.currentStage] + ' stage — expected ' + texLabels[expectedTex] + ' by ' + ageMo + ' months', signal: 'warn' });
+      dataItems.push({ text: 'Currently at ' + texLabels[tex.currentStage] + ' stage — expected ' + texLabels[expectedTex] + ' by ' + fmtAgeMonths(ageMo), signal: 'warn' });
       actionItems.push({ text: 'Gradually advance to ' + texLabels[expectedTex] + ' textures', signal: 'action' });
     }
 
@@ -66149,6 +66187,20 @@ function qaAnswerMilestoneSpecific(intentId) {
 
   var dataItems = [];
   var actionItems = [];
+
+  // Teeth: answer from the tooth chart (teethLog), not the milestone list.
+  if (targetKeyword === 'teeth' && typeof teethSummary === 'function') {
+    var ts = teethSummary();
+    var tHead = ts.count ? ts.count + ' of 20 baby teeth recorded' : 'No teeth recorded yet';
+    if (ts.latest) dataItems.push({ text: 'Latest: ' + ts.latest.name + ' (' + ts.latest.date + ')', signal: 'good' });
+    ts.next.forEach(function(r) { dataItems.push({ text: 'Coming next: ' + r, signal: 'info' }); });
+    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth she has on the Teeth chart (Milestones, Library)', signal: 'action' });
+    actionItems.push({ text: 'Teething does not cause fever. If she has a temperature, look for another cause.', signal: 'info' });
+    var tSections = [];
+    if (dataItems.length) tSections.push({ label: 'TEETH', icon: zi('tooth'), items: dataItems });
+    tSections.push({ label: 'WHAT TO DO', icon: zi('bulb'), items: actionItems });
+    return { icon: 'tooth', domain: 'lav', title: tHead, headline: tHead, sections: tSections, confidence: null, dataGap: null };
+  }
 
   // Find matching milestones
   var matched = (milestones || []).filter(function(m) {
@@ -81876,11 +81928,14 @@ function _postReceiveMilestoneSuppress(remoteMap, localMap) {
 function _postReceiveTeeth(remoteMap, localMap) {
   var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
   var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
-  var ok = function(v) { return v && typeof v === 'object' && typeof v.ts === 'number' && (v.date === null || typeof v.date === 'string'); };
+  var ok = function(k, v) {
+    return /^[A-T]$/.test(k) && v && typeof v === 'object' && typeof v.ts === 'number' && isFinite(v.ts) &&
+      (v.date === null || (typeof v.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.date)));
+  };
   var merged = {};
-  Object.keys(lm).forEach(function(k) { if (ok(lm[k])) merged[k] = lm[k]; });
+  Object.keys(lm).forEach(function(k) { if (ok(k, lm[k])) merged[k] = lm[k]; });
   Object.keys(rm).forEach(function(k) {
-    if (!ok(rm[k])) return;
+    if (!ok(k, rm[k])) return;
     if (!merged[k] || rm[k].ts > merged[k].ts) merged[k] = rm[k];
   });
   return merged;
@@ -82823,6 +82878,9 @@ function _syncUnionArrays(local, cloud, key) {
   return out;
 }
 function _syncMergeForPush(local, cloud, key) {
+  // Tooth chart: the push honours the same per-tooth newest-ts contract as the
+  // receive, so an offline or imported copy can't overwrite a newer cloud edit.
+  if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
   if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud, key) : local;
   if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
     var out = {};

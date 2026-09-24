@@ -531,23 +531,31 @@ test('regression-guard-milestone-engine-prep-v1-source-default-unverified: every
   await page.waitForTimeout(500);
   const r = await page.evaluate(() => {
     let missing = 0;
-    let unverified = 0;
-    let total = 0;
-    Object.values(MILESTONE_STANDARDS).forEach((std: any) => {
-      Object.values(std).forEach((rows: any) => {
+    let badSource = 0;
+    let curatedBelow13 = 0;
+    let curatedOutsideWho = 0;
+    const allowed = Object.values(MILESTONE_SOURCE);
+    Object.entries(MILESTONE_STANDARDS).forEach(([stdKey, std]: [string, any]) => {
+      Object.entries(std).forEach(([month, rows]: [string, any]) => {
         if (!Array.isArray(rows)) return;
         rows.forEach((row: any) => {
-          total++;
-          if (typeof row.source !== 'string') missing++;
-          else if (row.source === 'unverified') unverified++;
+          if (typeof row.source !== 'string') { missing++; return; }
+          if (!allowed.includes(row.source)) badSource++;
+          if (row.source !== 'unverified') {
+            if (parseInt(month, 10) < 13) curatedBelow13++;
+            if (stdKey !== 'who') curatedOutsideWho++;
+          }
         });
       });
     });
-    return { missing, unverified, total };
+    return { missing, badSource, curatedBelow13, curatedOutsideWho };
   });
   expect(r.missing).toBe(0);
-  // V-M-114 floor: every row defaults to 'unverified'. Future curation arc upgrades.
-  expect(r.unverified).toBe(r.total);
+  expect(r.badSource).toBe(0);
+  // V-M-114 floor, amended by the 12–24 m expansion (PR #268): the 6–12 m
+  // rows stay all-'unverified'; curated CDC/AAP tags live only in who 13–24.
+  expect(r.curatedBelow13).toBe(0);
+  expect(r.curatedOutsideWho).toBe(0);
 });
 
 test('regression-guard-milestone-engine-prep-v1-seed-rows: 2 new sensory + cognitive seed milestones (V-K-103 + V-M-118)', async ({ page }) => {
@@ -585,4 +593,49 @@ test('regression-guard-milestone-engine-prep-v1-audit-gate-wired: 8th audit gate
   expect(buildScript).toContain('audit-no-personalised-prediction-v1.sh');
   // And the script file itself exists.
   expect(fs.existsSync('split/audit-no-personalised-prediction-v1.sh')).toBe(true);
+});
+
+// ── 12–24 m expansion (PR #268) — engine regression guards (Kael V-K-268-8) ──
+
+test('regression-guard-toddler-standard-fallback: iap borrows who 13–24 per month, keeps its own 6–12', async ({ page }) => {
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => {
+    const m = _msStandardFor(MILESTONE_STANDARDS, 'iap');
+    return {
+      has13: m[13] === MILESTONE_STANDARDS.who[13],
+      has24: m[24] === MILESTONE_STANDARDS.who[24],
+      own12: m[12] === MILESTONE_STANDARDS.iap[12],
+      unknown: _msStandardFor(MILESTONE_STANDARDS, 'nope'),
+    };
+  });
+  expect(r.has13).toBe(true);
+  expect(r.has24).toBe(true);
+  expect(r.own12).toBe(true);
+  expect(r.unknown).toBeNull();
+});
+
+test('regression-guard-toddler-windows: no gap day between brackets 6–24 m; CDC checkpoint rows end at the checkpoint', async ({ page }) => {
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => {
+    const empty: number[] = [];
+    for (let d = 183; d <= 760; d++) {
+      if (_getInWindowMilestones(d, 50, { standardKey: 'who', nowAgeDays: d, milestones: [], suppressMap: {} }).length === 0) empty.push(d);
+    }
+    const walk = _predictMilestoneWindow(slugify('Walks without holding on to anyone or anything'), { standardKey: 'iap' });
+    return { empty, walk: walk && { s: walk.expectedStartMonths, e: walk.expectedEndMonths, cp: walk.checkpoint, src: walk.source } };
+  });
+  expect(r.empty).toEqual([]);
+  expect(r.walk).toEqual({ s: 15, e: 18, cp: 18, src: 'CDC' });
+});
+
+test('regression-guard-teeth-merge: per-tooth newest ts wins, tombstones hold, malformed entries drop', async ({ page }) => {
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => _postReceiveTeeth(
+    { P: { date: null, ts: 300 }, Q: { date: '2026-08-01', ts: 5 }, R: { date: '2026-06', ts: 9 }, Z: { date: '2026-01-01', ts: 9 }, O: { date: '2026-01-01', ts: 2 } },
+    { P: { date: '2026-03-10', ts: 200 }, O: { date: '2026-02-01', ts: 2 } }
+  ));
+  expect(r).toEqual({ P: { date: null, ts: 300 }, O: { date: '2026-02-01', ts: 2 }, Q: { date: '2026-08-01', ts: 5 } });
 });

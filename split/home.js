@@ -2372,7 +2372,11 @@ function _renderMsInWindowCard(item, opts) {
   }
   const startM = (win.expectedStartMonths != null) ? String(win.expectedStartMonths) : '';
   const endM = (win.expectedEndMonths != null) ? String(win.expectedEndMonths) : '';
-  const bandText = (startM && endM) ? ('Typically ' + startM + '–' + endM + ' months' + sourcePart + '.') : '';
+  // Checkpoint rows are "most children by N months" claims (CDC 75%+ / AAP
+  // "by two years"); say that, not a band starting at N.
+  const bandText = (win.checkpoint != null)
+    ? ('Most children do this by ' + win.checkpoint + ' months' + sourcePart + '.')
+    : ((startM && endM) ? ('Typically ' + startM + '–' + endM + ' months' + sourcePart + '.') : '');
   const ageM = (win.ageMonths != null) ? String(win.ageMonths) : '?';
   const ageRem = (win.ageDaysRemainder != null) ? String(win.ageDaysRemainder) : '0';
   // V-V-72 fold: priority-mix framing. Window classification reads
@@ -3234,6 +3238,36 @@ function _tcToothSvg(t, i, ageMo) {
     '</g>';
 }
 
+// teethSummary — shared by the chart and Smart Q&A. count; latest recorded
+// tooth; next = the groups the diagram dashes as "any time now" (up to three,
+// earliest window first), or the earliest window when none is due yet.
+function teethSummary() {
+  const log = (teethLog && typeof teethLog === 'object') ? teethLog : {};
+  const ageMo = getAgeInMonths();
+  const inTeeth = PRIMARY_TEETH.filter(t => _tcErupted(t.id));
+  let latest = null;
+  inTeeth.forEach(t => { if (!latest || log[t.id].date > log[latest.id].date) latest = t; });
+  const pending = PRIMARY_TEETH.filter(t => !_tcErupted(t.id));
+  const next = [];
+  if (pending.length) {
+    const dueNow = pending.filter(t => ageMo >= t.from - 1);
+    const minFrom = Math.min.apply(null, pending.map(t => t.from));
+    const pool = (dueNow.length ? dueNow : pending.filter(t => t.from === minFrom)).slice().sort((a, b) => a.from - b.from);
+    const groups = {};
+    const order = [];
+    pool.forEach(t => {
+      const k = t.arch + t.type;
+      if (!groups[k]) { groups[k] = []; order.push(k); }
+      groups[k].push(t);
+    });
+    order.slice(0, 3).forEach(k => {
+      const g = groups[k];
+      next.push((g.length > 1 ? _tcToothName(g[0], true) : _tcToothName(g[0])) + ', usually ' + _tcWindow(g[0].from, g[0].to));
+    });
+  }
+  return { count: inTeeth.length, latest: latest ? { name: _tcToothName(latest), date: _tcFmtDate(log[latest.id].date) } : null, next: next };
+}
+
 function renderMsTeeth() {
   const el = document.getElementById('msTeethChart');
   if (!el) return;
@@ -3258,25 +3292,8 @@ function renderMsTeeth() {
       '<span class="tth-key"><span class="tth-swatch"></span>Not yet</span>' +
     '</div>';
 
-  // What's next: the same groups the diagram dashes as "any time now" (up to
-  // three, earliest window first); if none is due yet, the earliest window.
-  const pending = PRIMARY_TEETH.filter(t => !_tcErupted(t.id));
-  if (pending.length) {
-    const dueNow = pending.filter(t => ageMo >= t.from - 1);
-    const minFrom = Math.min.apply(null, pending.map(t => t.from));
-    const pool = (dueNow.length ? dueNow : pending.filter(t => t.from === minFrom)).slice().sort((a, b) => a.from - b.from);
-    const groups = {};
-    const order = [];
-    pool.forEach(t => {
-      const k = t.arch + t.type;
-      if (!groups[k]) { groups[k] = []; order.push(k); }
-      groups[k].push(t);
-    });
-    const nextRows = order.slice(0, 3).map(k => {
-      const g = groups[k];
-      const name = g.length > 1 ? _tcToothName(g[0], true) : _tcToothName(g[0]);
-      return name + ', usually ' + _tcWindow(g[0].from, g[0].to);
-    });
+  const nextRows = teethSummary().next;
+  if (nextRows.length) {
     html += '<div class="tth-next"><div class="tth-next-label">Coming next</div>' +
       nextRows.map(r => '<div class="tth-next-row">' + escHtml(r) + '</div>').join('') + '</div>';
   } else {
