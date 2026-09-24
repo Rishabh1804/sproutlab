@@ -20,7 +20,7 @@
 // HTML build. HR-1: no emoji anywhere (this source lives under split/).
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname  = dirname(fileURLToPath(import.meta.url));
@@ -80,6 +80,17 @@ const builtAt = String(g.built_at_commit || '(unknown commit)').slice(0, 12);
 // edge-direction concern (V-K-G2) affects only qa-route's ripple, not this count.
 const degree = new Map();
 const id2file = new Map();
+// Normalize source_file to a split/-relative module name. graphify <=0.9.x emitted
+// bare names ("core.js"); 0.9.67+ emits repo-relative ("split/core.js"). Without
+// this every module fell through to Opera Publica with 0 LOC (the 2026-09-24
+// regression: Kael's province rendered as 0 modules / 0 LOC).
+const modName = (f) => {
+  if (!f) return f;
+  let r = String(f).replace(/\\/g, '/');
+  if (r.startsWith('/')) r = relative(__dirname, r).replace(/\\/g, '/');
+  return r.replace(/^(\.\/)+/, '').replace(/^split\//, '');
+};
+for (const n of nodes) n.source_file = modName(n.source_file);
 for (const n of nodes) { id2file.set(n.id, n.source_file || '?'); degree.set(n.id, 0); }
 for (const e of links) {
   if (e.relation !== 'calls') continue;
@@ -178,6 +189,17 @@ let roadRows = crossRoads.slice(0, 12).map(r => {
   const pa = provName[modules.get(r.a).prov], pb = provName[modules.get(r.b).prov];
   return `<tr><td>${esc(shortMod(r.a))}</td><td>${esc(shortMod(r.b))}</td><td class="num">${r.count}</td><td>${esc(pa)} &harr; ${esc(pb)}</td></tr>`;
 }).join('');
+// Resolution guard: SproutLab's modules are script-globals that call each other
+// constantly, so ZERO cross-file calls means the extractor stopped resolving them
+// (graphifyy 0.9.7+), not that the code decoupled. Say so on the map and in the
+// log instead of rendering a reassuring "no coupling" row.
+const callCount = links.filter(e => e.relation === 'calls').length;
+const xfileCalls = links.filter(e => e.relation === 'calls' && id2file.get(e.source) !== id2file.get(e.target)).length;
+const resolutionBroken = callCount > 200 && xfileCalls === 0;
+if (resolutionBroken) {
+  console.error(`[province-map] WARNING: ${callCount} calls edges but 0 cross-file — graphify is not resolving cross-module calls (pin graphifyy==0.9.6; see session-start.sh). Coupling table is NOT trustworthy.`);
+  roadRows = '<tr><td colspan="4">Cross-file call resolution is BROKEN in this graph build (0 of ' + callCount + ' calls cross a file). Coupling unknown &mdash; not absent. Rebuild with the pinned graphify.</td></tr>';
+}
 if (!roadRows) roadRows = '<tr><td colspan="4">No cross-province coupling detected.</td></tr>';
 
 // connectivity hubs
