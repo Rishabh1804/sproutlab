@@ -11,7 +11,7 @@
 
 Ziva turned one on 2026-09-04. A scout survey found every surface keyed to an age table
 that stops at 12 months. The **Tier-1** items (unsafe or wrong) were fixed in the monthly-update PR:
-child choking/CPR protocols, the fast-breathing threshold, WHO growth 0–24 m with IAP→WHO, the
+child choking/CPR protocols, the fast-breathing threshold, WHO growth 0–24 m with IAP→WHO (the Architect's call, 2026-09-24), the
 12–24 m velocity bands, the vaccine age map (JE-2 / Hep A-2 / Varicella-2), added sugar gated to 2 y,
 and the age-aware diet tips. The **Tier-2** items below are stale or empty rather than unsafe:
 
@@ -57,6 +57,13 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
   - add compound-name self-tests ("milk with sugar", "salt and sugar", "chocolate milk") to the resolver audit.
 
   The e2e suite still can't launch in the remote container (Playwright 1.48 vs chromium-1194).
+
+#### P2 — Cipher Edict V nits from PR #266
+- `renderInfoGrowthDiet` shows "normal" with a check when the weight interval is too short to judge. It should be neutral. This is practically unreachable once a birth weight is on file.
+- `_fdAgeRule` lives in diet.js (Ceres), but qa, quicklog and home call it behind `typeof` fallbacks. Move it next to `_lookupAllByFoodName` in core.js so one resolver owns the boundary.
+- Pre-existing: "shark fish with salt" matches salt@12 first, so the high-mercury guard is skipped (the null guard keys on the first match being fish). "sugar snap peas" now reads 24; that's stricter, so the safe direction.
+- GRAPHIFY_INTEGRATION.md gives 2,843 cross-file calls for 0.9.6 (bisect probe, raw `source_file`) and 2,286 (live baseline, normalized). Normalize the probe and restate a single figure.
+- SYMPTOM_DB breathing: "More than 60 breaths per minute" is the infant emergency line. It is coherent with the new ≥ 40 "fast" line, but Maren should confirm the toddler emergency threshold.
 
 #### P2 — 0–12 m velocity bands above the WHO median
 - **Symptom:** the 9–12 m band (8–13 g/day, 55–100 g/week) sits above the WHO median (~7.5 g/day at 10–12 m). Historical only now that she's past 12 m. The 12–24 m band is sourced (`GROWTH_VELOCITY_12_24`, core.js).

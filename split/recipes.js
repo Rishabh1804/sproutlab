@@ -537,8 +537,8 @@ const RECIPE_EP = {
   fish:{eps:['tender','omega-rich'],noun:'fish',fold:'boneless'}, chicken:{eps:['lean','tender'],noun:'chicken',fold:'shredded'},
   prawn:{eps:['tender','sweet'],noun:'prawn'}, mutton:{eps:['rich','tender'],noun:'mutton',fold:'soft-cooked'},
   // fats & sweeteners
-  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'go easy — added sugar'},
-  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 1'}, oil:{eps:['light'],noun:'oil'},
+  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'no added sugar before 2'},
+  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 2 (added sugar)'}, oil:{eps:['light'],noun:'oil'},
   // spices & herbs
   turmeric:{eps:['golden','earthy'],noun:'turmeric'}, cinnamon:{eps:['warm','sweet'],noun:'cinnamon'},
   cumin:{eps:['warm','earthy'],noun:'cumin'}, coriander:{eps:['fresh','herby'],noun:'coriander'},

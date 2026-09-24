@@ -3190,7 +3190,7 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    // cow milk flips from avoid to safe at 12 months (AGE_RULES 'cow milk' minMonth 12) — 2026-09-24 audit
+    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 2026-09-24 audit
     chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-caution' : 'chip-avoid' }); // checker returns caution (ALLERGENS) at 12 m+
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });
@@ -3792,7 +3792,11 @@ function renderComboHistory() {
   if (!el || comboHistory.length === 0) { if (el) el.innerHTML = ''; return; }
 
   let html = `<div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:6px;">Recent checks</div>`;
-  comboHistory.slice(0, 5).forEach(h => {
+  // Only rows still valid for her age + the current rules (Cipher A1): a pre-PR "jaggery: safe" row
+  // must not keep showing a green check here. Invalid rows are recomputed when re-queried.
+  const validRows = comboHistory.filter(h => typeof _comboCacheValid === 'function' ? _comboCacheValid(h.result) : true);
+  if (validRows.length === 0) { el.innerHTML = ''; return; }
+  validRows.slice(0, 5).forEach(h => {
     const emoji = h.result.verdict === 'safe' ? zi('check') : h.result.verdict === 'caution' ? zi('warn') : zi('warn');
     html += `<div class="combo-hist-item" data-action="showComboHistory" data-arg="${escHtml(h.q)}">
       <div class="combo-hist-q">${emoji} ${escHtml(h.q)}</div>

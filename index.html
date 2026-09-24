@@ -18205,7 +18205,9 @@ const NUTRITION = {
 
 // ── AGE SAFETY RULES ──
 const AGE_RULES = {
-  'honey':    { minMonth:12, reason:'Risk of infant botulism — strictly avoid until 12 months' },
+  // 24 m, not 12 (Cipher A2, 2026-09-24): botulism is the under-1 reason, and from 1 honey is a free
+  // sugar (WHO; US DGA) under the same 24 m added-sugar gate — so every surface says one thing.
+  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2' },
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
@@ -18308,7 +18310,7 @@ const FOOD_EFFECTS = {
     severity:   'critical',      // render chrome (rose); decoupled from foodClass per A-4
     effect:     'infant botulism',
     title:      'Honey before 12 months',
-    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
+    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. From the first birthday the botulism risk is gone, but honey is an added sugar — like jaggery, it waits until 2.',
     watchFor:   ['constipation', 'a weak cry or weak suck', 'unusual floppiness'],
     seekCare:   'If your baby has already had some and any of these appear, see a doctor promptly.',
     confidence: 'high',
@@ -22010,8 +22012,8 @@ const RECIPE_EP = {
   fish:{eps:['tender','omega-rich'],noun:'fish',fold:'boneless'}, chicken:{eps:['lean','tender'],noun:'chicken',fold:'shredded'},
   prawn:{eps:['tender','sweet'],noun:'prawn'}, mutton:{eps:['rich','tender'],noun:'mutton',fold:'soft-cooked'},
   // fats & sweeteners
-  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'go easy — added sugar'},
-  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 1'}, oil:{eps:['light'],noun:'oil'},
+  jaggery:{eps:['caramel-sweet'],noun:'jaggery',strict:'no added sugar before 2'},
+  honey:{eps:['golden'],noun:'honey',strict:'honey — only from age 2 (added sugar)'}, oil:{eps:['light'],noun:'oil'},
   // spices & herbs
   turmeric:{eps:['golden','earthy'],noun:'turmeric'}, cinnamon:{eps:['warm','sweet'],noun:'cinnamon'},
   cumin:{eps:['warm','earthy'],noun:'cumin'}, coriander:{eps:['fresh','herby'],noun:'coriander'},
@@ -43944,7 +43946,7 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    // cow milk flips from avoid to safe at 12 months (AGE_RULES 'cow milk' minMonth 12) — 2026-09-24 audit
+    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 2026-09-24 audit
     chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-caution' : 'chip-avoid' }); // checker returns caution (ALLERGENS) at 12 m+
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });
@@ -44546,7 +44548,11 @@ function renderComboHistory() {
   if (!el || comboHistory.length === 0) { if (el) el.innerHTML = ''; return; }
 
   let html = `<div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:6px;">Recent checks</div>`;
-  comboHistory.slice(0, 5).forEach(h => {
+  // Only rows still valid for her age + the current rules (Cipher A1): a pre-PR "jaggery: safe" row
+  // must not keep showing a green check here. Invalid rows are recomputed when re-queried.
+  const validRows = comboHistory.filter(h => typeof _comboCacheValid === 'function' ? _comboCacheValid(h.result) : true);
+  if (validRows.length === 0) { el.innerHTML = ''; return; }
+  validRows.slice(0, 5).forEach(h => {
     const emoji = h.result.verdict === 'safe' ? zi('check') : h.result.verdict === 'caution' ? zi('warn') : zi('warn');
     html += `<div class="combo-hist-item" data-action="showComboHistory" data-arg="${escHtml(h.q)}">
       <div class="combo-hist-q">${emoji} ${escHtml(h.q)}</div>

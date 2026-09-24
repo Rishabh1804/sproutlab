@@ -2416,7 +2416,9 @@ const NUTRITION = {
 
 // ── AGE SAFETY RULES ──
 const AGE_RULES = {
-  'honey':    { minMonth:12, reason:'Risk of infant botulism — strictly avoid until 12 months' },
+  // 24 m, not 12 (Cipher A2, 2026-09-24): botulism is the under-1 reason, and from 1 honey is a free
+  // sugar (WHO; US DGA) under the same 24 m added-sugar gate — so every surface says one thing.
+  'honey':    { minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2' },
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
@@ -2519,7 +2521,7 @@ const FOOD_EFFECTS = {
     severity:   'critical',      // render chrome (rose); decoupled from foodClass per A-4
     effect:     'infant botulism',
     title:      'Honey before 12 months',
-    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
+    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. From the first birthday the botulism risk is gone, but honey is an added sugar — like jaggery, it waits until 2.',
     watchFor:   ['constipation', 'a weak cry or weak suck', 'unusual floppiness'],
     seekCare:   'If your baby has already had some and any of these appear, see a doctor promptly.',
     confidence: 'high',
