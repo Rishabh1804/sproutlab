@@ -3979,7 +3979,7 @@ const MILESTONE_STANDARDS = {
     { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understands far more than she speaks.', advanced:true, domain:'language', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Uses specific words consistently. Receptive vocabulary is 10–50+ words.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows one-step instructions', icon:zi('list'), desc:'"Bring the shoe", "sit down" — understands and acts on simple requests.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Uses spoon (messily)', icon:zi('spoon'), desc:'Attempts self-feeding with a spoon — will be messy but is great for independence.', advanced:false, domain:'motor', source:'unverified' },
@@ -4202,7 +4202,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — wide range of normal.', advanced:true, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Small but real vocabulary with consistent meanings.', advanced:false, domain:'language', source:'unverified' },
     { text:'Drinks from cup with help', icon:zi('drop'), desc:'Takes sips from an open cup when held.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'"Sit down", "give me" — one-step commands understood and followed.', advanced:false, domain:'cognitive', source:'unverified' },
@@ -4268,7 +4268,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'European expectation for walking is 11–15 months.', advanced:false, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–6 words', icon:zi('chat'), desc:'Small vocabulary with consistent meaning. Understands many more.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'Acts on one-step commands like "give me the ball".', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Self-feeding with a spoon — messy but developing.', advanced:false, domain:'motor', source:'unverified' },
@@ -4334,7 +4334,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — early for Chinese standard.', advanced:true, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 meaningful words', icon:zi('chat'), desc:'Small vocabulary used consistently and correctly.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows one-step instructions', icon:zi('list'), desc:'Understands and acts on simple commands.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats food pieces independently.', advanced:false, domain:'motor', source:'unverified' },

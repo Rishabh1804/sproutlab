@@ -19813,7 +19813,7 @@ const MILESTONE_STANDARDS = {
     { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understands far more than she speaks.', advanced:true, domain:'language', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Uses specific words consistently. Receptive vocabulary is 10–50+ words.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows one-step instructions', icon:zi('list'), desc:'"Bring the shoe", "sit down" — understands and acts on simple requests.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Uses spoon (messily)', icon:zi('spoon'), desc:'Attempts self-feeding with a spoon — will be messy but is great for independence.', advanced:false, domain:'motor', source:'unverified' },
@@ -20036,7 +20036,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — wide range of normal.', advanced:true, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Small but real vocabulary with consistent meanings.', advanced:false, domain:'language', source:'unverified' },
     { text:'Drinks from cup with help', icon:zi('drop'), desc:'Takes sips from an open cup when held.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'"Sit down", "give me" — one-step commands understood and followed.', advanced:false, domain:'cognitive', source:'unverified' },
@@ -20102,7 +20102,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'European expectation for walking is 11–15 months.', advanced:false, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–6 words', icon:zi('chat'), desc:'Small vocabulary with consistent meaning. Understands many more.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'Acts on one-step commands like "give me the ball".', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Self-feeding with a spoon — messy but developing.', advanced:false, domain:'motor', source:'unverified' },
@@ -20168,7 +20168,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — early for Chinese standard.', advanced:true, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 meaningful words', icon:zi('chat'), desc:'Small vocabulary used consistently and correctly.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows one-step instructions', icon:zi('list'), desc:'Understands and acts on simple commands.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats food pieces independently.', advanced:false, domain:'motor', source:'unverified' },
@@ -24545,6 +24545,14 @@ function calcMedicalScore() {
 
 // ── MILESTONE SCORE ──
 
+// _msKeywords — the loose keyword set used to match a standards row against a
+// logged milestone (score + home lookout). Stopwords keep toddler rows
+// ("…with…", "…other…") from matching unrelated milestones.
+const _MS_STOP = { with:1, your:1, that:1, when:1, more:1, from:1, them:1, then:1, into:1, over:1, like:1, what:1, this:1, have:1, they:1, other:1, things:1, least:1 };
+function _msKeywords(text) {
+  return String(text || '').toLowerCase().split(/\s+/).filter(w => w.length > 3 && !_MS_STOP[w]);
+}
+
 function calcMilestoneScore() {
   const ageM = ageAt().months;
   const ageMo = Math.floor(ageM);
@@ -24565,10 +24573,8 @@ function calcMilestoneScore() {
   milestones.forEach(m => { msPctMap[m.text.toLowerCase().trim()] = MS_STAGE_META[m.status]?.pct || 0; });
   let expectedProgress = 0;
   let expectedMatchCount = 0;
-  // Stopwords keep toddler rows ("…with…", "…your…") from matching unrelated milestones.
-  const _msStop = { with:1, your:1, that:1, when:1, more:1, from:1, them:1, then:1, into:1, over:1, like:1, what:1, this:1, have:1, they:1, other:1, things:1, least:1 };
   expectedItems.forEach(it => {
-    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !_msStop[w]);
+    const keywords = _msKeywords(it.text);
     let bestPct = 0;
     Object.entries(msPctMap).forEach(([text, pct]) => {
       if (keywords.some(kw => text.includes(kw)) && pct > bestPct) bestPct = pct;
@@ -39874,7 +39880,7 @@ function renderTodayPlan() {
   const expectedItems = (getUpcomingMilestones()[currentBracket] || []).filter(it => !it.advanced);
   const doneTexts = new Set(milestones.filter(m => isMsDone(m) || isMsActive(m)).map(m => m.text.toLowerCase().trim()));
   const notStarted = expectedItems.filter(it => {
-    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const keywords = _msKeywords(it.text);
     return !([...doneTexts].some(dt => keywords.some(kw => dt.includes(kw))));
   });
   if (notStarted.length > 0) {
@@ -49713,7 +49719,7 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old (' + months + ' months)');
+  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
   lines.push('BORN Born 4 Sep 2025 · Jamshedpur');
   lines.push('');
 
@@ -49810,7 +49816,7 @@ function showFullDoctorSummary() {
       </style></head><body>`);
     
     printWin.document.write(`<h1>${zi('steth')} Paediatrician Visit Summary</h1>`);
-    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)} (${months} months) · Generated ${formatDate(today())}</div>`);
+    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)}${months >= 12 ? ' (' + months + ' months)' : ''} · Generated ${formatDate(today())}</div>`);
     printWin.document.write(`<div class="actions">`);
     printWin.document.write(`<button class="btn-print" data-action="printDashboard">${zi('note')} Print</button>`);
     printWin.document.write(`<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('raw').textContent).then(()=>this.textContent='Copied!')">${zi('note')} Copy</button>`);

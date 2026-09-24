@@ -2245,6 +2245,14 @@ function calcMedicalScore() {
 
 // ── MILESTONE SCORE ──
 
+// _msKeywords — the loose keyword set used to match a standards row against a
+// logged milestone (score + home lookout). Stopwords keep toddler rows
+// ("…with…", "…other…") from matching unrelated milestones.
+const _MS_STOP = { with:1, your:1, that:1, when:1, more:1, from:1, them:1, then:1, into:1, over:1, like:1, what:1, this:1, have:1, they:1, other:1, things:1, least:1 };
+function _msKeywords(text) {
+  return String(text || '').toLowerCase().split(/\s+/).filter(w => w.length > 3 && !_MS_STOP[w]);
+}
+
 function calcMilestoneScore() {
   const ageM = ageAt().months;
   const ageMo = Math.floor(ageM);
@@ -2265,10 +2273,8 @@ function calcMilestoneScore() {
   milestones.forEach(m => { msPctMap[m.text.toLowerCase().trim()] = MS_STAGE_META[m.status]?.pct || 0; });
   let expectedProgress = 0;
   let expectedMatchCount = 0;
-  // Stopwords keep toddler rows ("…with…", "…your…") from matching unrelated milestones.
-  const _msStop = { with:1, your:1, that:1, when:1, more:1, from:1, them:1, then:1, into:1, over:1, like:1, what:1, this:1, have:1, they:1, other:1, things:1, least:1 };
   expectedItems.forEach(it => {
-    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !_msStop[w]);
+    const keywords = _msKeywords(it.text);
     let bestPct = 0;
     Object.entries(msPctMap).forEach(([text, pct]) => {
       if (keywords.some(kw => text.includes(kw)) && pct > bestPct) bestPct = pct;

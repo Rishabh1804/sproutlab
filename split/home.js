@@ -10082,7 +10082,7 @@ function renderTodayPlan() {
   const expectedItems = (getUpcomingMilestones()[currentBracket] || []).filter(it => !it.advanced);
   const doneTexts = new Set(milestones.filter(m => isMsDone(m) || isMsActive(m)).map(m => m.text.toLowerCase().trim()));
   const notStarted = expectedItems.filter(it => {
-    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const keywords = _msKeywords(it.text);
     return !([...doneTexts].some(dt => keywords.some(kw => dt.includes(kw))));
   });
   if (notStarted.length > 0) {
