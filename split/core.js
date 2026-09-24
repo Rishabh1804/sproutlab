@@ -264,7 +264,9 @@ function medDayVal(m, ds) {
       fatFood: fat ? fat.fatFood : null, fatDelta: fat ? fat.fatDelta : null };
   }
   if (ps.every(function(p) { return p && p.status === 'skipped'; })) return { status: 'skipped' };
-  return { status: 'partial', givenAt: done.length ? done[0].givenAt : null };
+  // 'partial' only when at least one dose was actually given (Cipher A4).
+  if (!done.length) return ps.some(function(p) { return p && p.status === 'skipped'; }) ? { status: 'skipped' } : undefined;
+  return { status: 'partial', givenAt: done[0].givenAt };
 }
 // One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
 // stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
@@ -2002,7 +2004,9 @@ function computeMedicalModifier() {
   if (supp && supp.length > 0) {
     const primary = supp[0];
     const rate = primary.adherenceRate;
-    if (rate >= 90) suppVal = 100;
+    // A supplement started today has no counted days yet — keep the neutral 70 (Cipher).
+    if (!primary.totalDays) suppVal = 70;
+    else if (rate >= 90) suppVal = 100;
     else if (rate >= 70) suppVal = 80;
     else if (rate >= 50) suppVal = 55;
     else suppVal = 30;
@@ -2333,6 +2337,7 @@ function calcMedicalScore() {
   let suppScore = 100;
   if (activeMeds.length > 0) {
     let daysChecked = 0;
+    const _vdScore = vitDSupplement();   // hoisted out of the day loop (Cipher)
     for (let i = 0; i < 7; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const ds = toDateStr(d);
@@ -2340,8 +2345,8 @@ function calcMedicalScore() {
       if (dayChecks) {
         // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
         // Her Vitamin D supplement counts a day only when every dose was given (Kael V-K-270-22).
-        const _vd = vitDSupplement();
-        const anyDone = _vd ? medCheckIsDone(medDayVal(_vd, ds)) : Object.values(dayChecks).some(v => medCheckIsDone(v));
+        const anyDone = (_vdScore && !(_vdScore.start && ds < _vdScore.start)) ? medCheckIsDone(medDayVal(_vdScore, ds))
+          : Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }

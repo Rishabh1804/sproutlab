@@ -764,7 +764,8 @@ function _islMedicalData(startDate, endDate) {
       });
       // A day counts only when her Vitamin D supplement's EVERY dose was given (Kael V-K-270-22);
       // a twice-daily day part-way is 'partial', never a full day.
-      if (vdMed) {
+      // Before the supplement's start (e.g. the drops era) the any-dose path counts (Cipher A3).
+      if (vdMed && !(vdMed.start && ds < vdMed.start)) {
         var dv = parseMedCheck(medDayVal(vdMed, ds));
         if (dv && (dv.status === 'done' || dv.status === 'late')) suppDays++;
         else if (dv && dv.status === 'partial') suppPartial++;

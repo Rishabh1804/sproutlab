@@ -2855,9 +2855,13 @@ function _tsfGetNudges() {
         return pm !== null && pm >= pat.windowStart && pm <= pat.windowEnd;
       });
     } else if (pat.type === 'med' && pat.medName) {
+      // A dose-slot nudge only while that slot is the med's one 'due' dose — never an unlogged
+      // earlier dose beside Home's "Done now" (Cipher A1, the double-dose invariant).
+      const _m = (meds || []).filter(function(m) { return m.active && medDoseSlots(m).some(function(sl) { return sl.key === pat.medName; }); })[0];
+      const _x = _m ? medSlotStates(_m).filter(function(x) { return x.key === pat.medName; })[0] : null;
       // V-K-67: schema-aware — handles both legacy string and new object shapes.
       const mc = todayMC[pat.medName];
-      alreadyLogged = medCheckIsDone(mc) || medCheckSkipped(mc);
+      alreadyLogged = _x ? _x.state !== 'due' : (medCheckIsDone(mc) || medCheckSkipped(mc));
     }
 
     if (alreadyLogged) return;

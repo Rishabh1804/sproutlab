@@ -722,9 +722,9 @@ function renderRemindersAndAlerts() {
           <div class="supp-alert-icon">${zi('clock')}</div>
           <div class="supp-alert-title">Later today — ${escHtml(m.label || m.name)}</div>
         </div>
-        <div class="supp-alert-action">
+        ${states.some(x => x.state === 'due' || x.state === 'unlogged') ? '' : `<div class="supp-alert-action">
           <button class="supp-skip-btn supp-adjust-btn" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Given early? Log time</button>
-        </div>
+        </div>`}
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fromH ? 'due from ' + fromH : 'later today'}</div>
       </div>`;
       return;
@@ -6754,15 +6754,15 @@ function _obCheckVitD3Needed(intent) {
   var dayEntry = medChecks ? medChecks[todayStr] : null;
   var d3 = vitDSupplement();
   if (!d3) return false;
-  // Per dose slot. "Give before leaving" asks only for a slot already due (not the evening
-  // dose at 10 AM); packing counts any dose still to come today (bring the bottle).
-  return activeMedDoses().some(function(s) {
-    if (s.baseName !== d3.name) return false;
-    if (intent !== 'outing-pack' && !medSlotDueNow(s)) return false;
-    var todayCheck = dayEntry ? dayEntry[s.name] : null;
-    if (medCheckIsDone(todayCheck)) return false;
-    if (intent === 'overlay' && medCheckSkipped(todayCheck)) return false;
-    return true;
+  // "Give before leaving" only for the med's one 'due' dose — never an unlogged earlier dose
+  // (Cipher A2); packing counts any dose still to come today (bring the bottle).
+  if (intent !== 'outing-pack') {
+    return medSlotStates(d3).some(function(x) {
+      return x.state === 'due' && !(intent === 'overlay' && x.parsed && x.parsed.status === 'skipped');
+    });
+  }
+  return medDoseSlots(d3).some(function(sl) {
+    return !medCheckIsDone(medSlotRecord(d3, todayStr, sl.key)) && medSlotApplies(d3, todayStr, sl.label);
   });
 }
 
@@ -9888,7 +9888,7 @@ function renderTodayPlan() {
     if (!d3Med) return;
     const _slotTime = { '': 'After breakfast', morning: 'After breakfast', afternoon: 'After lunch', evening: 'Evening' };
     medDoseSlots(d3Med).filter(sl => labels.indexOf(sl.label) !== -1).forEach(sl => {
-      const d3Parsed = parseMedCheck(medChecks[todayStr] && medChecks[todayStr][sl.key]);
+      const d3Parsed = parseMedCheck(medSlotRecord(d3Med, todayStr, sl.key));
       const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
       const d3Late = !!(d3Parsed && d3Parsed.status === 'late');
       const d3Given = d3Parsed && d3Parsed.givenAt ? d3Parsed.givenAt : null;

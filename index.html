@@ -23612,7 +23612,9 @@ function medDayVal(m, ds) {
       fatFood: fat ? fat.fatFood : null, fatDelta: fat ? fat.fatDelta : null };
   }
   if (ps.every(function(p) { return p && p.status === 'skipped'; })) return { status: 'skipped' };
-  return { status: 'partial', givenAt: done.length ? done[0].givenAt : null };
+  // 'partial' only when at least one dose was actually given (Cipher A4).
+  if (!done.length) return ps.some(function(p) { return p && p.status === 'skipped'; }) ? { status: 'skipped' } : undefined;
+  return { status: 'partial', givenAt: done[0].givenAt };
 }
 // One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
 // stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
@@ -25350,7 +25352,9 @@ function computeMedicalModifier() {
   if (supp && supp.length > 0) {
     const primary = supp[0];
     const rate = primary.adherenceRate;
-    if (rate >= 90) suppVal = 100;
+    // A supplement started today has no counted days yet — keep the neutral 70 (Cipher).
+    if (!primary.totalDays) suppVal = 70;
+    else if (rate >= 90) suppVal = 100;
     else if (rate >= 70) suppVal = 80;
     else if (rate >= 50) suppVal = 55;
     else suppVal = 30;
@@ -25681,6 +25685,7 @@ function calcMedicalScore() {
   let suppScore = 100;
   if (activeMeds.length > 0) {
     let daysChecked = 0;
+    const _vdScore = vitDSupplement();   // hoisted out of the day loop (Cipher)
     for (let i = 0; i < 7; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const ds = toDateStr(d);
@@ -25688,8 +25693,8 @@ function calcMedicalScore() {
       if (dayChecks) {
         // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
         // Her Vitamin D supplement counts a day only when every dose was given (Kael V-K-270-22).
-        const _vd = vitDSupplement();
-        const anyDone = _vd ? medCheckIsDone(medDayVal(_vd, ds)) : Object.values(dayChecks).some(v => medCheckIsDone(v));
+        const anyDone = (_vdScore && !(_vdScore.start && ds < _vdScore.start)) ? medCheckIsDone(medDayVal(_vdScore, ds))
+          : Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }
@@ -31797,9 +31802,9 @@ function renderRemindersAndAlerts() {
           <div class="supp-alert-icon">${zi('clock')}</div>
           <div class="supp-alert-title">Later today — ${escHtml(m.label || m.name)}</div>
         </div>
-        <div class="supp-alert-action">
+        ${states.some(x => x.state === 'due' || x.state === 'unlogged') ? '' : `<div class="supp-alert-action">
           <button class="supp-skip-btn supp-adjust-btn" data-action="openMedDoneAt" data-arg="${escHtml(m.name)}" data-arg2="${idx}">${zi('clock')} Given early? Log time</button>
-        </div>
+        </div>`}
         <div class="supp-alert-detail">${m.dose ? escHtml(m.dose) + ' · ' : ''}${fromH ? 'due from ' + fromH : 'later today'}</div>
       </div>`;
       return;
@@ -37829,15 +37834,15 @@ function _obCheckVitD3Needed(intent) {
   var dayEntry = medChecks ? medChecks[todayStr] : null;
   var d3 = vitDSupplement();
   if (!d3) return false;
-  // Per dose slot. "Give before leaving" asks only for a slot already due (not the evening
-  // dose at 10 AM); packing counts any dose still to come today (bring the bottle).
-  return activeMedDoses().some(function(s) {
-    if (s.baseName !== d3.name) return false;
-    if (intent !== 'outing-pack' && !medSlotDueNow(s)) return false;
-    var todayCheck = dayEntry ? dayEntry[s.name] : null;
-    if (medCheckIsDone(todayCheck)) return false;
-    if (intent === 'overlay' && medCheckSkipped(todayCheck)) return false;
-    return true;
+  // "Give before leaving" only for the med's one 'due' dose — never an unlogged earlier dose
+  // (Cipher A2); packing counts any dose still to come today (bring the bottle).
+  if (intent !== 'outing-pack') {
+    return medSlotStates(d3).some(function(x) {
+      return x.state === 'due' && !(intent === 'overlay' && x.parsed && x.parsed.status === 'skipped');
+    });
+  }
+  return medDoseSlots(d3).some(function(sl) {
+    return !medCheckIsDone(medSlotRecord(d3, todayStr, sl.key)) && medSlotApplies(d3, todayStr, sl.label);
   });
 }
 
@@ -40963,7 +40968,7 @@ function renderTodayPlan() {
     if (!d3Med) return;
     const _slotTime = { '': 'After breakfast', morning: 'After breakfast', afternoon: 'After lunch', evening: 'Evening' };
     medDoseSlots(d3Med).filter(sl => labels.indexOf(sl.label) !== -1).forEach(sl => {
-      const d3Parsed = parseMedCheck(medChecks[todayStr] && medChecks[todayStr][sl.key]);
+      const d3Parsed = parseMedCheck(medSlotRecord(d3Med, todayStr, sl.key));
       const d3Done = !!(d3Parsed && (d3Parsed.status === 'done' || d3Parsed.status === 'late'));
       const d3Late = !!(d3Parsed && d3Parsed.status === 'late');
       const d3Given = d3Parsed && d3Parsed.givenAt ? d3Parsed.givenAt : null;
@@ -52872,7 +52877,7 @@ function orderMedicalCards() {
   // records and (b) the T1-6 `cleared` sentinel that an undone-skip produces — both leave a
   // truthy object in the slot but neither is a done dose. Use the same parsed semantics every
   // other medChecks reader does.
-  const medsPending = activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).length;
+  const medsPending = activeMeds.filter(m => { const r = medDoseRecord(m, todayKey); return !medCheckIsDone(r) && !medCheckSkipped(r); }).length;
 
   // Build ordered list: stats always first, then priority cards
   const cards = [];
@@ -62363,7 +62368,8 @@ function _islMedicalData(startDate, endDate) {
       });
       // A day counts only when her Vitamin D supplement's EVERY dose was given (Kael V-K-270-22);
       // a twice-daily day part-way is 'partial', never a full day.
-      if (vdMed) {
+      // Before the supplement's start (e.g. the drops era) the any-dose path counts (Cipher A3).
+      if (vdMed && !(vdMed.start && ds < vdMed.start)) {
         var dv = parseMedCheck(medDayVal(vdMed, ds));
         if (dv && (dv.status === 'done' || dv.status === 'late')) suppDays++;
         else if (dv && dv.status === 'partial') suppPartial++;
@@ -74823,9 +74829,13 @@ function _tsfGetNudges() {
         return pm !== null && pm >= pat.windowStart && pm <= pat.windowEnd;
       });
     } else if (pat.type === 'med' && pat.medName) {
+      // A dose-slot nudge only while that slot is the med's one 'due' dose — never an unlogged
+      // earlier dose beside Home's "Done now" (Cipher A1, the double-dose invariant).
+      const _m = (meds || []).filter(function(m) { return m.active && medDoseSlots(m).some(function(sl) { return sl.key === pat.medName; }); })[0];
+      const _x = _m ? medSlotStates(_m).filter(function(x) { return x.key === pat.medName; })[0] : null;
       // V-K-67: schema-aware — handles both legacy string and new object shapes.
       const mc = todayMC[pat.medName];
-      alreadyLogged = medCheckIsDone(mc) || medCheckSkipped(mc);
+      alreadyLogged = _x ? _x.state !== 'due' : (medCheckIsDone(mc) || medCheckSkipped(mc));
     }
 
     if (alreadyLogged) return;
@@ -83530,7 +83540,7 @@ const SYNC_RENDER_DEPS = {
   [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
   [KEYS.visits]:            { global: 'visits',      renderers: { 'track:medical': ['renderMedicalStats'] } },
   [KEYS.doctors]:           { global: 'doctors',     renderers: { 'track:medical': ['renderDoctorPrep'] } },
-  [KEYS.medChecks]:         { global: 'medChecks',   renderers: { 'track:medical': ['renderMedicalStats', 'renderMedD3PatternCard'] } }, // T1-2: pattern card joins the sync push render list so it live-updates when device A's Done propagates to device B
+  [KEYS.medChecks]:         { global: 'medChecks',   renderers: { home: ['renderRemindersAndAlerts', 'renderHomeContextAlerts'], 'track:medical': ['renderMedicalStats', 'renderMedD3PatternCard'] } }, // T1-2: pattern card joins the sync push render list so it live-updates when device A's Done propagates to device B
   [KEYS.feverEpisodes]:     { global: null, renderers: { home: ['renderHomeFeverBanner'],     'track:medical': ['renderFeverEpisodeCard'] } },
   [KEYS.diarrhoeaEpisodes]: { global: null, renderers: { home: ['renderHomeDiarrhoeaBanner'], 'track:medical': ['renderDiarrhoeaEpisodeCard'] } },
   [KEYS.vomitingEpisodes]:  { global: null, renderers: { home: ['renderHomeVomitingBanner'],  'track:medical': ['renderVomitingEpisodeCard'] } },

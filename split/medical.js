@@ -2298,7 +2298,7 @@ function orderMedicalCards() {
   // records and (b) the T1-6 `cleared` sentinel that an undone-skip produces — both leave a
   // truthy object in the slot but neither is a done dose. Use the same parsed semantics every
   // other medChecks reader does.
-  const medsPending = activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).length;
+  const medsPending = activeMeds.filter(m => { const r = medDoseRecord(m, todayKey); return !medCheckIsDone(r) && !medCheckSkipped(r); }).length;
 
   // Build ordered list: stats always first, then priority cards
   const cards = [];
