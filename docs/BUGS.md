@@ -15,10 +15,23 @@ child choking/CPR protocols, the fast-breathing threshold, WHO growth 0–24 m w
 12–24 m velocity bands, the vaccine age map (JE-2 / Hep A-2 / Varicella-2), added sugar gated to 2 y,
 and the age-aware diet tips. The **Tier-2** items below are stale or empty rather than unsafe:
 
+#### Progress — 12–24 m expansion PR 1 (#268): development + teeth
+- **Fixed in #268:** MILESTONE_STANDARDS reach 24 m (who 13–24; iap/eu/cn borrow them per month); Upcoming, next-milestone, lookouts and score move past 12; the age copy grows ("1 year 2 months"); 2nd-birthday event; toddler activities (and the `msStatus` gate bug); teething lookout to 33 m; the new tooth chart (Milestones → Library, synced `ziva_teeth`).
+- **Still open from #268 (Governor deferrals):**
+  - *Receive-side shadow after a merge hook (Kael V-K-268-4b, systemic):* when `mergeOnReceive` returns a value that differs from the remote, `_syncShadow[key]` holds the merged value, so a local-newer entry never flows back up until the next local edit. Affects `teeth`, `milestoneSuppress` and `activityMeta` alike. Fix: set the shadow to the remote value and queue a `syncWrite` after `_remoteWriteDepth--`. The push side for teeth is fixed in #268.
+  - *Evidence-key resolver (Kael V-K-268-5):* 48 of 102 toddler rows resolve to a generic short key by substring (walk / point / first_word). Four wrong ones were reworded; an optional `evidenceKey` row field honoured by `_msResolveEvidenceKey` (Maren) is the robust fix.
+  - *Kael Region 30K headroom (V-K-268-9):* about 29.2K after #268 (≈ 800 to the trigger). Scope the Kael successor split before the next large engine or data addition; MILESTONE_STANDARDS alone is about 450 lines.
+  - *Borrowed-standard label (V-K-268-15):* rows borrowed from WHO report `standardKey:'iap'` etc.; consider `borrowedFrom:'who'` on the window.
+  - *Past 24 months (Maren V-M-268-13, Kael V-K-268-14):* the milestone windows end at 26 m (≈ day 791, 2 Nov 2027), the Upcoming list keeps offering the 24 m CDC rows, and the activity list drops to a few infant-worded rows after 24 m. Extend with CDC 30 m / 3 y before mid-2027, alongside the growth-table horizon above.
+  - *Tooth chart (Vela V-V-268 deferral):* recorded teeth don't appear in the Activity Log, Today So Far or the Milestone Timeline; the chart sits under Library though recording is a Log-type action. Teeth carry `role="button"` but no `tabindex`/key handler (Cipher nit 3; app-wide, no non-native `data-action` element handles Enter/Space).
+  - *Two window ends (Cipher nit 5):* windows return `expectedEnd` (end − 1) for display while status is decided at `endBracket * 30.44`; on the day between, `_msWindowBandLabel` says "late band". Harmless; consider one `expectedEndExclusive`.
+  - *Units (Vela V-V-278, Maren V-M-268-12):* hero/header speak years; windows, the Upcoming label ("12–15 months") and the in-window "Ziva is 12m 20d" narration (home.js, 30.44-day months) speak months. Doctor share/print now append total months. Decide one convention for the in-window narration.
+  - *Pre-existing, surfaced:* `renderActivities` interpolates `a.title`/`a.desc` unescaped (static content, HR-4); the Activities list uses lavender for Sensory while milestones use amber; the curd "room temperature only" rule (data.js COMBO_RECIPES) has weak evidence (Ceres V-C-268-3, Kael to decide); `home.js` snack tip "ragi biscuit" (most contain sugar); the symptom guide lists 38.3 °C under emergency care, which over-escalates for a toddler (Maren V-M-268-1).
+
 #### P1 — MILESTONE_STANDARDS stop at 12 months (data.js)
 - **Symptom:** All four standards (who/iap/eu/cn) have keys 6–12 only. From 13 m, `renderUpcomingMilestones` says "No upcoming milestones data for this age range". The home next-milestone card returns nothing (`br < mo`), the "Expected at 12 months" copy stays pinned, and the milestone score completion freezes.
 - **Fix shape:** add 13–24 m rows from CDC Learn the Signs (15/18/24 m), the WHO Motor Development Study windows and IAP. The source work is Maren-primary.
-- **Live now (2026-09-24):** the parents' checklist shows she already meets every 12 m and 15 m marker (walking since ~10 m, 3+ words at 12 m). So the empty "upcoming milestones" state and the frozen milestone score are what they see today. **Next product priority.**
+- **Live now (2026-09-24):** the parents' checklist shows she already meets every 12 m and 15 m marker (walking since ~10 m, 3+ words at 12 m). So the empty "upcoming milestones" state and the frozen milestone score are what they see today. **Fixed in #268** (see Progress above).
 
 #### P1 — SLEEP_STANDARDS stop at 12 months; nap-count rules disagree
 - **Symptom:** `getSleepTargets` clamps at 12. The `napCount` recommendation (WHO/IAP 9–18 m) expects at least 2 naps, the Q&A expects 2 before 15 m, while `SLEEP_STANDARDS` allows [1,2] and quicklog says the 2→1 transition from 12 m is normal. So a 1-nap day reads "One nap short".
@@ -28,7 +41,7 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Symptom:** no annual influenza after 12 m. The PCV booster sits at 12 m where IAP says 12–15 m, and "PCV Booster-2 @15m" is non-standard. VACC_SERIES has no Hep A / Varicella / JE / MMR-2 series. Nothing auto-schedules the next dose after `_vaccMarkDone`.
 - **Fix shape:** a line-by-line IAP 2023 reconciliation. Maren-primary. (The age-map half of this is fixed and gated by `audit-vacc-age-map-v1.sh`.)
 
-#### P2 — Age copy and helpers still speak "infant"
+#### P2 — Age copy and helpers still speak "infant" (partly fixed in #268: hero, Q&A, 2nd birthday, activities, teething)
 - Hero reads "12 months, 20 days" rather than "1 year" (home.js hero, Q&A header).
 - `getZivaMonthDays` has no second-birthday entry. The CareTicket target text says "set for 6–12 months" (intelligence-caretickets.js). DYNAMIC_ACTIVITIES drops talk/music tips after 12 m and has no 12 m+ tips. Teething lookouts miss the 13–19 m molars. The variety target and texture ladder top out at "finger". The template.html help text is written for 6–8 months. The poop-frequency guide caps at 9–12 m.
 

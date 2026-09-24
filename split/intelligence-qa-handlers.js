@@ -331,7 +331,7 @@ function _qaRoutine() {
     headline: 'Based on last 7 days avg',
     icon: 'clock',
     domain: 'indigo',
-    sections: [{ label: age.months + ' months ' + age.days + ' days old', icon: zi('baby'), items: items }]
+    sections: [{ label: fmtAgeLong(age.months, age.days) + ' old', icon: zi('baby'), items: items }]
   };
 }
 
@@ -532,7 +532,7 @@ function _qaDoctorPrep() {
   var items = [];
 
   // Age
-  items.push({ text: 'Age: ' + age.months + ' months ' + age.days + ' days', signal: 'neutral', icon: zi('baby') });
+  items.push({ text: 'Age: ' + fmtAgeLong(age.months, age.days), signal: 'neutral', icon: zi('baby') });
 
   // Growth
   var gd = getDomainData('medical', _offsetDateStr(today(), -30), today());
@@ -613,7 +613,7 @@ function _qaDoctorPrep() {
 
   return {
     title: 'Doctor Visit Prep',
-    headline: 'Ziva \u00b7 ' + age.months + ' months',
+    headline: 'Ziva \u00b7 ' + fmtAgeMonths(age.months),
     icon: 'steth',
     domain: 'sky',
     sections: sections,
@@ -697,7 +697,7 @@ function _qaShareToday() {
 function formatSummaryAsText(summary) {
   var age = ageAt();
   var lines = [];
-  lines.push('*Ziva (' + age.months + 'mo ' + age.days + 'd) \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
+  lines.push('*Ziva (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
   if (summary.scores && summary.scores.overall !== null) lines.push('Score: ' + summary.scores.overall + '/100');
   lines.push('');
 
@@ -739,7 +739,7 @@ function qaAnswerAge() {
 
   return {
     title: 'Ziva\'s Age',
-    headline: age.months + ' months ' + age.days + ' days old',
+    headline: fmtAgeLong(age.months, age.days) + ' old',
     icon: 'baby',
     domain: 'rose',
     sections: [{ label: 'Details', icon: zi('clock'), items: [
@@ -1702,7 +1702,7 @@ function qaAnswerNaps(intentId) {
     var expectedMin = ageMo < 4 ? 3 : ageMo < 9 ? 2 : ageMo < 15 ? 2 : 1;
     var expectedMax = ageMo < 4 ? 4 : ageMo < 9 ? 3 : ageMo < 15 ? 2 : 1;
     if (avgNaps >= expectedMin && avgNaps <= expectedMax + 0.5) {
-      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + ageMo + ' months', signal: 'good' });
+      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + fmtAgeMonths(ageMo), signal: 'good' });
     } else if (avgNaps < expectedMin) {
       dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — fewer than expected ' + expectedNaps + ' for this age', signal: 'warn' });
     } else {
@@ -2338,7 +2338,7 @@ function qaAnswerTexture(intentId) {
     if (currentIdx >= expectedIdx) {
       dataItems.push({ text: 'Texture is age-appropriate or ahead — great progress', signal: 'good' });
     } else {
-      dataItems.push({ text: 'Currently at ' + texLabels[tex.currentStage] + ' stage — expected ' + texLabels[expectedTex] + ' by ' + ageMo + ' months', signal: 'warn' });
+      dataItems.push({ text: 'Currently at ' + texLabels[tex.currentStage] + ' stage — expected ' + texLabels[expectedTex] + ' by ' + fmtAgeMonths(ageMo), signal: 'warn' });
       actionItems.push({ text: 'Gradually advance to ' + texLabels[expectedTex] + ' textures', signal: 'action' });
     }
 
@@ -2745,6 +2745,20 @@ function qaAnswerMilestoneSpecific(intentId) {
 
   var dataItems = [];
   var actionItems = [];
+
+  // Teeth: answer from the tooth chart (teethLog), not the milestone list.
+  if (targetKeyword === 'teeth' && typeof teethSummary === 'function') {
+    var ts = teethSummary();
+    var tHead = ts.count ? ts.count + ' of 20 baby teeth recorded' : 'No teeth recorded yet';
+    if (ts.latest) dataItems.push({ text: 'Latest: ' + ts.latest.name + ' (' + ts.latest.date + ')', signal: 'good' });
+    ts.next.forEach(function(r) { dataItems.push({ text: 'Coming next: ' + r, signal: 'info' }); });
+    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth she has on the Teeth chart (Milestones, Library)', signal: 'action' });
+    actionItems.push({ text: 'Teething does not cause fever. If she has a temperature, look for another cause.', signal: 'info' });
+    var tSections = [];
+    if (dataItems.length) tSections.push({ label: 'TEETH', icon: zi('tooth'), items: dataItems });
+    tSections.push({ label: 'WHAT TO DO', icon: zi('bulb'), items: actionItems });
+    return { icon: 'tooth', domain: 'lav', title: tHead, headline: tHead, sections: tSections, confidence: null, dataGap: null };
+  }
 
   // Find matching milestones
   var matched = (milestones || []).filter(function(m) {

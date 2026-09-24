@@ -161,6 +161,9 @@ const SYNC_KEYS = {
   // (V-M-116 — last-write-wins on whole-doc is unsafe for per-key state).
   [KEYS.milestoneSuppress]:  { collection: 'milestones',  model: 'single-doc' },
   [KEYS.activityMeta]:       { collection: 'activities',  model: 'single-doc' },
+  // Tooth chart — per-tooth newest-ts merge via _postReceiveTeeth (a tombstone
+  // with a newer ts beats an older eruption date, so removals don't resurrect).
+  [KEYS.teeth]:              { collection: 'milestones',  model: 'single-doc' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -414,6 +417,7 @@ const SYNC_RENDER_DEPS = {
   // in-place — used by _postReceiveMilestones for migration + dedupe).
   [KEYS.milestoneSuppress]: { global: 'milestoneSuppress', mergeOnReceive: '_postReceiveMilestoneSuppress', renderers: { home: ['renderHome'], 'track:milestones': ['renderActiveMilestones'] } },
   [KEYS.activityMeta]:      { global: 'activityMeta',     mergeOnReceive: '_postReceiveActivityMeta',     renderers: { home: ['renderHome'] } },
+  [KEYS.teeth]:             { global: 'teethLog',         mergeOnReceive: '_postReceiveTeeth',            renderers: { 'track:milestones': ['renderMsTeeth'] } },
 };
 
 // _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module
@@ -450,6 +454,7 @@ function _syncSetGlobal(name, value) {
     // (closure-pinning reader added, OR in-place scrapbook mutator like
     // a future dedupeScrapbookByText).
     case 'scrapbook':    scrapbook    = value; return true;
+    case 'teethLog':     teethLog     = value; return true;
     default: return false;
   }
 }
@@ -470,6 +475,7 @@ function _syncGetGlobal(name) {
     case '_careTickets': return _careTickets;
     case 'activityLog':  return activityLog;
     case 'scrapbook':    return scrapbook;
+    case 'teethLog':     return teethLog;
     default: return undefined;
   }
 }
@@ -598,6 +604,25 @@ function _postReceiveMilestoneSuppress(remoteMap, localMap) {
   var now = Date.now();
   Object.keys(merged).forEach(function(k) {
     if (merged[k] <= now) delete merged[k];
+  });
+  return merged;
+}
+
+// _postReceiveTeeth — tooth-chart merge. Shape { [toothId]: { date, ts } };
+// per tooth the entry with the newer ts wins, so a removal (date:null) made
+// after a remote eruption date survives, and vice versa. Malformed entries drop.
+function _postReceiveTeeth(remoteMap, localMap) {
+  var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
+  var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
+  var ok = function(k, v) {
+    return /^[A-T]$/.test(k) && v && typeof v === 'object' && typeof v.ts === 'number' && isFinite(v.ts) &&
+      (v.date === null || (typeof v.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.date)));
+  };
+  var merged = {};
+  Object.keys(lm).forEach(function(k) { if (ok(k, lm[k])) merged[k] = lm[k]; });
+  Object.keys(rm).forEach(function(k) {
+    if (!ok(k, rm[k])) return;
+    if (!merged[k] || rm[k].ts > merged[k].ts) merged[k] = rm[k];
   });
   return merged;
 }
@@ -1539,6 +1564,9 @@ function _syncUnionArrays(local, cloud, key) {
   return out;
 }
 function _syncMergeForPush(local, cloud, key) {
+  // Tooth chart: the push honours the same per-tooth newest-ts contract as the
+  // receive, so an offline or imported copy can't overwrite a newer cloud edit.
+  if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
   if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud, key) : local;
   if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
     var out = {};
