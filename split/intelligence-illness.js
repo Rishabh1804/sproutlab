@@ -567,13 +567,17 @@ function feEditAction(idx) {
 // No Delete here: removing a whole episode from history is not what this sheet is for.
 const _EP_RESOLVE_KINDS = {
   fever:     { label: 'Fever',     noun: 'fever',     symptoms: ['readings'],  what: 'reading',
-               list: () => _feverEpisodes,     set: v => { _feverEpisodes = v; },     key: 'feverEpisodes',     render: () => renderFeverHistory() },
+               list: () => _feverEpisodes,     set: v => { _feverEpisodes = v; },     key: 'feverEpisodes',     render: () => renderFeverHistory(),
+               active: () => { renderFeverEpisodeCard(); if (getActiveFeverEpisode()) _startFeverCountdown(); } },
   diarrhoea: { label: 'Diarrhoea', noun: 'diarrhoea', symptoms: ['stools'],    what: 'stool',
-               list: () => _diarrhoeaEpisodes, set: v => { _diarrhoeaEpisodes = v; }, key: 'diarrhoeaEpisodes', render: () => renderDiarrhoeaHistory() },
+               list: () => _diarrhoeaEpisodes, set: v => { _diarrhoeaEpisodes = v; }, key: 'diarrhoeaEpisodes', render: () => renderDiarrhoeaHistory(),
+               active: () => renderDiarrhoeaEpisodeCard() },
   vomiting:  { label: 'Vomiting',  noun: 'vomiting',  symptoms: ['episodes'],  what: 'vomit',
-               list: () => _vomitingEpisodes,  set: v => { _vomitingEpisodes = v; },  key: 'vomitingEpisodes',  render: () => renderVomitingHistory() },
+               list: () => _vomitingEpisodes,  set: v => { _vomitingEpisodes = v; },  key: 'vomitingEpisodes',  render: () => renderVomitingHistory(),
+               active: () => renderVomitingEpisodeCard() },
   cold:      { label: 'Cold',      noun: 'cold',      symptoms: ['dailyLogs'], what: 'day log',
-               list: () => _coldEpisodes,      set: v => { _coldEpisodes = v; },      key: 'coldEpisodes',      render: () => renderColdHistory() }
+               list: () => _coldEpisodes,      set: v => { _coldEpisodes = v; },      key: 'coldEpisodes',      render: () => renderColdHistory(),
+               active: () => renderColdEpisodeCard() }
 };
 
 // Latest SYMPTOM entry in an episode → {t, entry} or null. Cold day-logs without a time fall
@@ -599,7 +603,12 @@ function epEditResolved(kind, id) {
   // Re-read the stored list first (Kael V-K-267-3): the in-memory array can be stale on a device
   // left open while the other parent logged, and saving it whole would revert their entries.
   const stored = load(KEYS[cfg.key], null);
-  if (Array.isArray(stored)) cfg.set(stored);
+  if (Array.isArray(stored)) {
+    cfg.set(stored);
+    // The active-episode card's taps carry array indices; re-render it from the re-read list so a
+    // longer stored array can't make a tap edit the wrong entry (Cipher A1).
+    try { cfg.active(); } catch (e) { console.warn('[epEditResolved] active re-render', e); }
+  }
   const list = cfg.list();
   const ep = list.find(e => e.id === id && e.status === 'resolved');
   if (!ep) return;

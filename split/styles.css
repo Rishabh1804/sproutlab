@@ -3325,7 +3325,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .fe-sparkline { display:block; margin:var(--sp-8) auto; }
 .fe-history-entry { padding:var(--sp-8) 0; border-bottom:1px solid rgba(0,0,0,0.04); }
 .fe-history-entry:last-child { border-bottom:none; }
-/* Tappable history rows (edit the resolved date — 2026-09-25): a quiet text affordance, no icon in the sprite.
+/* Tappable history rows (edit the resolved date — 2026-09-24): a quiet text affordance, no icon in the sprite.
    Flex row so the label keeps a gap and stays top-right at every zoom (Vela V-V-267-4). */
 .ep-entry-tap > .fe-history-date { display:flex; justify-content:space-between; align-items:baseline; gap:var(--sp-8); }
 .fe-history-edit { flex-shrink:0; font-size:var(--fs-xs); font-weight:700; color:var(--tc-sky); letter-spacing:var(--ls-wide); text-transform:uppercase; }

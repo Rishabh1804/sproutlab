@@ -3562,13 +3562,13 @@ function _epTimeToISO(timeStr, baseISO) {
   const [h, m] = timeStr.split(':').map(Number);
   // Editing an existing entry: the new time goes on whichever of the entry's own local day, the
   // day before or the day after lands CLOSEST to its original time (and not in the future). Before
-  // 2026-09-25 every edit was re-dated to today (a day-1 reading of a 3-day fever jumped to day 3);
+  // 2026-09-24 every edit was re-dated to today (a day-1 reading of a 3-day fever jumped to day 3);
   // a same-day-only rule would instead throw a 23:50 → 00:05 correction back ~24 h (Kael V-K-267-1).
   const base = baseISO ? new Date(baseISO) : null;
   if (base && !isNaN(base.getTime())) {
     const now = Date.now(), b = base.getTime();
     let best = null;
-    [-1, 0, 1].forEach(off => {
+    [0, -1, 1].forEach(off => { // same day first, so an exact 12 h tie (the AM/PM slip) stays on its day — Cipher A2
       const c = new Date(base.getFullYear(), base.getMonth(), base.getDate() + off, h, m, 0, 0).getTime();
       if (c <= now + 60000 && (best === null || Math.abs(c - b) < Math.abs(best - b))) best = c;
     });

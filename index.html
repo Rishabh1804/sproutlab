@@ -3340,7 +3340,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .fe-sparkline { display:block; margin:var(--sp-8) auto; }
 .fe-history-entry { padding:var(--sp-8) 0; border-bottom:1px solid rgba(0,0,0,0.04); }
 .fe-history-entry:last-child { border-bottom:none; }
-/* Tappable history rows (edit the resolved date — 2026-09-25): a quiet text affordance, no icon in the sprite.
+/* Tappable history rows (edit the resolved date — 2026-09-24): a quiet text affordance, no icon in the sprite.
    Flex row so the label keeps a gap and stays top-right at every zoom (Vela V-V-267-4). */
 .ep-entry-tap > .fe-history-date { display:flex; justify-content:space-between; align-items:baseline; gap:var(--sp-8); }
 .fe-history-edit { flex-shrink:0; font-size:var(--fs-xs); font-weight:700; color:var(--tc-sky); letter-spacing:var(--ls-wide); text-transform:uppercase; }
@@ -66373,13 +66373,13 @@ function _epTimeToISO(timeStr, baseISO) {
   const [h, m] = timeStr.split(':').map(Number);
   // Editing an existing entry: the new time goes on whichever of the entry's own local day, the
   // day before or the day after lands CLOSEST to its original time (and not in the future). Before
-  // 2026-09-25 every edit was re-dated to today (a day-1 reading of a 3-day fever jumped to day 3);
+  // 2026-09-24 every edit was re-dated to today (a day-1 reading of a 3-day fever jumped to day 3);
   // a same-day-only rule would instead throw a 23:50 → 00:05 correction back ~24 h (Kael V-K-267-1).
   const base = baseISO ? new Date(baseISO) : null;
   if (base && !isNaN(base.getTime())) {
     const now = Date.now(), b = base.getTime();
     let best = null;
-    [-1, 0, 1].forEach(off => {
+    [0, -1, 1].forEach(off => { // same day first, so an exact 12 h tie (the AM/PM slip) stays on its day — Cipher A2
       const c = new Date(base.getFullYear(), base.getMonth(), base.getDate() + off, h, m, 0, 0).getTime();
       if (c <= now + 60000 && (best === null || Math.abs(c - b) < Math.abs(best - b))) best = c;
     });
@@ -67083,13 +67083,17 @@ function feEditAction(idx) {
 // No Delete here: removing a whole episode from history is not what this sheet is for.
 const _EP_RESOLVE_KINDS = {
   fever:     { label: 'Fever',     noun: 'fever',     symptoms: ['readings'],  what: 'reading',
-               list: () => _feverEpisodes,     set: v => { _feverEpisodes = v; },     key: 'feverEpisodes',     render: () => renderFeverHistory() },
+               list: () => _feverEpisodes,     set: v => { _feverEpisodes = v; },     key: 'feverEpisodes',     render: () => renderFeverHistory(),
+               active: () => { renderFeverEpisodeCard(); if (getActiveFeverEpisode()) _startFeverCountdown(); } },
   diarrhoea: { label: 'Diarrhoea', noun: 'diarrhoea', symptoms: ['stools'],    what: 'stool',
-               list: () => _diarrhoeaEpisodes, set: v => { _diarrhoeaEpisodes = v; }, key: 'diarrhoeaEpisodes', render: () => renderDiarrhoeaHistory() },
+               list: () => _diarrhoeaEpisodes, set: v => { _diarrhoeaEpisodes = v; }, key: 'diarrhoeaEpisodes', render: () => renderDiarrhoeaHistory(),
+               active: () => renderDiarrhoeaEpisodeCard() },
   vomiting:  { label: 'Vomiting',  noun: 'vomiting',  symptoms: ['episodes'],  what: 'vomit',
-               list: () => _vomitingEpisodes,  set: v => { _vomitingEpisodes = v; },  key: 'vomitingEpisodes',  render: () => renderVomitingHistory() },
+               list: () => _vomitingEpisodes,  set: v => { _vomitingEpisodes = v; },  key: 'vomitingEpisodes',  render: () => renderVomitingHistory(),
+               active: () => renderVomitingEpisodeCard() },
   cold:      { label: 'Cold',      noun: 'cold',      symptoms: ['dailyLogs'], what: 'day log',
-               list: () => _coldEpisodes,      set: v => { _coldEpisodes = v; },      key: 'coldEpisodes',      render: () => renderColdHistory() }
+               list: () => _coldEpisodes,      set: v => { _coldEpisodes = v; },      key: 'coldEpisodes',      render: () => renderColdHistory(),
+               active: () => renderColdEpisodeCard() }
 };
 
 // Latest SYMPTOM entry in an episode → {t, entry} or null. Cold day-logs without a time fall
@@ -67115,7 +67119,12 @@ function epEditResolved(kind, id) {
   // Re-read the stored list first (Kael V-K-267-3): the in-memory array can be stale on a device
   // left open while the other parent logged, and saving it whole would revert their entries.
   const stored = load(KEYS[cfg.key], null);
-  if (Array.isArray(stored)) cfg.set(stored);
+  if (Array.isArray(stored)) {
+    cfg.set(stored);
+    // The active-episode card's taps carry array indices; re-render it from the re-read list so a
+    // longer stored array can't make a tap edit the wrong entry (Cipher A1).
+    try { cfg.active(); } catch (e) { console.warn('[epEditResolved] active re-render', e); }
+  }
   const list = cfg.list();
   const ep = list.find(e => e.id === id && e.status === 'resolved');
   if (!ep) return;
