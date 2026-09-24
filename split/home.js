@@ -3192,7 +3192,9 @@ const TOOTH_TYPE_NAMES = { ci:'central incisor', li:'lateral incisor', c:'canine
 function _tcToothName(t, plural) {
   const n = TOOTH_TYPE_NAMES[t.type] || 'tooth';
   const arch = t.arch === 'upper' ? 'Upper' : 'Lower';
-  return plural ? arch + ' ' + n + 's' : arch + ' ' + t.side + ' ' + n;
+  // Singular names say whose side ("her left"): the diagram faces her, so
+  // her left is on the viewer's right.
+  return plural ? arch + ' ' + n + 's' : arch + ' ' + n + ', her ' + t.side;
 }
 function _tcErupted(id) {
   const e = teethLog && teethLog[id];
@@ -3204,17 +3206,12 @@ function _tcFmtDate(ds) {
   if (p.length !== 3 || !p[0]) return '';
   return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
 }
-function _tcAgeAtDate(ds) {
-  const p = String(ds || '').split('-').map(Number);
-  if (p.length !== 3 || !p[0]) return null;
-  return ageAt(new Date(p[0], p[1] - 1, p[2], 12)).months;
-}
 function _tcWindow(from, to) { return from + '–' + to + ' months'; }
 
-// Arch geometry (viewBox 320×350). Ten teeth per arch spaced evenly along a
-// 150° elliptical arc, upper and lower arches apart like an open mouth.
-// ~38-unit spacing and 40-unit tap circles stay ≥36 CSS px on a 360px phone.
-const _TC_GEOM = { cx:160, rx:132, ry:130, upperCy:150, lowerCy:200, from:165, step:150 / 9 };
+// Arch geometry (viewBox x 10–310, 350 tall). Ten teeth per arch spaced evenly
+// along a 170° elliptical arc, upper and lower arches apart like an open mouth.
+// ~43-unit spacing and 42-unit tap circles measure ≥36 CSS px on a 360px phone.
+const _TC_GEOM = { cx:160, rx:132, ry:130, upperCy:150, lowerCy:200, from:175, step:170 / 9 };
 function _tcToothSvg(t, i, ageMo) {
   const g = _TC_GEOM;
   const theta = (g.from - i * g.step) * Math.PI / 180;
@@ -3225,12 +3222,14 @@ function _tcToothSvg(t, i, ageMo) {
   const w = molar ? 26 : (t.type === 'c' ? 20 : 18);
   const h = molar ? 24 : 24;
   const erupted = _tcErupted(t.id);
-  const due = !erupted && ageMo >= t.from - 1 && ageMo <= t.to + 2;
-  const cls = 'tc-shape' + (erupted ? ' is-in' : (due ? ' is-due' : ''));
-  const state = erupted ? 'came through ' + _tcFmtDate(teethLog[t.id].date) : (due ? 'due around now' : 'not yet');
+  // Due from a month before the window opens and stays due until recorded:
+  // a late tooth reads neutral 'due', never 'later' (timing varies widely).
+  const due = !erupted && ageMo >= t.from - 1;
+  const cls = 'tth-shape' + (erupted ? ' is-in' : (due ? ' is-due' : ''));
+  const state = erupted ? 'came through ' + _tcFmtDate(teethLog[t.id].date) : (due ? 'any time now' : 'not yet');
   const label = _tcToothName(t) + ', ' + state;
-  return '<g class="tc-tooth" data-action="teethTap" data-arg="' + t.id + '" aria-label="' + escHtml(label) + '">' +
-    '<circle class="tc-hit" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="20"/>' +
+  return '<g class="tth-tooth" data-action="teethTap" data-arg="' + t.id + '" role="button" aria-label="' + escHtml(label) + '">' +
+    '<circle class="tth-hit" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="21"/>' +
     '<rect class="' + cls + '" x="' + (x - w / 2).toFixed(1) + '" y="' + (y - h / 2).toFixed(1) + '" width="' + w + '" height="' + h + '" rx="8" transform="rotate(' + deg.toFixed(1) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>' +
     '</g>';
 }
@@ -3244,50 +3243,59 @@ function renderMsTeeth() {
   const lower = PRIMARY_TEETH.filter(t => t.arch === 'lower').slice().reverse(); // draw her right → her left
   const count = PRIMARY_TEETH.filter(t => _tcErupted(t.id)).length;
 
-  let svg = '<svg class="tc-svg" viewBox="0 0 320 350" role="group" aria-label="Tooth chart, ' + count + ' of 20 teeth">';
+  let svg = '<svg class="tth-svg" viewBox="10 0 300 350" role="group" aria-label="Tooth chart, ' + count + ' of 20 teeth">';
   upper.forEach((t, i) => { svg += _tcToothSvg(t, i, ageMo); });
   lower.forEach((t, i) => { svg += _tcToothSvg(t, i, ageMo); });
   svg += '</svg>';
 
-  let html = '<div class="tc-diagram">' + svg +
-    '<div class="tc-center"><div class="tc-count">' + count + '</div><div class="tc-count-sub">of 20 teeth</div></div>' +
+  let html = '<div class="tth-diagram">' + svg +
+    '<div class="tth-center" aria-hidden="true"><div class="tth-count">' + (count || '—') + '</div><div class="tth-count-sub">' + (count ? 'of 20 teeth' : 'none recorded yet') + '</div></div>' +
     '</div>' +
-    '<div class="tc-sides"><span>Her right</span><span>Her left</span></div>' +
-    '<div class="tc-legend">' +
-      '<span class="tc-key"><span class="tc-swatch is-in"></span>Came through</span>' +
-      '<span class="tc-key"><span class="tc-swatch is-due"></span>Due around now</span>' +
-      '<span class="tc-key"><span class="tc-swatch"></span>Later</span>' +
+    '<div class="tth-sides"><span>Her right</span><span>Her left</span></div>' +
+    '<div class="tth-legend">' +
+      '<span class="tth-key"><span class="tth-swatch is-in"></span>Came through</span>' +
+      '<span class="tth-key"><span class="tth-swatch is-due"></span>Any time now</span>' +
+      '<span class="tth-key"><span class="tth-swatch"></span>Not yet</span>' +
     '</div>';
 
-  // What's next: the unerupted pair(s) with the earliest typical window.
+  // What's next: the same groups the diagram dashes as "any time now" (up to
+  // three, earliest window first); if none is due yet, the earliest window.
   const pending = PRIMARY_TEETH.filter(t => !_tcErupted(t.id));
   if (pending.length) {
+    const dueNow = pending.filter(t => ageMo >= t.from - 1);
     const minFrom = Math.min.apply(null, pending.map(t => t.from));
-    const seen = {};
-    const nextRows = [];
-    pending.filter(t => t.from === minFrom).forEach(t => {
+    const pool = (dueNow.length ? dueNow : pending.filter(t => t.from === minFrom)).slice().sort((a, b) => a.from - b.from);
+    const groups = {};
+    const order = [];
+    pool.forEach(t => {
       const k = t.arch + t.type;
-      if (seen[k]) return;
-      seen[k] = 1;
-      nextRows.push(_tcToothName(t, true) + ', usually ' + _tcWindow(t.from, t.to));
+      if (!groups[k]) { groups[k] = []; order.push(k); }
+      groups[k].push(t);
     });
-    html += '<div class="tc-next"><div class="tc-next-label">Coming next</div>' +
-      nextRows.map(r => '<div class="tc-next-row">' + escHtml(r) + '</div>').join('') + '</div>';
+    const nextRows = order.slice(0, 3).map(k => {
+      const g = groups[k];
+      const name = g.length > 1 ? _tcToothName(g[0], true) : _tcToothName(g[0]);
+      return name + ', usually ' + _tcWindow(g[0].from, g[0].to);
+    });
+    html += '<div class="tth-next"><div class="tth-next-label">Coming next</div>' +
+      nextRows.map(r => '<div class="tth-next-row">' + escHtml(r) + '</div>').join('') + '</div>';
   } else {
-    html += '<div class="tc-next"><div class="tc-next-row">All 20 baby teeth are in.</div></div>';
+    html += '<div class="tth-next"><div class="tth-next-row">All 20 baby teeth are in.</div></div>';
   }
 
   // Calm context. Timing varies a lot; only the no-teeth-by-18-months case is a
   // "mention it to the doctor" line.
   let note;
   if (count === 0 && ageMo >= 18) {
-    note = 'No teeth yet at 18 months is worth mentioning to her paediatrician or a dentist.';
+    // src: AAP/HealthyChildren "Baby's First Tooth: 7 Facts Parents Should Know"
+    // (no teeth by 18 months → see a dentist); ADA eruption chart for windows.
+    note = 'No teeth recorded yet. If none have come through by 18 months, mention it to her paediatrician or a dentist.';
   } else if (count === 0) {
     note = 'Tap a tooth to record when it came through. An approximate date is fine.';
   } else {
     note = 'Teeth often arrive in pairs, and months early or late is common. Most children have all 20 by about 3 years. Molars can make teething sorer: a chilled (not frozen) teether helps.';
   }
-  html += '<div class="tc-note">' + escHtml(note) + '</div>';
+  html += '<div class="tth-note">' + escHtml(note) + '</div>';
   el.innerHTML = html;
 }
 
@@ -3309,13 +3317,13 @@ function teethTap(id) {
       teethLog[id] = { date: d, ts: Date.now() };
       save(KEYS.teeth, teethLog);
       renderMsTeeth();
-      showQLToast(_tcToothName(t) + ' recorded');
+      showQLToast('Recorded: ' + _tcToothName(t));
     },
     onDelete: has ? () => {
       teethLog[id] = { date: null, ts: Date.now() };
       save(KEYS.teeth, teethLog);
       renderMsTeeth();
-      showQLToast(_tcToothName(t) + ' removed');
+      showQLToast('Removed: ' + _tcToothName(t));
     } : null,
   });
 }
@@ -10004,11 +10012,11 @@ function renderTodayPlan() {
       const nDate = n.date ? n.date.split('T')[0] : '';
       return nDate >= toDateStr(new Date(Date.now() - 7 * 86400000));
     });
-    const teethingMentioned = recentNotes.some(n => /teeth|teething|drool|gum/i.test(n.text));
+    const teethingMentioned = recentNotes.some(n => /\b(teeth|teething|tooth|molars?|drool\w*|gums?)\b/i.test(n.text));
     if (teethingMentioned) {
       const teethTxt = ageM >= 13
-        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps.'
-        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. Cold teething ring helps.';
+        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps. Teething does not cause fever: if she has a temperature, look for another cause.'
+        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. A chilled (not frozen) teething ring helps. Teething does not cause fever: if she has a temperature, look for another cause.';
       lookouts.push({ icon: zi('baby'), text: teethTxt, tag: 'lookout' });
     }
   }

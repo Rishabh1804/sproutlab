@@ -7051,27 +7051,28 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-pediatric-prep-card { padding:var(--sp-16); }
 
 /* ── Tooth chart (Milestones → Library) — lavender milestone domain ── */
-.tc-diagram { position:relative; max-width:360px; margin:0 auto; }
-.tc-svg { display:block; width:100%; height:auto; }
-.tc-tooth { cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.tc-hit { fill:transparent; pointer-events:all; }
-.tc-shape { fill:var(--white); stroke:var(--lavender); stroke-width:2; transition:fill var(--ease-med), stroke var(--ease-med); }
-.tc-shape.is-in { fill:var(--lavender); stroke:var(--tc-lav); }
-.tc-shape.is-due { fill:var(--lav-light); stroke:var(--tc-lav); stroke-dasharray:4 3; }
-.tc-tooth:active .tc-shape { stroke-width:3; }
-.tc-center { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; }
-.tc-count { font-family:'Fraunces', serif; font-size:var(--fs-3xl); font-weight:600; color:var(--tc-lav); line-height:1; }
-.tc-count-sub { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-4); }
-.tc-sides { display:flex; justify-content:space-between; max-width:360px; margin:var(--sp-4) auto 0; font-size:var(--fs-xs); color:var(--light); }
-.tc-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:var(--sp-8) var(--sp-16); margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); }
-.tc-key { display:inline-flex; align-items:center; gap:var(--sp-6); }
-.tc-swatch { display:inline-block; width:var(--sp-12); height:var(--sp-12); border-radius:var(--r-sm); background:var(--white); border:2px solid var(--lavender); }
-.tc-swatch.is-in { background:var(--lavender); border-color:var(--tc-lav); }
-.tc-swatch.is-due { background:var(--lav-light); border:2px dashed var(--tc-lav); }
-.tc-next { margin-top:var(--sp-16); padding:var(--sp-12); border-radius:var(--r-lg); background:var(--lav-light); }
-.tc-next-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-lav); margin-bottom:var(--sp-4); }
-.tc-next-row { font-size:var(--fs-base); color:var(--text); }
-.tc-note { margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); line-height:1.5; }
+.tth-diagram { position:relative; max-width:360px; margin:0 auto; }
+@media (max-width:400px) { .tth-diagram { margin:0 calc(var(--sp-8) * -1); } }
+.tth-svg { display:block; width:100%; height:auto; }
+.tth-tooth { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.tth-hit { fill:transparent; pointer-events:all; }
+.tth-shape { fill:var(--white); stroke:var(--lavender); stroke-width:2; transition:fill var(--ease-med), stroke var(--ease-med); }
+.tth-shape.is-in { fill:var(--lavender); stroke:var(--tc-lav); }
+.tth-shape.is-due { fill:var(--lav-light); stroke:var(--tc-lav); stroke-dasharray:4 3; }
+.tth-tooth:active .tth-shape { stroke-width:3; }
+.tth-center { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; }
+.tth-count { font-family:'Fraunces', serif; font-size:var(--fs-3xl); font-weight:600; color:var(--tc-lav); line-height:var(--lh-none); }
+.tth-count-sub { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-4); }
+.tth-sides { display:flex; justify-content:space-between; max-width:360px; margin:var(--sp-4) auto 0; font-size:var(--fs-xs); color:var(--light); }
+.tth-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:var(--sp-8) var(--sp-16); margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); }
+.tth-key { display:inline-flex; align-items:center; gap:var(--sp-6); }
+.tth-swatch { display:inline-block; width:var(--sp-16); height:var(--sp-16); border-radius:var(--r-sm); background:var(--white); border:2px solid var(--lavender); }
+.tth-swatch.is-in { background:var(--lavender); border-color:var(--tc-lav); }
+.tth-swatch.is-due { background:var(--lav-light); border:2px dashed var(--tc-lav); }
+.tth-next { margin-top:var(--sp-16); padding:var(--sp-12); border-radius:var(--r-lg); background:var(--lav-light); }
+.tth-next-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--tc-lav); margin-bottom:var(--sp-4); }
+.tth-next-row { font-size:var(--fs-base); color:var(--text); }
+.tth-note { margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .ms-pediatric-prep-narration { font-family:'Fraunces',serif; font-size:var(--fs-md); line-height:1.6; color:var(--text); }
 .ms-pediatric-prep-section { margin-top:var(--sp-12); }
 .ms-pediatric-prep-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-bottom:var(--sp-4); }

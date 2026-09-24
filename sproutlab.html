@@ -7066,27 +7066,28 @@ body.ql-locked .dark-toggle { pointer-events:none; }
 .ms-pediatric-prep-card { padding:var(--sp-16); }
 
 /* ── Tooth chart (Milestones → Library) — lavender milestone domain ── */
-.tc-diagram { position:relative; max-width:360px; margin:0 auto; }
-.tc-svg { display:block; width:100%; height:auto; }
-.tc-tooth { cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.tc-hit { fill:transparent; pointer-events:all; }
-.tc-shape { fill:var(--white); stroke:var(--lavender); stroke-width:2; transition:fill var(--ease-med), stroke var(--ease-med); }
-.tc-shape.is-in { fill:var(--lavender); stroke:var(--tc-lav); }
-.tc-shape.is-due { fill:var(--lav-light); stroke:var(--tc-lav); stroke-dasharray:4 3; }
-.tc-tooth:active .tc-shape { stroke-width:3; }
-.tc-center { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; }
-.tc-count { font-family:'Fraunces', serif; font-size:var(--fs-3xl); font-weight:600; color:var(--tc-lav); line-height:1; }
-.tc-count-sub { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-4); }
-.tc-sides { display:flex; justify-content:space-between; max-width:360px; margin:var(--sp-4) auto 0; font-size:var(--fs-xs); color:var(--light); }
-.tc-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:var(--sp-8) var(--sp-16); margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); }
-.tc-key { display:inline-flex; align-items:center; gap:var(--sp-6); }
-.tc-swatch { display:inline-block; width:var(--sp-12); height:var(--sp-12); border-radius:var(--r-sm); background:var(--white); border:2px solid var(--lavender); }
-.tc-swatch.is-in { background:var(--lavender); border-color:var(--tc-lav); }
-.tc-swatch.is-due { background:var(--lav-light); border:2px dashed var(--tc-lav); }
-.tc-next { margin-top:var(--sp-16); padding:var(--sp-12); border-radius:var(--r-lg); background:var(--lav-light); }
-.tc-next-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-lav); margin-bottom:var(--sp-4); }
-.tc-next-row { font-size:var(--fs-base); color:var(--text); }
-.tc-note { margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); line-height:1.5; }
+.tth-diagram { position:relative; max-width:360px; margin:0 auto; }
+@media (max-width:400px) { .tth-diagram { margin:0 calc(var(--sp-8) * -1); } }
+.tth-svg { display:block; width:100%; height:auto; }
+.tth-tooth { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.tth-hit { fill:transparent; pointer-events:all; }
+.tth-shape { fill:var(--white); stroke:var(--lavender); stroke-width:2; transition:fill var(--ease-med), stroke var(--ease-med); }
+.tth-shape.is-in { fill:var(--lavender); stroke:var(--tc-lav); }
+.tth-shape.is-due { fill:var(--lav-light); stroke:var(--tc-lav); stroke-dasharray:4 3; }
+.tth-tooth:active .tth-shape { stroke-width:3; }
+.tth-center { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; }
+.tth-count { font-family:'Fraunces', serif; font-size:var(--fs-3xl); font-weight:600; color:var(--tc-lav); line-height:var(--lh-none); }
+.tth-count-sub { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-4); }
+.tth-sides { display:flex; justify-content:space-between; max-width:360px; margin:var(--sp-4) auto 0; font-size:var(--fs-xs); color:var(--light); }
+.tth-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:var(--sp-8) var(--sp-16); margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); }
+.tth-key { display:inline-flex; align-items:center; gap:var(--sp-6); }
+.tth-swatch { display:inline-block; width:var(--sp-16); height:var(--sp-16); border-radius:var(--r-sm); background:var(--white); border:2px solid var(--lavender); }
+.tth-swatch.is-in { background:var(--lavender); border-color:var(--tc-lav); }
+.tth-swatch.is-due { background:var(--lav-light); border:2px dashed var(--tc-lav); }
+.tth-next { margin-top:var(--sp-16); padding:var(--sp-12); border-radius:var(--r-lg); background:var(--lav-light); }
+.tth-next-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--tc-lav); margin-bottom:var(--sp-4); }
+.tth-next-row { font-size:var(--fs-base); color:var(--text); }
+.tth-note { margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .ms-pediatric-prep-narration { font-family:'Fraunces',serif; font-size:var(--fs-md); line-height:1.6; color:var(--text); }
 .ms-pediatric-prep-section { margin-top:var(--sp-12); }
 .ms-pediatric-prep-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-bottom:var(--sp-4); }
@@ -32962,7 +32963,9 @@ const TOOTH_TYPE_NAMES = { ci:'central incisor', li:'lateral incisor', c:'canine
 function _tcToothName(t, plural) {
   const n = TOOTH_TYPE_NAMES[t.type] || 'tooth';
   const arch = t.arch === 'upper' ? 'Upper' : 'Lower';
-  return plural ? arch + ' ' + n + 's' : arch + ' ' + t.side + ' ' + n;
+  // Singular names say whose side ("her left"): the diagram faces her, so
+  // her left is on the viewer's right.
+  return plural ? arch + ' ' + n + 's' : arch + ' ' + n + ', her ' + t.side;
 }
 function _tcErupted(id) {
   const e = teethLog && teethLog[id];
@@ -32974,17 +32977,12 @@ function _tcFmtDate(ds) {
   if (p.length !== 3 || !p[0]) return '';
   return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
 }
-function _tcAgeAtDate(ds) {
-  const p = String(ds || '').split('-').map(Number);
-  if (p.length !== 3 || !p[0]) return null;
-  return ageAt(new Date(p[0], p[1] - 1, p[2], 12)).months;
-}
 function _tcWindow(from, to) { return from + '–' + to + ' months'; }
 
-// Arch geometry (viewBox 320×350). Ten teeth per arch spaced evenly along a
-// 150° elliptical arc, upper and lower arches apart like an open mouth.
-// ~38-unit spacing and 40-unit tap circles stay ≥36 CSS px on a 360px phone.
-const _TC_GEOM = { cx:160, rx:132, ry:130, upperCy:150, lowerCy:200, from:165, step:150 / 9 };
+// Arch geometry (viewBox x 10–310, 350 tall). Ten teeth per arch spaced evenly
+// along a 170° elliptical arc, upper and lower arches apart like an open mouth.
+// ~43-unit spacing and 42-unit tap circles measure ≥36 CSS px on a 360px phone.
+const _TC_GEOM = { cx:160, rx:132, ry:130, upperCy:150, lowerCy:200, from:175, step:170 / 9 };
 function _tcToothSvg(t, i, ageMo) {
   const g = _TC_GEOM;
   const theta = (g.from - i * g.step) * Math.PI / 180;
@@ -32995,12 +32993,14 @@ function _tcToothSvg(t, i, ageMo) {
   const w = molar ? 26 : (t.type === 'c' ? 20 : 18);
   const h = molar ? 24 : 24;
   const erupted = _tcErupted(t.id);
-  const due = !erupted && ageMo >= t.from - 1 && ageMo <= t.to + 2;
-  const cls = 'tc-shape' + (erupted ? ' is-in' : (due ? ' is-due' : ''));
-  const state = erupted ? 'came through ' + _tcFmtDate(teethLog[t.id].date) : (due ? 'due around now' : 'not yet');
+  // Due from a month before the window opens and stays due until recorded:
+  // a late tooth reads neutral 'due', never 'later' (timing varies widely).
+  const due = !erupted && ageMo >= t.from - 1;
+  const cls = 'tth-shape' + (erupted ? ' is-in' : (due ? ' is-due' : ''));
+  const state = erupted ? 'came through ' + _tcFmtDate(teethLog[t.id].date) : (due ? 'any time now' : 'not yet');
   const label = _tcToothName(t) + ', ' + state;
-  return '<g class="tc-tooth" data-action="teethTap" data-arg="' + t.id + '" aria-label="' + escHtml(label) + '">' +
-    '<circle class="tc-hit" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="20"/>' +
+  return '<g class="tth-tooth" data-action="teethTap" data-arg="' + t.id + '" role="button" aria-label="' + escHtml(label) + '">' +
+    '<circle class="tth-hit" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="21"/>' +
     '<rect class="' + cls + '" x="' + (x - w / 2).toFixed(1) + '" y="' + (y - h / 2).toFixed(1) + '" width="' + w + '" height="' + h + '" rx="8" transform="rotate(' + deg.toFixed(1) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>' +
     '</g>';
 }
@@ -33014,50 +33014,59 @@ function renderMsTeeth() {
   const lower = PRIMARY_TEETH.filter(t => t.arch === 'lower').slice().reverse(); // draw her right → her left
   const count = PRIMARY_TEETH.filter(t => _tcErupted(t.id)).length;
 
-  let svg = '<svg class="tc-svg" viewBox="0 0 320 350" role="group" aria-label="Tooth chart, ' + count + ' of 20 teeth">';
+  let svg = '<svg class="tth-svg" viewBox="10 0 300 350" role="group" aria-label="Tooth chart, ' + count + ' of 20 teeth">';
   upper.forEach((t, i) => { svg += _tcToothSvg(t, i, ageMo); });
   lower.forEach((t, i) => { svg += _tcToothSvg(t, i, ageMo); });
   svg += '</svg>';
 
-  let html = '<div class="tc-diagram">' + svg +
-    '<div class="tc-center"><div class="tc-count">' + count + '</div><div class="tc-count-sub">of 20 teeth</div></div>' +
+  let html = '<div class="tth-diagram">' + svg +
+    '<div class="tth-center" aria-hidden="true"><div class="tth-count">' + (count || '—') + '</div><div class="tth-count-sub">' + (count ? 'of 20 teeth' : 'none recorded yet') + '</div></div>' +
     '</div>' +
-    '<div class="tc-sides"><span>Her right</span><span>Her left</span></div>' +
-    '<div class="tc-legend">' +
-      '<span class="tc-key"><span class="tc-swatch is-in"></span>Came through</span>' +
-      '<span class="tc-key"><span class="tc-swatch is-due"></span>Due around now</span>' +
-      '<span class="tc-key"><span class="tc-swatch"></span>Later</span>' +
+    '<div class="tth-sides"><span>Her right</span><span>Her left</span></div>' +
+    '<div class="tth-legend">' +
+      '<span class="tth-key"><span class="tth-swatch is-in"></span>Came through</span>' +
+      '<span class="tth-key"><span class="tth-swatch is-due"></span>Any time now</span>' +
+      '<span class="tth-key"><span class="tth-swatch"></span>Not yet</span>' +
     '</div>';
 
-  // What's next: the unerupted pair(s) with the earliest typical window.
+  // What's next: the same groups the diagram dashes as "any time now" (up to
+  // three, earliest window first); if none is due yet, the earliest window.
   const pending = PRIMARY_TEETH.filter(t => !_tcErupted(t.id));
   if (pending.length) {
+    const dueNow = pending.filter(t => ageMo >= t.from - 1);
     const minFrom = Math.min.apply(null, pending.map(t => t.from));
-    const seen = {};
-    const nextRows = [];
-    pending.filter(t => t.from === minFrom).forEach(t => {
+    const pool = (dueNow.length ? dueNow : pending.filter(t => t.from === minFrom)).slice().sort((a, b) => a.from - b.from);
+    const groups = {};
+    const order = [];
+    pool.forEach(t => {
       const k = t.arch + t.type;
-      if (seen[k]) return;
-      seen[k] = 1;
-      nextRows.push(_tcToothName(t, true) + ', usually ' + _tcWindow(t.from, t.to));
+      if (!groups[k]) { groups[k] = []; order.push(k); }
+      groups[k].push(t);
     });
-    html += '<div class="tc-next"><div class="tc-next-label">Coming next</div>' +
-      nextRows.map(r => '<div class="tc-next-row">' + escHtml(r) + '</div>').join('') + '</div>';
+    const nextRows = order.slice(0, 3).map(k => {
+      const g = groups[k];
+      const name = g.length > 1 ? _tcToothName(g[0], true) : _tcToothName(g[0]);
+      return name + ', usually ' + _tcWindow(g[0].from, g[0].to);
+    });
+    html += '<div class="tth-next"><div class="tth-next-label">Coming next</div>' +
+      nextRows.map(r => '<div class="tth-next-row">' + escHtml(r) + '</div>').join('') + '</div>';
   } else {
-    html += '<div class="tc-next"><div class="tc-next-row">All 20 baby teeth are in.</div></div>';
+    html += '<div class="tth-next"><div class="tth-next-row">All 20 baby teeth are in.</div></div>';
   }
 
   // Calm context. Timing varies a lot; only the no-teeth-by-18-months case is a
   // "mention it to the doctor" line.
   let note;
   if (count === 0 && ageMo >= 18) {
-    note = 'No teeth yet at 18 months is worth mentioning to her paediatrician or a dentist.';
+    // src: AAP/HealthyChildren "Baby's First Tooth: 7 Facts Parents Should Know"
+    // (no teeth by 18 months → see a dentist); ADA eruption chart for windows.
+    note = 'No teeth recorded yet. If none have come through by 18 months, mention it to her paediatrician or a dentist.';
   } else if (count === 0) {
     note = 'Tap a tooth to record when it came through. An approximate date is fine.';
   } else {
     note = 'Teeth often arrive in pairs, and months early or late is common. Most children have all 20 by about 3 years. Molars can make teething sorer: a chilled (not frozen) teether helps.';
   }
-  html += '<div class="tc-note">' + escHtml(note) + '</div>';
+  html += '<div class="tth-note">' + escHtml(note) + '</div>';
   el.innerHTML = html;
 }
 
@@ -33079,13 +33088,13 @@ function teethTap(id) {
       teethLog[id] = { date: d, ts: Date.now() };
       save(KEYS.teeth, teethLog);
       renderMsTeeth();
-      showQLToast(_tcToothName(t) + ' recorded');
+      showQLToast('Recorded: ' + _tcToothName(t));
     },
     onDelete: has ? () => {
       teethLog[id] = { date: null, ts: Date.now() };
       save(KEYS.teeth, teethLog);
       renderMsTeeth();
-      showQLToast(_tcToothName(t) + ' removed');
+      showQLToast('Removed: ' + _tcToothName(t));
     } : null,
   });
 }
@@ -39774,11 +39783,11 @@ function renderTodayPlan() {
       const nDate = n.date ? n.date.split('T')[0] : '';
       return nDate >= toDateStr(new Date(Date.now() - 7 * 86400000));
     });
-    const teethingMentioned = recentNotes.some(n => /teeth|teething|drool|gum/i.test(n.text));
+    const teethingMentioned = recentNotes.some(n => /\b(teeth|teething|tooth|molars?|drool\w*|gums?)\b/i.test(n.text));
     if (teethingMentioned) {
       const teethTxt = ageM >= 13
-        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps.'
-        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. Cold teething ring helps.';
+        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps. Teething does not cause fever: if she has a temperature, look for another cause.'
+        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. A chilled (not frozen) teething ring helps. Teething does not cause fever: if she has a temperature, look for another cause.';
       lookouts.push({ icon: zi('baby'), text: teethTxt, tag: 'lookout' });
     }
   }
@@ -49666,7 +49675,7 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old');
+  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old (' + months + ' months)');
   lines.push('BORN Born 4 Sep 2025 · Jamshedpur');
   lines.push('');
 
@@ -49763,7 +49772,7 @@ function showFullDoctorSummary() {
       </style></head><body>`);
     
     printWin.document.write(`<h1>${zi('steth')} Paediatrician Visit Summary</h1>`);
-    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)} · Generated ${formatDate(today())}</div>`);
+    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)} (${months} months) · Generated ${formatDate(today())}</div>`);
     printWin.document.write(`<div class="actions">`);
     printWin.document.write(`<button class="btn-print" data-action="printDashboard">${zi('note')} Print</button>`);
     printWin.document.write(`<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('raw').textContent).then(()=>this.textContent='Copied!')">${zi('note')} Copy</button>`);
@@ -53527,7 +53536,7 @@ const DYNAMIC_ACTIVITIES = [
 
   // ── MOTOR: Fine motor ──
   { type:'motor', icon:zi('baby'), title:'Pincer grasp practice',
-    desc:'Offer small soft foods (puffs, peas) or safe objects to pick up with thumb and forefinger. Key fine motor milestone.',
+    desc:'Offer small soft foods (puffs, squashed peas) or safe objects to pick up with thumb and forefinger. Key fine motor milestone.',
     condition: (mo) => msStatus('pincer') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'motor', icon:zi('spoon'), title:'Self-feeding with spoon',
@@ -53549,7 +53558,7 @@ const DYNAMIC_ACTIVITIES = [
 
   { type:'language', icon:zi('chat'), title:'Name body parts',
     desc:'Touch her nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
-    condition: (mo) => mo >= 6 && mo < 18 && msStatus('understand') !== 'done' },
+    condition: (mo) => mo >= 6 && mo < 18 && msStatus('body part') !== 'done' },
 
   { type:'language', icon:zi('chat'), title:'Imitation games — copy her sounds',
     desc:'Repeat her babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
@@ -53573,11 +53582,11 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'sensory', icon:zi('drop'), title:'Water play',
-    desc:'Splashing in a basin or during bath time. Pouring, scooping — builds sensory awareness and fine motor skills.',
-    condition: (mo) => mo >= 5 },
+    desc:'Splashing in a basin or during bath time. Pouring, scooping — builds sensory awareness and fine motor skills. Stay within arm\'s reach and tip the water out straight after: a baby can drown in a few centimetres of water.',
+    condition: (mo) => mo >= 5 && mo < 15 },
 
   { type:'sensory', icon:zi('star'), title:'Instrument exploration',
-    desc:'Simple shakers, soft drums, or bells. Let her make noise — it builds cause-and-effect understanding and auditory processing.',
+    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let her make noise — it builds cause-and-effect understanding and auditory processing.',
     condition: (mo) => mo >= 6 },
 
   { type:'sensory', icon:zi('palette'), title:'Food-safe finger painting',
@@ -53616,9 +53625,9 @@ const DYNAMIC_ACTIVITIES = [
   // pages; WHO 2019 physical-activity guideline (1–2 y). Keys in // src: lines.
   // ── MOTOR: Toddler gross motor ──
   { type:'motor', icon:zi('run'), title:'Push and pull toys',
-    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Skip baby walkers — they are not recommended.',
+    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
     condition: (mo) => mo >= 12 && mo < 18 },
-    // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'")
+    // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'"); cord guard: ASTM F963 (cords under 30 cm on toys for under-18-month-olds)
 
   { type:'motor', icon:zi('leaf'), title:'Child-led walks outside',
     desc:'Let her lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
@@ -53652,12 +53661,12 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-15M ("You can stack the blocks and she can knock them down"); CDC-2Y ("Take turns building towers and knocking them down"); AAP-ACT 12–18 m ("may be able to make a tower of 3 or 4 blocks")
 
   { type:'motor', icon:zi('palette'), title:'First scribbles',
-    desc:'Tape paper to the table and offer chunky crayons, or a little finger paint to spread and dot. Talk about the colours, then put her art on the wall.',
+    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside her, as crayons get bitten. Talk about the colours, then put her art on the wall.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-2Y ("Give your child crayons or put some finger paint on paper ... Hang it on the wall or refrigerator"); AAP-ACT 12–18 m ("scribble on paper"); NHS-BSIL ("Draw simple pictures and encourage your child to add marks and colours")
 
-  { type:'motor', icon:zi('bowl'), title:'Fill and dump',
-    desc:'Give her a basket of soft balls or blocks and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
+  { type:'motor', icon:zi('star'), title:'Fill and dump',
+    desc:'Give her a basket of soft balls or blocks too big to fit in her mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: ZTT-PA ("Fill and Dump ... If the child is walking, place the baskets a few steps apart"); CDC-18M ("putting blocks or other items in and out of containers")
 
@@ -53672,11 +53681,10 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-15M + CDC-18M ("Let your child use a cup without a lid for drinking and practice eating with a spoon. Learning to eat and drink is messy but fun!"); CDC-18M ("sit at the table with your child when she's eating")
 
   { type:'motor', icon:zi('sparkle'), title:'Toothbrushing together',
-    desc:'Brush her teeth with a fluoride toothpaste as part of the bedtime routine, and let her have a turn holding the brush. Brushing in front of a mirror makes it a game.',
+    desc:'Twice a day, brush her teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Let her have a turn holding the brush while she sits or stands still, never walking about with it in her mouth. Brushing in front of a mirror makes it a game.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("Create a calm, quiet bedtime ... brush his teeth, and read 1 or 2 books"); ZTT-TS ("Encourage your child to take on some self-care activities — combing hair, brushing teeth"); NHS-TEETH ("Start brushing your baby's teeth with fluoride toothpaste as soon as their first milk tooth breaks through")
-    // NOTE: toothpaste AMOUNT deliberately omitted — not in any fetched source; defer to dentist/Maren.
-    // NOTE: brushing frequency deliberately omitted — not stated in the fetched sources.
+    // src (amount + frequency, Maren/Ceres fold): NHS "Children's teeth" (under 3: a smear, >=1,000 ppm, twice daily); AAP clinical report "Fluoride Use in Caries Prevention in the Primary Care Setting", Pediatrics 2014;134:626 (smear / rice-grain under 3, twice daily); ADA Council on Scientific Affairs, JADA 2014;145:190.
 
   // ── LANGUAGE ──
   { type:'language', icon:zi('chat'), title:'Build on her words',
@@ -53705,7 +53713,7 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-18M ("teach your child the names for body parts ... 'Here's your nose, here's my nose'"); CDC-2Y ("Sing songs, such as 'Head, Shoulders, Knees, and Toes' ... see if your child sings some of the words")
 
   { type:'language', icon:zi('list'), title:'Offer simple choices',
-    desc:'Hold up two options — "Red shirt or blue shirt?", "Apple or banana?" — so she can point or say which. Choices grow words and independence.',
+    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so she can point or say which. Choices grow words and independence.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-18M ("Give simple choices ... red or blue shirt"); NHS-BSIL ("Name objects and offer your child choices, for example, 'Do you want an apple or an orange?'")
 
@@ -53715,21 +53723,21 @@ const DYNAMIC_ACTIVITIES = [
     // src: NHS-BSIL ("Out and about ... a car go 'vroom vroom' ... the till go 'beep beep' ... birds singing 'cheep cheep'. Make the sounds and see if your child joins in")
 
   { type:'language', icon:zi('chat'), title:'Mealtime and dressing chat',
-    desc:'Describe as you go: "Crunchy toast", "cold yoghurt", "one arm in, two arms in". The same words every day help her match words to things and actions.',
+    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help her match words to things and actions.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL (senses at mealtimes — "This yoghurt is sweet"; getting dressed — "1 arm in, 2 arms in"; "hear the same words every day ... matching words ... to things and actions")
 
   // ── SENSORY ──
   { type:'sensory', icon:zi('drop'), title:'Sand, scoop and pour',
-    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water.',
+    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water, and tip the tub out afterwards.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-2Y ("Let your child play with sand toys or plastic containers, spoons, or a funnel in the tub or in a sandbox"); ZTT-PA ("Squishy Sponges ... it is critical to supervise children carefully as they play" with water)
 
   { type:'sensory', icon:zi('leaf'), title:'Nature treasure hunt',
-    desc:'On a walk, collect leaves, flowers and big pebbles in a bag, then sort them at home — big and small, rough and smooth. Watch that small items stay out of her mouth.',
+    desc:'On a walk, collect leaves and pebbles too big to fit inside a toilet-roll tube, then sort them at home — big and small, rough and smooth. Skip berries, seeds, mushrooms and flowers: some garden plants are poisonous. Wash hands afterwards.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: ZTT-TS ("Take walks and look for new objects to explore—pine cones, acorns, rocks, and leaves"; "Go for a nature walk and collect leaves, pine cones, and rocks in a bag. Then sort them when you get home")
-    // NOTE: the choking caveat is Lyra's safety framing, not from ZTT — Maren to confirm wording (toddler choking lens).
+    // Safety line (Maren/Ceres fold): toilet-roll tube ≈ CPSC small-parts cylinder (16 CFR 1501); poisonous garden plants common locally (oleander, datura, lantana berries).
 
   // ── SOCIAL ──
   { type:'social', icon:zi('bubble'), title:'Bubble pop',
@@ -53798,7 +53806,7 @@ function renderActivities() {
     return;
   }
 
-  label.textContent = `${activities.length} activities · ${mo} months`;
+  label.textContent = `${activities.length} activities · ${fmtAgeMonths(mo)}`;
 
   // Group by type
   const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
@@ -53929,7 +53937,7 @@ function renderUpcomingMilestones() {
   });
 
   const stateOrder = ['pending', 'in_progress'];
-  const catOrder = ['motor', 'language', 'social', 'sensory', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  const catOrder = ['motor', 'language', 'social', 'cognitive', 'sensory'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
 
   let html = '<div class="upcoming-cats">';
 

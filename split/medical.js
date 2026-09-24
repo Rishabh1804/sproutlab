@@ -720,7 +720,7 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old');
+  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old (' + months + ' months)');
   lines.push('BORN Born 4 Sep 2025 · Jamshedpur');
   lines.push('');
 
@@ -817,7 +817,7 @@ function showFullDoctorSummary() {
       </style></head><body>`);
     
     printWin.document.write(`<h1>${zi('steth')} Paediatrician Visit Summary</h1>`);
-    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)} · Generated ${formatDate(today())}</div>`);
+    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)} (${months} months) · Generated ${formatDate(today())}</div>`);
     printWin.document.write(`<div class="actions">`);
     printWin.document.write(`<button class="btn-print" data-action="printDashboard">${zi('note')} Print</button>`);
     printWin.document.write(`<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('raw').textContent).then(()=>this.textContent='Copied!')">${zi('note')} Copy</button>`);
@@ -4581,7 +4581,7 @@ const DYNAMIC_ACTIVITIES = [
 
   // ── MOTOR: Fine motor ──
   { type:'motor', icon:zi('baby'), title:'Pincer grasp practice',
-    desc:'Offer small soft foods (puffs, peas) or safe objects to pick up with thumb and forefinger. Key fine motor milestone.',
+    desc:'Offer small soft foods (puffs, squashed peas) or safe objects to pick up with thumb and forefinger. Key fine motor milestone.',
     condition: (mo) => msStatus('pincer') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'motor', icon:zi('spoon'), title:'Self-feeding with spoon',
@@ -4603,7 +4603,7 @@ const DYNAMIC_ACTIVITIES = [
 
   { type:'language', icon:zi('chat'), title:'Name body parts',
     desc:'Touch her nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
-    condition: (mo) => mo >= 6 && mo < 18 && msStatus('understand') !== 'done' },
+    condition: (mo) => mo >= 6 && mo < 18 && msStatus('body part') !== 'done' },
 
   { type:'language', icon:zi('chat'), title:'Imitation games — copy her sounds',
     desc:'Repeat her babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
@@ -4627,11 +4627,11 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'sensory', icon:zi('drop'), title:'Water play',
-    desc:'Splashing in a basin or during bath time. Pouring, scooping — builds sensory awareness and fine motor skills.',
-    condition: (mo) => mo >= 5 },
+    desc:'Splashing in a basin or during bath time. Pouring, scooping — builds sensory awareness and fine motor skills. Stay within arm\'s reach and tip the water out straight after: a baby can drown in a few centimetres of water.',
+    condition: (mo) => mo >= 5 && mo < 15 },
 
   { type:'sensory', icon:zi('star'), title:'Instrument exploration',
-    desc:'Simple shakers, soft drums, or bells. Let her make noise — it builds cause-and-effect understanding and auditory processing.',
+    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let her make noise — it builds cause-and-effect understanding and auditory processing.',
     condition: (mo) => mo >= 6 },
 
   { type:'sensory', icon:zi('palette'), title:'Food-safe finger painting',
@@ -4670,9 +4670,9 @@ const DYNAMIC_ACTIVITIES = [
   // pages; WHO 2019 physical-activity guideline (1–2 y). Keys in // src: lines.
   // ── MOTOR: Toddler gross motor ──
   { type:'motor', icon:zi('run'), title:'Push and pull toys',
-    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Skip baby walkers — they are not recommended.',
+    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
     condition: (mo) => mo >= 12 && mo < 18 },
-    // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'")
+    // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'"); cord guard: ASTM F963 (cords under 30 cm on toys for under-18-month-olds)
 
   { type:'motor', icon:zi('leaf'), title:'Child-led walks outside',
     desc:'Let her lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
@@ -4706,12 +4706,12 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-15M ("You can stack the blocks and she can knock them down"); CDC-2Y ("Take turns building towers and knocking them down"); AAP-ACT 12–18 m ("may be able to make a tower of 3 or 4 blocks")
 
   { type:'motor', icon:zi('palette'), title:'First scribbles',
-    desc:'Tape paper to the table and offer chunky crayons, or a little finger paint to spread and dot. Talk about the colours, then put her art on the wall.',
+    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside her, as crayons get bitten. Talk about the colours, then put her art on the wall.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-2Y ("Give your child crayons or put some finger paint on paper ... Hang it on the wall or refrigerator"); AAP-ACT 12–18 m ("scribble on paper"); NHS-BSIL ("Draw simple pictures and encourage your child to add marks and colours")
 
-  { type:'motor', icon:zi('bowl'), title:'Fill and dump',
-    desc:'Give her a basket of soft balls or blocks and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
+  { type:'motor', icon:zi('star'), title:'Fill and dump',
+    desc:'Give her a basket of soft balls or blocks too big to fit in her mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: ZTT-PA ("Fill and Dump ... If the child is walking, place the baskets a few steps apart"); CDC-18M ("putting blocks or other items in and out of containers")
 
@@ -4726,11 +4726,10 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-15M + CDC-18M ("Let your child use a cup without a lid for drinking and practice eating with a spoon. Learning to eat and drink is messy but fun!"); CDC-18M ("sit at the table with your child when she's eating")
 
   { type:'motor', icon:zi('sparkle'), title:'Toothbrushing together',
-    desc:'Brush her teeth with a fluoride toothpaste as part of the bedtime routine, and let her have a turn holding the brush. Brushing in front of a mirror makes it a game.',
+    desc:'Twice a day, brush her teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Let her have a turn holding the brush while she sits or stands still, never walking about with it in her mouth. Brushing in front of a mirror makes it a game.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("Create a calm, quiet bedtime ... brush his teeth, and read 1 or 2 books"); ZTT-TS ("Encourage your child to take on some self-care activities — combing hair, brushing teeth"); NHS-TEETH ("Start brushing your baby's teeth with fluoride toothpaste as soon as their first milk tooth breaks through")
-    // NOTE: toothpaste AMOUNT deliberately omitted — not in any fetched source; defer to dentist/Maren.
-    // NOTE: brushing frequency deliberately omitted — not stated in the fetched sources.
+    // src (amount + frequency, Maren/Ceres fold): NHS "Children's teeth" (under 3: a smear, >=1,000 ppm, twice daily); AAP clinical report "Fluoride Use in Caries Prevention in the Primary Care Setting", Pediatrics 2014;134:626 (smear / rice-grain under 3, twice daily); ADA Council on Scientific Affairs, JADA 2014;145:190.
 
   // ── LANGUAGE ──
   { type:'language', icon:zi('chat'), title:'Build on her words',
@@ -4759,7 +4758,7 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-18M ("teach your child the names for body parts ... 'Here's your nose, here's my nose'"); CDC-2Y ("Sing songs, such as 'Head, Shoulders, Knees, and Toes' ... see if your child sings some of the words")
 
   { type:'language', icon:zi('list'), title:'Offer simple choices',
-    desc:'Hold up two options — "Red shirt or blue shirt?", "Apple or banana?" — so she can point or say which. Choices grow words and independence.',
+    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so she can point or say which. Choices grow words and independence.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-18M ("Give simple choices ... red or blue shirt"); NHS-BSIL ("Name objects and offer your child choices, for example, 'Do you want an apple or an orange?'")
 
@@ -4769,21 +4768,21 @@ const DYNAMIC_ACTIVITIES = [
     // src: NHS-BSIL ("Out and about ... a car go 'vroom vroom' ... the till go 'beep beep' ... birds singing 'cheep cheep'. Make the sounds and see if your child joins in")
 
   { type:'language', icon:zi('chat'), title:'Mealtime and dressing chat',
-    desc:'Describe as you go: "Crunchy toast", "cold yoghurt", "one arm in, two arms in". The same words every day help her match words to things and actions.',
+    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help her match words to things and actions.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL (senses at mealtimes — "This yoghurt is sweet"; getting dressed — "1 arm in, 2 arms in"; "hear the same words every day ... matching words ... to things and actions")
 
   // ── SENSORY ──
   { type:'sensory', icon:zi('drop'), title:'Sand, scoop and pour',
-    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water.',
+    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water, and tip the tub out afterwards.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-2Y ("Let your child play with sand toys or plastic containers, spoons, or a funnel in the tub or in a sandbox"); ZTT-PA ("Squishy Sponges ... it is critical to supervise children carefully as they play" with water)
 
   { type:'sensory', icon:zi('leaf'), title:'Nature treasure hunt',
-    desc:'On a walk, collect leaves, flowers and big pebbles in a bag, then sort them at home — big and small, rough and smooth. Watch that small items stay out of her mouth.',
+    desc:'On a walk, collect leaves and pebbles too big to fit inside a toilet-roll tube, then sort them at home — big and small, rough and smooth. Skip berries, seeds, mushrooms and flowers: some garden plants are poisonous. Wash hands afterwards.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: ZTT-TS ("Take walks and look for new objects to explore—pine cones, acorns, rocks, and leaves"; "Go for a nature walk and collect leaves, pine cones, and rocks in a bag. Then sort them when you get home")
-    // NOTE: the choking caveat is Lyra's safety framing, not from ZTT — Maren to confirm wording (toddler choking lens).
+    // Safety line (Maren/Ceres fold): toilet-roll tube ≈ CPSC small-parts cylinder (16 CFR 1501); poisonous garden plants common locally (oleander, datura, lantana berries).
 
   // ── SOCIAL ──
   { type:'social', icon:zi('bubble'), title:'Bubble pop',
@@ -4852,7 +4851,7 @@ function renderActivities() {
     return;
   }
 
-  label.textContent = `${activities.length} activities · ${mo} months`;
+  label.textContent = `${activities.length} activities · ${fmtAgeMonths(mo)}`;
 
   // Group by type
   const catMeta = {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
@@ -4983,7 +4982,7 @@ function renderUpcomingMilestones() {
   });
 
   const stateOrder = ['pending', 'in_progress'];
-  const catOrder = ['motor', 'language', 'social', 'sensory', 'cognitive'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
+  const catOrder = ['motor', 'language', 'social', 'cognitive', 'sensory'];  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (milestones-tab-v1 carry-forward)
 
   let html = '<div class="upcoming-cats">';
 
