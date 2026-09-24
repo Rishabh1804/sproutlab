@@ -1557,6 +1557,11 @@ const DEFAULT_VACC = [
 //   "due now", never "missing" (V-M-266-7). No windowEnd = the window is the age itself.
 // conditional: doses that don't apply to every child (vaccine brand, endemic area, special
 //   situations). Never "missing" and never scored; shown as "check with her doctor".
+// after: a follow-on dose, only listed once that first dose is recorded as given.
+// completesSeries: once `after` is given, the dose stops being conditional and reads
+//   due/overdue like a routine dose (JE-2, MCV-2 finish a series the doctor started).
+// seasonal:'flu': timed by season, not age — due Apr–Jul (pre-monsoon) when no flu dose
+//   was logged in the last ~10 months; never 'missing', never scored (vaccDueState).
 // 2026-09-24 reconciliation (12–24 m PR 2): removed OPV-2 @9 m, PCV Booster-2 @15 m,
 //   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025 or the UIP
 //   (IAP: one PCV booster at 12–15 m; TCV has no booster; the 4–6 y polio dose is IPV-B2).
@@ -1610,20 +1615,20 @@ const VACC_SCHEDULE = [
 
   // ── 9 MONTHS ──
   { name:'MMR-1', age:'9 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Critical vaccine. Measles remains a leading cause of child mortality in India.' },
-  { name:'MCV-1', age:'9 months', type:'private', conditional:'Special situations only (travel, outbreaks, some medical conditions).', protects:'Meningococcal meningitis', notes:'MenACWY (meningococcal conjugate), not the measles vaccine. Special situations only: 2 doses between 9 and 23 months, at least 3 months apart.' },
+  { name:'MCV-1', age:'9 months', windowEnd:23, type:'private', conditional:'Special situations only (travel, outbreaks, some medical conditions).', protects:'Meningococcal meningitis', notes:'MenACWY (meningococcal conjugate), not the measles vaccine. Special situations only: 2 doses between 9 and 23 months, at least 3 months apart.' },
 
   // ── 12 MONTHS ──
   { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Only in JE-endemic districts (parts of Jharkhand, Bihar, UP, Assam, West Bengal). Ask her doctor or the local vaccination centre.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
-  { name:'MCV-2', age:'12 months', type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'MCV-2', age:'12 months', windowEnd:23, after:'MCV-1', completesSeries:true, type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
   { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 
   // ── 13 MONTHS ──
-  { name:'JE-2', age:'13 months', type:'iap-rec', conditional:'Only if JE-1 was given (endemic areas).', protects:'Japanese Encephalitis', notes:'Second dose, 28 days after the first. Completes the JE series.' },
+  { name:'JE-2', age:'13 months', after:'JE-1', completesSeries:true, type:'iap-rec', conditional:'Only if JE-1 was given (endemic areas).', protects:'Japanese Encephalitis', notes:'Second dose, 28 days after the first. Completes the JE series.' },
 
   // ── 15 MONTHS ──
-  { name:'MMR-2', age:'15 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Second dose for full protection.' },
-  { name:'Varicella-1', age:'15 months', type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose 3–6 months later, at 18–19 months. Not in UIP — private only.' },
+  { name:'MMR-2', age:'15 months', windowEnd:18, type:'iap', protects:'Measles, Mumps, Rubella', notes:'Second dose for full protection.' },
+  { name:'Varicella-1', age:'15 months', windowEnd:18, type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose 3–6 months later, at 18–19 months. Not in UIP — private only.' },
 
   // ── 16-18 MONTHS ──
   { name:'DTwP/DTaP-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'First booster after primary 3-dose series.' },
@@ -1631,14 +1636,14 @@ const VACC_SCHEDULE = [
   { name:'IPV-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Poliomyelitis', notes:'IPV booster dose.' },
 
   // ── 18-19 MONTHS ──
-  { name:'Hep A-2', age:'18-19 months', windowEnd:19, type:'iap-rec', conditional:'Only if Hep A-1 was the inactivated (killed) vaccine; the live vaccine is a single dose.', protects:'Hepatitis A', notes:'Second dose of the inactivated vaccine, at least 6 months after the first.' },
-  { name:'Varicella-2', age:'18-19 months', windowEnd:19, type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
+  { name:'Hep A-2', age:'18-19 months', windowEnd:19, after:'Hep A-1', type:'iap-rec', conditional:'Only if Hep A-1 was the inactivated (killed) vaccine; the live vaccine is a single dose.', protects:'Hepatitis A', notes:'Second dose of the inactivated vaccine, at least 6 months after the first.' },
+  { name:'Varicella-2', age:'18-19 months', windowEnd:24, type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
 
   // ── YEARLY FLU, 1–5 YEARS (IAP: every year until 5, before the monsoon, May–June) ──
-  { name:'Influenza yearly (1-2 y)', age:'1-2 years', windowEnd:24, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
-  { name:'Influenza yearly (2-3 y)', age:'2-3 years', windowEnd:36, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
-  { name:'Influenza yearly (3-4 y)', age:'3-4 years', windowEnd:48, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
-  { name:'Influenza yearly (4-5 y)', age:'4-5 years', windowEnd:60, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
+  { name:'Influenza yearly (1-2 y)', age:'1-2 years', seasonal:'flu', windowEnd:24, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (2-3 y)', age:'2-3 years', seasonal:'flu', windowEnd:36, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (3-4 y)', age:'3-4 years', seasonal:'flu', windowEnd:48, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (4-5 y)', age:'4-5 years', seasonal:'flu', windowEnd:60, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
 
   // ── 4-6 YEARS ──
   { name:'DTwP/DTaP-B2', age:'4-6 years', windowEnd:72, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'Second booster at school entry.' },
@@ -2007,7 +2012,7 @@ const VACC_DELAY_SAFETY = {
   'Rotavirus': { safe: 7, concern: 14, note: 'Rotavirus has strict age windows. First dose must be before 15 weeks. Delay beyond the age window means the dose may be skipped entirely.' },
   'MMR': { safe: 14, concern: 30, note: 'MMR at 9 months is critical in India due to measles prevalence. A 2-week delay is usually fine, but avoid delaying beyond 4 weeks.' },
   'DTwP': { safe: 14, concern: 28, note: 'DTP vaccines can be delayed 2-4 weeks without restarting the series. The full primary series is important for complete protection.' },
-  'Influenza': { safe: 21, concern: 42, note: 'Influenza vaccine timing is seasonal \u2014 delay is fine as long as it is given before peak flu season (Oct-Feb in India).' },
+  'Influenza': { safe: 21, concern: 42, note: 'Influenza vaccine timing is seasonal \u2014 delay is fine as long as it is given before the monsoon (May\u2013June), as IAP advises for India.' },
   'PCV': { safe: 14, concern: 28, note: 'PCV can be safely delayed by 2-4 weeks. The series does not need to be restarted if delayed.' },
 };
 
@@ -4373,8 +4378,8 @@ const SLEEP_STANDARDS = {
   who: { // WHO sleep guidelines
     nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },  // 10h floor
     nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:630, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 }, // 11h / 10.5h
-    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:780, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 }, // 14h / 13h
-    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:480, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 }, // 9h / 8h
+    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:750, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 }, // 14h / 13h
+    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 }, // 9h / 8h infant; 10h from 12 m (AASM/WHO 1–2 y band starts at 12 m)
     bedtimeStart: 19, bedtimeEnd: 20, // 7–8 PM
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'WHO'
@@ -4382,17 +4387,17 @@ const SLEEP_STANDARDS = {
   iap: { // IAP (India) — slightly more flexible on bedtime, adjusted for Indian routines
     nightMin:  { 6:570, 7:570, 8:570, 9:570, 10:570, 11:570, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:540, 30:540, 31:540, 36:540 },  // 9.5h floor
     nightTarget: { 6:660, 7:660, 8:660, 9:630, 10:630, 11:630, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 11h / 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:750, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 }, // 14h → 12.5h
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:450, 13:570, 15:570, 18:570, 19:570, 24:570, 25:600, 30:600, 31:600, 36:600 },
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:720, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 }, // 14h → 12.5h
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:540, 30:540, 31:540, 36:540 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Indian households tend later)
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[1,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'IAP'
   },
   eu: { // European norms — similar to WHO with slight variations
-    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:570, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
+    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
     nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:660, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 },
-    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:780, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 },
-    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:480, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
+    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:750, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 },
+    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 19, bedtimeEnd: 20,
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'EU'
@@ -4400,8 +4405,8 @@ const SLEEP_STANDARDS = {
   cn: { // Chinese (CIP) — tends to expect slightly less night sleep, more naps
     nightMin:  { 6:570, 7:570, 8:570, 9:540, 10:540, 11:540, 12:540, 13:540, 15:540, 18:540, 19:540, 24:540, 25:540, 30:540, 31:540, 36:540 },  // 9.5h / 9h
     nightTarget: { 6:630, 7:630, 8:630, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:750, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 },
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:450, 13:570, 15:570, 18:570, 19:570, 24:570, 25:570, 30:570, 31:570, 36:570 },
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:720, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 },
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Chinese households tend later)
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,3], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'CIP'
@@ -4718,7 +4723,7 @@ const VACC_GUIDANCE = {
     note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
   },
   'mcv': {
-    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask her doctor', 'Two doses between 9 and 23 months, at least 3 months apart'],
+    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask her doctor', 'If her doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
     donts: ['Don\'t confuse it with the measles vaccine (in India "MCV" often means measles-containing vaccine)'],
     note: 'MenACWY protects against meningococcal meningitis and septicaemia. IAP lists it for special situations, not routine use.',
   },
@@ -4733,12 +4738,12 @@ const VACC_GUIDANCE = {
     note: 'Protects against chickenpox. Not in the government programme, so usually given privately.',
   },
   'je': {
-    dos: ['Only in JE-endemic districts — ask her doctor or the local vaccination centre', 'Two doses 28 days apart (private inactivated vaccine)'],
+    dos: ['Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres — ask at her next visit', 'Private inactivated vaccine: two doses 28 days apart; government live vaccine: 9–12 and 16–24 months'],
     donts: ['Don\'t skip it if you live in an endemic district — JE can cause lasting brain damage'],
     note: 'Japanese encephalitis spreads through mosquito bites in rural, rice-growing areas.',
   },
   'opv': {
-    dos: ['Oral drops — easy and painless', 'Continue giving OPV even during pulse polio campaigns'],
+    dos: ['Oral drops — easy and painless', 'On every Pulse Polio day, children under 5 should get the drops, even if fully vaccinated'],
     donts: ['Don\'t breastfeed for 30 minutes before/after OPV (some guidelines)', 'Don\'t skip government pulse polio rounds'],
     note: 'Oral polio vaccine provides intestinal immunity. Works alongside IPV for complete protection.',
   },
@@ -5814,17 +5819,19 @@ const RECOMMENDATION_ROSTER = {
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
         { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        // 12–36 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
-        // SLEEP_STANDARDS naps [1,2] from 12 m). A single-nap day is met, not "one short".
-        { startMo: 12, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        // 12–31 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] then [1,1]). A single-nap day is met, not "one short".
+        // From 31 m naps are optional ([0,1]); no band, so the nap nudge ages out.
+        { startMo: 12, endMo: 31, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       iap: { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
         { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        // 12–36 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
-        // SLEEP_STANDARDS naps [1,2] from 12 m). A single-nap day is met, not "one short".
-        { startMo: 12, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        // 12–31 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] then [1,1]). A single-nap day is met, not "one short".
+        // From 31 m naps are optional ([0,1]); no band, so the nap nudge ages out.
+        { startMo: 12, endMo: 31, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       eu:  { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
@@ -5836,9 +5843,9 @@ const RECOMMENDATION_ROSTER = {
       ]},
     },
     severityMessages: {
-      // Severity follows days since naps were last on target, not how many are missing.
+      // Severity follows days since a nap was last logged, not how many are missing.
       gentle: { strength: 'one-short',  text: 'Fewer naps than usual today — a calm afternoon helps.' },
-      firm:   { strength: 'two-short',  text: 'Naps have been short two days running. A quieter morning tomorrow could help.' },
+      firm:   { strength: 'two-short',  text: 'No naps logged yesterday either. A quieter morning tomorrow could help.' },
       urgent: { strength: 'no-naps',    text: 'No naps logged today at this age. Watch for evening overtiredness.' },
     },
     successorOnExpiry: null,

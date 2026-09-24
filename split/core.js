@@ -1429,6 +1429,8 @@ function init() {
       { name:'TCV', upcoming:false },
       { name:'Influenza-1', upcoming:false },
     ],
+    // Kept deliberately: rebuilds doses actually given. OPV-2 left the schedule in the
+    // 12–24 m PR 2 (not in IAP 2023/UIP) but a given dose stays on her record.
     '9-month combo (mmr, opv booster)': [
       { name:'MMR-1', upcoming:false },
       { name:'OPV-2', upcoming:false },
@@ -2160,16 +2162,17 @@ function calcMedicalScore() {
   // Scored doses: routine (not private, not conditional) doses that are given or
   // overdue. A dose still inside its window neither helps nor hurts until it
   // is given or its window closes (V-M-266-7).
-  const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
+  const givenList = vaccData.filter(v => !v.upcoming);
+  const givenNames = new Set(givenList.map(v => normVacc(v.name)));
   const dueNow = VACC_SCHEDULE.filter(v => {
-    if (v.conditional || v.type === 'private') return false;
+    if (vaccIsConditional(v, givenNames) || v.type === 'private' || v.seasonal) return false;
     const st = vaccDueState(v, mo);
-    return st === 'overdue' || (st === 'due' && givenNames.has(normVacc(v.name)));
+    return st === 'overdue' || (st === 'due' && vaccIsGiven(v, givenNames, givenList));
   });
   const vaccBookedData = load(KEYS.vaccBooked, null);
   let vaccGiven = 0;
   dueNow.forEach(v => {
-    if (givenNames.has(normVacc(v.name))) {
+    if (vaccIsGiven(v, givenNames, givenList)) {
       vaccGiven++;
     } else if (vaccBookedData && normVacc(vaccBookedData.vaccName) === normVacc(v.name)) {
       vaccGiven += 0.85; // booked but not yet given — mostly credited
@@ -2243,7 +2246,7 @@ function calcMedicalScore() {
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
       // Routine doses inside their window and not yet given (not scored; shown as "due now").
-      vaccDueNow: VACC_SCHEDULE.filter(v => !v.conditional && v.type !== 'private' && vaccDueState(v, mo) === 'due' && !givenNames.has(normVacc(v.name))).length,
+      vaccDueNow: VACC_SCHEDULE.filter(v => !vaccIsConditional(v, givenNames) && v.type !== 'private' && vaccDueState(v, mo) === 'due' && !vaccIsGiven(v, givenNames, givenList)).length,
       suppDays: activeMeds.length > 0 ? Math.round(suppScore / 100 * 7) : null, suppTotal: 7,
       daysSinceGrowth: daysSinceGrowth,
       hasBothMeasures: growthData.length > 0 && !!(growthData[growthData.length-1].wt && growthData[growthData.length-1].ht)
@@ -3154,9 +3157,45 @@ function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 // month), 'overdue' (past that). The grace month is an app convention, not
 // IAP: a dose reads "due now" before it ever reads "missing" (V-M-266-7).
 const VACC_DUE_GRACE_MONTHS = 1;
+// vaccIsGiven — whether a scheduled dose is recorded. Exact (normalised) name match,
+// except the yearly flu rows: any given flu/influenza entry dated inside that
+// year's window counts, since cards and parents never use the app's row label.
+function vaccIsGiven(v, givenNorm, givenList) {
+  if (givenNorm.has(normVacc(v.name))) return true;
+  if (/^Influenza yearly/.test(v.name) && Array.isArray(givenList)) {
+    const start = VACC_AGE_MONTHS[v.age], end = v.windowEnd;
+    return givenList.some(e => {
+      if (!e || !/influenza|flu/i.test(e.name || '') || typeof e.date !== 'string') return false;
+      const p = e.date.split('-').map(Number);
+      if (p.length !== 3 || !p[0]) return false;
+      const m = ageAt(new Date(p[0], p[1] - 1, p[2], 12)).months;
+      return m >= start && m < end;
+    });
+  }
+  return false;
+}
+// _vaccFluSeasonDue — a yearly flu row is due in the pre-monsoon season (Apr–Jul,
+// IAP: before the monsoon, May–June) when no flu dose was logged in ~10 months.
+function _vaccFluSeasonDue() {
+  const m = new Date().getMonth();
+  if (m < 3 || m > 6) return false;
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 300);
+  const cutStr = toDateStr(cutoff);
+  return !(vaccData || []).some(e => e && !e.upcoming && /influenza|flu/i.test(e.name || '') && typeof e.date === 'string' && e.date >= cutStr);
+}
+// vaccIsConditional — conditional unless it completes a series whose first dose is given.
+function vaccIsConditional(v, givenNorm) {
+  if (!v.conditional) return false;
+  if (v.completesSeries && v.after && givenNorm && givenNorm.has(normVacc(v.after))) return false;
+  return true;
+}
 function vaccDueState(v, mo) {
   const start = VACC_AGE_MONTHS[v.age];
   if (typeof start !== 'number' || mo < start) return 'future';
+  if (v.seasonal === 'flu') {
+    if (typeof v.windowEnd === 'number' && mo >= v.windowEnd) return 'future';
+    return _vaccFluSeasonDue() ? 'due' : 'future';
+  }
   const end = (typeof v.windowEnd === 'number' ? v.windowEnd : start) + VACC_DUE_GRACE_MONTHS;
   return mo <= end ? 'due' : 'overdue';
 }

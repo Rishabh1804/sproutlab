@@ -4716,8 +4716,12 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .section-label-danger { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-danger); margin-bottom:var(--sp-6); }
 .section-label-warn   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-warn); margin:var(--sp-12) 0 var(--sp-6); }
 .section-label-info   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin:var(--sp-12) 0 var(--sp-6); }
-.section-label-due    { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sky); margin-bottom:var(--sp-6); }
+.section-label-due    { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sky); margin:var(--sp-12) 0 var(--sp-6); }
+.section-label-check  { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-lav); margin:var(--sp-12) 0 var(--sp-6); }
 .vacc-cond-note { font-size:var(--fs-sm); color:var(--tc-lav); margin-top:var(--sp-2); }
+.vacc-other-label { margin-top:var(--sp-12); }
+.vacc-chip-row { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.vacc-chip-other { font-size:var(--fs-sm); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-lg); background:var(--warm); color:var(--mid); }
 
 /* ── M2 Migration: Insight/Guidance Boxes ── */
 .insight-box      { padding:var(--sp-8) var(--sp-12); border-radius:var(--r-md); font-size:var(--fs-sm); }
@@ -17393,6 +17397,11 @@ const DEFAULT_VACC = [
 //   "due now", never "missing" (V-M-266-7). No windowEnd = the window is the age itself.
 // conditional: doses that don't apply to every child (vaccine brand, endemic area, special
 //   situations). Never "missing" and never scored; shown as "check with her doctor".
+// after: a follow-on dose, only listed once that first dose is recorded as given.
+// completesSeries: once `after` is given, the dose stops being conditional and reads
+//   due/overdue like a routine dose (JE-2, MCV-2 finish a series the doctor started).
+// seasonal:'flu': timed by season, not age — due Apr–Jul (pre-monsoon) when no flu dose
+//   was logged in the last ~10 months; never 'missing', never scored (vaccDueState).
 // 2026-09-24 reconciliation (12–24 m PR 2): removed OPV-2 @9 m, PCV Booster-2 @15 m,
 //   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025 or the UIP
 //   (IAP: one PCV booster at 12–15 m; TCV has no booster; the 4–6 y polio dose is IPV-B2).
@@ -17446,20 +17455,20 @@ const VACC_SCHEDULE = [
 
   // ── 9 MONTHS ──
   { name:'MMR-1', age:'9 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Critical vaccine. Measles remains a leading cause of child mortality in India.' },
-  { name:'MCV-1', age:'9 months', type:'private', conditional:'Special situations only (travel, outbreaks, some medical conditions).', protects:'Meningococcal meningitis', notes:'MenACWY (meningococcal conjugate), not the measles vaccine. Special situations only: 2 doses between 9 and 23 months, at least 3 months apart.' },
+  { name:'MCV-1', age:'9 months', windowEnd:23, type:'private', conditional:'Special situations only (travel, outbreaks, some medical conditions).', protects:'Meningococcal meningitis', notes:'MenACWY (meningococcal conjugate), not the measles vaccine. Special situations only: 2 doses between 9 and 23 months, at least 3 months apart.' },
 
   // ── 12 MONTHS ──
   { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Only in JE-endemic districts (parts of Jharkhand, Bihar, UP, Assam, West Bengal). Ask her doctor or the local vaccination centre.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
-  { name:'MCV-2', age:'12 months', type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'MCV-2', age:'12 months', windowEnd:23, after:'MCV-1', completesSeries:true, type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
   { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 
   // ── 13 MONTHS ──
-  { name:'JE-2', age:'13 months', type:'iap-rec', conditional:'Only if JE-1 was given (endemic areas).', protects:'Japanese Encephalitis', notes:'Second dose, 28 days after the first. Completes the JE series.' },
+  { name:'JE-2', age:'13 months', after:'JE-1', completesSeries:true, type:'iap-rec', conditional:'Only if JE-1 was given (endemic areas).', protects:'Japanese Encephalitis', notes:'Second dose, 28 days after the first. Completes the JE series.' },
 
   // ── 15 MONTHS ──
-  { name:'MMR-2', age:'15 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Second dose for full protection.' },
-  { name:'Varicella-1', age:'15 months', type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose 3–6 months later, at 18–19 months. Not in UIP — private only.' },
+  { name:'MMR-2', age:'15 months', windowEnd:18, type:'iap', protects:'Measles, Mumps, Rubella', notes:'Second dose for full protection.' },
+  { name:'Varicella-1', age:'15 months', windowEnd:18, type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose 3–6 months later, at 18–19 months. Not in UIP — private only.' },
 
   // ── 16-18 MONTHS ──
   { name:'DTwP/DTaP-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'First booster after primary 3-dose series.' },
@@ -17467,14 +17476,14 @@ const VACC_SCHEDULE = [
   { name:'IPV-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Poliomyelitis', notes:'IPV booster dose.' },
 
   // ── 18-19 MONTHS ──
-  { name:'Hep A-2', age:'18-19 months', windowEnd:19, type:'iap-rec', conditional:'Only if Hep A-1 was the inactivated (killed) vaccine; the live vaccine is a single dose.', protects:'Hepatitis A', notes:'Second dose of the inactivated vaccine, at least 6 months after the first.' },
-  { name:'Varicella-2', age:'18-19 months', windowEnd:19, type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
+  { name:'Hep A-2', age:'18-19 months', windowEnd:19, after:'Hep A-1', type:'iap-rec', conditional:'Only if Hep A-1 was the inactivated (killed) vaccine; the live vaccine is a single dose.', protects:'Hepatitis A', notes:'Second dose of the inactivated vaccine, at least 6 months after the first.' },
+  { name:'Varicella-2', age:'18-19 months', windowEnd:24, type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
 
   // ── YEARLY FLU, 1–5 YEARS (IAP: every year until 5, before the monsoon, May–June) ──
-  { name:'Influenza yearly (1-2 y)', age:'1-2 years', windowEnd:24, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
-  { name:'Influenza yearly (2-3 y)', age:'2-3 years', windowEnd:36, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
-  { name:'Influenza yearly (3-4 y)', age:'3-4 years', windowEnd:48, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
-  { name:'Influenza yearly (4-5 y)', age:'4-5 years', windowEnd:60, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose this year, ideally before the monsoon (May–June).' },
+  { name:'Influenza yearly (1-2 y)', age:'1-2 years', seasonal:'flu', windowEnd:24, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (2-3 y)', age:'2-3 years', seasonal:'flu', windowEnd:36, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (3-4 y)', age:'3-4 years', seasonal:'flu', windowEnd:48, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (4-5 y)', age:'4-5 years', seasonal:'flu', windowEnd:60, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
 
   // ── 4-6 YEARS ──
   { name:'DTwP/DTaP-B2', age:'4-6 years', windowEnd:72, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'Second booster at school entry.' },
@@ -17843,7 +17852,7 @@ const VACC_DELAY_SAFETY = {
   'Rotavirus': { safe: 7, concern: 14, note: 'Rotavirus has strict age windows. First dose must be before 15 weeks. Delay beyond the age window means the dose may be skipped entirely.' },
   'MMR': { safe: 14, concern: 30, note: 'MMR at 9 months is critical in India due to measles prevalence. A 2-week delay is usually fine, but avoid delaying beyond 4 weeks.' },
   'DTwP': { safe: 14, concern: 28, note: 'DTP vaccines can be delayed 2-4 weeks without restarting the series. The full primary series is important for complete protection.' },
-  'Influenza': { safe: 21, concern: 42, note: 'Influenza vaccine timing is seasonal \u2014 delay is fine as long as it is given before peak flu season (Oct-Feb in India).' },
+  'Influenza': { safe: 21, concern: 42, note: 'Influenza vaccine timing is seasonal \u2014 delay is fine as long as it is given before the monsoon (May\u2013June), as IAP advises for India.' },
   'PCV': { safe: 14, concern: 28, note: 'PCV can be safely delayed by 2-4 weeks. The series does not need to be restarted if delayed.' },
 };
 
@@ -20209,8 +20218,8 @@ const SLEEP_STANDARDS = {
   who: { // WHO sleep guidelines
     nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },  // 10h floor
     nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:630, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 }, // 11h / 10.5h
-    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:780, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 }, // 14h / 13h
-    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:480, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 }, // 9h / 8h
+    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:750, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 }, // 14h / 13h
+    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 }, // 9h / 8h infant; 10h from 12 m (AASM/WHO 1–2 y band starts at 12 m)
     bedtimeStart: 19, bedtimeEnd: 20, // 7–8 PM
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'WHO'
@@ -20218,17 +20227,17 @@ const SLEEP_STANDARDS = {
   iap: { // IAP (India) — slightly more flexible on bedtime, adjusted for Indian routines
     nightMin:  { 6:570, 7:570, 8:570, 9:570, 10:570, 11:570, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:540, 30:540, 31:540, 36:540 },  // 9.5h floor
     nightTarget: { 6:660, 7:660, 8:660, 9:630, 10:630, 11:630, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 11h / 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:750, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 }, // 14h → 12.5h
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:450, 13:570, 15:570, 18:570, 19:570, 24:570, 25:600, 30:600, 31:600, 36:600 },
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:720, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 }, // 14h → 12.5h
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:540, 30:540, 31:540, 36:540 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Indian households tend later)
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[1,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'IAP'
   },
   eu: { // European norms — similar to WHO with slight variations
-    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:570, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
+    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
     nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:660, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 },
-    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:780, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 },
-    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:480, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
+    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:750, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 },
+    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 19, bedtimeEnd: 20,
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'EU'
@@ -20236,8 +20245,8 @@ const SLEEP_STANDARDS = {
   cn: { // Chinese (CIP) — tends to expect slightly less night sleep, more naps
     nightMin:  { 6:570, 7:570, 8:570, 9:540, 10:540, 11:540, 12:540, 13:540, 15:540, 18:540, 19:540, 24:540, 25:540, 30:540, 31:540, 36:540 },  // 9.5h / 9h
     nightTarget: { 6:630, 7:630, 8:630, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:750, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 },
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:450, 13:570, 15:570, 18:570, 19:570, 24:570, 25:570, 30:570, 31:570, 36:570 },
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:720, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 },
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Chinese households tend later)
     naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,3], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'CIP'
@@ -20554,7 +20563,7 @@ const VACC_GUIDANCE = {
     note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
   },
   'mcv': {
-    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask her doctor', 'Two doses between 9 and 23 months, at least 3 months apart'],
+    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask her doctor', 'If her doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
     donts: ['Don\'t confuse it with the measles vaccine (in India "MCV" often means measles-containing vaccine)'],
     note: 'MenACWY protects against meningococcal meningitis and septicaemia. IAP lists it for special situations, not routine use.',
   },
@@ -20569,12 +20578,12 @@ const VACC_GUIDANCE = {
     note: 'Protects against chickenpox. Not in the government programme, so usually given privately.',
   },
   'je': {
-    dos: ['Only in JE-endemic districts — ask her doctor or the local vaccination centre', 'Two doses 28 days apart (private inactivated vaccine)'],
+    dos: ['Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres — ask at her next visit', 'Private inactivated vaccine: two doses 28 days apart; government live vaccine: 9–12 and 16–24 months'],
     donts: ['Don\'t skip it if you live in an endemic district — JE can cause lasting brain damage'],
     note: 'Japanese encephalitis spreads through mosquito bites in rural, rice-growing areas.',
   },
   'opv': {
-    dos: ['Oral drops — easy and painless', 'Continue giving OPV even during pulse polio campaigns'],
+    dos: ['Oral drops — easy and painless', 'On every Pulse Polio day, children under 5 should get the drops, even if fully vaccinated'],
     donts: ['Don\'t breastfeed for 30 minutes before/after OPV (some guidelines)', 'Don\'t skip government pulse polio rounds'],
     note: 'Oral polio vaccine provides intestinal immunity. Works alongside IPV for complete protection.',
   },
@@ -21650,17 +21659,19 @@ const RECOMMENDATION_ROSTER = {
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
         { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        // 12–36 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
-        // SLEEP_STANDARDS naps [1,2] from 12 m). A single-nap day is met, not "one short".
-        { startMo: 12, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        // 12–31 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] then [1,1]). A single-nap day is met, not "one short".
+        // From 31 m naps are optional ([0,1]); no band, so the nap nudge ages out.
+        { startMo: 12, endMo: 31, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       iap: { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
         { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        // 12–36 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
-        // SLEEP_STANDARDS naps [1,2] from 12 m). A single-nap day is met, not "one short".
-        { startMo: 12, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        // 12–31 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] then [1,1]). A single-nap day is met, not "one short".
+        // From 31 m naps are optional ([0,1]); no band, so the nap nudge ages out.
+        { startMo: 12, endMo: 31, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       eu:  { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
@@ -21672,9 +21683,9 @@ const RECOMMENDATION_ROSTER = {
       ]},
     },
     severityMessages: {
-      // Severity follows days since naps were last on target, not how many are missing.
+      // Severity follows days since a nap was last logged, not how many are missing.
       gentle: { strength: 'one-short',  text: 'Fewer naps than usual today — a calm afternoon helps.' },
-      firm:   { strength: 'two-short',  text: 'Naps have been short two days running. A quieter morning tomorrow could help.' },
+      firm:   { strength: 'two-short',  text: 'No naps logged yesterday either. A quieter morning tomorrow could help.' },
       urgent: { strength: 'no-naps',    text: 'No naps logged today at this age. Watch for evening overtiredness.' },
     },
     successorOnExpiry: null,
@@ -23772,6 +23783,8 @@ function init() {
       { name:'TCV', upcoming:false },
       { name:'Influenza-1', upcoming:false },
     ],
+    // Kept deliberately: rebuilds doses actually given. OPV-2 left the schedule in the
+    // 12–24 m PR 2 (not in IAP 2023/UIP) but a given dose stays on her record.
     '9-month combo (mmr, opv booster)': [
       { name:'MMR-1', upcoming:false },
       { name:'OPV-2', upcoming:false },
@@ -24503,16 +24516,17 @@ function calcMedicalScore() {
   // Scored doses: routine (not private, not conditional) doses that are given or
   // overdue. A dose still inside its window neither helps nor hurts until it
   // is given or its window closes (V-M-266-7).
-  const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
+  const givenList = vaccData.filter(v => !v.upcoming);
+  const givenNames = new Set(givenList.map(v => normVacc(v.name)));
   const dueNow = VACC_SCHEDULE.filter(v => {
-    if (v.conditional || v.type === 'private') return false;
+    if (vaccIsConditional(v, givenNames) || v.type === 'private' || v.seasonal) return false;
     const st = vaccDueState(v, mo);
-    return st === 'overdue' || (st === 'due' && givenNames.has(normVacc(v.name)));
+    return st === 'overdue' || (st === 'due' && vaccIsGiven(v, givenNames, givenList));
   });
   const vaccBookedData = load(KEYS.vaccBooked, null);
   let vaccGiven = 0;
   dueNow.forEach(v => {
-    if (givenNames.has(normVacc(v.name))) {
+    if (vaccIsGiven(v, givenNames, givenList)) {
       vaccGiven++;
     } else if (vaccBookedData && normVacc(vaccBookedData.vaccName) === normVacc(v.name)) {
       vaccGiven += 0.85; // booked but not yet given — mostly credited
@@ -24586,7 +24600,7 @@ function calcMedicalScore() {
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
       // Routine doses inside their window and not yet given (not scored; shown as "due now").
-      vaccDueNow: VACC_SCHEDULE.filter(v => !v.conditional && v.type !== 'private' && vaccDueState(v, mo) === 'due' && !givenNames.has(normVacc(v.name))).length,
+      vaccDueNow: VACC_SCHEDULE.filter(v => !vaccIsConditional(v, givenNames) && v.type !== 'private' && vaccDueState(v, mo) === 'due' && !vaccIsGiven(v, givenNames, givenList)).length,
       suppDays: activeMeds.length > 0 ? Math.round(suppScore / 100 * 7) : null, suppTotal: 7,
       daysSinceGrowth: daysSinceGrowth,
       hasBothMeasures: growthData.length > 0 && !!(growthData[growthData.length-1].wt && growthData[growthData.length-1].ht)
@@ -25497,9 +25511,45 @@ function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 // month), 'overdue' (past that). The grace month is an app convention, not
 // IAP: a dose reads "due now" before it ever reads "missing" (V-M-266-7).
 const VACC_DUE_GRACE_MONTHS = 1;
+// vaccIsGiven — whether a scheduled dose is recorded. Exact (normalised) name match,
+// except the yearly flu rows: any given flu/influenza entry dated inside that
+// year's window counts, since cards and parents never use the app's row label.
+function vaccIsGiven(v, givenNorm, givenList) {
+  if (givenNorm.has(normVacc(v.name))) return true;
+  if (/^Influenza yearly/.test(v.name) && Array.isArray(givenList)) {
+    const start = VACC_AGE_MONTHS[v.age], end = v.windowEnd;
+    return givenList.some(e => {
+      if (!e || !/influenza|flu/i.test(e.name || '') || typeof e.date !== 'string') return false;
+      const p = e.date.split('-').map(Number);
+      if (p.length !== 3 || !p[0]) return false;
+      const m = ageAt(new Date(p[0], p[1] - 1, p[2], 12)).months;
+      return m >= start && m < end;
+    });
+  }
+  return false;
+}
+// _vaccFluSeasonDue — a yearly flu row is due in the pre-monsoon season (Apr–Jul,
+// IAP: before the monsoon, May–June) when no flu dose was logged in ~10 months.
+function _vaccFluSeasonDue() {
+  const m = new Date().getMonth();
+  if (m < 3 || m > 6) return false;
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 300);
+  const cutStr = toDateStr(cutoff);
+  return !(vaccData || []).some(e => e && !e.upcoming && /influenza|flu/i.test(e.name || '') && typeof e.date === 'string' && e.date >= cutStr);
+}
+// vaccIsConditional — conditional unless it completes a series whose first dose is given.
+function vaccIsConditional(v, givenNorm) {
+  if (!v.conditional) return false;
+  if (v.completesSeries && v.after && givenNorm && givenNorm.has(normVacc(v.after))) return false;
+  return true;
+}
 function vaccDueState(v, mo) {
   const start = VACC_AGE_MONTHS[v.age];
   if (typeof start !== 'number' || mo < start) return 'future';
+  if (v.seasonal === 'flu') {
+    if (typeof v.windowEnd === 'number' && mo >= v.windowEnd) return 'future';
+    return _vaccFluSeasonDue() ? 'due' : 'future';
+  }
   const end = (typeof v.windowEnd === 'number' ? v.windowEnd : start) + VACC_DUE_GRACE_MONTHS;
   return mo <= end ? 'due' : 'overdue';
 }
@@ -39703,13 +39753,15 @@ function renderTodayPlan() {
   const napIdealToday = (typeof getSleepTargets === 'function') ? getSleepTargets(ageM).napIdeal : [2, 3];
   const oneNapAge = napIdealToday[1] <= 1;
   const toddlerNaps = ageM >= 12 && !oneNapAge;
+  const _todayNapList = todaySleep.filter(e => e.type === 'nap' && e.bedtime);
+  const todayMainNapOnly = _todayNapList.length === 1 && parseInt(_todayNapList[0].bedtime) >= 11;
   if (!oneNapAge) {
     items.push({
       time: '9:30', icon: zi('zzz'), title: toddlerNaps ? 'Morning nap (if she still takes one)' : 'Morning nap',
       detail: hasMorningNap ? zi('check') + ' Logged'
         : (toddlerNaps ? 'Many toddlers drop this nap between 12 and 18 months. If she takes it, about ' + napDuration + '.'
           : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.'),
-      tag: 'sleep', done: hasMorningNap, htmlDetail: hasMorningNap
+      tag: 'sleep', done: hasMorningNap && !(toddlerNaps && todayMainNapOnly), htmlDetail: hasMorningNap && !(toddlerNaps && todayMainNapOnly)
     });
   }
 
@@ -39773,9 +39825,15 @@ function renderTodayPlan() {
   });
 
   // Afternoon nap
-  const hasAfternoonNap = todaySleep.some(e => e.type === 'nap' && e.bedtime && parseInt(e.bedtime) >= 12);
+  const todayNapsPlan = todaySleep.filter(e => e.type === 'nap' && e.bedtime);
+  // One-nap age: any logged nap is today's nap. Toddler on 1–2 naps: a single nap
+  // starting from 11:00 is her main nap, so the afternoon item counts it.
+  const hasAfternoonNap = oneNapAge ? todayNapsPlan.length > 0
+    : (todayNapsPlan.some(e => parseInt(e.bedtime) >= 12)
+      || (toddlerNaps && todayNapsPlan.length === 1 && parseInt(todayNapsPlan[0].bedtime) >= 11));
+  const napOptional = napIdealToday[0] === 0;
   items.push({
-    time: oneNapAge ? '12:30' : '1:30', icon: zi('zzz'), title: oneNapAge ? 'Midday nap' : 'Afternoon nap',
+    time: oneNapAge ? '12:30' : '1:30', icon: zi('zzz'), title: oneNapAge ? (napOptional ? 'Midday nap or quiet time' : 'Midday nap') : 'Afternoon nap',
     detail: hasAfternoonNap ? '' + zi('check') + ' Logged' : (oneNapAge ? 'One nap after lunch. End it by about 3:30 PM to protect bedtime.' : 'Usually the longest nap. Dim the room, white noise helps.'),
     tag: 'sleep', done: hasAfternoonNap, htmlDetail: hasAfternoonNap
   });
@@ -48024,7 +48082,7 @@ function _spGetDomainDefs(zs) {
         const d = r.detail || {};
         const items = [
           { name: 'Vaccines', weight: '40%', score: r.components.vaccination,
-            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given on time' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
+            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
           { name: 'Supplements', weight: '25%', score: r.components.supplements,
             detail: d.suppDays !== null ? d.suppDays + '/7 days given this week' : 'No active supplements', tab: 'medical' },
           { name: 'Growth', weight: '20%', score: r.components.growth,
@@ -52178,12 +52236,20 @@ function renderVacc() {
 // ── Vaccination Info Panel ──
 // VACC_GUIDANCE → migrated to data.js
 
+// _vaccKeyMatches — whole-word match of a guidance/series key inside a free-text
+// vaccine name. A plain includes() let 'je' match "Flu injection" (JE advice on a
+// flu shot); spaces or hyphens inside a key are optional, so 'hep b' matches
+// "Hep B-1", "Hep-B booster" and "HepB".
+function _vaccKeyMatches(name, key) {
+  const pat = String(key).toLowerCase().split(/\s+/).map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s-]*');
+  return new RegExp('(^|[^a-z])' + pat + '([^a-z]|$)').test(String(name || '').toLowerCase());
+}
 function getVaccGuidance(vaccName) {
-  const lower = vaccName.toLowerCase();
   // Match to the most specific guidance
+  const _alias = { 'hep b': ['hepatitis b'], 'hep a': ['hepatitis a'], 'je': ['japanese'], 'influenza': ['flu'] };
   for (const [key, guidance] of Object.entries(VACC_GUIDANCE)) {
     if (key === '_default') continue;
-    if (lower.includes(key)) return { ...VACC_GUIDANCE._default, ...guidance };
+    if (_vaccKeyMatches(vaccName, key) || (_alias[key] || []).some(a => _vaccKeyMatches(vaccName, a))) return { ...VACC_GUIDANCE._default, ...guidance };
   }
   return VACC_GUIDANCE._default;
 }
@@ -52192,7 +52258,7 @@ function getVaccGuidance(vaccName) {
 function _vaccFamilyKey(vaccName) {
   const cleaned = vaccName.replace(/[-\u2013]\d+$/,'').trim();
   for (const family of Object.keys(VACC_SERIES)) {
-    if (cleaned.toLowerCase().includes(family.toLowerCase())) return family;
+    if (_vaccKeyMatches(cleaned, family)) return family;
   }
   return cleaned;
 }
@@ -52701,6 +52767,10 @@ function renderVaccInfoPanel(vaccName) {
         <div class="t-sub" style="font-size:var(--fs-base);margin-top:2px;">${escHtml(schedInfo.age)} · ${escHtml(schedInfo.notes)}</div>
       </div>
     </div>`;
+  } else {
+    // A stored dose the IAP 2023 schedule no longer lists (e.g. Typhoid Booster,
+    // PCV Booster-2, OPV Booster) — say so rather than show nothing.
+    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask her doctor whether it is still needed.</div></div></div>`;
   }
 
   // Note
@@ -53220,9 +53290,15 @@ function renderVaccCoverage() {
   const ageMap = VACC_AGE_MONTHS;
   const dueNow = VACC_SCHEDULE.filter(v => vaccDueState(v, mo) !== 'future');
   const upcoming = VACC_SCHEDULE.filter(v => {
+    if (v.seasonal) return false;   // yearly flu is placed by season below
     const am = ageMap[v.age] ?? 99;
     return am > mo && am <= mo + 6;
   });
+  // Yearly flu (seasonal): the row covering her age at the next May–June season is
+  // "Coming up — May–June YYYY" until the season opens (then it reads Due now).
+  const _now = new Date();
+  const _fluYear = _now.getMonth() > 6 ? _now.getFullYear() + 1 : _now.getFullYear();
+  const _moAtSeason = ageAt(new Date(_fluYear, 4, 15)).months;
 
   // Match given vaccines to schedule using normalized names
   // Normalize: strip everything except letters and digits for bulletproof matching
@@ -53234,10 +53310,28 @@ function renderVaccCoverage() {
   const dueList = [];
   const checkList = [];
 
+  const givenList = vaccData.filter(e => !e.upcoming);
+  // Follow-on doses (Hep A-2, JE-2, MCV-2) aren't "coming up" until their first dose is given.
+  for (let i = upcoming.length - 1; i >= 0; i--) {
+    if (upcoming[i].after && !givenNorm.has(normVacc(upcoming[i].after))) upcoming.splice(i, 1);
+  }
+  VACC_SCHEDULE.filter(v => v.seasonal === 'flu').forEach(v => {
+    const start = ageMap[v.age];
+    if (vaccIsGiven(v, givenNorm, givenList)) {
+      if (mo >= start && vaccDueState(v, mo) === 'future') { givenCount++; given.push(v); }
+    } else if (vaccDueState(v, mo) === 'future' && _moAtSeason >= start && _moAtSeason < v.windowEnd && _fluYear >= _now.getFullYear()) {
+      upcoming.push(Object.assign({}, v, { age: 'May–June ' + _fluYear }));
+    }
+  });
   dueNow.forEach(v => {
-    const isGiven = givenNorm.has(normVacc(v.name));
+    const isGiven = vaccIsGiven(v, givenNorm, givenList);
     if (isGiven) { givenCount++; given.push(v); }
-    else if (v.conditional) checkList.push(v);
+    else if (v.after && !givenNorm.has(normVacc(v.after))) return;  // follow-on waits for its first dose
+    else if (vaccIsConditional(v, givenNorm)) {
+      // A conditional dose whose own window has closed (MenACWY after 23 m) drops off.
+      if (typeof v.windowEnd === 'number' && vaccDueState(v, mo) === 'overdue') return;
+      checkList.push(v);
+    }
     else if (vaccDueState(v, mo) === 'due') dueList.push(v);
     else {
       if (v.type === 'private') optionalMissing++;
@@ -53277,11 +53371,11 @@ function renderVaccCoverage() {
       <div class="diet-stat-val">${pvtMissing.length}</div>
       <div class="diet-stat-label">Optional</div>
     </div>` : ''}
-    ${dueList.length > 0 ? `<div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
+    ${dueList.length > 0 ? `<div class="diet-stat ds-amber" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
       <div class="diet-stat-val">${dueList.length}</div>
       <div class="diet-stat-label">Due now</div>
     </div>` : ''}
-    <div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
+    <div class="diet-stat ds-lav" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
       <div class="diet-stat-val">${upcoming.length}</div>
       <div class="diet-stat-label">Next up</div>
     </div>
@@ -53290,18 +53384,18 @@ function renderVaccCoverage() {
   // Full content
   let html = '';
 
-  // Due now — inside the IAP window (plus a grace month); not missing yet.
-  if (dueList.length > 0) {
-    html += `<div class="section-label-due">${zi('clock')} Due now</div>`;
-    dueList.forEach(v => { html += renderVaccItem(v, 'due'); });
-  }
-
   // Missing mandatory
   if (mandatoryMissing.length > 0) {
     html += `<div class="section-label-danger">${zi('siren')} Missing — IAP Mandatory</div>`;
     mandatoryMissing.forEach(v => {
       html += renderVaccItem(v, 'missing');
     });
+  }
+
+  // Due now — inside the IAP window (plus a grace month); not missing yet.
+  if (dueList.length > 0) {
+    html += `<div class="section-label-due">${zi('syringe')} Due now</div>`;
+    dueList.forEach(v => { html += renderVaccItem(v, 'due'); });
   }
 
   // Missing recommended
@@ -53322,7 +53416,7 @@ function renderVaccCoverage() {
 
   // Conditional doses — not for every child; never counted as missing.
   if (checkList.length > 0) {
-    html += `<div class="section-label-info">${zi('steth')} Check with her doctor</div>`;
+    html += `<div class="section-label-check">${zi('steth')} Check with her doctor</div>`;
     checkList.forEach(v => { html += renderVaccItem(v, 'check'); });
   }
 
@@ -53333,6 +53427,17 @@ function renderVaccCoverage() {
     given.forEach(v => {
       html += `<span style="font-size:var(--fs-sm);padding:3px 8px;border-radius:var(--r-lg);background:var(--sage-light);color:var(--tc-sage);">${escHtml(v.name)}</span>`;
     });
+    html += `</div>`;
+  }
+  // Doses on her record that no schedule row covers (e.g. a 9-month OPV, or an
+  // entry typed in the parent's own words) — kept visible so the record a doctor
+  // sees stays complete.
+  const _schedNorm = new Set(VACC_SCHEDULE.map(v => normVacc(v.name)));
+  const otherGiven = givenList.filter(e => e && e.name && !_schedNorm.has(normVacc(e.name))
+    && !(/influenza|flu/i.test(e.name) && given.some(g => g.seasonal)));
+  if (otherGiven.length > 0) {
+    html += `<div class="section-label-light vacc-other-label">Other doses on her record (${otherGiven.length})</div><div class="vacc-chip-row">`;
+    otherGiven.forEach(e => { html += `<span class="vacc-chip-other">${escHtml(e.name)}</span>`; });
     html += `</div>`;
   }
 
@@ -53358,12 +53463,12 @@ function renderVaccItem(v, status) {
     optional: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--lav-light)', badgeText:'var(--tc-lav)', badgeLabel:'OPTIONAL' },
     upcoming: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--sky-light)', badgeText:'#3a7090', badgeLabel:v.age },
     due: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--white)', badgeText:'var(--tc-sky)', badgeLabel:'DUE NOW' },
-    check: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--white)', badgeText:'var(--tc-lav)', badgeLabel:'IF NEEDED' },
+    check: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--white)', badgeText:'var(--tc-lav)', badgeLabel:'ASK DOCTOR' },
   };
   const c = colors[status];
   // Show booking status for upcoming vaccines
   let bookingHtml = '';
-  if (status === 'upcoming' || status === 'missing' || status === 'due') {
+  if (status === 'upcoming' || status === 'missing' || status === 'due' || status === 'check') {
     const bookedData = load(KEYS.vaccBooked, null);
     const isBooked = bookedData && bookedData.vaccName === v.name;
     if (isBooked) {
@@ -55186,7 +55291,7 @@ function renderSleepTips() {
       ] : [
         { icon:zi('moon'), title:'Same wind-down, same time', text:'Toddlers thrive on a predictable routine: bath, teeth, one or two books, lights out. Regular sleep and wake times matter more than the exact hour (WHO 2019).' },
         { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If she fights sleep, a slightly earlier bedtime often helps more than a later one.' },
-        { icon:zi('moon'), title:'Screens off', text:'No screen time under 2 years apart from video calls with family (WHO, IAP), and none in the hour before bed.' },
+        { icon:zi('no-entry'), title:'Screens off', text:'No screen time under 2 years (WHO; IAP 2022), and none in the hour before bed. Video calls with family are fine, says the AAP.' },
         { icon:zi('baby'), title:'Short, warm goodnight', text:'A brief goodnight ritual helps with separation worries, which often flare again around 18 months.' },
       ]
     },
@@ -55238,7 +55343,9 @@ function renderSleepTips() {
         { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on her teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
         { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
         { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
-        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, gasps or pauses in her breathing, or sleeping with her neck stretched back (AAP).' },  // milestone-source-ok: sleep-apnoea tip citation (AAP 2012 guideline), not a milestone band
+        // src: AAP 2012 OSA clinical practice guideline (symptoms incl. cyanosis); Sheffield Children's NHS (film her sleeping).
+        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with her neck stretched back. If you see gasps or pauses in her breathing, call her doctor this week and take a short phone video of her sleeping.' },
+        { icon:zi('siren'), title:'Get help now', text:'Blue or grey lips or face, or struggling to breathe: seek medical care straight away.' },
       ]
     },
     {
@@ -71939,19 +72046,30 @@ function _qlFeedInsight(foodArg) {
   return null;
 }
 
-function _qlSleepInsight() {
+// dateStr: the date the entry was logged for; kind: 'nap' | 'night'. The nap-count
+// lines speak only about today, only from a nap save, and only once the count is
+// a fair read of the day (a morning nap is not yet "the day's nap").
+function _qlSleepInsight(dateStr, kind) {
   try {
     var todayStr = today();
+    if (dateStr && dateStr !== todayStr) return null;
     var todayNaps = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'nap'; });
-    if (todayNaps.length === 2) return '2 naps today \u2014 solid rest.';
-    // From 12 m one nap is on track too (SLEEP_STANDARDS naps [1,2]).
-    if (todayNaps.length === 1 && getAgeInMonths() >= 12) return '1 nap today \u2014 one or two is normal at her age.';
 
     var lastNap = todayNaps[todayNaps.length - 1];
     if (lastNap && lastNap.bedtime && lastNap.wakeTime) {
       var sP = lastNap.bedtime.split(':'), eP = lastNap.wakeTime.split(':');
       var durMin = (parseInt(eP[0]) * 60 + parseInt(eP[1])) - (parseInt(sP[0]) * 60 + parseInt(sP[1]));
       if (durMin > 120) return 'Long nap! Monitor bedtime \u2014 may shift later.';
+    }
+
+    if (kind !== 'night') {
+      var ideal = (typeof getSleepTargets === 'function') ? getSleepTargets(getAgeInMonths()).napIdeal : [2, 3];
+      var n = todayNaps.length;
+      var lateEnough = new Date().getHours() >= 15 || (lastNap && parseInt(lastNap.bedtime) >= 11);
+      if (n >= 1 && n >= ideal[0] && n <= ideal[1] && (n === ideal[1] || lateEnough)) {
+        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at her age.';
+        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for her age.';
+      }
     }
 
     var nightEntries = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'night'; });
@@ -72323,7 +72441,7 @@ function saveQLSleep() {
 
   _islMarkDirty('sleep');
   // Smart QL: compute insight BEFORE close
-  var qlInsight = _qlSleepInsight();
+  var qlInsight = _qlSleepInsight(entry.date, 'night');
   _qlLogAction('sleep', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -72360,7 +72478,7 @@ function saveQLNap() {
 
   _islMarkDirty('sleep');
   // Smart QL: compute insight BEFORE close
-  var qlNapInsight = _qlSleepInsight();
+  var qlNapInsight = _qlSleepInsight(entry.date, 'nap');
   _qlLogAction('nap', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -74520,10 +74638,15 @@ function computeWakeWindows() {
   const ageM = ageAt().months;
   // Age-appropriate ideal wake windows (minutes)
   let idealMin, idealMax;
+  // App convention (no guideline body publishes wake windows). From 12 m the band
+  // follows her actual nap pattern: a one-nap toddler has two long windows.
   if (ageM <= 6) { idealMin = 120; idealMax = 150; }
   else if (ageM <= 9) { idealMin = 135; idealMax = 180; }
-  else if (ageM <= 12) { idealMin = 150; idealMax = 210; }
-  else { idealMin = 180; idealMax = 300; }
+  else if (ageM < 12) { idealMin = 150; idealMax = 210; }
+  else {
+    const avgNapsWW = days.reduce((s, d) => s + (d.naps || 0), 0) / days.length;
+    if (avgNapsWW < 1.5) { idealMin = 240; idealMax = 360; } else { idealMin = 180; idealMax = 240; }
+  }
 
   const allWindows = days.flatMap(d => d.windows);
   const avgGap = Math.round(allWindows.reduce((s, w) => s + w.gapMin, 0) / allWindows.length);
@@ -74620,7 +74743,7 @@ function renderInfoSleepWakeWindows() {
   if (insightEl) {
     let html = '';
     if (data.avgLastGap > data.idealMax + 30) {
-      html += '<div class="si-insight si-insight-warn">Last wake window before bed is too long (' + Math.floor(data.avgLastGap / 60) + 'h ' + (data.avgLastGap % 60) + 'm). Try fitting an extra nap or moving bedtime earlier.</div>';
+      html += '<div class="si-insight si-insight-warn">Last wake window before bed is too long (' + Math.floor(data.avgLastGap / 60) + 'h ' + (data.avgLastGap % 60) + 'm). ' + (ageAt().months >= 12 ? 'Try moving bedtime a little earlier.' : 'Try fitting an extra nap or moving bedtime earlier.') + '</div>';
     }
     if (data.overtiredCount >= 3) {
       html += '<div class="si-insight si-insight-warn">' + data.overtiredCount + ' overtired windows detected this week — may cause harder settling.</div>';
@@ -74803,7 +74926,12 @@ function computeNapTransition() {
   const avgNaps = dayData.reduce((s, d) => s + d.napCount, 0) / 14;
 
   // Signal 1: Nap count dropping below target
-  const lowNapDays = dayData.filter(d => d.napCount < napMin && (d.naps.length > 0 || d.night)).length;
+  // While one or two naps are both normal (napMin < napMax), the transition shows as
+  // days with fewer naps than the upper bound (but not zero — that's signal 5).
+  const napRangeOpen = napMin < napMax;
+  const lowNapDays = napRangeOpen
+    ? dayData.filter(d => d.napCount > 0 && d.napCount < napMax).length
+    : dayData.filter(d => d.napCount < napMin && (d.naps.length > 0 || d.night)).length;
   const napCountDrop = lowNapDays >= 4;
 
   // Signal 2: Short naps (<30min) increasing
@@ -74836,7 +74964,7 @@ function computeNapTransition() {
   const napRefusal = napRefusalDays >= 3 && ageM >= 8;
 
   const signals = [
-    { label: 'Nap count below target', met: napCountDrop, detail: lowNapDays + '/14 days below ' + napMin + ' naps' },
+    { label: napRangeOpen ? 'Days with fewer naps' : 'Nap count below target', met: napCountDrop, detail: napRangeOpen ? lowNapDays + '/14 days with fewer than ' + napMax + ' naps' : lowNapDays + '/14 days below ' + napMin + ' nap' + (napMin === 1 ? '' : 's') },
     { label: 'Short naps increasing', met: shortNapsRising, detail: Math.round(shortNapRate * 100) + '% of naps <30min' },
     { label: 'Bedtime drifting later', met: bedtimeLater, detail: drift.insufficient ? 'Not enough data' : (drift.driftPerWeek > 0 ? '+' + drift.driftPerWeek + 'min/week' : 'Stable') },
     { label: 'Last nap ending late', met: lateLastNap, detail: lastNapEnds.length > 0 ? 'Avg end: ' + Math.floor(avgLastNapEnd / 60) + ':' + String(Math.round(avgLastNapEnd % 60)).padStart(2, '0') : 'No data' },

@@ -3107,12 +3107,20 @@ function renderVacc() {
 // ── Vaccination Info Panel ──
 // VACC_GUIDANCE → migrated to data.js
 
+// _vaccKeyMatches — whole-word match of a guidance/series key inside a free-text
+// vaccine name. A plain includes() let 'je' match "Flu injection" (JE advice on a
+// flu shot); spaces or hyphens inside a key are optional, so 'hep b' matches
+// "Hep B-1", "Hep-B booster" and "HepB".
+function _vaccKeyMatches(name, key) {
+  const pat = String(key).toLowerCase().split(/\s+/).map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s-]*');
+  return new RegExp('(^|[^a-z])' + pat + '([^a-z]|$)').test(String(name || '').toLowerCase());
+}
 function getVaccGuidance(vaccName) {
-  const lower = vaccName.toLowerCase();
   // Match to the most specific guidance
+  const _alias = { 'hep b': ['hepatitis b'], 'hep a': ['hepatitis a'], 'je': ['japanese'], 'influenza': ['flu'] };
   for (const [key, guidance] of Object.entries(VACC_GUIDANCE)) {
     if (key === '_default') continue;
-    if (lower.includes(key)) return { ...VACC_GUIDANCE._default, ...guidance };
+    if (_vaccKeyMatches(vaccName, key) || (_alias[key] || []).some(a => _vaccKeyMatches(vaccName, a))) return { ...VACC_GUIDANCE._default, ...guidance };
   }
   return VACC_GUIDANCE._default;
 }
@@ -3121,7 +3129,7 @@ function getVaccGuidance(vaccName) {
 function _vaccFamilyKey(vaccName) {
   const cleaned = vaccName.replace(/[-\u2013]\d+$/,'').trim();
   for (const family of Object.keys(VACC_SERIES)) {
-    if (cleaned.toLowerCase().includes(family.toLowerCase())) return family;
+    if (_vaccKeyMatches(cleaned, family)) return family;
   }
   return cleaned;
 }
@@ -3630,6 +3638,10 @@ function renderVaccInfoPanel(vaccName) {
         <div class="t-sub" style="font-size:var(--fs-base);margin-top:2px;">${escHtml(schedInfo.age)} · ${escHtml(schedInfo.notes)}</div>
       </div>
     </div>`;
+  } else {
+    // A stored dose the IAP 2023 schedule no longer lists (e.g. Typhoid Booster,
+    // PCV Booster-2, OPV Booster) — say so rather than show nothing.
+    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask her doctor whether it is still needed.</div></div></div>`;
   }
 
   // Note
@@ -4149,9 +4161,15 @@ function renderVaccCoverage() {
   const ageMap = VACC_AGE_MONTHS;
   const dueNow = VACC_SCHEDULE.filter(v => vaccDueState(v, mo) !== 'future');
   const upcoming = VACC_SCHEDULE.filter(v => {
+    if (v.seasonal) return false;   // yearly flu is placed by season below
     const am = ageMap[v.age] ?? 99;
     return am > mo && am <= mo + 6;
   });
+  // Yearly flu (seasonal): the row covering her age at the next May–June season is
+  // "Coming up — May–June YYYY" until the season opens (then it reads Due now).
+  const _now = new Date();
+  const _fluYear = _now.getMonth() > 6 ? _now.getFullYear() + 1 : _now.getFullYear();
+  const _moAtSeason = ageAt(new Date(_fluYear, 4, 15)).months;
 
   // Match given vaccines to schedule using normalized names
   // Normalize: strip everything except letters and digits for bulletproof matching
@@ -4163,10 +4181,28 @@ function renderVaccCoverage() {
   const dueList = [];
   const checkList = [];
 
+  const givenList = vaccData.filter(e => !e.upcoming);
+  // Follow-on doses (Hep A-2, JE-2, MCV-2) aren't "coming up" until their first dose is given.
+  for (let i = upcoming.length - 1; i >= 0; i--) {
+    if (upcoming[i].after && !givenNorm.has(normVacc(upcoming[i].after))) upcoming.splice(i, 1);
+  }
+  VACC_SCHEDULE.filter(v => v.seasonal === 'flu').forEach(v => {
+    const start = ageMap[v.age];
+    if (vaccIsGiven(v, givenNorm, givenList)) {
+      if (mo >= start && vaccDueState(v, mo) === 'future') { givenCount++; given.push(v); }
+    } else if (vaccDueState(v, mo) === 'future' && _moAtSeason >= start && _moAtSeason < v.windowEnd && _fluYear >= _now.getFullYear()) {
+      upcoming.push(Object.assign({}, v, { age: 'May–June ' + _fluYear }));
+    }
+  });
   dueNow.forEach(v => {
-    const isGiven = givenNorm.has(normVacc(v.name));
+    const isGiven = vaccIsGiven(v, givenNorm, givenList);
     if (isGiven) { givenCount++; given.push(v); }
-    else if (v.conditional) checkList.push(v);
+    else if (v.after && !givenNorm.has(normVacc(v.after))) return;  // follow-on waits for its first dose
+    else if (vaccIsConditional(v, givenNorm)) {
+      // A conditional dose whose own window has closed (MenACWY after 23 m) drops off.
+      if (typeof v.windowEnd === 'number' && vaccDueState(v, mo) === 'overdue') return;
+      checkList.push(v);
+    }
     else if (vaccDueState(v, mo) === 'due') dueList.push(v);
     else {
       if (v.type === 'private') optionalMissing++;
@@ -4206,11 +4242,11 @@ function renderVaccCoverage() {
       <div class="diet-stat-val">${pvtMissing.length}</div>
       <div class="diet-stat-label">Optional</div>
     </div>` : ''}
-    ${dueList.length > 0 ? `<div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
+    ${dueList.length > 0 ? `<div class="diet-stat ds-amber" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
       <div class="diet-stat-val">${dueList.length}</div>
       <div class="diet-stat-label">Due now</div>
     </div>` : ''}
-    <div class="diet-stat ds-sky" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
+    <div class="diet-stat ds-lav" data-collapse-target="vaccCoverageBody" data-collapse-chevron="vaccCoverageChevron">
       <div class="diet-stat-val">${upcoming.length}</div>
       <div class="diet-stat-label">Next up</div>
     </div>
@@ -4219,18 +4255,18 @@ function renderVaccCoverage() {
   // Full content
   let html = '';
 
-  // Due now — inside the IAP window (plus a grace month); not missing yet.
-  if (dueList.length > 0) {
-    html += `<div class="section-label-due">${zi('clock')} Due now</div>`;
-    dueList.forEach(v => { html += renderVaccItem(v, 'due'); });
-  }
-
   // Missing mandatory
   if (mandatoryMissing.length > 0) {
     html += `<div class="section-label-danger">${zi('siren')} Missing — IAP Mandatory</div>`;
     mandatoryMissing.forEach(v => {
       html += renderVaccItem(v, 'missing');
     });
+  }
+
+  // Due now — inside the IAP window (plus a grace month); not missing yet.
+  if (dueList.length > 0) {
+    html += `<div class="section-label-due">${zi('syringe')} Due now</div>`;
+    dueList.forEach(v => { html += renderVaccItem(v, 'due'); });
   }
 
   // Missing recommended
@@ -4251,7 +4287,7 @@ function renderVaccCoverage() {
 
   // Conditional doses — not for every child; never counted as missing.
   if (checkList.length > 0) {
-    html += `<div class="section-label-info">${zi('steth')} Check with her doctor</div>`;
+    html += `<div class="section-label-check">${zi('steth')} Check with her doctor</div>`;
     checkList.forEach(v => { html += renderVaccItem(v, 'check'); });
   }
 
@@ -4262,6 +4298,17 @@ function renderVaccCoverage() {
     given.forEach(v => {
       html += `<span style="font-size:var(--fs-sm);padding:3px 8px;border-radius:var(--r-lg);background:var(--sage-light);color:var(--tc-sage);">${escHtml(v.name)}</span>`;
     });
+    html += `</div>`;
+  }
+  // Doses on her record that no schedule row covers (e.g. a 9-month OPV, or an
+  // entry typed in the parent's own words) — kept visible so the record a doctor
+  // sees stays complete.
+  const _schedNorm = new Set(VACC_SCHEDULE.map(v => normVacc(v.name)));
+  const otherGiven = givenList.filter(e => e && e.name && !_schedNorm.has(normVacc(e.name))
+    && !(/influenza|flu/i.test(e.name) && given.some(g => g.seasonal)));
+  if (otherGiven.length > 0) {
+    html += `<div class="section-label-light vacc-other-label">Other doses on her record (${otherGiven.length})</div><div class="vacc-chip-row">`;
+    otherGiven.forEach(e => { html += `<span class="vacc-chip-other">${escHtml(e.name)}</span>`; });
     html += `</div>`;
   }
 
@@ -4287,12 +4334,12 @@ function renderVaccItem(v, status) {
     optional: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--lav-light)', badgeText:'var(--tc-lav)', badgeLabel:'OPTIONAL' },
     upcoming: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--sky-light)', badgeText:'#3a7090', badgeLabel:v.age },
     due: { bg:'var(--sky-light)', border:'var(--sky)', badge:'var(--white)', badgeText:'var(--tc-sky)', badgeLabel:'DUE NOW' },
-    check: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--white)', badgeText:'var(--tc-lav)', badgeLabel:'IF NEEDED' },
+    check: { bg:'var(--lav-light)', border:'var(--lavender)', badge:'var(--white)', badgeText:'var(--tc-lav)', badgeLabel:'ASK DOCTOR' },
   };
   const c = colors[status];
   // Show booking status for upcoming vaccines
   let bookingHtml = '';
-  if (status === 'upcoming' || status === 'missing' || status === 'due') {
+  if (status === 'upcoming' || status === 'missing' || status === 'due' || status === 'check') {
     const bookedData = load(KEYS.vaccBooked, null);
     const isBooked = bookedData && bookedData.vaccName === v.name;
     if (isBooked) {
@@ -6115,7 +6162,7 @@ function renderSleepTips() {
       ] : [
         { icon:zi('moon'), title:'Same wind-down, same time', text:'Toddlers thrive on a predictable routine: bath, teeth, one or two books, lights out. Regular sleep and wake times matter more than the exact hour (WHO 2019).' },
         { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If she fights sleep, a slightly earlier bedtime often helps more than a later one.' },
-        { icon:zi('moon'), title:'Screens off', text:'No screen time under 2 years apart from video calls with family (WHO, IAP), and none in the hour before bed.' },
+        { icon:zi('no-entry'), title:'Screens off', text:'No screen time under 2 years (WHO; IAP 2022), and none in the hour before bed. Video calls with family are fine, says the AAP.' },
         { icon:zi('baby'), title:'Short, warm goodnight', text:'A brief goodnight ritual helps with separation worries, which often flare again around 18 months.' },
       ]
     },
@@ -6167,7 +6214,9 @@ function renderSleepTips() {
         { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on her teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
         { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
         { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
-        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, gasps or pauses in her breathing, or sleeping with her neck stretched back (AAP).' },  // milestone-source-ok: sleep-apnoea tip citation (AAP 2012 guideline), not a milestone band
+        // src: AAP 2012 OSA clinical practice guideline (symptoms incl. cyanosis); Sheffield Children's NHS (film her sleeping).
+        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with her neck stretched back. If you see gasps or pauses in her breathing, call her doctor this week and take a short phone video of her sleeping.' },
+        { icon:zi('siren'), title:'Get help now', text:'Blue or grey lips or face, or struggling to breathe: seek medical care straight away.' },
       ]
     },
     {

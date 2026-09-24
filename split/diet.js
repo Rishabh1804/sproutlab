@@ -6729,7 +6729,7 @@ function _spGetDomainDefs(zs) {
         const d = r.detail || {};
         const items = [
           { name: 'Vaccines', weight: '40%', score: r.components.vaccination,
-            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given on time' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
+            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
           { name: 'Supplements', weight: '25%', score: r.components.supplements,
             detail: d.suppDays !== null ? d.suppDays + '/7 days given this week' : 'No active supplements', tab: 'medical' },
           { name: 'Growth', weight: '20%', score: r.components.growth,
