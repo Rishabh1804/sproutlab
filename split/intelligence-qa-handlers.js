@@ -318,7 +318,7 @@ function _qaRoutine() {
 
   var md = getDomainData('medical', _offsetDateStr(today(), -6), today());
   if (md.suppAdherence !== null) {
-    var d3Text = 'Vit D3: ' + md.suppAdherence + '% adherence';
+    var d3Text = 'Vitamin D: ' + md.suppAdherence + '% adherence';
     if (md.d3FatRate !== null && (md.d3WithFat + md.d3WithoutFat) >= 3) {
       d3Text += ' · ' + md.d3FatRate + '% with fat';
     }
@@ -1976,7 +1976,9 @@ function _qaDeepNutrientCard(nutrient) {
     var entry = NUTRITION[food];
     var hasNutrient = (entry.nutrients || []).some(function(n) { return n.toLowerCase() === nutrient; });
     var hasTag = (entry.tags || []).some(function(t) { return t.toLowerCase().indexOf(nutrient.replace(/\s+/g, '-')) !== -1; });
-    if (hasNutrient || hasTag) {
+    // Diet-preference surfacing gate (V-K-270-3): the first non-veg NUTRITION keys
+    // (egg / fish / chicken / mutton) must not be suggested to a veg household.
+    if ((hasNutrient || hasTag) && (typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food))) {
       allRichFoods.push(food);
     }
   });
@@ -2063,7 +2065,7 @@ function _qaNutrientTips(nutrient) {
       { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
     ],
     'calcium': [
-      { text: 'Vitamin D3 helps calcium absorption \u2014 ensure daily D3 drops', signal: 'info' },
+      { text: 'Vitamin D helps her absorb calcium \u2014 keep her Vitamin D supplement as prescribed', signal: 'info' },
       { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
     ],
     'protein': [
@@ -2115,7 +2117,7 @@ function _qaGenericNutrientGaps() {
         // Show which foods could fill the gap
         var richFoods = [];
         Object.keys(NUTRITION).forEach(function(food) {
-          if ((NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
+          if ((typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food)) && (NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
             richFoods.push(food);
           }
         });
@@ -3071,6 +3073,23 @@ function qaAnswerSupplement(intentId) {
         actionItems.push({ text: 'Set extra reminders for ' + s.flaggedDays.join(', '), signal: 'action' });
       }
 
+      // A twice-daily med: one line per dose from its slot state, so "not given yet" never
+      // follows two logged doses (Kael V-K-270-18) and an unlogged earlier dose is never a
+      // "don't forget" (that invites a double dose).
+      var sMed = (meds || []).filter(function(mm) { return mm.active && mm.name === s.name; })[0];
+      if (sMed && medDoseSlots(sMed).length > 1) {
+        medSlotStates(sMed).forEach(function(x) {
+          if (x.state === 'na') return;
+          var L = x.label.charAt(0).toUpperCase() + x.label.slice(1) + ' dose';
+          if (x.state === 'resolved') {
+            if (x.parsed.status === 'skipped') actionItems.push({ text: L + ': skipped', signal: 'info' });
+            else actionItems.push({ text: L + ': given' + (x.parsed.givenAt ? ' at ' + _formatTime12h(x.parsed.givenAt) : ''), signal: 'good' });
+          } else if (x.state === 'later') actionItems.push({ text: L + ': later today', signal: 'info' });
+          else if (x.state === 'due') actionItems.push({ text: L + ': due now', signal: 'action' });
+          else actionItems.push({ text: L + ': not logged — record whether it was given; don\'t double up', signal: 'action' });
+        });
+        return;
+      }
       // Today's status — CR-1: schema-aware via parseMedCheck (handles both legacy string + new object).
       var todayEntry = (medChecks || {})[today()];
       var todayStatus = todayEntry ? todayEntry[s.name] : undefined;

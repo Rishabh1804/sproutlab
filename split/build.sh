@@ -176,6 +176,12 @@ if ! bash audit-vacc-age-map-v1.sh >&2; then
   echo "BUILD ABORTED: vaccine age-map audit failed. A schedule dose would never come due (see above)." >&2
   exit 1
 fi
+# Food-library overlay totality gate (Ceres V-C-270-14): every recipes.js 12–24 m overlay
+# entry must merge; a data.js key that shadows one would silently drop its gate.
+if ! bash audit-food-lib-overlay-v1.sh >&2; then
+  echo "BUILD ABORTED: food-library overlay audit failed. An overlay entry is shadowed by a data.js key (see above)." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json

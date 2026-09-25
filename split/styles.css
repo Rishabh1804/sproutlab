@@ -3107,6 +3107,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mi-adherence-dot.mi-adh-missed { background:rgba(230,100,100,0.2); color:var(--tc-rose); }
 .mi-adherence-dot.mi-adh-skipped { background:rgba(240,180,80,0.2); color:var(--tc-amber); }
 .mi-adherence-dot.mi-adh-late { background:rgba(180,180,180,0.2); color:var(--mid); }
+.mi-adherence-dot.mi-adh-partial { background:rgba(240,180,80,0.12); color:var(--tc-amber); }
 .mi-adherence-dot.mi-adh-future { background:rgba(0,0,0,0.03); }
 .mi-velocity-range { position:relative; height:8px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:visible; margin:var(--sp-8) 0; }
 .mi-velocity-expected { position:absolute; top:0; height:100%; border-radius:var(--r-full); background:rgba(58,112,96,0.15); }
@@ -12039,6 +12040,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .rcp-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .rcp-prow--steps .rcp-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
 .rcp-prow--dos .rcp-prow-ic { background:var(--sky-light); color:var(--tc-sky); }
+.rcp-prow--chew .rcp-prow-ic { background:var(--amber-light); color:var(--tc-amber); }
 /* V-1: the safety prow's disc echoes the summary band (amber caution / rose flag),
    so a green-summary recipe never meets a fixed-rose safety disc. */
 .rcp-prow--safety-flag .rcp-prow-ic { background:var(--rose-light); color:var(--tc-rose); }

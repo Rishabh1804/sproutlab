@@ -2292,13 +2292,13 @@ function orderMedicalCards() {
 
   // Today's med status
   const todayKey = today();
-  const activeMeds = meds.filter(m => m.active);
+  const activeMeds = activeMedDoses().filter(m => medSlotDueNow(m));   // per dose already due
   const todayChecks = medChecks[todayKey] || {};
   // T1-6 / T3-14: schema-aware pending check. Raw truthy missed (a) corrupted partial-write
   // records and (b) the T1-6 `cleared` sentinel that an undone-skip produces — both leave a
   // truthy object in the slot but neither is a done dose. Use the same parsed semantics every
   // other medChecks reader does.
-  const medsPending = activeMeds.filter(m => !medCheckIsDone(todayChecks[m.name]) && !medCheckSkipped(todayChecks[m.name])).length;
+  const medsPending = activeMeds.filter(m => { const r = medDoseRecord(m, todayKey); return !medCheckIsDone(r) && !medCheckSkipped(r); }).length;
 
   // Build ordered list: stats always first, then priority cards
   const cards = [];
@@ -4385,6 +4385,7 @@ function renderMeds() {
         <div class="med-detail">
           ${m.dose ? `<span>${zi('pill')} ${escHtml(m.dose)}</span>` : ''}
           ${m.freq ? ` &nbsp;·&nbsp; <span>${zi('clock')} ${escHtml(m.freq)}</span>` : ''}
+          ${m.active && medDosesPerDay(m) > 1 ? ` &nbsp;·&nbsp; <span>Logged as ${medDosesPerDay(m)} doses a day: ${escHtml(medDoseSlots(m).map(sl => sl.label).join(', '))}</span>` : ''}
           ${m.start ? ` &nbsp;·&nbsp; <span>${zi('clock')} Since ${formatDate(m.start)}</span>` : ''}
         </div>
         ${m.brand ? `<div class="med-brand">${zi('target')} ${escHtml(m.brand)}</div>` : ''}
@@ -4409,7 +4410,8 @@ function renderMedD3PatternCard() {
   const card = document.getElementById('medD3PatternCard');
   const body = document.getElementById('medD3PatternBody');
   if (!card || !body) return;
-  const d3Med = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().indexOf('d3') >= 0);
+  // Her Vitamin D supplement by what it contains (drops, or a calcium + D3 suspension).
+  const d3Med = vitDSupplement();
   if (!d3Med) { card.style.display = 'none'; return; }
   card.style.display = '';
   const todayStr = today();
@@ -4419,7 +4421,7 @@ function renderMedD3PatternCard() {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    const parsed = parseMedCheck(medChecks[ds] && medChecks[ds][d3Med.name]);
+    const parsed = parseMedCheck(medDayVal(d3Med, ds));
     days.push({ date: ds, parsed: parsed });
   }
   // CR-6: adherence denominator must respect d3Med.start AND medChecks._trackingSince —
@@ -4441,7 +4443,9 @@ function renderMedD3PatternCard() {
   // that excludes it from the streak walk — otherwise the card reads "Adherence: 13/14
   // (93%)" beside "Streak through yesterday: 13 days," reproducing the very three-line
   // incoherence T2-A.1 was authored to eliminate, just at a different boundary.
-  const excludeToday = (!todayParsed || todayParsed.status === 'skipped') && lastDayIsToday;
+  // A twice-daily day still in progress ('partial') is pending, not a miss (Maren S-5 / V-K-270-24).
+  const todayPending = !todayParsed || todayParsed.status === 'skipped' || todayParsed.status === 'partial';
+  const excludeToday = todayPending && lastDayIsToday;
   const adherenceWindow = excludeToday ? eligibleDays.slice(0, -1) : eligibleDays;
   const doneDays = eligibleDays.filter(d => d.parsed && (d.parsed.status === 'done' || d.parsed.status === 'late'));
   const skippedDays = eligibleDays.filter(d => d.parsed && d.parsed.status === 'skipped');
@@ -4485,7 +4489,7 @@ function renderMedD3PatternCard() {
   // doesn't see its streak punished by pre-activation no-data rows.
   let streak = 0;
   let streakLabel = 'Current streak';
-  const todayIsSkippedOrUnlogged = !todayParsed || todayParsed.status === 'skipped';
+  const todayIsSkippedOrUnlogged = todayPending;
   const startIdx = todayIsSkippedOrUnlogged ? eligibleDays.length - 2 : eligibleDays.length - 1;
   if (todayIsSkippedOrUnlogged) streakLabel = 'Streak through yesterday';
   for (let i = startIdx; i >= 0; i--) {
@@ -4532,10 +4536,19 @@ function renderMedD3PatternCard() {
       row = `<span class="tc-warn">Not logged</span>`;
     } else if (d.parsed.status === 'skipped') {
       row = `<span class="tc-warn">Skipped</span>`;
+    } else if (d.parsed.status === 'partial') {
+      // A twice-daily supplement with one dose in: say so, never "Done". Today, while the
+      // remaining doses are simply not due yet, it reads neutrally (Maren S-5).
+      const slotsD = medDoseSlots(d3Med);
+      const nIn = slotsD.filter(sl => medCheckIsDone(medSlotRecord(d3Med, d.date, sl.key))).length;
+      const laterOnly = d.date === todayStr && medSlotStates(d3Med).every(x => x.state === 'resolved' || x.state === 'later' || x.state === 'na');
+      row = laterOnly ? `<span class="t-sub">${nIn} of ${slotsD.length} given · the rest later today</span>`
+        : `<span class="tc-warn">${nIn} of ${slotsD.length} doses</span>`;
     } else {
       // CR-9 + CR-15: 12h display, surface 'logged late' marker consistently.
       const isLate = d.parsed.status === 'late';
-      const t = d.parsed.givenAt
+      const t = medDoseSlots(d3Med).length > 1 ? (isLate ? 'All doses (logged late)' : 'All doses given')
+        : d.parsed.givenAt
         ? 'Done at ' + escHtml(_formatTime12h(d.parsed.givenAt)) + (isLate ? ' (late)' : '')
         : (isLate ? 'Done (logged late)' : 'Done');
       const fat = d.parsed.withFat === true && d.parsed.fatFood
@@ -4564,6 +4577,7 @@ function openMedModal() {
   document.getElementById('medFreq').value  = '';
   document.getElementById('medStart').value = today();
   document.getElementById('medNotes').value = '';
+  const _dz = document.getElementById('medDoses'); if (_dz) _dz.value = '';
   activateBtn('medSaveBtn', false);
   openModal('medModal');
 }
@@ -4571,7 +4585,9 @@ function openMedModal() {
 function saveMed() {
   const name = document.getElementById('medName').value.trim();
   if (!name) return;
-  meds.push({
+  const _dz = document.getElementById('medDoses');
+  const dosesPerDay = _dz && _dz.value ? parseInt(_dz.value, 10) : null;
+  const med = {
     name,
     dose:  document.getElementById('medDose').value.trim(),
     brand: document.getElementById('medBrand').value.trim(),
@@ -4579,10 +4595,24 @@ function saveMed() {
     start: document.getElementById('medStart').value,
     notes: document.getElementById('medNotes').value.trim(),
     active: true,
-  });
+  };
+  // The explicit doses-a-day choice wins over reading free text (Kael V-K-270-17).
+  if (dosesPerDay >= 1 && dosesPerDay <= 3) med.dosesPerDay = dosesPerDay;
+  // Added today: slots whose window already closed don't count as missed (Maren S-8).
+  if (med.start === today()) med.createdAt = String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0');
+  // A second Vitamin D source (Maren S-4 / Kael V-K-270-20): offer to stop the old one.
+  const oldVd = isVitDSupplement(med) ? meds.filter(m => m.active && isVitDSupplement(m)) : [];
+  meds.push(med);
   closeModal('medModal');
   _islMarkDirty('medical');
   renderMeds();
+  if (oldVd.length) {
+    // confirmAction renders msg as HTML — escape the parent-typed names (HR-4).
+    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if her doctor asked for both.', () => {
+      oldVd.forEach(m => { m.active = false; });
+      renderMeds();
+    }, 'Stop');
+  }
 }
 
 function toggleMed(i) {
@@ -9903,7 +9933,7 @@ function computeSupplementAdherence(windowDays) {
 
   activeMeds.forEach(function(med) {
     var medStart = med.start || trackingSince || todayStr;
-    var doneCount = 0, skippedCount = 0, missedCount = 0, lateCount = 0;
+    var doneCount = 0, skippedCount = 0, missedCount = 0, lateCount = 0, partialCount = 0;
     var times = []; // minutes since midnight
     var streakCurrent = 0, streakLongest = 0, streakRunning = true;
     var dayOfWeekMisses = [0,0,0,0,0,0,0]; // Sun-Sat
@@ -9917,8 +9947,8 @@ function computeSupplementAdherence(windowDays) {
       var ds = toDateStr(d);
       if (ds < medStart) continue;
       if (ds > todayStr) continue;
-      var dayEntry = medChecks ? medChecks[ds] : null;
-      var status = dayEntry ? dayEntry[med.name] : undefined;
+      // Whole-day status: a twice-daily med is 'done' only when every dose was given.
+      var status = medDayVal(med, ds);
       var dow = d.getDay();
 
       var calStatus = 'missed';
@@ -9942,8 +9972,13 @@ function computeSupplementAdherence(windowDays) {
         calStatus = 'skipped';
         dayOfWeekMisses[dow]++;
       } else if (ds === todayStr) {
-        // Today with no entry yet — don't count as missed, skip entirely
+        // Today still in progress (nothing yet, or a twice-daily med part-way) — not counted.
         continue;
+      } else if (parsedStatus && parsedStatus.status === 'partial') {
+        // Some doses given, not all (Maren S-6): its own status — never shown as "missed".
+        partialCount++;
+        calStatus = 'partial';
+        dayOfWeekMisses[dow]++;
       } else {
         missedCount++;
         calStatus = 'missed';
@@ -9980,7 +10015,7 @@ function computeSupplementAdherence(windowDays) {
       }
     }
 
-    var totalDays = doneCount + skippedCount + missedCount;
+    var totalDays = doneCount + skippedCount + missedCount + partialCount;
     var adherenceRate = totalDays > 0 ? Math.round((doneCount / totalDays) * 100) : 0;
     var onTimeRate = totalDays > 0 ? Math.round(((doneCount - lateCount) / totalDays) * 100) : 0;
 
@@ -10027,6 +10062,7 @@ function computeSupplementAdherence(windowDays) {
       doneCount: doneCount,
       skippedCount: skippedCount,
       missedCount: missedCount,
+      partialCount: partialCount,
       lateCount: lateCount,
       currentStreak: streakCurrent,
       longestStreak: streakLongest,
@@ -10106,7 +10142,7 @@ function renderInfoSupplementAdherence() {
     var calSorted = med.calendar.slice().reverse(); // oldest first
     calSorted.forEach(function(c) {
       var cls = 'mi-adh-' + c.status;
-      var sym = c.status === 'done' ? zi('check') : (c.status === 'skipped' ? '–' : (c.status === 'late' ? zi('check') : '—'));
+      var sym = c.status === 'done' ? zi('check') : (c.status === 'skipped' ? '–' : (c.status === 'late' ? zi('check') : (c.status === 'partial' ? '½' : '—')));
       var dateLabel = new Date(c.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
       html += '<div class="mi-adherence-dot ' + cls + '" title="' + dateLabel + ': ' + c.status + '">' + sym + '</div>';
     });
@@ -10117,6 +10153,7 @@ function renderInfoSupplementAdherence() {
     html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-missed dot-10" ></div> Missed</div>';
     html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-skipped dot-10" ></div> Skipped</div>';
     html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-late dot-10" ></div> Late</div>';
+    if (med.partialCount) html += '<div class="mi-legend-item"><div class="mi-adherence-dot mi-adh-partial dot-10" ></div> Some doses</div>';
     html += '</div>';
     calEl.innerHTML = html;
   }

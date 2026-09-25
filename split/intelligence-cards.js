@@ -3238,13 +3238,13 @@ function computeSmartPairings() {
 
   FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
     // Check if both synergy foods are introduced (using normalized names)
-    const f1Introduced = introducedNormSet.has(f1) || [...introducedSet].some(f => f.includes(f1) || f1.includes(f));
-    const f2Introduced = introducedNormSet.has(f2) || [...introducedSet].some(f => f.includes(f2) || f2.includes(f));
+    const f1Introduced = introducedNormSet.has(f1) || [...introducedSet].some(f => _foodWordHit(f, f1) || _foodWordHit(f1, f));
+    const f2Introduced = introducedNormSet.has(f2) || [...introducedSet].some(f => _foodWordHit(f, f2) || _foodWordHit(f2, f));
     if (!f1Introduced || !f2Introduced) return;
 
     // Find display names for the matched foods
-    const f1Match = [...introducedSet].find(f => normalizeFoodName(f) === f1 || f.includes(f1) || f1.includes(f)) || f1;
-    const f2Match = [...introducedSet].find(f => normalizeFoodName(f) === f2 || f.includes(f2) || f2.includes(f)) || f2;
+    const f1Match = [...introducedSet].find(f => normalizeFoodName(f) === f1 || _foodWordHit(f, f1) || _foodWordHit(f1, f)) || f1;
+    const f2Match = [...introducedSet].find(f => normalizeFoodName(f) === f2 || _foodWordHit(f, f2) || _foodWordHit(f2, f)) || f2;
 
     const paired = usedSynergyKeys.has(f1 + '|' + f2);
 
@@ -3575,16 +3575,20 @@ function getSynergyPairings(rawFoods) {
   rawFoods.forEach(food => {
     FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
       let match = null, partner = null;
-      if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
-      else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+      // Whole-word matches (V-V-270-2): "eggplant" is not "egg".
+      if (_foodWordHit(food, f1) || _foodWordHit(f1, food)) { match = f1; partner = f2; }
+      else if (_foodWordHit(food, f2) || _foodWordHit(f2, food)) { match = f2; partner = f1; }
       if (!match || !partner) return;
+      if (typeof _dietAllowsFood === 'function' && !_dietAllowsFood(partner)) return;
       // Don't suggest if partner is already in the query
-      if (rawFoods.some(rf => rf.includes(partner) || partner.includes(rf))) return;
+      if (rawFoods.some(rf => _foodWordHit(rf, partner) || _foodWordHit(partner, rf))) return;
       // Age-safety check
-      const rule = AGE_RULES[partner] || AGE_RULES[partner.replace(/s$/, '')] || Object.entries(AGE_RULES).find(([k]) => partner.includes(k))?.[1];
+      // The shared strictest-gate resolver (Kael V-K-270-16), not a substring scan of AGE_RULES keys.
+      const rule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(partner)
+        : (AGE_RULES[partner] || AGE_RULES[partner.replace(/s$/, '')]);
       if (rule && mo < rule.minMonth) return;
       // Must be already introduced
-      if (![...introducedSet].some(f => f.includes(partner) || partner.includes(f))) return;
+      if (![...introducedSet].some(f => _foodWordHit(f, partner) || _foodWordHit(partner, f))) return;
       const key = partner;
       if (seen.has(key)) return;
       seen.add(key);

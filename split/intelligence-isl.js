@@ -729,6 +729,7 @@ function _islMedicalData(startDate, endDate) {
   var dates = _islDateRange(startDate, endDate);
   var activeMeds = (meds || []).filter(function(m) { return m.active !== false; });
   var suppDays = 0;
+  var suppPartial = 0;
   var suppTotal = 0;
   var d3Times = [];
 
@@ -737,6 +738,11 @@ function _islMedicalData(startDate, endDate) {
   var d3WithFat = 0;
   var d3WithoutFat = 0;
   var d3FatFoods = [];
+  // The Vitamin D supplement's own dose-slot keys (a calcium + D3 suspension such as
+  // Caldikind-P NF has no "d3" in its name); the regex still catches past drops history.
+  var vdKeys = {};
+  var vdMed = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+  if (vdMed) medDoseSlots(vdMed).forEach(function(sl) { vdKeys[sl.key] = true; });
   dates.forEach(function(ds) {
     var dayChecks = medChecks[ds];
     if (dayChecks) {
@@ -745,7 +751,7 @@ function _islMedicalData(startDate, endDate) {
         var parsed = parseMedCheck(dayChecks[name]);
         if (parsed && (parsed.status === 'done' || parsed.status === 'late')) {
           anyDone = true;
-          if (/d3|vitamin d/i.test(name)) {
+          if (vdKeys[name] || /d3|vitamin d/i.test(name)) {
             if (parsed.givenAt) d3Times.push(parsed.givenAt);
             if (parsed.withFat === true) {
               d3WithFat++;
@@ -756,7 +762,14 @@ function _islMedicalData(startDate, endDate) {
           }
         }
       });
-      if (anyDone) suppDays++;
+      // A day counts only when her Vitamin D supplement's EVERY dose was given (Kael V-K-270-22);
+      // a twice-daily day part-way is 'partial', never a full day.
+      // Before the supplement's start (e.g. the drops era) the any-dose path counts (Cipher A3).
+      if (vdMed && !(vdMed.start && ds < vdMed.start)) {
+        var dv = parseMedCheck(medDayVal(vdMed, ds));
+        if (dv && (dv.status === 'done' || dv.status === 'late')) suppDays++;
+        else if (dv && dv.status === 'partial') suppPartial++;
+      } else if (anyDone) suppDays++;
     }
     suppTotal++;
   });
@@ -797,6 +810,7 @@ function _islMedicalData(startDate, endDate) {
   return {
     suppAdherence: suppTotal > 0 ? Math.round((suppDays / suppTotal) * 100) : null,
     suppDays: suppDays,
+    suppPartial: suppPartial,
     suppTotal: suppTotal,
     d3Times: d3Times,
     d3WithFat: d3WithFat,
@@ -1061,9 +1075,11 @@ function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
   // Medical highlights — D3 adherence
   if (md.suppTotal > 0) {
     if (md.suppDays > 0) {
-      highlights.push({ domain: 'medical', text: 'Vit D3 given' + (md.d3Times.length > 0 ? ' at ' + _formatTime12h(md.d3Times[0]) : ''), signal: 'good' }); // T1-5: CR-9's _formatTime12h sweep missed this site; daily/range summary rendered 24h while every other surface rendered 12h.
+      highlights.push({ domain: 'medical', text: 'Vitamin D given' + (md.d3Times.length === 1 ? ' at ' + _formatTime12h(md.d3Times[0]) : (md.d3Times.length > 1 ? ' — all doses' : '')), signal: 'good' }); // T1-5: CR-9's _formatTime12h sweep missed this site; daily/range summary rendered 24h while every other surface rendered 12h.
+    } else if (md.suppPartial > 0) {
+      highlights.push({ domain: 'medical', text: 'Vitamin D: some doses given', signal: 'neutral' });
     } else {
-      concerns.push({ domain: 'medical', text: 'Vit D3 missed', signal: 'warn' });
+      concerns.push({ domain: 'medical', text: 'Vitamin D not logged', signal: 'warn' });
     }
   }
 

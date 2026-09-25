@@ -153,6 +153,153 @@ function medCheckGivenAt(val) {
   return p ? p.givenAt : null;
 }
 
+// ── Dose slots + the Vitamin D supplement (2026-09-24, Caldikind-P NF 2.5 ml twice daily) ──
+// A med taken N times a day is logged as N independent slots — medChecks[date][slotKey] —
+// so the existing Done / Done at / Skip / Adjust flow works per dose unchanged. Once-daily
+// meds keep their bare name as the key (full back-compat with the Vit D3 drops history).
+function medDosesPerDay(m) {
+  if (!m) return 1;
+  if (m.dosesPerDay >= 1 && m.dosesPerDay <= 3) return Math.floor(m.dosesPerDay);
+  // Free text is read conservatively (Kael V-K-270-17/21): "How often" only — never the dose
+  // ("2 x 400 IU") — and a course length ("x 5 days") or a once-marker never multiplies.
+  // The add form's explicit "Doses a day" choice is the reliable path.
+  var t = String(m.freq || '').toLowerCase();
+  if (!t) return 1;
+  if (/\b(once|od|o\.d|q24h|weekly|week|alternate|sos|prn|as needed|if needed|stat)\b/.test(t)) return 1;
+  var abc = t.match(/\b([0-9])-([0-9])-([0-9])\b/);   // 1-0-1 · 1-1-1
+  if (abc) { var n = [abc[1], abc[2], abc[3]].filter(function(x) { return x !== '0'; }).length; return Math.min(Math.max(n, 1), 3); }
+  var perDay = '\\s*(a |per )?(day|daily)\\b';
+  if (new RegExp('\\b(thrice|tds|tid|t\\.d\\.s)\\b|8 ?-?hourly|every 8 ?h|\\bq8h\\b|\\b(3 ?x|x ?3|3 times)' + perDay).test(t)) return 3;
+  if (new RegExp('\\b(twice|bd|bid|b\\.d)\\b|12 ?-?hourly|every 12 ?h|\\bq12h\\b|morning (and|&) (night|evening)|\\b(2 ?x|x ?2|2 times|two times)' + perDay).test(t)) return 2;
+  return 1;
+}
+function medDoseSlots(m) {
+  var n = medDosesPerDay(m);
+  if (n === 1) return [{ key: m.name, label: '' }];
+  var labels = n === 2 ? ['morning', 'evening'] : ['morning', 'afternoon', 'evening'];
+  return labels.map(function(l) { return { key: m.name + ' · ' + l, label: l }; });
+}
+// Active meds expanded to one entry per dose slot: `name` is the medChecks key (and reads
+// as "Caldikind-P NF · evening"), `baseName` the med itself.
+function activeMedDoses() {
+  var out = [];
+  (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).forEach(function(m) {
+    if (!m.active) return;
+    // `label` is the parent-facing text (slot first — Vela V-V-270-7); `name` stays the storage key.
+    medDoseSlots(m).forEach(function(s) { out.push(Object.assign({}, m, { name: s.key, doseSlot: s.label, baseName: m.name,
+      label: s.label ? s.label.charAt(0).toUpperCase() + s.label.slice(1) + ' dose · ' + m.name : m.name })); });
+  });
+  return out;
+}
+// A slot is due from its part of the day: morning from 05:00 (so a late-night log of last
+// evening's dose never lands on today's morning — Maren S-1), afternoon 12:00, evening 16:00.
+var _MED_SLOT_FROM = { '': 0, morning: 5, afternoon: 12, evening: 16 };
+function medSlotDueNow(slot, hour) {
+  if (hour === undefined) hour = new Date().getHours();
+  return hour >= (_MED_SLOT_FROM[(slot && slot.doseSlot) || ''] || 0);
+}
+// A slot's record for a day. A bare-name record on a multi-dose med (logged by a device on an
+// older build, or history from before a once→twice switch) counts for its first slot (Maren S-9).
+function medSlotRecord(m, ds, slotKey) {
+  var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+  if (!day) return undefined;
+  if (day[slotKey] !== undefined) return day[slotKey];
+  var slots = medDoseSlots(m);
+  return (slots.length > 1 && slots[0].key === slotKey) ? day[m.name] : undefined;
+}
+// Does a slot count on a given day? Not before the med's start, and on the start day not a
+// slot whose window had already closed when the med was added (Maren S-8: a med added at 5 PM
+// is not "missed this morning").
+function medSlotApplies(m, ds, slotLabel) {
+  if (m.start && ds < m.start) return false;
+  if (ds !== m.start || !m.createdAt) return true;
+  var labels = medDoseSlots(m).map(function(s) { return s.label; });
+  var i = labels.indexOf(slotLabel || '');
+  var closes = (i >= 0 && i < labels.length - 1) ? _MED_SLOT_FROM[labels[i + 1]] : 24;
+  return parseInt(m.createdAt, 10) < closes;
+}
+// The record for one activeMedDoses() entry on a day (bare-name fallback included).
+function medDoseRecord(entry, ds) {
+  if (!entry) return undefined;
+  if (!entry.baseName) { var d = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null; return d ? d[entry.name] : undefined; }
+  return medSlotRecord(Object.assign({}, entry, { name: entry.baseName }), ds, entry.name);
+}
+// Today's state per dose slot, so exactly ONE dose per med is ever offered as "Done now"
+// (Maren B-1): 'resolved' · 'due' (the latest slot already due) · 'unlogged' (an earlier slot
+// never logged once a later one is due — resolve it, never give it now) · 'later' (not due yet).
+function medSlotStates(m, hour) {
+  var t = today();
+  var slots = medDoseSlots(m);
+  var dueIdx = -1;
+  slots.forEach(function(s, i) { if (medSlotDueNow({ doseSlot: s.label }, hour)) dueIdx = i; });
+  return slots.map(function(s, i) {
+    var p = parseMedCheck(medSlotRecord(m, t, s.key));
+    var resolved = !!(p && (p.status === 'done' || p.status === 'late' || p.status === 'skipped'));
+    var state = !medSlotApplies(m, t, s.label) ? 'na'
+      : resolved ? 'resolved' : i > dueIdx ? 'later' : i === dueIdx ? 'due' : 'unlogged';
+    return { key: s.key, label: s.label, state: state, parsed: p };
+  });
+}
+// One day's record for a whole med, in the med-check object shape (parseMedCheck-compatible):
+// once-daily → the raw value; multi-dose → 'done'/'late' only when EVERY slot is given,
+// 'skipped' when every slot was skipped, 'partial' otherwise (neither done nor skipped).
+function medDayVal(m, ds) {
+  var slots = medDoseSlots(m);
+  if (slots.length === 1) {
+    var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+    if (!day) return undefined;
+    if (day[m.name] !== undefined) return day[m.name];
+    // Switched back to once a day: a given slot-keyed dose still counts for that day (V-K-270-23).
+    var sk = Object.keys(day).filter(function(k) { return k.indexOf(m.name + ' · ') === 0; });
+    return sk.map(function(k) { return day[k]; }).filter(medCheckIsDone)[0];
+  }
+  var ps = slots.filter(function(s) { return medSlotApplies(m, ds, s.label); })
+    .map(function(s) { return parseMedCheck(medSlotRecord(m, ds, s.key)); });
+  if (!ps.length || ps.every(function(p) { return !p; })) return undefined;
+  var done = ps.filter(function(p) { return p && (p.status === 'done' || p.status === 'late'); });
+  if (done.length === ps.length) {
+    var fat = done.filter(function(p) { return p.withFat === true; })[0];
+    return { status: done.some(function(p) { return p.status === 'late'; }) ? 'late' : 'done', givenAt: done[0].givenAt,
+      withFat: fat ? true : (done.every(function(p) { return p.withFat === false; }) ? false : null),
+      fatFood: fat ? fat.fatFood : null, fatDelta: fat ? fat.fatDelta : null };
+  }
+  if (ps.every(function(p) { return p && p.status === 'skipped'; })) return { status: 'skipped' };
+  // 'partial' only when at least one dose was actually given (Cipher A4).
+  if (!done.length) return ps.some(function(p) { return p && p.status === 'skipped'; }) ? { status: 'skipped' } : undefined;
+  return { status: 'partial', givenAt: done[0].givenAt };
+}
+// One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
+// stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
+// date keeps the sync identity (name + start) the same on both phones, so they merge.
+function _migrateCaldikind20260924() {
+  try {
+    if (localStorage.getItem('ziva_mig_caldikind') === '1') return;
+    localStorage.setItem('ziva_mig_caldikind', '1');
+    if (!Array.isArray(meds) || meds.some(function(m) { return /caldikind/i.test(m.name || ''); })) return;
+    var drops = meds.filter(function(m) { return m.active && /\bd3\b|vitamin\s*d\b/i.test(m.name || ''); });
+    if (!drops.length) return;
+    drops.forEach(function(m) { m.active = false; });
+    meds.push(Object.assign({}, DEFAULT_MEDS[0]));
+    save(KEYS.meds, meds);
+  } catch (e) { console.warn('[migrate] caldikind:', e); }
+}
+// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
+// iron drop must not match — Maren S-4). With two active, the most recently started wins.
+function isVitDSupplement(m) {
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
+  return /\bd3\b|vitamin\s*d\b|\bvit\.?\s*d\b|cholecalciferol|caldikind/i.test(t);
+}
+function vitDSupplement() {
+  var list = (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).filter(function(m) { return m.active && isVitDSupplement(m); });
+  list.sort(function(a, b) { return String(b.start || '').localeCompare(String(a.start || '')); });
+  return list[0] || null;
+}
+// A calcium-bearing supplement (calcium + D3 combos) — drives the iron-spacing guidance.
+function isCalciumSupplement(m) {
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
+  return /\bcalcium\b|caldikind/i.test(t);
+}
+
 // Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
 // the C-1.5 factuality work flows through automatically — no second source of truth.
 var _fatBearingFoodNamesCache = null;
@@ -173,6 +320,8 @@ function _getFatBearingFoodNames() {
   }
   // Indian-prep augmentation: paratha carries ghee in default preparation.
   if (out.indexOf('paratha') < 0) out.push('paratha');
+  // Plain "milk" — the word parents actually log — carries fat like whole milk (V-K-270-11).
+  if (out.indexOf('milk') < 0) out.push('milk');
   _fatBearingFoodNamesCache = out;
   return out;
 }
@@ -1315,6 +1464,7 @@ function init() {
     if (!Array.isArray(vaccData)) vaccData = DEFAULT_VACC.slice();
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
+    _migrateCaldikind20260924();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -1854,7 +2004,9 @@ function computeMedicalModifier() {
   if (supp && supp.length > 0) {
     const primary = supp[0];
     const rate = primary.adherenceRate;
-    if (rate >= 90) suppVal = 100;
+    // A supplement started today has no counted days yet — keep the neutral 70 (Cipher).
+    if (!primary.totalDays) suppVal = 70;
+    else if (rate >= 90) suppVal = 100;
     else if (rate >= 70) suppVal = 80;
     else if (rate >= 50) suppVal = 55;
     else suppVal = 30;
@@ -2185,13 +2337,16 @@ function calcMedicalScore() {
   let suppScore = 100;
   if (activeMeds.length > 0) {
     let daysChecked = 0;
+    const _vdScore = vitDSupplement();   // hoisted out of the day loop (Cipher)
     for (let i = 0; i < 7; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const ds = toDateStr(d);
       const dayChecks = medChecks[ds];
       if (dayChecks) {
         // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
-        const anyDone = Object.values(dayChecks).some(v => medCheckIsDone(v));
+        // Her Vitamin D supplement counts a day only when every dose was given (Kael V-K-270-22).
+        const anyDone = (_vdScore && !(_vdScore.start && ds < _vdScore.start)) ? medCheckIsDone(medDayVal(_vdScore, ds))
+          : Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }
@@ -4372,6 +4527,20 @@ function getFoodEffect(name) {
   return eff;
 }
 
+// Age-aware view of a FOOD_EFFECTS record for RENDER surfaces (Ceres V-C-270-9 /
+// Maren M-S2 / Kael V-K-270-12). From 12 m honey's botulism risk falls to very low and
+// its remaining reason is added sugar, so the "before 12 months" headline and the
+// botulism watch-floor must not reach a toddler's parent. From 24 m the sugar gate has
+// passed: no card at all (null) — honey is an ordinary food with an AGE_RULES `after`
+// line. Every other record, and honey under 12 m, is returned unchanged (same object).
+function foodEffectForAge(eff, mo) {
+  if (!eff || typeof FOOD_EFFECTS === 'undefined' || eff !== FOOD_EFFECTS['honey'] || !(mo >= 12)) return eff;
+  if (mo >= 24) return null;
+  return Object.assign({}, eff, { watchFor: [], severeSigns: [], seekCare: '',
+    title: 'Honey waits until 2 — it counts as added sugar',
+    why: 'After the first birthday the botulism risk falls to very low, but honey is an added sugar — like jaggery, it waits until 2.' });
+}
+
 // Combo-result schema tag (food-effects v2 R1, M-R1-1). The combo checker caches
 // results in localStorage (comboHistory, unversioned). A result cached BEFORE R1
 // lacks the emergency-floor fields (toxin / severe_floors / encourage); rendering
@@ -4380,8 +4549,10 @@ function getFoodEffect(name) {
 // (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
 // 'r1-fe-a24' (2026-09-24, Ceres V-C-266-1): bumped when the added-sugar gates moved 12 → 24 m, so
 // every result cached under the old gates (jaggery / sugar "safe" at 12 m) is recomputed once.
+// 'r1-fe-a24-t3' (Maren #270 B2): bumped for the 12–24 m food-library gates (gajak/chikki 48,
+// ragi biscuit 24, juice 12, chai/namkeen/papad/sharbat 24) and the age-aware honey framing.
 // Bump it again whenever an AGE_RULES gate tightens.
-const COMBO_RESULT_SCHEMA = 'r1-fe-a24';
+const COMBO_RESULT_SCHEMA = 'r1-fe-a24-t3';
 
 // A cached combo result is reusable only if it carries the current schema AND was computed at her
 // current age in whole months — verdicts are age-gated, so a result from last month can be wrong
@@ -4799,14 +4970,18 @@ const DIET_PREF_LABEL = {
 // synonyms the combo-checker sees (lamb/pork/beef → meat; crab → seafood) so the gate classifies
 // every animal food the app references from one source.
 const NONVEG_TOKEN_SID = {
-  egg: 'eggs',
-  chicken: 'poultry',
+  egg: 'eggs', eggs: 'eggs', anda: 'eggs', omelette: 'eggs',
+  chicken: 'poultry', murgi: 'poultry', murga: 'poultry',
   fish: 'fish', prawn: 'fish', shrimp: 'fish', crab: 'fish', seafood: 'fish',
-  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat',
+  // 12–24 m vocabulary (Kael V-K-270-10): Indian fish + shellfish names parents log.
+  shellfish: 'fish', prawns: 'fish', jhinga: 'fish', chingri: 'fish', kekda: 'fish', lobster: 'fish',
+  rohu: 'fish', katla: 'fish', pomfret: 'fish', bangda: 'fish', hilsa: 'fish', ilish: 'fish',
+  sardine: 'fish', salmon: 'fish', machli: 'fish', machhli: 'fish',
+  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat', keema: 'meat',
 };
 // Resolve a food NAME to its non-veg sid, or null if it is not a non-veg food. WORD-BOUNDARY
 // matched (not substring) so "Egg yolk"/"Chicken (puree)" classify but "eggplant" does NOT, and
-// "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
+// "shellfish" does NOT match \bfish\b — it has its own token above (a pescatarian set allows it).
 function _dietNonvegSid(name) {
   const n = String(name || '').toLowerCase();
   // First-match-wins (K-214-1): intentional and surfacing-safe. The nonveg-category items this

@@ -2286,7 +2286,8 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
     if (ev.type === 'feed') counts.meal++;
     else if (ev.type === 'nap') counts.nap++;
     else if (ev.type === 'sleep') counts.night++;
-    else if (ev.type === 'med') counts.med++;
+    // Only a GIVEN dose counts as logged — never a skip (Vela V-V-270-2).
+    else if (ev.type === 'med') { if (ev.parsed && (ev.parsed.status === 'done' || ev.parsed.status === 'late')) counts.med++; }
     else if (ev.type === 'poop') counts.poop++;
     else if (ev.type === 'activity') counts.activity++;
     else if (ev.type === 'ct' || ev.type === 'careticket') counts.ct++;
@@ -2301,7 +2302,15 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
   if (counts.meal > 0) parts.push(num(counts.meal, 'meal', 'meals'));
   if (counts.night > 0) parts.push('night sleep');
   if (counts.nap > 0) parts.push(num(counts.nap, 'nap', 'naps'));
-  if (counts.med > 0) parts.push('D3 logged');
+  if (counts.med > 0) {
+    // Name the supplement's actual state: a twice-daily dose half-done must not read as done.
+    const _vd = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+    const _vdSlots = _vd ? medDoseSlots(_vd) : [];
+    if (_vdSlots.length > 1) {
+      const nIn = _vdSlots.filter(function(sl) { return medCheckIsDone(medSlotRecord(_vd, today(), sl.key)); }).length;
+      parts.push(nIn === _vdSlots.length ? 'all supplement doses given' : nIn + ' of ' + _vdSlots.length + ' supplement doses given');
+    } else parts.push(counts.med === 1 ? 'supplement given' : counts.med + ' supplements given');
+  }
   if (counts.poop > 0) parts.push(num(counts.poop, 'poop', 'poops'));
   // V-K-91 (Kael synth-fold): activity + careticket counts are taxonomy
   // citizens. "care-note" is the soft surface word — neither "ticket"
@@ -2701,9 +2710,15 @@ function _tsfDetectPatterns() {
     { key: 'afternoon-nap', type: 'nap', minDays: 4, wStart: 750, wEnd: 990, label: 'Afternoon nap usually ~{time}', icon: zi('zzz'), color: 'lav', nudgeAction: 'nap' },
     { key: 'snack', type: 'feed', meal: 'snack', minDays: 4, wStart: 840, wEnd: 1020, label: 'Snack usually around {time}', icon: zi('spoon'), color: 'amber', nudgeAction: 'feed', nudgeMeal: 'snack' },
     { key: 'dinner', type: 'feed', meal: 'dinner', minDays: 5, wStart: 1020, wEnd: 1230, label: 'Dinner usually around {time}', icon: zi('moon'), color: 'lav', nudgeAction: 'feed', nudgeMeal: 'dinner' },
-    { key: 'afternoon-poop', type: 'poop', minDays: 3, wStart: 720, wEnd: 1020, label: 'Poop usually around {time}', icon: zi('diaper'), color: 'amber', nudgeAction: 'poop' },
-    { key: 'med-Vitamin D3 Drops', type: 'med', medName: 'Vitamin D3 Drops', minDays: 5, wStart: 0, wEnd: 1440, label: 'Vit D3 usually by {time}', icon: zi('pill'), color: 'sky', nudgeAction: 'med' }
+    { key: 'afternoon-poop', type: 'poop', minDays: 3, wStart: 720, wEnd: 1020, label: 'Poop usually around {time}', icon: zi('diaper'), color: 'amber', nudgeAction: 'poop' }
   ];
+  // Her Vitamin D supplement, one pattern per dose slot (was a hard-coded 'Vitamin D3 Drops'
+  // key, which a renamed or twice-daily supplement never matched).
+  const _vdPat = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+  if (_vdPat) medDoseSlots(_vdPat).forEach(function(sl) {
+    patternDefs.push({ key: 'med-' + sl.key, type: 'med', medName: sl.key, minDays: 5, wStart: 0, wEnd: 1440,
+      label: sl.key + ' usually by {time}', icon: zi('pill'), color: 'sky', nudgeAction: 'med' });
+  });
 
   const patterns = [];
 
@@ -2840,9 +2855,13 @@ function _tsfGetNudges() {
         return pm !== null && pm >= pat.windowStart && pm <= pat.windowEnd;
       });
     } else if (pat.type === 'med' && pat.medName) {
+      // A dose-slot nudge only while that slot is the med's one 'due' dose — never an unlogged
+      // earlier dose beside Home's "Done now" (Cipher A1, the double-dose invariant).
+      const _m = (meds || []).filter(function(m) { return m.active && medDoseSlots(m).some(function(sl) { return sl.key === pat.medName; }); })[0];
+      const _x = _m ? medSlotStates(_m).filter(function(x) { return x.key === pat.medName; })[0] : null;
       // V-K-67: schema-aware — handles both legacy string and new object shapes.
       const mc = todayMC[pat.medName];
-      alreadyLogged = medCheckIsDone(mc) || medCheckSkipped(mc);
+      alreadyLogged = _x ? _x.state !== 'due' : (medCheckIsDone(mc) || medCheckSkipped(mc));
     }
 
     if (alreadyLogged) return;
@@ -2939,7 +2958,11 @@ function renderTodaySoFar() {
   const anchor = _tsfGetAnchor();
   const nudges = _tsfGetNudges();
   const patterns = _tsfPatternCache || [];
-  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0;
+  // Never "All caught up" while a med dose is due or unlogged (Vela V-V-270-2).
+  const _medOpen = (typeof medSlotStates === 'function') && (meds || []).some(function(m) {
+    return m.active && medSlotStates(m).some(function(x) { return x.state === 'due' || x.state === 'unlogged'; });
+  });
+  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0 && !_medOpen;
 
   // Mark cache as clean
   _tsfCacheDirty = false;
@@ -3664,6 +3687,10 @@ function computeIntroductionRate() {
 function getUntriedSuggestions(n) {
   n = n || 5;
   const introduced = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  // Canonical bases too (Vela V-V-270-5): a synonym key ("palak" once spinach is in) is not new.
+  const _base = n => (typeof _baseFoodName === 'function') ? _baseFoodName(n) : n;
+  const introducedBase = new Set([...introduced].map(_base));
+  const offeredBase = new Set();
   const ageM = ageAt().months;
   // V-M-19 amendment: respect the user's diet preference — non-veg foods outside the
   // preference must not surface as "Foods to Try Next." A parent who set a dietary boundary
@@ -3676,6 +3703,8 @@ function getUntriedSuggestions(n) {
   _foodTaxFlat.forEach(item => {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
+    const kb = _base(key);
+    if (introducedBase.has(kb) || offeredBase.has(kb)) return;
     // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
     // is in the current preference's allowed set. hasGate is fail-OPEN by design (V-V-31): this is
   // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
@@ -3694,6 +3723,7 @@ function getUntriedSuggestions(n) {
     const sub = group?.subs?.[item.sid];
     const nutrition = getNutrition(key);
 
+    offeredBase.add(kb);
     candidates.push({
       name: item.key,
       group: item.pid,
