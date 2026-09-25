@@ -47,7 +47,7 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
   - *Nudge tap (Vela V-V-270-13, pre-existing):* the Today So Far "Mark done" nudge animates card 0 and stamps tap time.
   - *Name collisions (Kael V-K-270-29):* a once-daily med literally named "X · morning" would share a key with twice-daily "X"; med names containing `.` or `/` break sync dotted paths (pre-existing).
   - *Kael Region headroom:* 29,575 LOC after this change (≈425 to the 30K trigger). Scope the Kael→successor split before the next engine feature.
-  - *Adequacy question for her doctor (not an app nudge):* at 2.5 ml twice daily the retail label figures suggest ≈200 IU Vitamin D3 a day vs 800 IU from the drops; the app asserts neither.
+  - *Adequacy question for her doctor (not an app nudge):* the pack states 10 ml = 200 IU Vitamin D3, so 2.5 ml twice daily gives ≈100 IU a day vs 800 IU from the drops (IAP guidance ≈600 IU/day at 1–3 y). Parents are confirming with her doctor whether the drops should continue alongside; the app asserts neither.
 
 #### Progress — 12–24 m expansion PR 2 (#269): sleep + vaccines
 - **Fixed in #269:** SLEEP_STANDARDS to 36 m with one nap source; IAP 2023 vaccine reconciliation (four non-IAP doses removed, due windows + grace, conditional doses, seasonal yearly flu, series completion for JE-2/MCV-2, word-boundary vaccine matching).
