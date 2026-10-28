@@ -242,7 +242,7 @@ Gate 2.5.
 
 **Model tiers (2026-07-27):** invocation cost follows the
 [Model Selection Protocol](docs/MODEL_SELECTION_PROTOCOL.md). Scribes run on
-pinned cheap tiers (scout/verify → Haiku, draft/record → Sonnet, via `model:`
+pinned cheap tiers (verify → Haiku; scout/draft/record → Sonnet, via `model:`
 frontmatter); Builders, Governors, Cipher, and the Chronicler carry no `model:`
 field and inherit the session model — the canon-cc-008 QA chain never runs
 below it (the safety floor). Skills always run in-session at the session

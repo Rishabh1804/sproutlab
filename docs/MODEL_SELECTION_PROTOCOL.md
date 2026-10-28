@@ -10,7 +10,7 @@
 > **Model refresh 2026-10-28:** §3 and §6 now name the current generation
 > (Haiku 5.5, Sonnet 5.5, Opus 5.5, Fable 5.1; prices from the model catalog
 > cached 2026-10-06). §2 is kept as the dated July fact-check. The tier
-> structure and the safety floor are unchanged; the `haiku` / `sonnet` aliases
+> structure and the safety floor are unchanged; scribe-scout moves from Tier 0 to Tier 1 (Architect, 2026-10-28, on Cipher's omission-error finding); the `haiku` / `sonnet` aliases
 > in the Scribe frontmatter already resolve to the current generation.
 
 ---
@@ -52,8 +52,8 @@ target. Treat the infographic's "Opus 4.7 / 4.8" rows as one collapsed row:
 
 | Tier | Model (alias) | $/MTok in–out | Assigned work in the Republic |
 |---|---|---|---|
-| 0 — Mechanical | `haiku` (Haiku 5.5) | 0.10 – 0.50 (≤ 100K-token prompts; 0.50 – 2.50 beyond) | Reconnaissance and pass/fail verification. File location, symbol greps, region mapping, running builds/tests and reporting output verbatim. No judgment, no prose quality requirement. |
-| 1 — Drafting | `sonnet` (Sonnet 5.5) | 2 – 10 | Composition and chronicling. Drafts from a precise brief, session notes, journal/log/chronicle stubs, routine docs. The commanding Companion reviews everything anyway (canon-proc-006), so the review layer absorbs the tier gap. |
+| 0 — Mechanical | `haiku` (Haiku 5.5) | 0.10 – 0.50 (≤ 100K-token prompts; 0.50 – 2.50 beyond) | Pass/fail verification: running builds/tests and reporting output verbatim. No judgment, no prose quality requirement. |
+| 1 — Drafting | `sonnet` (Sonnet 5.5) | 2 – 10 | Reconnaissance, composition and chronicling. Codebase recon (file location, symbol greps, region mapping) sits here, not at Tier 0: recon feeds signed spec bodies (invocation.md §10.1), and the commanding Companion's review catches what a scout got wrong but not what it missed. Drafts from a precise brief, session notes, journal/log/chronicle stubs, routine docs. The commanding Companion reviews everything anyway (canon-proc-006), so the review layer absorbs the tier gap. |
 | 2 — Judgment | *(inherit — no `model:` field)* | session rate | Builders, Governors, the Censor, the Chronicler's canonical records. Anything signed, safety-bearing, or entering the cc-018 lifecycle runs at the session's model, whatever the Architect set it to. |
 | 3 — Summit | `fable` (Fable 5.1) | 10 – 50 | **Explicit Architect opt-in only.** Ambiguous strategic work, deep research, highest-stakes decisions. Never a default; never pinned in a spec. |
 
@@ -61,7 +61,7 @@ target. Treat the infographic's "Opus 4.7 / 4.8" rows as one collapsed row:
 
 | Companion / worker | Frontmatter `model:` | Rationale |
 |---|---|---|
-| scribe-scout | `haiku` | Read-only recon; returns paths and line numbers. |
+| scribe-scout | `sonnet` | Read-only recon that feeds signed spec bodies; review catches commission errors, not omissions, so recon gets the drafting tier (Architect, 2026-10-28). |
 | scribe-verify | `haiku` | Mechanical checks; reports failing output verbatim — no interpretation. |
 | scribe-draft | `sonnet` | Composition from a brief; commanding Companion reviews the return. |
 | scribe-record | `sonnet` | Chronicle stubs and running notes; Sonnet's writing is strong. |
