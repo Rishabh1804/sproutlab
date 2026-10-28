@@ -76,7 +76,7 @@ target. Treat the infographic's "Opus 4.7 / 4.8" rows as one collapsed row:
 a health-intelligence tracker for Ziva; a Governor audit that misses a
 medication-timing bug or a mis-rendered fever threshold because it ran on a
 cheaper model is a false economy of the worst kind. This is why the Governors,
-Cipher, and Lyra carry **no** `model:` field: a pinned model is a ceiling as
+Cipher, Lyra, and the Chronicler carry **no** `model:` field: a pinned model is a ceiling as
 well as a floor — if the Architect runs a session on Fable, a spec pinned to
 `opus` would silently *downgrade* the audit. Inheriting means the chain always
 runs at whatever tier the Architect chose for the session.
@@ -115,6 +115,6 @@ verification runs), never on the judgment itself.
 
 Working doctrine pending ratification. Amendments follow the canon-cc-027
 signing chain once ratified; until then the Architect may revise directly.
-Model IDs and prices in §2–§3 should be re-verified against the live model
+Model IDs and prices in §3 and §6 (§2 is a frozen snapshot) should be re-verified against the live model
 catalog whenever Anthropic ships a new family — the tier *structure* is the
 durable part, the model names are the perishable part.
