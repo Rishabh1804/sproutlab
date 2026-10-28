@@ -30,6 +30,11 @@ A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git.
 #### P2 — Inline `onchange` on the Essential-mode toggle (template.html:3043, HR-3)
 - `onchange="toggleEssentialMode()"` — the Phase 4 carry-forward P-6, never closed. Sits beside the `#settingsRefStd` HR-2/HR-3 entry under the #266 nits; fix both together.
 
+#### P2 — Surface Catalog follow-ups (Cipher Edict V nits on #254, merged 2026-10-28)
+- **≤360 px orphan pill (styles.css ~6097):** `@media(max-width:360px){ .zs-domain-pill{grid-column:span 2 !important} }` beats the zoom full-row rule, so the fifth Home pill (Milestones) sits alone in a half row at ≤360 px at every zoom. Pre-existing. Fix: drop the `!important`, use `.zs-domains .zs-domain-pill` (0,2,0) plus a `:last-child:nth-child(odd)` full-row rule inside the query. Maren / Vela; shared module → all four Governors.
+- **SCORE_LABELS parse is all-or-nothing (build-surface-catalog.mjs):** it warns only when zero rows match; a single reformatted row drops that ring state silently. Warn when no `min: 0` row is found or the row count differs from the `min:` count. Public Works.
+- **Installed PWA serves the catalog's linked CSS one revision late (sw.js stale-while-revalidate):** add a build hash to the link (`styles.css?v=<hash>`) or a "reload twice" note in the banner. Public Works.
+
 #### P2 — Roadmap v7 assumptions past their review date
 - "CareTicket data ≈ 100 KB" (review Oct 2026) and `normalizeFoodName` quality (Sep 2026) are due; "localStorage < 2 MB" falls due Dec 2026. Measure on a real device export and record the figures.
 

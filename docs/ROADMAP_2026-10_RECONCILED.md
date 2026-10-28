@@ -120,7 +120,7 @@ content surface when its human dependencies exist. Note: e2e cannot run in the r
 
 ## 4. Decisions for the Architect
 - **D1 — v3.0.** Keep v3.0 (arcs v3-1 / 2 / 4 / 7 / 9 still to spec and build) as a target, fold its open arcs into this sequence, or retire the v3.0 label.
-- **D2 — Open draft PRs.** #254 (surface catalog, idle since June) and #257 (model-selection protocol, idle since July): close, or revive.
+- ~~**D2 — Open draft PRs.**~~ **Resolved 2026-10-28:** both revived and merged — #254 Surface Catalog (four-Governor round, Home fade dropped, stylesheet linked) and #257 Model Selection Protocol (refreshed to the current models; scribe-scout on Sonnet).
 - **D3 — v7 leftovers.** Snapshot Sharing, Inline Insights / Parent Celebration, CareTickets Phase 2: drop or carry. (CareTicket list views are visible "coming soon" stubs today.)
 - **D4 — Kael split boundary** (step C), on Lyra's spec.
 - **D5 — i18n / Hindi this year**, given the content surface waits on a named paediatrician.
