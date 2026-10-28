@@ -94,7 +94,7 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 
 #### P2 — Age copy still speaking "infant" (most fixed in #268–#270; re-checked 2026-10-28)
 - Fixed: hero and Q&A age ("1 year 2 months"), 2nd-birthday entry, toddler activities, teething lookout to 33 m, age-aware diet tips.
-- Still open: the CareTicket target text "set for 6–12 months" (see the CareTicket threshold entry below); the template.html help text is written for 6–8 months; the poop-frequency guide caps at 9–12 m. The texture ladder and variety target are tracked under the #270 progress block.
+- Still open: the CareTicket target text "set for 6–12 months" (see the CareTicket threshold entry above); the template.html help text is written for 6–8 months; the poop-frequency guide caps at 9–12 m. The texture ladder and variety target are tracked under the #270 progress block.
 
 #### P1 — Growth-velocity bands are still hand-copied at ~11 sites (Maren V-M-266-4)
 - **Symptom:** the 12–24 m band is shared (`GROWTH_VELOCITY_12_24`), but each site still carries its own ternary chain for 0–12 m. Some sites key on today's age, and `computeGrowthVelocity` keys on the measurement's (rounded) age.
