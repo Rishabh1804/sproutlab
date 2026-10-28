@@ -5081,6 +5081,7 @@ const SYMPTOM_DB = [
     precautions: [
       // AAP (HealthyChildren "Teething Pain", 2025): fever is a false symptom of teething.
       'Teething does not cause fever, diarrhoea or hours of crying. If she has any of these, it is something else: check her and call her doctor.',
+      'A fever of 38.3°C (101°F) or more is not teething: call her doctor the same day.',
       'Back teeth can be sorer and slower: first molars come through around 13–19 months, canines 16–23, second molars 23–33 (ADA).',
       'Watch for inconsolable crying lasting more than a couple of hours.',
       'Record each tooth on the Teeth chart (Milestones, Library) for the paediatrician or dentist.'
@@ -5092,8 +5093,11 @@ const SYMPTOM_DB = [
       { text: 'Freeze a teething ring solid or use a liquid-filled teether', critical: false },
       { text: 'Offer rusks or teething biscuits (most contain sugar, and hard pieces can break off)', critical: false }
     ],
+    // A toddler's 38.3°C is a same-day call (precautions above), not emergency care; the
+    // emergency line is the fever-high threshold (Maren V-M-268-1).
     emergency: [
-      'Fever of 38.3°C (101°F) or more — this is not teething; look for another cause',
+      'Fever of 40°C (104°F) or more, or any fever with a stiff neck, a rash that doesn\'t fade when pressed, or drowsiness that is hard to wake from',
+      'A fit (seizure), or fast or hard breathing',
       'Gums bleed heavily or look infected',
       'Ziva is inconsolable for hours'
     ],
@@ -5213,7 +5217,8 @@ const SYMPTOM_DB = [
     precautions: [
       'Ear-pulling alone is often just exploration at this age.',
       'Ear infections often follow upper respiratory infections.',
-      'Note any change in how Ziva responds to your voice (hearing concerns).'
+      'Note any change in how Ziva responds to your voice (hearing concerns).',
+      'Ear-pulling with a fever of 38.3°C (101°F) or more: call her doctor the same day; it is often an ear infection.'
     ],
     doNot: [
       { text: 'Insert cotton buds, fingers, or any object into the ear canal', critical: true },
@@ -5222,7 +5227,8 @@ const SYMPTOM_DB = [
     ],
     emergency: [
       'Fluid or pus draining from the ear',
-      'Ear-pulling with fever above 101°F (38.3°C)',
+      'Fever of 40°C (104°F) or more, or a red, swollen, tender area behind the ear that pushes the ear outward',
+      'A fit (seizure), or fast or hard breathing',
       'Ziva is inconsolable, especially when lying down',
       'Hearing seems noticeably affected'
     ],

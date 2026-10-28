@@ -388,7 +388,7 @@ const SYNC_RENDER_DEPS = {
   [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.milestones]:        { global: 'milestones',  postReceive: '_postReceiveMilestones', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
-  [KEYS.vacc]:              { global: 'vaccData',    renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
+  [KEYS.vacc]:              { global: 'vaccData',    mergeOnReceive: '_postReceiveVacc', renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
   [KEYS.visits]:            { global: 'visits',      renderers: { 'track:medical': ['renderMedicalStats'] } },
@@ -606,6 +606,13 @@ function _postReceiveMilestoneSuppress(remoteMap, localMap) {
     if (merged[k] <= now) delete merged[k];
   });
   return merged;
+}
+
+// _postReceiveVacc — drop pending doses the remote copy itself has given. The remote stays the
+// truth on receive: counting this phone's given doses could drop a pending twin without
+// carrying the given entry across, erasing the dose (Kael V-K-273-1).
+function _postReceiveVacc(remoteList) {
+  return vaccDropSatisfiedPending(remoteList);
 }
 
 // _postReceiveTeeth — tooth-chart merge. Shape { [toothId]: { date, ts } };
@@ -1567,6 +1574,9 @@ function _syncMergeForPush(local, cloud, key) {
   // Tooth chart: the push honours the same per-tooth newest-ts contract as the
   // receive, so an offline or imported copy can't overwrite a newer cloud edit.
   if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
+  // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
+  // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
+  if (key === KEYS.vacc && Array.isArray(local) && Array.isArray(cloud)) return vaccDropSatisfiedPending(_syncUnionArrays(local, cloud, key));
   if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud, key) : local;
   if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
     var out = {};

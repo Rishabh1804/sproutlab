@@ -5009,10 +5009,15 @@ function _tpGatherHeadsUp() {
 
   // 1. Vaccination upcoming
   try {
-    var upcoming = (vaccData || []).find(function(v) { return v.upcoming; });
+    // The earliest pending dose due in the next 7 days, so an overdue dose (which the
+    // overall next-dose helper puts first) can't hide one due this week (Ceres V-C-273-1).
+    var _now = new Date();
+    var upcoming = (vaccDropSatisfiedPending(vaccData || []) || [])
+      .filter(function(v) { var d = v && v.upcoming && v.date ? Math.ceil((new Date(v.date) - _now) / 86400000) : -1; return d >= 0 && d <= 7; })
+      .sort(function(a, b) { return String(a.date).localeCompare(String(b.date)); })[0];
     if (upcoming) {
-      var daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
-      if (daysTo >= 0 && daysTo <= 7) {
+      var daysTo = Math.ceil((new Date(upcoming.date) - _now) / 86400000);
+      {
         var bookedData = load(KEYS.vaccBooked, null);
         var isBooked = bookedData && bookedData.vaccName === upcoming.name;
         items.push({

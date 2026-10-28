@@ -15686,8 +15686,12 @@ const GENERAL_EMERGENCIES = [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
       // Child (1 year+) technique since Ziva turned one (2026-09-24 12-month audit): mouth-to-mouth
       // with the nose pinched, heel of ONE hand, 5 cm — NHS 'How to resuscitate a child' (mod. 2026-08-07).
-      'Tilt the head back slightly and lift the chin, clear any obvious blockage, then give 5 rescue breaths — pinch her nose, seal your mouth over hers and blow steadily for about 1 second until the chest rises.',
-      '30 chest compressions: heel of one hand on the lower third of the breastbone, arm straight, push down 5 cm (a third of the chest depth) and fast (100–120 a minute) — then 2 breaths. Keep the 30:2 cycle going until help arrives.'
+      // Breathing check + two-hand note + plainer landmark (Maren V-M-266-12; RCUK 2025 paediatric
+      // BLS: look, listen and feel for no more than 10 s; lower half of the sternum, two hands if needed).
+      'Check her breathing: tilt the head back slightly, lift the chin, and look, listen and feel for breaths for up to 10 seconds. Gasping is not breathing.',
+      'Breathing normally: turn her onto her side (recovery position), call 112, and keep checking her breathing until help arrives.',
+      'Not breathing normally: clear any obvious blockage, then give 5 rescue breaths — pinch her nose, seal your mouth over hers and blow steadily for about 1 second until the chest rises.',
+      '30 chest compressions: heel of one hand in the middle of her chest, on the lower half of the breastbone (not the soft tip at the bottom), arm straight, push down 5 cm (a third of the chest depth) and fast (100–120 a minute) — then 2 breaths. If one hand can\'t push 5 cm, use both hands, one on top of the other. Keep the 30:2 cycle going until help arrives.'
     ],
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',
@@ -20945,6 +20949,7 @@ const SYMPTOM_DB = [
     precautions: [
       // AAP (HealthyChildren "Teething Pain", 2025): fever is a false symptom of teething.
       'Teething does not cause fever, diarrhoea or hours of crying. If she has any of these, it is something else: check her and call her doctor.',
+      'A fever of 38.3°C (101°F) or more is not teething: call her doctor the same day.',
       'Back teeth can be sorer and slower: first molars come through around 13–19 months, canines 16–23, second molars 23–33 (ADA).',
       'Watch for inconsolable crying lasting more than a couple of hours.',
       'Record each tooth on the Teeth chart (Milestones, Library) for the paediatrician or dentist.'
@@ -20956,8 +20961,11 @@ const SYMPTOM_DB = [
       { text: 'Freeze a teething ring solid or use a liquid-filled teether', critical: false },
       { text: 'Offer rusks or teething biscuits (most contain sugar, and hard pieces can break off)', critical: false }
     ],
+    // A toddler's 38.3°C is a same-day call (precautions above), not emergency care; the
+    // emergency line is the fever-high threshold (Maren V-M-268-1).
     emergency: [
-      'Fever of 38.3°C (101°F) or more — this is not teething; look for another cause',
+      'Fever of 40°C (104°F) or more, or any fever with a stiff neck, a rash that doesn\'t fade when pressed, or drowsiness that is hard to wake from',
+      'A fit (seizure), or fast or hard breathing',
       'Gums bleed heavily or look infected',
       'Ziva is inconsolable for hours'
     ],
@@ -21077,7 +21085,8 @@ const SYMPTOM_DB = [
     precautions: [
       'Ear-pulling alone is often just exploration at this age.',
       'Ear infections often follow upper respiratory infections.',
-      'Note any change in how Ziva responds to your voice (hearing concerns).'
+      'Note any change in how Ziva responds to your voice (hearing concerns).',
+      'Ear-pulling with a fever of 38.3°C (101°F) or more: call her doctor the same day; it is often an ear infection.'
     ],
     doNot: [
       { text: 'Insert cotton buds, fingers, or any object into the ear canal', critical: true },
@@ -21086,7 +21095,8 @@ const SYMPTOM_DB = [
     ],
     emergency: [
       'Fluid or pus draining from the ear',
-      'Ear-pulling with fever above 101°F (38.3°C)',
+      'Fever of 40°C (104°F) or more, or a red, swollen, tender area behind the ear that pushes the ear outward',
+      'A fit (seizure), or fast or hard breathing',
       'Ziva is inconsolable, especially when lying down',
       'Hearing seems noticeably affected'
     ],
@@ -23647,6 +23657,35 @@ function _migrateCaldikind20260924() {
     save(KEYS.meds, meds);
   } catch (e) { console.warn('[migrate] caldikind:', e); }
 }
+// Second pass (2026-10-28, parent report: the old drops still showed as due). The first pass
+// returned early when Caldikind was already listed (added by hand on 24 Sep, "keep both" on the
+// stop prompt) and its name test missed entries like "Vit D drops", so on such a phone the
+// drops stayed active. Her doctor confirmed Caldikind alone. One-shot per device under a new
+// flag: with an active calcium + Vitamin D supplement, stop every other active Vitamin D
+// supplement that started before it. One started later was added on purpose and is left alone.
+function _migrateVitDSingle20261028() {
+  try {
+    if (localStorage.getItem('ziva_mig_vitd_single') === '1') return;
+    localStorage.setItem('ziva_mig_vitd_single', '1');
+    if (!Array.isArray(meds)) return;
+    var cal = meds.filter(function(m) { return m.active && isCalciumSupplement(m) && isVitDSupplement(m); })
+      .sort(function(a, b) { return String(a.start || '').localeCompare(String(b.start || '')); })[0];
+    if (!cal) return;
+    if (!cal.start) return;   // no start date to compare against (Maren/Kael on #273)
+    var calStart = String(cal.start);
+    var old = meds.filter(function(m) {
+      return m !== cal && m.active && isVitDSupplement(m) && !isCalciumSupplement(m) && String(m.start || '') < calStart;
+    });
+    if (!old.length) return;
+    old.forEach(function(m) { m.active = false; });
+    save(KEYS.meds, meds);
+    // Say what changed and how to undo it (Maren N-3); after load, once the toast host exists.
+    setTimeout(function() {
+      // showQLToast sets innerHTML — escape the parent-typed names (HR-4).
+      if (typeof showQLToast === 'function') showQLToast('Stopped ' + escHtml(old.map(function(m) { return m.name; }).join(', ')) + ': ' + escHtml(cal.name) + ' already has Vitamin D. You can restart it in Medicines.', 6000);
+    }, 2500);
+  } catch (e) { console.warn('[migrate] vitd-single:', e); }
+}
 // Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
 // iron drop must not match — Maren S-4). With two active, the most recently started wins.
 function isVitDSupplement(m) {
@@ -24408,6 +24447,7 @@ function init() {
     else if (action === 'upcomingToMilestoneDone') console.warn('[dispatcher] upcomingToMilestone handler missing — intent dead (upcoming-milestone Done tap)');
     else if (action === 'markVaccBooked') markVaccBooked(arg);
     else if (action === 'vaccMarkDone') _vaccMarkDone([arg], arg2);
+    else if (action === 'vaccMarkGiven') openVaccGivenModal(arg);
     else if (action === 'vaccMarkDoneMulti') {
       const checks = document.querySelectorAll('.vc-complete-checks .vc-check-input:checked');
       const names = [];
@@ -24826,9 +24866,11 @@ function init() {
     if (!Array.isArray(foods)) foods = DEFAULT_FOODS.slice();
     _deduplicateFoods();
     if (!Array.isArray(vaccData)) vaccData = DEFAULT_VACC.slice();
+    { const _vd = vaccDropSatisfiedPending(vaccData); if (_vd.length !== vaccData.length) { vaccData = _vd; save(KEYS.vacc, vaccData); } }
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
     _migrateCaldikind20260924();
+    _migrateVitDSingle20261028();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -26670,6 +26712,40 @@ function escHtml(s) {
 // leak class V-M-9/V-M-10/V-M-16 surfaced across PR #74-#75.
 function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+// A repeat name: logged again and again under one name (bare "Flu", "Influenza", "OPV",
+// "Pulse Polio", "Vitamin A"), so a given entry never stands in for a pending one. A name
+// with a dose number, or a single-dose schedule name (BCG, TCV, PCV Booster, Tdap…), is one
+// dose (Maren B-1 on #273: a flu-name rule had left "Influenza-2" pending forever).
+function vaccIsRepeatName(name) {
+  const n = normVacc(String(name || ''));
+  if (!n || /\d/.test(n)) return false;
+  return !(typeof VACC_SCHEDULE !== 'undefined' && VACC_SCHEDULE.some(v => normVacc(v.name) === n));
+}
+// A pending (upcoming) vaccine entry is satisfied once a given entry of the same dose exists
+// (normalised name; repeat names excluded). Logging a given dose used to leave its pending twin
+// "due", and the sync union re-added a pending entry another phone had already marked given
+// (parent report, 2026-10-28). Names are read as strings so a corrupt entry can't throw (Kael).
+function vaccDropSatisfiedPending(list) {
+  if (!Array.isArray(list)) return list;
+  const given = new Set();
+  list.forEach(v => { if (v && !v.upcoming && v.name) given.add(normVacc(String(v.name))); });
+  return list.filter(v => !(v && v.upcoming && v.name && !vaccIsRepeatName(v.name) && given.has(normVacc(String(v.name)))));
+}
+// The next pending dose: earliest due date, satisfied twins dropped, and a conditional dose
+// (special situations only, e.g. MCV-1 = MenACWY) skipped until its series is unlocked — so
+// "Mark given" is never offered on it (Maren S-2). Home and Medical used to disagree (first in
+// array order vs earliest date, Maren V-M-269-8 / Cipher E-V 3).
+function getNextUpcomingVacc() {
+  const list = vaccDropSatisfiedPending(typeof vaccData !== 'undefined' ? vaccData : []) || [];
+  const givenNorm = new Set(list.filter(v => v && !v.upcoming && v.name).map(v => normVacc(String(v.name))));
+  const sched = typeof VACC_SCHEDULE !== 'undefined' ? VACC_SCHEDULE : [];
+  return list.filter(v => {
+    if (!v || !v.upcoming) return false;
+    const row = sched.find(r => normVacc(r.name) === normVacc(String(v.name || '')));
+    return !(row && vaccIsConditional(row, givenNorm));
+  }).sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')))[0] || null;
+}
 
 // vaccDueState — where a scheduled dose sits at an age in fractional months:
 // 'future' (window not open yet), 'due' (inside [age, windowEnd] plus a grace
@@ -31207,7 +31283,7 @@ function updateHeader() {
   }
 
   // next vacc
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (upcoming) {
     const daysTo = Math.ceil((new Date(upcoming.date) - todayD) / 86400000);
     const dv = document.getElementById('homeVaccDays');
@@ -31359,7 +31435,7 @@ function weatherCodeToIcon(code) {
 // Fetches forecast for the appointment date and shows precautions 2 days before
 function fetchVaccWeatherAdvisory() {
   const bookedData = load(KEYS.vaccBooked, null);
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (!bookedData || !upcoming || bookedData.vaccName !== upcoming.name || !bookedData.apptDate) return;
 
   const apptDate = bookedData.apptDate;
@@ -31629,7 +31705,7 @@ function renderRemindersAndAlerts() {
   // ── 1. VACCINATION OVERDUE / URGENT + POST-VACC MONITORING ──
   const todayStr2 = today();
   const yesterdayStr2 = _offsetDateStr(todayStr2, -1);
-  const upcomingAll = vaccData.filter(v => v.upcoming);
+  const upcomingAll = vaccDropSatisfiedPending(vaccData).filter(v => v.upcoming);
 
   // Group overdue vaccinations by date
   const overdueGroups = {};
@@ -31701,6 +31777,7 @@ function renderRemindersAndAlerts() {
           <div class="flex-1"><strong class="tc-danger">${daysTo} day${daysTo > 1 ? 's' : ''} to ${escHtml(upcoming.name)}</strong>
           <div class="t-sub">Due ${formatDate(upcoming.date)}</div></div>
           <button class="btn btn-sage vc-sm-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">Book</button>
+          <button class="btn btn-ghost vc-sm-btn" data-action="vaccMarkGiven" data-arg="${escAttr(upcoming.name)}">Given</button>
         </div>`;
       }
     }
@@ -31963,7 +32040,7 @@ function getActiveCareSignals() {
           'Tap to reschedule or mark done');
     }
     // 1b · Urgent upcoming (≤7 days, mirrors :601)
-    var upNext = vaccData.filter(function(v) { return v.upcoming; })
+    var upNext = vaccDropSatisfiedPending(vaccData).filter(function(v) { return v.upcoming; })
       .sort(function(a, b) { return new Date(a.date) - new Date(b.date); })[0];
     if (upNext) {
       var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
@@ -32504,7 +32581,7 @@ function resolveMissedMed(name, dateStr, action) {
 }
 
 function renderHomeVacc() {
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const el = document.getElementById('homeVaccCard');
   const wrap = document.getElementById('homeVaccCardWrap');
   if (!wrap || !el) return; // v2.3: card relocated from Home
@@ -32532,6 +32609,9 @@ function renderHomeVacc() {
     statusLine = `<div style="font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;margin-top:4px;">${zi('check')} Booked — ${apptLabel}</div>`;
   } else if (isBooked) {
     statusLine = `<div style="font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;margin-top:4px;cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">${zi('check')} Booked — tap to add date & time</div>`;
+  } else if (daysTo < 0) {
+    // Overdue reads as overdue, with the two ways out (Maren S-2 on #273).
+    statusLine = '<div class="t-sub tc-danger mt-4">' + zi('warn') + ' ' + (-daysTo) + ' day' + (daysTo === -1 ? '' : 's') + ' overdue. Tap Mark given if she has had it, or book it.</div>';
   } else {
     statusLine = safe <= 3 ? '<div style="font-size:var(--fs-sm);color:var(--tc-danger);font-weight:700;margin-top:4px;">' + zi('warn') + ' Due very soon — book your appointment!</div>' : '<div style="font-size:var(--fs-sm);color:var(--tc-caution);font-weight:600;margin-top:4px;">' + zi('clock') + ' Coming up this week</div>';
   }
@@ -32545,6 +32625,7 @@ function renderHomeVacc() {
         <div class="t-title">${escHtml(upcoming.name)}</div>
         <div class="t-sub" style="margin-top:3px;">Due ${formatDate(upcoming.date)}</div>
         ${statusLine}
+        <div class="mt-6"><button class="btn btn-ghost vc-sm-btn" data-action="vaccMarkGiven" data-arg="${escAttr(upcoming.name)}">${zi('check')} Mark given</button></div>
       </div>
     </div>`;
 }
@@ -32987,7 +33068,7 @@ function renderVaccHistory() {
   if (!container) return;
 
   const past = vaccData.filter(v => !v.upcoming).sort((a, b) => new Date(b.date) - new Date(a.date));
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const total = past.length + (upcoming ? 1 : 0);
 
   // Build a lookup from VACC_SCHEDULE by normalized name
@@ -32998,7 +33079,10 @@ function renderVaccHistory() {
 
   // Upcoming vaccination highlight
   if (upcoming) {
-    const daysTo = Math.max(0, Math.ceil((new Date(upcoming.date) - new Date()) / 86400000));
+    const daysRaw = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
+    const daysTo = Math.max(0, daysRaw);
+    // An overdue dose says so instead of "0 days away" (Maren S-2 on #273).
+    const whenLabel = daysRaw < 0 ? (-daysRaw) + ' day' + (daysRaw === -1 ? '' : 's') + ' overdue' : daysTo + ' days away';
     const urgency = daysTo <= 7 ? 'var(--tc-danger)' : daysTo <= 14 ? 'var(--tc-caution)' : 'var(--tc-lav)';
     const uInfo = schedLookup[normVacc(upcoming.name)];
     const bookedData = load(KEYS.vaccBooked, null);
@@ -33015,10 +33099,11 @@ function renderVaccHistory() {
         <div class="flex-1">
           <div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:2px;">Next due</div>
           <div class="t-title" style="font-size:var(--fs-md);">${escHtml(upcoming.name)}</div>
-          <div style="font-size:var(--fs-sm);color:${urgency};margin-top:2px;">${formatDate(upcoming.date)} · ${daysTo} days away</div>
+          <div style="font-size:var(--fs-sm);color:${urgency};margin-top:2px;">${formatDate(upcoming.date)} · ${whenLabel}</div>
           ${uInfo ? `<div class="t-sub mt-4">${zi('shield')} ${escHtml(uInfo.protects)}</div>
           <div style="font-size:var(--fs-sm);color:var(--light);margin-top:2px;">${zi('list')} ${escHtml(uInfo.notes)}</div>` : ''}
           ${bookingBadge}
+          <div class="mt-6"><button class="btn btn-ghost vc-book-btn" data-action="vaccMarkGiven" data-arg="${escAttr(upcoming.name)}">${zi('check')} Mark given</button></div>
         </div>
       </div>`;
   }
@@ -39164,7 +39249,7 @@ function renderHistoryPreviews() {
   // ── VACCINATION PREVIEW ──
   const vaccPrev = document.getElementById('vaccHistPreview');
   if (vaccPrev) {
-    const upcoming = vaccData.find(v => v.upcoming);
+    const upcoming = getNextUpcomingVacc();
     const past = vaccData.filter(v => !v.upcoming);
     const latestPast = past.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
     const bookedData = load(KEYS.vaccBooked, null);
@@ -40134,7 +40219,7 @@ function computeAlerts() {
   }
 
   // ─── 8. VACCINATION REMINDER ───
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (upcoming && upcoming.date) {
     const daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
     const bookedData = load(KEYS.vaccBooked, null);
@@ -40897,7 +40982,7 @@ function renderTodayPlan() {
   let items = [];
 
   // ═══ UPCOMING MEDICAL (vaccination + doctor visits) ═══
-  const upcomingVacc = vaccData.find(v => v.upcoming);
+  const upcomingVacc = getNextUpcomingVacc();
   const bookedData = load(KEYS.vaccBooked, null);
   const vaccIsBooked = bookedData && upcomingVacc && bookedData.vaccName === upcomingVacc.name;
   const vaccHasAppt = vaccIsBooked && bookedData.apptDate;
@@ -47676,10 +47761,15 @@ function _tpGatherHeadsUp() {
 
   // 1. Vaccination upcoming
   try {
-    var upcoming = (vaccData || []).find(function(v) { return v.upcoming; });
+    // The earliest pending dose due in the next 7 days, so an overdue dose (which the
+    // overall next-dose helper puts first) can't hide one due this week (Ceres V-C-273-1).
+    var _now = new Date();
+    var upcoming = (vaccDropSatisfiedPending(vaccData || []) || [])
+      .filter(function(v) { var d = v && v.upcoming && v.date ? Math.ceil((new Date(v.date) - _now) / 86400000) : -1; return d >= 0 && d <= 7; })
+      .sort(function(a, b) { return String(a.date).localeCompare(String(b.date)); })[0];
     if (upcoming) {
-      var daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
-      if (daysTo >= 0 && daysTo <= 7) {
+      var daysTo = Math.ceil((new Date(upcoming.date) - _now) / 86400000);
+      {
         var bookedData = load(KEYS.vaccBooked, null);
         var isBooked = bookedData && bookedData.vaccName === upcoming.name;
         items.push({
@@ -51208,7 +51298,7 @@ function renderDoctorPrep() {
   if (!card || !el) return;
 
   // Find next upcoming vaccination (proxy for next doctor visit)
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const nextVisit = visits.find(v => new Date(v.date) >= new Date());
   const visitDate = upcoming ? upcoming.date : (nextVisit ? nextVisit.date : null);
 
@@ -51349,7 +51439,7 @@ function showFullDoctorSummary() {
   vaccData.filter(v => !v.upcoming).forEach(v => {
     lines.push('  OK ' + v.name + ' — ' + formatDate(v.date));
   });
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (upcoming) lines.push('  PENDING Due: ' + upcoming.name + ' — ' + formatDate(upcoming.date));
 
   // Milestones
@@ -52808,7 +52898,7 @@ function renderMedicalStats() {
   if (!el) return;
 
   const pastVacc = vaccData.filter(v => !v.upcoming);
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const daysToVacc = upcoming ? Math.max(0, Math.ceil((new Date(upcoming.date) - new Date()) / 86400000)) : '—';
   const activeMeds = meds.filter(m => m.active);
   const totalVisits = visits.length;
@@ -52878,7 +52968,7 @@ function orderMedicalCards() {
   const statsCard = document.getElementById('medStatsCard');
 
   // Calculate urgency scores
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const vaccDays = upcoming ? Math.ceil((new Date(upcoming.date) - new Date()) / 86400000) : 999;
 
   // Find next upcoming doctor visit
@@ -53609,7 +53699,7 @@ function renderVacc() {
   if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
 
   // Find upcoming
-  const upcomingAll = vaccData.filter(v => v.upcoming).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const upcomingAll = vaccDropSatisfiedPending(vaccData).filter(v => v.upcoming).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const upcoming = upcomingAll[0];
   if (upcoming) {
     const days = Math.ceil((new Date(upcoming.date) - today_d) / 86400000);
@@ -53812,7 +53902,7 @@ function _isPostVaccWindow() {
 
 function _vaccGetDueGroups() {
   const todayD = new Date();
-  const upcomingAll = vaccData.filter(v => v.upcoming);
+  const upcomingAll = vaccDropSatisfiedPending(vaccData).filter(v => v.upcoming);
   const groups = {};
   upcomingAll.forEach(v => {
     const days = Math.ceil((new Date(v.date) - todayD) / 86400000);
@@ -53871,18 +53961,30 @@ function _vaccRenderCompletionCard(dueVaccines) {
   </div>`;
 }
 
+// One pending dose becomes given on `dateStr` (the scheduled date is kept).
+function _vaccCompleteEntry(v, dateStr) {
+  v.scheduledDate = v.scheduledDate || v.date;
+  v.date = dateStr;
+  v.upcoming = false;
+  v.visitGroup = dateStr;
+}
+
 function _vaccMarkDone(vaccNames, dueDate) {
   const todayStr = today();
   const doneNames = [];
   vaccNames.forEach(name => {
     const v = vaccData.find(e => e.upcoming && e.name === name);
     if (!v) return;
-    v.scheduledDate = v.scheduledDate || v.date;
-    v.date = todayStr;
-    v.upcoming = false;
-    v.visitGroup = todayStr;
+    _vaccCompleteEntry(v, todayStr);
     doneNames.push(name);
   });
+  _vaccAfterComplete(doneNames);
+}
+
+// After doses become given: clear a matching booking, reset the post-vaccine watch, re-render
+// every vaccine surface and offer the reaction check. Shared by the completion card and the
+// "Mark given" sheet, so both behave the same (Maren S-1 / Kael V-K-273-9 on #273).
+function _vaccAfterComplete(doneNames) {
   // Clear booked appointment if matches any
   const bookedData = load(KEYS.vaccBooked, null);
   if (bookedData && doneNames.includes(bookedData.vaccName)) {
@@ -53897,6 +53999,8 @@ function _vaccMarkDone(vaccNames, dueDate) {
   renderVaccPastList();
   renderRemindersAndAlerts();
   renderHomeContextAlerts();
+  // The Home vaccine views carrying "Mark given" re-render too, so a done dose leaves them.
+  ['renderVaccHistory', 'renderHomeVacc', 'renderHistoryPreviews'].forEach(fn => { if (typeof window[fn] === 'function') window[fn](); });
   updateHeader();
   // Open reaction modal
   _vaccOpenReactionModal(doneNames);
@@ -54294,6 +54398,15 @@ function toggleVaccInfo() {
   }
 }
 
+// "Mark given" on a pending dose: the add-vaccination sheet, prefilled with the dose's name
+// and today's date (editable for a dose given earlier). Saving completes the pending twin
+// (addVacc) instead of adding a second entry.
+function openVaccGivenModal(name) {
+  openVaccModal();
+  document.getElementById('vName').value = name || '';
+  activateBtn('vaccSaveBtn', !!name);
+}
+
 function openVaccModal() {
   document.getElementById('vName').value = '';
   document.getElementById('vDate').value = today();
@@ -54308,6 +54421,23 @@ function addVacc() {
   if (!name || !date) return;
   // A new upcoming entry used to flip every other pending dose to "given"
   // (vaccData.forEach(v => v.upcoming = false)), silently marking doses done.
+  const sameDose = v => normVacc(String(v.name || '')) === normVacc(name);
+  const repeat = vaccIsRepeatName(name);
+  // A pending entry under the name of a dose already given would be hidden and then cleaned
+  // up at the next load; ask for a distinct name instead (Kael V-K-273-4).
+  if (upcoming && !repeat && vaccData.some(v => !v.upcoming && sameDose(v))) {
+    showQLToast(escHtml(name) + ' is already recorded as given. For a repeat dose, add "repeat" to the name.', 5000);
+    return;
+  }
+  // Logging a given dose completes its pending twin (same dose, normalised name) instead of
+  // adding a second entry and leaving the scheduled one "due" (parent report, 2026-10-28).
+  const twin = !upcoming && !repeat && vaccData.find(v => v.upcoming && sameDose(v));
+  if (twin) {
+    _vaccCompleteEntry(twin, date);
+    closeModal('vaccModal');
+    _vaccAfterComplete([twin.name]);
+    return;
+  }
   vaccData.push({ name, date, upcoming });
   _islMarkDirty('medical');
   closeModal('vaccModal');
@@ -54415,7 +54545,7 @@ function saveVaccEdit() {
 }
 
 function editUpcomingVaccDate() {
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (!upcoming) return;
   const idx = vaccData.indexOf(upcoming);
   openVaccEditModal(idx);
@@ -56857,7 +56987,22 @@ function renderSleepTips() {
     },
     {
       id: 'safety', icon: zi('shield'), label: 'Safe Sleep', color: 'rose',
-      tips: [
+      // From 12 m the toddler tier (Maren V-M-269-15). The family bed-shares (no cot, parents'
+      // checklist 2026-10-28), so it covers the adult bed. src: AAP HealthyChildren (safe sleep,
+      // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
+      // a bed: alcohol, sedating medicine, smoking, sofas).
+      tips: ageM >= 12 ? [
+        { icon:zi('baby'), title:'Her own sleep position', text:'Now that she rolls and moves freely, she can settle in whatever position she likes. There is no need to turn her back.' },
+        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap she can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
+        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from her face. A light blanket of her own is fine from about 1 year.' },
+        // No bed rails under 2 y: a toddler can be trapped between rail and mattress (CPSC 16 CFR
+        // 1224; AAP HealthyChildren) — Maren B-2 on #273.
+        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. The safest setup is the mattress on the floor, away from the walls. If the bed stays raised, keep her on the side away from the edge, keep the floor beside it clear and soft, and don\'t use bed rails before age 2: she can get trapped between the rail and the mattress.' },
+        { icon:zi('eye'), title:'Naps on the big bed', text:'Don\'t leave her alone on the adult bed for a nap. Put her down on a floor mattress, or stay with her.' },
+        { icon:zi('baby'), title:'Who shares the bed', text:'Keep pets and other children out of the bed when she sleeps in it.' },
+        { icon:zi('no-entry'), title:'When not to share the bed', text:'Not next to an adult who has had alcohol, sedating medicine, or is a smoker, and never asleep together on a sofa or armchair.' },
+        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around her. Smoke on clothes and furnishings also harms her breathing and sleep.' },
+      ] : [
         { icon:zi('baby'), title:'Always on the back', text:'Place her on her back for every sleep. Once she can roll both ways independently, she can find her own position — but always start on the back.' },
         { icon:zi('warn'), title:'Nothing in the crib', text:'No pillows, blankets, bumpers, stuffed animals, or positioners. A fitted sheet on a firm mattress is all that\'s needed.' },
         { icon:zi('sprout'), title:'Air circulation', text:'A ceiling fan or gentle air circulation reduces SIDS risk. Keep the room ventilated but not drafty.' },
@@ -64327,7 +64472,7 @@ function qaGetContextualQuickQuestions() {
 
   // Doctor prep if vaccine due within 14 days
   try {
-    var nextVacc = (vaccData || []).find(function(v) { return v.upcoming && v.date; });
+    var nextVacc = getNextUpcomingVacc();
     if (nextVacc) {
       var daysUntil = Math.round((new Date(nextVacc.date) - new Date(today())) / 86400000);
       if (daysUntil <= 14 && daysUntil >= 0) {
@@ -66677,7 +66822,7 @@ function qaAnswerOverall(intentId) {
 
     // Vaccination
     try {
-      var nextVacc = (vaccData || []).find(function(v) { return v.upcoming; });
+      var nextVacc = getNextUpcomingVacc();
       if (nextVacc) {
         var vaccDate = nextVacc.date || nextVacc.dueDate;
         if (vaccDate) {
@@ -68499,7 +68644,7 @@ function qaAnswerTomorrow(intentId) {
 
   // Vaccination reminder
   try {
-    var nextVacc = (vaccData || []).find(function(v) { return v.upcoming && v.date; });
+    var nextVacc = getNextUpcomingVacc();
     if (nextVacc) {
       var daysUntil = Math.round((new Date(nextVacc.date) - new Date(today())) / 86400000);
       if (daysUntil <= 3 && daysUntil >= 0) {
@@ -83552,7 +83697,7 @@ const SYNC_RENDER_DEPS = {
   [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.milestones]:        { global: 'milestones',  postReceive: '_postReceiveMilestones', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
-  [KEYS.vacc]:              { global: 'vaccData',    renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
+  [KEYS.vacc]:              { global: 'vaccData',    mergeOnReceive: '_postReceiveVacc', renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
   [KEYS.visits]:            { global: 'visits',      renderers: { 'track:medical': ['renderMedicalStats'] } },
@@ -83770,6 +83915,13 @@ function _postReceiveMilestoneSuppress(remoteMap, localMap) {
     if (merged[k] <= now) delete merged[k];
   });
   return merged;
+}
+
+// _postReceiveVacc — drop pending doses the remote copy itself has given. The remote stays the
+// truth on receive: counting this phone's given doses could drop a pending twin without
+// carrying the given entry across, erasing the dose (Kael V-K-273-1).
+function _postReceiveVacc(remoteList) {
+  return vaccDropSatisfiedPending(remoteList);
 }
 
 // _postReceiveTeeth — tooth-chart merge. Shape { [toothId]: { date, ts } };
@@ -84731,6 +84883,9 @@ function _syncMergeForPush(local, cloud, key) {
   // Tooth chart: the push honours the same per-tooth newest-ts contract as the
   // receive, so an offline or imported copy can't overwrite a newer cloud edit.
   if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
+  // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
+  // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
+  if (key === KEYS.vacc && Array.isArray(local) && Array.isArray(cloud)) return vaccDropSatisfiedPending(_syncUnionArrays(local, cloud, key));
   if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud, key) : local;
   if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
     var out = {};

@@ -176,8 +176,12 @@ const GENERAL_EMERGENCIES = [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
       // Child (1 year+) technique since Ziva turned one (2026-09-24 12-month audit): mouth-to-mouth
       // with the nose pinched, heel of ONE hand, 5 cm — NHS 'How to resuscitate a child' (mod. 2026-08-07).
-      'Tilt the head back slightly and lift the chin, clear any obvious blockage, then give 5 rescue breaths — pinch her nose, seal your mouth over hers and blow steadily for about 1 second until the chest rises.',
-      '30 chest compressions: heel of one hand on the lower third of the breastbone, arm straight, push down 5 cm (a third of the chest depth) and fast (100–120 a minute) — then 2 breaths. Keep the 30:2 cycle going until help arrives.'
+      // Breathing check + two-hand note + plainer landmark (Maren V-M-266-12; RCUK 2025 paediatric
+      // BLS: look, listen and feel for no more than 10 s; lower half of the sternum, two hands if needed).
+      'Check her breathing: tilt the head back slightly, lift the chin, and look, listen and feel for breaths for up to 10 seconds. Gasping is not breathing.',
+      'Breathing normally: turn her onto her side (recovery position), call 112, and keep checking her breathing until help arrives.',
+      'Not breathing normally: clear any obvious blockage, then give 5 rescue breaths — pinch her nose, seal your mouth over hers and blow steadily for about 1 second until the chest rises.',
+      '30 chest compressions: heel of one hand in the middle of her chest, on the lower half of the breastbone (not the soft tip at the bottom), arm straight, push down 5 cm (a third of the chest depth) and fast (100–120 a minute) — then 2 breaths. If one hand can\'t push 5 cm, use both hands, one on top of the other. Keep the 30:2 cycle going until help arrives.'
     ],
     call112When: null,
     call112Label: 'Call 112 now — or after 1 minute of CPR if you’re alone.',

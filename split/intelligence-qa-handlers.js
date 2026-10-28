@@ -1463,7 +1463,7 @@ function qaAnswerOverall(intentId) {
 
     // Vaccination
     try {
-      var nextVacc = (vaccData || []).find(function(v) { return v.upcoming; });
+      var nextVacc = getNextUpcomingVacc();
       if (nextVacc) {
         var vaccDate = nextVacc.date || nextVacc.dueDate;
         if (vaccDate) {
@@ -3285,7 +3285,7 @@ function qaAnswerTomorrow(intentId) {
 
   // Vaccination reminder
   try {
-    var nextVacc = (vaccData || []).find(function(v) { return v.upcoming && v.date; });
+    var nextVacc = getNextUpcomingVacc();
     if (nextVacc) {
       var daysUntil = Math.round((new Date(nextVacc.date) - new Date(today())) / 86400000);
       if (daysUntil <= 3 && daysUntil >= 0) {
