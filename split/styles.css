@@ -6392,7 +6392,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .dsh-domain-name { font-family:'Fraunces',serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
 .dsh-domain-sublabel { font-size:var(--fs-xs); color:var(--mid); margin-top:var(--sp-2); }
 .dsh-components {
-  display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-8);
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--sp-8);
 }
 @media(max-width:400px) { .dsh-components { grid-template-columns:1fr; } }
 .dsh-comp-pill {
@@ -6438,6 +6438,22 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .dsh-poop .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(232,184,109,0.10)); border-color:rgba(232,184,109,0.3); }
 .dsh-medical .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(242,168,184,0.10)); border-color:rgba(242,168,184,0.3); }
 .dsh-milestones .dsh-comp-pill { background:linear-gradient(135deg, var(--warm), rgba(201,184,232,0.10)); border-color:rgba(201,184,232,0.3); }
+
+/* Hero text in full + reflow at medium/large zoom (Surface Catalog; HR-10 —
+   no truncation, it wraps). The domain-hero pills drop to one column at
+   medium and large zoom, as they already do at <=400px (the base 2-column
+   rule above carries minmax(0,1fr) so longer details never push the grid
+   wider). The Home Ziva-Score pills use a 4-column grid at zoom: two per row,
+   and the fifth (Milestones) takes the whole last row instead of sitting alone. */
+.dsh-domain-name, .dsh-domain-sublabel, .dcp-name, .dcp-detail, .zsd-label, .zsd-score { overflow-wrap:break-word; }
+:root[data-zoom="med"]  .dsh-components,
+:root[data-zoom="high"] .dsh-components { grid-template-columns:1fr; }
+:root[data-zoom="med"]  .zs-domains,
+:root[data-zoom="high"] .zs-domains { grid-template-columns:repeat(4, 1fr); }
+:root[data-zoom="med"]  .zs-domain-pill,
+:root[data-zoom="high"] .zs-domain-pill { grid-column:span 2; }
+:root[data-zoom="med"]  .zs-domain-pill:last-child:nth-child(odd),
+:root[data-zoom="high"] .zs-domain-pill:last-child:nth-child(odd) { grid-column:1 / -1; }
 
 /* ── Domain-tinted card backgrounds per track tab ── */
 #tab-diet .card { background:linear-gradient(135deg, var(--warm), rgba(181,213,197,0.10)); }

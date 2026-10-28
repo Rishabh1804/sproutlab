@@ -6675,12 +6675,15 @@ function renderDomainHero(domainKey) {
     if (c.isTrend) return; // Trends line not shown in overview pills
     const barClass = c.score >= 70 ? 'dcb-high' : c.score >= 40 ? 'dcb-mid' : 'dcb-low';
     const pillClass = c.score >= 70 ? 'dcp-high' : c.score >= 40 ? 'dcp-mid' : 'dcp-low';
-    const shortDetail = c.detail && c.detail.length > 28 ? c.detail.substring(0, 26) + '…' : (c.detail || '');
+    // HR-10 — show the detail IN FULL and let it wrap (no '…' truncation); the
+    // .dcp-detail rule wraps, and the components grid reflows to 1 column at
+    // <=400px and at medium/large zoom so longer detail text never clips.
+    const detail = c.detail || '';
     html += `<div class="dsh-comp-pill ${pillClass}" data-action="openScorePopup" data-arg="${domainKey}">
       <div class="dcp-bar ${barClass}">${c.score}</div>
       <div class="dcp-text">
         <div class="dcp-name">${c.name} <span class="dcp-weight">${c.weight}</span></div>
-        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(shortDetail)}</div>
+        <div class="dcp-detail">${c.icon ? c.icon + ' ' : ''}${escHtml(detail)}</div>
       </div>
     </div>`;
   });
@@ -6853,13 +6856,11 @@ function _spGetDomainDefs(zs) {
             detail: (d.poopCount || 0) + ' poops (baseline: ' + (d.baselineFreq || '?') + '/day)', tab: 'poop' },
           { name: 'Color', weight: '20%', score: r.components.color,
             detail: d.colors && d.colors.length ? 'Colors: ' + d.colors.join(', ') : 'All normal colors', tab: 'poop' },
-          // V-M-16: detail split into {icon, detail} so the consumer at
-          // diet.js:2752 can substring-chop the text safely without slicing
-          // through the SVG tag. Previously emitted as `zi('warn') + ' Blood
-          // detected'` etc.; substring(0,26) chopped mid `aria-hidden="true"`
-          // and the broken-SVG fragment swallowed the user-readable text into
-          // the SVG namespace on every Symptoms pill, every day — including
-          // the common "No blood or mucus" branch. Safety-tier surface.
+          // V-M-16: icon and text stay separate fields — renderDomainHero
+          // escapes `detail` and places the trusted zi() `icon` beside it.
+          // (Historically a substring(0,26) cut sliced through an inlined SVG
+          // tag here; the cut is gone, and keeping the fields apart keeps the
+          // escape boundary clean.) Safety-tier surface.
           { name: 'Symptoms', weight: '10%', score: r.components.symptoms,
             icon: d.hasBlood || d.hasMucus ? zi('warn') : zi('check'),
             detail: d.hasBlood ? 'Blood detected' : d.hasMucus ? 'Mucus detected' : 'No blood or mucus', tab: 'poop' },
@@ -6872,7 +6873,7 @@ function _spGetDomainDefs(zs) {
     },
     {
       key: 'medical', icon: zi('medical'), name: 'Medical', tab: 'medical',
-      tip: 'Keep vaccinations on schedule and log Vitamin D3 daily for best scores.',
+      tip: 'Keep vaccinations on schedule and log her Vitamin D supplement doses for best scores.',
       components: () => {
         const r = zs.domains.medical.result;
         if (!r) return [];
