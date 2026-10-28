@@ -211,7 +211,7 @@ node build-icon-reference.mjs >&2
 # rendered with the live styles.css tokens + sprite, light + dark + zoom. Both
 # documentation and the design surface (add a surface's exemplar to the
 # generator, review rendered, sign off, THEN wire it). Rebuilt each build.
-node build-surface-catalog.mjs >&2
+node build-surface-catalog.mjs >&2 || echo "WARN: Surface Catalog not regenerated (non-fatal) — docs/SURFACE_CATALOG.html may be stale" >&2
 # PWA installability (2026-09-18): Chrome offers "Install app" only when the page
 # links a manifest; iOS reads the apple-* tags for Add to Home Screen. These tags
 # were carried by the retired beta/ pages and never made it into this heredoc, so

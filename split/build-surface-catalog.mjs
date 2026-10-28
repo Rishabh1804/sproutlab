@@ -7,7 +7,9 @@
 // review it rendered (this is exactly what will ship — same stylesheet), get
 // Architect sign-off, THEN wire the feature using these exact classes/tokens.
 // That closes the "post-build surprise" gap structurally — what you approve is
-// what ships, because the catalog and the app read the same CSS.
+// what ships, because the catalog and the app read the same CSS. The page
+// LINKS ../split/styles.css (served alongside it on GitHub Pages) rather than
+// inlining it, so a styles.css change never produces a second copy in docs/.
 //
 // NEVER hand-edit docs/SURFACE_CATALOG.html — it is regenerated every build
 // from this script + the live styles.css/template.html. Edit the exemplars in
@@ -22,32 +24,41 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
-const CSS = readFileSync(join(ROOT, 'split', 'styles.css'), 'utf8');
 const TEMPLATE = readFileSync(join(ROOT, 'split', 'template.html'), 'utf8');
+const CORE = readFileSync(join(ROOT, 'split', 'core.js'), 'utf8');
 const OUT = join(ROOT, 'docs', 'SURFACE_CATALOG.html');
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// ── Inline the live zi/zif sprites (the hidden <svg> symbol blocks at the
-// top of template.html) so every zi() icon resolves exactly as in the app. ──
-const sprites = (TEMPLATE.match(/<svg[^>]*display:\s*none[\s\S]*?<\/svg>/g) || []).join('\n');
+// ── Inline the live zi/zif symbols from template.html (same symbol-level
+// match as build-icon-reference.mjs) so every zi() icon resolves exactly as in
+// the app. An empty match would blank every icon, so it warns. ──
+const symbols = TEMPLATE.match(/<symbol\b[^>]*\bid="(zi|zif)-[^"]+"[\s\S]*?<\/symbol>/g) || [];
+if (!symbols.length) console.error('WARN: Surface Catalog found no zi/zif symbols in template.html — icons will be blank');
+const sprites = `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" hidden>${symbols.join('\n')}</svg>`;
 
 // zi(name) → the same <svg><use> string the app emits (HR-7).
 const zi = name => `<svg class="zi" aria-hidden="true"><use href="#zi-${name}"/></svg>`;
 
-// Score → label/emoji, mirroring core.js SCORE_LABELS so hero ring states are faithful.
+// Score → label/icon, read from core.js SCORE_LABELS itself (as
+// build-poop-reference.mjs reads SAFE_POOP_COLORS) so ring states cannot drift.
+const SCORE_LABELS = (() => {
+  const m = CORE.match(/const SCORE_LABELS = \[([\s\S]*?)\];/);
+  const rows = m ? [...m[1].matchAll(/min:\s*(\d+),\s*label:\s*'(\w+)',\s*emoji:\s*zi\('([\w-]+)'\)/g)]
+    .map(r => ({ min: +r[1], label: r[2], emoji: r[3] })) : [];
+  if (!rows.length) console.error('WARN: Surface Catalog could not read SCORE_LABELS from core.js — ring states may be wrong');
+  return rows.sort((a, b) => b.min - a.min);
+})();
 function scoreLabel(s) {
-  if (s >= 90) return { label: 'excellent', emoji: 'sparkle', text: 'Excellent' };
-  if (s >= 75) return { label: 'great',     emoji: 'check',   text: 'Great' };
-  if (s >= 60) return { label: 'good',      emoji: 'check',   text: 'Good' };
-  if (s >= 45) return { label: 'fair',      emoji: 'target',  text: 'Fair' };
-  return            { label: 'attention',  emoji: 'warn',    text: 'Needs attention' };
+  return SCORE_LABELS.find(r => s >= r.min) || { label: 'attention', emoji: 'warn' };
 }
+// Component bar bands — the 70/40 cut-offs renderDomainHero (diet.js) uses.
 const band = s => (s >= 70 ? 'high' : s >= 40 ? 'mid' : 'low');
+const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
 
 // ── Hero exemplars (faithful to renderDomainHero / renderHeroScore markup) ──
 
-function domainHero({ key, word, sub, weight, score, comps }) {
+function domainHero({ key, word, sub, weight, score, comps, stale }) {
   const lb = scoreLabel(score);
   const pills = comps.map(c => {
     const b = band(c.score);
@@ -59,7 +70,7 @@ function domainHero({ key, word, sub, weight, score, comps }) {
       </div>
     </div>`;
   }).join('');
-  return `<div class="card card-hero hero-${key}"><div class="domain-score-hero dsh-${key}">
+  return `<div class="card col-full card-hero hero-${key}"><div class="domain-score-hero dsh-${key}${stale ? ' dsh-stale' : ''}">
     <div class="dsh-top">
       <div class="dsh-ring dsh-ring-${lb.label}">
         <div class="dsh-number">${score}</div>
@@ -67,7 +78,7 @@ function domainHero({ key, word, sub, weight, score, comps }) {
         <div class="dsh-emoji">${zi(lb.emoji)}</div>
       </div>
       <div class="dsh-info">
-        <div class="dsh-domain-name">${zi(lb.emoji)} ${esc(lb.text)}</div>
+        <div class="dsh-domain-name">${zi(lb.emoji)} ${esc(cap(lb.label))}</div>
         <div class="dsh-domain-sublabel">${esc(sub)} · ${esc(weight)} of Ziva Score</div>
       </div>
     </div>
@@ -75,22 +86,26 @@ function domainHero({ key, word, sub, weight, score, comps }) {
   </div></div>`;
 }
 
-function homeHero({ score, trend, domains }) {
+// Rendered inside its real Home shell (#homeVitalsCard → .vitals-expanded-inner,
+// template.html), so the card's rainbow and stripe sit behind it as in the app.
+function homeHero({ score, trend, trendDown, domains }) {
   const dpills = domains.map(d => {
     const lvl = d.score === null ? '' : ' zsd-' + scoreLabel(d.score).label;
-    return `<div class="zs-domain-pill${lvl}">
+    return `<div class="zs-domain-pill${d.stale ? ' zsd-stale' : ''}${lvl}">
       <div class="zsd-icon">${zi(d.icon)}</div>
       <div class="zsd-text"><div class="zsd-score">${d.score === null ? '—' : d.score}</div><div class="zsd-label">${esc(d.label)}</div></div>
     </div>`;
   }).join('');
-  return `<div class="ziva-score-hero zs-score-${scoreLabel(score).label}">
-    <div class="zs-ring">
-      <div class="zs-number">${score}</div>
-      <div class="zs-label">Ziva Score</div>
-      <div class="zs-trend">${esc(trend)}</div>
+  return `<div class="card col-full card-hero hero-home"><div class="vitals-expanded-inner">
+    <div class="ziva-score-hero zs-score-${scoreLabel(score).label}">
+      <div class="zs-ring">
+        <div class="zs-number">${score}</div>
+        <div class="zs-label">Ziva Score</div>
+        <div class="zs-trend${trendDown ? ' trend-down' : ''}">${esc(trend)}</div>
+      </div>
+      <div class="zs-domains">${dpills}</div>
     </div>
-    <div class="zs-domains">${dpills}</div>
-  </div>`;
+  </div></div>`;
 }
 
 // Each surface: { id, title, note, exemplars: [{label, html}] }.
@@ -98,49 +113,57 @@ const SURFACES = [
   {
     id: 'hero-ziva',
     title: 'Ziva Score hero (Home)',
-    note: 'The home front-door hero — composite score ring + per-domain pills. `.ziva-score-hero.zs-score-{label}`. Carries the signature rainbow FADE (rose→peach→sage→lavender) over `--card-bg`, hue-swapped in dark. Domain pills reflow 2-per-row at medium/large zoom. Tap a pill to jump to that tab; tap the ring for the score popup.',
+    note: 'The home front-door hero — composite score ring + per-domain pills, `.ziva-score-hero.zs-score-{label}`, shown inside its real Home vitals card (`.card.card-hero.hero-home` → `.vitals-expanded-inner`), whose rainbow it leans on. Stale domains carry `.zsd-stale`; an untracked domain shows "—". Domain pills reflow two per row at medium/large zoom, with the fifth taking the whole last row. Tap a pill to jump to that tab; tap the ring for the score popup.',
     exemplars: [
       { label: 'Strong week', html: homeHero({ score: 84, trend: '↑ +4 vs last week', domains: [
         { key: 'sleep', icon: 'moon', label: 'Sleep', score: 79 },
         { key: 'diet', icon: 'bowl', label: 'Diet', score: 88 },
         { key: 'poop', icon: 'diaper', label: 'Poop', score: 72 },
         { key: 'medical', icon: 'medical', label: 'Medical', score: 95 },
-        { key: 'milestones', icon: 'trophy', label: 'Milestones', score: 66 },
+        { key: 'milestones', icon: 'trophy', label: 'Milestones', score: 82 },
       ] }) },
-      { label: 'Needs attention + a not-yet-tracked domain', html: homeHero({ score: 52, trend: '→ stable', domains: [
-        { key: 'sleep', icon: 'moon', label: 'Sleep', score: 48 },
-        { key: 'diet', icon: 'bowl', label: 'Diet', score: 61 },
-        { key: 'poop', icon: 'diaper', label: 'Poop', score: 40 },
+      { label: 'Needs attention — trending down, Poop carried forward (stale), Medical not yet tracked', html: homeHero({ score: 41, trend: '↓ -9 vs last week', trendDown: true, domains: [
+        { key: 'sleep', icon: 'moon', label: 'Sleep', score: 38 },
+        { key: 'diet', icon: 'bowl', label: 'Diet', score: 52 },
+        { key: 'poop', icon: 'diaper', label: 'Poop', score: 40, stale: true },
         { key: 'medical', icon: 'medical', label: 'Medical', score: null },
-        { key: 'milestones', icon: 'trophy', label: 'Milestones', score: 55 },
+        { key: 'milestones', icon: 'trophy', label: 'Milestones', score: 61 },
       ] }) },
     ],
   },
   {
     id: 'hero-domain',
     title: 'Domain Score hero (per-tab)',
-    note: 'Per-tab score hero. Rendered inside its real `.card.card-hero.hero-{domain}` shell (the floor’s two-domain semantic gradient + the 5px `::before` accent stripe) wrapping `.domain-score-hero.dsh-{domain}`. The RING carries the score-band polarity (`.dsh-ring-{label}`), the card-hero gradient carries domain identity — the two never compete (§Polarity Collision). Component bars `.dcb-{high|mid|low}`. One per tab (diet/sleep/poop/medical/milestones).',
+    note: 'Per-tab score hero. Rendered inside its real `.card.card-hero.hero-{domain}` shell (the floor’s two-domain semantic gradient + the 5px `::before` accent stripe) wrapping `.domain-score-hero.dsh-{domain}`. The RING carries the score-band polarity (`.dsh-ring-{label}`), the card-hero gradient carries domain identity — the two never compete (§Polarity Collision). Component bars `.dcb-{high|mid|low}`. Components, weights and detail strings mirror `_spGetDomainDefs` (diet.js); details show in full and wrap (no truncation). Pills are one column at ≤400px and at medium/large zoom — the ≤400px rule follows the browser window, so narrow this page to see it.',
     exemplars: [
       { label: 'Diet · Great (88)', html: domainHero({
-        key: 'diet', word: 'Diet', sub: 'Based on meals, variety, groups & nutrients', weight: '24%', score: 88,
+        key: 'diet', word: 'Diet', sub: 'Based on meals, variety, groups & nutrients', weight: '25%', score: 88,
         comps: [
-          { name: 'Meals logged', weight: '40%', score: 92, icon: 'bowl', detail: '3 of 3 today' },
-          { name: 'Variety', weight: '30%', score: 78, icon: 'rainbow', detail: '5 food groups' },
-          { name: 'Nutrients', weight: '30%', score: 84, icon: 'drop', detail: 'iron + Vitamin C paired this morning — great for absorption' },
+          { name: 'Meals', weight: '30%', score: 100, detail: '3/3 meals logged today' },
+          { name: 'Variety', weight: '30%', score: 80, detail: '12 unique foods this week (target: 15)' },
+          { name: 'Groups', weight: '20%', score: 83, detail: '5/6 food groups covered' },
+          { name: 'Nutrients', weight: '20%', score: 75, detail: '6/8 key nutrients this week' },
         ] }) },
       { label: 'Sleep · Fair (55)', html: domainHero({
-        key: 'sleep', word: 'Sleep', sub: 'Based on duration, wake-ups, bedtime & naps', weight: '22%', score: 55,
+        key: 'sleep', word: 'Sleep', sub: 'Based on duration, wake-ups, bedtime & naps', weight: '25%', score: 55,
         comps: [
-          { name: 'Duration', weight: '40%', score: 62, icon: 'moon', detail: '10.5h last night' },
-          { name: 'Wake-ups', weight: '30%', score: 45, icon: 'zzz', detail: '3 wake-ups' },
-          { name: 'Naps', weight: '30%', score: 38, icon: 'sun', detail: '1 of 2 expected' },
+          { name: 'Duration', weight: '40%', score: 84, detail: '10.5h total (target: 12h 30m, WHO)' },
+          { name: 'Wake-ups', weight: '30%', score: 50, detail: '3 wake-ups' },
+          { name: 'Bedtime', weight: '15%', score: 50, detail: 'Ideal: 19:00–20:00 (WHO)' },
+          { name: 'Naps', weight: '15%', score: 60, detail: '1 nap (ideal: 2)' },
         ] }) },
-      { label: 'Medical · Excellent (95)', html: domainHero({
-        key: 'medical', word: 'Medical', sub: 'Based on vaccines, supplements, growth & checkups', weight: '18%', score: 95,
+      { label: 'Medical · Fair (58) — a dose due now, checkup may be due', html: domainHero({
+        key: 'medical', word: 'Medical', sub: 'Based on vaccines, supplements, growth & checkups', weight: '15%', score: 58,
         comps: [
-          { name: 'Vaccines', weight: '35%', score: 100, icon: 'shield', detail: 'on schedule' },
-          { name: 'Supplements', weight: '30%', score: 90, icon: 'drop', detail: 'Vit D3 today' },
-          { name: 'Growth', weight: '35%', score: 94, icon: 'ruler', detail: '50th percentile' },
+          { name: 'Vaccines', weight: '40%', score: 62, detail: '7/8 scheduled vaccines given · 1 due now' },
+          { name: 'Supplements', weight: '25%', score: 86, detail: '6/7 days given this week' },
+          { name: 'Growth', weight: '20%', score: 70, detail: 'Last measured 9d ago (wt+ht)' },
+          { name: 'Checkup', weight: '15%', score: 40, detail: 'Developmental checkup may be due' },
+        ] }) },
+      { label: 'Poop · Needs attention (42), carried forward (stale)', html: domainHero({
+        key: 'poop', word: 'Poop', sub: 'Based on consistency, frequency, color & symptoms', weight: '20%', score: 42, stale: true,
+        comps: [
+          { name: 'Carry-forward', weight: '', score: 42, detail: 'No poop today — using last score (2d ago, −4 decay)' },
         ] }) },
     ],
   },
@@ -179,17 +202,15 @@ const roadmapRows = ROADMAP.map(([name, state, desc]) =>
   `<tr class="sc-rm-${state}"><td>${esc(name)}</td><td><span class="sc-badge sc-badge-${state}">${state}</span></td><td>${esc(desc)}</td></tr>`).join('');
 
 const html = `<!DOCTYPE html>
-<html lang="en" data-zoom="default">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SproutLab — Surface Catalog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-/* ── the LIVE app stylesheet (inlined; do not edit here — edit split/styles.css) ── */
-${CSS}
-</style>
+<!-- the LIVE app stylesheet, linked (edit split/styles.css, never this page) -->
+<link rel="stylesheet" href="../split/styles.css">
 <style>
 /* ── catalog chrome (sc-* only; never collides with app classes) ── */
 body { padding:0; margin:0; }
@@ -208,6 +229,7 @@ body { padding:0; margin:0; }
 .sc-badge-next { background:var(--amber,#e8b86d); color:#5a3e10; }
 .sc-badge-planned { background:var(--border-subtle,#eee); color:var(--mid,#8a7a72); }
 .sc-rm-live td:first-child { font-weight:800; }
+.sc-h2 { font-family:'Fraunces',serif; font-size:24px; color:var(--text,#3a2e2e); margin:10px 0 0; }
 .sc-surface { margin:0 0 40px; }
 .sc-surface > h3 { font-family:'Fraunces',serif; font-size:21px; font-weight:600; color:var(--text,#3a2e2e); margin:30px 0 4px; padding-top:14px; border-top:2px solid var(--border-subtle,#eee); }
 .sc-surface-note { color:var(--mid,#8a7a72); font-size:14px; line-height:1.5; margin:0 0 14px; }
@@ -236,20 +258,22 @@ ${sprites}
 
   <div class="sc-toolbar">
     <span class="sc-zlabel">Zoom</span>
-    <button class="sc-zbtn active" data-zoom="default">Default</button>
+    <button class="sc-zbtn active" data-zoom="">Default</button>
     <button class="sc-zbtn" data-zoom="med">Medium</button>
     <button class="sc-zbtn" data-zoom="high">Large</button>
   </div>
 
   <table class="sc-rm"><tbody>${roadmapRows}</tbody></table>
 
-  <h2 style="font-family:'Fraunces',serif;font-size:24px;color:var(--text,#3a2e2e);margin:10px 0 0;">Heroes</h2>
+  <h2 class="sc-h2">Heroes</h2>
   ${heroSection}
 </div>
 <script>
   document.querySelectorAll('.sc-zbtn').forEach(function(b){
     b.addEventListener('click', function(){
-      document.documentElement.dataset.zoom = b.dataset.zoom;
+      // Mirrors setZoomLevel (core.js): Default removes the attribute.
+      if (b.dataset.zoom) document.documentElement.dataset.zoom = b.dataset.zoom;
+      else document.documentElement.removeAttribute('data-zoom');
       document.querySelectorAll('.sc-zbtn').forEach(function(x){ x.classList.toggle('active', x===b); });
     });
   });
