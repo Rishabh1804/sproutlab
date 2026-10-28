@@ -283,6 +283,29 @@ function _migrateCaldikind20260924() {
     save(KEYS.meds, meds);
   } catch (e) { console.warn('[migrate] caldikind:', e); }
 }
+// Second pass (2026-10-28, parent report: the old drops still showed as due). The first pass
+// returned early when Caldikind was already listed (added by hand on 24 Sep, "keep both" on the
+// stop prompt) and its name test missed entries like "Vit D drops", so on such a phone the
+// drops stayed active. Her doctor confirmed Caldikind alone. One-shot per device under a new
+// flag: with an active calcium + Vitamin D supplement, stop every other active Vitamin D
+// supplement that started before it. One started later was added on purpose and is left alone.
+function _migrateVitDSingle20261028() {
+  try {
+    if (localStorage.getItem('ziva_mig_vitd_single') === '1') return;
+    localStorage.setItem('ziva_mig_vitd_single', '1');
+    if (!Array.isArray(meds)) return;
+    var cal = meds.filter(function(m) { return m.active && isCalciumSupplement(m) && isVitDSupplement(m); })
+      .sort(function(a, b) { return String(a.start || '').localeCompare(String(b.start || '')); })[0];
+    if (!cal) return;
+    var calStart = String(cal.start || '9999-12-31');
+    var old = meds.filter(function(m) {
+      return m !== cal && m.active && isVitDSupplement(m) && !isCalciumSupplement(m) && String(m.start || '') < calStart;
+    });
+    if (!old.length) return;
+    old.forEach(function(m) { m.active = false; });
+    save(KEYS.meds, meds);
+  } catch (e) { console.warn('[migrate] vitd-single:', e); }
+}
 // Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
 // iron drop must not match — Maren S-4). With two active, the most recently started wins.
 function isVitDSupplement(m) {
@@ -1044,6 +1067,7 @@ function init() {
     else if (action === 'upcomingToMilestoneDone') console.warn('[dispatcher] upcomingToMilestone handler missing — intent dead (upcoming-milestone Done tap)');
     else if (action === 'markVaccBooked') markVaccBooked(arg);
     else if (action === 'vaccMarkDone') _vaccMarkDone([arg], arg2);
+    else if (action === 'vaccMarkGiven') openVaccGivenModal(arg);
     else if (action === 'vaccMarkDoneMulti') {
       const checks = document.querySelectorAll('.vc-complete-checks .vc-check-input:checked');
       const names = [];
@@ -1462,9 +1486,11 @@ function init() {
     if (!Array.isArray(foods)) foods = DEFAULT_FOODS.slice();
     _deduplicateFoods();
     if (!Array.isArray(vaccData)) vaccData = DEFAULT_VACC.slice();
+    { const _vd = vaccDropSatisfiedPending(vaccData); if (_vd.length !== vaccData.length) { vaccData = _vd; save(KEYS.vacc, vaccData); } }
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
     _migrateCaldikind20260924();
+    _migrateVitDSingle20261028();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -3306,6 +3332,26 @@ function escHtml(s) {
 // leak class V-M-9/V-M-10/V-M-16 surfaced across PR #74-#75.
 function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+// A pending (upcoming) vaccine entry is satisfied once a given entry of the same dose exists
+// (normalised name). Logging a given dose used to leave its pending twin "due", and the sync
+// union re-added a pending entry another phone had already marked given (parent report,
+// 2026-10-28). Yearly flu is excluded: its doses repeat under one name. `extraGiven` lets the
+// sync receive count this phone's given doses too.
+function vaccDropSatisfiedPending(list, extraGiven) {
+  if (!Array.isArray(list)) return list;
+  const given = new Set();
+  [list, Array.isArray(extraGiven) ? extraGiven : []].forEach(a => a.forEach(v => {
+    if (v && !v.upcoming && v.name) given.add(normVacc(v.name));
+  }));
+  return list.filter(v => !(v && v.upcoming && v.name && !/influenza|flu/i.test(v.name) && given.has(normVacc(v.name))));
+}
+// The next pending dose: earliest due date, satisfied twins dropped. Home and Medical used to
+// disagree (first in array order vs earliest date, Maren V-M-269-8 / Cipher E-V 3).
+function getNextUpcomingVacc() {
+  const list = vaccDropSatisfiedPending(typeof vaccData !== 'undefined' ? vaccData : []) || [];
+  return list.filter(v => v && v.upcoming).sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')))[0] || null;
+}
 
 // vaccDueState — where a scheduled dose sits at an age in fractional months:
 // 'future' (window not open yet), 'due' (inside [age, windowEnd] plus a grace

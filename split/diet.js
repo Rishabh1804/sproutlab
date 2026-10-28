@@ -5009,7 +5009,7 @@ function _tpGatherHeadsUp() {
 
   // 1. Vaccination upcoming
   try {
-    var upcoming = (vaccData || []).find(function(v) { return v.upcoming; });
+    var upcoming = getNextUpcomingVacc();
     if (upcoming) {
       var daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
       if (daysTo >= 0 && daysTo <= 7) {

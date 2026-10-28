@@ -111,7 +111,7 @@ function updateHeader() {
   }
 
   // next vacc
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (upcoming) {
     const daysTo = Math.ceil((new Date(upcoming.date) - todayD) / 86400000);
     const dv = document.getElementById('homeVaccDays');
@@ -263,7 +263,7 @@ function weatherCodeToIcon(code) {
 // Fetches forecast for the appointment date and shows precautions 2 days before
 function fetchVaccWeatherAdvisory() {
   const bookedData = load(KEYS.vaccBooked, null);
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (!bookedData || !upcoming || bookedData.vaccName !== upcoming.name || !bookedData.apptDate) return;
 
   const apptDate = bookedData.apptDate;
@@ -533,7 +533,7 @@ function renderRemindersAndAlerts() {
   // ── 1. VACCINATION OVERDUE / URGENT + POST-VACC MONITORING ──
   const todayStr2 = today();
   const yesterdayStr2 = _offsetDateStr(todayStr2, -1);
-  const upcomingAll = vaccData.filter(v => v.upcoming);
+  const upcomingAll = vaccDropSatisfiedPending(vaccData).filter(v => v.upcoming);
 
   // Group overdue vaccinations by date
   const overdueGroups = {};
@@ -605,6 +605,7 @@ function renderRemindersAndAlerts() {
           <div class="flex-1"><strong class="tc-danger">${daysTo} day${daysTo > 1 ? 's' : ''} to ${escHtml(upcoming.name)}</strong>
           <div class="t-sub">Due ${formatDate(upcoming.date)}</div></div>
           <button class="btn btn-sage vc-sm-btn" data-action="markVaccBooked" data-arg="${escAttr(upcoming.name)}">Book</button>
+          <button class="btn btn-ghost vc-sm-btn" data-action="vaccMarkGiven" data-arg="${escAttr(upcoming.name)}">Given</button>
         </div>`;
       }
     }
@@ -867,7 +868,7 @@ function getActiveCareSignals() {
           'Tap to reschedule or mark done');
     }
     // 1b · Urgent upcoming (≤7 days, mirrors :601)
-    var upNext = vaccData.filter(function(v) { return v.upcoming; })
+    var upNext = vaccDropSatisfiedPending(vaccData).filter(function(v) { return v.upcoming; })
       .sort(function(a, b) { return new Date(a.date) - new Date(b.date); })[0];
     if (upNext) {
       var daysTo = Math.ceil((new Date(upNext.date) - new Date()) / 86400000);
@@ -1408,7 +1409,7 @@ function resolveMissedMed(name, dateStr, action) {
 }
 
 function renderHomeVacc() {
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const el = document.getElementById('homeVaccCard');
   const wrap = document.getElementById('homeVaccCardWrap');
   if (!wrap || !el) return; // v2.3: card relocated from Home
@@ -1891,7 +1892,7 @@ function renderVaccHistory() {
   if (!container) return;
 
   const past = vaccData.filter(v => !v.upcoming).sort((a, b) => new Date(b.date) - new Date(a.date));
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const total = past.length + (upcoming ? 1 : 0);
 
   // Build a lookup from VACC_SCHEDULE by normalized name
@@ -1923,6 +1924,7 @@ function renderVaccHistory() {
           ${uInfo ? `<div class="t-sub mt-4">${zi('shield')} ${escHtml(uInfo.protects)}</div>
           <div style="font-size:var(--fs-sm);color:var(--light);margin-top:2px;">${zi('list')} ${escHtml(uInfo.notes)}</div>` : ''}
           ${bookingBadge}
+          <div class="mt-6"><button class="btn btn-ghost vc-book-btn" data-action="vaccMarkGiven" data-arg="${escAttr(upcoming.name)}">${zi('check')} Mark given</button></div>
         </div>
       </div>`;
   }
@@ -8068,7 +8070,7 @@ function renderHistoryPreviews() {
   // ── VACCINATION PREVIEW ──
   const vaccPrev = document.getElementById('vaccHistPreview');
   if (vaccPrev) {
-    const upcoming = vaccData.find(v => v.upcoming);
+    const upcoming = getNextUpcomingVacc();
     const past = vaccData.filter(v => !v.upcoming);
     const latestPast = past.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
     const bookedData = load(KEYS.vaccBooked, null);
@@ -9038,7 +9040,7 @@ function computeAlerts() {
   }
 
   // ─── 8. VACCINATION REMINDER ───
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (upcoming && upcoming.date) {
     const daysTo = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
     const bookedData = load(KEYS.vaccBooked, null);
@@ -9801,7 +9803,7 @@ function renderTodayPlan() {
   let items = [];
 
   // ═══ UPCOMING MEDICAL (vaccination + doctor visits) ═══
-  const upcomingVacc = vaccData.find(v => v.upcoming);
+  const upcomingVacc = getNextUpcomingVacc();
   const bookedData = load(KEYS.vaccBooked, null);
   const vaccIsBooked = bookedData && upcomingVacc && bookedData.vaccName === upcomingVacc.name;
   const vaccHasAppt = vaccIsBooked && bookedData.apptDate;

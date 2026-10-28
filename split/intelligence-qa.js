@@ -1446,7 +1446,7 @@ function qaGetContextualQuickQuestions() {
 
   // Doctor prep if vaccine due within 14 days
   try {
-    var nextVacc = (vaccData || []).find(function(v) { return v.upcoming && v.date; });
+    var nextVacc = getNextUpcomingVacc();
     if (nextVacc) {
       var daysUntil = Math.round((new Date(nextVacc.date) - new Date(today())) / 86400000);
       if (daysUntil <= 14 && daysUntil >= 0) {

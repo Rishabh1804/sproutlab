@@ -612,7 +612,7 @@ function renderDoctorPrep() {
   if (!card || !el) return;
 
   // Find next upcoming vaccination (proxy for next doctor visit)
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const nextVisit = visits.find(v => new Date(v.date) >= new Date());
   const visitDate = upcoming ? upcoming.date : (nextVisit ? nextVisit.date : null);
 
@@ -753,7 +753,7 @@ function showFullDoctorSummary() {
   vaccData.filter(v => !v.upcoming).forEach(v => {
     lines.push('  OK ' + v.name + ' — ' + formatDate(v.date));
   });
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (upcoming) lines.push('  PENDING Due: ' + upcoming.name + ' — ' + formatDate(upcoming.date));
 
   // Milestones
@@ -2212,7 +2212,7 @@ function renderMedicalStats() {
   if (!el) return;
 
   const pastVacc = vaccData.filter(v => !v.upcoming);
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const daysToVacc = upcoming ? Math.max(0, Math.ceil((new Date(upcoming.date) - new Date()) / 86400000)) : '—';
   const activeMeds = meds.filter(m => m.active);
   const totalVisits = visits.length;
@@ -2282,7 +2282,7 @@ function orderMedicalCards() {
   const statsCard = document.getElementById('medStatsCard');
 
   // Calculate urgency scores
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   const vaccDays = upcoming ? Math.ceil((new Date(upcoming.date) - new Date()) / 86400000) : 999;
 
   // Find next upcoming doctor visit
@@ -3013,7 +3013,7 @@ function renderVacc() {
   if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
 
   // Find upcoming
-  const upcomingAll = vaccData.filter(v => v.upcoming).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const upcomingAll = vaccDropSatisfiedPending(vaccData).filter(v => v.upcoming).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const upcoming = upcomingAll[0];
   if (upcoming) {
     const days = Math.ceil((new Date(upcoming.date) - today_d) / 86400000);
@@ -3216,7 +3216,7 @@ function _isPostVaccWindow() {
 
 function _vaccGetDueGroups() {
   const todayD = new Date();
-  const upcomingAll = vaccData.filter(v => v.upcoming);
+  const upcomingAll = vaccDropSatisfiedPending(vaccData).filter(v => v.upcoming);
   const groups = {};
   upcomingAll.forEach(v => {
     const days = Math.ceil((new Date(v.date) - todayD) / 86400000);
@@ -3698,6 +3698,15 @@ function toggleVaccInfo() {
   }
 }
 
+// "Mark given" on a pending dose: the add-vaccination sheet, prefilled with the dose's name
+// and today's date (editable for a dose given earlier). Saving completes the pending twin
+// (addVacc) instead of adding a second entry.
+function openVaccGivenModal(name) {
+  openVaccModal();
+  document.getElementById('vName').value = name || '';
+  activateBtn('vaccSaveBtn', !!name);
+}
+
 function openVaccModal() {
   document.getElementById('vName').value = '';
   document.getElementById('vDate').value = today();
@@ -3712,7 +3721,17 @@ function addVacc() {
   if (!name || !date) return;
   // A new upcoming entry used to flip every other pending dose to "given"
   // (vaccData.forEach(v => v.upcoming = false)), silently marking doses done.
-  vaccData.push({ name, date, upcoming });
+  // Logging a given dose completes its pending twin (same dose, normalised name) instead of
+  // adding a second entry and leaving the scheduled one "due" (parent report, 2026-10-28).
+  const twin = !upcoming && !/influenza|flu/i.test(name) && vaccData.find(v => v.upcoming && normVacc(v.name) === normVacc(name));
+  if (twin) {
+    twin.scheduledDate = twin.scheduledDate || twin.date;
+    twin.date = date;
+    twin.upcoming = false;
+    twin.visitGroup = date;
+  } else {
+    vaccData.push({ name, date, upcoming });
+  }
   _islMarkDirty('medical');
   closeModal('vaccModal');
   renderVacc();
@@ -3819,7 +3838,7 @@ function saveVaccEdit() {
 }
 
 function editUpcomingVaccDate() {
-  const upcoming = vaccData.find(v => v.upcoming);
+  const upcoming = getNextUpcomingVacc();
   if (!upcoming) return;
   const idx = vaccData.indexOf(upcoming);
   openVaccEditModal(idx);
@@ -6261,7 +6280,18 @@ function renderSleepTips() {
     },
     {
       id: 'safety', icon: zi('shield'), label: 'Safe Sleep', color: 'rose',
-      tips: [
+      // From 12 m the toddler tier (Maren V-M-269-15). The family bed-shares (no cot, parents'
+      // checklist 2026-10-28), so it covers the adult bed. src: AAP HealthyChildren (safe sleep,
+      // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
+      // a bed: alcohol, sedating medicine, smoking, sofas).
+      tips: ageM >= 12 ? [
+        { icon:zi('baby'), title:'Her own sleep position', text:'Now that she rolls and moves freely, she can settle in whatever position she likes. There is no need to turn her back.' },
+        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap she can slip into, and none at the headboard or footboard.' },
+        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from her face. A light blanket of her own is fine from about 1 year.' },
+        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. Use a bed rail on her side, or put the mattress on the floor, and keep the floor beside the bed clear and soft.' },
+        { icon:zi('no-entry'), title:'When not to share the bed', text:'Not next to an adult who has had alcohol, sedating medicine, or is a smoker, and never asleep together on a sofa or armchair.' },
+        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around her. Smoke on clothes and furnishings also harms her breathing and sleep.' },
+      ] : [
         { icon:zi('baby'), title:'Always on the back', text:'Place her on her back for every sleep. Once she can roll both ways independently, she can find her own position — but always start on the back.' },
         { icon:zi('warn'), title:'Nothing in the crib', text:'No pillows, blankets, bumpers, stuffed animals, or positioners. A fitted sheet on a firm mattress is all that\'s needed.' },
         { icon:zi('sprout'), title:'Air circulation', text:'A ceiling fan or gentle air circulation reduces SIDS risk. Keep the room ventilated but not drafty.' },

@@ -5092,8 +5092,10 @@ const SYMPTOM_DB = [
       { text: 'Freeze a teething ring solid or use a liquid-filled teether', critical: false },
       { text: 'Offer rusks or teething biscuits (most contain sugar, and hard pieces can break off)', critical: false }
     ],
+    // A toddler's 38.3°C is a same-day call (precautions above), not emergency care; the
+    // emergency line is the fever-high threshold (Maren V-M-268-1).
     emergency: [
-      'Fever of 38.3°C (101°F) or more — this is not teething; look for another cause',
+      'Fever of 40°C (104°F) or more, or any fever with a stiff neck, a rash that doesn\'t fade when pressed, or drowsiness that is hard to wake from',
       'Gums bleed heavily or look infected',
       'Ziva is inconsolable for hours'
     ],
@@ -5213,7 +5215,8 @@ const SYMPTOM_DB = [
     precautions: [
       'Ear-pulling alone is often just exploration at this age.',
       'Ear infections often follow upper respiratory infections.',
-      'Note any change in how Ziva responds to your voice (hearing concerns).'
+      'Note any change in how Ziva responds to your voice (hearing concerns).',
+      'Ear-pulling with a fever of 38.3°C (101°F) or more: call her doctor the same day; it is often an ear infection.'
     ],
     doNot: [
       { text: 'Insert cotton buds, fingers, or any object into the ear canal', critical: true },
@@ -5222,7 +5225,7 @@ const SYMPTOM_DB = [
     ],
     emergency: [
       'Fluid or pus draining from the ear',
-      'Ear-pulling with fever above 101°F (38.3°C)',
+      'Fever of 40°C (104°F) or more, or a red, swollen, tender area behind the ear that pushes the ear outward',
       'Ziva is inconsolable, especially when lying down',
       'Hearing seems noticeably affected'
     ],
