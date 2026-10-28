@@ -2748,5 +2748,60 @@
   "solved": "After a reinstall the app showed March data: writes had silently stopped reaching Firestore, and the stale cloud copy would have clobbered six months of local entries.",
   "category": "Product / Sync, PWA & Offline",
   "kind": "fix"
+ },
+ {
+  "number": 266,
+  "title": "Monthly update 2026-09: the 12-month age step, graph routing restored, housekeeping",
+  "date": "2026-09-24",
+  "merged": true,
+  "what": "The 12-month audit's Tier-1 fixes: child (1y+) first-aid technique, WHO 0–24 m growth references, a corrected and gated vaccine age map, added sugar and honey gated to 24 m, age-aware diet tips; graphify pinned to 0.9.6; PR corpus #250–#265, era 9, LOC refresh and her 12.7-month milestones.",
+  "achieved": "Ziva turned one without the app teaching infant first aid or comparing her growth against the wrong reference; the cross-province routing oracle works again.",
+  "solved": "At 12 months several surfaces were unsafe or wrong for a toddler (infant CPR/choking, IAP growth tables ending at 12 m, vaccine labels misread as Missing).",
+  "category": "Product / Medical & Care",
+  "kind": "fix"
+ },
+ {
+  "number": 267,
+  "title": "Edit a resolved illness episode's end; fix edit sheets writing UTC times back",
+  "date": "2026-09-24",
+  "merged": true,
+  "what": "All four illness histories (fever, diarrhoea, vomiting, cold) can edit when an episode ended, with guards (not future, not before start or last symptom, not into the next episode); edit sheets pre-fill local time; history dates and day counts use local days.",
+  "achieved": "Parents can correct an episode they forgot to close, and edits no longer shift IST entries by 5.5 hours.",
+  "solved": "A resolved episode's end was frozen at the tap time, and edit sheets wrote UTC times back over local ones.",
+  "category": "Product / Medical & Care",
+  "kind": "fix"
+ },
+ {
+  "number": 268,
+  "title": "12–24 month expansion, PR 1: tooth chart, toddler milestones and activities",
+  "date": "2026-09-24",
+  "merged": true,
+  "what": "MILESTONE_STANDARDS reach 24 months; Upcoming, next-milestone, lookouts and the score move past 12; toddler activities; a second-birthday event; teething lookout to 33 m; a synced tooth chart under Milestones → Library.",
+  "achieved": "The milestone engine keeps pace with a toddler who already met every 15-month marker.",
+  "solved": "From 13 months the Upcoming list was empty and the milestone score froze.",
+  "category": "Product / Milestones & Memories",
+  "kind": "feature"
+ },
+ {
+  "number": 269,
+  "title": "12–24 month expansion, PR 2: toddler sleep standards and IAP 2023 vaccine reconciliation",
+  "date": "2026-09-24",
+  "merged": true,
+  "what": "SLEEP_STANDARDS to 36 months with one nap source; the vaccine schedule reconciled against IAP 2023 (non-IAP doses removed, due windows with grace, conditional doses, yearly flu, series completion, word-boundary matching).",
+  "achieved": "One nap rule across the app, and a vaccine schedule that matches what her paediatrician follows.",
+  "solved": "Sleep targets clamped at 12 m (a 1-nap day read 'one nap short') and the vaccine list carried non-standard doses.",
+  "category": "Product / Sleep",
+  "kind": "feature"
+ },
+ {
+  "number": 270,
+  "title": "12–24 month expansion, PR 3: toddler nutrition, and Caldikind-P NF replacing the Vit D3 drops",
+  "date": "2026-09-25",
+  "merged": true,
+  "what": "28 cited toddler recipes, a 12–24 m food-library overlay with hazard gates and rule corrections, one age-aware honey framing, toddler diet tips; twice-daily dose slots for Caldikind-P NF with a one-shot switchover from the D3 drops.",
+  "achieved": "Family-food guidance for a toddler, and supplement tracking that matches the new prescription (morning and evening doses).",
+  "solved": "The food library and recipes stopped at 12 months, and the app could only track a once-a-day Vitamin D drop.",
+  "category": "Product / Diet & Nutrition / Recipes",
+  "kind": "feature"
  }
 ]
