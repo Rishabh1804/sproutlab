@@ -318,7 +318,7 @@ function _qaRoutine() {
 
   var md = getDomainData('medical', _offsetDateStr(today(), -6), today());
   if (md.suppAdherence !== null) {
-    var d3Text = 'Vit D3: ' + md.suppAdherence + '% adherence';
+    var d3Text = 'Vitamin D: ' + md.suppAdherence + '% adherence';
     if (md.d3FatRate !== null && (md.d3WithFat + md.d3WithoutFat) >= 3) {
       d3Text += ' · ' + md.d3FatRate + '% with fat';
     }
@@ -331,7 +331,7 @@ function _qaRoutine() {
     headline: 'Based on last 7 days avg',
     icon: 'clock',
     domain: 'indigo',
-    sections: [{ label: age.months + ' months ' + age.days + ' days old', icon: zi('baby'), items: items }]
+    sections: [{ label: fmtAgeLong(age.months, age.days) + ' old', icon: zi('baby'), items: items }]
   };
 }
 
@@ -532,7 +532,7 @@ function _qaDoctorPrep() {
   var items = [];
 
   // Age
-  items.push({ text: 'Age: ' + age.months + ' months ' + age.days + ' days', signal: 'neutral', icon: zi('baby') });
+  items.push({ text: 'Age: ' + fmtAgeLong(age.months, age.days), signal: 'neutral', icon: zi('baby') });
 
   // Growth
   var gd = getDomainData('medical', _offsetDateStr(today(), -30), today());
@@ -613,7 +613,7 @@ function _qaDoctorPrep() {
 
   return {
     title: 'Doctor Visit Prep',
-    headline: 'Ziva \u00b7 ' + age.months + ' months',
+    headline: 'Ziva \u00b7 ' + fmtAgeMonths(age.months),
     icon: 'steth',
     domain: 'sky',
     sections: sections,
@@ -697,7 +697,7 @@ function _qaShareToday() {
 function formatSummaryAsText(summary) {
   var age = ageAt();
   var lines = [];
-  lines.push('*Ziva (' + age.months + 'mo ' + age.days + 'd) \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
+  lines.push('*Ziva (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
   if (summary.scores && summary.scores.overall !== null) lines.push('Score: ' + summary.scores.overall + '/100');
   lines.push('');
 
@@ -739,7 +739,7 @@ function qaAnswerAge() {
 
   return {
     title: 'Ziva\'s Age',
-    headline: age.months + ' months ' + age.days + ' days old',
+    headline: fmtAgeLong(age.months, age.days) + ' old',
     icon: 'baby',
     domain: 'rose',
     sections: [{ label: 'Details', icon: zi('clock'), items: [
@@ -1694,15 +1694,17 @@ function qaAnswerNaps(intentId) {
   var napCounts = scores.filter(function(s) { return s.napCount !== undefined && s.napCount !== null; }).map(function(s) { return s.napCount; });
   var avgNaps = napCounts.length > 0 ? _qaAvg(napCounts) : null;
 
-  // Expected naps by age
-  var expectedNaps = ageMo < 4 ? '3-4' : ageMo < 9 ? '2-3' : ageMo < 15 ? '2' : '1';
+  // Expected naps by age — one source with the sleep score (SLEEP_STANDARDS via
+  // getSleepTargets): from 12 m one or two naps are both on track.
+  var napIdeal = (ageMo >= 6 && typeof getSleepTargets === 'function') ? getSleepTargets(ageMo).napIdeal : null;
+  var expectedMin = napIdeal ? napIdeal[0] : (ageMo < 4 ? 3 : 2);
+  var expectedMax = napIdeal ? napIdeal[1] : (ageMo < 4 ? 4 : 3);
+  var expectedNaps = expectedMin === expectedMax ? String(expectedMin) : expectedMin + '-' + expectedMax;
   var headline = avgNaps !== null ? 'Avg ' + avgNaps.toFixed(1) + ' naps/day (expected: ' + expectedNaps + ')' : 'Nap Analysis';
 
   if (avgNaps !== null) {
-    var expectedMin = ageMo < 4 ? 3 : ageMo < 9 ? 2 : ageMo < 15 ? 2 : 1;
-    var expectedMax = ageMo < 4 ? 4 : ageMo < 9 ? 3 : ageMo < 15 ? 2 : 1;
     if (avgNaps >= expectedMin && avgNaps <= expectedMax + 0.5) {
-      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + ageMo + ' months', signal: 'good' });
+      dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — right on track for ' + fmtAgeMonths(ageMo), signal: 'good' });
     } else if (avgNaps < expectedMin) {
       dataItems.push({ text: avgNaps.toFixed(1) + ' naps/day — fewer than expected ' + expectedNaps + ' for this age', signal: 'warn' });
     } else {
@@ -1737,8 +1739,8 @@ function qaAnswerNaps(intentId) {
   // Transition guidance
   if (ageMo >= 7 && ageMo <= 9) {
     actionItems.push({ text: 'Approaching 3-to-2 nap transition — watch for longer wake windows', signal: 'info' });
-  } else if (ageMo >= 13 && ageMo <= 16) {
-    actionItems.push({ text: 'Approaching 2-to-1 nap transition — if resisting second nap, try one longer midday nap', signal: 'info' });
+  } else if (ageMo >= 12 && ageMo < 18) {
+    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if she resists the second nap, try one longer midday nap', signal: 'info' });
   }
 
   actionItems.push({ text: 'Keep nap environment dark and consistent', signal: 'action' });
@@ -1974,7 +1976,9 @@ function _qaDeepNutrientCard(nutrient) {
     var entry = NUTRITION[food];
     var hasNutrient = (entry.nutrients || []).some(function(n) { return n.toLowerCase() === nutrient; });
     var hasTag = (entry.tags || []).some(function(t) { return t.toLowerCase().indexOf(nutrient.replace(/\s+/g, '-')) !== -1; });
-    if (hasNutrient || hasTag) {
+    // Diet-preference surfacing gate (V-K-270-3): the first non-veg NUTRITION keys
+    // (egg / fish / chicken / mutton) must not be suggested to a veg household.
+    if ((hasNutrient || hasTag) && (typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food))) {
       allRichFoods.push(food);
     }
   });
@@ -2061,7 +2065,7 @@ function _qaNutrientTips(nutrient) {
       { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
     ],
     'calcium': [
-      { text: 'Vitamin D3 helps calcium absorption \u2014 ensure daily D3 drops', signal: 'info' },
+      { text: 'Vitamin D helps her absorb calcium \u2014 keep her Vitamin D supplement as prescribed', signal: 'info' },
       { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
     ],
     'protein': [
@@ -2113,7 +2117,7 @@ function _qaGenericNutrientGaps() {
         // Show which foods could fill the gap
         var richFoods = [];
         Object.keys(NUTRITION).forEach(function(food) {
-          if ((NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
+          if ((typeof _dietAllowsFood !== 'function' || _dietAllowsFood(food)) && (NUTRITION[food].nutrients || []).some(function(n) { return n.toLowerCase() === gap.toLowerCase(); })) {
             richFoods.push(food);
           }
         });
@@ -2338,7 +2342,7 @@ function qaAnswerTexture(intentId) {
     if (currentIdx >= expectedIdx) {
       dataItems.push({ text: 'Texture is age-appropriate or ahead — great progress', signal: 'good' });
     } else {
-      dataItems.push({ text: 'Currently at ' + texLabels[tex.currentStage] + ' stage — expected ' + texLabels[expectedTex] + ' by ' + ageMo + ' months', signal: 'warn' });
+      dataItems.push({ text: 'Currently at ' + texLabels[tex.currentStage] + ' stage — expected ' + texLabels[expectedTex] + ' by ' + fmtAgeMonths(ageMo), signal: 'warn' });
       actionItems.push({ text: 'Gradually advance to ' + texLabels[expectedTex] + ' textures', signal: 'action' });
     }
 
@@ -2746,6 +2750,20 @@ function qaAnswerMilestoneSpecific(intentId) {
   var dataItems = [];
   var actionItems = [];
 
+  // Teeth: answer from the tooth chart (teethLog), not the milestone list.
+  if (targetKeyword === 'teeth' && typeof teethSummary === 'function') {
+    var ts = teethSummary();
+    var tHead = ts.count ? ts.count + ' of 20 baby teeth recorded' : 'No teeth recorded yet';
+    if (ts.latest) dataItems.push({ text: 'Latest: ' + ts.latest.name + ' (' + ts.latest.date + ')', signal: 'good' });
+    ts.next.forEach(function(r) { dataItems.push({ text: 'Coming next: ' + r, signal: 'info' }); });
+    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth she has on the Teeth chart (Milestones, Library)', signal: 'action' });
+    actionItems.push({ text: 'Teething does not cause fever. If she has a temperature, look for another cause.', signal: 'info' });
+    var tSections = [];
+    if (dataItems.length) tSections.push({ label: 'TEETH', icon: zi('tooth'), items: dataItems });
+    tSections.push({ label: 'WHAT TO DO', icon: zi('bulb'), items: actionItems });
+    return { icon: 'tooth', domain: 'lav', title: tHead, headline: tHead, sections: tSections, confidence: null, dataGap: null };
+  }
+
   // Find matching milestones
   var matched = (milestones || []).filter(function(m) {
     if (!targetKeyword) return false;
@@ -3055,6 +3073,23 @@ function qaAnswerSupplement(intentId) {
         actionItems.push({ text: 'Set extra reminders for ' + s.flaggedDays.join(', '), signal: 'action' });
       }
 
+      // A twice-daily med: one line per dose from its slot state, so "not given yet" never
+      // follows two logged doses (Kael V-K-270-18) and an unlogged earlier dose is never a
+      // "don't forget" (that invites a double dose).
+      var sMed = (meds || []).filter(function(mm) { return mm.active && mm.name === s.name; })[0];
+      if (sMed && medDoseSlots(sMed).length > 1) {
+        medSlotStates(sMed).forEach(function(x) {
+          if (x.state === 'na') return;
+          var L = x.label.charAt(0).toUpperCase() + x.label.slice(1) + ' dose';
+          if (x.state === 'resolved') {
+            if (x.parsed.status === 'skipped') actionItems.push({ text: L + ': skipped', signal: 'info' });
+            else actionItems.push({ text: L + ': given' + (x.parsed.givenAt ? ' at ' + _formatTime12h(x.parsed.givenAt) : ''), signal: 'good' });
+          } else if (x.state === 'later') actionItems.push({ text: L + ': later today', signal: 'info' });
+          else if (x.state === 'due') actionItems.push({ text: L + ': due now', signal: 'action' });
+          else actionItems.push({ text: L + ': not logged — record whether it was given; don\'t double up', signal: 'action' });
+        });
+        return;
+      }
       // Today's status — CR-1: schema-aware via parseMedCheck (handles both legacy string + new object).
       var todayEntry = (medChecks || {})[today()];
       var todayStatus = todayEntry ? todayEntry[s.name] : undefined;
@@ -3557,14 +3592,47 @@ function _epNowTimeStr() { return new Date().toTimeString().slice(0, 5); }
 /**
  * Converts a HH:MM time string to a full ISO string for today (or yesterday if time > now suggesting it was yesterday)
  */
-function _epTimeToISO(timeStr) {
-  if (!timeStr || !timeStr.includes(':')) return new Date().toISOString();
+function _epTimeToISO(timeStr, baseISO) {
+  if (!timeStr || !timeStr.includes(':')) return baseISO || new Date().toISOString();
   const [h, m] = timeStr.split(':').map(Number);
+  // Editing an existing entry: the new time goes on whichever of the entry's own local day, the
+  // day before or the day after lands CLOSEST to its original time (and not in the future). Before
+  // 2026-09-24 every edit was re-dated to today (a day-1 reading of a 3-day fever jumped to day 3);
+  // a same-day-only rule would instead throw a 23:50 → 00:05 correction back ~24 h (Kael V-K-267-1).
+  const base = baseISO ? new Date(baseISO) : null;
+  if (base && !isNaN(base.getTime())) {
+    const now = Date.now(), b = base.getTime();
+    let best = null;
+    [0, -1, 1].forEach(off => { // same day first, so an exact 12 h tie (the AM/PM slip) stays on its day — Cipher A2
+      const c = new Date(base.getFullYear(), base.getMonth(), base.getDate() + off, h, m, 0, 0).getTime();
+      if (c <= now + 60000 && (best === null || Math.abs(c - b) < Math.abs(best - b))) best = c;
+    });
+    return new Date(best !== null ? best : b).toISOString();
+  }
+  // A new entry lands today; >2h in the future means they meant yesterday.
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  // If the selected time is >2h in the future, assume they meant yesterday
   if (d.getTime() > Date.now() + 7200000) d.setDate(d.getDate() - 1);
   return d.toISOString();
+}
+
+// Local-time parts of a stored ISO timestamp (HR-12: never slice the ISO string — that is UTC).
+function _epLocalTimeStr(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return _epNowTimeStr();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+function _epLocalDateStr(iso) {
+  const d = iso ? new Date(iso) : new Date();
+  return toDateStr(isNaN(d.getTime()) ? new Date() : d); // core.js local 'YYYY-MM-DD' (V-K-267-7)
+}
+// Build an ISO timestamp from local 'YYYY-MM-DD' + 'HH:MM' by components (HR-12 timezone-safe).
+function _epLocalToISO(dateStr, timeStr) {
+  const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr || '');
+  const tm = /^(\d{1,2}):(\d{2})/.exec(timeStr || '');
+  if (!dm || !tm) return null;
+  const d = new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3]), Number(tm[1]), Number(tm[2]), 0, 0);
+  return isNaN(d.getTime()) ? null : d.toISOString();
 }
 
 /**
@@ -3604,8 +3672,12 @@ function _epEditEntry(opts) {
     fieldsHTML += '<div class="ep-edit-field">';
     fieldsHTML += '<div class="ep-edit-label">' + escHtml(f.label) + '</div>';
     if (f.type === 'time') {
-      const timeVal = f.value ? (typeof f.value === 'string' && f.value.includes('T') ? f.value.split('T')[1].slice(0, 5) : f.value) : _epNowTimeStr();
-      fieldsHTML += '<input type="time" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + timeVal + '">';
+      // ISO values are shown in LOCAL time. This used to slice the ISO string, which is UTC:
+      // in IST a 10:00 reading opened as 04:30, and Save wrote it back 5.5 h early.
+      const timeVal = f.value ? (typeof f.value === 'string' && f.value.includes('T') ? _epLocalTimeStr(f.value) : f.value) : _epNowTimeStr();
+      fieldsHTML += '<input type="time" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(timeVal) + '">';
+    } else if (f.type === 'date') {
+      fieldsHTML += '<input type="date" class="ep-edit-input" id="epEdit_' + f.id + '" value="' + escHtml(f.value || _epLocalDateStr()) + '"' + (f.min ? ' min="' + escHtml(f.min) + '"' : '') + (f.max ? ' max="' + escHtml(f.max) + '"' : '') + '>';
     } else if (f.type === 'select' && f.options) {
       fieldsHTML += '<select class="ep-edit-input" id="epEdit_' + f.id + '">';
       f.options.forEach(o => {
@@ -3623,9 +3695,11 @@ function _epEditEntry(opts) {
 
   overlay.innerHTML = '<div class="ep-edit-sheet">' +
     '<div class="ep-edit-title">' + escHtml(opts.title || 'Edit Entry') + '</div>' +
+    (opts.hint ? '<div class="ep-edit-hint">' + escHtml(opts.hint) + '</div>' : '') +
     fieldsHTML +
+    '<div class="ep-edit-err" id="epEditErr" role="alert" hidden></div>' +
     '<div class="ep-edit-btns">' +
-    '<button class="btn btn-rose" id="epEditDelete">Delete</button>' +
+    (opts.onDelete ? '<button class="btn btn-rose" id="epEditDelete">Delete</button>' : '') +
     '<button class="btn btn-ghost" id="epEditCancel">Cancel</button>' +
     '<button class="btn btn-sky" id="epEditSave">Save</button>' +
     '</div></div>';
@@ -3633,9 +3707,11 @@ function _epEditEntry(opts) {
   document.body.appendChild(overlay);
 
   overlay.querySelector('#epEditCancel').onclick = () => overlay.remove();
+  overlay.addEventListener('input', () => { const err = overlay.querySelector('#epEditErr'); if (err) err.hidden = true; });
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
 
-  overlay.querySelector('#epEditDelete').onclick = () => {
+  const delBtn = overlay.querySelector('#epEditDelete');
+  if (delBtn) delBtn.onclick = () => {
     overlay.remove();
     if (opts.onDelete) {
       confirmAction('Delete this entry?', opts.onDelete, 'Delete');
@@ -3648,8 +3724,16 @@ function _epEditEntry(opts) {
       const el = document.getElementById('epEdit_' + f.id);
       if (el) values[f.id] = el.value;
     });
+    // onSave may return an error string to keep the sheet open (validation); anything else closes it.
+    let res;
+    try { res = opts.onSave ? opts.onSave(values) : undefined; }
+    catch (e) { console.warn('[epEdit] save failed', e); res = 'Could not save. Please try again.'; }
+    if (typeof res === 'string' && res) {
+      const err = overlay.querySelector('#epEditErr');
+      if (err) { err.textContent = res; err.hidden = false; }
+      return;
+    }
     overlay.remove();
-    if (opts.onSave) opts.onSave(values);
   };
 }
 

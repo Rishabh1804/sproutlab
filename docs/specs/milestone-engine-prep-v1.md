@@ -153,7 +153,9 @@ v1 ratifies a schema extension: rows gain explicit `source:` (the per-row source
 For a row in bracket-month `K`:
 - `expectedStart = K * 30.44` days (bracket-month start → average days)
 - `expectedEnd = row.endMonth ? row.endMonth * 30.44 : (nextBracketMonth * 30.44 - 1)` days
-- For the highest bracket (12m), `expectedEnd` defaults to `18 * 30.44 = 547.92 days ≈ 548 days` absent explicit `endMonth:` — clinical-typical bracket-end window per WHO defaults (V-K-114 synth-fold corrected the 542-day typo)
+- For the highest bracket, `expectedEnd` defaults to `max(18, K + 1) * 30.44 - 1` days absent explicit `endMonth:` (V-K-114; the 12 m → 18 default held while 12 was the top bracket). **Amended by PR #268 (12–24 m expansion):** the tables now run to 24 m, so the 12 m brackets (who, and iap/eu/cn via the per-month WHO fallback `_msStandardFor`) end at 13 like months 6–11, and the top bracket 24 ends at 25.
+- **Checkpoint rows (PR #268):** a row with `checkpoint:N` (a CDC "most children, 75%+, by N months" item, or an AAP "by two years" item) gets the band `[N-3, N)`, and the in-window card reads "Most children do this by N months (source)". A by-N claim never renders as a band that starts at N.
+- **Half-open end (PR #268):** a row is in-window while `expectedStart <= ageDays < endBracket * 30.44`. The fractional 30.44 used to leave one whole day between brackets in no window (days 365, 395, 547, 730…).
 
 The IMPL adds an explicit `endMonth:` to rows where the WHO/IAP/EU/CN reference data provides a specific upper bound; rows without explicit endMonth use the next-bracket fallback.
 

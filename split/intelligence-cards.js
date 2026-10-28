@@ -956,18 +956,27 @@ function renderInfoGrowthDiet() {
     return;
   }
 
-  var sorted = [...growthData].sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
-  var last = sorted[sorted.length - 1];
-  var prev = sorted[sorted.length - 2];
-
-  var daysBetweenMeasurements = Math.max(1, Math.round((new Date(last.date) - new Date(prev.date)) / 86400000));
-  var wtDiffG = Math.round((last.wt - prev.wt) * 1000);
-  var velocity = Math.round((wtDiffG / daysBetweenMeasurements) * 100) / 100;
-
-  // Velocity assessment (WHO guidance for 6-12 months: ~10-15 g/day is normal)
-  var velLabel = 'normal';
-  if (velocity < 5) velLabel = 'slow';
-  else if (velocity > 20) velLabel = 'rapid';
+  // Velocity + verdict come from ONE source — computeGrowthVelocity().weight (medical.js) — so this
+  // card can never disagree with the Growth tab (Vela V-V-266-1, 2026-09-24). It had its own fixed
+  // 5–20 g/day band (an infant-era "6-12 months" comment) and sorted ALL growthData rows, so a
+  // height-only latest entry (wt:null) read as a ~-8,500 g loss. The shared path filters to weight
+  // rows, uses the age-appropriate band and the >= 28-day toddler interval.
+  var gvW = (typeof computeGrowthVelocity === 'function') ? (computeGrowthVelocity() || {}).weight : null;
+  if (!gvW) {
+    sumEl.innerHTML = '<div class="si-nodata">Need at least 2 weight measurements for growth-diet analysis</div>';
+    if (perEl) perEl.innerHTML = '';
+    if (nutEl) nutEl.innerHTML = '';
+    if (insEl) insEl.innerHTML = '';
+    _setCardPriority('infoGrowthDietCard', 'ambient');
+    return;
+  }
+  var last = gvW.latest;
+  var prev = gvW.prev;
+  var daysBetweenMeasurements = gvW.daysBetween;
+  var velocity = gvW.gPerDay;
+  var velLabel = gvW.tooShort ? 'normal'
+    : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
+    : gvW.status === 'fast' ? 'rapid' : 'normal';
 
   // Diet metrics during the growth period
   var periodDates = [];
@@ -1140,8 +1149,11 @@ function renderInfoIllnessImpact() {
   var mostImpacted = null, worstDelta = 0;
 
   episodes.forEach(function(ep) {
-    var startDate = ep.startedAt.slice(0, 10);
-    var endDate = ep.resolvedAt ? ep.resolvedAt.slice(0, 10) : today();
+    // Local calendar days (Vela V-V-267-1 / Ceres V-C-267-3): the UTC slice put a 3 AM IST start on
+    // the previous day, so this card disagreed with the (now local) history rows and the
+    // during-illness diet/sleep windows covered the wrong days.
+    var startDate = toDateStr(new Date(ep.startedAt));
+    var endDate = ep.resolvedAt ? toDateStr(new Date(ep.resolvedAt)) : today();
     var duration = _episodeDurationDays(ep);
     totalSickDays += duration;
 
@@ -3226,13 +3238,13 @@ function computeSmartPairings() {
 
   FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
     // Check if both synergy foods are introduced (using normalized names)
-    const f1Introduced = introducedNormSet.has(f1) || [...introducedSet].some(f => f.includes(f1) || f1.includes(f));
-    const f2Introduced = introducedNormSet.has(f2) || [...introducedSet].some(f => f.includes(f2) || f2.includes(f));
+    const f1Introduced = introducedNormSet.has(f1) || [...introducedSet].some(f => _foodWordHit(f, f1) || _foodWordHit(f1, f));
+    const f2Introduced = introducedNormSet.has(f2) || [...introducedSet].some(f => _foodWordHit(f, f2) || _foodWordHit(f2, f));
     if (!f1Introduced || !f2Introduced) return;
 
     // Find display names for the matched foods
-    const f1Match = [...introducedSet].find(f => normalizeFoodName(f) === f1 || f.includes(f1) || f1.includes(f)) || f1;
-    const f2Match = [...introducedSet].find(f => normalizeFoodName(f) === f2 || f.includes(f2) || f2.includes(f)) || f2;
+    const f1Match = [...introducedSet].find(f => normalizeFoodName(f) === f1 || _foodWordHit(f, f1) || _foodWordHit(f1, f)) || f1;
+    const f2Match = [...introducedSet].find(f => normalizeFoodName(f) === f2 || _foodWordHit(f, f2) || _foodWordHit(f2, f)) || f2;
 
     const paired = usedSynergyKeys.has(f1 + '|' + f2);
 
@@ -3563,16 +3575,20 @@ function getSynergyPairings(rawFoods) {
   rawFoods.forEach(food => {
     FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
       let match = null, partner = null;
-      if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
-      else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+      // Whole-word matches (V-V-270-2): "eggplant" is not "egg".
+      if (_foodWordHit(food, f1) || _foodWordHit(f1, food)) { match = f1; partner = f2; }
+      else if (_foodWordHit(food, f2) || _foodWordHit(f2, food)) { match = f2; partner = f1; }
       if (!match || !partner) return;
+      if (typeof _dietAllowsFood === 'function' && !_dietAllowsFood(partner)) return;
       // Don't suggest if partner is already in the query
-      if (rawFoods.some(rf => rf.includes(partner) || partner.includes(rf))) return;
+      if (rawFoods.some(rf => _foodWordHit(rf, partner) || _foodWordHit(partner, rf))) return;
       // Age-safety check
-      const rule = AGE_RULES[partner] || AGE_RULES[partner.replace(/s$/, '')] || Object.entries(AGE_RULES).find(([k]) => partner.includes(k))?.[1];
+      // The shared strictest-gate resolver (Kael V-K-270-16), not a substring scan of AGE_RULES keys.
+      const rule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(partner)
+        : (AGE_RULES[partner] || AGE_RULES[partner.replace(/s$/, '')]);
       if (rule && mo < rule.minMonth) return;
       // Must be already introduced
-      if (![...introducedSet].some(f => f.includes(partner) || partner.includes(f))) return;
+      if (![...introducedSet].some(f => _foodWordHit(f, partner) || _foodWordHit(partner, f))) return;
       const key = partner;
       if (seen.has(key)) return;
       seen.add(key);

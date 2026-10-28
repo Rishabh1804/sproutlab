@@ -1601,17 +1601,30 @@ function _qlFeedInsight(foodArg) {
   return null;
 }
 
-function _qlSleepInsight() {
+// dateStr: the date the entry was logged for; kind: 'nap' | 'night'. The nap-count
+// lines speak only about today, only from a nap save, and only once the count is
+// a fair read of the day (a morning nap is not yet "the day's nap").
+function _qlSleepInsight(dateStr, kind) {
   try {
     var todayStr = today();
+    if (dateStr && dateStr !== todayStr) return null;
     var todayNaps = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'nap'; });
-    if (todayNaps.length === 2) return '2 naps today \u2014 solid rest.';
 
     var lastNap = todayNaps[todayNaps.length - 1];
     if (lastNap && lastNap.bedtime && lastNap.wakeTime) {
       var sP = lastNap.bedtime.split(':'), eP = lastNap.wakeTime.split(':');
       var durMin = (parseInt(eP[0]) * 60 + parseInt(eP[1])) - (parseInt(sP[0]) * 60 + parseInt(sP[1]));
       if (durMin > 120) return 'Long nap! Monitor bedtime \u2014 may shift later.';
+    }
+
+    if (kind !== 'night') {
+      var ideal = (typeof getSleepTargets === 'function') ? getSleepTargets(getAgeInMonths()).napIdeal : [2, 3];
+      var n = todayNaps.length;
+      var lateEnough = new Date().getHours() >= 15 || (lastNap && parseInt(lastNap.bedtime) >= 11);
+      if (n >= 1 && n >= ideal[0] && n <= ideal[1] && (n === ideal[1] || lateEnough)) {
+        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at her age.';
+        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for her age.';
+      }
     }
 
     var nightEntries = sleepData.filter(function(e) { return e.date === todayStr && e.type === 'night'; });
@@ -1983,7 +1996,7 @@ function saveQLSleep() {
 
   _islMarkDirty('sleep');
   // Smart QL: compute insight BEFORE close
-  var qlInsight = _qlSleepInsight();
+  var qlInsight = _qlSleepInsight(entry.date, 'night');
   _qlLogAction('sleep', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -2020,7 +2033,7 @@ function saveQLNap() {
 
   _islMarkDirty('sleep');
   // Smart QL: compute insight BEFORE close
-  var qlNapInsight = _qlSleepInsight();
+  var qlNapInsight = _qlSleepInsight(entry.date, 'nap');
   _qlLogAction('nap', _qlSuggestUsed);
   const undoFn = () => {
     const idx = sleepData.indexOf(entry);
@@ -2273,7 +2286,8 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
     if (ev.type === 'feed') counts.meal++;
     else if (ev.type === 'nap') counts.nap++;
     else if (ev.type === 'sleep') counts.night++;
-    else if (ev.type === 'med') counts.med++;
+    // Only a GIVEN dose counts as logged — never a skip (Vela V-V-270-2).
+    else if (ev.type === 'med') { if (ev.parsed && (ev.parsed.status === 'done' || ev.parsed.status === 'late')) counts.med++; }
     else if (ev.type === 'poop') counts.poop++;
     else if (ev.type === 'activity') counts.activity++;
     else if (ev.type === 'ct' || ev.type === 'careticket') counts.ct++;
@@ -2288,7 +2302,15 @@ function _tsfGenerateSummary(dateKey, eventsObj, ctx) {
   if (counts.meal > 0) parts.push(num(counts.meal, 'meal', 'meals'));
   if (counts.night > 0) parts.push('night sleep');
   if (counts.nap > 0) parts.push(num(counts.nap, 'nap', 'naps'));
-  if (counts.med > 0) parts.push('D3 logged');
+  if (counts.med > 0) {
+    // Name the supplement's actual state: a twice-daily dose half-done must not read as done.
+    const _vd = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+    const _vdSlots = _vd ? medDoseSlots(_vd) : [];
+    if (_vdSlots.length > 1) {
+      const nIn = _vdSlots.filter(function(sl) { return medCheckIsDone(medSlotRecord(_vd, today(), sl.key)); }).length;
+      parts.push(nIn === _vdSlots.length ? 'all supplement doses given' : nIn + ' of ' + _vdSlots.length + ' supplement doses given');
+    } else parts.push(counts.med === 1 ? 'supplement given' : counts.med + ' supplements given');
+  }
   if (counts.poop > 0) parts.push(num(counts.poop, 'poop', 'poops'));
   // V-K-91 (Kael synth-fold): activity + careticket counts are taxonomy
   // citizens. "care-note" is the soft surface word — neither "ticket"
@@ -2688,9 +2710,15 @@ function _tsfDetectPatterns() {
     { key: 'afternoon-nap', type: 'nap', minDays: 4, wStart: 750, wEnd: 990, label: 'Afternoon nap usually ~{time}', icon: zi('zzz'), color: 'lav', nudgeAction: 'nap' },
     { key: 'snack', type: 'feed', meal: 'snack', minDays: 4, wStart: 840, wEnd: 1020, label: 'Snack usually around {time}', icon: zi('spoon'), color: 'amber', nudgeAction: 'feed', nudgeMeal: 'snack' },
     { key: 'dinner', type: 'feed', meal: 'dinner', minDays: 5, wStart: 1020, wEnd: 1230, label: 'Dinner usually around {time}', icon: zi('moon'), color: 'lav', nudgeAction: 'feed', nudgeMeal: 'dinner' },
-    { key: 'afternoon-poop', type: 'poop', minDays: 3, wStart: 720, wEnd: 1020, label: 'Poop usually around {time}', icon: zi('diaper'), color: 'amber', nudgeAction: 'poop' },
-    { key: 'med-Vitamin D3 Drops', type: 'med', medName: 'Vitamin D3 Drops', minDays: 5, wStart: 0, wEnd: 1440, label: 'Vit D3 usually by {time}', icon: zi('pill'), color: 'sky', nudgeAction: 'med' }
+    { key: 'afternoon-poop', type: 'poop', minDays: 3, wStart: 720, wEnd: 1020, label: 'Poop usually around {time}', icon: zi('diaper'), color: 'amber', nudgeAction: 'poop' }
   ];
+  // Her Vitamin D supplement, one pattern per dose slot (was a hard-coded 'Vitamin D3 Drops'
+  // key, which a renamed or twice-daily supplement never matched).
+  const _vdPat = (typeof vitDSupplement === 'function') ? vitDSupplement() : null;
+  if (_vdPat) medDoseSlots(_vdPat).forEach(function(sl) {
+    patternDefs.push({ key: 'med-' + sl.key, type: 'med', medName: sl.key, minDays: 5, wStart: 0, wEnd: 1440,
+      label: sl.key + ' usually by {time}', icon: zi('pill'), color: 'sky', nudgeAction: 'med' });
+  });
 
   const patterns = [];
 
@@ -2827,9 +2855,13 @@ function _tsfGetNudges() {
         return pm !== null && pm >= pat.windowStart && pm <= pat.windowEnd;
       });
     } else if (pat.type === 'med' && pat.medName) {
+      // A dose-slot nudge only while that slot is the med's one 'due' dose — never an unlogged
+      // earlier dose beside Home's "Done now" (Cipher A1, the double-dose invariant).
+      const _m = (meds || []).filter(function(m) { return m.active && medDoseSlots(m).some(function(sl) { return sl.key === pat.medName; }); })[0];
+      const _x = _m ? medSlotStates(_m).filter(function(x) { return x.key === pat.medName; })[0] : null;
       // V-K-67: schema-aware — handles both legacy string and new object shapes.
       const mc = todayMC[pat.medName];
-      alreadyLogged = medCheckIsDone(mc) || medCheckSkipped(mc);
+      alreadyLogged = _x ? _x.state !== 'due' : (medCheckIsDone(mc) || medCheckSkipped(mc));
     }
 
     if (alreadyLogged) return;
@@ -2926,7 +2958,11 @@ function renderTodaySoFar() {
   const anchor = _tsfGetAnchor();
   const nudges = _tsfGetNudges();
   const patterns = _tsfPatternCache || [];
-  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0;
+  // Never "All caught up" while a med dose is due or unlogged (Vela V-V-270-2).
+  const _medOpen = (typeof medSlotStates === 'function') && (meds || []).some(function(m) {
+    return m.active && medSlotStates(m).some(function(x) { return x.state === 'due' || x.state === 'unlogged'; });
+  });
+  const allNudgesResolved = nudges.length === 0 && patterns.length > 0 && totalCount > 0 && !_medOpen;
 
   // Mark cache as clean
   _tsfCacheDirty = false;
@@ -3651,6 +3687,10 @@ function computeIntroductionRate() {
 function getUntriedSuggestions(n) {
   n = n || 5;
   const introduced = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
+  // Canonical bases too (Vela V-V-270-5): a synonym key ("palak" once spinach is in) is not new.
+  const _base = n => (typeof _baseFoodName === 'function') ? _baseFoodName(n) : n;
+  const introducedBase = new Set([...introduced].map(_base));
+  const offeredBase = new Set();
   const ageM = ageAt().months;
   // V-M-19 amendment: respect the user's diet preference — non-veg foods outside the
   // preference must not surface as "Foods to Try Next." A parent who set a dietary boundary
@@ -3663,12 +3703,18 @@ function getUntriedSuggestions(n) {
   _foodTaxFlat.forEach(item => {
     const key = item.key.toLowerCase().trim();
     if (introduced.has(key)) return;
+    const kb = _base(key);
+    if (introducedBase.has(kb) || offeredBase.has(kb)) return;
     // Diet-preference surfacing gate: a nonveg food surfaces only if its subcategory (sid)
     // is in the current preference's allowed set. hasGate is fail-OPEN by design (V-V-31): this is
   // a RECOMMENDATION surface — a missed withhold shows one extra food (self-correcting), it never
   // hides a safety signal. Fail-closed could falsely declare the taxonomy complete.
     if (item.pid === 'nonveg' && hasGate && !_dietAllowsNonvegSid(item.sid)) return;
-    // Age gate: skip nuts for <8m (whole), skip honey for <12m
+    // Age gate: the shared strictest AGE_RULES gate (Vela V-V-266-4) — so jaggery / gur / mishri
+    // (added sugar, 24 m) never surface as "try next" while the Library says wait. The hand-coded
+    // lines below stay as a fallback if diet.js's resolver is ever absent.
+    const _ageRule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(key) : null;
+    if (_ageRule && typeof _ageRule.minMonth === 'number' && ageM < _ageRule.minMonth) return;
     if (key === 'honey' && ageM < 12) return;
     if (key === 'peanut' && ageM < 8) return;
     if (key === 'whole egg' && ageM < 8) return;
@@ -3677,6 +3723,7 @@ function getUntriedSuggestions(n) {
     const sub = group?.subs?.[item.sid];
     const nutrition = getNutrition(key);
 
+    offeredBase.add(kb);
     candidates.push({
       name: item.key,
       group: item.pid,
@@ -4176,10 +4223,15 @@ function computeWakeWindows() {
   const ageM = ageAt().months;
   // Age-appropriate ideal wake windows (minutes)
   let idealMin, idealMax;
+  // App convention (no guideline body publishes wake windows). From 12 m the band
+  // follows her actual nap pattern: a one-nap toddler has two long windows.
   if (ageM <= 6) { idealMin = 120; idealMax = 150; }
   else if (ageM <= 9) { idealMin = 135; idealMax = 180; }
-  else if (ageM <= 12) { idealMin = 150; idealMax = 210; }
-  else { idealMin = 180; idealMax = 300; }
+  else if (ageM < 12) { idealMin = 150; idealMax = 210; }
+  else {
+    const avgNapsWW = days.reduce((s, d) => s + (d.naps || 0), 0) / days.length;
+    if (avgNapsWW < 1.5) { idealMin = 240; idealMax = 360; } else { idealMin = 180; idealMax = 240; }
+  }
 
   const allWindows = days.flatMap(d => d.windows);
   const avgGap = Math.round(allWindows.reduce((s, w) => s + w.gapMin, 0) / allWindows.length);
@@ -4276,7 +4328,7 @@ function renderInfoSleepWakeWindows() {
   if (insightEl) {
     let html = '';
     if (data.avgLastGap > data.idealMax + 30) {
-      html += '<div class="si-insight si-insight-warn">Last wake window before bed is too long (' + Math.floor(data.avgLastGap / 60) + 'h ' + (data.avgLastGap % 60) + 'm). Try fitting an extra nap or moving bedtime earlier.</div>';
+      html += '<div class="si-insight si-insight-warn">Last wake window before bed is too long (' + Math.floor(data.avgLastGap / 60) + 'h ' + (data.avgLastGap % 60) + 'm). ' + (ageAt().months >= 12 ? 'Try moving bedtime a little earlier.' : 'Try fitting an extra nap or moving bedtime earlier.') + '</div>';
     }
     if (data.overtiredCount >= 3) {
       html += '<div class="si-insight si-insight-warn">' + data.overtiredCount + ' overtired windows detected this week — may cause harder settling.</div>';
@@ -4459,7 +4511,12 @@ function computeNapTransition() {
   const avgNaps = dayData.reduce((s, d) => s + d.napCount, 0) / 14;
 
   // Signal 1: Nap count dropping below target
-  const lowNapDays = dayData.filter(d => d.napCount < napMin && (d.naps.length > 0 || d.night)).length;
+  // While one or two naps are both normal (napMin < napMax), the transition shows as
+  // days with fewer naps than the upper bound (but not zero — that's signal 5).
+  const napRangeOpen = napMin < napMax;
+  const lowNapDays = napRangeOpen
+    ? dayData.filter(d => d.napCount > 0 && d.napCount < napMax).length
+    : dayData.filter(d => d.napCount < napMin && (d.naps.length > 0 || d.night)).length;
   const napCountDrop = lowNapDays >= 4;
 
   // Signal 2: Short naps (<30min) increasing
@@ -4492,7 +4549,7 @@ function computeNapTransition() {
   const napRefusal = napRefusalDays >= 3 && ageM >= 8;
 
   const signals = [
-    { label: 'Nap count below target', met: napCountDrop, detail: lowNapDays + '/14 days below ' + napMin + ' naps' },
+    { label: napRangeOpen ? 'Days with fewer naps' : 'Nap count below target', met: napCountDrop, detail: napRangeOpen ? lowNapDays + '/14 days with fewer than ' + napMax + ' naps' : lowNapDays + '/14 days below ' + napMin + ' nap' + (napMin === 1 ? '' : 's') },
     { label: 'Short naps increasing', met: shortNapsRising, detail: Math.round(shortNapRate * 100) + '% of naps <30min' },
     { label: 'Bedtime drifting later', met: bedtimeLater, detail: drift.insufficient ? 'Not enough data' : (drift.driftPerWeek > 0 ? '+' + drift.driftPerWeek + 'min/week' : 'Stable') },
     { label: 'Last nap ending late', met: lateLastNap, detail: lastNapEnds.length > 0 ? 'Avg end: ' + Math.floor(avgLastNapEnd / 60) + ':' + String(Math.round(avgLastNapEnd % 60)).padStart(2, '0') : 'No data' },

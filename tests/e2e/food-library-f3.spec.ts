@@ -105,7 +105,7 @@ test.describe('F-3 Library — search, filter, detail sheet', () => {
   });
 
   test('high-stakes gated foods absent from NUTRITION are findable (V-M-202)', async ({ page }) => {
-    // honey (12m, botulism) has no NUTRITION record — the union index must
+    // honey (24m: botulism <1, added sugar to 2) has no NUTRITION record — the union index must
     // still surface it in search, with its age gate, degrading cleanly in the
     // sheet to "No nutrition data on file".
     const listed = await page.evaluate(() => {
@@ -121,7 +121,7 @@ test.describe('F-3 Library — search, filter, detail sheet', () => {
       (window as any).renderFoodDetailSheet('honey');
       return (document.getElementById('foodDetailBody') as HTMLElement).textContent || '';
     });
-    expect(sheet).toContain('Not before 12 months'); // age gate surfaced
+    expect(sheet).toContain('Not before 24 months'); // age gate surfaced (honey = added sugar to 2, 2026-09-24)
     expect(sheet).toContain('No nutrition data on file'); // degrades cleanly
   });
 

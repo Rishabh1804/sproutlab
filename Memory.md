@@ -11,7 +11,7 @@
 (Removed by the Architect). - Business Manager at Soma Electro Products (zinc electroplating). Creative Head for AdapTea (green tea brand). Solo PWA developer.
 
 ### Personal
-- Has a young daughter (**Ziva Jain**, born 4 Sep 2025; ~8.7 months as of session date) whose development is tracked in SproutLab.
+- Has a young daughter (**Ziva Jain**, born 4 Sep 2025; turned one on 4 Sep 2026) whose development is tracked in SproutLab.
 - Interests: cosmology (Kardashev scales, astrobiology), physics documentaries, sci-fi, data visualization, 3D modeling, YouTube content creation.
 - Follows Indian stock markets. Uses 6% inflation assumption in financial planning.
 - Location holidays: Jharkhand state + national Indian holidays.

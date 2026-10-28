@@ -152,11 +152,18 @@ echo "[companions] materialized into $total_dirs discovery dir(s) from $SPROUTLA
 if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] && command -v uv >/dev/null 2>&1; then
   export PATH="$HOME/.local/bin:$PATH"
 
-  # 1. Install graphifyy WITH the [mcp] extra (the MCP stdio server needs it).
-  if ! command -v graphify >/dev/null 2>&1; then
-    echo "[graphify] installing graphifyy[mcp] ..." >&2
-    uv tool install "graphifyy[mcp]" >/dev/null 2>&1 \
-      && echo "[graphify] installed." >&2 \
+  # 1. Install graphifyy WITH the [mcp] extra (the MCP stdio server needs it),
+  #    PINNED. graphifyy 0.9.7+ stopped resolving cross-file `calls` edges for
+  #    SproutLab's script-global JS (bisected 2026-09-24: 0.9.6 = 2,843
+  #    cross-file calls, 0.9.7..0.9.67 = 0). Unpinned, the Province Map lost its
+  #    coupling table and qa-route's cross-province ripple went silently blind.
+  #    Bump only after re-running the cross-file probe (docs/GRAPHIFY_INTEGRATION.md).
+  GRAPHIFY_PIN="0.9.6"
+  GRAPHIFY_HAVE="$(uv tool list 2>/dev/null | awk '/^graphifyy /{print $2}' | sed 's/^v//')"
+  if [ "$GRAPHIFY_HAVE" != "$GRAPHIFY_PIN" ]; then
+    echo "[graphify] installing graphifyy[mcp]==$GRAPHIFY_PIN (had: ${GRAPHIFY_HAVE:-none}) ..." >&2
+    uv tool install --force "graphifyy[mcp]==$GRAPHIFY_PIN" >/dev/null 2>&1 \
+      && echo "[graphify] installed $GRAPHIFY_PIN." >&2 \
       || echo "[graphify] install failed (non-fatal)." >&2
   fi
 

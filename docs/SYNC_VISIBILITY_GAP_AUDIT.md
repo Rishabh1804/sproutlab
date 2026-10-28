@@ -53,7 +53,7 @@ Cipher's blocker #2 is resolved by not collapsing a local fault (`halted`) into 
 | `offline` | red | `navigator.onLine === false` | "Offline" | "Offline — changes will sync when back online. (N pending)" |
 | `halted` | red | `_syncDisabled === true` (circuit breaker tripped) | "Sync paused" | "Sync paused after errors — reload to retry. (N pending)" + reload button |
 
-The visible pill uses `[data-state=connecting|online|syncing|offline|halted]`. CSS maps them to three color tokens (`--tc-amber / --tc-sage / --tc-amber / --tc-danger / --tc-danger`). Screen readers get five distinct `aria-label`s so the two red states are distinguishable by assistive tech, not just by visual cue.
+The visible pill uses `[data-state=connecting|online|syncing|offline|halted|stale]`. CSS maps them to three color tokens (`--tc-amber / --tc-sage / --tc-amber / --tc-danger / --tc-danger / --tc-amber`). Screen readers get distinct `aria-label`s so the two red states are distinguishable by assistive tech, not just by visual cue. `stale` (PR #265, 2026-09-18) = signed in, in a household, and local writes unacknowledged by the server for over 6h (or the write breaker tripped); tap → `syncRetryPush`.
 
 ### Derived store — disjointness contract for the pending count
 
@@ -101,7 +101,7 @@ Exposed as `syncVisibilityState(): { state, pending, reason }` plus `onSyncVisib
 </button>
 ```
 
-JS flips `data-state="connecting|online|syncing|offline|halted"`. CSS maps `data-state` to `--tc-sage / --tc-amber / --tc-danger`. No inline colors, no hardcoded labels. Button remains `hidden` until the first notify lands — no lying initial pixel.
+JS flips `data-state="connecting|online|syncing|offline|halted|stale"`. CSS maps `data-state` to `--tc-sage / --tc-amber / --tc-danger`. No inline colors, no hardcoded labels. Button remains `hidden` until the first notify lands — no lying initial pixel.
 
 ### Offline badge (`sl-1-3`) — markup (informational; lands in next PR)
 

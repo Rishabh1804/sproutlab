@@ -1716,6 +1716,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .upc-subcat-header.language { background:rgba(168,207,224,0.25); border-color:var(--sky); }
 .upc-subcat-header.social   { background:rgba(250,212,180,0.25); border-color:var(--peach); }
 .upc-subcat-header.cognitive{ background:rgba(201,184,232,0.25); border-color:var(--lavender); }
+.upc-subcat-header.sensory  { background:rgba(232,184,109,0.22); border-color:var(--amber); }
 .upc-subcat-header:hover { filter:brightness(0.95); }
 .upc-subcat-icon { font-size:var(--icon-sm); }
 .upc-subcat-label { font-size:var(--fs-base); font-weight:600; flex:1; }
@@ -1723,6 +1724,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .upc-subcat-header.language .upc-subcat-label  { color:var(--tc-sky); }
 .upc-subcat-header.social .upc-subcat-label    { color:var(--tc-caution); }
 .upc-subcat-header.cognitive .upc-subcat-label { color:var(--tc-lav); }
+.upc-subcat-header.sensory .upc-subcat-label   { color:var(--tc-amber); }
 .upc-subcat-count {
   font-size:var(--fs-sm); font-weight:700; padding:1px var(--sp-8);
   border-radius:var(--r-lg); background:var(--glass-strong);
@@ -1731,6 +1733,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .upc-subcat-header.language .upc-subcat-count  { color:var(--tc-sky); }
 .upc-subcat-header.social .upc-subcat-count    { color:var(--tc-caution); }
 .upc-subcat-header.cognitive .upc-subcat-count { color:var(--tc-lav); }
+.upc-subcat-header.sensory .upc-subcat-count   { color:var(--tc-amber); }
 .upc-subcat-chevron { font-size:var(--icon-xs); color:var(--light); transition:transform var(--ease-fast); }
 .upc-subcat.expanded .upc-subcat-chevron { transform:rotate(180deg); }
 .upc-subcat-items {
@@ -1741,6 +1744,7 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .upc-subcat-items.language { background:rgba(168,207,224,0.1); border-color:rgba(168,207,224,0.3); }
 .upc-subcat-items.social   { background:rgba(250,212,180,0.1); border-color:rgba(250,212,180,0.3); }
 .upc-subcat-items.cognitive{ background:rgba(201,184,232,0.1); border-color:rgba(201,184,232,0.3); }
+.upc-subcat-items.sensory  { background:rgba(232,184,109,0.1); border-color:rgba(232,184,109,0.3); }
 .upcoming-list { display:flex; flex-direction:column; gap:var(--sp-8); }
 .upcoming-item {
   display:flex; align-items:flex-start; gap:var(--sp-8);
@@ -2197,6 +2201,8 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .growth-fact.positive { background:var(--sage-light); border-color:var(--sage); }
 .growth-fact.info     { background:var(--sky-light); border-color:var(--sky); }
+/* One-time dismissible fact (the WHO-growth change note, 2026-09-24): room for the × (.ctx-alert-dismiss). */
+.growth-fact.has-dismiss { position:relative; padding-right:var(--sp-32); }
 .growth-fact-icon { font-size:var(--icon-md); flex-shrink:0; }
 .growth-fact-body strong { font-size:var(--fs-md); font-weight:700; display:block; color:var(--text); }
 .growth-fact-body span   { font-size:var(--fs-base); font-weight:400; color:var(--mid); line-height:var(--lh-relaxed); }
@@ -3101,6 +3107,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .mi-adherence-dot.mi-adh-missed { background:rgba(230,100,100,0.2); color:var(--tc-rose); }
 .mi-adherence-dot.mi-adh-skipped { background:rgba(240,180,80,0.2); color:var(--tc-amber); }
 .mi-adherence-dot.mi-adh-late { background:rgba(180,180,180,0.2); color:var(--mid); }
+.mi-adherence-dot.mi-adh-partial { background:rgba(240,180,80,0.12); color:var(--tc-amber); }
 .mi-adherence-dot.mi-adh-future { background:rgba(0,0,0,0.03); }
 .mi-velocity-range { position:relative; height:8px; border-radius:var(--r-full); background:rgba(0,0,0,0.06); overflow:visible; margin:var(--sp-8) 0; }
 .mi-velocity-expected { position:absolute; top:0; height:100%; border-radius:var(--r-full); background:rgba(58,112,96,0.15); }
@@ -3323,6 +3330,11 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .fe-sparkline { display:block; margin:var(--sp-8) auto; }
 .fe-history-entry { padding:var(--sp-8) 0; border-bottom:1px solid rgba(0,0,0,0.04); }
 .fe-history-entry:last-child { border-bottom:none; }
+/* Tappable history rows (edit the resolved date — 2026-09-24): a quiet text affordance, no icon in the sprite.
+   Flex row so the label keeps a gap and stays top-right at every zoom (Vela V-V-267-4). */
+.ep-entry-tap > .fe-history-date { display:flex; justify-content:space-between; align-items:baseline; gap:var(--sp-8); }
+.fe-history-edit { flex-shrink:0; font-size:var(--fs-xs); font-weight:700; color:var(--tc-sky); letter-spacing:var(--ls-wide); text-transform:uppercase; }
+.fe-history-edited { font-style:italic; color:var(--light); }
 .fe-history-date { font-size:var(--fs-sm); font-weight:600; color:var(--text); }
 .fe-history-detail { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); }
 .fe-home-banner { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-8); padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg); margin-bottom:var(--sp-8); cursor:pointer; border-left:4px solid transparent; }
@@ -3464,7 +3476,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .pi-amount-track { background:rgba(255,255,255,0.06); }
 
 /* ── Episode Entry Edit System ── */
-.ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:var(--sp-4); padding-right:var(--sp-4); margin:0 -var(--sp-4); }
+.ep-entry-tap { cursor:pointer; transition:background 0.15s ease; border-radius:var(--r-md); padding-left:var(--sp-4); padding-right:var(--sp-4); margin:0 calc(-1 * var(--sp-4)); }
 .ep-entry-tap:active { background:rgba(0,0,0,0.04); }
 [data-theme="dark"] .ep-entry-tap:active { background:rgba(255,255,255,0.04); }
 .ep-edit-overlay {
@@ -3485,6 +3497,8 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .ep-edit-label { font-size:var(--fs-xs); font-weight:600; color:var(--mid); text-transform:uppercase; letter-spacing:var(--ls-wide); margin-bottom:var(--sp-4); }
 .ep-edit-input { width:100%; padding:var(--sp-8) var(--sp-12); border:1px solid var(--border-subtle); border-radius:var(--r-md); font-size:var(--fs-sm); background:var(--warm); color:var(--text); box-sizing:border-box; }
 .ep-edit-input:focus { border-color:var(--indigo); outline:none; }
+.ep-edit-hint { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin-bottom:var(--sp-12); }
+.ep-edit-err { font-size:var(--fs-sm); font-weight:600; color:var(--tc-caution); margin-top:var(--sp-4); } /* a date correction, not an alarm (Maren V-M-267 nit) */
 .ep-edit-btns { display:flex; gap:var(--sp-8); justify-content:space-between; margin-top:var(--sp-16); }
 .ep-edit-btns .btn { flex:1; }
 .ep-time-row { display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) 0; margin-bottom:var(--sp-4); }
@@ -4688,6 +4702,12 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 .section-label-danger { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-danger); margin-bottom:var(--sp-6); }
 .section-label-warn   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-warn); margin:var(--sp-12) 0 var(--sp-6); }
 .section-label-info   { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin:var(--sp-12) 0 var(--sp-6); }
+.section-label-due    { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sky); margin:var(--sp-12) 0 var(--sp-6); }
+.section-label-check  { font-size:var(--fs-sm); font-weight:600; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-lav); margin:var(--sp-12) 0 var(--sp-6); }
+.vacc-cond-note { font-size:var(--fs-sm); color:var(--tc-lav); margin-top:var(--sp-2); }
+.vacc-other-label { margin-top:var(--sp-12); }
+.vacc-chip-row { display:flex; flex-wrap:wrap; gap:var(--sp-4); }
+.vacc-chip-other { font-size:var(--fs-sm); padding:var(--sp-2) var(--sp-8); border-radius:var(--r-lg); background:var(--warm); color:var(--mid); }
 
 /* ── M2 Migration: Insight/Guidance Boxes ── */
 .insight-box      { padding:var(--sp-8) var(--sp-12); border-radius:var(--r-md); font-size:var(--fs-sm); }
@@ -7068,6 +7088,31 @@ body.ql-locked .dark-toggle { pointer-events:none; }
    (320/375/414px widths) — top-positioned card body, footer at bottom of card
    with no scroll-clip on standard breakpoints (regression guard verified at IMPL). */
 .ms-pediatric-prep-card { padding:var(--sp-16); }
+
+/* ── Tooth chart (Milestones → Library) — lavender milestone domain ── */
+.tth-diagram { position:relative; max-width:360px; margin:0 auto; }
+@media (max-width:400px) { .tth-diagram { margin:0 calc(var(--sp-8) * -1); } }
+.tth-svg { display:block; width:100%; height:auto; }
+.tth-tooth { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.tth-hit { fill:transparent; pointer-events:all; }
+.tth-shape { fill:var(--white); stroke:var(--lavender); stroke-width:2; transition:fill var(--ease-med), stroke var(--ease-med); }
+.tth-shape.is-in { fill:var(--lavender); stroke:var(--tc-lav); }
+.tth-shape.is-due { fill:var(--lav-light); stroke:var(--tc-lav); stroke-dasharray:4 3; }
+.tth-tooth:active .tth-shape { stroke-width:3; }
+.tth-center { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; }
+.tth-count { font-family:'Fraunces', serif; font-size:var(--fs-3xl); font-weight:600; color:var(--tc-lav); line-height:var(--lh-none); }
+.tth-count-sub { font-size:var(--fs-sm); color:var(--mid); margin-top:var(--sp-4); }
+.tth-sides { display:flex; justify-content:space-between; max-width:360px; margin:var(--sp-4) auto 0; font-size:var(--fs-xs); color:var(--light); }
+.tth-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:var(--sp-8) var(--sp-16); margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); }
+.tth-key { display:inline-flex; align-items:center; gap:var(--sp-6); }
+.tth-swatch { display:inline-block; width:var(--sp-16); height:var(--sp-16); border-radius:var(--r-sm); background:var(--white); border:2px solid var(--lavender); }
+.tth-swatch.is-in { background:var(--lavender); border-color:var(--tc-lav); }
+.tth-swatch.is-due { background:var(--lav-light); border:2px dashed var(--tc-lav); }
+.tth-next { margin-top:var(--sp-16); padding:var(--sp-12); border-radius:var(--r-lg); background:var(--lav-light); }
+.tth-next-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-normal); color:var(--tc-lav); margin-bottom:var(--sp-4); }
+.tth-next-row { font-size:var(--fs-base); color:var(--text); }
+.tth-next-row + .tth-next-row { margin-top:var(--sp-6); }
+.tth-note { margin-top:var(--sp-12); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .ms-pediatric-prep-narration { font-family:'Fraunces',serif; font-size:var(--fs-md); line-height:1.6; color:var(--text); }
 .ms-pediatric-prep-section { margin-top:var(--sp-12); }
 .ms-pediatric-prep-section-label { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--mid); margin-bottom:var(--sp-4); }
@@ -11139,6 +11184,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   margin-left:auto;
 }
 .sync-status-connected { background:var(--sage-light); color:var(--tc-sage); }
+.sync-status-unsynced  { background:var(--amber-light); color:var(--tc-amber); }  /* ledger has unacknowledged writes (PR #265) */
 .sync-modal-overlay {
   position:fixed; inset:0; z-index:9999;
   background:var(--overlay-bg);
@@ -11238,6 +11284,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .sync-indicator[data-state="syncing"]    { color: var(--tc-amber); }
 .sync-indicator[data-state="offline"]    { color: var(--tc-danger); }
 .sync-indicator[data-state="halted"]     { color: var(--tc-danger); cursor: pointer; }
+.sync-indicator[data-state="stale"]      { color: var(--tc-amber); cursor: pointer; }  /* unsynced local writes (PR #265) */
 .sync-indicator[data-state="connecting"] .sync-indicator__dot,
 .sync-indicator[data-state="syncing"]    .sync-indicator__dot {
   animation: sync-indicator-pulse 1.4s ease-in-out infinite;
@@ -11310,6 +11357,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   outline-offset: 2px;
 }
 [data-theme="dark"] .offline-badge { background: rgba(224, 112, 112, 0.08); }
+/* stale = caution, not danger (PR #265): unacknowledged local writes; the entries
+   are safe on the phone, so the banner must not paint the danger family under an
+   amber pill. Reload/offline/halted keep rose. */
+.offline-badge[data-state="stale"] { border-left-color: var(--tc-amber); background: var(--amber-light); }
+.offline-badge[data-state="stale"] .offline-badge__icon { color: var(--tc-amber); }
+.offline-badge[data-state="stale"] .offline-badge__action { border-color: var(--tc-amber); color: var(--tc-amber); }
+.offline-badge[data-state="stale"] .offline-badge__action:hover,
+.offline-badge[data-state="stale"] .offline-badge__action:focus-visible { background: var(--tc-amber); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    v3-6 — Card-priority registry (single source of truth, card tier).
@@ -12017,6 +12072,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .rcp-prow-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .rcp-prow--steps .rcp-prow-ic { background:var(--sage-light); color:var(--tc-sage); }
 .rcp-prow--dos .rcp-prow-ic { background:var(--sky-light); color:var(--tc-sky); }
+.rcp-prow--chew .rcp-prow-ic { background:var(--amber-light); color:var(--tc-amber); }
 /* V-1: the safety prow's disc echoes the summary band (amber caution / rose flag),
    so a green-summary recipe never meets a fixed-rose safety disc. */
 .rcp-prow--safety-flag .rcp-prow-ic { background:var(--rose-light); color:var(--tc-rose); }

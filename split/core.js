@@ -60,6 +60,10 @@ const KEYS = {
   //   { entries, _meta } breaks 20+ existing Array.isArray consumers).
   milestoneSuppress: 'ziva_milestone_suppress',
   activityMeta:      'ziva_activity_meta',
+  // teeth: single-doc tooth-eruption record { [toothId]: { date:'YYYY-MM-DD'|null, ts:epochMs } }.
+  //   date:null is a tombstone (the parent removed a tooth), so a remote copy
+  //   can't resurrect it. Merged per tooth, newest ts wins (_postReceiveTeeth).
+  teeth:             'ziva_teeth',
 };
 
 function load(key, def) {
@@ -149,6 +153,153 @@ function medCheckGivenAt(val) {
   return p ? p.givenAt : null;
 }
 
+// ── Dose slots + the Vitamin D supplement (2026-09-24, Caldikind-P NF 2.5 ml twice daily) ──
+// A med taken N times a day is logged as N independent slots — medChecks[date][slotKey] —
+// so the existing Done / Done at / Skip / Adjust flow works per dose unchanged. Once-daily
+// meds keep their bare name as the key (full back-compat with the Vit D3 drops history).
+function medDosesPerDay(m) {
+  if (!m) return 1;
+  if (m.dosesPerDay >= 1 && m.dosesPerDay <= 3) return Math.floor(m.dosesPerDay);
+  // Free text is read conservatively (Kael V-K-270-17/21): "How often" only — never the dose
+  // ("2 x 400 IU") — and a course length ("x 5 days") or a once-marker never multiplies.
+  // The add form's explicit "Doses a day" choice is the reliable path.
+  var t = String(m.freq || '').toLowerCase();
+  if (!t) return 1;
+  if (/\b(once|od|o\.d|q24h|weekly|week|alternate|sos|prn|as needed|if needed|stat)\b/.test(t)) return 1;
+  var abc = t.match(/\b([0-9])-([0-9])-([0-9])\b/);   // 1-0-1 · 1-1-1
+  if (abc) { var n = [abc[1], abc[2], abc[3]].filter(function(x) { return x !== '0'; }).length; return Math.min(Math.max(n, 1), 3); }
+  var perDay = '\\s*(a |per )?(day|daily)\\b';
+  if (new RegExp('\\b(thrice|tds|tid|t\\.d\\.s)\\b|8 ?-?hourly|every 8 ?h|\\bq8h\\b|\\b(3 ?x|x ?3|3 times)' + perDay).test(t)) return 3;
+  if (new RegExp('\\b(twice|bd|bid|b\\.d)\\b|12 ?-?hourly|every 12 ?h|\\bq12h\\b|morning (and|&) (night|evening)|\\b(2 ?x|x ?2|2 times|two times)' + perDay).test(t)) return 2;
+  return 1;
+}
+function medDoseSlots(m) {
+  var n = medDosesPerDay(m);
+  if (n === 1) return [{ key: m.name, label: '' }];
+  var labels = n === 2 ? ['morning', 'evening'] : ['morning', 'afternoon', 'evening'];
+  return labels.map(function(l) { return { key: m.name + ' · ' + l, label: l }; });
+}
+// Active meds expanded to one entry per dose slot: `name` is the medChecks key (and reads
+// as "Caldikind-P NF · evening"), `baseName` the med itself.
+function activeMedDoses() {
+  var out = [];
+  (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).forEach(function(m) {
+    if (!m.active) return;
+    // `label` is the parent-facing text (slot first — Vela V-V-270-7); `name` stays the storage key.
+    medDoseSlots(m).forEach(function(s) { out.push(Object.assign({}, m, { name: s.key, doseSlot: s.label, baseName: m.name,
+      label: s.label ? s.label.charAt(0).toUpperCase() + s.label.slice(1) + ' dose · ' + m.name : m.name })); });
+  });
+  return out;
+}
+// A slot is due from its part of the day: morning from 05:00 (so a late-night log of last
+// evening's dose never lands on today's morning — Maren S-1), afternoon 12:00, evening 16:00.
+var _MED_SLOT_FROM = { '': 0, morning: 5, afternoon: 12, evening: 16 };
+function medSlotDueNow(slot, hour) {
+  if (hour === undefined) hour = new Date().getHours();
+  return hour >= (_MED_SLOT_FROM[(slot && slot.doseSlot) || ''] || 0);
+}
+// A slot's record for a day. A bare-name record on a multi-dose med (logged by a device on an
+// older build, or history from before a once→twice switch) counts for its first slot (Maren S-9).
+function medSlotRecord(m, ds, slotKey) {
+  var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+  if (!day) return undefined;
+  if (day[slotKey] !== undefined) return day[slotKey];
+  var slots = medDoseSlots(m);
+  return (slots.length > 1 && slots[0].key === slotKey) ? day[m.name] : undefined;
+}
+// Does a slot count on a given day? Not before the med's start, and on the start day not a
+// slot whose window had already closed when the med was added (Maren S-8: a med added at 5 PM
+// is not "missed this morning").
+function medSlotApplies(m, ds, slotLabel) {
+  if (m.start && ds < m.start) return false;
+  if (ds !== m.start || !m.createdAt) return true;
+  var labels = medDoseSlots(m).map(function(s) { return s.label; });
+  var i = labels.indexOf(slotLabel || '');
+  var closes = (i >= 0 && i < labels.length - 1) ? _MED_SLOT_FROM[labels[i + 1]] : 24;
+  return parseInt(m.createdAt, 10) < closes;
+}
+// The record for one activeMedDoses() entry on a day (bare-name fallback included).
+function medDoseRecord(entry, ds) {
+  if (!entry) return undefined;
+  if (!entry.baseName) { var d = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null; return d ? d[entry.name] : undefined; }
+  return medSlotRecord(Object.assign({}, entry, { name: entry.baseName }), ds, entry.name);
+}
+// Today's state per dose slot, so exactly ONE dose per med is ever offered as "Done now"
+// (Maren B-1): 'resolved' · 'due' (the latest slot already due) · 'unlogged' (an earlier slot
+// never logged once a later one is due — resolve it, never give it now) · 'later' (not due yet).
+function medSlotStates(m, hour) {
+  var t = today();
+  var slots = medDoseSlots(m);
+  var dueIdx = -1;
+  slots.forEach(function(s, i) { if (medSlotDueNow({ doseSlot: s.label }, hour)) dueIdx = i; });
+  return slots.map(function(s, i) {
+    var p = parseMedCheck(medSlotRecord(m, t, s.key));
+    var resolved = !!(p && (p.status === 'done' || p.status === 'late' || p.status === 'skipped'));
+    var state = !medSlotApplies(m, t, s.label) ? 'na'
+      : resolved ? 'resolved' : i > dueIdx ? 'later' : i === dueIdx ? 'due' : 'unlogged';
+    return { key: s.key, label: s.label, state: state, parsed: p };
+  });
+}
+// One day's record for a whole med, in the med-check object shape (parseMedCheck-compatible):
+// once-daily → the raw value; multi-dose → 'done'/'late' only when EVERY slot is given,
+// 'skipped' when every slot was skipped, 'partial' otherwise (neither done nor skipped).
+function medDayVal(m, ds) {
+  var slots = medDoseSlots(m);
+  if (slots.length === 1) {
+    var day = (typeof medChecks === 'object' && medChecks) ? medChecks[ds] : null;
+    if (!day) return undefined;
+    if (day[m.name] !== undefined) return day[m.name];
+    // Switched back to once a day: a given slot-keyed dose still counts for that day (V-K-270-23).
+    var sk = Object.keys(day).filter(function(k) { return k.indexOf(m.name + ' · ') === 0; });
+    return sk.map(function(k) { return day[k]; }).filter(medCheckIsDone)[0];
+  }
+  var ps = slots.filter(function(s) { return medSlotApplies(m, ds, s.label); })
+    .map(function(s) { return parseMedCheck(medSlotRecord(m, ds, s.key)); });
+  if (!ps.length || ps.every(function(p) { return !p; })) return undefined;
+  var done = ps.filter(function(p) { return p && (p.status === 'done' || p.status === 'late'); });
+  if (done.length === ps.length) {
+    var fat = done.filter(function(p) { return p.withFat === true; })[0];
+    return { status: done.some(function(p) { return p.status === 'late'; }) ? 'late' : 'done', givenAt: done[0].givenAt,
+      withFat: fat ? true : (done.every(function(p) { return p.withFat === false; }) ? false : null),
+      fatFood: fat ? fat.fatFood : null, fatDelta: fat ? fat.fatDelta : null };
+  }
+  if (ps.every(function(p) { return p && p.status === 'skipped'; })) return { status: 'skipped' };
+  // 'partial' only when at least one dose was actually given (Cipher A4).
+  if (!done.length) return ps.some(function(p) { return p && p.status === 'skipped'; }) ? { status: 'skipped' } : undefined;
+  return { status: 'partial', givenAt: done[0].givenAt };
+}
+// One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
+// stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
+// date keeps the sync identity (name + start) the same on both phones, so they merge.
+function _migrateCaldikind20260924() {
+  try {
+    if (localStorage.getItem('ziva_mig_caldikind') === '1') return;
+    localStorage.setItem('ziva_mig_caldikind', '1');
+    if (!Array.isArray(meds) || meds.some(function(m) { return /caldikind/i.test(m.name || ''); })) return;
+    var drops = meds.filter(function(m) { return m.active && /\bd3\b|vitamin\s*d\b/i.test(m.name || ''); });
+    if (!drops.length) return;
+    drops.forEach(function(m) { m.active = false; });
+    meds.push(Object.assign({}, DEFAULT_MEDS[0]));
+    save(KEYS.meds, meds);
+  } catch (e) { console.warn('[migrate] caldikind:', e); }
+}
+// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
+// iron drop must not match — Maren S-4). With two active, the most recently started wins.
+function isVitDSupplement(m) {
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
+  return /\bd3\b|vitamin\s*d\b|\bvit\.?\s*d\b|cholecalciferol|caldikind/i.test(t);
+}
+function vitDSupplement() {
+  var list = (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).filter(function(m) { return m.active && isVitDSupplement(m); });
+  list.sort(function(a, b) { return String(b.start || '').localeCompare(String(a.start || '')); });
+  return list[0] || null;
+}
+// A calcium-bearing supplement (calcium + D3 combos) — drives the iron-spacing guidance.
+function isCalciumSupplement(m) {
+  var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
+  return /\bcalcium\b|caldikind/i.test(t);
+}
+
 // Derive fat-bearing food names from NUTRITION (memoised). Computed-not-hardcoded so
 // the C-1.5 factuality work flows through automatically — no second source of truth.
 var _fatBearingFoodNamesCache = null;
@@ -169,6 +320,8 @@ function _getFatBearingFoodNames() {
   }
   // Indian-prep augmentation: paratha carries ghee in default preparation.
   if (out.indexOf('paratha') < 0) out.push('paratha');
+  // Plain "milk" — the word parents actually log — carries fat like whole milk (V-K-270-11).
+  if (out.indexOf('milk') < 0) out.push('milk');
   _fatBearingFoodNamesCache = out;
   return out;
 }
@@ -387,6 +540,8 @@ let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, m
 // milestoneSuppress: per-milestone suppress-until { [milestoneId]: epochMs }.
 // Both hydrated from localStorage in init flow alongside the other data globals.
 let activityMeta, milestoneSuppress;
+// teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
+let teethLog;
 
 // Per-key version tracking — only resets what actually changed
 // Bump individual key versions when their defaults change
@@ -577,6 +732,7 @@ function init() {
     else if (action === 'toggleVisitFormShow') toggleVisitForm(true);
     else if (action === 'toggleVisitFormHide') toggleVisitForm(false);
     else if (action === 'syncReload' && typeof syncReload === 'function') syncReload();
+    else if (action === 'syncRetryPush' && typeof syncRetryPush === 'function') syncRetryPush();
     else if (action === 'dismissWelcomeGuide') dismissWelcomeGuide();
     else if (action === 'toggleHomeVitals') toggleHomeVitals();
     else if (action === 'openScorePopupStop') { e.stopPropagation(); openScorePopup(arg); }
@@ -649,6 +805,7 @@ function init() {
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
+    else if (action === 'teethTap' && typeof teethTap === 'function') teethTap(arg);
     else if (action === 'setMsActivityLevel' && typeof setMsActivityLevel === 'function') setMsActivityLevel(btn);
     else if (action === 'confirmMsInWindow' && typeof confirmMsInWindow === 'function') confirmMsInWindow(btn);
     else if (action === 'practicingMsInWindow' && typeof practicingMsInWindow === 'function') practicingMsInWindow(btn);
@@ -713,7 +870,7 @@ function init() {
       const hit = comboHistory.find(x => x.q === arg);
       // M-R1-1: a stale (pre-R1-schema) cached result lacks the emergency floor —
       // never render it directly; recompute so the floor stays reachable.
-      if (hit && hit.result && hit.result._schema === COMBO_RESULT_SCHEMA) {
+      if (hit && _comboCacheValid(hit.result)) {
         renderComboResult(hit.result);
       } else if (typeof checkFoodCombo === 'function') {
         checkFoodCombo();
@@ -976,6 +1133,7 @@ function init() {
     else if (action === 'sgToggleMore') sgToggleMore();
     else if (action === 'sgTapChip') sgTapChip(parseInt(arg));
     else if (action === 'feEditReading') feEditReading(parseInt(arg));
+    else if (action === 'epEditResolved') epEditResolved(arg, arg2);
     else if (action === 'feEditDose') feEditDose(parseInt(arg));
     else if (action === 'feEditAction') feEditAction(parseInt(arg));
     else if (action === 'deEditFluid') deEditFluid(parseInt(arg));
@@ -1043,6 +1201,7 @@ function init() {
     else if (action === 'feHomeBannerLog') feHomeBannerLog();
     else if (action === 'deLogStoolQuick') deLogStoolQuick(arg);
     else if (action === 'dismissAlert') dismissAlert(arg, arg2);
+    else if (action === 'dismissGrowthWhoNote') dismissGrowthWhoNote();
     else if (action === 'acknowledgeAlert') acknowledgeAlert(arg, arg2);
     else if (action === 'snoozeAlert') snoozeAlert(arg, arg2);
     else if (action === 'gotoCard') gotoCard(arg, arg2);
@@ -1267,6 +1426,8 @@ function init() {
   if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) activityMeta = {};
   milestoneSuppress = load(KEYS.milestoneSuppress, null) || {};
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null || Array.isArray(milestoneSuppress)) milestoneSuppress = {};
+  teethLog = load(KEYS.teeth, null) || {};
+  if (typeof teethLog !== 'object' || teethLog === null || Array.isArray(teethLog)) teethLog = {};
 
   // Load tomorrow's planned meals
   _tomorrowPlanned = load(KEYS.tomorrowPlanned, null) || null;
@@ -1303,6 +1464,7 @@ function init() {
     if (!Array.isArray(vaccData)) vaccData = DEFAULT_VACC.slice();
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
+    _migrateCaldikind20260924();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -1417,6 +1579,8 @@ function init() {
       { name:'TCV', upcoming:false },
       { name:'Influenza-1', upcoming:false },
     ],
+    // Kept deliberately: rebuilds doses actually given. OPV-2 left the schedule in the
+    // 12–24 m PR 2 (not in IAP 2023/UIP) but a given dose stays on her record.
     '9-month combo (mmr, opv booster)': [
       { name:'MMR-1', upcoming:false },
       { name:'OPV-2', upcoming:false },
@@ -1840,7 +2004,9 @@ function computeMedicalModifier() {
   if (supp && supp.length > 0) {
     const primary = supp[0];
     const rate = primary.adherenceRate;
-    if (rate >= 90) suppVal = 100;
+    // A supplement started today has no counted days yet — keep the neutral 70 (Cipher).
+    if (!primary.totalDays) suppVal = 70;
+    else if (rate >= 90) suppVal = 100;
     else if (rate >= 70) suppVal = 80;
     else if (rate >= 50) suppVal = 55;
     else suppVal = 30;
@@ -2145,14 +2311,20 @@ function calcMedicalScore() {
   const mo = (new Date() - DOB) / (30.44 * 86400000);
 
   // A. Vaccination coverage (40%)
-  const ageMap = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
-    '9 months':9, '12 months':12, '15 months':15, '16-18 months':16, '18 months':18, '2 years':24 };
-  const dueNow = VACC_SCHEDULE.filter(v => (ageMap[v.age] ?? 99) <= mo + 0.5);
-  const givenNames = new Set(vaccData.filter(v => !v.upcoming).map(v => normVacc(v.name)));
+  // Scored doses: routine (not private, not conditional) doses that are given or
+  // overdue. A dose still inside its window neither helps nor hurts until it
+  // is given or its window closes (V-M-266-7).
+  const givenList = vaccData.filter(v => !v.upcoming);
+  const givenNames = new Set(givenList.map(v => normVacc(v.name)));
+  const dueNow = VACC_SCHEDULE.filter(v => {
+    if (vaccIsConditional(v, givenNames) || v.type === 'private' || v.seasonal) return false;
+    const st = vaccDueState(v, mo);
+    return st === 'overdue' || (st === 'due' && vaccIsGiven(v, givenNames, givenList));
+  });
   const vaccBookedData = load(KEYS.vaccBooked, null);
   let vaccGiven = 0;
   dueNow.forEach(v => {
-    if (givenNames.has(normVacc(v.name))) {
+    if (vaccIsGiven(v, givenNames, givenList)) {
       vaccGiven++;
     } else if (vaccBookedData && normVacc(vaccBookedData.vaccName) === normVacc(v.name)) {
       vaccGiven += 0.85; // booked but not yet given — mostly credited
@@ -2165,13 +2337,16 @@ function calcMedicalScore() {
   let suppScore = 100;
   if (activeMeds.length > 0) {
     let daysChecked = 0;
+    const _vdScore = vitDSupplement();   // hoisted out of the day loop (Cipher)
     for (let i = 0; i < 7; i++) {
       const d = new Date(); d.setDate(d.getDate() - i);
       const ds = toDateStr(d);
       const dayChecks = medChecks[ds];
       if (dayChecks) {
         // V-K-68: schema-aware via medCheckIsDone (handles both legacy string + new object).
-        const anyDone = Object.values(dayChecks).some(v => medCheckIsDone(v));
+        // Her Vitamin D supplement counts a day only when every dose was given (Kael V-K-270-22).
+        const anyDone = (_vdScore && !(_vdScore.start && ds < _vdScore.start)) ? medCheckIsDone(medDayVal(_vdScore, ds))
+          : Object.values(dayChecks).some(v => medCheckIsDone(v));
         if (anyDone) daysChecked++;
       }
     }
@@ -2225,6 +2400,8 @@ function calcMedicalScore() {
     components: { vaccination: vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
+      // Routine doses inside their window and not yet given (not scored; shown as "due now").
+      vaccDueNow: VACC_SCHEDULE.filter(v => !vaccIsConditional(v, givenNames) && vaccDueState(v, mo) === 'due' && !vaccIsGiven(v, givenNames, givenList)).length,
       suppDays: activeMeds.length > 0 ? Math.round(suppScore / 100 * 7) : null, suppTotal: 7,
       daysSinceGrowth: daysSinceGrowth,
       hasBothMeasures: growthData.length > 0 && !!(growthData[growthData.length-1].wt && growthData[growthData.length-1].ht)
@@ -2234,6 +2411,14 @@ function calcMedicalScore() {
 
 // ── MILESTONE SCORE ──
 
+// _msKeywords — the loose keyword set used to match a standards row against a
+// logged milestone (score + home lookout). Stopwords keep toddler rows
+// ("…with…", "…other…") from matching unrelated milestones.
+const _MS_STOP = { with:1, your:1, that:1, when:1, more:1, from:1, them:1, then:1, into:1, over:1, like:1, what:1, this:1, have:1, they:1, other:1, things:1, least:1 };
+function _msKeywords(text) {
+  return String(text || '').toLowerCase().split(/\s+/).filter(w => w.length > 3 && !_MS_STOP[w]);
+}
+
 function calcMilestoneScore() {
   const ageM = ageAt().months;
   const ageMo = Math.floor(ageM);
@@ -2241,8 +2426,11 @@ function calcMilestoneScore() {
   // A. Evidence-based completion (35%) — auto-status of age-appropriate milestones
   const brackets = Object.keys(getUpcomingMilestones()).map(Number).sort((a, b) => a - b);
   let expectedItems = [];
+  // A trailing seven-month band of brackets (6–12 m at 12 m, 12–18 m at 18 m):
+  // at 12 m this is the whole 6–12 table as before; past it, the score tracks
+  // what is age-appropriate now instead of diluting over every earlier bracket.
   brackets.forEach(br => {
-    if (br <= ageMo) {
+    if (br <= ageMo && br > ageMo - 7) {
       const items = getUpcomingMilestones()[br] || [];
       expectedItems = expectedItems.concat(items.filter(it => !it.advanced));
     }
@@ -2252,7 +2440,7 @@ function calcMilestoneScore() {
   let expectedProgress = 0;
   let expectedMatchCount = 0;
   expectedItems.forEach(it => {
-    const keywords = it.text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const keywords = _msKeywords(it.text);
     let bestPct = 0;
     Object.entries(msPctMap).forEach(([text, pct]) => {
       if (keywords.some(kw => text.includes(kw)) && pct > bestPct) bestPct = pct;
@@ -2726,7 +2914,7 @@ function renderScrapbook() {
       <div class="scrap-body">
         <div class="scrap-title">${escHtml(entry.title || 'Untitled')}</div>
         ${entry.desc ? `<div class="scrap-desc">${escHtml(entry.desc)}</div>` : ''}
-        <div class="scrap-meta">${dateStr} · ${months}m ${days}d old</div>
+        <div class="scrap-meta">${dateStr} · ${fmtAgeShort(months, days)} old</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:var(--sp-4);align-self:flex-start;flex-shrink:0;">
         <button class="note-btn" data-action="editScrapEntry" data-arg="${entry.id}" aria-label="Edit memory">Edit</button>
@@ -3027,7 +3215,7 @@ function openScrapPhoto(id) {
   document.getElementById('lbImage').src = entry.photo;
   const entryDate = entry.date || entry.ts.split('T')[0];
   const { months, days } = ageAtScrapDate(entryDate);
-  document.getElementById('lbSub').textContent = `${formatDate(entryDate)} · ${months}m ${days}d old`;
+  document.getElementById('lbSub').textContent = `${formatDate(entryDate)} · ${fmtAgeShort(months, days)} old`;
   lb.querySelector('.lb-name').textContent = entry.title || 'Memory';
   lb.classList.add('open');
   history.pushState({ overlay: 'lightbox' }, '');
@@ -3119,6 +3307,54 @@ function escHtml(s) {
 function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
+// vaccDueState — where a scheduled dose sits at an age in fractional months:
+// 'future' (window not open yet), 'due' (inside [age, windowEnd] plus a grace
+// month), 'overdue' (past that). The grace month is an app convention, not
+// IAP: a dose reads "due now" before it ever reads "missing" (V-M-266-7).
+const VACC_DUE_GRACE_MONTHS = 1;
+// vaccIsGiven — whether a scheduled dose is recorded. Exact (normalised) name match,
+// except the yearly flu rows: any given flu/influenza entry dated inside that
+// year's window counts, since cards and parents never use the app's row label.
+function vaccIsGiven(v, givenNorm, givenList) {
+  if (givenNorm.has(normVacc(v.name))) return true;
+  if (/^Influenza yearly/.test(v.name) && Array.isArray(givenList)) {
+    const start = VACC_AGE_MONTHS[v.age], end = v.windowEnd;
+    return givenList.some(e => {
+      if (!e || !/influenza|flu/i.test(e.name || '') || typeof e.date !== 'string') return false;
+      const p = e.date.split('-').map(Number);
+      if (p.length !== 3 || !p[0]) return false;
+      const m = ageAt(new Date(p[0], p[1] - 1, p[2], 12)).months;
+      return m >= start && m < end;
+    });
+  }
+  return false;
+}
+// _vaccFluSeasonDue — a yearly flu row is due in the pre-monsoon season (Apr–Jul,
+// IAP: before the monsoon, May–June) when no flu dose was logged in ~10 months.
+function _vaccFluSeasonDue() {
+  const m = new Date().getMonth();
+  if (m < 3 || m > 6) return false;
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 300);
+  const cutStr = toDateStr(cutoff);
+  return !(vaccData || []).some(e => e && !e.upcoming && /influenza|flu/i.test(e.name || '') && typeof e.date === 'string' && e.date >= cutStr);
+}
+// vaccIsConditional — conditional unless it completes a series whose first dose is given.
+function vaccIsConditional(v, givenNorm) {
+  if (!v.conditional) return false;
+  if (v.completesSeries && v.after && givenNorm && givenNorm.has(normVacc(v.after))) return false;
+  return true;
+}
+function vaccDueState(v, mo) {
+  const start = VACC_AGE_MONTHS[v.age];
+  if (typeof start !== 'number' || mo < start) return 'future';
+  if (v.seasonal === 'flu') {
+    if (typeof v.windowEnd === 'number' && mo >= v.windowEnd) return 'future';
+    return _vaccFluSeasonDue() ? 'due' : 'future';
+  }
+  const end = (typeof v.windowEnd === 'number' ? v.windowEnd : start) + VACC_DUE_GRACE_MONTHS;
+  return mo <= end ? 'due' : 'overdue';
+}
+
 // _renderAttribution — PR-19.5 (per-entry attribution). Returns an HTML
 // fragment for the "by Bhavna" tagline shown on history-tab rows. Reads
 // __sync_updatedBy from the entry (preserved through the listener strip
@@ -3171,7 +3407,23 @@ function preciseAge() { return ageAt(); }
 function getAgeInMonths() { return ageAt().months; }
 function ageAtDate(dateStr) {
   const { months, days } = ageAt(dateStr);
-  return `${months}m ${days}d`;
+  return fmtAgeShort(months, days);
+}
+// Age copy that grows with her: "7 months" → "1 year 2 months"; short form
+// "7m 12d" → "1y 2m 12d". Callers pass whole months from ageAt().
+function fmtAgeMonths(months) {
+  months = Math.max(0, Math.floor(months || 0));
+  if (months < 12) return months + (months === 1 ? ' month' : ' months');
+  const y = Math.floor(months / 12), r = months % 12;
+  return y + (y === 1 ? ' year' : ' years') + (r ? ' ' + r + (r === 1 ? ' month' : ' months') : '');
+}
+function fmtAgeLong(months, days) {
+  return fmtAgeMonths(months) + ', ' + days + (days === 1 ? ' day' : ' days');
+}
+function fmtAgeShort(months, days) {
+  if (months < 12) return months + 'm ' + days + 'd';
+  const r = months % 12;
+  return Math.floor(months / 12) + 'y ' + (r ? r + 'm ' : '') + days + 'd';
 }
 function daysBetween(d1, d2) {
   return Math.round(Math.abs(new Date(d2) - new Date(d1)) / 86400000);
@@ -3426,7 +3678,7 @@ function openAvatarLightbox() {
   const lb = document.getElementById('avatarLightbox');
   document.getElementById('lbImage').src = src;
   const { months, days } = preciseAge();
-  document.getElementById('lbSub').textContent = `${months} months, ${days} days old`;
+  document.getElementById('lbSub').textContent = fmtAgeLong(months, days) + ' old';
   lb.classList.add('open');
   history.pushState({ overlay: 'lightbox' }, '');
 }
@@ -4204,6 +4456,28 @@ function _lookupByFoodName(table, name) {
   return byAlias || null;
 }
 
+// Every record a food name resolves to — the same exact / de-plural / word-boundary key /
+// alias tiers and the same negation guard as _lookupByFoodName, but ALL matches instead of
+// the first. For the AGE GATE only (V-K-266-1, 2026-09-24): first-match resolution picks by
+// table insertion order, so "milk with sugar" / "salt and sugar" / "chocolate milk" resolved to
+// milk@12 or salt@12 and read green at 12–24 months, silently bypassing the added-sugar gate@24.
+// _fdAgeRule takes the strictest (highest minMonth) of these. The FOOD_EFFECTS card keeps the
+// single-match resolver (one card per food).
+function _lookupAllByFoodName(table, name) {
+  if (!table || !name) return [];
+  const n = String(name).toLowerCase().trim();
+  const out = [];
+  const add = (v) => { if (v && out.indexOf(v) === -1) out.push(v); };
+  add(table[n]);
+  add(table[n.replace(/s$/, '')]);
+  const wb = (token) => new RegExp('\\b' + String(token).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(n);
+  Object.entries(table).forEach(([k, v]) => { if (wb(k) && !_foodNameNegated(n, k)) add(v); });
+  Object.values(table).forEach(v => {
+    if (v && Array.isArray(v.aliases) && v.aliases.some(a => wb(a) && !_foodNameNegated(n, a))) add(v);
+  });
+  return out;
+}
+
 // food-effects-v2 P1c (Cipher Edict-V, M-F-1 completion). The fish record is reached by the
 // bare 'fish' KEY, which word-boundary-matches the trailing word of a "<species> fish" host —
 // so "seer fish" / "shark fish" (documented HIGH-MERCURY species in the record's safeForm.never)
@@ -4253,13 +4527,40 @@ function getFoodEffect(name) {
   return eff;
 }
 
+// Age-aware view of a FOOD_EFFECTS record for RENDER surfaces (Ceres V-C-270-9 /
+// Maren M-S2 / Kael V-K-270-12). From 12 m honey's botulism risk falls to very low and
+// its remaining reason is added sugar, so the "before 12 months" headline and the
+// botulism watch-floor must not reach a toddler's parent. From 24 m the sugar gate has
+// passed: no card at all (null) — honey is an ordinary food with an AGE_RULES `after`
+// line. Every other record, and honey under 12 m, is returned unchanged (same object).
+function foodEffectForAge(eff, mo) {
+  if (!eff || typeof FOOD_EFFECTS === 'undefined' || eff !== FOOD_EFFECTS['honey'] || !(mo >= 12)) return eff;
+  if (mo >= 24) return null;
+  return Object.assign({}, eff, { watchFor: [], severeSigns: [], seekCare: '',
+    title: 'Honey waits until 2 — it counts as added sugar',
+    why: 'After the first birthday the botulism risk falls to very low, but honey is an added sugar — like jaggery, it waits until 2.' });
+}
+
 // Combo-result schema tag (food-effects v2 R1, M-R1-1). The combo checker caches
 // results in localStorage (comboHistory, unversioned). A result cached BEFORE R1
 // lacks the emergency-floor fields (toxin / severe_floors / encourage); rendering
 // it directly would drop the floor — the silent-floor-drop §10 names worse than
 // the legacy verdict. Stamp every fresh result with this tag; both read paths
 // (checkFoodCombo cache short-circuit + showComboHistory) recompute when it's absent.
-const COMBO_RESULT_SCHEMA = 'r1-fe';
+// 'r1-fe-a24' (2026-09-24, Ceres V-C-266-1): bumped when the added-sugar gates moved 12 → 24 m, so
+// every result cached under the old gates (jaggery / sugar "safe" at 12 m) is recomputed once.
+// 'r1-fe-a24-t3' (Maren #270 B2): bumped for the 12–24 m food-library gates (gajak/chikki 48,
+// ragi biscuit 24, juice 12, chai/namkeen/papad/sharbat 24) and the age-aware honey framing.
+// Bump it again whenever an AGE_RULES gate tightens.
+const COMBO_RESULT_SCHEMA = 'r1-fe-a24-t3';
+
+// A cached combo result is reusable only if it carries the current schema AND was computed at her
+// current age in whole months — verdicts are age-gated, so a result from last month can be wrong
+// today (a gate that opened or, after a rules change, closed). Both read paths use this.
+function _comboCacheValid(result) {
+  return !!(result && result._schema === COMBO_RESULT_SCHEMA
+    && result._mo === Math.floor(getAgeInMonths()));
+}
 
 // foodClass membership test (food-effects v2 §3.0, M-S-5/K-S-4). foodClass is
 // multi-valued (peanut/tree nut carry ['allergen-introduce-early','choking-by-form'];
@@ -4669,14 +4970,18 @@ const DIET_PREF_LABEL = {
 // synonyms the combo-checker sees (lamb/pork/beef → meat; crab → seafood) so the gate classifies
 // every animal food the app references from one source.
 const NONVEG_TOKEN_SID = {
-  egg: 'eggs',
-  chicken: 'poultry',
+  egg: 'eggs', eggs: 'eggs', anda: 'eggs', omelette: 'eggs',
+  chicken: 'poultry', murgi: 'poultry', murga: 'poultry',
   fish: 'fish', prawn: 'fish', shrimp: 'fish', crab: 'fish', seafood: 'fish',
-  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat',
+  // 12–24 m vocabulary (Kael V-K-270-10): Indian fish + shellfish names parents log.
+  shellfish: 'fish', prawns: 'fish', jhinga: 'fish', chingri: 'fish', kekda: 'fish', lobster: 'fish',
+  rohu: 'fish', katla: 'fish', pomfret: 'fish', bangda: 'fish', hilsa: 'fish', ilish: 'fish',
+  sardine: 'fish', salmon: 'fish', machli: 'fish', machhli: 'fish',
+  mutton: 'meat', lamb: 'meat', pork: 'meat', beef: 'meat', meat: 'meat', keema: 'meat',
 };
 // Resolve a food NAME to its non-veg sid, or null if it is not a non-veg food. WORD-BOUNDARY
 // matched (not substring) so "Egg yolk"/"Chicken (puree)" classify but "eggplant" does NOT, and
-// "shellfish" does NOT match \bfish\b (shellfish is a separate concern, not gated here).
+// "shellfish" does NOT match \bfish\b — it has its own token above (a pescatarian set allows it).
 function _dietNonvegSid(name) {
   const n = String(name || '').toLowerCase();
   // First-match-wins (K-214-1): intentional and surfacing-safe. The nonveg-category items this
@@ -4719,7 +5024,7 @@ function updateStorageUsage() {
     'Growth':      ['ziva_growth'],
     'Feeding':     ['ziva_feeding'],
     'Vaccines':    ['ziva_vacc'],
-    'Milestones':  ['ziva_milestones'],
+    'Milestones':  ['ziva_milestones', 'ziva_teeth'],
     'Foods':       ['ziva_foods'],
     'Notes':       ['ziva_notes'],
     'Scrapbook':   ['ziva_scrapbook'],
@@ -4969,14 +5274,19 @@ function restoreAutosave(slotIdx) {
   try {
     const data = JSON.parse(raw);
     const dateLabel = data._autosaveDate ? formatSavedTime(data._autosaveDate) : 'unknown';
-    confirmAction(`Restore from autosave ${slotIdx + 1}?\n\nSnapshot from: ${dateLabel}\n\nThis will replace all current data. A backup will be downloaded first.`, () => {
+    confirmAction(`Restore from autosave ${slotIdx + 1}?\n\nSnapshot from: ${dateLabel}\n\nThis replaces the data on this phone and, once it syncs, updates your household's copy too. Newer entries from other phones are merged back in, but edits made after this snapshot may be undone. A backup will be downloaded first.`, () => {
       exportData(); // Safety backup before restore
       setTimeout(() => {
+        const restored = [];
         Object.entries(data).forEach(([k, v]) => {
           if (k.startsWith('ziva_')) {
             localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+            restored.push(k);
           }
         });
+        // A restored snapshot is the parent's chosen truth: mark it unsynced so the
+        // reload pushes it to the cloud before listeners can overwrite it (PR #265).
+        if (typeof syncMarkUnsynced === 'function') syncMarkUnsynced(restored);
         location.reload();
       }, 500);
     }, 'Restore');
@@ -5048,12 +5358,18 @@ function importData(event) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      confirmAction(`Import backup from ${data._exportDate ? formatDate(data._exportDate.split('T')[0]) : 'unknown date'}? This will replace all current data.`, () => {
+      confirmAction(`Import backup from ${data._exportDate ? formatDate(data._exportDate.split('T')[0]) : 'unknown date'}?\n\nThis replaces the data on this phone and, once it syncs, updates your household's copy too. Newer entries from other phones are merged back in, but edits made after this backup may be undone. A backup of the current data will be downloaded first.`, () => {
+        exportData(); // Safety backup before import (Maren F4), as restoreAutosave does
+        const imported = [];
         Object.entries(data).forEach(([k, v]) => {
           if (k.startsWith('ziva_')) {
             localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+            imported.push(k);
           }
         });
+        // Imported data is the parent's chosen truth: mark it unsynced so the reload
+        // pushes it to the cloud before listeners can overwrite it (PR #265).
+        if (typeof syncMarkUnsynced === 'function') syncMarkUnsynced(imported);
         location.reload();
       }, 'Import');
     } catch (err) {
@@ -5441,6 +5757,18 @@ function getGrowthVelocity() {
 }
 
 // Growth velocity interpretation
+// ── Growth-velocity band, 12–24 months (girls) ──
+// From WHO Child Growth Standards velocity tables (cdn.who.int, fetched 2026-09-24):
+//   weight, 2-month increments 12–24 m: P15 ≈ 140→39 g, P50 ≈ 428→367 g, P85 ≈ 736→723 g
+//     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
+//   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
+//     → band 0.6–1.6 cm/month, ≈ 0.15–0.35 cm/week.
+// Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
+// later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
+// the 0–12 m bands at each site are unchanged.
+const GROWTH_VELOCITY_12_24 = { wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
+  hCmMoMin: 0.6, hCmMoMax: 1.6, hCmWk: '0.15–0.35', label: '12–24 months' };
+
 function getGrowthNarrative(velocity) {
   const lines = [];
   const ageM = ageAt().months;
@@ -5448,8 +5776,8 @@ function getGrowthNarrative(velocity) {
   if (velocity.wtGPerWeek != null) {
     const gw = velocity.wtGPerWeek;
     // WHO-based expected ranges by age (girls, g/week)
-    const expectedMin = ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expectedMax = ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
     let interp;
     if (gw >= expectedMin && gw <= expectedMax) {
       interp = `gaining ${gw}g/week — healthy pace for ${ageM} months`;
@@ -5464,8 +5792,8 @@ function getGrowthNarrative(velocity) {
 
   if (velocity.htCmPerMonth != null) {
     const cm = velocity.htCmPerMonth;
-    const expectedMin = ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
-    const expectedMax = ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
+    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMin : ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
+    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMax : ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
     let interp;
     if (cm >= expectedMin && cm <= expectedMax) {
       interp = `growing ${cm} cm/month — on track`;
@@ -5778,7 +6106,7 @@ function getPulseNarrative() {
   if (latestWt) {
     const moExact = ageMonthsAt(latestWt.date);
     const ref = getGrowthRef(moExact);
-    const pct = calcPercentile(latestWt.wt, ref.w3, ref.w50, ref.w97);
+    const pct = calcPercentile(latestWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85);
     parts.push(`weight at ${latestWt.wt} kg (${pct.text} percentile)`);
   }
 
@@ -5805,7 +6133,7 @@ function getPulseNarrative() {
   }
 
   if (parts.length === 0) return 'Start logging data to see weekly insights here!';
-  return `This week at ${months}m ${days}d: ${parts.join(', ')}.`;
+  return `This week at ${fmtAgeShort(months, days)}: ${parts.join(', ')}.`;
 }
 
 // ── STAT PILL TREND UPDATER ──
@@ -6466,6 +6794,23 @@ function _getActiveStandard() {
   } catch (e) { return 'who'; }
 }
 
+// _msStandardFor — per-month fallback for MILESTONE_STANDARDS. A standard that
+// doesn't author a month borrows that month's rows from STANDARDS_FALLBACK_CHAIN
+// (WHO), so iap/eu/cn (authored 6–12 m) extend to 24 m through the WHO toddler
+// rows. Authored months always win. Returns null when the key itself is unknown.
+function _msStandardFor(standards, key) {
+  const spec = standards && standards[key];
+  if (!spec || typeof spec !== 'object') return null;
+  const merged = Object.assign({}, spec);
+  const chain = (typeof STANDARDS_FALLBACK_CHAIN !== 'undefined' && Array.isArray(STANDARDS_FALLBACK_CHAIN)) ? STANDARDS_FALLBACK_CHAIN : ['who'];
+  chain.forEach(function(fb) {
+    const f = standards[fb];
+    if (fb === key || !f || typeof f !== 'object') return;
+    Object.keys(f).forEach(function(k) { if (!(k in merged)) merged[k] = f[k]; });
+  });
+  return merged;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // milestone-engine-prep-v1 PR-A — 4 engine primitives (V-K-113 split).
 // Spec: docs/specs/milestone-engine-prep-v1.md §Primitive 1..3.
@@ -6485,8 +6830,8 @@ function _predictMilestoneWindow(milestoneId, opts) {
   const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
   if (!standards) return null;
   const standardKey = opts.standardKey || _getActiveStandard();
-  const standardSpec = standards[standardKey];
-  if (!standardSpec || typeof standardSpec !== 'object') return null;
+  const standardSpec = _msStandardFor(standards, standardKey);
+  if (!standardSpec) return null;
 
   // Walk brackets (integer month keys) to find the row whose slugify(text)
   // matches milestoneId. Match by slug per the DEFAULT_MILESTONES id
@@ -6515,7 +6860,7 @@ function _predictMilestoneWindow(milestoneId, opts) {
   // V-K-116 — advanced-row derivation rule: advanced:true offsets by +1 bracket.
   // Treats the advanced flag as a clinical-band shift (matches row.desc intent
   // which often says "may appear here but typical is later").
-  const effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
+  let effectiveStartBracket = matchedRow.advanced ? (matchedBracket + 1) : matchedBracket;
   // Find the next bracket for the end-fallback. V-K-114: highest-bracket
   // (12m) default end is 18*30.44 ≈ 548 days when no explicit endMonth set.
   const startBracketIdx = bracketKeys.indexOf(matchedBracket);
@@ -6529,9 +6874,15 @@ function _predictMilestoneWindow(milestoneId, opts) {
   } else if (typeof nextBracket === 'number') {
     endBracket = nextBracket;
   } else {
-    // Top bracket fallback per V-K-114
-    endBracket = 18;
+    // Top bracket fallback per V-K-114 (12 → 18). Once the table runs past 18
+    // (toddler rows to 24), the top bracket gets the usual one-month band.
+    endBracket = Math.max(18, matchedBracket + 1);
   }
+  // Checkpoint rows ("most children by N months", CDC 75%+ / AAP "by two
+  // years"): the band is the three months leading up to N and ends at N, so
+  // a card never reads "typically N–N+1" for a by-N item.
+  const checkpoint = (typeof matchedRow.checkpoint === 'number') ? matchedRow.checkpoint : null;
+  if (checkpoint !== null) { effectiveStartBracket = checkpoint - 3; endBracket = checkpoint; }
   const expectedStart = effectiveStartBracket * 30.44;
   // For advanced rows, end is (K+2)*30.44 - 1 to honor the +1 bracket shift contract.
   // For non-advanced rows, end = endBracket * 30.44 - 1 to land at the bracket-end day.
@@ -6562,8 +6913,11 @@ function _predictMilestoneWindow(milestoneId, opts) {
   // V-V-57 — windowStatus (renamed from `status` to avoid collision with
   // _getInWindowMilestones[i].evidenceStatus). Three states.
   let windowStatus;
+  // Half-open at the end: day (endBracket * 30.44) is the next bracket's
+  // start, so no whole day falls between two windows (the fractional 30.44
+  // used to leave days like 365 and 395 in no window at all).
   if (ageDays < expectedStart) windowStatus = 'pre-window';
-  else if (ageDays > expectedEnd) windowStatus = 'post-window';
+  else if (ageDays >= endBracket * 30.44) windowStatus = 'post-window';
   else windowStatus = 'in-window';
 
   // V-M-114 floor — source defaults to 'unverified'. Never walk wrapping key.
@@ -6582,6 +6936,7 @@ function _predictMilestoneWindow(milestoneId, opts) {
     ageDaysRemainder: ageDaysRemainder,
     windowStatus: windowStatus,
     source: source,
+    checkpoint: checkpoint,
     standardKey: standardKey,
   };
 }
@@ -6597,8 +6952,8 @@ function _getInWindowMilestones(ageDays, n, opts) {
   const standards = opts.standards || (typeof MILESTONE_STANDARDS === 'object' ? MILESTONE_STANDARDS : null);
   if (!standards) return [];
   const standardKey = opts.standardKey || _getActiveStandard();
-  const standardSpec = standards[standardKey];
-  if (!standardSpec || typeof standardSpec !== 'object') return [];
+  const standardSpec = _msStandardFor(standards, standardKey);
+  if (!standardSpec) return [];
   const milestonesGlobal = opts.milestones || (typeof milestones !== 'undefined' ? milestones : []);
   const suppressMap = opts.suppressMap || (typeof milestoneSuppress !== 'undefined' ? milestoneSuppress : {});
   // V-K-118 floor: nowAgeDays derived via _zivaAgeInDays(today()), never millis arithmetic.
@@ -6634,15 +6989,17 @@ function _getInWindowMilestones(ageDays, n, opts) {
       // Suppression filter — entries whose suppress-until > now skip.
       if (suppressMap[milestoneId] && suppressMap[milestoneId] > nowMs) continue;
       // Derive window (mirror _predictMilestoneWindow logic).
-      const effStart = row.advanced ? (bracket + 1) : bracket;
+      let effStart = row.advanced ? (bracket + 1) : bracket;
       let endBr;
       if (typeof row.endMonth === 'number') endBr = row.endMonth;
       else if (row.advanced) endBr = bracket + 2;
       else if (typeof nextBracket === 'number') endBr = nextBracket;
-      else endBr = 18;
+      else endBr = Math.max(18, bracket + 1);
+      if (typeof row.checkpoint === 'number') { effStart = row.checkpoint - 3; endBr = row.checkpoint; }
       const expectedStart = effStart * 30.44;
       const expectedEnd = (endBr * 30.44) - 1;
-      if (ageDays < expectedStart || ageDays > expectedEnd) continue;
+      // Half-open end (see _predictMilestoneWindow): no gap day between brackets.
+      if (ageDays < expectedStart || ageDays >= endBr * 30.44) continue;
 
       // Evidence status — driven by the parent's milestones global.
       const ev = evidenceByText[milestoneId];
@@ -6702,7 +7059,7 @@ function _getInWindowMilestones(ageDays, n, opts) {
         window: (function() {
           var ws;
           if (ageDays < expectedStart) ws = 'pre-window';
-          else if (ageDays > expectedEnd) ws = 'post-window';
+          else if (ageDays >= endBr * 30.44) ws = 'post-window';
           else ws = 'in-window';
           return {
             expectedStart: expectedStart,
@@ -6717,6 +7074,7 @@ function _getInWindowMilestones(ageDays, n, opts) {
             ageDaysRemainder: Math.round(ageDays - (Math.floor(ageDays / 30.44) * 30.44)),
             windowStatus: ws,
             source: row.source || 'unverified',
+            checkpoint: (typeof row.checkpoint === 'number') ? row.checkpoint : null,
             standardKey: standardKey,
           };
         })(),
