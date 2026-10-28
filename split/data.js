@@ -1550,8 +1550,35 @@ const DEFAULT_VACC = [
   { name:'MCV-1', date:'2026-06-04', upcoming:true },
 ];
 
-// ── MASTER VACCINATION SCHEDULE (IAP 2024 + card schedule) ──
+// ── MASTER VACCINATION SCHEDULE (IAP-ACVIP 2023, Indian Pediatr Jan 2024; the 2025 revision,
+//    Indian Pediatr May 2026, is identical for 9 m–6 y) + card schedule ──
 // type: 'iap' = IAP mandatory, 'iap-rec' = IAP recommended, 'private' = optional/private
+// windowEnd (months): the IAP window closes here; a dose inside [age, windowEnd] reads
+//   "due now", never "missing" (V-M-266-7). No windowEnd = the window is the age itself.
+// conditional: doses that don't apply to every child (vaccine brand, endemic area, special
+//   situations). Never "missing" and never scored; shown as "check with her doctor".
+// after: a follow-on dose, only listed once that first dose is recorded as given.
+// completesSeries: once `after` is given, the dose stops being conditional and reads
+//   due/overdue like a routine dose (JE-2, MCV-2 finish a series the doctor started).
+// seasonal:'flu': timed by season, not age — due Apr–Jul (pre-monsoon) when no flu dose
+//   was logged in the last ~10 months; never 'missing', never scored (vaccDueState).
+// 2026-09-24 reconciliation (12–24 m PR 2): removed OPV-2 @9 m, PCV Booster-2 @15 m,
+//   Typhoid Booster @2 y and OPV Booster @4–6 y — none is in IAP 2023/2025, nor in the UIP at
+//   those ages (the UIP's own OPV booster is at 16–24 m)
+//   (IAP: one PCV booster at 12–15 m; TCV has no booster; the 4–6 y polio dose is IPV-B2).
+// Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
+// consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
+// carry private copies that lacked '13 months' and '18-19 months', so JE-2, Hep A-2 and
+// Varicella-2 defaulted to 99 and silently never came due (2026-09-24 12-month audit).
+// Every VACC_SCHEDULE `age` label MUST appear here — build gate: split/audit-vacc-age-map-v1.sh.
+const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
+  '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
+  '18-19 months':18, '2 years':24, '1-2 years':12, '2-3 years':24, '3-4 years':36, '4-5 years':48,
+  '4-6 years':48, '9-14 years':108, '16-18 years':192 };
+
+// Doses the schedule used to list; a stored entry with one of these names is told so.
+const VACC_RETIRED = ['OPV-2', 'PCV Booster-2', 'Typhoid Booster', 'OPV Booster'];
+
 const VACC_SCHEDULE = [
   // ── BIRTH ──
   { name:'BCG', age:'Birth', type:'iap', protects:'Tuberculosis (TB)', notes:'Single dose, left upper arm. Small scar is normal.' },
@@ -1584,48 +1611,48 @@ const VACC_SCHEDULE = [
   { name:'PCV-3', age:'14 weeks', type:'iap', protects:'Pneumococcal disease', notes:'Third dose.' },
 
   // ── 6 MONTHS ──
-  { name:'TCV', age:'6 months', type:'iap-rec', protects:'Typhoid fever', notes:'Typhoid Conjugate Vaccine. Can be given from 6 months. IAP recommends 9-12 months.' },
-  { name:'Influenza-1', age:'6 months', type:'iap-rec', protects:'Seasonal Influenza (Flu)', notes:'First dose. Needs a second dose 4 weeks later. Then annual.' },
+  { name:'TCV', age:'6 months', type:'iap-rec', protects:'Typhoid fever', notes:'Typhoid Conjugate Vaccine. One dose at 6–9 months (IAP 2023). IAP does not recommend a booster.' },
+  { name:'Influenza-1', age:'6 months', type:'iap-rec', protects:'Seasonal Influenza (Flu)', notes:'First dose. A child under 9 getting flu vaccine for the first time needs a second dose 4 weeks later. Then once a year until 5 years, before the monsoon (May–June).' },
 
   // ── 7 MONTHS ──
-  { name:'Influenza-2', age:'7 months', type:'iap-rec', protects:'Seasonal Influenza', notes:'Second dose, 4 weeks after first. Annual booster thereafter.' },
+  { name:'Influenza-2', age:'7 months', type:'iap-rec', protects:'Seasonal Influenza', notes:'Second dose, 4 weeks after the first. Then one dose every year until 5 years, before the monsoon (May–June).' },
 
   // ── 9 MONTHS ──
   { name:'MMR-1', age:'9 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Critical vaccine. Measles remains a leading cause of child mortality in India.' },
-  { name:'MCV-1', age:'9 months', type:'private', protects:'Meningococcal meningitis', notes:'Meningococcal Conjugate Vaccine. 2 doses (9 and 12 months). Recommended for travel/outbreak areas.' },
-  { name:'OPV-2', age:'9 months', type:'iap', protects:'Poliomyelitis', notes:'OPV booster dose.' },
+  { name:'MCV-1', age:'9 months', windowEnd:23, type:'private', conditional:'Special situations only (travel, outbreaks, some medical conditions).', protects:'Meningococcal meningitis', notes:'MenACWY (meningococcal conjugate), not the measles vaccine. Special situations only: 2 doses between 9 and 23 months, at least 3 months apart.' },
 
   // ── 12 MONTHS ──
-  { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. Booster at 18 months. Killed vaccine (2 doses) or live vaccine (1 dose).' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', protects:'Japanese Encephalitis', notes:'Live attenuated vaccine. Important in endemic areas (eastern UP, Bihar, Jharkhand, Assam, West Bengal).' },
-  { name:'MCV-2', age:'12 months', type:'private', protects:'Meningococcal meningitis', notes:'Second dose if first given at 9 months.' },
-  { name:'PCV Booster', age:'12 months', type:'iap', protects:'Pneumococcal disease', notes:'Booster after primary 3-dose series.' },
+  { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'MCV-2', age:'12 months', windowEnd:23, after:'MCV-1', completesSeries:true, type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
+  { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 
   // ── 13 MONTHS ──
-  { name:'JE-2', age:'13 months', type:'iap-rec', protects:'Japanese Encephalitis', notes:'Second dose, 4 weeks after first. Completes primary JE series.' },
+  { name:'JE-2', age:'13 months', after:'JE-1', completesSeries:true, type:'iap-rec', conditional:'Only if JE-1 was given (endemic areas).', protects:'Japanese Encephalitis', notes:'Second dose, 28 days after the first. Completes the JE series.' },
 
   // ── 15 MONTHS ──
-  { name:'MMR-2', age:'15 months', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Second dose for full protection.' },
-  { name:'Varicella-1', age:'15 months', type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose at 18-19 months. Not in UIP — private only.' },
-  { name:'PCV Booster-2', age:'15 months', type:'iap', protects:'Pneumococcal disease', notes:'Additional booster if using PCV-10.' },
+  { name:'MMR-2', age:'15 months', windowEnd:18, type:'iap', protects:'Measles, Mumps, Rubella', notes:'Second dose for full protection.' },
+  { name:'Varicella-1', age:'15 months', windowEnd:18, type:'iap-rec', protects:'Chickenpox (Varicella)', notes:'First dose. Second dose 3–6 months later, at 18–19 months. Not in UIP — private only.' },
 
   // ── 16-18 MONTHS ──
-  { name:'DTwP/DTaP-B1', age:'16-18 months', type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'First booster after primary 3-dose series.' },
-  { name:'Hib-B1', age:'16-18 months', type:'iap', protects:'Haemophilus influenzae B', notes:'Booster dose.' },
-  { name:'IPV-B1', age:'16-18 months', type:'iap', protects:'Poliomyelitis', notes:'IPV booster dose.' },
+  { name:'DTwP/DTaP-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'First booster after primary 3-dose series.' },
+  { name:'Hib-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Haemophilus influenzae B', notes:'Booster dose.' },
+  { name:'IPV-B1', age:'16-18 months', windowEnd:18, type:'iap', protects:'Poliomyelitis', notes:'IPV booster dose.' },
 
   // ── 18-19 MONTHS ──
-  { name:'Hep A-2', age:'18-19 months', type:'iap-rec', protects:'Hepatitis A', notes:'Second dose (if killed vaccine used).' },
-  { name:'Varicella-2', age:'18-19 months', type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
+  { name:'Hep A-2', age:'18-19 months', windowEnd:19, after:'Hep A-1', type:'iap-rec', conditional:'Only if Hep A-1 was the inactivated (killed) vaccine; the live vaccine is a single dose.', protects:'Hepatitis A', notes:'Second dose of the inactivated vaccine, at least 6 months after the first.' },
+  { name:'Varicella-2', age:'18-19 months', windowEnd:24, type:'iap-rec', protects:'Chickenpox', notes:'Second dose. Completes Varicella series.' },
 
-  // ── 2 YEARS ──
-  { name:'Typhoid Booster', age:'2 years', type:'iap-rec', protects:'Typhoid fever', notes:'Booster if TCV given earlier.' },
+  // ── YEARLY FLU, 1–5 YEARS (IAP: every year until 5, before the monsoon, May–June) ──
+  { name:'Influenza yearly (1-2 y)', age:'1-2 years', seasonal:'flu', windowEnd:24, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (2-3 y)', age:'2-3 years', seasonal:'flu', windowEnd:36, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (3-4 y)', age:'3-4 years', seasonal:'flu', windowEnd:48, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
+  { name:'Influenza yearly (4-5 y)', age:'4-5 years', seasonal:'flu', windowEnd:60, type:'iap-rec', protects:'Seasonal Influenza', notes:'One dose each year, before the monsoon (May–June).' },
 
   // ── 4-6 YEARS ──
-  { name:'DTwP/DTaP-B2', age:'4-6 years', type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'Second booster at school entry.' },
-  { name:'IPV-B2', age:'4-6 years', type:'iap', protects:'Poliomyelitis', notes:'IPV booster at school entry.' },
-  { name:'MMR-3', age:'4-6 years', type:'iap', protects:'Measles, Mumps, Rubella', notes:'Third dose at school entry.' },
-  { name:'OPV Booster', age:'4-6 years', type:'iap', protects:'Poliomyelitis', notes:'Final OPV booster.' },
+  { name:'DTwP/DTaP-B2', age:'4-6 years', windowEnd:72, type:'iap', protects:'Diphtheria, Tetanus, Pertussis', notes:'Second booster at school entry.' },
+  { name:'IPV-B2', age:'4-6 years', windowEnd:72, type:'iap', protects:'Poliomyelitis', notes:'IPV booster at school entry.' },
+  { name:'MMR-3', age:'4-6 years', windowEnd:72, type:'iap', protects:'Measles, Mumps, Rubella', notes:'Third dose at school entry.' },
 
   // ── 9-14 YEARS ──
   { name:'Tdap', age:'9-14 years', type:'iap', protects:'Tetanus, Diphtheria, Pertussis (adolescent)', notes:'Adolescent booster.' },
@@ -1637,14 +1664,26 @@ const VACC_SCHEDULE = [
 ];
 
 const DEFAULT_MEDS = [
+  // 2026-09-24: prescribed in place of the D3 drops. Twice daily → logged as morning + evening
+  // dose slots (core.js medDoseSlots); recognised as her Vitamin D supplement by its contents.
+  {
+    name:    'Caldikind-P NF',
+    dose:    '2.5 ml',
+    brand:   'Mankind',
+    freq:    'Twice daily',
+    dosesPerDay: 2,
+    start:   '2026-09-24',
+    notes:   'Calcium, phosphorus, magnesium, zinc & Vitamin D3 suspension (replaces the D3 drops)',
+    active:  true,
+  },
   {
     name:    'Vitamin D3 Drops',
     dose:    '0.5 ml · 800 IU',
     brand:   'Ultra D3 by Meyer Vitabiotics',
     freq:    'Once daily',
     start:   '2025-09-04',
-    notes:   '',
-    active:  true,
+    notes:   'Replaced by Caldikind-P NF on 2026-09-24',
+    active:  false,
   },
 ];
 
@@ -1922,7 +1961,7 @@ const EVENT_ACTIVITIES = {
   },
   vacation: [
     { icon:zi('baby'), text:'Pack familiar foods — maintain her meal routine even while travelling' },
-    { icon:zi('pill'), text:'Don\'t forget Vitamin D drops — travel disrupts routines' },
+    { icon:zi('pill'), text:'Don\'t forget her Vitamin D supplement — travel disrupts routines' },
     { icon:zi('baby'), text:'Carry baby sunscreen + mosquito repellent if going outdoors' },
     { icon:zi('spoon'), text:'Pre-make ragi/dal powder in small zip bags — just add water for instant meals' },
     { icon:zi('moon'), text:'Try to keep nap and bedtime consistent — sleep routine matters more than location' },
@@ -1941,18 +1980,24 @@ const EVENT_ACTIVITIES = {
 // ─────────────────────────────────────────
 // GROWTH
 // ─────────────────────────────────────────
-// WHO Girls 50th percentile weight/height by month
-const WHO_W50 = [3.2,4.2,5.1,5.8,6.4,6.9,7.3,7.6,7.9,8.2,8.5,8.7,8.9];
-const WHO_H50 = [49.1,53.7,57.1,59.8,62.1,64.0,65.7,67.3,68.7,70.1,71.5,72.8,74.0];
-const WHO_W3  = [2.4,3.2,3.9,4.5,4.9,5.3,5.7,6.0,6.3,6.5,6.7,6.9,7.0];
-const WHO_W97 = [4.2,5.5,6.6,7.5,8.2,8.8,9.3,9.8,10.2,10.5,10.9,11.2,11.5];
-const WHO_H3  = [45.6,49.8,52.8,55.5,57.8,59.6,61.2,62.7,64.0,65.3,66.5,67.6,68.6];
-const WHO_H97 = [52.7,57.6,61.4,64.4,66.8,68.8,70.5,72.1,73.7,75.2,76.6,78.0,79.2];
-// WHO P15 and P85 for better mid-range accuracy (girls, 0-12 months)
-const WHO_W15 = [2.7,3.6,4.4,5.1,5.6,6.1,6.5,6.8,7.1,7.3,7.5,7.7,7.9];
-const WHO_W85 = [3.7,4.9,5.9,6.7,7.3,7.9,8.3,8.7,9.0,9.4,9.7,10.0,10.2];
-const WHO_H15 = [47.0,51.4,54.6,57.3,59.6,61.5,63.1,64.6,66.0,67.4,68.6,69.8,71.0];
-const WHO_H85 = [51.3,56.1,59.7,62.5,64.8,66.8,68.5,70.1,71.6,73.0,74.4,75.7,76.9];
+// WHO Child Growth Standards — GIRLS, months 0–24 (index = completed month).
+// Weight-for-age (kg): tab_wfa_girls_p_0_5.xlsx · Length-for-age (cm, recumbent): tab_lhfa_girls_p_0_2.xlsx
+// (cdn.who.int, fetched 2026-09-24). Rewritten in the 12-month audit: the tables used to stop at 12
+// months (every later measurement was compared to the 12-month row, so percentiles drifted high), and
+// the old "P3/P97" rows were actually WHO's −2 SD / +2 SD columns (≈2.3rd / 97.7th). Values below are
+// the true percentile columns. WHO is the only growth reference: IAP 2015 recommends the WHO 2006
+// standards for children under 5 (Indian Pediatrics 2015;52:47–55).
+const WHO_W50 = [3.2,4.2,5.1,5.8,6.4,6.9,7.3,7.6,7.9,8.2,8.5,8.7,8.9,9.2,9.4,9.6,9.8,10.0,10.2,10.4,10.6,10.9,11.1,11.3,11.5];
+const WHO_H50 = [49.1,53.7,57.1,59.8,62.1,64.0,65.7,67.3,68.7,70.1,71.5,72.8,74.0,75.2,76.4,77.5,78.6,79.7,80.7,81.7,82.7,83.7,84.6,85.5,86.4];
+const WHO_W3  = [2.4,3.2,4.0,4.6,5.1,5.5,5.8,6.1,6.3,6.6,6.8,7.0,7.1,7.3,7.5,7.7,7.8,8.0,8.2,8.3,8.5,8.7,8.8,9.0,9.2];
+const WHO_W97 = [4.2,5.4,6.5,7.4,8.1,8.7,9.2,9.6,10.0,10.4,10.7,11.0,11.3,11.6,11.9,12.2,12.5,12.7,13.0,13.3,13.5,13.8,14.1,14.3,14.6];
+const WHO_H3  = [45.6,50.0,53.2,55.8,58.0,59.9,61.5,62.9,64.3,65.6,66.8,68.0,69.2,70.3,71.3,72.4,73.3,74.3,75.2,76.2,77.0,77.9,78.7,79.6,80.3];
+const WHO_H97 = [52.7,57.4,60.9,63.8,66.2,68.2,70.0,71.6,73.2,74.7,76.1,77.5,78.9,80.2,81.4,82.7,83.9,85.0,86.2,87.3,88.4,89.4,90.5,91.5,92.5];
+// P15 / P85 for mid-range accuracy
+const WHO_W15 = [2.8,3.6,4.5,5.1,5.6,6.1,6.4,6.7,7.0,7.3,7.5,7.7,7.9,8.1,8.3,8.5,8.7,8.8,9.0,9.2,9.4,9.6,9.8,9.9,10.1];
+const WHO_W85 = [3.7,4.8,5.9,6.7,7.3,7.8,8.3,8.7,9.0,9.3,9.6,9.9,10.2,10.4,10.7,10.9,11.2,11.4,11.6,11.9,12.1,12.4,12.6,12.8,13.1];
+const WHO_H15 = [47.2,51.7,55.0,57.6,59.8,61.7,63.4,64.9,66.3,67.6,68.9,70.2,71.3,72.5,73.6,74.7,75.7,76.7,77.7,78.7,79.6,80.5,81.4,82.2,83.1];
+const WHO_H85 = [51.1,55.7,59.2,62.0,64.3,66.3,68.1,69.7,71.2,72.6,74.0,75.4,76.7,77.9,79.2,80.3,81.5,82.6,83.7,84.8,85.8,86.8,87.8,88.8,89.8];
 // @@DATA_BLOCK_5_END@@
 
 // @@DATA_BLOCK_6_START@@ VACC_SERIES
@@ -1966,8 +2011,11 @@ const VACC_SERIES = {
   'IPV': ['IPV-1', 'IPV-2', 'IPV-3'],
   'PCV': ['PCV-1', 'PCV-2', 'PCV-3'],
   'Rotavirus': ['Rotavirus-1', 'Rotavirus-2', 'Rotavirus-3'],
-  'Influenza': ['Influenza-1', 'Influenza-2'],
-  'MMR': ['MMR-1'],
+  'Influenza': ['Influenza-1', 'Influenza-2', 'Influenza yearly (1-2 y)', 'Influenza yearly (2-3 y)', 'Influenza yearly (3-4 y)', 'Influenza yearly (4-5 y)'],
+  'MMR': ['MMR-1', 'MMR-2', 'MMR-3'],
+  'Hep A': ['Hep A-1', 'Hep A-2'],
+  'Varicella': ['Varicella-1', 'Varicella-2'],
+  'JE': ['JE-1', 'JE-2'],
 };
 // @@DATA_BLOCK_6_END@@
 
@@ -1980,7 +2028,7 @@ const VACC_DELAY_SAFETY = {
   'Rotavirus': { safe: 7, concern: 14, note: 'Rotavirus has strict age windows. First dose must be before 15 weeks. Delay beyond the age window means the dose may be skipped entirely.' },
   'MMR': { safe: 14, concern: 30, note: 'MMR at 9 months is critical in India due to measles prevalence. A 2-week delay is usually fine, but avoid delaying beyond 4 weeks.' },
   'DTwP': { safe: 14, concern: 28, note: 'DTP vaccines can be delayed 2-4 weeks without restarting the series. The full primary series is important for complete protection.' },
-  'Influenza': { safe: 21, concern: 42, note: 'Influenza vaccine timing is seasonal \u2014 delay is fine as long as it is given before peak flu season (Oct-Feb in India).' },
+  'Influenza': { safe: 21, concern: 42, note: 'Influenza vaccine timing is seasonal \u2014 delay is fine as long as it is given before the monsoon (May\u2013June), as IAP advises for India.' },
   'PCV': { safe: 14, concern: 28, note: 'PCV can be safely delayed by 2-4 weeks. The series does not need to be restarted if delayed.' },
 };
 
@@ -2247,6 +2295,8 @@ const FOOD_SYNERGIES = [
 // per-100g chemistry, not per-serving care guidance. Downstream consumers
 // (chemRollup, the per-food chemistry sub-tab) should weight spice-tier
 // `nutrients[]` per serving, not per 100g.
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const NUTRITION = {
   // ── GRAINS & STAPLES ──
   'ragi':           { nutrients:['iron','calcium','fibre','protein','phosphorus'], tags:['iron-rich','bone-health','protein-rich','gluten-free'], chem:{ fibre:'mixed', antiNutrients:['phytates','tannins'], bioactives:['polyphenols'] } },
@@ -2400,8 +2450,12 @@ const NUTRITION = {
 // @@DATA_BLOCK_13_START@@ AGE_RULES + ALLERGENS + COMBO_RULES
 
 // ── AGE SAFETY RULES ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const AGE_RULES = {
-  'honey':    { minMonth:12, reason:'Risk of infant botulism — strictly avoid until 12 months' },
+  // 24 m, not 12 (Cipher A2, 2026-09-24): botulism is the under-1 reason, and from 1 honey is a free
+  // sugar (WHO; US DGA) under the same 24 m added-sugar gate — so every surface says one thing.
+  'honey':    { limit:true, minMonth:24, reason:'Risk of infant botulism under 1; from 1 it is an added sugar — wait until 2', after:'A small amount now and then — honey is an added sugar, so keep it occasional, like jaggery.' },
   'cow milk': { minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'cow\'s milk':{minMonth:12, reason:'Low in iron, hard on infant kidneys as main drink. Curd and paneer are fine.' },
   'milk':     { minMonth:12, reason:'As a drink, avoid until 12 months. Curd, paneer, and small amounts in cooking are fine.' },
@@ -2417,15 +2471,23 @@ const AGE_RULES = {
   'oat milk':   { minMonth:12, reason:'Not a milk substitute before 12 months. From 12 months, unsweetened fortified oat milk can be part of a varied diet — not the only drink.' },
   'rice milk':  { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Eating rice the grain is still fine. Not a milk substitute under 1.' },
   'rice drink': { minMonth:60, reason:'Rice drinks contain arsenic — not for any child under 5. Not a milk substitute under 1.' },
-  'salt':     { minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.' },
-  'sugar':    { minMonth:12, reason:'No added sugar before 12 months. Use fruit for natural sweetness.' },
-  'jaggery':  { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
-  'gur':      { minMonth:12, reason:'Treat as added sugar — avoid before 12 months.' },
-  'tea':      { minMonth:24, reason:'Tannins block iron absorption. Caffeine is harmful for babies.' },
-  'coffee':   { minMonth:24, reason:'Caffeine is harmful for infants and toddlers.' },
-  'juice':    { minMonth:8, reason:'Whole fruit is better. If juice, limit to 2-3 tsp diluted in an open cup, never a bottle.' },
-  'whole nut': { minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
-  'whole nuts':{ minMonth:60, reason:'Choking hazard — always use powdered or paste form for babies.' },
+  // after: shown once the gate has passed (V-C-266-10), so 'Fine from 12 months' never hides the limit.
+  'salt':     { limit:true, minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
+  // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
+  // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
+  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
+  // aliases (Ceres V-C-266-4 / Kael V-K-266-2): the everyday Indian names for added sugar, so
+  // mishri (with saunf), chini, khand, batasha, mithai and date syrup gate at 24 m too.
+  'sugar':    { minMonth:24, aliases:['mishri','misri','rock sugar','chini','cheeni','khand','shakkar','batasha','mithai','sweets','toffee','date syrup'],
+                reason:'No added sugar before 2 years (WHO, AAP). Use fruit for natural sweetness.' },
+  'jaggery':  { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
+  'gur':      { minMonth:24, reason:'Treat as added sugar — avoid before 2 years.' },
+  'tea':      { minMonth:24, aliases:['chai','chay','milk tea','masala chai','doodh chai','kadak chai','green tea','black tea'], reason:'Tannins block iron absorption. Caffeine is harmful for babies and toddlers.' },
+  'coffee':   { minMonth:24, aliases:['cold coffee','filter coffee','kaapi'], reason:'Caffeine is harmful for infants and toddlers.' },
+  // 12–24 m PR 3: AAP 2017 — no juice under 1; ≤ 4 oz (120 ml) 100% juice a day at 1–3 y; WHO 2023 'limit'.
+  'juice':    { limit:true, minMonth:12, reason:'No juice needed under 1. From 1, whole fruit is better; if you give 100% juice, keep it to 120 ml a day at most, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks are sugary drinks: wait until 2.', after:'Whole fruit is better. If you give 100% juice: at most 120 ml a day, in an open cup with a meal — never a bottle or at bedtime. Packaged fruit drinks wait until 2.' },
+  'whole nut': { minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
+  'whole nuts':{ minMonth:60, reason:'Choking hazard — whole or chopped nuts (peanuts too) wait until 5. Give them ground, or as nut butter spread thin.' },
   // food-effects-v2 (P1a-β): peanut + tree nut are SOFT floors (introduce-early,
   // ~6mo), NOT the 60mo 'whole nut' choking gate — that's the FORM, this is the
   // FOOD. aliases mirror the FOOD_EFFECTS records so the age GATE and the
@@ -2436,12 +2498,15 @@ const AGE_RULES = {
   'tree nut': { minMonth:6, aliases:['tree nuts','almond','almonds','badam','walnut','walnuts','akhrot','cashew','cashews','kaju','pistachio','pista','hazelnut','pecan','almond butter','almond paste'],
                 reason:'Good to introduce from ~6 months, ground or as smooth paste — never whole (choking). Early, regular nuts support tolerance.' },
   'popcorn':  { minMonth:48, reason:'Choking hazard — avoid for young children.' },
-  'raw salad':{ minMonth:12, reason:'Raw vegetables are hard to chew and digest. Steam or cook first.' },
-  'chocolate':{ minMonth:12, reason:'Contains sugar and caffeine. Avoid before 12 months.' },
-  'biscuit':  { minMonth:10, reason:'Most contain sugar, salt, and maida. If giving, choose sugar-free, whole grain.' },
-  'chips':    { minMonth:24, reason:'High salt, trans fats. Not suitable for babies.' },
-  'ice cream':{ minMonth:12, reason:'Contains sugar and cow milk. Avoid before 12 months.' },
-  'kheer':    { minMonth:10, reason:'Often made with cow milk and sugar. Use breast milk/formula and fruit instead.' },
+  'raw salad':{ minMonth:12, reason:'From 1, soft raw foods are fine grated or sliced very thin (cucumber, tomato, grated carrot). Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.', after:'Grate or thin-slice raw foods. Hard raw chunks — carrot sticks, apple pieces — stay a choking risk until about 4: grate, thin-slice or steam them.' },
+  'chocolate':{ minMonth:24, reason:'Contains added sugar and caffeine. Avoid before 2 years.' },
+  // 12–24 m PR 3: was 10 while its own reason said 'no added sugar before 2'; ICMR-NIN 2024 lists biscuits as HFSS to avoid; matches rusk (24).
+  'biscuit':  { minMonth:24, reason:'Most biscuits carry added sugar, salt and refined flour — no added sugar before 2 (WHO, ICMR-NIN). Offer soft roti, fruit or plain home snacks instead.' },
+  // Rusk (Ceres V-C-268-6): the teething guide warns against rusks; the food log gates them too.
+  'rusk':     { minMonth:24, aliases:['rusks','toast rusk','teething rusk','suji rusk','cake rusk'], reason:'Most rusks contain added sugar and break into hard chunks she can\'t chew yet (choking). Avoid before 2 years; offer soft bread or roti pieces instead.' },
+  'chips':    { minMonth:24, reason:'Very salty and fried, and a choking risk. Not for under-2s (WHO: high-salt, trans-fat foods should not be given before 2).' },
+  'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
+  'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
   // food-effects-v2 P1c: reconciled 7→6 (AAP/NHS/ASCIA ~6mo; egg-yolk:7 precedent). aliases
   // mirror the FOOD_EFFECTS record so the gate and the consequence card agree per name
   // (one-resolver doctrine, V-M-205-B1). A vegetarian/Jain household not giving fish is valid.
@@ -2459,21 +2524,33 @@ const AGE_RULES = {
   'chana':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'chole':    { minMonth:9, reason:'Can cause gas — introduce after 9 months, well-cooked.' },
   'mushroom': { minMonth:10, reason:'Can introduce after 10 months — always well-cooked, never raw.' },
-  'corn':     { minMonth:8, reason:'Hard to digest whole. After 8 months, use corn flour or well-mashed sweet corn.' },
+  'corn':     { minMonth:8, aliases:['bhutta','sweet corn','makki'], reason:'From 8 months as makki atta or well-mashed sweet corn. Whole kernels — cooked or raw, and bhutta off the cob — are a choking risk for young children, per the CDC; mash or blend them.', after:'Makki atta is fine. Whole kernels and bhutta off the cob stay a choking risk — mash or blend them.' },
   'spinach':  { minMonth:7, reason:'Contains oxalates — blanch before use. Fine from 7 months in small amounts.' },
-  'bajra':    { minMonth:7, reason:'A warming millet — better after 7 months, avoid in very hot weather.' },
+  'bajra':    { minMonth:7, reason:'Well-cooked bajra porridge or soft roti is fine from about 7 months — an iron-rich millet (IFCT 2017: 6.4 mg iron per 100 g).' },
   // food-effects-v2 Phase δ allergen gates (egg already above). minMonth:6 follows
   // AAP/NHS/ASCIA (~6mo, don't delay); each backs a FOOD_EFFECTS record below.
   'soy':      { minMonth:6, aliases:['soya','soybean','soya bean','tofu','edamame','soya chunks','soya granules','soya nuggets','soy milk','soya milk','tempeh','miso','natto','tamari'],
                 reason:'Fine from around 6 months — soft tofu or well-mashed soya. Whole edamame is a choking risk; mash it.' },
   'wheat':    { minMonth:6, aliases:['atta','maida','wheat flour','suji','sooji','rava','semolina','dalia','broken wheat','roti','chapati','phulka','paratha','naan','pasta','sevai','vermicelli','durum','couscous','bulgur','seitan'],
                 reason:'Fine from around 6 months — soft cereal or softened roti. Wheat allergy is separate from celiac disease.' },
-  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','gajak','til laddoo'],
+  'sesame':   { minMonth:6, aliases:['til','tahini','gingelly','gingelly oil','sesame seeds','sesame oil','sim sim','benne','gomashio','hummus','til laddoo'],
                 // 'halva'/'halwa' deliberately NOT aliases — they collide with carrot/banana/
                 // ragi/suji halwa (Kael B-1); til-halwa is covered by 'til'. Suji halwa still
                 // resolves to wheat via 'suji', correctly.
                 reason:'Fine from around 6 months — as smooth tahini thinned into food, not whole seeds.' },
   // food-effects-v2 P1c (the choking set): the gate the choking-by-form card hangs off.
+  // 12–24 m hazard gates (Kael V-K-270-2 / V-K-270-4) — here, not in the recipes.js overlay, so the
+  // source-reading audits see them. The strictest gate a name reaches wins (_fdAgeRule).
+  'whole chana': { minMonth:48, aliases:['roasted chana','bhuna chana','roasted gram'], reason:'Whole or roasted chana is hard and round — a choking risk until about 4, per the AAP. Mash it, or grind it into food.' },
+  // Hard jaggery/sugar brittle: added sugar (24) AND hard-candy choking (AAP-CH keeps hard candy until 4) → 48. UNCONFIRMED-by-analogy.
+  'chikki':      { minMonth:48, aliases:['gajak','til chikki','peanut chikki','rewri','revdi','til patti','tilkut','til laddoo','til ladoo'],
+                   reason:'Chikki, gajak and til laddoo are hard jaggery brittles — added sugar (wait until 2) and too hard to chew safely until about 4, per the AAP. Give sesame or peanut ground into food instead.' },
+  // SPROUT: children should avoid raw or lightly cooked sprouts. minMonth 60 is an app floor (UNCONFIRMED cutoff).
+  'raw sprouts': { minMonth:60, aliases:['raw moong sprouts','sprout salad','sprouts salad','kachche sprouts','uncooked sprouts'],
+                   reason:'Raw or lightly cooked sprouts can carry salmonella and E. coli — health agencies advise children not to eat them. Steam or cook sprouts until soft.' },
+  // NHS-AV (raw shellfish); shellfish is a major allergen. Cooked shellfish from ~6 m (NHS). No FOOD_EFFECTS record exists.
+  'shellfish':   { minMonth:6, aliases:['prawn','prawns','shrimp','jhinga','chingri','crab','kekda','lobster'],
+                   reason:'Well-cooked prawns or crab are fine from around 6 months — never raw or lightly cooked (food poisoning). Shellfish is a major allergen: first taste at home, watch about 2 hours.' },
   // Required for the P0.1 sync-gate Check 3 (every FOOD_EFFECTS key resolves vs AGE_RULES);
   // 'choking hazards' resolves here by EXACT KEY. minMonth:6 frames the form-gate (modified
   // forms from solids start), and the reason carries the chokingUntilYears:5 whole-form rule.
@@ -2498,7 +2575,7 @@ const FOOD_EFFECTS = {
     severity:   'critical',      // render chrome (rose); decoupled from foodClass per A-4
     effect:     'infant botulism',
     title:      'Honey before 12 months',
-    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. Honey is fine from the first birthday.',
+    why:        'Honey can carry spores that cause infant botulism, and a baby’s gut can’t safely handle them yet. Cooking or baking does not make it safe. From the first birthday the botulism risk is gone, but honey is an added sugar — like jaggery, it waits until 2.',
     watchFor:   ['constipation', 'a weak cry or weak suck', 'unusual floppiness'],
     seekCare:   'If your baby has already had some and any of these appear, see a doctor promptly.',
     confidence: 'high',
@@ -2684,7 +2761,7 @@ const FOOD_EFFECTS = {
   'sesame': {
     foodClass:  'allergen-introduce-early',
     severity:   'caution',
-    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'gajak', 'til laddoo'],  // no 'halva'/'halwa' — collides with carrot/banana/ragi halwa (Kael B-1)
+    aliases:    ['til', 'tahini', 'gingelly', 'gingelly oil', 'sesame seeds', 'sesame oil', 'sim sim', 'benne', 'gomashio', 'hummus', 'til laddoo'],  // no 'gajak' — a hard jaggery brittle, gated by the recipes.js 'chikki' rule + choking alias  // no 'halva'/'halwa' — collides with carrot/banana/ragi halwa (Kael B-1)
     effect:     'food allergy (often lifelong)',
     title:      'Sesame — introduce early, as thinned tahini',
     why:        'Around 6 months, sesame is good to introduce — best as smooth tahini (sesame paste) thinned into food, not whole seeds or a thick glob. There is no reason to delay it. Sesame allergy tends to be lifelong, so watch the first tastes closely and keep an eye out as you continue.',
@@ -2851,7 +2928,7 @@ const FOOD_EFFECTS = {
   // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
   // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
   // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
-  // chest-thrusts + call-112 (NEVER abdominal thrusts under 1, NEVER adrenaline).
+  // abdominal-thrusts + call-112 (child 1y+ technique since Ziva turned one; NEVER adrenaline).
   // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
   // gate doesn't apply).
   // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
@@ -2868,7 +2945,7 @@ const FOOD_EFFECTS = {
   'choking hazards': {
     foodClass:  'choking-by-form',     // PRIMARY (first standalone) — the form IS the hazard
     severity:   'caution',             // amber conditional chrome; the floor renders via severeSigns
-    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum'],
+    aliases:    ['grape', 'grapes', 'whole grape', 'cherry tomato', 'cherry tomatoes', 'popcorn', 'hot dog', 'hotdog', 'sausage', 'hard candy', 'boiled sweet', 'lollipop', 'marshmallow', 'whole carrot', 'raw carrot', 'roasted chana', 'whole chana', 'roasted gram', 'bhuna chana', 'sev', 'namkeen', 'murukku', 'chakli', 'supari', 'areca nut', 'betel nut', 'makhana', 'fox nuts', 'ber', 'jujube', 'raisin', 'raisins', 'chewing gum', 'whole corn', 'corn kernels', 'bhutta', 'chikki', 'gajak', 'whole litchi', 'whole lychee', 'litchi', 'lychee', 'chivda', 'bhujia sev', 'mathri', 'jelly cubes', 'dry coconut pieces', 'whole makhana', 'roasted makhana'],
     effect:     'airway obstruction (choking) by food form',
     title:      'Choking hazards — cut it to make it safe; whole forms wait until ~5',
     why:        'Most of these foods are healthy in a SAFE form — the hazard is the SHAPE, not the food. Round (grape, whole nut) and coin/cylindrical (hot-dog round) shapes plug a small airway; hard foods can\'t be chewed without grinding molars (which a baby has none of until ~16–29 months). Change the form: cut to ≤½ inch (a child\'s small fingernail), cook soft, grind, or thin.',
@@ -2901,8 +2978,9 @@ const FOOD_EFFECTS = {
     // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
     severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
-    // the hazard, milk-spec §9). Under-1: 5 back blows + 5 chest thrusts, NEVER abdominal thrusts.
-    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or they can\'t breathe — BABY UNDER 1: alternate 5 back blows (face-down along your forearm, head lower than the body, between the shoulder blades) and 5 chest thrusts (2 fingers, middle of the chest just below the nipple line); NEVER abdominal thrusts (Heimlich) under 1 — risk of organ damage. CHILD OVER 1: 5 back blows, then 5 abdominal thrusts. No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if they become unresponsive → start CPR.',
+    // the hazard, milk-spec §9). Child 1y+ (Ziva turned one 2026-09-04): 5 back blows + 5 abdominal
+    // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
+    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
     culturalNote:'Whole GROUNDNUT (peanut) is the single most common aspirated food in Indian children (≈67.5% in one ENT series), often handed loose to toddlers to console them — grind it or thin the butter. SUPARI / areca nut is a double danger (in airways AND acutely toxic — seizures, liver injury) — keep it away from children. Other Indian hazards: chana / roasted gram, hard sev / namkeen / murukku, whole makhana, ber (jujube) pits.',
     confidence: 'high',
@@ -2952,16 +3030,16 @@ const EMERGENCY_PROTOCOL = {
     ],
     steps: [
       '**Can she cough or cry?** Encourage coughing — don’t intervene.',
-      '**Silent / can’t breathe → 5 back blows** — face-down along your forearm, head low, between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
-      '**Then 5 chest thrusts** — two fingers, middle of the chest. **Never abdominal thrusts under 1.**',
-      '**Alternate** back blows + chest thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
+      '**Silent / can’t breathe → 5 back blows** — face-down across your lap, head low (or leaning forward), between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
+      '**Then 5 abdominal thrusts** — from behind, fist between the belly button and the ribs, pull **inwards and upwards**. Keep off the lower ribs.',
+      '**Alternate** back blows + abdominal thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
     ],
-    after: [ 'Even once cleared, get her checked — a retained fragment or airway irritation can follow.' ],
+    after: [ 'Even once cleared, get her checked — a retained fragment, airway irritation, or injury from the abdominal thrusts can follow.' ],
     doc: {
       suspected: 'Choking',
       stamps: [ { id: 'reaction', label: 'Time it happened' } ],
-      action: { label: 'Back blows / chest thrusts given · object cleared', value: 'Yes / No' },
-      forTeam: 'choking on {food}; back blows + chest thrusts given; see the “cleared” line above.',
+      action: { label: 'Back blows / abdominal thrusts given · object cleared', value: 'Yes / No' },
+      forTeam: 'choking on {food}; back blows + abdominal thrusts given; see the “cleared” line above.',
     },
   },
   botulism: {
@@ -2984,8 +3062,10 @@ const EMERGENCY_PROTOCOL = {
 window.EMERGENCY_PROTOCOL = EMERGENCY_PROTOCOL;
 
 // ── ALLERGEN FLAGS ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const ALLERGENS = {
-  'peanut':    'Tree nut/legume allergen. Introduce alone for 3 days. Watch for rash, swelling, vomiting.',
+  'peanut':    'Legume allergen (not a tree nut). Give ground or as thinly spread butter, never whole. Watch for rash, swelling or vomiting for about 2 hours.',
   'almond':    'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
   'almonds':   'Tree nut allergen. Use soaked+peeled+ground. Watch for reactions first 2-3 times.',
   'walnut':    'Tree nut allergen. Always grind to paste. Watch for reactions.',
@@ -3016,7 +3096,7 @@ const ALLERGENS = {
 // ── COMBINATION LOGIC ──
 const COMBO_RULES = [
   { foods:['iron','calcium'], type:'caution', title:'Iron + Calcium compete for absorption',
-    detail:'Calcium can reduce iron absorption by 30-50%. Don\'t serve ragi (iron) with paneer (calcium) in the same meal. Space iron-rich and calcium-rich foods at least 2 hours apart.' },
+    detail:'Calcium lowers iron absorption at the same meal. For her main iron meal, keep big dairy portions and any calcium supplement dose apart; a little curd with dal is fine.' },
   { foods:['iron','vitamin c'], type:'boost', title:'Iron + Vitamin C = absorption boost',
     detail:'Vitamin C increases iron absorption by up to 3×. This is an excellent combination! Pair ragi/dal with lemon, tomato, orange, or mango.' },
   { foods:['iron','tea'], type:'avoid', title:'Tea blocks iron absorption',
@@ -3033,6 +3113,8 @@ const COMBO_RULES = [
 // @@DATA_BLOCK_14_START@@ COMBO_RECIPES
 
 // ── RECIPE DATABASE (120+ combinations) ──
+// 12–24 m additions are merged into this table at parse time from the recipes.js
+// overlay (_mergeFoodLib1224, add-if-absent) — a key added here shadows its overlay entry.
 const COMBO_RECIPES = {
   // ── SINGLE INGREDIENTS ──
   'banana':       { recipe:'1. Peel ¼ ripe banana.\n2. Mash with fork until smooth.\n3. Serve immediately.', dos:['Use ripe bananas with brown spots','Great quick energy snack','Can mix with ragi or curd'], donts:['Don\'t overfeed if stools are firm','Avoid green/unripe bananas','Don\'t store mashed — turns brown'] },
@@ -3075,9 +3157,9 @@ const COMBO_RECIPES = {
   'ragi beetroot':    { recipe:'1. Grate 1 small beetroot, steam 5 min, puree.\n2. Cook 1 tbsp ragi in ½ cup water (5 min).\n3. Mix beetroot puree into ragi.\n4. Add ghee.', dos:['Double iron sources combined','Pair with lemon or mango for absorption','Rich colour — visually appealing'], donts:['Will stain everything pink','Don\'t add salt','Serve fresh'] },
   'blueberry avocado':{ recipe:'1. Steam 10 blueberries 2 min, mash.\n2. Scoop 2 tbsp avocado.\n3. Mix together.\n4. Serve immediately.', dos:['Brain fats + antioxidants','No cooking needed','Rich purple colour'], donts:['Don\'t give whole blueberries','Both oxidise fast — serve immediately','Stains heavily — bib essential'] },
   'spinach khichdi':  { recipe:'1. Blanch 5-6 spinach leaves 2 min, puree.\n2. Cook 1 tbsp rice + ½ tbsp dal — 3 whistles.\n3. Mix spinach puree + ghee + lemon.', dos:['Triple iron — spinach + dal + lemon for absorption','Blanch spinach first to reduce oxalates','Complete meal'], donts:['Don\'t reheat spinach dishes','Don\'t skip blanching','Make fresh each time'] },
-  'honey':            { recipe:'', dos:[], donts:['NEVER give honey before 12 months','Risk of infant botulism — can be fatal','No form of honey is safe — raw, cooked, or baked'] },
-  'salt':             { recipe:'', dos:[], donts:['No added salt before 12 months','Baby\'s kidneys cannot process it','Natural sodium in food is sufficient'] },
-  'sugar':            { recipe:'', dos:[], donts:['No added sugar before 12 months','Use fruit for natural sweetness','Includes jaggery and gur'] },
+  'honey':            { recipe:'', dos:[], donts:['Never before 12 months — risk of infant botulism, which can be fatal','From 1 it is an added sugar, so wait until 2','No form of honey is safe before 1 — raw, cooked, or baked'] },
+  'salt':             { recipe:'', dos:[], donts:['None added before 12 months — baby kidneys cannot process it','From 1 year keep it light: no more than 2 g a day up to age 3 (NHS)','Skip pickles, papad and namkeen'] },
+  'sugar':            { recipe:'', dos:[], donts:['No added sugar before 2 years','Use fruit for natural sweetness','Includes jaggery and gur'] },
 };
 // @@DATA_BLOCK_14_END@@
 
@@ -3125,7 +3207,7 @@ const FOOD_SUBCATS = {
   seed:        { match:['sesame','til','flaxseed','alsi','chia','pumpkin seed','sunflower seed','makhana','fox nut'], cook:'roast+powder', time:'3–5 min', method:'Dry roast on low, cool, grind to fine powder' },
   // Spices
   spice:       { match:['turmeric','jeera','cumin','ajwain','cinnamon','cardamom','nutmeg','pepper','hing','saffron','fennel','mint','curry leaves','bay leaf','ginger'], cook:'temper', time:'30 sec', method:'Add tiny pinch to cooked food or temper in ghee' },
-  sweetener:   { match:['jaggery','gur','mishri','date syrup'], cook:'dissolve', time:'1 min', method:'Dissolve small amount in warm food — avoid before 12 months' },
+  sweetener:   { match:['jaggery','gur','mishri','date syrup'], cook:'dissolve', time:'1 min', method:'Dissolve small amount in warm food — avoid before 2 years' },
   // Oils
   oil:         { match:['coconut oil','sesame oil','mustard oil','olive oil','groundnut oil'], cook:'none', time:'0 min', method:'Add ½ tsp to cooked food for healthy fats' },
   // Non-veg
@@ -3953,7 +4035,7 @@ const MILESTONE_STANDARDS = {
     { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understands far more than she speaks.', advanced:true, domain:'language', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Uses specific words consistently. Receptive vocabulary is 10–50+ words.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows one-step instructions', icon:zi('list'), desc:'"Bring the shoe", "sit down" — understands and acts on simple requests.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Uses spoon (messily)', icon:zi('spoon'), desc:'Attempts self-feeding with a spoon — will be messy but is great for independence.', advanced:false, domain:'motor', source:'unverified' },
@@ -3961,6 +4043,162 @@ const MILESTONE_STANDARDS = {
     { text:'Scribbles with crayon', icon:zi('palette'), desc:'Makes marks on paper when given a crayon — early fine motor + creative expression.', advanced:true, domain:'motor', source:'unverified' },
     { text:'Says 5+ words', icon:zi('chat'), desc:'Expanding vocabulary with clear intent. May combine a word + gesture.', advanced:true, domain:'language', source:'unverified' },
     { text:'Runs (toddles fast)', icon:zi('run'), desc:'Moves at speed once walking is stable — balance and coordination accelerating.', advanced:true, domain:'motor', source:'unverified' },
+  ],
+  // ── 13–24 m toddler extension (2026-09-24). WHO-only: iap/eu/cn fall back to
+  // these per month via _msStandardFor(). Sources, fetched 2026-09-24:
+  //   CDC "Learn the Signs. Act Early." 2022 checklists (cdc.gov/act-early/
+  //   milestones/15-months, 18-months, 2-years); AAP / HealthyChildren.org
+  //   "Developmental Milestones: 2 Year Olds", "Language Development: 1 Year
+  //   Olds", "Hand and Finger Skills: 1 Year Olds", "Developmental Milestones
+  //   of Early Literacy"; WHO MGRS motor study (Acta Paediatr 2006 Suppl 450)
+  //   as desc context only. source:'CDC' = a CDC checklist item at its own
+  //   checkpoint month; 'AAP' = AAP item whose [bracket, endMonth) sits inside
+  //   AAP's stated timing; everything else 'unverified' (trailing comment names
+  //   the content origin for the curation arc). checkpoint:N marks a "most
+  //   children by N months" item (CDC 75%+; AAP "by two years"): the window is
+  //   the three months up to N and the card says "by N months", never a band
+  //   that starts at N.
+  13: [
+    { text:'Carries a book to you to read', icon:zi('book'), desc:'Brings a favourite board book and hands it over — a lovely early sign of shared attention and a love of stories.', advanced:false, domain:'social', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
+    { text:'Understands far more words than she can say', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
+    { text:'Squats to pick up a toy and stands back up', icon:zi('run'), desc:'Bends down mid-play, grabs the toy, rises without holding on — balance and leg strength working together.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Climbs stairs on hands and knees', icon:zi('run'), desc:'Crawls up a few steps with you right behind her. A gate at the top and bottom keeps practice safe.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Enjoys simple songs with actions', icon:zi('sparkle'), desc:'Joins in with a clap or a wave during action songs — rhythm, listening and imitation all at once.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Uses a word plus a gesture to ask for something', icon:zi('chat'), desc:'Points and says "ball" to ask you to roll it — her first sentence is a word and a gesture together.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1
+  ],
+  14: [
+    { text:'Notices when a book is upside down', icon:zi('book'), desc:'Turns the book the right way round, or looks puzzled when it is not — an early step toward reading.', advanced:false, domain:'cognitive', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
+    { text:'Drinks from a straw cup', icon:zi('drop'), desc:'Sips water from a straw cup — mouth and tongue coordination growing. Sit down for drinks and snacks.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
+    { text:'Says "uh-oh" or another everyday word', icon:zi('chat'), desc:'Little words tied to moments — "uh-oh" when something drops, "up" when she wants lifting.', advanced:false, domain:'language', source:'unverified' },
+    { text:'Enjoys being chased in play', icon:zi('handshake'), desc:'Squeals and toddles off when you pretend to chase — a playful social game full of turn-taking.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Enjoys water play — pouring and splashing', icon:zi('sparkle'), desc:'Fills and tips cups in the bath or a basin. Always within arm\'s reach around water.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Fits a round piece into a shape sorter', icon:zi('star'), desc:'Finds the circle hole with a little trial and error — shape matching and hand control together.', advanced:true, domain:'cognitive', source:'unverified' },
+  ],
+  15: [
+    // CDC "Milestones by 15 Months" — Social/Emotional
+    { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Claps when excited', icon:zi('party'), desc:'Claps for herself or along with you when something delights her.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses of her own — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    // CDC 15 m — Language/Communication
+    { text:'Tries to say 1–2 words besides mama or dada', icon:zi('chat'), desc:'Words are often partial — "ba" for ball, "da" for dog. Repeat the full word back warmly.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Looks at a familiar object when you name it', icon:zi('eye'), desc:'You say "where\'s the cup?" and her eyes go straight to it — words are linking to things.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Follows a direction given with words and a gesture', icon:zi('list'), desc:'Hands you the toy when you hold out your hand and say "give me the toy".', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Points to ask for something or for help', icon:zi('target'), desc:'Points at the shelf she cannot reach — asking with her finger before she has the words.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    // CDC 15 m — Cognitive
+    { text:'Uses everyday things the right way, like a phone or a book', icon:zi('phone'), desc:'Holds a phone to her ear, lifts a cup to drink, opens a book — she knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
+    { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
+    // CDC 15 m — Movement/Physical
+    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
+    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and feeds herself. Offer soft, bite-sized food and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
+    // AAP — explicit 15–18 m timing
+    { text:'Says several single words', icon:zi('chat'), desc:'A small handful of real words used on purpose. The pace varies a lot from child to child.', advanced:false, domain:'language', source:'AAP', endMonth:18 }, // AAP-2Y "by fifteen to eighteen months"
+    { text:'Uses a few simple signs or gestures (more, all done)', icon:zi('handshake'), desc:'Taps fingers for "more" or waves hands for "all done" — gestures bridge the gap before words.', advanced:true, domain:'language', source:'unverified' },
+  ],
+  16: [
+    { text:'Turns board-book pages, a few at a time', icon:zi('book'), desc:'Flips thick pages — often several at once. Hands and interest in books growing together.', advanced:false, domain:'motor', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
+    { text:'Builds a tower of three blocks', icon:zi('star'), desc:'Stacks three before the happy crash — hand steadiness and patience growing.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1 towers in the second year
+    { text:'Walks while pulling a toy along', icon:zi('run'), desc:'Walks while tugging a pull-toy behind her — walking is now steady enough to multitask.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Knows the names of familiar people', icon:zi('chat'), desc:'Looks toward Nani or Papa when you say their name — a growing map of the people she loves.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
+    { text:'Plays alongside other children', icon:zi('handshake'), desc:'Happy to play near another child — side-by-side play comes long before sharing.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
+    { text:'Points to one body part when asked', icon:zi('eye'), desc:'Touches her nose when you ask "where\'s your nose?" — an early stretch toward naming body parts.', advanced:true, domain:'language', source:'unverified' },
+  ],
+  17: [
+    { text:'Walks while carrying a big toy', icon:zi('run'), desc:'Carries a teddy or a ball in both arms while walking — balance without using arms to steady herself.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Pretends to feed a doll or teddy', icon:zi('spoon'), desc:'Offers a spoon to a teddy — the first seeds of pretend play.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins make-believe"
+    { text:'Takes toys apart and puts them back together', icon:zi('bulb'), desc:'Pulls apart stacking cups or pop-beads and tries to fit them again — little problem-solving at work.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1
+    { text:'Uses a word to ask for help or "more"', icon:zi('chat'), desc:'Says "more" at snack time or "help" with a stuck lid — words starting to do real work.', advanced:false, domain:'language', source:'unverified' },
+    { text:'Wants to do things herself', icon:zi('sprout'), desc:'Says "no" and reaches to do it alone — healthy independence, even when it tests your patience.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
+    { text:'Tries to take off her shoes or socks', icon:zi('baby'), desc:'Tugs socks off at every chance — early self-care and body awareness.', advanced:true, domain:'motor', source:'unverified' },
+  ],
+  18: [
+    // CDC "Milestones by 18 Months" — Social/Emotional
+    { text:'Moves away from you but checks you are close by', icon:zi('eye'), desc:'Explores a little way off, then glances back to find you — you are her safe base.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Points to show you something interesting', icon:zi('target'), desc:'Points at the bird or the bus just to share the moment with you.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Puts hands out for you to wash them', icon:zi('drop'), desc:'Holds out her hands at the tap — joining in with daily routines.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Looks at a few pages in a book with you', icon:zi('book'), desc:'Sits for a few pages of a story together — shared reading time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Helps with dressing by pushing an arm through or lifting a foot', icon:zi('handshake'), desc:'Pushes an arm through the sleeve or lifts a foot for a shoe — teamwork at dressing time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    // CDC 18 m — Language/Communication
+    { text:'Tries to say three or more words besides mama or dada', icon:zi('chat'), desc:'A few real words beyond mama and dada, even if only you understand them yet.', advanced:false, domain:'language', source:'CDC', checkpoint:18 },
+    { text:'Follows a one-step direction without gestures', icon:zi('list'), desc:'Gives you the toy when you just say "give it to me" — no pointing needed.', advanced:false, domain:'language', source:'CDC', checkpoint:18 },
+    // CDC 18 m — Cognitive
+    { text:'Copies you doing chores, like sweeping', icon:zi('mirror'), desc:'Pushes a broom or wipes the table like you do — learning by imitation.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
+    { text:'Plays with toys in a simple way, like pushing a car', icon:zi('star'), desc:'Rolls a car along the floor, not just mouths or bangs it — playing with purpose.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
+    // CDC 18 m — Movement/Physical
+    { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks on her own around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 }, // desc context: WHO-MGRS 99th pct 17.6 m
+    { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
+    { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds her own meals. Keep offering soft, bite-sized pieces and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for her mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down by herself. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
+    // AAP — explicit timing
+    { text:'Starts using simple phrases', icon:zi('chat'), desc:'Short phrases like "ball up" or "drink milk" begin to appear somewhere in this stretch.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-2Y "by eighteen to twenty-four months"
+    { text:'Uses action and direction words (go, up, down)', icon:zi('chat'), desc:'Words like "go", "up", "down", "in" and "out" join her naming words.', advanced:false, domain:'language', source:'unverified' }, // AAP-LANG1 "by midyear" of the second year
+    { text:'Walks backwards a few steps', icon:zi('run'), desc:'Steps backwards while pulling a toy or watching you — balance keeps refining.', advanced:true, domain:'motor', source:'unverified' },
+  ],
+  19: [
+    { text:'Walks up steps with a hand held', icon:zi('handshake'), desc:'Steps up the stairs holding your hand or a rail. Gates stay up for unsupervised moments.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y stairs holding support
+    { text:'Fits simple shapes into a shape sorter', icon:zi('star'), desc:'Matches a few shapes to their holes — trial and error turning into planning.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins to sort by shapes"
+    { text:'Picks up new words almost every week', icon:zi('chat'), desc:'New words keep arriving — names of foods, animals and people she sees every day.', advanced:false, domain:'language', source:'unverified' },
+    { text:'Shows pride when she does something new', icon:zi('trophy'), desc:'Claps for herself or looks to you beaming after a new feat — confidence growing.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Points out everyday sounds (dog, plane, bell)', icon:zi('bell'), desc:'Stops and points when she hears a dog or a plane — listening closely to her world.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Turns a knob or unscrews a loose lid', icon:zi('bulb'), desc:'Twists a knob or a loose lid with her wrist — fine motor control getting precise.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-HAND1 turning knobs
+  ],
+  20: [
+    { text:'Names familiar pictures when you ask "what\'s that?"', icon:zi('book'), desc:'Names a dog, ball or cup in a picture book — words and pictures linking up.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-LIT 18–24 m
+    { text:'Starts to run with a quick toddle', icon:zi('run'), desc:'Walking speeds up into a stiff, happy run — falls are common and usually harmless.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y "begins to run"
+    { text:'Turns a container over to pour things out', icon:zi('note'), desc:'Tips a box to get the toys out — using a tool-like action to solve a problem.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
+    { text:'Plays dress-up with hats or shoes', icon:zi('sparkle'), desc:'Tries on your hat or steps into your shoes — pretend play is blooming.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Pats or hugs a teddy that is "crying"', icon:zi('heart'), desc:'Comforts a toy when you pretend it is sad — early empathy taking shape.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Stands on tiptoe', icon:zi('run'), desc:'Rises onto her toes to reach something — calf strength and balance on show.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-2Y
+  ],
+  21: [
+    { text:'Finishes a line in a favourite book', icon:zi('book'), desc:'Pause before the last word of a well-loved book and she fills it in.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-LIT 18–24 m
+    { text:'Walks down steps holding a rail or your hand', icon:zi('handshake'), desc:'Coming down is harder than going up — a hand to hold makes it safe.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Finds a toy hidden under two covers', icon:zi('star'), desc:'Lifts one cloth, then the next, to find the toy — memory and problem-solving together.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
+    { text:'Matches two identical objects or pictures', icon:zi('eye'), desc:'Puts two matching cups or cards together — noticing what is the same.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Wants to help with simple tasks', icon:zi('sprout'), desc:'Fetches her shoes or puts socks in the basket — being a helper feels big.', advanced:false, domain:'social', source:'unverified' },
+  ],
+  22: [
+    { text:'Begins sorting by shape or colour', icon:zi('palette'), desc:'Groups the red blocks or the round ones — early sorting and matching.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
+    { text:'Repeats words she overhears', icon:zi('chat'), desc:'Echoes words from your conversations — sometimes at surprising moments.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
+    { text:'Uses a spoon with less spilling', icon:zi('spoon'), desc:'More food reaches her mouth than the floor. Keep meals seated and supervised.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
+    { text:'Shows a wider range of feelings', icon:zi('heart'), desc:'Joy, frustration, pride and shyness all show clearly now. Short tantrums are a normal part of this age.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Enjoys dancing and moving to music', icon:zi('sparkle'), desc:'Bounces, sways and spins when music plays — rhythm and body awareness.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Throws a ball overhand', icon:zi('run'), desc:'A wobbly overhand throw — aim comes later, the arm action comes first.', advanced:true, domain:'motor', source:'unverified' },
+  ],
+  23: [
+    { text:'Climbs on low playground equipment', icon:zi('run'), desc:'Climbs a low ladder or slide steps with you close by — coordination and courage.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Completes a simple 2–3 piece puzzle', icon:zi('bulb'), desc:'Fits a few chunky puzzle pieces in place — shape sense and persistence.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Plays simple turn-taking games with you', icon:zi('handshake'), desc:'Rolls the ball back, waits, rolls again — the rhythm of taking turns.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Tries to jump with both feet', icon:zi('run'), desc:'Bends her knees and tries to leave the ground — both feet may not lift yet.', advanced:true, domain:'motor', source:'unverified' },
+    { text:'Uses three- or four-word sentences', icon:zi('chat'), desc:'Longer sentences like "Mama, more milk please" — a stretch skill that many reach closer to age two or later.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-2Y "two- to four-word sentences"
+  ],
+  24: [
+    // CDC "Milestones by 2 Years" — Social/Emotional
+    { text:'Notices when others are hurt or upset', icon:zi('heart'), desc:'Pauses or looks sad when someone is crying — the beginnings of empathy.', advanced:false, domain:'social', source:'CDC', checkpoint:24 },
+    { text:'Looks at your face to see how to react to something new', icon:zi('eye'), desc:'Checks your expression before deciding if something new is safe or fun.', advanced:false, domain:'social', source:'CDC', checkpoint:24 },
+    // CDC 24 m — Language/Communication
+    { text:'Points to things in a book when you ask', icon:zi('book'), desc:'Finds the bear when you ask "where is the bear?" — understanding and pointing together.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Says at least two words together, like "more milk"', icon:zi('chat'), desc:'Two-word combinations appear — "more milk", "bye Papa", "big ball".', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Points to at least two body parts when asked', icon:zi('target'), desc:'Shows you her nose, tummy or toes when you ask.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Uses more gestures, like blowing a kiss or nodding yes', icon:zi('handshake'), desc:'Blows a kiss or nods yes — a richer set of gestures to go with her words.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    // CDC 24 m — Cognitive
+    { text:'Holds something in one hand while using the other', icon:zi('bulb'), desc:'Holds a container steady and pulls the lid off with the other hand — two hands with two jobs.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
+    { text:'Tries to use switches, knobs or buttons on a toy', icon:zi('star'), desc:'Presses, twists and flips to make toys work — figuring out how things function.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
+    { text:'Plays with more than one toy at the same time', icon:zi('star'), desc:'Puts toy food on a toy plate — combining toys into a little story.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
+    // CDC 24 m — Movement/Physical
+    { text:'Kicks a ball', icon:zi('run'), desc:'Swings a leg and connects with a ball — balance on one foot for a moment.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Runs', icon:zi('run'), desc:'Runs across the room or park — still a little stiff, and full of joy.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Walks up a few stairs, with or without help', icon:zi('run'), desc:'Walks (not crawls) up a few steps, holding on or on her own. Gates stay up when you are not beside her.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Eats with a spoon', icon:zi('spoon'), desc:'Feeds herself with a spoon for much of the meal. Seated, supervised meals remain the safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:24, safetyTier:true },
+    // AAP — "by two years"
+    { text:'Builds a tower of four or more blocks', icon:zi('star'), desc:'Stacks four blocks or more before knocking them down — steady hands and focus.', advanced:false, domain:'cognitive', source:'AAP', checkpoint:24 }, // AAP-2Y
+    { text:'May start to favour one hand', icon:zi('palette'), desc:'Might reach or scribble with one hand more often. Many children settle handedness later — both are normal.', advanced:false, domain:'motor', source:'AAP', checkpoint:24 }, // AAP-2Y + AAP-HAND1
+    // Stretch
+    { text:'Uses the words "me" and "you"', icon:zi('chat'), desc:'Starts using "me" and "you" correctly — a sense of self showing up in language.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1
+    { text:'Says around 50 words', icon:zi('chat'), desc:'A vocabulary of about fifty words — a wide range is normal, and understanding stays well ahead of speech.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1 (timing hedged: stretch)
   ],
   },
 
@@ -4020,7 +4258,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — wide range of normal.', advanced:true, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently or with minimal support', icon:zi('run'), desc:'IAP expects walking by 12–15 months. Both early and later walkers are normal.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 words with meaning', icon:zi('chat'), desc:'Small but real vocabulary with consistent meanings.', advanced:false, domain:'language', source:'unverified' },
     { text:'Drinks from cup with help', icon:zi('drop'), desc:'Takes sips from an open cup when held.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'"Sit down", "give me" — one-step commands understood and followed.', advanced:false, domain:'cognitive', source:'unverified' },
@@ -4086,7 +4324,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'European expectation for walking is 11–15 months.', advanced:false, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Most European norms expect walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–6 words', icon:zi('chat'), desc:'Small vocabulary with consistent meaning. Understands many more.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows simple instructions', icon:zi('list'), desc:'Acts on one-step commands like "give me the ball".', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Uses spoon (attempts)', icon:zi('spoon'), desc:'Self-feeding with a spoon — messy but developing.', advanced:false, domain:'motor', source:'unverified' },
@@ -4152,7 +4390,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks independently', icon:zi('run'), desc:'Some babies walk by 11 months — early for Chinese standard.', advanced:true, domain:'motor', source:'unverified' },
   ],
   12: [
-    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Walks independently', icon:zi('run'), desc:'Chinese standard expects independent walking by 12–15 months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
     { text:'Says 2–3 meaningful words', icon:zi('chat'), desc:'Small vocabulary used consistently and correctly.', advanced:false, domain:'language', source:'unverified' },
     { text:'Follows one-step instructions', icon:zi('list'), desc:'Understands and acts on simple commands.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Feeds self with fingers', icon:zi('spoon'), desc:'Picks up and eats food pieces independently.', advanced:false, domain:'motor', source:'unverified' },
@@ -4167,41 +4405,49 @@ const MILESTONE_STANDARDS = {
 // @@DATA_BLOCK_21_START@@ SLEEP_STANDARDS
 
 // ── Sleep Standards per reference ──
+// Toddler keys 13–36 m (2026-09-24, 12–24 m PR 2) are ANCHORS read by nearest-lower-key
+// lookup (getSleepTargets, medical.js). Sources: AASM 2016 (Paruthi, JCSM 12:785) and WHO 2019
+// under-5 guideline: 1–2 y 11–14 h per 24 h incl. naps; NSF 2015 (reaffirmed Jun 2026); Galland
+// 2012 (Sleep Med Rev 16:213) 1–2 y 12.6 h (10.0–15.2), 2–3 y 12.0 h (9.7–14.2); Iglowstein 2003
+// (Pediatrics 111:302) 2→1 nap shift by ~18 m; Staton 2020: <2.5% stop napping before 2 y, 33% by
+// 3 y (so naps [1,2] to 24 m, [1,1] to 30, [0,1] after); IAP 2022 (Indian Pediatr 59:235) 24–59 m
+// 10–14 h. Floors/targets are derived from these ranges; EU/CN toddler values and every bedtime
+// window are unverified (EU mirrors WHO, CN keeps its offsets).
 const SLEEP_STANDARDS = {
   who: { // WHO sleep guidelines
-    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600 },  // 10h floor
-    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:630, 11:630, 12:630 }, // 11h / 10.5h
-    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:780 }, // 14h / 13h
-    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:480 }, // 9h / 8h
+    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },  // 10h floor
+    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:630, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 }, // 11h / 10.5h
+    totalTarget: { 6:840, 7:840, 8:840, 9:780, 10:780, 11:780, 12:750, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 }, // 14h / 13h
+    totalFloor:  { 6:540, 7:540, 8:540, 9:480, 10:480, 11:480, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 }, // 9h / 8h infant; 10h from 12 m (AASM/WHO 1–2 y band starts at 12 m)
     bedtimeStart: 19, bedtimeEnd: 20, // 7–8 PM
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'WHO'
   },
   iap: { // IAP (India) — slightly more flexible on bedtime, adjusted for Indian routines
-    nightMin:  { 6:570, 7:570, 8:570, 9:570, 10:570, 11:570, 12:570 },  // 9.5h floor
-    nightTarget: { 6:660, 7:660, 8:660, 9:630, 10:630, 11:630, 12:600 }, // 11h / 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:750 }, // 14h → 12.5h
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:450 },
+    nightMin:  { 6:570, 7:570, 8:570, 9:570, 10:570, 11:570, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:540, 30:540, 31:540, 36:540 },  // 9.5h floor
+    nightTarget: { 6:660, 7:660, 8:660, 9:630, 10:630, 11:630, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 11h / 10.5h / 10h
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:780, 12:720, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 }, // 14h → 12.5h
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:480, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:540, 30:540, 31:540, 36:540 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Indian households tend later)
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[1,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[1,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'IAP'
   },
   eu: { // European norms — similar to WHO with slight variations
-    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:570 },
-    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:660, 11:630, 12:630 },
-    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:780 },
-    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:480 },
+    nightMin:  { 6:600, 7:600, 8:600, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
+    nightTarget: { 6:660, 7:660, 8:660, 9:660, 10:660, 11:630, 12:630, 13:630, 15:630, 18:630, 19:630, 24:630, 25:630, 30:630, 31:630, 36:630 },
+    totalTarget: { 6:840, 7:840, 8:840, 9:810, 10:780, 11:780, 12:750, 13:750, 15:750, 18:720, 19:720, 24:720, 25:690, 30:690, 31:690, 36:690 },
+    totalFloor:  { 6:540, 7:540, 8:540, 9:510, 10:480, 11:480, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 19, bedtimeEnd: 20,
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,2], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'EU'
   },
   cn: { // Chinese (CIP) — tends to expect slightly less night sleep, more naps
-    nightMin:  { 6:570, 7:570, 8:570, 9:540, 10:540, 11:540, 12:540 },  // 9.5h / 9h
-    nightTarget: { 6:630, 7:630, 8:630, 9:600, 10:600, 11:600, 12:600 }, // 10.5h / 10h
-    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:750 },
-    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:450 },
+    nightMin:  { 6:570, 7:570, 8:570, 9:540, 10:540, 11:540, 12:540, 13:540, 15:540, 18:540, 19:540, 24:540, 25:540, 30:540, 31:540, 36:540 },  // 9.5h / 9h
+    nightTarget: { 6:630, 7:630, 8:630, 9:600, 10:600, 11:600, 12:600, 13:600, 15:600, 18:600, 19:600, 24:600, 25:600, 30:600, 31:600, 36:600 }, // 10.5h / 10h
+    totalTarget: { 6:840, 7:840, 8:810, 9:780, 10:780, 11:750, 12:720, 13:720, 15:720, 18:690, 19:690, 24:690, 25:660, 30:660, 31:660, 36:660 },
+    totalFloor:  { 6:540, 7:540, 8:510, 9:480, 10:480, 11:450, 12:570, 13:570, 15:570, 18:570, 19:570, 24:570, 25:570, 30:570, 31:570, 36:570 },
     bedtimeStart: 20, bedtimeEnd: 21, // 8–9 PM (Chinese households tend later)
-    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,3], 10:[2,2], 11:[1,2], 12:[1,2] },
+    naps: { 6:[2,3], 7:[2,3], 8:[2,3], 9:[2,3], 10:[2,2], 11:[1,2], 12:[1,2], 13:[1,2], 15:[1,2], 18:[1,2], 19:[1,2], 24:[1,2], 25:[1,1], 30:[1,1], 31:[0,1], 36:[0,1] },
     label: 'CIP'
   },
 };
@@ -4495,11 +4741,12 @@ const VACC_GUIDANCE = {
     note: 'IPV is the injectable polio vaccine. Along with OPV (oral), provides complete protection against all three poliovirus types.',
   },
   'influenza': {
-    dos: ['First time: two doses 4 weeks apart, then annual booster', 'Best given before flu season (Sep–Nov in India)'],
+    dos: ['First time: two doses 4 weeks apart, then one dose every year until 5 years', 'Best given before the monsoon (May–June), as IAP advises for India'],
     donts: ['Don\'t skip the second dose if this is the first year', 'Don\'t assume flu is harmless for babies — complications can be serious'],
     note: 'IAP recommended (not mandatory). Protects against seasonal influenza which can be severe in babies under 2.',
   },
-  'hep': {
+  // 'hep b' (not 'hep'): a bare 'hep' matched "Hep A-1" and served Hep B birth-dose advice.
+  'hep b': {
     dos: ['Birth dose is critical — should be given within 24 hours', 'No special precautions needed after this vaccine'],
     donts: ['Don\'t delay the birth dose — early protection against hepatitis B is essential'],
     note: 'Hepatitis B can cause chronic liver disease. The birth dose prevents mother-to-child transmission.',
@@ -4515,12 +4762,27 @@ const VACC_GUIDANCE = {
     note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
   },
   'mcv': {
-    dos: ['Critical for preventing meningococcal meningitis', 'Can be given at 9 months with MMR'],
-    donts: ['Don\'t skip — meningococcal disease progresses very rapidly'],
-    note: 'Protects against Neisseria meningitidis which causes bacterial meningitis and septicaemia.',
+    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask her doctor', 'If her doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
+    donts: ['Don\'t confuse it with the measles vaccine (in India "MCV" often means measles-containing vaccine)'],
+    note: 'MenACWY protects against meningococcal meningitis and septicaemia. IAP lists it for special situations, not routine use.',
+  },
+  'hep a': {
+    dos: ['First dose from 12 months', 'Live vaccine: one dose is enough. Inactivated vaccine: a second dose 6 months or more later'],
+    donts: ['Don\'t book a second dose until you know which vaccine was used for the first'],
+    note: 'Hepatitis A spreads through contaminated food and water. IAP routine from 12 months.',
+  },
+  'varicella': {
+    dos: ['First dose at 15 months, second 3–6 months later', 'A few spots near the injection site a week or two later can be normal'],
+    donts: ['Don\'t give aspirin in the weeks after this vaccine'],
+    note: 'Protects against chickenpox. Not in the government programme, so usually given privately.',
+  },
+  'je': {
+    dos: ['Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres — ask at her next visit', 'Private inactivated vaccine: two doses 28 days apart; government live vaccine: 9–12 and 16–24 months'],
+    donts: ['Don\'t skip it if you live in an endemic district — JE can cause lasting brain damage'],
+    note: 'Japanese encephalitis spreads through mosquito bites in rural, rice-growing areas.',
   },
   'opv': {
-    dos: ['Oral drops — easy and painless', 'Continue giving OPV even during pulse polio campaigns'],
+    dos: ['Oral drops — easy and painless', 'On every Pulse Polio day, children under 5 should get the drops, even if fully vaccinated'],
     donts: ['Don\'t breastfeed for 30 minutes before/after OPV (some guidelines)', 'Don\'t skip government pulse polio rounds'],
     note: 'Oral polio vaccine provides intestinal immunity. Works alongside IPV for complete protection.',
   },
@@ -4744,7 +5006,7 @@ const SYMPTOM_DB = [
       'Keep Ziva upright.',
       'Clear her nose with saline drops and a nasal aspirator.',
       'Stay calm so she stays calm.',
-      'Count her breaths per minute (normal: 30–50 for 6–12 months).'
+      'Count her breaths for a full minute while she is calm (normal at 1–2 years: under 40, usually about 24–39). 40 or more at rest is fast breathing — call the doctor.'
     ],
     precautions: [
       'Watch for the chest retracting (sucking in) with each breath.',
@@ -4809,25 +5071,29 @@ const SYMPTOM_DB = [
     keywords: ['teething','teeth','gum','gums','drooling','biting','chewing','swollen gum'],
     severity: 'mild',
     title: 'Teething Discomfort',
-    summary: 'Chilled teether, gum massage, wipe drool, high fever is NOT teething',
+    summary: 'Chilled teether, gum massage, wipe drool — fever is NOT teething',
     whatToDo: [
       'Offer a clean, chilled (not frozen) teething ring.',
       'Gently massage gums with a clean finger.',
-      'Offer chilled fruit puree (banana or apple) to soothe gums.',
+      'Offer cold water in her cup, or soft ripe chilled fruit like melon in small pieces, with her sitting down and you beside her.',
       'Wipe drool frequently to prevent chin rash.'
     ],
     precautions: [
-      'Mild warmth (up to 100.4°F / 38°C) can accompany teething; anything higher is NOT teething.',
+      // AAP (HealthyChildren "Teething Pain", 2025): fever is a false symptom of teething.
+      'Teething does not cause fever, diarrhoea or hours of crying. If she has any of these, it is something else: check her and call her doctor.',
+      'Back teeth can be sorer and slower: first molars come through around 13–19 months, canines 16–23, second molars 23–33 (ADA).',
       'Watch for inconsolable crying lasting more than a couple of hours.',
-      'Track which teeth are coming through for the pediatrician visit.'
+      'Record each tooth on the Teeth chart (Milestones, Library) for the paediatrician or dentist.'
     ],
     doNot: [
       { text: 'Use teething gels containing benzocaine or lidocaine', critical: true },
       { text: 'Give homeopathic teething tablets', critical: true },
-      { text: 'Tie a teething necklace around her neck (strangulation risk)', critical: false }
+      { text: 'Tie a teething necklace around her neck (strangulation risk)', critical: false },
+      { text: 'Freeze a teething ring solid or use a liquid-filled teether', critical: false },
+      { text: 'Offer rusks or teething biscuits (most contain sugar, and hard pieces can break off)', critical: false }
     ],
     emergency: [
-      'Fever exceeds 101°F (38.3°C) — teething alone does not cause high fever',
+      'Fever of 38.3°C (101°F) or more — this is not teething; look for another cause',
       'Gums bleed heavily or look infected',
       'Ziva is inconsolable for hours'
     ],
@@ -5136,31 +5402,32 @@ const SYMPTOM_DB = [
     keywords: ['choking','choke','airway','blocked airway','food stuck','swallowed','object in mouth','can\'t breathe','gagging','coughing food'],
     severity: 'emergency',
     title: 'Choking',
-    summary: 'If she can cough, let her. If silent and not breathing, back blows then chest thrusts',
+    summary: 'If she can cough, let her. If silent and not breathing, back blows then abdominal thrusts',
     whatToDo: [
       'If Ziva is coughing forcefully, let her keep coughing — do not interfere.',
-      'If she cannot cry, cough, or breathe, place her face-down along your forearm with her head lower than her chest.',
+      'If she cannot cry, cough, or breathe, lay her face-down across your lap with her head low, or support her leaning forward.',
       'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
-      'Turn her face-up; give 5 chest thrusts using 2 fingers on the breastbone.',
-      'Repeat back blows and chest thrusts until the object comes out or she starts breathing.',
+      'Still stuck? Kneel behind her, make a fist between her belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
+      'Repeat back blows and abdominal thrusts until the object comes out or she starts breathing.',
+      'If she goes limp or unresponsive: lay her on a firm, flat surface, call 112 on speakerphone, remove an object only if you can clearly see and grasp it, and start CPR.',
       'Call emergency services as soon as possible — ideally have someone call while you do first aid.'
     ],
     precautions: [
       'Stay calm — your composure helps the rescue work.',
       'Look in her mouth only if you can clearly see the object and remove it with one finger sweep.',
-      'After the object comes out, she still needs to be checked by a doctor.'
+      'After the object comes out, she still needs to be checked by a doctor — abdominal thrusts can cause internal injury.'
     ],
     doNot: [
       { text: 'Do a blind finger sweep inside her mouth (it can push the object deeper)', critical: true },
       { text: 'Give water, food, or medication during a choking episode', critical: true },
-      { text: 'Perform abdominal thrusts (Heimlich) on babies under 1 year', critical: true },
+      { text: 'Press on her lower ribs during abdominal thrusts (it can cause injury)', critical: true },
       { text: 'Hold her upside down by the ankles', critical: false }
     ],
     emergency: [
       'Cannot cry, cough, or breathe',
       'Lips or face turning blue',
       'Becomes limp or loses consciousness',
-      'Object remains stuck after 5 cycles of back blows and chest thrusts',
+      'Object remains stuck after cycles of back blows and abdominal thrusts',
       'Severe coughing or gagging lasts more than a minute'
     ],
     lifeThreat: true,
@@ -5191,6 +5458,8 @@ const SYMPTOM_DB = [
     ],
     emergency: [
       'Loss of consciousness, even briefly',
+      'A fall from higher than 1 metre or down 5 or more stairs',
+      'Behaviour change — more irritable, distracted, or losing interest in things',
       'Vomiting more than once',
       'Seizure',
       'Clear fluid from the nose or ears',
@@ -5206,12 +5475,12 @@ const SYMPTOM_DB = [
     keywords: ['unconscious','unresponsive','passed out','fainted','won\'t wake up','limp','not responding','no response','collapsed'],
     severity: 'emergency',
     title: 'Unresponsive / Unconscious',
-    summary: 'Check breathing, place on side if breathing, start infant CPR if not, call 108',
+    summary: 'Check breathing, place on side if breathing, start child CPR if not (5 breaths, then 30 compressions : 2 breaths), call 112',
     whatToDo: [
-      'Shout her name and gently tap the bottom of her foot to see if she responds.',
-      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek.',
-      'If she is breathing, place her on her side (recovery position) and call emergency services.',
-      'If she is not breathing, call emergency services immediately — the dispatcher will guide you through chest compressions while help is on the way.',
+      'Tap her arm and call her name loudly to see if she responds.',
+      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek, for up to 10 seconds. Gasping is not breathing.',
+      'If she is breathing, place her on her side (recovery position) and call 112 on speakerphone.',
+      'If she is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? They call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
       'Stay with her until help arrives.'
     ],
     precautions: [
@@ -5220,7 +5489,7 @@ const SYMPTOM_DB = [
       'Note her colour — pale, blue, or grey is a serious sign.'
     ],
     doNot: [
-      { text: 'Give water, milk, or medication to an unresponsive baby', critical: true },
+      { text: 'Give water, milk, or medication to her while she is unresponsive', critical: true },
       { text: 'Shake her to try to wake her', critical: true },
       { text: 'Leave her alone to find help (call from where she is)', critical: false }
     ],
@@ -5323,9 +5592,9 @@ const ESCALATING_TIPS = {
     'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
   ],
   'supp-streak-broken': [
-    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s drops as usual; there is no need to double up for the missed day.',
-    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking the drops to the morning feed makes them hard to forget.',
-    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the drops next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
+    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
+    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking each dose to a meal or her milk makes it hard to forget.',
+    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
   ],
   'low-iron': [
     'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',
@@ -5334,7 +5603,7 @@ const ESCALATING_TIPS = {
   ],
   'low-calcium': [
     'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
-    'Calcium and Vitamin D work together for bone health. Since Ziva takes D3 drops, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
+    'Calcium and Vitamin D work together for bone health. Since Ziva takes a Vitamin D supplement, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
     'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
   ],
   'low-protein': [
@@ -5588,14 +5857,20 @@ const RECOMMENDATION_ROSTER = {
         // Nap-count guidance by age band — calibrated to the WHO/AAP nap-consolidation arc.
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
-        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        // 12–31 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] then [1,1]). A single-nap day is met, not "one short".
+        // From 31 m naps are optional ([0,1]); no band, so the nap nudge ages out.
+        { startMo: 12, endMo: 31, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       iap: { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
         { startMo: 4,  endMo: 9,  cadence: 'multiple', strength: 'recommended', minPerDay: 3 },
-        { startMo: 9,  endMo: 18, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
-        { startMo: 18, endMo: 36, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
+        { startMo: 9,  endMo: 12, cadence: 'twice',    strength: 'recommended', minPerDay: 2 },
+        // 12–31 m: one or two naps are both normal (2→1 shift ~12–18 m, Iglowstein 2003;
+        // SLEEP_STANDARDS naps [1,2] then [1,1]). A single-nap day is met, not "one short".
+        // From 31 m naps are optional ([0,1]); no band, so the nap nudge ages out.
+        { startMo: 12, endMo: 31, cadence: 'daily',    strength: 'recommended', minPerDay: 1 },
       ]},
       eu:  { ageRanges: [
         { startMo: 0,  endMo: 4,  cadence: 'multiple', strength: 'recommended', minPerDay: 4 },
@@ -5607,8 +5882,9 @@ const RECOMMENDATION_ROSTER = {
       ]},
     },
     severityMessages: {
-      gentle: { strength: 'one-short',  text: 'One nap short of the usual count today — a calm afternoon helps.' },
-      firm:   { strength: 'two-short',  text: 'Two naps short today. A quieter morning tomorrow could rebuild.' },
+      // Severity follows days since a nap was last logged, not how many are missing.
+      gentle: { strength: 'one-short',  text: 'Fewer naps than usual today — a calm afternoon helps.' },
+      firm:   { strength: 'two-short',  text: 'No naps logged yesterday either. A quieter morning tomorrow could help.' },
       urgent: { strength: 'no-naps',    text: 'No naps logged today at this age. Watch for evening overtiredness.' },
     },
     successorOnExpiry: null,

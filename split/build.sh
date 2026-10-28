@@ -164,6 +164,24 @@ if ! bash audit-emergency-floor-v1.sh >&2; then
   echo "BUILD ABORTED: emergency-floor never-cross audit failed. An Emergency Card step names the wrong first-aid (see above)." >&2
   exit 1
 fi
+# First-aid age gate (2026-09-24, Kael V-K-266-4): every choking / CPR surface (config.js +
+# data.js, six in all) must teach the child (1 year+) technique — no infant copy anywhere.
+if ! bash audit-first-aid-age-v1.sh >&2; then
+  echo "BUILD ABORTED: first-aid age audit failed. A choking/CPR surface teaches the infant technique (see above)." >&2
+  exit 1
+fi
+# Vaccine age-map totality gate (2026-09-24, 12-month audit): every VACC_SCHEDULE age label
+# must resolve in VACC_AGE_MONTHS, or that dose silently never comes due (the ?? 99 fallback).
+if ! bash audit-vacc-age-map-v1.sh >&2; then
+  echo "BUILD ABORTED: vaccine age-map audit failed. A schedule dose would never come due (see above)." >&2
+  exit 1
+fi
+# Food-library overlay totality gate (Ceres V-C-270-14): every recipes.js 12–24 m overlay
+# entry must merge; a data.js key that shadows one would silently drop its gate.
+if ! bash audit-food-lib-overlay-v1.sh >&2; then
+  echo "BUILD ABORTED: food-library overlay audit failed. An overlay entry is shadowed by a data.js key (see above)." >&2
+  exit 1
+fi
 # Phase 2 PR-3: bump manifest.json version (date-stamp + same-day counter)
 # before HTML concat. Errors here go to stderr so stdout (HTML) stays clean.
 node bump-version.mjs ../manifest.json
@@ -189,6 +207,15 @@ node build-doc-views.mjs >&2
 # Icon reference: a visual gallery of every zi-/zif- symbol in the sprite, auto-generated from
 # template.html so the icon count/list can never drift from the actual sprite.
 node build-icon-reference.mjs >&2
+# PWA installability (2026-09-18): Chrome offers "Install app" only when the page
+# links a manifest; iOS reads the apple-* tags for Add to Home Screen. These tags
+# were carried by the retired beta/ pages and never made it into this heredoc, so
+# the root index.html was non-installable from 2026-04-09 until this fix.
+# theme-color ships the light paper token; core.js toggleDarkMode / initDarkMode
+# rewrite it at runtime (#1a1a2e dark / #fdf0f3 light). Regression guard:
+# tests/e2e/pwa-head.spec.ts. NOTE (Cipher, Edict V): this <head> lives outside
+# every Governor jurisdiction — logged in docs/BUGS.md as a candidate move into
+# template.html.
 cat <<'HEAD'
 <!DOCTYPE html>
 <html lang="en">
@@ -196,6 +223,14 @@ cat <<'HEAD'
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Ziva's Dashboard</title>
+  <!-- PWA install contract — regression guard: tests/e2e/pwa-head.spec.ts -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#fdf0f3">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Ziva's Dashboard">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
 HEAD
 cat styles.css

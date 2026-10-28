@@ -1,5 +1,7 @@
 # SproutLab Roadmap — Post-Borders (2026-07-11)
 
+> **Status as of 2026-10-28:** see [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md) for where each item below stands and the proposed sequence. This document stays the authority for its own phases.
+
 **Status:** proposed v0.1, awaiting Architect priority-set. Supersedes the stale
 `SPROUTLAB_ROADMAP.md` (v7.0, Apr 2026) and `REVISED_ROADMAP-10.md` for
 forward planning; those are retained as history.

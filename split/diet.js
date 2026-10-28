@@ -92,13 +92,10 @@ function _categorizeFoods() {
     const base = _baseFoodName(lower);
     let placed = false;
     // Try exact key match first, then base food match, then substring
-    for (const { key, pid, sid } of _foodTaxFlat) {
-      if (lower === key || base === key || lower.includes(key) || key.includes(base)) {
-        grouped[pid][sid].push({ ...f, _i: i });
-        placed = true;
-        break;
-      }
-    }
+    // Exact passes run over the WHOLE taxonomy before any substring pass (Kael V-K-270-7).
+    const hit = _foodTaxFlat.find(t => lower === t.key || base === t.key)
+             || _foodTaxFlat.find(t => lower.includes(t.key) || t.key.includes(base));
+    if (hit) { grouped[hit.pid][hit.sid].push({ ...f, _i: i }); placed = true; }
     if (!placed && cachedCats[lower]) {
       const cat = cachedCats[lower];
       if (grouped[cat]) {
@@ -486,12 +483,36 @@ function _fdIsFoodTried(name) {
 // (getFoodEffect) — one food-name matching rule across the project, not two.
 // Word-boundary (not substring) retires the honeydew-class door: a name only
 // matches an ALLERGENS key on a whole word (V-K-30 word-boundary doctrine).
+// Memoised by name (Kael V-K-270-14): the tables are fixed once the recipes.js overlay has
+// merged at parse time, and the Library's age filter resolves ~200 names per tap.
 function _fdAllergenNote(name) {
-  return _lookupByFoodName(ALLERGENS, name);
+  const memo = _fdAllergenNote._m || (_fdAllergenNote._m = new Map());
+  const k = String(name);
+  if (!memo.has(k)) memo.set(k, _lookupByFoodName(ALLERGENS, name));
+  return memo.get(k);
 }
 
-// Resolve an age-gate rule {minMonth, reason} for a food name.
+// Resolve an age-gate rule {minMonth, reason} for a food name — the STRICTEST gate the name
+// reaches (V-K-266-1). A compound name ("milk with sugar", "salt and sugar", "chocolate milk")
+// must wait for its latest-opening ingredient, not whichever AGE_RULES key comes first. Only
+// ever tightens a resolved gate: a name the guards below deliberately null out (high-mercury
+// fish) stays null rather than inheriting a looser companion gate.
 function _fdAgeRule(name) {
+  const memo = _fdAgeRule._m || (_fdAgeRule._m = new Map());   // memoised — see _fdAllergenNote
+  const k = String(name);
+  if (memo.has(k)) return memo.get(k);
+  const rule = _fdAgeRuleFirst(name);
+  if (!rule || typeof _lookupAllByFoodName !== 'function') { memo.set(k, rule); return rule; }
+  let strictest = rule;
+  _lookupAllByFoodName(AGE_RULES, name).forEach(r => {
+    if (r && typeof r.minMonth === 'number' && r.minMonth > strictest.minMonth) strictest = r;
+  });
+  memo.set(k, strictest);
+  return strictest;
+}
+
+// First-match gate with the plant-milk / high-mercury / whole-nut guards (pre-V-K-266-1 body).
+function _fdAgeRuleFirst(name) {
   // V-M-205-B1: route through the shared word-boundary resolver (core.js) so
   // 'honeydew' no longer inherits honey's gate, and the gate stays consistent
   // with the consequence card (getFoodEffect uses the same resolver).
@@ -532,7 +553,10 @@ function _fdAgeRule(name) {
     const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(name) : null;
     const fc = eff && eff.foodClass;
     const isChokingForm = Array.isArray(fc) ? fc.indexOf('choking-by-form') !== -1 : fc === 'choking-by-form';
-    if (isChokingForm) return _lookupByFoodName(AGE_RULES, 'whole nut') || rule;
+    // Nuts only (V-C-270-8): "whole corn" / "whole chana" are choking-by-form too,
+    // but must keep their own rule, never the nut reason.
+    const isNut = eff === FOOD_EFFECTS['peanut'] || eff === FOOD_EFFECTS['tree nut'];
+    if (isChokingForm && isNut) return _lookupByFoodName(AGE_RULES, 'whole nut') || rule;
   }
   return rule;
 }
@@ -831,7 +855,7 @@ function _recipeIngredientSafety(name, ageMonths) {
   const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
   const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
   const aged = ageR && ageR.minMonth > ageMonths;
-  const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+  const eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), ageMonths) : null;
   const floor = (eff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(eff) : '';
   let h = '';
   if (floor) {
@@ -855,15 +879,19 @@ function _recipeIngredientSafety(name, ageMonths) {
 // Safety row expands (age-gate ▸ allergen/severe-floor ▸ clear), so the summary
 // and the detail can never drift. Maren jurisdiction. Returns { level, icon, text }.
 function _recipeSafetySummary(r, ageMonths) {
-  const aged = []; const gates = new Set(); let agedMin = 0; const watch = [];
+  const aged = []; const gates = new Set(); let agedMin = 0; const watch = []; const choke = [];
   for (const ing of (r.ingredients || [])) {
     const lower = String(ing.name).toLowerCase().trim();
     const ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(lower) : null;
     if (ageR && ageR.minMonth > ageMonths) { aged.push(ing.name); gates.add(ageR.minMonth); if (ageR.minMonth > agedMin) agedMin = ageR.minMonth; continue; }
-    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+    const eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), ageMonths) : null;
     const hasFloor = !!(eff && typeof _severeFloorHtml === 'function' && _severeFloorHtml(eff));
     const allerg = (typeof _fdAllergenNote === 'function') ? _fdAllergenNote(lower) : '';
-    if (hasFloor || allerg) watch.push(ing.name);
+    // A food whose hazard is its SHAPE (grapes) needs cutting, not the allergen
+    // ladder's "watch for 3 days" (V-C-270-2 / M-S3).
+    const shapeOnly = !allerg && eff && _effHasClass(eff, 'choking-by-form') && !_effHasClass(eff, 'allergen-introduce-early');
+    if (shapeOnly) choke.push(ing.name);
+    else if (hasFloor || allerg) watch.push(ing.name);
   }
   if (aged.length) {
     const names = [...new Set(aged)].join(', ');
@@ -874,8 +902,13 @@ function _recipeSafetySummary(r, ageMonths) {
       : `not before ${agedMin} months. See Safety below for the full guidance`;
     return { level: 'flag', icon: 'warn', text: `${names} — ${tail}.` };
   }
-  if (watch.length) return { level: 'caution', icon: 'note',
-    text: `Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.` };
+  const lead = [];
+  if (watch.length) lead.push(`Contains ${[...new Set(watch)].join(', ')} — introduce one at a time and watch for 3 days.`);
+  if (choke.length) {
+    const c = [...new Set(choke)];
+    lead.push(`${c.join(', ')} — cut as shown in "Make it safe to chew" below.`);
+  }
+  if (lead.length) return { level: 'caution', icon: 'note', text: lead.join(' ') };
   return { level: 'safe', icon: 'check',
     text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
 }
@@ -924,14 +957,27 @@ function _recipeDetailHtml(r, ageMonths) {
     const effMin = _recipeEffectiveMinAge(r);
     const gated = effMin && effMin > ageNow;
     const servAge = gated ? effMin : ageNow;
-    const serving = _recipeServing(r.slot, servAge);
+    // Toddler recipes carry their own portion (household measures, ICMR-NIN 1–3 y chart);
+    // the age-band amount (WHO/PAHO · IAP) rides alongside so the two never read as one
+    // figure (V-C-270-5 / M-S5). Others use the age band alone.
+    const own = !gated && r.portion;
+    const band = _recipeServing(r.slot, servAge);
+    const serving = own ? `${r.portion}. A toddler ${r.slot === 'snack' ? 'snack' : 'meal'} is ${band}` : band;
     const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
-    // M-1 (Maren): the amount is a WHO/PAHO/IAP figure — anchor its OWN source on
-    // the line, independent of the recipe's r.source (which often cites other bodies).
-    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">WHO/PAHO · IAP</span></span></div>`;
+    // M-1 (Maren): anchor the amount's OWN source on the line, independent of r.source.
+    const src = own ? 'ICMR-NIN · WHO/PAHO · IAP' : 'WHO/PAHO · IAP';
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
   }
   // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
   let rows = '';
+  // Toddler recipes: how to make each piece safe to chew for a toddler without molars.
+  if (Array.isArray(r.choking) && r.choking.length) {
+    // Neutral numbered prep list (never a green tick beside "never …", M-S4), a tooth
+    // glyph distinct from the Safety row (N7), and open by default — choking prep is
+    // safety content, not something to find behind a tap (V-C-270-3 / M-S3).
+    const body = `<ol class="recipe-steps">${r.choking.map(c => `<li>${escHtml(c)}</li>`).join('')}</ol>`;
+    rows += _recipeProw('chew', 'tooth', 'Make it safe to chew', `${r.choking.length} prep ${r.choking.length === 1 ? 'step' : 'steps'}`, body, true);
+  }
   if (r.steps && r.steps.length) {
     const body = `<ol class="recipe-steps">${r.steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>`;
     const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
@@ -1055,7 +1101,10 @@ function _recipeSuggestForZiva(surfaced, ageMonths) {
   const gapGroups = new Set(gaps.map(g => g.group));
   const subGapGroups = new Set(subGaps.map(g => g.group));
   const gapWhy = {};
-  gaps.forEach(g => { gapWhy[g.group] = g.suggestion || ('More ' + (g.label || g.group).toLowerCase() + ' this week'); });
+  // From 1 the infant-era group suggestions ("try carrot purée…") would caption a family
+  // recipe wrongly (Vela V-V-270-8) — say which gap the recipe fills instead.
+  gaps.forEach(g => { gapWhy[g.group] = (ageMonths >= 12 || !g.suggestion)
+    ? ('Fills this week\'s ' + (g.label || g.group).toLowerCase() + ' gap') : g.suggestion; });
   const untried = (typeof getUntriedSuggestions === 'function') ? (getUntriedSuggestions(8) || []) : [];
   const untriedNames = new Set(untried.map(u => (u.name || '').toLowerCase()));
   const untriedWhy = {};
@@ -1077,6 +1126,11 @@ function _recipeSuggestForZiva(surfaced, ageMonths) {
     }
     // age-fit tiebreak: a recipe close to Ziva's age scores a hair higher
     score += Math.max(0, 1 - Math.abs(ageMonths - (r.minAgeMonths || ageMonths)) * 0.05);
+    // From 1, lead with family food and keep moving her on from purées (V-C-270-6).
+    if (ageMonths >= 12) {
+      if (r.texture === 'family') score += 2;
+      else if ((r.minAgeMonths || 0) <= 8) score -= 1;
+    }
     if (!why) why = r.steps && r.steps.length ? null : '';
     return { r, score, why };
   });
@@ -1117,7 +1171,7 @@ function renderDietRecipes() {
 
   // ── (b) Browsable catalog grouped by meal slot ──
   html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
-  html += `<p class="recipes-sub-note">A small, cited collection for 6–12 months — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
+  html += `<p class="recipes-sub-note">A cited collection from first foods (6–12 months) to family food for toddlers (12–24 months) — Indian and global. Tap any recipe for steps, safety, and dos &amp; don'ts.</p>`;
   for (const slot of RECIPE_SLOT_ORDER) {
     const inSlot = surfaced.filter(r => r.slot === slot);
     if (!inSlot.length) continue;
@@ -1181,15 +1235,27 @@ function _recipeStepsText(r) {
 // Count how many query foods appear in a recipe's ingredient names.
 function _recipeQueryOverlap(r, rawFoods) {
   let n = 0;
+  const title = String(r.title || '').toLowerCase();
   for (const q of rawFoods) {
     const qn = String(q).toLowerCase().trim();
     if (!qn) continue;
-    if ((r.ingredients || []).some(ing => {
+    // Whole words, and the dish name counts (V-V-270-7): "idli" finds the idli
+    // recipe; "dal" no longer lands on Dalia.
+    if (_foodWordHit(title, qn) || (r.ingredients || []).some(ing => {
       const inm = ing.name.toLowerCase();
-      return inm.indexOf(qn) !== -1 || qn.indexOf(inm) !== -1;
+      return _foodWordHit(inm, qn) || _foodWordHit(qn, inm);
     })) n++;
   }
   return n;
+}
+
+// Tie-break among equal-overlap recipes (V-V-270-7): the query in the dish name
+// first, then the recipe written closest to her age (a toddler gets the family
+// version, not the 7-month purée).
+function _recipeFitRank(r, rawFoods, ageMonths) {
+  const title = String(r.title || '').toLowerCase();
+  const tHits = rawFoods.filter(q => _foodWordHit(title, String(q).toLowerCase().trim())).length;
+  return tHits * 100 - Math.abs(ageMonths - (r.minAgeMonths || 0));
 }
 
 // Best corpus recipe where EVERY query food maps to an ingredient — age- and
@@ -1197,12 +1263,14 @@ function _recipeQueryOverlap(r, rawFoods) {
 function _recipeCorpusMatch(rawFoods) {
   const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
   const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
-  let best = null; let bestScore = 0;
+  let best = null; let bestScore = 0; let bestRank = -Infinity;
   for (const r of corpus) {
     if (!_recipeAllowedForHousehold(r)) continue;
     if (_recipeEffectiveMinAge(r) > ageMonths) continue;
     const overlap = _recipeQueryOverlap(r, rawFoods);
-    if (overlap >= rawFoods.length && overlap > bestScore) { best = r; bestScore = overlap; }
+    if (overlap < rawFoods.length) continue;
+    const rank = _recipeFitRank(r, rawFoods, ageMonths);
+    if (overlap > bestScore || (overlap === bestScore && rank > bestRank)) { best = r; bestScore = overlap; bestRank = rank; }
   }
   return best;
 }
@@ -1211,12 +1279,14 @@ function _recipeCorpusMatch(rawFoods) {
 function _recipeNearest(rawFoods) {
   const corpus = Array.isArray(window.RECIPES) ? window.RECIPES : [];
   const ageMonths = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 9;
-  let best = null; let bestScore = 0;
+  let best = null; let bestScore = 0; let bestRank = -Infinity;
   for (const r of corpus) {
     if (!_recipeAllowedForHousehold(r)) continue;
     if (_recipeEffectiveMinAge(r) > ageMonths) continue;
     const overlap = _recipeQueryOverlap(r, rawFoods);
-    if (overlap > bestScore) { best = r; bestScore = overlap; }
+    if (!overlap) continue;
+    const rank = _recipeFitRank(r, rawFoods, ageMonths);
+    if (overlap > bestScore || (overlap === bestScore && rank > bestRank)) { best = r; bestScore = overlap; bestRank = rank; }
   }
   return (best && bestScore > 0) ? { id: best.id, title: best.title } : null;
 }
@@ -1266,7 +1336,7 @@ function renderFoodDetailSheet(name) {
   // the combo result, and here). Fall back to the terse legacy string only when
   // no record exists. (Render depth — inline vs link to the γ card — is Vela's
   // Q-3 call; the severe floor's presence is the non-negotiable, M-S-6.)
-  const fdEff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+  const fdEff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), getAgeInMonths()) : null;
   const fdFloor = (fdEff && typeof _severeFloorHtml === 'function') ? _severeFloorHtml(fdEff) : '';
   // Polarity (food-effects-v2 P1c, K-6): the banner cosmetic switches off the SHARED
   // _effPolarity resolver (core.js, milk-spec §3-bis), NOT a two-state encourage/avoid
@@ -1309,6 +1379,8 @@ function renderFoodDetailSheet(name) {
   }
   if (aged) {
     html += `<div class="fd-flag fd-flag-aged">${zi('warn')} <span><strong>Not before ${ageR.minMonth} months.</strong> ${escHtml(ageR.reason)}</span></div>`;
+  } else if (ageR && ageR.after) {
+    html += `<div class="fd-flag fd-flag-neutral">${zi('note')} <span><strong>How to give it now.</strong> ${escHtml(ageR.after)}</span></div>`;
   }
   // V-M-201: absence of an allergen note must NOT read as "cleared". When no
   // specific note AND no record floor are on file, surface the universal
@@ -1390,7 +1462,7 @@ function foodLibToggleTried(name) {
     // happened, and the record + watch-for guidance matter more than refusal.
     const _ageR = _fdAgeRule(lower);
     if (_ageR && _ageR.minMonth > getAgeInMonths()) {
-      const _eff = (typeof getFoodEffect === 'function') ? getFoodEffect(lower) : null;
+      const _eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(lower), getAgeInMonths()) : null;
       foodConsequenceCard(_eff ? {
         severity: _eff.severity || 'critical', title: _eff.title, why: _eff.why,
         watchFor: _eff.watchFor, severeSigns: _eff.severeSigns, seekCare: _eff.seekCare
@@ -1603,8 +1675,15 @@ function renderLibShelves() {
   var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
   if (!FE) { root.innerHTML = ''; return; }
   var groups = { encourage: [], conditional: [], warn: [], inform: [] };
+  // Age-framed records (Cipher A1): the shelf title matches the pop-up it opens; a record
+  // past its window (honey from 2) leaves the shelves — search still reaches it.
+  var mo = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
+  var framed = {};
   Object.keys(FE).forEach(function(k) {
-    var pol = (typeof _effPolarity === 'function') ? _effPolarity(FE[k]) : 'inform';
+    var e = (typeof foodEffectForAge === 'function') ? foodEffectForAge(FE[k], mo) : FE[k];
+    if (!e) return;
+    framed[k] = e;
+    var pol = (typeof _effPolarity === 'function') ? _effPolarity(e) : 'inform';
     (groups[pol] || groups.inform).push(k);
   });
   var html = _libLeadHtml();
@@ -1618,7 +1697,7 @@ function renderLibShelves() {
       '<span class="lib-group-count">' + keys.length + '</span>' +
       '<span class="lib-group-chev">' + zi('arrow-right') + '</span></button>' +
       '<div class="lib-shelf-row">';
-    keys.forEach(function(k) { html += _libBookHtml(k, FE[k], s.pol); });
+    keys.forEach(function(k) { html += _libBookHtml(k, framed[k], s.pol); });
     html += '</div></div>';
   });
   root.innerHTML = html;
@@ -1775,7 +1854,7 @@ function _libPopHtml(key, eff, pol, j) {
   // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
   var floorCaution = isChoke || !acute;
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
-  var floorTitle = isChoke ? 'If your baby is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTitle = isChoke ? 'If she is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
   var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
@@ -1842,6 +1921,17 @@ function libOpenBook(btn) {
   if (!eff) return;
   var ov = document.getElementById('libPopOv');
   if (!ov) return;
+  // Age-framed record (foodEffectForAge): past its window (honey from 2) the book
+  // opens as an ordinary food — gate + "how to give it now" — not a warning card.
+  if (typeof foodEffectForAge === 'function' && typeof getAgeInMonths === 'function') {
+    eff = foodEffectForAge(eff, getAgeInMonths());
+    if (!eff) {
+      ov.innerHTML = _libCorpusPopHtml(key, _libJourney(key));
+      ov.classList.add('open');
+      document.body.classList.add('lib-overlay-open');
+      return;
+    }
+  }
   var pol = (typeof _effPolarity === 'function') ? _effPolarity(eff) : 'inform';
   var j = _libJourney(key);
   ov.innerHTML = _libPopHtml(key, eff, pol, j);
@@ -1880,7 +1970,7 @@ function libLogServing(btn) {
   };
   var ageR = (typeof _fdAgeRule === 'function') ? _fdAgeRule(key) : null;
   if (ageR && typeof getAgeInMonths === 'function' && ageR.minMonth > getAgeInMonths() && typeof foodConsequenceCard === 'function') {
-    var eff = (typeof getFoodEffect === 'function') ? getFoodEffect(key) : null;
+    var eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(key), getAgeInMonths()) : null;
     foodConsequenceCard(eff ? {
       severity: eff.severity || 'critical', title: eff.title, why: eff.why,
       watchFor: eff.watchFor, severeSigns: eff.severeSigns, seekCare: eff.seekCare
@@ -1944,7 +2034,9 @@ function _libLookupRow(name) {
   var feKey = _libFEKeyFor(name);
   var action = feKey ? 'libOpenBook' : 'libOpenCorpus';
   var arg = feKey || name;
-  var disp = feKey ? _libDisplayName(feKey, FOOD_EFFECTS[feKey]) : _libTitleCase(name);
+  var feAged = (feKey && typeof foodEffectForAge === 'function' && typeof getAgeInMonths === 'function')
+    ? foodEffectForAge(FOOD_EFFECTS[feKey], getAgeInMonths()) : (feKey ? FOOD_EFFECTS[feKey] : null);
+  var disp = feKey ? _libDisplayName(feKey, feAged) : _libTitleCase(name);
   var grp = (typeof classifyFoodToGroup === 'function') ? classifyFoodToGroup(name) : null;
   var dt = (grp && grp.group) ? ' dt-' + grp.group : '';
   var j = _libJourney(name);
@@ -2011,14 +2103,18 @@ function _libCorpusPopHtml(name, j) {
 
   // ── 6-second body: a concrete verdict leads, then disclosure rows ──
   var verClass, verHead;
-  if (aged) { verClass = 'wait'; verHead = 'Wait — from ' + ageR.minMonth + ' months'; }
-  else if (ageR && ageR.minMonth) { verClass = 'yes'; verHead = 'Fine from ' + ageR.minMonth + ' months'; }
+  // Whole-year gates read as years ("from 5 years", not "from 60 months").
+  var gateAge = ageR ? ((ageR.minMonth >= 24 && ageR.minMonth % 12 === 0) ? (ageR.minMonth / 12) + ' years' : ageR.minMonth + ' months') : '';
+  if (aged) { verClass = 'wait'; verHead = 'Wait — from ' + gateAge; }
+  else if (ageR && ageR.minMonth) { verClass = 'yes'; verHead = 'Fine from ' + gateAge; }
   else { verClass = 'info'; verHead = 'Good to know'; }
   var rows =
     (allerg ? _libPopRow('floor lib-prow--caution', 'warn', 'Allergen — introduce with care', 'watch the first few times',
       '<p class="lib-prow-p">' + escHtml(allerg) + '</p>', false) : '') +
     (aged ? _libPopRow('why', 'info', 'Why wait', '',
-      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '');
+      '<p class="lib-prow-p">' + escHtml(ageR.reason) + '</p>', false) : '') +
+    (!aged && ageR && ageR.after ? _libPopRow('why', 'info', 'How to give it now', '',
+      '<p class="lib-prow-p">' + escHtml(ageR.after) + '</p>', true) : '');
   var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
   if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
@@ -2360,9 +2456,9 @@ function renderLibGuides() {
       body: '<p class="lib-guide-why">Most choking risk is the <b>shape</b>, not the food. Change the form and the food is safe.</p>' +
         '<div><div class="lib-guide-h">Change the form</div><div class="lib-guide-chips">' + formChips + '</div></div>' + _libGuideDeckLink() },
     { pol: 'sky', icon: 'info', t: 'Milk & drinks',
-      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1.</p>' },
+      body: '<p class="lib-guide-why">Under 1, <b>breastmilk or formula stays the main drink</b>. Cow&rsquo;s milk is fine cooked into food (porridge, curd, paneer) but not as the main drink until 12 months; plant milks are not a substitute under 1. <b>From 1 year</b>, full-cream cow&rsquo;s milk can be a main drink, from an open cup — about 500 ml (2 cups) a day at most, since more is linked to iron deficiency. Not toned, double-toned or skimmed. Breastfeeding can carry on alongside — WHO recommends it to 2 years and beyond.</p>' },
     { pol: 'lav', icon: 'clock', t: 'First foods, by age',
-      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods (Ziva is here) · <b>12 mo+</b> family food, whole cow&rsquo;s milk as a drink, honey becomes safe.</p>' }
+      body: '<p class="lib-guide-why"><b>~6 mo</b> smooth purées + start the allergens · <b>~9 mo</b> lumps + finger foods · <b>12 mo+</b> family food (lightly salted, still no added sugar), whole cow&rsquo;s milk as a drink. Honey is no longer a botulism risk, but it is a sugar — like jaggery, it waits until 2.</p>' }
   ];
 
   root.innerHTML = guides.map(function(g) {
@@ -2658,7 +2754,7 @@ function _libBuildGuide(severeSigns, seekCare, scopeHeader) {
 // form" over an amber gate "whole forms wait until ~5"), the cut-it-this-way safeForm block,
 // then the PINNED emergency floor.
 // THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): the severe
-// strip carries the QUIET-choking signs + the back-blows/chest-thrusts seekCare, under a
+// strip carries the QUIET-choking signs + the back-blows/abdominal-thrusts seekCare, under a
 // choking-scoped header (never "allergic reaction"). All copy is FOOD_EFFECTS-sourced; the only
 // hardcoded strings are the polarity-keyed band/section HEADINGS (render copy, not reusable).
 function renderDietChokingIntro() {
@@ -2707,9 +2803,9 @@ function renderDietChokingIntro() {
 
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
-  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/chest-
-  // thrusts + "NO adrenaline" + "NEVER abdominal thrusts under 1".
-  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If your baby is choking, it\'s an emergency');
+  // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
+  // thrusts (child 1y+ technique since Ziva turned one) + "NO adrenaline".
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).
@@ -2744,8 +2840,9 @@ const ALL_TIPS = [
   // ── IRON (highest priority at 6–9 months) ──
   {
     type:'info', icon:zi('dot-red'),
-    title:'Iron window — act before 9 months',
-    body:'Ziva\'s birth iron stores deplete around 8–9 months. Ensure ragi, masoor dal, beetroot, or spinach appear at least 4–5 times a week.',
+    // Retitled for 12 m+ (Vela V-V-266-11): the 9-month "deadline" framing reads as missed.
+    title:'Iron-rich foods, most days',
+    body:'Toddlers need about 7 mg of iron a day, and too much milk crowds it out. Aim for ragi, masoor dal, rajma, beetroot, or spinach at least 4–5 times a week, with a vitamin C food (amla, lemon, orange) alongside.',
     condition: d => {
       const ironFoods = ['ragi','masoor dal','beetroot','beans','moong dal','spinach','bajra','jowar','poha','toor dal','chana dal','rajma','pumpkin seeds'];
       return countFoodsInDiary(d, ironFoods) < 4;
@@ -2868,29 +2965,47 @@ const ALL_TIPS = [
     body:'Avocado, ghee, coconut, paneer, and nut butters are key for brain & nerve development at this age. Include daily.',
     condition: d => countFoodsInDiary(d, ['avocado','ghee','coconut','coconut oil','paneer','butter','almonds','walnut','cashew']) < 3,
   },
-  // ── AVOID (always show) ──
+  // ── AVOID (always show, or age-gated) ──
+  // The under-1 rules (honey, cow's milk as a drink) are gated to < 12 months; from 1 year they
+  // retire and the salt/sugar tip turns into its toddler form (2026-09-24 12-month audit — they had
+  // shown "always", contradicting the unlocked Library gates).
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 12 months. Natural sweetness from fruit is fine.',
-    condition: () => true,
+    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    type:'avoid', icon:zi('warn'),
+    title:'Keep salt light — still no added sugar',
+    body:'Family food is fine now, but cook hers lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery, honey or sweets until 2 years; fruit is her sweetener.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('spoon'),
     title:'No honey before 12 months',
     body:'Honey carries risk of infant botulism regardless of form. Strictly avoid until 1 year.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
   },
   {
     type:'avoid', icon:zi('drop'),
     title:'No cow\'s milk as main drink yet',
     body:'Cow\'s milk lacks iron and can stress infant kidneys. Curd and paneer are fine, but milk as a drink should wait until 12 months.',
-    condition: () => true,
+    condition: () => getAgeInMonths() < 12,
+  },
+  {
+    // type 'info', not 'add' (Vela V-V-266-11): the toddler milk risk is too MUCH. The 500 ml cap is
+    // the in-repo verified figure (FOOD_EFFECTS['cow milk']; docs/research/cow-milk-plant-milks-
+    // infant-safety.md Axis 3 — AAP ~2 cups, ESPGHAN <500 ml) — Ceres V-C-266-6.
+    type:'info', icon:zi('drop'),
+    title:'Whole milk — from a cup, not too much',
+    body:'From 1 year, full-cream cow\'s milk can be a main drink — in an open cup, with or after meals, not a bottle. About 500 ml (2 cups) a day at most: more fills her up and is linked to iron deficiency. Use full-cream, not toned, double-toned or skimmed.',
+    condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'avoid', icon:zi('drop'),
     title:'No fruit juice in bottles',
-    body:'Juice in bottles causes tooth decay and reduces appetite for solids. If giving juice, use an open cup and limit to 2–3 tsp diluted.',
+    body:'Juice in a bottle causes tooth decay and blunts appetite. No juice under 1; from 1, whole fruit is better — if you give 100% juice, keep it to 120 ml a day, in an open cup with a meal. Packaged fruit drinks wait until 2.',
     condition: () => true,
   },
   // ── TEXTURE PROGRESSION ──
@@ -2900,7 +3015,7 @@ const ALL_TIPS = [
     body:'At 6.5+ months, start moving from smooth purees to slightly mashed food. Tiny soft lumps help develop chewing muscles and prevent texture aversion later.',
     condition: () => {
       const mo = getAgeInMonths();
-      return mo >= 6.5;
+      return mo >= 6.5 && mo < 12; // 12 m+: family-food textures
     }
   },
   {
@@ -2909,8 +3024,27 @@ const ALL_TIPS = [
     body:'By 7–8 months, soft finger foods like steamed carrot sticks, banana pieces, or soft idli strips help develop pincer grasp and self-feeding skills.',
     condition: () => {
       const mo = getAgeInMonths();
-      return mo >= 7;
+      return mo >= 7 && mo < 12;   // 12 m+: finger foods are already here
     }
+  },
+  // ── TODDLER (12–24 m) — TODDLER_FEEDING in recipes.js carries the sources ──
+  {
+    type:'info', icon:zi('spoon'),
+    title:'Family food, adapted',
+    body:'From 1 year she can eat what the family eats, in small soft pieces she can squash between finger and thumb — she has no grinding molars yet. Take her portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
+    condition: () => getAgeInMonths() >= 12,
+  },
+  {
+    type:'info', icon:zi('bowl'),
+    title:'3–4 meals and 1–2 snacks',
+    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 cup (a big katori, 190–250 ml) a meal. Offer, then let her appetite decide — no forcing (WHO, IAP).',
+    condition: () => getAgeInMonths() >= 12,
+  },
+  {
+    type:'info', icon:zi('leaf'),
+    title:'Five food groups a day',
+    body:'Aim for at least 5 of these 8 groups each day: breast milk · grains · dals, nuts and seeds · milk, curd and paneer · meat or fish · eggs · orange and green fruit and veg · other fruit and veg. A vegetarian day can still reach 5 without eggs or meat — 6 with breast milk (WHO/UNICEF).',
+    condition: () => getAgeInMonths() >= 12,
   },
   // ── ALLERGEN INTRODUCTION ──
   {
@@ -3048,7 +3182,7 @@ const ALL_TIPS = [
   {
     type:'add', icon:zi('spoon'),
     title:'Expand the fruit basket',
-    body:'Beyond banana and apple, try grapes (halved!), strawberry, peach, chiku, papaya, fig, and pomegranate. Different colours = different antioxidants. Aim for 3+ fruit varieties per week.',
+    body:'Beyond banana and apple, try grapes (quartered lengthwise!), strawberry, peach, chiku, papaya, fig, and pomegranate. Different colours = different antioxidants. Aim for 3+ fruit varieties per week.',
     condition: d => {
       const fruits = ['banana','apple','pear','mango','papaya','grapes','strawberry','chiku','pomegranate','blueberry','peach','kiwi','fig','watermelon','orange'];
       const used = fruits.filter(f => countFoodsInDiary(d, [f]) > 0);
@@ -3070,9 +3204,9 @@ const ALL_TIPS = [
   {
     type:'add', icon:zi('star'),
     title:'Indian superfoods for babies',
-    body:'Makhana (calcium), sattu (protein), jaggery (iron), saffron (brain), drumstick (calcium + iron), and amla (Vit C) are traditional Indian baby superfoods. Try adding one new one this week.',
+    body:'Makhana (calcium), sattu (protein), halim / garden cress (iron), saffron (brain), drumstick (calcium + iron), and amla (Vit C) are traditional Indian baby superfoods. Try adding one new one this week.',
     condition: d => {
-      const superfoods = ['makhana','sattu','jaggery','saffron','drumstick','amla'];
+      const superfoods = ['makhana','sattu','halim','saffron','drumstick','amla']; // jaggery out: added sugar (V-C-266-2)
       return countFoodsInDiary(d, superfoods) === 0;
     }
   },
@@ -3156,7 +3290,8 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    chips.push({ text:'cow milk', cls:'chip-avoid' });
+    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 2026-09-24 audit
+    chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-caution' : 'chip-avoid' }); // checker returns caution (ALLERGENS) at 12 m+
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });
     chips.push({ text:'idli + sambar', cls:'chip-safe' });
@@ -3182,8 +3317,8 @@ function checkFoodCombo() {
   const cachedIdx = comboHistory.findIndex(h => h.q.toLowerCase() === query.toLowerCase());
   if (cachedIdx !== -1) {
     const cached = comboHistory[cachedIdx];
-    if (cached.result && cached.result._schema === COMBO_RESULT_SCHEMA) { renderComboResult(cached.result); return; }
-    comboHistory.splice(cachedIdx, 1); // stale schema → recompute below
+    if (_comboCacheValid(cached.result)) { renderComboResult(cached.result); return; }
+    comboHistory.splice(cachedIdx, 1); // stale schema or computed at a different age → recompute below
   }
 
   // Parse foods from query
@@ -3202,6 +3337,7 @@ function checkFoodCombo() {
   let recipeText = '';
   let dos = [];
   let donts = [];
+  const afterNotes = [];
   let pairsWellWith = '';
   let nutritionHighlights = '';
 
@@ -3215,6 +3351,10 @@ function checkFoodCombo() {
       verdict = 'avoid';
       verdictEmoji = zi('warn');
       warnings.push(`${food}: ${rule.reason}`);
+    } else if (rule && rule.after) {
+      // Past the gate: the "how to give it now" line (V-C-270-7 / M-S1) — the
+      // 120 ml juice cap, whole corn kernels — never changes the verdict.
+      afterNotes.push(rule.after);
     }
   });
 
@@ -3231,7 +3371,7 @@ function checkFoodCombo() {
   let toxin = null;          // {title, why}                — acute-toxin (honey)
   let encourage = null;      // {title, whyGood, safeFormNote} — age-appropriate allergen
   rawFoods.forEach(food => {
-    const eff = (typeof getFoodEffect === 'function') ? getFoodEffect(food) : null;
+    const eff = (typeof getFoodEffect === 'function') ? foodEffectForAge(getFoodEffect(food), mo) : null;
     const rule = _fdAgeRule(food);
     const belowFloor = !!(rule && mo < rule.minMonth);
 
@@ -3254,6 +3394,8 @@ function checkFoodCombo() {
     // the safe verdict and the collected floor are set in the same pass.
     if (eff && _effHasClass(eff, 'acute-toxin')) {
       verdict = 'avoid'; verdictEmoji = zi('warn');
+      // eff is already age-framed (foodEffectForAge): from 12 m honey reads as added
+      // sugar, not "before 12 months"; from 24 m it is no longer an acute-toxin.
       toxin = { title: eff.title || '', why: eff.why || '' };
     } else if (introEarlyOk) {
       if (verdict !== 'avoid') { verdict = 'safe'; verdictEmoji = zi('check'); }
@@ -3269,6 +3411,10 @@ function checkFoodCombo() {
   rawFoods.forEach(food => {
     const norm = normalizeFoodName(food);
     const isIntroduced = introducedNormSet.has(norm) || [...introducedSet].some(f => f.includes(food) || food.includes(f));
+    // Not "introduce it alone for 3 days" for a food she should wait on, or a limit-food like
+    // salt or juice (Vela V-V-270-13) — the gate / after line already speaks for those.
+    const gateR = _fdAgeRule(food);
+    if (gateR && (mo < gateR.minMonth || gateR.limit)) return;
     if (!isIntroduced && food.length > 2) {
       newFoods.push(food);
     }
@@ -3286,11 +3432,14 @@ function checkFoodCombo() {
     benefits.push('Iron + Vitamin C pairing — absorption boosted up to 3×!');
   }
   // Iron + Calcium conflict
-  const hasIron = tags.includes('iron-rich');
-  const hasCalcium = tags.includes('bone-health') && (nutrients.includes('calcium') || rawFoods.some(f => ['paneer','cheese','curd','yogurt','dahi','sesame','til','ragi'].includes(f)));
-  if (hasIron && hasCalcium && rawFoods.length > 1) {
-    if (verdict === 'safe') { verdict = 'caution'; verdictEmoji = zi('warn'); }
-    warnings.push('Iron + calcium in same meal can reduce iron absorption. Consider spacing them 2 hours apart.');
+  // Proportionate (Ceres V-C-270-18): only when the iron and the calcium come from DIFFERENT
+  // foods (ragi alone carries both), and as a gentle note, not a caution verdict — a single
+  // meal's effect is real (Hallberg 1991) but longer-term iron status is not changed
+  // (Ames 1999, young children). Everyday dal with a little curd is fine.
+  const _ironFoods = rawFoods.filter(f => getFoodTags([f]).tags.includes('iron-rich'));
+  const _calcFoods = rawFoods.filter(f => ['paneer','cheese','curd','yogurt','dahi','milk'].includes(f));
+  if (_ironFoods.some(f => _calcFoods.indexOf(f) === -1) && _calcFoods.some(f => _ironFoods.indexOf(f) === -1)) {
+    warnings.push('For her main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
   }
   // Brain health combo
   if (tags.includes('brain-health') || tags.includes('omega-3')) {
@@ -3322,10 +3471,15 @@ function checkFoodCombo() {
   if (!recipeMatch && rawFoods.length === 1) recipeMatch = COMBO_RECIPES[rawFoods[0]];
   // Try partial key match
   if (!recipeMatch) {
+    // Whole-word hits (plural-tolerant), never substrings (V-C-270-13): "eggplant"
+    // must not pull the "egg" scramble, nor "eggless" an egg recipe.
+    const _tokHit = (f, kp) => _foodWordHit(f, kp) || _foodWordHit(kp, f);
     const key = Object.keys(COMBO_RECIPES).find(k => {
       const kParts = k.split(' ');
-      return rawFoods.every(f => kParts.some(kp => kp.includes(f) || f.includes(kp))) ||
-             kParts.every(kp => rawFoods.some(f => f.includes(kp) || kp.includes(f)));
+      // A query food matches a key only when EVERY word of it is in the key (Kael V-K-270-6):
+      // "oat milk" / "coconut milk" must not take the "cow milk" recipe.
+      return rawFoods.every(f => f.split(/\s+/).every(w => kParts.some(kp => _tokHit(w, kp)))) ||
+             kParts.every(kp => rawFoods.some(f => _tokHit(f, kp)));
     });
     if (key) recipeMatch = COMBO_RECIPES[key];
   }
@@ -3416,6 +3570,7 @@ function checkFoodCombo() {
   recipeText = _recAns ? _recAns.recipe : '';
   dos = _recAns ? _recAns.dos : [];
   donts = _recAns ? _recAns.donts : [];
+  if (afterNotes.length) donts = [...new Set(afterNotes)].concat(donts);
   const _recipeId = (_recAns && _recAns.kind === 'recipe') ? _recAns.recipeId : null;
   const _nearestRecipe = (_recAns && _recAns.kind === 'suggest') ? _recAns.nearest : null;
 
@@ -3437,6 +3592,7 @@ function checkFoodCombo() {
     toxin,
     encourage,
     _schema: COMBO_RESULT_SCHEMA,   // M-R1-1: marks an R1-floor-bearing result
+    _mo: Math.floor(mo),            // V-C-266-1: the age the verdict was computed at (cache key)
   };
 
   // Cache
@@ -3608,7 +3764,8 @@ function generateDonts(foodList, tags, mo) {
   const classified = foodList.map(f => ({ name:f, info:classifyFood(f) })).filter(c => c.info);
   const subcats = new Set(classified.map(c => c.info.subcat));
 
-  donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  if (mo < 12) donts.push('Don\'t add salt, sugar, or honey (honey unsafe before 12 months)');
+  else donts.push('Go light on salt. No added sugar, jaggery or honey until 2 years');
   if (mo < 8) donts.push('Puree or mash very smooth — no chunks yet at this age');
   else if (mo < 10) donts.push('Keep pieces soft and small — gag reflex is still developing');
 
@@ -3618,7 +3775,7 @@ function generateDonts(foodList, tags, mo) {
   if (subcats.has('leafy')) donts.push('Don\'t give leafy greens daily — 2–3 times/week is ideal (nitrate/oxalate content)');
   if (subcats.has('curd')) donts.push('Don\'t heat curd/yogurt — kills beneficial bacteria. Room temperature only');
   if (subcats.has('spice')) donts.push('Use barely a pinch — baby portions need 1/10th of adult amounts');
-  if (subcats.has('sweetener')) donts.push('Avoid jaggery/gur before 12 months — treated as added sugar by paediatricians');
+  if (subcats.has('sweetener')) donts.push('Avoid jaggery, gur, mishri and syrups before 2 years — they are added sugar');
   if (subcats.has('egg')) donts.push('Avoid egg white initially — introduce yolk only for the first few times');
   if (subcats.has('fish')) donts.push('Check every flake for tiny bones — even "boneless" fillets can have pin bones');
   if (subcats.has('legume')) donts.push('Soak overnight and cook very well — undercooked legumes cause gas and bloating');
@@ -3755,7 +3912,11 @@ function renderComboHistory() {
   if (!el || comboHistory.length === 0) { if (el) el.innerHTML = ''; return; }
 
   let html = `<div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:6px;">Recent checks</div>`;
-  comboHistory.slice(0, 5).forEach(h => {
+  // Only rows still valid for her age + the current rules (Cipher A1): a pre-PR "jaggery: safe" row
+  // must not keep showing a green check here. Invalid rows are recomputed when re-queried.
+  const validRows = comboHistory.filter(h => typeof _comboCacheValid === 'function' ? _comboCacheValid(h.result) : true);
+  if (validRows.length === 0) { el.innerHTML = ''; return; }
+  validRows.slice(0, 5).forEach(h => {
     const emoji = h.result.verdict === 'safe' ? zi('check') : h.result.verdict === 'caution' ? zi('warn') : zi('warn');
     html += `<div class="combo-hist-item" data-action="showComboHistory" data-arg="${escHtml(h.q)}">
       <div class="combo-hist-q">${emoji} ${escHtml(h.q)}</div>
@@ -3763,6 +3924,22 @@ function renderComboHistory() {
     </div>`;
   });
   el.innerHTML = html;
+}
+
+// Whole-word food match (plural-tolerant) for the synergy pairers (Vela V-V-270-2):
+// "egg" must not hit "eggplant", while "roti" still hits "soft roti".
+// Compiled patterns are memoised per term (the meal parser runs it per NUTRITION key).
+// The cache hangs off the function itself, so an early caller never meets a TDZ binding.
+function _foodWordHit(text, term) {
+  if (!text || !term) return false;
+  const k = String(term).toLowerCase();
+  const cache = _foodWordHit._re || (_foodWordHit._re = new Map());
+  let re = cache.get(k);
+  if (!re) {
+    re = new RegExp('(^|[^a-z])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(e?s)?($|[^a-z])');
+    cache.set(k, re);
+  }
+  return re.test(String(text).toLowerCase());
 }
 
 function renderTips() {
@@ -3792,11 +3969,13 @@ function renderTips() {
     todayFoods.forEach(food => {
       FOOD_SYNERGIES.forEach(([f1, f2, reason, type]) => {
         let match = null, partner = null;
-        if (food.includes(f1) || f1.includes(food)) { match = f1; partner = f2; }
-        else if (food.includes(f2) || f2.includes(food)) { match = f2; partner = f1; }
+        if (_foodWordHit(food, f1) || _foodWordHit(f1, food)) { match = f1; partner = f2; }
+        else if (_foodWordHit(food, f2) || _foodWordHit(f2, food)) { match = f2; partner = f1; }
         if (!match || !partner) return;
+        // Never push a food the household's diet preference excludes (V-M-19 / V-V-270-2).
+        if (typeof _dietAllowsFood === 'function' && !_dietAllowsFood(partner)) return;
         // Check partner not already in today's meals
-        const partnerUsed = todayFoods.some(tf => tf.includes(partner) || partner.includes(tf));
+        const partnerUsed = todayFoods.some(tf => _foodWordHit(tf, partner) || _foodWordHit(partner, tf));
         if (partnerUsed) return;
         const key = match + '|' + partner;
         if (seen.has(key)) return;
@@ -3881,6 +4060,18 @@ const _foodGroupCache = {};
 function classifyFoodToGroup(foodName) {
   const key = foodName.toLowerCase().trim();
   if (_foodGroupCache[key]) return _foodGroupCache[key];
+  // Exact / canonical-base pass first (Kael V-K-270-7): "amaranth leaves" is a leafy
+  // green, not the grain its substring "amaranth" would file it under.
+  const base = (typeof _baseFoodName === 'function') ? _baseFoodName(key) : key;
+  for (const [gid, group] of Object.entries(FOOD_TAX)) {
+    for (const [sid, sub] of Object.entries(group.subs)) {
+      if (sub.keys.indexOf(key) !== -1 || sub.keys.indexOf(base) !== -1) {
+        const result = { group: gid, sub: sid, groupLabel: group.label, subLabel: sub.label };
+        _foodGroupCache[key] = result;
+        return result;
+      }
+    }
+  }
   for (const [gid, group] of Object.entries(FOOD_TAX)) {
     for (const [sid, sub] of Object.entries(group.subs)) {
       for (const k of sub.keys) {
@@ -6598,12 +6789,12 @@ function _spGetDomainDefs(zs) {
         if (!r) return [{ name: 'No data', weight: '', score: 0, detail: 'Log sleep to see score breakdown' }];
         const ageM2 = ageAt().months;
         const st = getSleepTargets(ageM2);
-        const durTarget = st.totalTarget / 60;
         const totalMin = r.totalMin || (r.detail ? r.detail.totalMin : 0) || 0;
         const wakeVal = r.wakes !== undefined ? r.wakes : (r.detail ? r.detail.wakes : 0) || 0;
         const napVal = r.napCount !== undefined ? r.napCount : (r.detail ? r.detail.napCount : 0) || 0;
         const [napMin, napMax] = st.napIdeal;
-        const durDetail = totalMin ? (totalMin / 60).toFixed(1) + 'h total (target: ' + durTarget.toFixed(0) + 'h, ' + st.label + ')' : 'No data';
+        const tH = Math.floor(st.totalTarget / 60), tM = st.totalTarget % 60;
+        const durDetail = totalMin ? (totalMin / 60).toFixed(1) + 'h total (target: ' + tH + 'h' + (tM ? ' ' + tM + 'm' : '') + ', ' + st.label + ')' : 'No data';
         const comps = r.components || {};
         const durScore = comps.duration !== undefined ? comps.duration : (totalMin ? Math.round(Math.min(totalMin / st.totalTarget, 1) * 100) : 0);
         const wakeScoreVal = comps.wakeups !== undefined ? comps.wakeups : [100,85,70,50,30,15,0][Math.min(wakeVal, 6)];
@@ -6613,7 +6804,7 @@ function _spGetDomainDefs(zs) {
           { name: 'Duration', weight: '40%', score: durScore, detail: durDetail, tab: 'sleep' },
           { name: 'Wake-ups', weight: '30%', score: wakeScoreVal, detail: wakeVal + ' wake-up' + (wakeVal !== 1 ? 's' : ''), tab: 'sleep' },
           { name: 'Bedtime', weight: '15%', score: bedScoreVal, detail: 'Ideal: ' + st.bedtimeStart + ':00–' + st.bedtimeEnd + ':00 (' + st.label + ')', tab: 'sleep' },
-          { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + napMin + '–' + napMax + ')', tab: 'sleep' },
+          { name: 'Naps', weight: '15%', score: napScoreVal, detail: napVal + ' nap' + (napVal !== 1 ? 's' : '') + ' (ideal: ' + (napMin === napMax ? String(napMin) : napMin + '–' + napMax) + ')', tab: 'sleep' },
         ];
         if (r.modifier && r.modifier.delta !== 0 && getModifierWeight() > 0 && !isEssentialMode()) {
           items.push({ name: 'Trends', weight: '', score: null, isTrend: true, delta: r.modifier.delta, label: r.modifier.label, tab: 'insights' });
@@ -6623,7 +6814,7 @@ function _spGetDomainDefs(zs) {
     },
     {
       key: 'diet', icon: zi('bowl'), name: 'Diet', tab: 'diet',
-      tip: 'Aim for 3 meals daily + snack as bonus with diverse foods across all food groups. Variety is key!',
+      tip: getAgeInMonths() >= 12 ? 'Aim for 3–4 meals and 1–2 snacks a day across at least 5 food groups. Variety is key!' : 'Aim for 3 meals daily + snack as bonus with diverse foods across all food groups. Variety is key!',
       components: () => {
         const r = zs.domains.diet.result;
         if (!r) return [];
@@ -6688,7 +6879,7 @@ function _spGetDomainDefs(zs) {
         const d = r.detail || {};
         const items = [
           { name: 'Vaccines', weight: '40%', score: r.components.vaccination,
-            detail: (d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' age-due vaccines given', tab: 'medical' },
+            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
           { name: 'Supplements', weight: '25%', score: r.components.supplements,
             detail: d.suppDays !== null ? d.suppDays + '/7 days given this week' : 'No active supplements', tab: 'medical' },
           { name: 'Growth', weight: '20%', score: r.components.growth,
@@ -7333,10 +7524,10 @@ function renderInsightsD3() { /* v2.4: DORMANT — insights cards replaced by tr
   if (!el) return;
 
   const bl = computeBaselines();
-  const d3Med = meds.find(m => m.active && m.name.toLowerCase().includes('d3'));
+  const d3Med = vitDSupplement();   // by contents — drops, or a calcium + D3 suspension
   if (!d3Med) {
-    if (prevEl) prevEl.innerHTML = '<div class="ins-preview"><span class="ins-preview-pill ipp-neutral">No active D3 supplement</span></div>';
-    el.innerHTML = '<div class="t-sub fe-center-action" >No active Vitamin D3 supplement being tracked.</div>';
+    if (prevEl) prevEl.innerHTML = '<div class="ins-preview"><span class="ins-preview-pill ipp-neutral">No active Vitamin D supplement</span></div>';
+    el.innerHTML = '<div class="t-sub fe-center-action" >No active Vitamin D supplement being tracked.</div>';
     return;
   }
 
@@ -7390,7 +7581,7 @@ function renderInsightsD3() { /* v2.4: DORMANT — insights cards replaced by tr
       <div class="ir-icon">${zi('drop')}</div>
       <div class="ir-body">
         <div class="ir-label">Dose</div>
-        <div class="ir-value">${escHtml(d3Med.dose)} · ${escHtml(d3Med.freq || 'Once daily')}</div>
+        <div class="ir-value">${escHtml(d3Med.dose)} · ${escHtml(d3Med.freq || (medDosesPerDay(d3Med) > 1 ? medDosesPerDay(d3Med) + ' times a day' : 'Once daily'))}</div>
       </div>
     </div>`;
   }
@@ -7398,11 +7589,13 @@ function renderInsightsD3() { /* v2.4: DORMANT — insights cards replaced by tr
   // Dos & Don'ts
   html += '<div style="margin-top:8px;">';
   html += '<div class="ir-label" style="margin-bottom:6px;font-weight:600;">' + zi('check') + ' Dos</div>';
-  D3_KNOWLEDGE.dos.forEach(tip => {
+  // A calcium + D3 suspension has its own guidance (shake, space doses, iron spacing).
+  const _kb = isCalciumSupplement(d3Med) ? CALCIUM_D3_KNOWLEDGE : D3_KNOWLEDGE;
+  _kb.dos.forEach(tip => {
     html += `<div style="font-size:var(--fs-sm);color:var(--mid);padding:3px 0 3px 16px;line-height:var(--lh-normal);">• ${escHtml(tip)}</div>`;
   });
   html += '<div class="ir-label" style="margin-top:8px;margin-bottom:6px;font-weight:600;">' + zi('warn') + ' Don\'ts</div>';
-  D3_KNOWLEDGE.donts.forEach(tip => {
+  _kb.donts.forEach(tip => {
     html += `<div style="font-size:var(--fs-sm);color:var(--mid);padding:3px 0 3px 16px;line-height:var(--lh-normal);">• ${escHtml(tip)}</div>`;
   });
   html += '</div>';

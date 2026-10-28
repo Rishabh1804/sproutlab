@@ -2,7 +2,7 @@
 # audit-floor-fidelity-v1.sh — never-cross safety-floor ship-gate (13th gate, food-effects-v2 S0)
 #
 # The emergency floors must never cross: choking first-aid is MECHANICAL airway
-# rescue (back blows / chest thrusts, explicitly NO adrenaline); an allergic
+# rescue (back blows / abdominal thrusts — child 1y+ since 2026-09, explicitly NO adrenaline); an allergic
 # reaction is ANAPHYLAXIS (a prescribed adrenaline auto-injector, NOT back
 # blows). A floor that carried the wrong first-aid would tell a parent to do the
 # opposite of the life-saving action. _libBuildGuide (diet.js) renders one floor
@@ -11,7 +11,7 @@
 #
 # Three drift classes — any one fails the build:
 #   A. CHOKING FLOOR LOST ITS MECHANICAL AID — FOOD_EFFECTS['choking hazards']
-#      seekCare must name back blows AND chest thrusts, and must NOT carry the
+#      seekCare must name back blows AND thrusts (abdominal, child 1y+), and must NOT carry the
 #      adrenaline-auto-injector instruction (the "NO adrenaline" phrasing is fine
 #      — we ban the affirmative anaphylaxis treatment, not the word).
 #   B. ANAPHYLAXIS FLOOR LOST ITS ADRENALINE — every allergen-introduce-early
@@ -100,7 +100,7 @@ if (allergens.length < 3) fail2('audit-floor-fidelity-v1: SELF-TEST FAIL — few
 const A = [], B = [], C = [];
 
 // ── A. choking floor keeps its mechanical aid, sheds the adrenaline injector ──
-if (!MECHANICAL.test(choke.seekCare)) A.push('choking seekCare names no back-blows / chest-thrusts (mechanical aid missing)');
+if (!MECHANICAL.test(choke.seekCare)) A.push('choking seekCare names no back-blows / thrusts (mechanical aid missing)');
 if (ADRENALINE.test(choke.seekCare))  A.push('choking seekCare carries the adrenaline auto-injector instruction (anaphylaxis aid on a choking floor)');
 
 // ── B. every anaphylaxis floor keeps its adrenaline, sheds mechanical aid ──
@@ -128,7 +128,7 @@ if (B.length) { console.log('  [B] ANAPHYLAXIS FLOOR:'); B.forEach(m => console.
 if (C.length) { console.log('  [C] CROSSED FLOOR:'); C.forEach(m => console.log('      ' + m)); }
 console.log('');
 console.log('Resolution: edit the offending FOOD_EFFECTS[...].seekCare in data.js so the first-aid');
-console.log('  matches the hazard — choking = back blows / chest thrusts (NO adrenaline);');
+console.log('  matches the hazard — choking = back blows / abdominal thrusts (NO adrenaline);');
 console.log('  allergic reaction = prescribed adrenaline auto-injector (NOT back blows / Heimlich).');
 process.exit(1);
 NODEEOF

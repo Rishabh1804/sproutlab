@@ -1,21 +1,143 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-05-27 (PM — Milestones arc operational rules added)
+**Last updated:** 2026-10-28 (repo sweep — stale entries moved to Fixed, sweep findings logged at the top of Open Bugs)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
 
+### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
+
+A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
+
+#### P1 — CareTicket thresholds are still the 6–12 month set (age trigger passed Sep 2026)
+- **Symptom:** the CareTicket targets were planned to become age-adaptive at 12 months (SPROUTLAB_ROADMAP v7, "review by Sep 2026"). Only a disclaimer was added: the target text says it was "set for 6–12 months" (intelligence-caretickets.js). A toddler's tickets are judged against infant targets.
+- **Fix shape:** an age-banded target table (12–24 m first), sourced; Maren-primary, Kael for the engine. Blocked on the Kael Region split for any sizeable addition.
+
+#### P1 — Kael Region at 29,581 LOC (≈419 to the 30K trigger)
+- **Symptom:** the 12–24 m expansion (#268–#270) added ≈930 engine lines. Every engine-side item in this log and the roadmap now risks tripping the trigger.
+- **Fix shape:** a Lyra spec for the Kael→successor split (proposed boundary: data tables vs engine logic), Architect-ratified, before the next engine or data addition. Supersedes the three per-PR headroom notes below.
+
+#### P2 — User-facing "coming soon" stubs (HR-8 compliant, but visible)
+- Symptom-checker footer **Save / Share / Track** (`medical.js:2662–2664`, `scSaveResult` …): visible on every result. Part of the unbuilt symptom-checker D3 (see the weave-ISL / UX-vision specs).
+- CareTicket **View all / View overdue** (`intelligence-caretickets.js:1881, 1884`): the CareTickets Phase 2 list views.
+
+#### P2 — Chart.js loads from a CDN with no version pin (`build.sh:239`)
+- **Symptom:** `<script src="https://cdn.jsdelivr.net/npm/chart.js">` resolves to whatever is latest; a breaking major or a compromised release reaches the app on next load. Roadmap item 1b (vendor Chart.js, closes ASI04) is not started.
+- **Fix shape:** pin an exact version now (one-line change, build.sh — infra, Cipher review); vendor it under roadmap 1b.
+
+#### P2 — Inline `onchange` on the Essential-mode toggle (template.html:3043, HR-3)
+- `onchange="toggleEssentialMode()"` — the Phase 4 carry-forward P-6, never closed. Sits beside the `#settingsRefStd` HR-2/HR-3 entry under the #266 nits; fix both together.
+
+#### P2 — Roadmap v7 assumptions past their review date
+- "CareTicket data ≈ 100 KB" (review Oct 2026) and `normalizeFoodName` quality (Sep 2026) are due; "localStorage < 2 MB" falls due Dec 2026. Measure on a real device export and record the figures.
+
+---
+
+### 12-month age step — Tier-2 gaps (logged 2026-09-24, monthly-update session)
+
+Ziva turned one on 2026-09-04. A scout survey found every surface keyed to an age table
+that stops at 12 months. The **Tier-1** items (unsafe or wrong) were fixed in the monthly-update PR:
+child choking/CPR protocols, the fast-breathing threshold, WHO growth 0–24 m with IAP→WHO (the Architect's call, 2026-09-24), the
+12–24 m velocity bands, the vaccine age map (JE-2 / Hep A-2 / Varicella-2), added sugar gated to 2 y,
+and the age-aware diet tips. The **Tier-2** items below are stale or empty rather than unsafe:
+
+#### Progress — 12–24 m expansion PR 1 (#268): development + teeth
+- **Fixed in #268:** MILESTONE_STANDARDS reach 24 m (who 13–24; iap/eu/cn borrow them per month); Upcoming, next-milestone, lookouts and score move past 12; the age copy grows ("1 year 2 months"); 2nd-birthday event; toddler activities (and the `msStatus` gate bug); teething lookout to 33 m; the new tooth chart (Milestones → Library, synced `ziva_teeth`).
+- **Still open from #268 (Governor deferrals):**
+  - *Receive-side shadow after a merge hook (Kael V-K-268-4b, systemic):* when `mergeOnReceive` returns a value that differs from the remote, `_syncShadow[key]` holds the merged value, so a local-newer entry never flows back up until the next local edit. Affects `teeth`, `milestoneSuppress` and `activityMeta` alike. Fix: set the shadow to the remote value and queue a `syncWrite` after `_remoteWriteDepth--`. The push side for teeth is fixed in #268.
+  - *Evidence-key resolver (Kael V-K-268-5):* 48 of 102 toddler rows resolve to a generic short key by substring (walk / point / first_word). Four wrong ones were reworded; an optional `evidenceKey` row field honoured by `_msResolveEvidenceKey` (Maren) is the robust fix.
+  - *Kael Region 30K headroom (V-K-268-9):* about 29.2K after #268 (≈ 800 to the trigger). Scope the Kael successor split before the next large engine or data addition; MILESTONE_STANDARDS alone is about 450 lines.
+  - *Borrowed-standard label (V-K-268-15):* rows borrowed from WHO report `standardKey:'iap'` etc.; consider `borrowedFrom:'who'` on the window.
+  - *Past 24 months (Maren V-M-268-13, Kael V-K-268-14):* the milestone windows end at 26 m (≈ day 791, 2 Nov 2027), the Upcoming list keeps offering the 24 m CDC rows, and the activity list drops to a few infant-worded rows after 24 m. Extend with CDC 30 m / 3 y before mid-2027, alongside the growth-table horizon above.
+  - *Tooth chart (Vela V-V-268 deferral):* recorded teeth don't appear in the Activity Log, Today So Far or the Milestone Timeline; the chart sits under Library though recording is a Log-type action. Teeth carry `role="button"` but no `tabindex`/key handler (Cipher nit 3; app-wide, no non-native `data-action` element handles Enter/Space).
+  - *Two window ends (Cipher nit 5):* windows return `expectedEnd` (end − 1) for display while status is decided at `endBracket * 30.44`; on the day between, `_msWindowBandLabel` says "late band". Harmless; consider one `expectedEndExclusive`.
+  - *Units (Vela V-V-278, Maren V-M-268-12):* hero/header speak years; windows, the Upcoming label ("12–15 months") and the in-window "Ziva is 12m 20d" narration (home.js, 30.44-day months) speak months. Doctor share/print now append total months. Decide one convention for the in-window narration.
+  - *Pre-existing, surfaced:* `renderActivities` interpolates `a.title`/`a.desc` unescaped (static content, HR-4); the Activities list uses lavender for Sensory while milestones use amber; the curd "room temperature only" rule (data.js COMBO_RECIPES) has weak evidence (Ceres V-C-268-3, Kael to decide); `home.js` snack tip "ragi biscuit" (most contain sugar); the symptom guide lists 38.3 °C under emergency care, which over-escalates for a toddler (Maren V-M-268-1).
+
+#### Progress — 12–24 m expansion PR 3 (#270): nutrition
+- **Fixed in #270:** 28 cited toddler recipes (family food, adapted — portion, chew-safety, MDD groups); food-library overlay (foods, aliases, sugar/salt gates, allergen names…) merged from recipes.js and guarded by `audit-food-lib-overlay-v1.sh`; hazard gates (whole chana 48, chikki 48, raw sprouts 60, shellfish 6) in data.js; rule corrections in data.js (chai, juice, biscuit, corn, gajak, peanut, honey); `after` lines (salt, juice, raw salad, corn, honey) on the Library, combo, Q&A and detail sheet; one age-aware honey framing (`foodEffectForAge`) on every surface; combo cache schema bump; whole-word food matching in the synergy tips, combo recipe tier, recipe tap-through and meal nutrition parser; diet-preference gates on Q&A suggestions and synergy tips; toddler diet tips (family food, meals/snacks, five food groups).
+- **Still open:**
+  - *Texture ladder past 'finger':* the ladder is defined five times (core.js `_expectedTextureStage`, medical.js `TEXTURE_STAGES`, qa-handlers ×2, diet.js scoring) and tops out at 'finger'. Recipes carry `texture:'family'` and the tips describe it, but the engines have no 'family' stage; adding one needs a shared definition + classifier keywords (Kael + Maren).
+  - *Variety target:* `VARIETY_TARGETS` stays 18 foods/week from 12 m (no numeric source for a toddler count); the WHO MDD "5 of 8 groups a day" is surfaced as a tip, not scored. Recipes carry `mddGroups` for a future MDD score.
+  - *Draft sidecars not wired:* `SAFE_FORM_12_24` (29 choking safe-forms for a 4-tooth toddler) and `IFCT_REF_12_24` (per-100 g protein/calcium/iron) from the research draft are not merged — nothing renders them yet. **The research draft itself was never committed** (not in the repo, any branch, or git history — found in the 2026-10-28 sweep), so the sources must be re-gathered before wiring.
+  - *Decisions:* popcorn gate 48 (AAP until 4) vs the choking record's 5; generic 'laddoo' deliberately ungated (sugar-bound besan ladoo reads ungated); 'cake' also gates plain rice cakes (accepted false positive).
+  - *Governor deferrals (#270 QA):* a name that reaches two records ("til chikki", "peanut chikki") shows the sesame/peanut encourage card, not the choking floor — the 48-month gate still protects (Kael V-K-270-9, needs a resolver rule); the NUTRITION `fish` entry claims omega-3 for lean rohu (Kael/Maren); plain "lassi" (usually sweetened) has no gate (Maren N6); Library duplicates for one food (badam/almonds, prawn/shrimp/jhinga, tahini/gingelly) — extend `_FD_SYN` (Kael V-K-270-10); `classifyFoodToGroup` / `_categorizeFoods` substring passes and the WHO-8 vs FOOD_TAX group mismatch in the five-groups tip (Vela V-V-270-12); SUB_SUGGESTIONS 'vegs:roots' still offers "carrot sticks"; `TODDLER_FEEDING` has no consumer; gajak lost its sesame allergen note (gated at 48, low stakes); the infant reco juice tiles (watermelon) predate juice@12; bare "mustard" takes the mustard-greens combo recipe (ambiguous query). Cipher E-V follow-ups: move `_foodWordHit` into core.js as the one word matcher (it duplicates `_lookupByFoodName`'s boundary rule); the 'energy drink'@216 stimulant gate still lives in the overlay (the overlay audit guarantees it merges); the e2e specs `food-effects-v2-r1-combo-checker` / `-r2-qa-food-safety` assert infant honey framing without pinning the clock — pin it or re-baseline to 12+ m.
+  - *Existing gaps surfaced:* the cow-milk allergen card never fires on 'milk'/'curd'/'paneer'/'buttermilk' (aliases only cover forms like 'whole milk'); new milk/egg/fish NUTRITION entries join `_getFatBearingFoodNames` (changes Vit D3 'with fat' detection — Kael); COMBO_RULES 'no ragi with paneer' contradicts FOOD_SYNERGIES ragi+curd; NUTRITION 'fig' vs 'anjeer' disagree; `FOOD_SUGGESTIONS` has no consumer; infant copy in the 6–9 m recipes (cow's milk waits, no salt before 12 m) is correct for those recipes' ages.
+
+#### Progress — Caldikind-P NF replaces the Vit D3 drops (#270)
+- **Fixed in #270:** twice-daily dose slots (`core.js` `medDoseSlots` / `medSlotStates` / `medDayVal`) with one "Done now" per med at a time, an unlogged-earlier-dose prompt ("don't double up"), quiet "later today" rows that can log an early dose, a 05:00 morning start, start-day applicability (`createdAt`), bare-name fallback for older builds; an explicit "Doses a day" choice in the add form (conservative free-text fallback); Vitamin D supplement detection by name/brand (latest start wins) with a stop-the-old-one prompt; a one-shot per-device switchover (drops → Caldikind-P NF); calcium + D3 guidance live on the streak tip; slot-aware chip, day plan, 14-day card, Info adherence (partial status), Smart Q&A, ISL, medical score, Today So Far story.
+- **Still open (Governor deferrals):**
+  - *Timing per dose (Maren N-1 / Vela V-V-270-6 / Kael V-K-270-31):* the 14-day card's "Usual time" band, the Info timing line and `computeSupplementAdherence` use the first given dose only; show a band per slot.
+  - *With-fat badge near an iron meal (Ceres V-C-270-17):* for a calcium supplement, flag a dose given within the iron meal's window with a gentle amber note.
+  - *Food-only calcium alerts (Ceres V-C-270-22):* 'low-calcium' tips ignore the prescribed calcium; add "plus the calcium in her supplement" when one is active.
+  - *Nudge tap (Vela V-V-270-13, pre-existing):* the Today So Far "Mark done" nudge animates card 0 and stamps tap time.
+  - *Name collisions (Kael V-K-270-29):* a once-daily med literally named "X · morning" would share a key with twice-daily "X"; med names containing `.` or `/` break sync dotted paths (pre-existing).
+  - *Kael Region headroom:* 29,575 LOC after this change (≈425 to the 30K trigger). Scope the Kael→successor split before the next engine feature.
+  - *Adequacy question for her doctor (not an app nudge):* the pack states 10 ml = 200 IU Vitamin D3, so 2.5 ml twice daily gives ≈100 IU a day vs 800 IU from the drops (IAP guidance ≈600 IU/day at 1–3 y). Parents are confirming with her doctor whether the drops should continue alongside; the app asserts neither.
+
+#### Progress — 12–24 m expansion PR 2 (#269): sleep + vaccines
+- **Fixed in #269:** SLEEP_STANDARDS to 36 m with one nap source; IAP 2023 vaccine reconciliation (four non-IAP doses removed, due windows + grace, conditional doses, seasonal yearly flu, series completion for JE-2/MCV-2, word-boundary vaccine matching).
+- **Still open (Governor deferrals):**
+  - *Next upcoming vaccine (Maren V-M-269-8):* `addVacc` no longer flips other pending doses to given, so several `upcoming:true` entries can coexist. A dozen consumers use `vaccData.find(v => v.upcoming)` (first in array order, not earliest by date) — home card, 7–14-day reminder, day plan. Add `getNextUpcomingVacc()` (earliest by date, skip or flag past-dated) and route them through it.
+  - *Mark given / Not needed (Vela V-V-269-9/10):* no in-card action to mark a due dose given or a conditional dose not needed; free-text names still drive matching (yearly flu is matched by any flu entry in its band).
+  - *Next-dose auto-scheduling* after `_vaccMarkDone` (from the IAP 2023 review) is still open.
+  - *Toddler safe-sleep tier (Maren V-M-269-15):* the Safe Sleep tips are infant-only (SIDS, nothing in the crib); toddler items (crib climbing, lowering the mattress, blind cords, when a light blanket is fine) belong on the 12-month checklist.
+  - *Vaccine score predicate (Kael V-K-269-10):* the routine-dose rule is re-derived in `calcMedicalScore`, its `vaccDueNow` detail and `renderVaccCoverage`; extract one helper.
+  - *Kael Region headroom:* ≈ 29.3K after #269 (≈ 700 to the 30K trigger). Refresh the CLAUDE.md jurisdiction summary and scope the Kael split before PR 3's data additions.
+  - *Next PR first item (Cipher E-V 3):* Home picks the first upcoming entry in array order while Medical picks the earliest date — `getNextUpcomingVacc()` unifies them.
+  - *Engine tests (Cipher E-V 11):* add a regression spec for `vaccDueState` season cases (Sep → future, Apr–Jul → due, flu dose within 300 days → future), follow-on gating, the conditional → check path, and `getSleepTargets` anchors. When the shared vaccine helper is extracted (V-K-269-10), move the vaccine helpers from core.js to medical.js (≈ 50 lines of Kael headroom) and pass `givenList`/`now` explicitly (Cipher E-V 5–6).
+  - *UIP OPV booster (Cipher E-V 12, Maren call):* the UIP gives an OPV booster at 16–24 m; her record mixes UIP and private doses (OPV-0/1 logged). Decide whether to list it.
+  - *SLEEP_STANDARDS anchors (Cipher E-V 7):* 13, 15, 19, 30 and 36 repeat the key below them in every field but naps; prune or move to a band table.
+  - *Small copy:* the under-12 m nap tips still say the 2→1 shift is "usually around 12–15 months" (12–18 elsewhere); the 7-day sleep pill's sage threshold is the standard's target, stricter than the tip's "11–14 h is normal" (Vela V-V-269-13); `intelligence-quicklog.js` hard-codes a 720-minute target (Kael pair-note).
+
+#### P2 — Age copy still speaking "infant" (most fixed in #268–#270; re-checked 2026-10-28)
+- Fixed: hero and Q&A age ("1 year 2 months"), 2nd-birthday entry, toddler activities, teething lookout to 33 m, age-aware diet tips.
+- Still open: the CareTicket target text "set for 6–12 months" (see the CareTicket threshold entry above); the template.html help text is written for 6–8 months; the poop-frequency guide caps at 9–12 m. The texture ladder and variety target are tracked under the #270 progress block.
+
+#### P1 — Growth-velocity bands are still hand-copied at ~11 sites (Maren V-M-266-4)
+- **Symptom:** the 12–24 m band is shared (`GROWTH_VELOCITY_12_24`), but each site still carries its own ternary chain for 0–12 m. Some sites key on today's age, and `computeGrowthVelocity` keys on the measurement's (rounded) age.
+- **Fix shape:** add one `growthVelocityBand(ageMo)` helper in core.js holding every band, called with the measurement's age, and replace the chains. This is the same consolidation `VACC_AGE_MONTHS` did for vaccines. Kael co-sign.
+
+#### P1 — 24-month reference horizon (Kael V-K-266-9 / Maren V-M-266-14)
+- **Symptom:** `getInterpolatedWHO` clamps to the 24-month row. From 4 Sep 2027 every reading would silently compare against month 24, which is the same drift this PR fixed at 12 m. WHO also switches from recumbent length to standing height at 24 m (about 0.7 cm lower).
+- **Fix shape:** before Jul 2027, extend with the WHO 2–5 y tables (height-for-age, with the length/height adjustment), and add a build-time horizon warning when DOB + table-end is within 90 days.
+
+#### P2 — Deferred Governor NITs from PR #266 (12-month audit)
+- **Vaccines (Maren V-M-266-7, rest):**
+  - range labels ('16-18 months', '18-19 months') should flag Missing only after the window END plus a grace period;
+  - compute JE-2 as JE-1 date + 28 days once JE-1 is logged;
+  - add a "not needed for our vaccine" dismiss for conditional doses (Hep A-2, PCV Booster-2).
+
+  The +0.5-month look-ahead that labelled JE-2 "Missing" early is fixed.
+- **Honey reasons (Ceres V-C-266-5):** the combo checker's honey 'avoid' headline and the Library honey shelf still give the botulism reason at every age. From 12 m the reason is "added sugar, until 2".
+- **Salt verdict (Ceres V-C-266-10):** the Library shows "Fine from 12 months" and hides the reason. Add an optional `after` line to AGE_RULES salt ("lightly — under 2 g/day at 1–3 y").
+- **Tips:** two duplicate tips predate this PR ("Early allergen…" ×2, hydration ×2). "Ziva is here" in the First-foods guide could return as a dynamic age marker (Vela V-V-266-11).
+- **Chart legend (Vela V-V-266-10):** the shaded 3rd–97th band has no label. The help tip now explains it; a caption under the chart would be better.
+- **CPR completeness (Maren V-M-266-12):** add the landmark ("where the lowest ribs meet, one finger's width above"), "use both hands if you can't push 5 cm", and a 10-second breathing check. Paediatrician sign-off is still desirable.
+- **Settings select HR-2/HR-3 (Kael V-K-266-15, Maren):** the `#settingsRefStd` select has an inline `style=` and `onchange=` (pre-existing). The `.chart-filter-btn.active-india` / `.active-both` rules in styles.css are now dead CSS.
+- **Tests (Ceres V-C-266-9, Kael V-K-266-1):**
+  - add a 12.7-month e2e case: toddler tips present, infant tips absent, and jaggery reads 'avoid' even with a green result pre-seeded in the combo cache;
+  - add compound-name self-tests ("milk with sugar", "salt and sugar", "chocolate milk") to the resolver audit.
+
+  The e2e suite still can't launch in the remote container (Playwright 1.48 vs chromium-1194).
+
+#### P2 — Cipher Edict V nits from PR #266
+- `renderInfoGrowthDiet` shows "normal" with a check when the weight interval is too short to judge. It should be neutral. This is practically unreachable once a birth weight is on file.
+- `_fdAgeRule` lives in diet.js (Ceres), but qa, quicklog and home call it behind `typeof` fallbacks. Move it next to `_lookupAllByFoodName` in core.js so one resolver owns the boundary.
+- Pre-existing: "shark fish with salt" matches salt@12 first, so the high-mercury guard is skipped (the null guard keys on the first match being fish). "sugar snap peas" now reads 24; that's stricter, so the safe direction.
+- GRAPHIFY_INTEGRATION.md gives 2,843 cross-file calls for 0.9.6 (bisect probe, raw `source_file`) and 2,286 (live baseline, normalized). Normalize the probe and restate a single figure.
+- SYMPTOM_DB breathing: "More than 60 breaths per minute" is the infant emergency line. It is coherent with the new ≥ 40 "fast" line, but Maren should confirm the toddler emergency threshold.
+
+#### P2 — 0–12 m velocity bands above the WHO median
+- **Symptom:** the 9–12 m band (8–13 g/day, 55–100 g/week) sits above the WHO median (~7.5 g/day at 10–12 m). Historical only now that she's past 12 m. The 12–24 m band is sourced (`GROWTH_VELOCITY_12_24`, core.js).
+
+---
+
 ### Home Tab
 
 (Symptom Checker P1 — severity badge invisible on `crying-fussy` (mild) entry — RESOLVED bridge build 2026-05-13; see Fixed Bugs § Bridge Build.)
-
-#### P2 — HR-1: `getMoonPhaseEmoji` returns Unicode emoji (core.js:2973)
-- **Symptom:** Moon phase display on home greeting uses raw Unicode emoji characters (🌑🌒🌓…) instead of the `zi()` SVG system.
-- **Rule violated:** HR-1 — no Unicode emoji; all icons via `zi()`.
-- **Notes:** Pre-existing. Not reachable through Polish-11 surface area; deferred to R-10 HR-1 queue.
-- **File:** `split/core.js` ~line 2973
 
 ---
 
@@ -29,32 +151,52 @@
 
 ---
 
-### Activities Tab
-
-#### P0 — Recent Evidence Feed flooding ("Social Smiling" repeated entries)
-- **Symptom:** Activities tab shows "Social Smiling" (a milestone display name) repeatedly, making the tab feel haphazard. Root cause: UI conflates "what to do" (Recommended Activities) with "what was done" (Recent Evidence Feed); Recent Evidence Feed lacks rollup aggregation so high-frequency milestone observations flood the view.
-- **Fix shape:** Rollup aggregation (PR-β scope) — e.g. "Social Smiling — 12 observations this week, last: 3pm today"; tappable expand reveals individual entries.
-- **Sequencing:** Blocked on PR-α merge (Stability sub-phase). PR-β opens post-PR-α + Sovereign real-device verification.
-- **File:** `split/home.js` — `renderRecentEvidence()` (PR-α scout-deep correction; was incorrectly logged as `medical.js`)
-
-#### P1 — `_renderAttribution` not wired into Recent Evidence Feed (Phase 3 deferred PR-19.6) — **FIXED in PR-α**
-- **Symptom:** Attribution chips (who logged the entry) don't appear on Recent Evidence Feed entries, only on Visit entries.
-- **Fix:** Wired `_renderAttribution(e)` per entry inside `renderRecentEvidence()`, modeled on `renderVisits()` and `renderActiveMilestones()` precedents.
-- **File:** `split/home.js` — `renderRecentEvidence()` (PR-α correction; was logged as `medical.js`)
-
-#### P1 — `renderMilestones()` is a monolith (~165 LOC body + 5 tail-calls) — **FIXED in PR-α**
-- **Symptom:** Single function bundled milestoneList HTML build with implicit tail-calls to 5 sibling renderers. Prevented independent per-surface re-renders and per-renderer `SYNC_RENDER_DEPS` wiring.
-- **Fix:** Split into `renderMilestoneList()` (extracted from body), kept `renderMilestones()` as facade calling all 6 sub-renderers; also extracted `renderMilestoneHighlights()` from `renderMilestoneStats()` (was double-duty rendering both pills + cards). `SYNC_RENDER_DEPS[KEYS.activityLog]` and `SYNC_RENDER_DEPS[KEYS.milestones]` `'track:milestones'` extended to dispatch all 8 milestone-tab renderers.
-- **File:** `split/home.js` — `renderMilestones()` (PR-α correction; was logged as `medical.js`)
-
----
-
 ### Data / Sync
 
 #### P1 — `medChecks` / `feedingData` not migrated to object-keyed shape
 - **Symptom:** Pre-Phase-4 data shape uses array indexing; object-keyed shape (by date string) is required for cross-device sync consistency and efficient lookups.
 - **Sequencing:** Stability sub-phase carryforward item.
 - **Files:** `split/medical.js`, `split/sync.js`
+
+#### P1 — Illness-episode sync receive re-renders from stale module arrays (all four keys)
+- **Symptom:** `SYNC_RENDER_DEPS` registers `feverEpisodes` / `diarrhoeaEpisodes` / `vomitingEpisodes` / `coldEpisodes` with `global: null` and dispatches the episode-card renderers on receive, but those renderers read module-level `let` arrays (`_feverEpisodes` etc.) hydrated once from localStorage at load, not the freshly written key. Device B resolves an episode; device A keeps showing "Active … Episode" until reload. Nothing throws (per-renderer try/catch), it silently no-ops on data.
+- **Fix shape:** Either a `_postReceive*` hook per episode key that reassigns the module array (the `_postReceiveMilestones` idiom), or have `getActive*Episode()` read through `load()`. Kael-primary; separate PR.
+- **Origin:** Kael V-K-3 on PR #263 (fever readings toggle), widened by Cipher Edict V ruling 5 from fever-only to all four illness-episode keys. Pre-existing; not introduced by #263.
+- **Files:** `split/sync.js` ~lines 244–247 (registrations), `split/intelligence-illness.js` ~lines 3–14 (`_feverEpisodes` hydration) and the diarrhoea / vomiting / cold module arrays.
+- **Raised again on PR #267 (Maren V-M-267-5, Kael V-K-267-3):** the new resolved-episode editor is a write path that saves the whole module array, so a device left open can revert the other parent's entries. #267 re-reads the stored list before editing (a minimal guard). The real fix above is still owed, and should add the `render*History` renderers to the episode keys' `SYNC_RENDER_DEPS`.
+
+#### P2 — Deferred from the PR #267 Governor round (illness edit + timezone)
+- **`_qaLastIllness` answers with "Invalid Date" / "Unknown" (Kael V-K-267-10).** `intelligence-qa-handlers.js` ~195–206 reads `ep.startDate` / `ep.type` / `ep.durationDays`, which no episode has (they carry `startedAt` / `illnessType` / `resolvedAt`). Its sort key is always `''`, so it returns the OLDEST episode. Fix: sort by `(resolvedAt || startedAt)` descending and read the real fields (`_episodeDurationDays`). Separate PR.
+- **More UTC-day slices on episode dates (Kael V-K-267-11, Ceres, Maren V-M-267-8):**
+  - `intelligence-isl.js` ~404 (the "since the fever" anchor) and ~777 (range illness filter) use `startedAt.substring(0,10)`;
+  - `medical.js` ~7982 buckets illness frequency by `startedAt.slice(0,7)` (a start before 05:30 IST on the 1st lands in the previous month);
+  - `home.js` milestone `doneAt` / notification timestamps are sliced at ~5069, 7004, 7035–7036, 7808, 7956, 8013, 9269, 9839.
+
+  Fix: use `toDateStr(new Date(x))`.
+- **`formatDate('YYYY-MM-DD')` parses as UTC midnight (Kael V-K-267-12, Maren V-M-267-8).** `core.js` ~4002. It is correct in IST but shows the previous day west of UTC. diet.js has the same `new Date('YYYY-MM-DD')` pattern at ~60, 3142, 3963, 4261, 4924 and 7524 (Ceres scan); it is safe while the family is in UTC+. Fix: parse by components. Every caller is affected, so do it in a separate PR.
+- **No timezone in the e2e config (Maren V-M-267-9).** `playwright.config.ts` runs in the container's UTC, which is why the edit-sheet UTC bug was never caught. Add a spec with `timezoneId: 'Asia/Kolkata'` and one negative-offset zone, covering: local pre-fill, day-preserving edits across midnight, and the resolved-edit guards (same-minute, next-episode, symptom-only floor).
+- **Attribution on edited episodes (Kael V-K-267-5).** The row's "by X" keeps the original logger after the other parent edits the end time. #267 adds an "End time edited" line; clearing `__sync_updatedBy` so the flush re-stamps the editor is still open.
+- **Tappable rows are plain `div`s** with no `role="button"` or `tabindex` (a gap across the whole `ep-entry-tap` pattern; Maren, Kael).
+- **Cipher Edict V nits on #267:**
+  - `_epLocalDateStr(invalid)` returns today. A corrupt timestamp would then display as today, and in `_deWetDiapersToday` / `_voWetToday` it adds a phantom diaper to today's count. Return `''` for invalid input when an argument was given.
+  - After an end-time edit, `renderMedicalStats` and the post-illness recovery view (`medical.js` ~8517) stay stale until the next tab switch.
+  - A `role="alert"` element may not re-announce identical text.
+  - If a render throws after `save()` succeeds, the sheet says "Could not save". Saving again is harmless.
+- **Entry sheets have no date field (Ceres V-C-267-4).** A time edit now lands on the nearest day to the original (±1). Moving an entry further than a day still means deleting it and re-logging.
+
+
+#### P1 — Unsynced-write ledger follow-ups (PR #265, 2026-09-18)
+- **Context:** PR #265 added the ledger after the September incident (six months of one phone's entries overwritten by a stale March cloud copy on reinstall). The Governor chain accepted the design with these follow-ups still open:
+- **(a) Map-shaped keys union on full push, so a stale phone can re-introduce a day a parent deleted elsewhere** (Ceres F2). `KEYS.feeding` / `medChecks` / `activityMeta` are date-keyed maps pushed with `set(merge:true)`. Fix shape: ledger the touched sub-keys per save site and push only those subtrees via `_syncNestDottedPaths`. Kael-primary, Ceres consult.
+- **(b) Array union has no delete signal** (Kael F5 note): entries deleted locally come back from the cloud on the replay after a full push. Acceptable for the recovery path; a tombstone list per key would close it.
+- **(c) Join silently discards this phone's ledger** (Kael F9): consistent with "joiner never seeds", but the join modal copy should say "entries on this phone will be replaced by the household's". Maren/Vela copy. (The member sign-out → log → sign-in path no longer discards: `sl_sync_attached_once` survives sign-out and routes that device through the ledger push — Kael F18, folded.)
+- **(f) Replayed skipped snapshots re-record `hasPendingWrites` from the cached metadata** (Kael F20): the pill can read "Syncing" until the next live snapshot for that doc. Cosmetic.
+- **(g) Seed version literal `'4'` is hard-coded in six places and doubles as the attach signal** (Cipher ruling 2): the next bump silently routes every device through the seed/member branches — the admin re-seed replaces arrays without `_syncMergeForPush`, a member drops local. Hoist `SYNC_SEED_VERSION`, keep `sl_sync_attached_once` (folded in #265) as the attach signal, and route the admin re-seed through the merge. Kael.
+- **(d) `renderFoods()` saves on render** (`diet.js:177`, Ceres F1.3): a render function writing storage; harmless since `syncWrite` now skips no-op re-saves, still a layer smell. Ceres.
+- **(e) Stale comments**: `template.html:322-324` says Reload surfaces only in halted — the badge button is now Reload (halted) or Retry (stale). Comment-only; next template touch.
+- **Fixed in the same PR, worth the record:** `_syncFindHousehold` referenced `user.uid` (undefined) in the seed/member branch — a ReferenceError that killed listener attach on every launch for any device whose seeded flag was missing (e.g. after sign-out). Sync went silently dead with the pill hidden. Candidate root cause of the March stop (Kael F3).
+
+---
 
 ---
 
@@ -82,9 +224,26 @@
 - **Status:** Triggered in Polish-11 session; fix landed (PR-41). Document here as a standing operational rule.
 - **Rule:** Always build as `bash build.sh > sproutlab.html` (stderr separate). Never append `2>&1`.
 
+#### P2 — Built `<head>` is authored in a bash heredoc outside every Governor jurisdiction
+- **Symptom:** `split/build.sh` emits the `<head>` (meta, title, PWA tags, CDN scripts) from a heredoc. No Governor audits `build.sh` (Public Works) and it is not on the quad-Gov shared-file trigger, so head regressions go unreviewed — this is how the manifest link and PWA meta tags were missing for five months (PR #264).
+- **Fix shape:** Move the head markup into `template.html` (shared module, quad-Gov review) and have `build.sh` splice it, or add `build.sh`'s head heredoc to the shared-file trigger. Regression guard already in place: `tests/e2e/pwa-head.spec.ts`.
+- **Origin:** Cipher Edict V ruling 3 on PR #264 (2026-09-18).
+- **File:** `split/build.sh` `cat <<'HEAD'` block
+
 ---
 
 ## Fixed Bugs (Polish Sub-phase, Phase 4)
+
+### Ledger sweep (2026-10-28) — entries found fixed and moved here
+| Entry | Fixed in |
+|---|---|
+| P0 Recent Evidence Feed flooding ("Social Smiling" × N) | PR-β (#47), rollup at `home.js` `renderRecentEvidence` (`ROLLUP_THRESHOLD`) |
+| P1 `_renderAttribution` not wired into Recent Evidence | PR-α (#45) |
+| P1 `renderMilestones()` monolith | PR-α (#45) |
+| P2 HR-1 `getMoonPhaseEmoji` Unicode emoji | replaced by `getMoonPhaseIcon` (core.js), which returns `zi('moon-*')` |
+| P1 MILESTONE_STANDARDS stop at 12 months | #268 (to 24 m) |
+| P1 SLEEP_STANDARDS stop at 12 months; nap rules disagree | #269 (to 36 m, one nap source) |
+| P1 VACC_SCHEDULE review against IAP 2023 | #269 (next-dose auto-scheduling stays open under the #269 progress block) |
 
 ### Bridge Build — Symptom Checker (2026-05-13) — PR-bridge
 
@@ -136,7 +295,6 @@ Items inventoried but not yet scheduled. 15-item queue as of bridge build 2026-0
 
 | Priority | Area | Description |
 |----------|------|-------------|
-| P2 | HR-1 | `getMoonPhaseEmoji` Unicode emoji sweep (core.js) |
 | P2 | HR-2 | JS-side hex color constants (~15 sites — Kael Stability baseline) |
 | P2 | CSS | Raw px padding debt (~259 declarations) |
 | P2 | CSS | Chip wrapping + container `flex-wrap` fixes |

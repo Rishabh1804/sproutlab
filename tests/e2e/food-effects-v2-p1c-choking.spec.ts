@@ -10,7 +10,8 @@ import { test, expect } from '@playwright/test';
 //     amber, a SPLIT lead (sage carve-out "safe in the right form" over an amber gate "whole
 //     forms wait until ~5"), NEVER the rose 'avoid' siren and NEVER the sage encourage benefit.
 //   • THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): back
-//     blows + chest thrusts, NEVER abdominal thrusts under 1, and NO adrenaline / auto-injector.
+//     blows + abdominal thrusts (child 1y+ technique since 2026-09 — the under-1 chest-thrust
+//     protocol was retired when Ziva turned one), and NO adrenaline / auto-injector.
 //   • ALIAS PRECISION (the carry-forward lesson, M-F-1 / K-M-1): the record is reached by MANY
 //     aliases; the curated set fires on the unambiguous hazard forms (grape, popcorn, supari,
 //     roasted gram…) but NEVER on a safe homograph (chana dal, cooked carrot, sevai), and never
@@ -77,7 +78,7 @@ test.describe('food-effects-v2 P1c — the choking set', () => {
   });
 
   // ── §9 the FLOOR IS CHOKING FIRST AID, not anaphylaxis ──
-  test('the emergency floor is CHOKING FIRST AID — back blows / chest thrusts, NEVER adrenaline', async ({ page }) => {
+  test('the emergency floor is CHOKING FIRST AID — back blows / abdominal thrusts, NEVER adrenaline', async ({ page }) => {
     const e = await page.evaluate(() => {
       const x = getFoodEffect('choking hazards');
       return { severe: [].concat(x.severeSigns || []).join(' | ').toLowerCase(),
@@ -85,8 +86,9 @@ test.describe('food-effects-v2 P1c — the choking set', () => {
     });
     // the mechanical-rescue protocol is present...
     expect(e.seek).toMatch(/back blow/);
-    expect(e.seek).toMatch(/chest thrust/);
-    expect(e.seek).toMatch(/never abdominal thrusts/);   // the load-bearing infant rule (<1)
+    expect(e.seek).toMatch(/abdominal thrust/);          // the child (1y+) technique
+    expect(e.seek).toMatch(/inwards and upwards/);
+    expect(e.seek).not.toMatch(/chest thrust/);          // the retired infant technique must not linger
     expect(e.seek).toMatch(/112|108/);
     // ...the floor explicitly DISCLAIMS the allergy response (it names "no adrenaline" / "not an
     // allergy" to steer a parent away from the wrong floor)...
@@ -131,8 +133,8 @@ test.describe('food-effects-v2 P1c — the choking set', () => {
   test('the choking-first-aid strip is pinned, present-only, and choking-scoped', async ({ page }) => {
     await expect(page.locator('#dietChokingIntro .cons-severe')).toHaveCount(1);
     await expect(page.locator('#dietChokingIntroBody .cons-severe')).toHaveCount(0); // pinned, never folds
-    await expect(page.locator('#dietChokingIntro .cons-severe-h')).toContainText(/if your baby is choking/i);
-    await expect(page.locator('#dietChokingIntro .enc-emergency')).toContainText(/back blow|chest thrust/i);
+    await expect(page.locator('#dietChokingIntro .cons-severe-h')).toContainText(/if she is choking/i);
+    await expect(page.locator('#dietChokingIntro .enc-emergency')).toContainText(/back blow|abdominal thrust/i);
   });
 
   // ── the gagging-vs-choking discriminator (highest-value education) is PINNED, by the floor (V-V-12) ──

@@ -109,7 +109,19 @@ ripple_note = []
 if graph_path:
     try:
         g = json.load(open(graph_path))
-        id2mod = {n["id"]: n.get("source_file", "?") for n in g.get("nodes", [])}
+        # Normalize source_file to a split/-relative module name. The prefix follows the directory
+        # graphify runs from (repo root -> "split/core.js"), not its version. Unnormalized, no ripple
+        # edge ever matched `changed` and the oracle SILENTLY reported "jurisdiction-local"
+        # (2026-09-24 regression) — the under-summon class.
+        # Same rule as build-province-map.mjs modName (V-K-266-12).
+        def modname(f):
+            f = str(f or "?").replace("\\", "/")
+            if "/split/" in f:
+                return f.rsplit("/split/", 1)[1]
+            while f.startswith("./"):
+                f = f[2:]
+            return f[len("split/"):] if f.startswith("split/") else f
+        id2mod = {n["id"]: modname(n.get("source_file")) for n in g.get("nodes", [])}
         # Direction invariant (V-K-G2): the graph is undirected (directed:false); the
         # ripple below assumes edge source=caller, target=callee. networkx does not
         # guarantee endpoint stability on undirected graphs across graphify versions.
@@ -128,6 +140,18 @@ if graph_path:
             ripple_note.append("     ripple may be inverted. FAIL-SAFE: summoning ALL Governors.")
             for gname in ("Maren", "Ceres", "Kael", "Vela"):
                 add(gname, "fail-safe: graph edge-direction invariant broken (V-K-G2)")
+        # Resolution invariant: the modules are script-globals that call each other
+        # constantly, so zero cross-file calls means the extractor stopped resolving
+        # them (graphifyy 0.9.7+), and every ripple below would read "none". Same
+        # fail-safe as V-K-G2: widen to ALL Governors rather than trust silence.
+        calls = [e for e in g.get("links", []) if e.get("relation") == "calls"]
+        xfile = sum(1 for e in calls if id2mod.get(e.get("source")) != id2mod.get(e.get("target")))
+        # Baseline 2026-09-24: 4,296 calls / 2,286 cross-file (53%). Mirrors build-province-map.mjs.
+        if len(calls) < 500 or xfile / max(1, len(calls)) < 0.15:
+            ripple_note.append(f"  !! CROSS-FILE RESOLUTION BROKEN: {len(calls)} calls edges, {xfile} cross-file;")
+            ripple_note.append("     ripple is blind (pin graphifyy==0.9.6). FAIL-SAFE: summoning ALL Governors.")
+            for gname in ("Maren", "Ceres", "Kael", "Vela"):
+                add(gname, "fail-safe: graph cross-file call resolution broken")
         # downstream: who CALLS into a changed module (reverse of calls edge =
         # dependents). edge source --calls--> target ; if target lives in a
         # changed module, then source depends on it.
