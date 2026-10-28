@@ -1437,6 +1437,9 @@ function renderHomeVacc() {
     statusLine = `<div style="font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;margin-top:4px;">${zi('check')} Booked — ${apptLabel}</div>`;
   } else if (isBooked) {
     statusLine = `<div style="font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;margin-top:4px;cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">${zi('check')} Booked — tap to add date & time</div>`;
+  } else if (daysTo < 0) {
+    // Overdue reads as overdue, with the two ways out (Maren S-2 on #273).
+    statusLine = '<div class="t-sub tc-danger mt-4">' + zi('warn') + ' ' + (-daysTo) + ' day' + (daysTo === -1 ? '' : 's') + ' overdue. Tap Mark given if she has had it, or book it.</div>';
   } else {
     statusLine = safe <= 3 ? '<div style="font-size:var(--fs-sm);color:var(--tc-danger);font-weight:700;margin-top:4px;">' + zi('warn') + ' Due very soon — book your appointment!</div>' : '<div style="font-size:var(--fs-sm);color:var(--tc-caution);font-weight:600;margin-top:4px;">' + zi('clock') + ' Coming up this week</div>';
   }
@@ -1450,6 +1453,7 @@ function renderHomeVacc() {
         <div class="t-title">${escHtml(upcoming.name)}</div>
         <div class="t-sub" style="margin-top:3px;">Due ${formatDate(upcoming.date)}</div>
         ${statusLine}
+        <div class="mt-6"><button class="btn btn-ghost vc-sm-btn" data-action="vaccMarkGiven" data-arg="${escAttr(upcoming.name)}">${zi('check')} Mark given</button></div>
       </div>
     </div>`;
 }
@@ -1903,7 +1907,10 @@ function renderVaccHistory() {
 
   // Upcoming vaccination highlight
   if (upcoming) {
-    const daysTo = Math.max(0, Math.ceil((new Date(upcoming.date) - new Date()) / 86400000));
+    const daysRaw = Math.ceil((new Date(upcoming.date) - new Date()) / 86400000);
+    const daysTo = Math.max(0, daysRaw);
+    // An overdue dose says so instead of "0 days away" (Maren S-2 on #273).
+    const whenLabel = daysRaw < 0 ? (-daysRaw) + ' day' + (daysRaw === -1 ? '' : 's') + ' overdue' : daysTo + ' days away';
     const urgency = daysTo <= 7 ? 'var(--tc-danger)' : daysTo <= 14 ? 'var(--tc-caution)' : 'var(--tc-lav)';
     const uInfo = schedLookup[normVacc(upcoming.name)];
     const bookedData = load(KEYS.vaccBooked, null);
@@ -1920,7 +1927,7 @@ function renderVaccHistory() {
         <div class="flex-1">
           <div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:2px;">Next due</div>
           <div class="t-title" style="font-size:var(--fs-md);">${escHtml(upcoming.name)}</div>
-          <div style="font-size:var(--fs-sm);color:${urgency};margin-top:2px;">${formatDate(upcoming.date)} · ${daysTo} days away</div>
+          <div style="font-size:var(--fs-sm);color:${urgency};margin-top:2px;">${formatDate(upcoming.date)} · ${whenLabel}</div>
           ${uInfo ? `<div class="t-sub mt-4">${zi('shield')} ${escHtml(uInfo.protects)}</div>
           <div style="font-size:var(--fs-sm);color:var(--light);margin-top:2px;">${zi('list')} ${escHtml(uInfo.notes)}</div>` : ''}
           ${bookingBadge}

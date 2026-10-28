@@ -608,9 +608,11 @@ function _postReceiveMilestoneSuppress(remoteMap, localMap) {
   return merged;
 }
 
-// _postReceiveVacc — drop pending doses already given on either phone (vaccDropSatisfiedPending).
-function _postReceiveVacc(remoteList, localList) {
-  return vaccDropSatisfiedPending(remoteList, localList);
+// _postReceiveVacc — drop pending doses the remote copy itself has given. The remote stays the
+// truth on receive: counting this phone's given doses could drop a pending twin without
+// carrying the given entry across, erasing the dose (Kael V-K-273-1).
+function _postReceiveVacc(remoteList) {
+  return vaccDropSatisfiedPending(remoteList);
 }
 
 // _postReceiveTeeth — tooth-chart merge. Shape { [toothId]: { date, ts } };

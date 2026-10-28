@@ -179,7 +179,8 @@ const GENERAL_EMERGENCIES = [
       // Breathing check + two-hand note + plainer landmark (Maren V-M-266-12; RCUK 2025 paediatric
       // BLS: look, listen and feel for no more than 10 s; lower half of the sternum, two hands if needed).
       'Check her breathing: tilt the head back slightly, lift the chin, and look, listen and feel for breaths for up to 10 seconds. Gasping is not breathing.',
-      'Not breathing: clear any obvious blockage, then give 5 rescue breaths — pinch her nose, seal your mouth over hers and blow steadily for about 1 second until the chest rises.',
+      'Breathing normally: turn her onto her side (recovery position), call 112, and keep checking her breathing until help arrives.',
+      'Not breathing normally: clear any obvious blockage, then give 5 rescue breaths — pinch her nose, seal your mouth over hers and blow steadily for about 1 second until the chest rises.',
       '30 chest compressions: heel of one hand in the middle of her chest, on the lower half of the breastbone (not the soft tip at the bottom), arm straight, push down 5 cm (a third of the chest depth) and fast (100–120 a minute) — then 2 breaths. If one hand can\'t push 5 cm, use both hands, one on top of the other. Keep the 30:2 cycle going until help arrives.'
     ],
     call112When: null,

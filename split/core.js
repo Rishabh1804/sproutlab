@@ -297,13 +297,19 @@ function _migrateVitDSingle20261028() {
     var cal = meds.filter(function(m) { return m.active && isCalciumSupplement(m) && isVitDSupplement(m); })
       .sort(function(a, b) { return String(a.start || '').localeCompare(String(b.start || '')); })[0];
     if (!cal) return;
-    var calStart = String(cal.start || '9999-12-31');
+    if (!cal.start) return;   // no start date to compare against (Maren/Kael on #273)
+    var calStart = String(cal.start);
     var old = meds.filter(function(m) {
       return m !== cal && m.active && isVitDSupplement(m) && !isCalciumSupplement(m) && String(m.start || '') < calStart;
     });
     if (!old.length) return;
     old.forEach(function(m) { m.active = false; });
     save(KEYS.meds, meds);
+    // Say what changed and how to undo it (Maren N-3); after load, once the toast host exists.
+    setTimeout(function() {
+      // showQLToast sets innerHTML — escape the parent-typed names (HR-4).
+      if (typeof showQLToast === 'function') showQLToast('Stopped ' + escHtml(old.map(function(m) { return m.name; }).join(', ')) + ': ' + escHtml(cal.name) + ' already has Vitamin D. You can restart it in Medicines.', 6000);
+    }, 2500);
   } catch (e) { console.warn('[migrate] vitd-single:', e); }
 }
 // Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
@@ -3333,24 +3339,38 @@ function escHtml(s) {
 function iconText(name, text) { return zi(name) + ' ' + escHtml(text); }
 function normVacc(n) { return n.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
+// A repeat name: logged again and again under one name (bare "Flu", "Influenza", "OPV",
+// "Pulse Polio", "Vitamin A"), so a given entry never stands in for a pending one. A name
+// with a dose number, or a single-dose schedule name (BCG, TCV, PCV Booster, Tdap…), is one
+// dose (Maren B-1 on #273: a flu-name rule had left "Influenza-2" pending forever).
+function vaccIsRepeatName(name) {
+  const n = normVacc(String(name || ''));
+  if (!n || /\d/.test(n)) return false;
+  return !(typeof VACC_SCHEDULE !== 'undefined' && VACC_SCHEDULE.some(v => normVacc(v.name) === n));
+}
 // A pending (upcoming) vaccine entry is satisfied once a given entry of the same dose exists
-// (normalised name). Logging a given dose used to leave its pending twin "due", and the sync
-// union re-added a pending entry another phone had already marked given (parent report,
-// 2026-10-28). Yearly flu is excluded: its doses repeat under one name. `extraGiven` lets the
-// sync receive count this phone's given doses too.
-function vaccDropSatisfiedPending(list, extraGiven) {
+// (normalised name; repeat names excluded). Logging a given dose used to leave its pending twin
+// "due", and the sync union re-added a pending entry another phone had already marked given
+// (parent report, 2026-10-28). Names are read as strings so a corrupt entry can't throw (Kael).
+function vaccDropSatisfiedPending(list) {
   if (!Array.isArray(list)) return list;
   const given = new Set();
-  [list, Array.isArray(extraGiven) ? extraGiven : []].forEach(a => a.forEach(v => {
-    if (v && !v.upcoming && v.name) given.add(normVacc(v.name));
-  }));
-  return list.filter(v => !(v && v.upcoming && v.name && !/influenza|flu/i.test(v.name) && given.has(normVacc(v.name))));
+  list.forEach(v => { if (v && !v.upcoming && v.name) given.add(normVacc(String(v.name))); });
+  return list.filter(v => !(v && v.upcoming && v.name && !vaccIsRepeatName(v.name) && given.has(normVacc(String(v.name)))));
 }
-// The next pending dose: earliest due date, satisfied twins dropped. Home and Medical used to
-// disagree (first in array order vs earliest date, Maren V-M-269-8 / Cipher E-V 3).
+// The next pending dose: earliest due date, satisfied twins dropped, and a conditional dose
+// (special situations only, e.g. MCV-1 = MenACWY) skipped until its series is unlocked — so
+// "Mark given" is never offered on it (Maren S-2). Home and Medical used to disagree (first in
+// array order vs earliest date, Maren V-M-269-8 / Cipher E-V 3).
 function getNextUpcomingVacc() {
   const list = vaccDropSatisfiedPending(typeof vaccData !== 'undefined' ? vaccData : []) || [];
-  return list.filter(v => v && v.upcoming).sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')))[0] || null;
+  const givenNorm = new Set(list.filter(v => v && !v.upcoming && v.name).map(v => normVacc(String(v.name))));
+  const sched = typeof VACC_SCHEDULE !== 'undefined' ? VACC_SCHEDULE : [];
+  return list.filter(v => {
+    if (!v || !v.upcoming) return false;
+    const row = sched.find(r => normVacc(r.name) === normVacc(String(v.name || '')));
+    return !(row && vaccIsConditional(row, givenNorm));
+  }).sort((a, b) => String(a.date || '9999').localeCompare(String(b.date || '9999')))[0] || null;
 }
 
 // vaccDueState — where a scheduled dose sits at an age in fractional months:

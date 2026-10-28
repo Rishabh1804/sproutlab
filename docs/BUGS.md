@@ -15,6 +15,14 @@ A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git.
 - **Symptom:** the parents report the retired D3 drops still appearing as a dose to give. Her doctor confirmed Caldikind alone (no drops), so a "give drops" prompt invites a double Vitamin D dose.
 - **Likely cause:** `_migrateCaldikind20260924` (core.js) is one-shot per device and sets its flag first; it returns early without deactivating the drops when Caldikind is already in the list (e.g. added by hand on 24 Sep), and its name test (`\bd3\b|vitamin\s*d\b`) misses entries like "Vit D drops".
 - **Fix shape:** a second, idempotent pass under a new flag — whenever an active Caldikind/calcium-D3 supplement exists, deactivate every other active Vitamin D supplement (`isVitDSupplement`), push once so both phones converge. Maren + Kael. Pre-15-month PR.
+- **Fixed in #273** (`_migrateVitDSingle20261028`). Residual (Kael V-K-273-5, accepted): a phone still on old code with an unsynced medicines edit can push the drops back as active; the one-shot flag won't rerun, so the parent stops them by hand. A multivitamin named "Vitamin D…" started before Caldikind is also stopped (doctor: Caldikind alone).
+
+#### P2 — Vaccine sync follow-ups from #273 (Kael / Maren)
+- **Identity collision:** the vaccine union keys on `name + date`, so a dose given on its scheduled date has the same identity pending and given; a stale phone's full push can put the pending copy back over the given one in the cloud. Updated phones filter it out (push, receive, cold load), but widen `SYNC_ENTRY_IDENTITY[KEYS.vacc]` (key pending entries on `scheduledDate || date`, or include the state). Kael V-K-273-1.
+- **Shadow after merge (V-K-268-4b) now includes `vacc`:** stale pending twins stay in the cloud until the next local vaccine edit pushes.
+- **Raw readers:** `calcMedicalScore` (core.js), the ISL vaccine summary and qa-handlers' vaccine list still read raw `vaccData`; route them through `vaccDropSatisfiedPending` so score and Q&A always agree with the UI (Kael V-K-273-4).
+- **Fever lines:** `fever-mild` lists "above 102°F (38.9°C)" as emergency while Teething/Ear now say 38.3 °C same-day and 40 °C emergency — one reconciliation pass (Maren N-2).
+
 
 #### P1 — CareTicket thresholds are still the 6–12 month set (age trigger passed Sep 2026)
 - **Symptom:** the CareTicket targets were planned to become age-adaptive at 12 months (SPROUTLAB_ROADMAP v7, "review by Sep 2026"). Only a disclaimer was added: the target text says it was "set for 6–12 months" (intelligence-caretickets.js). A toddler's tickets are judged against infant targets.
