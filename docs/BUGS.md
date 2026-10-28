@@ -11,6 +11,11 @@
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
 
+#### P1 — Old Vit D3 drops still show as due after the switch to Caldikind (parent report, 2026-10-28)
+- **Symptom:** the parents report the retired D3 drops still appearing as a dose to give. Her doctor confirmed Caldikind alone (no drops), so a "give drops" prompt invites a double Vitamin D dose.
+- **Likely cause:** `_migrateCaldikind20260924` (core.js) is one-shot per device and sets its flag first; it returns early without deactivating the drops when Caldikind is already in the list (e.g. added by hand on 24 Sep), and its name test (`\bd3\b|vitamin\s*d\b`) misses entries like "Vit D drops".
+- **Fix shape:** a second, idempotent pass under a new flag — whenever an active Caldikind/calcium-D3 supplement exists, deactivate every other active Vitamin D supplement (`isVitDSupplement`), push once so both phones converge. Maren + Kael. Pre-15-month PR.
+
 #### P1 — CareTicket thresholds are still the 6–12 month set (age trigger passed Sep 2026)
 - **Symptom:** the CareTicket targets were planned to become age-adaptive at 12 months (SPROUTLAB_ROADMAP v7, "review by Sep 2026"). Only a disclaimer was added: the target text says it was "set for 6–12 months" (intelligence-caretickets.js). A toddler's tickets are judged against infant targets.
 - **Fix shape:** an age-banded target table (12–24 m first), sourced; Maren-primary, Kael for the engine. Blocked on the Kael Region split for any sizeable addition.
@@ -80,7 +85,7 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
   - *Nudge tap (Vela V-V-270-13, pre-existing):* the Today So Far "Mark done" nudge animates card 0 and stamps tap time.
   - *Name collisions (Kael V-K-270-29):* a once-daily med literally named "X · morning" would share a key with twice-daily "X"; med names containing `.` or `/` break sync dotted paths (pre-existing).
   - *Kael Region headroom:* 29,575 LOC after this change (≈425 to the 30K trigger). Scope the Kael→successor split before the next engine feature.
-  - *Adequacy question for her doctor (not an app nudge):* the pack states 10 ml = 200 IU Vitamin D3, so 2.5 ml twice daily gives ≈100 IU a day vs 800 IU from the drops (IAP guidance ≈600 IU/day at 1–3 y). Parents are confirming with her doctor whether the drops should continue alongside; the app asserts neither.
+  - *Adequacy question for her doctor — answered 2026-10-28:* the pack gives ≈100 IU/day at 2.5 ml twice daily (vs 800 IU from the drops); her doctor confirmed Caldikind alone is enough, no separate D3 drops. The app keeps asserting nothing about the dose.
 
 #### Progress — 12–24 m expansion PR 2 (#269): sleep + vaccines
 - **Fixed in #269:** SLEEP_STANDARDS to 36 m with one nap source; IAP 2023 vaccine reconciliation (four non-IAP doses removed, due windows + grace, conditional doses, seasonal yearly flu, series completion for JE-2/MCV-2, word-boundary vaccine matching).
