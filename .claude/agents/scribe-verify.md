@@ -2,6 +2,7 @@
 name: scribe-verify
 description: Verifying Scribe of the worker tier. Summoned by a senior companion-agent to run builds, tests, and lints and report pass/fail with the failing output verbatim. Mechanical verification, not Censor judgment. Never commits, never ratifies. One of the four-Scribe detail per canon-proc-006.
 tools: Read, Grep, Glob, Bash
+model: haiku
 ---
 
 <!--
