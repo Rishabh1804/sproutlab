@@ -21,6 +21,7 @@ A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git.
 - **Identity collision:** the vaccine union keys on `name + date`, so a dose given on its scheduled date has the same identity pending and given; a stale phone's full push can put the pending copy back over the given one in the cloud. Updated phones filter it out (push, receive, cold load), but widen `SYNC_ENTRY_IDENTITY[KEYS.vacc]` (key pending entries on `scheduledDate || date`, or include the state). Kael V-K-273-1.
 - **Shadow after merge (V-K-268-4b) now includes `vacc`:** stale pending twins stay in the cloud until the next local vaccine edit pushes.
 - **Raw readers:** `calcMedicalScore` (core.js), the ISL vaccine summary and qa-handlers' vaccine list still read raw `vaccData`; route them through `vaccDropSatisfiedPending` so score and Q&A always agree with the UI (Kael V-K-273-4).
+- **One "next dose" rule:** `getNextUpcomingVacc` skips conditional doses, but `renderRemindersAndAlerts` (home.js, where the 7-day "Given" button lives) and `renderVacc` (medical.js) only drop satisfied twins — a conditional dose that is the earliest due within 7 days could still be offered "Given". Ziva's data doesn't hit it (MCV-1 is overdue). Route both through one helper (Cipher E-V on #273).
 - **Fever lines:** `fever-mild` lists "above 102°F (38.9°C)" as emergency while Teething/Ear now say 38.3 °C same-day and 40 °C emergency — one reconciliation pass (Maren N-2).
 
 
@@ -28,7 +29,7 @@ A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git.
 - **Symptom:** the CareTicket targets were planned to become age-adaptive at 12 months (SPROUTLAB_ROADMAP v7, "review by Sep 2026"). Only a disclaimer was added: the target text says it was "set for 6–12 months" (intelligence-caretickets.js). A toddler's tickets are judged against infant targets.
 - **Fix shape:** an age-banded target table (12–24 m first), sourced; Maren-primary, Kael for the engine. Blocked on the Kael Region split for any sizeable addition.
 
-#### P1 — Kael Region at 29,581 LOC (≈419 to the 30K trigger)
+#### P1 — Kael Region at 29,667 LOC (≈333 to the 30K trigger; measured after #273)
 - **Symptom:** the 12–24 m expansion (#268–#270) added ≈930 engine lines. Every engine-side item in this log and the roadmap now risks tripping the trigger.
 - **Fix shape:** a Lyra spec for the Kael→successor split (proposed boundary: data tables vs engine logic), Architect-ratified, before the next engine or data addition. Supersedes the three per-PR headroom notes below.
 
