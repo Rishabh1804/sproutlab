@@ -12193,6 +12193,24 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 /* Inventory and suggestion chips (pack summary, dinner suggestions): never planned food. */
 .mp-chips { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); margin:var(--sp-6) 0 var(--sp-4); }
 .mp-picker .recipe-row { margin-bottom:var(--sp-6); }
+/* Planner sheets (a .ql-sheet): scroll inside, never the page (CL-5, CL-8). */
+.mp-sheet { max-height:85vh; overflow-y:auto; padding:var(--sp-12) var(--sp-16) var(--sp-24); }
+.mp-sheet .mp-picker { border:none; padding:0; background:none; }
+.mp-sheet-head { display:flex; align-items:center; gap:var(--sp-8); margin:0 0 var(--sp-8); }
+.mp-sheet-head .mp-picker-title { flex:1; min-width:0; }
+.mp-sheet .chip { min-height:44px; gap:var(--sp-6); }
+.mp-sheet .chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-sheet .chip[aria-pressed="true"] { background:var(--sage-light); color:var(--tc-sage); border-color:var(--sage); }
+.mp-daypick { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:var(--sp-4); margin:0 0 var(--sp-8); }
+.mp-daypick-btn { min-height:56px; flex-direction:column; gap:var(--sp-2); padding:var(--sp-4) 0; }
+.mp-sheet .btn { min-height:44px; gap:var(--sp-6); }
+.mp-sheet .btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.rcp-plan { margin:var(--sp-8) 0 var(--sp-4); }
+.rcp-plan .btn { min-height:44px; gap:var(--sp-6); }
+.rcp-plan .btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.rsn-teaser { display:none; }
+.mp-teaser .rsn-full { display:none; }
+.mp-teaser .rsn-teaser { display:inline; }
 /* A recipe locked for her age: the flat whisper, no fade or stripe, reason in the row in amber words (V-V-278-23). */
 .mp-locked .recipe-row-gen, [data-theme="dark"] .mp-locked .recipe-row-gen { background:var(--surface-alt); cursor:default; }
 .mp-locked .recipe-row-gen::before { display:none; }
@@ -24616,6 +24634,8 @@ function init() {
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
     else if (action === 'toggleRecipeProw' && typeof toggleRecipeProw === 'function') toggleRecipeProw(btn);
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
+    // Meal planner (diet.js): every data-action="mp…" routes to its one dispatcher.
+    else if (/^mp[A-Z]/.test(action) && typeof mpDispatch === 'function') mpDispatch(action, arg, btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'teethTap' && typeof teethTap === 'function') teethTap(arg);
@@ -28471,7 +28491,7 @@ window.addEventListener('popstate', e => {
   }
 });
 
-function confirmAction(msg, callback, btnText) {
+function confirmAction(msg, callback, btnText, opts) {
   // V-K-8 (PR-B) — defensive parsing: the prior `startsWith('delete')` heuristic
   // missed forms like "Are you sure you want to delete this entry?" where the
   // destructive token isn't the leading word. Word-boundary match catches the
@@ -28483,7 +28503,7 @@ function confirmAction(msg, callback, btnText) {
   // Word-boundary preserves the "cleared" mid-word safety (the two `cleared`
   // callers at core.js:690 + intelligence.js:8754 carry explicit btnText anyway).
   const label = btnText || (/\b(delete|remove|clear)\b/i.test(msg) ? 'Delete' : 'Confirm');
-  const btnCls = label === 'Delete' ? 'btn btn-rose' : label === 'Reset' ? 'btn btn-rose' : 'btn btn-sky';
+  const btnCls = (label === 'Delete' || label === 'Reset' || (opts && opts.danger)) ? 'btn btn-rose' : 'btn btn-sky';
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
   overlay.innerHTML = `
@@ -28591,6 +28611,12 @@ function _lookupAllByFoodName(table, name) {
 // caught downstream — the suppression is the only floor. (The allergen-note surface intentionally
 // still fires its calm caution for "seer fish"; the suppression targets only the GREEN affirm.)
 const _FISH_HIGH_MERCURY = ['seer', 'surmai', 'shark', 'sura', 'swordfish', 'marlin', 'king mackerel', 'bigeye'];
+// The cited high-mercury line from the fish record (FOOD_EFFECTS.fish.safeForm.never), so the
+// planner's flag lead quotes the record rather than re-voicing it (canon-cc-013, V-CA-275-12).
+function _mpHighMercuryLine() {
+  const rec = (typeof FOOD_EFFECTS !== 'undefined' && FOOD_EFFECTS.fish && FOOD_EFFECTS.fish.safeForm) ? FOOD_EFFECTS.fish.safeForm.never : null;
+  return Array.isArray(rec) ? (rec.find(l => /^high-mercury/i.test(l)) || '') : '';
+}
 function _isHighMercuryFishHost(name) {
   const n = String(name || '').toLowerCase();
   return _FISH_HIGH_MERCURY.some(t =>
@@ -44361,6 +44387,8 @@ function _recipeDetailHtml(r, ageMonths) {
   // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
   const ss = _recipeSafetySummary(r, ageMonths);
   h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
+  // Add to plan (meal planner §1.3): the recipe's one primary action.
+  h += `<div class="rcp-plan"><button class="btn btn-sage btn-compact" data-action="mpAddRecipe" data-arg="${escAttr(r.id)}">${zi('calendar')} Add to plan</button></div>`;
   // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
   // amount to OFFER — a guide, never a target; appetite leads. An age-gated
   // recipe (effMin > Ziva's age) frames the portion at its own start age.
@@ -44457,16 +44485,23 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const prepMeta = r.prepMinutes ? `<span>${zi('clock')} ${r.prepMinutes} min</span>` : '';
   const relRaw = (opts.relevance != null) ? opts.relevance : _recipeRelevanceTag(r);
   const relMeta = relRaw ? `<span class="recipe-row-rel">${escHtml(relRaw)}</span>` : '';
-  return `<div class="recipe-row${genCls}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+  // The planner's picker reuses the row (meal-planner-v1 §10.6): opts.pickAction makes a row tap
+  // pick the recipe (a plus, not a chevron); opts.locked makes it inert; opts.noDetail drops the
+  // expand-in-place body.
+  const act = opts.locked ? 'aria-disabled="true"'
+    : opts.pickAction ? `data-action="${opts.pickAction}" data-arg="${escAttr(opts.pickArg || r.id)}"`
+    : `aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}"`;
+  const chev = opts.locked ? '' : `<span class="recipe-row-chev">${zi(opts.pickAction ? 'plus' : 'chevron-down')}</span>`;
+  return `<div class="recipe-row${genCls}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="${opts.locked ? '-1' : '0'}" ${act}>
     <div class="recipe-row-top">
       <span class="recipe-row-icon">${glyph}</span>
       <span class="recipe-row-main">
         <span class="recipe-row-title">${escHtml(r.title)}</span>
         <span class="recipe-row-meta">${prepMeta}${ageMeta}${slotMeta}${relMeta}${ageBadge}</span>
       </span>
-      <span class="recipe-row-chev">${zi('chevron-down')}</span>
+      ${chev}
     </div>
-    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+    ${opts.noDetail ? '' : `<div class="recipe-detail" id="rdet-${escAttr(uid)}" hidden>${_recipeDetailHtml(r, ageMonths)}</div>`}
   </div>`;
 }
 
@@ -44510,7 +44545,7 @@ function _recipeHeroHtml(r, whyText, ageMonths) {
       <span class="recipe-hero-meta">${meta.join('')}</span>
       <span class="recipe-hero-cta">See recipe ${zi('arrow-right')}</span>
     </div>
-    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+    <div class="recipe-detail" id="rdet-${escAttr(uid)}" hidden>${_recipeDetailHtml(r, ageMonths)}</div>
   </div>`;
 }
 
@@ -44573,6 +44608,8 @@ function renderDietRecipes() {
 
   // Panel header (LOCKED 05-meal-rows): "Recipes" + the sourced-from-logs subtitle.
   html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for Ziva's stage · cooked from what you log.</p></div>`;
+  // The meal planner's Plan section (meal-planner-v1 §4.1), filled by renderMealPlanSection.
+  html += `<div class="col-full" id="dietPlanRoot"></div>`;
 
   // ── (a) Suggested for Ziva — featured generative hero + "More for Ziva" rows ──
   const suggested = _recipeSuggestForZiva(surfaced, ageMonths);
@@ -44595,7 +44632,9 @@ function renderDietRecipes() {
   const travel = surfaced.filter(r => r.travel && RECIPE_TRAVEL_META[r.travel.how]);
   if (travel.length) {
     html += `<div class="col-full"><div class="recipes-sec-label">For travel</div>`;
-    html += `<p class="recipes-sub-note">Food that packs well for a day out or a journey. Cooked food can sit out for 2 hours at most, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. For a longer trip, pack it hot in a flask or cold with an ice pack straight away, not after it has been sitting out. Each recipe says how to pack it. <span class="rcp-serving-src">WHO · USDA FSIS</span></p>`;
+    // On a planned travel day the planner already states how food keeps, so this note folds to a
+    // teaser (one 2 h statement per tab, V-V-275-9).
+    html += `<p class="recipes-sub-note recipes-sub-note--travel"><span class="rsn-full">Food that packs well for a day out or a journey. Cooked food can sit out for 2 hours at most, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. For a longer trip, pack it hot in a flask or cold with an ice pack straight away, not after it has been sitting out. Each recipe says how to pack it.</span><span class="rsn-teaser">How long packed food keeps is in each recipe.</span> <span class="rcp-serving-src">WHO · USDA FSIS</span></p>`;
     for (const how of RECIPE_TRAVEL_ORDER) {
       const inHow = travel.filter(r => r.travel.how === how);
       if (!inHow.length) continue;
@@ -44623,6 +44662,7 @@ function renderDietRecipes() {
   html += '</div>';
 
   root.innerHTML = html;
+  renderMealPlanSection();
 }
 
 // Toggle a recipe row's expand-in-place detail (data-action target).
@@ -44630,8 +44670,8 @@ function toggleRecipeRow(uid) {
   const det = document.getElementById('rdet-' + uid);
   const row = document.getElementById('rrow-' + uid);
   if (!det || !row) return;
-  const open = det.style.display !== 'none';
-  det.style.display = open ? 'none' : 'block';
+  const open = !det.hidden;
+  det.hidden = open;
   row.setAttribute('aria-expanded', open ? 'false' : 'true');
 }
 
@@ -44650,7 +44690,7 @@ function expandRecipeRow(recipeId) {
   const det = document.getElementById('rdet-' + uid);
   const row = document.getElementById('rrow-' + uid);
   if (!det || !row) return false;
-  det.style.display = 'block';
+  det.hidden = false;
   row.setAttribute('aria-expanded', 'true');
   if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ behavior: 'smooth', block: 'center' });
   return true;
@@ -51374,6 +51414,608 @@ function getMdiTextColor(score) {
 }
 
 // ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// MEAL PLANNER — the Plan section atop Diet → Recipes (spec docs/specs/meal-planner-v1.md
+// §4, P1b; the signed-off mock-ups are docs/SURFACE_CATALOG.html "Meal planner"). Reads and
+// writes only through the core.js record helpers (_mpSave and friends); never touches
+// feedingData or foods. Logging from the plan and new-food scheduling are P2.
+// ═══════════════════════════════════════════════════════
+let _mpSel = null;              // selected day key (defaults to today)
+let _mpWeek = null;             // Monday of the shown week
+let _mpOpenSlot = null;         // the slot opened on the selected day card
+let _mpHintsHidden = new Set(); // day keys whose iron hint was dismissed this session
+let _mpSheetState = null;       // { kind, ... } while a planner sheet is open
+let _mpRenderPending = false;   // a sync render arrived while a sheet was open
+
+const _MP_WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const _MP_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// How a travel recipe travels: [icon, label, source, glance check, the keeps sentence to act on,
+// its corpus anchor]. The glance check and the sentence are asserted against the corpus by the
+// Surface Catalog build (meal-planner-v1 §10.6, C-278-9/-10).
+const _MP_MODE = {
+  thermos: ['thermos', 'In a flask', 'WHO', 'still too hot to eat', 'If it is only warm, throw it away'],
+  cool:    ['timer', 'Ice-pack bag', 'WHO · USDA FSIS', 'still fridge-cold', 'If the ice pack has melted, don\'t give it'],
+  spot:    ['clock', 'Made on the spot', '', '', ''],
+};
+// Spot recipes that need a flask of boiling water (until the corpus carries travel.waterFlask, Ceres).
+const _MP_WATER_FLASK = new Set(['travel-flask-oats-banana']);
+
+function _mpDate(key) { return _parseLocalDate(key); }
+function _mpDayTitle(key) { const d = _mpDate(key); return d ? `${_MP_WD[d.getDay()]}, ${d.getDate()} ${_MP_MON[d.getMonth()]}` : key; }
+function _mpShortDay(key) { const d = _mpDate(key); return d ? `${_MP_WD[d.getDay()].slice(0, 3)} ${d.getDate()} ${_MP_MON[d.getMonth()]}` : key; }
+function _mpPlan() { return mealPlan || { v: 1, days: {} }; }
+function _mpLiveItems(key, slot) { const s = _mpLiveSlot(_mpPlan().days[key], slot); return s ? s.items : []; }
+function _mpRecipe(id) { return (typeof RECIPES_BY_ID !== 'undefined' && RECIPES_BY_ID[id]) || null; }
+const _mpCap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Logged (read-only from the diary): the slot's logged time, or null.
+function _mpLoggedAt(key, slot) {
+  const day = (typeof feedingData !== 'undefined' && feedingData) ? feedingData[key] : null;
+  if (!day || typeof window._fdReadDayMeal !== 'function') return null;
+  const rec = window._fdReadDayMeal(day, slot);
+  return (rec && !rec.skipped && rec.items && rec.items.length) ? (rec.time || '') : null;
+}
+
+// The next meal on today's card, by the §10.1 rule table (V-V-275-2): breakfast → lunch →
+// dinner, snack only if planned, logged slots skipped; before the breakfast window → breakfast;
+// after the dinner window (or everything logged) → no lead.
+function _mpNextSlot(key, now) {
+  if (key !== today()) return null;
+  const w = (typeof _qlComputeMealWindow === 'function') ? _qlComputeMealWindow() : null;
+  const win = w || { breakfast: { start: 420, end: 690 }, lunch: { start: 690, end: 1020 }, dinner: { start: 1020, end: 1380 } };
+  const t = now || new Date();
+  const mins = t.getHours() * 60 + t.getMinutes();
+  if (mins >= win.dinner.end) return null;
+  const order = ['breakfast', 'lunch'];
+  if (_mpLiveItems(key, 'snack').length) order.push('snack');
+  order.push('dinner');
+  for (const slot of order) {
+    if (_mpLoggedAt(key, slot) !== null) continue;
+    if (slot === 'breakfast' && mins >= win.breakfast.end && _mpLiveItems(key, 'lunch').length) continue;
+    if (slot === 'lunch' && mins >= win.lunch.end) continue;
+    if (slot === 'snack' && mins >= win.dinner.start) continue;
+    return slot;
+  }
+  return null;
+}
+
+// ── Safety on a planned date (V-C-275-5, -6, -9, -10; V-CA-275-12) ──
+function _mpItemNames(it) {
+  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? (r.ingredients || []).map(i => i.name) : []; }
+  return it.kind === 'food' ? [it.name] : [];
+}
+function _mpReactionTo(name) {
+  return (typeof foods !== 'undefined' && Array.isArray(foods)) ? foods.find(f => f && f.reaction === 'watch' && _sameFood(f.name, name)) : null;
+}
+// The slot's one safety lead: a flag (age-gated on that date, a noted reaction, high-mercury fish)
+// beats a caution (new allergens, a form-sensitive free food). Established, clean allergens stay quiet.
+function _mpSlotLead(items, key) {
+  const age = _mpAgeMonthsOn(key);
+  const flags = [], newFoods = [], forms = [];
+  for (const it of items) {
+    if (it.kind === 'recipe') {
+      const r = _mpRecipe(it.id);
+      if (r && _recipeEffectiveMinAge(r) > age) flags.push(`${r.title} is for ${_recipeEffectiveMinAge(r)} months and up; she'll be ${age} months then.`);
+    }
+    for (const name of _mpItemNames(it)) {
+      const lower = String(name).toLowerCase().trim();
+      const rule = _fdAgeRule(lower);
+      if (it.kind === 'food' && rule && rule.minMonth > age) flags.push(`${_mpCap(name)}: not before ${rule.minMonth} months. ${rule.reason || ''}`.trim());
+      const react = _mpReactionTo(name);
+      if (react) flags.push(`You noted a reaction to ${react.name.toLowerCase()}${react.date ? ' on ' + _mpShortDay(react.date) : ''}. Talk to her doctor before offering it again.`);
+      if (_isHighMercuryFishHost(lower)) { const line = _mpHighMercuryLine(); if (line) flags.push(`Not for her: ${line}.`); }
+      if (_fdAllergenNote(lower) && !_fdIsFoodTried(lower)) newFoods.push(lower);
+      if (it.kind === 'food') {
+        const eff = foodEffectForAge(getFoodEffect(lower), age);
+        if (eff && _effHasClass(eff, 'choking-by-form') && eff.safeForm && eff.safeForm.note) forms.push(`${_mpCap(name)}: ${eff.safeForm.note}`);
+      }
+    }
+  }
+  if (flags.length) return ['flag', flags[0]];
+  const fresh = [...new Set(newFoods)];
+  const caution = [];
+  if (fresh.length > 1) caution.push(`${fresh.map(_mpCap).join(' and ')} are new for her, in the same meal. If she reacts, it will be hard to tell which caused it. Give new foods one at a time, a few days apart.`);
+  else if (fresh.length === 1) caution.push(`${_mpCap(fresh[0])} is a common allergen and new for her: give it on its own and watch her closely.`);
+  caution.push(...forms);
+  return caution.length ? ['caution', caution.join(' ')] : null;
+}
+
+// Iron on the day (V-C-275-16): NUTRITION's iron-rich tag, plus haem iron and chana (V-C-278-7).
+const _MP_IRON_EXTRA = /\b(egg|eggs|chicken|mutton|lamb|meat|liver|fish|rohu|catla|salmon|sardine|chana|chickpeas?)\b/i;
+function _mpIsIron(name) {
+  const base = _baseFoodName(String(name).toLowerCase().trim());
+  const n = (typeof NUTRITION !== 'undefined' && NUTRITION) ? NUTRITION[base] : null;
+  return !!(n && Array.isArray(n.tags) && n.tags.indexOf('iron-rich') >= 0) || _MP_IRON_EXTRA.test(name);
+}
+function _mpDayHasIron(key) {
+  return MP_SLOTS.some(s => _mpLiveItems(key, s).some(it => _mpItemNames(it).some(_mpIsIron)));
+}
+
+// ── Pieces ──
+function _mpZif(name) {
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+}
+function _mpTravelMode(r) {
+  if (!r || !r.travel || !_MP_MODE[r.travel.how]) return null;
+  return (r.travel.how === 'spot' && _MP_WATER_FLASK.has(r.id)) ? ['clock', 'Mixed on the spot', '', ''] : _MP_MODE[r.travel.how];
+}
+// A planned recipe: the recipe-row standard at slot size (rail, fingerprint fade, food icon).
+function _mpRecipeEntry(r, travelCue) {
+  const fp = _recipeFingerprint(r);
+  const style = (fp ? `--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '') + `--rc-rail:${_recipeRailColor(_recipePrimaryGroup(r))}`;
+  const n = (r.choking || []).length;
+  const mode = travelCue ? _mpTravelMode(r) : null;
+  const meta = (mode ? `<span class="mp-cue">${zi(mode[0])} ${escHtml(mode[1])}${mode[3] ? ' · ' + escHtml(mode[3]) : ''}</span>` : '')
+    + (n ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${n} ${n === 1 ? 'step' : 'steps'}</span>` : '');
+  return `<span class="mp-entry${fp ? ' mp-entry--gen' : ''}" style="${style}">${_mpZif(((r.ingredients || [])[0] || {}).name)}`
+    + `<span class="mp-entry-main"><span class="mp-entry-t">${escHtml(r.title)}</span>${meta ? `<span class="mp-entry-meta">${meta}</span>` : ''}</span></span>`;
+}
+function _mpFoodChip(name) {
+  const d = _recipeChipDomain(name);
+  return `<span class="recipe-chip${d ? ' fdom-chip--' + d : ''}">${_mpZif(name)}${escHtml(name)}</span>`;
+}
+function _mpItemHtml(it, travelCue) {
+  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? _mpRecipeEntry(r, travelCue) : `<span class="recipe-chip">${zi('info')} Recipe no longer in the list</span>`; }
+  if (it.kind === 'food') return _mpFoodChip(it.name);
+  return `<span class="recipe-chip">${zi('info')} Not shown in this version</span>`;
+}
+function _mpItemLabel(it) {
+  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? r.title : 'Recipe no longer in the list'; }
+  return it.kind === 'food' ? _mpCap(it.name) : 'Not shown in this version';
+}
+function _mpSafeRow(lead) {
+  return `<div class="rcp-safe rcp-safe--${lead[0]}">${zi(lead[0] === 'flag' ? 'alert-circle' : 'warn')} <span>${escHtml(lead[1])}</span></div>`;
+}
+function _mpOl(lines) { return `<ol class="mp-pack-list">${lines.map(l => `<li>${escHtml(l)}</li>`).join('')}</ol>`; }
+function _mpKeepsLine(r) {
+  const m = _MP_MODE[r.travel.how];
+  return `<div class="rcp-serving">${zi(m[0])} <span><strong>How it keeps:</strong> ${escHtml(r.travel.keeps)}${m[2] ? ` <span class="rcp-serving-src">${m[2]}</span>` : ''}</span></div>`;
+}
+function _mpServeProw(r, open) {
+  const m = _MP_MODE[r.travel.how];
+  return _recipeProw('travel', m[0], 'Before you serve', m[4] ? m[4] + '.' : 'How it keeps', _mpKeepsLine(r), open);
+}
+
+// ── The slot row ──
+function _mpSlotHtml(key, slot, opts) {
+  opts = opts || {};
+  const meta = RECIPE_SLOT_META[slot];
+  const items = _mpLiveItems(key, slot);
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const logged = _mpLoggedAt(key, slot);
+  const open = _mpOpenSlot === slot && key === _mpSel;
+  const lead = items.length ? _mpSlotLead(items, key) : null;
+  const flagged = lead && lead[0] === 'flag';
+  // Logging from the plan lands in P2; until then a logged slot shows its diary time.
+  const act = logged !== null ? `<span class="mp-logged">${zi('check')} Logged${logged ? ' · ' + escHtml(logged) : ''}</span>`
+    : (!items.length ? `<button class="btn btn-ghost btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add ${meta.label.toLowerCase()}</button>` : '');
+  const entries = items.length ? `<div class="mp-entries" data-action="mpToggleSlot" data-arg="${slot}">${items.map(it => _mpItemHtml(it, travel && logged === null)).join('')}</div>` : '';
+  let body = '';
+  if (open && items.length) {
+    body += `<div class="mp-chips">${items.map((it, i) => `<button class="btn btn-ghost btn-compact" data-action="mpRemoveEntry" data-arg="${escAttr(key + '|' + slot + '|' + i)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')} ${escHtml(_mpItemLabel(it))}</button>`).join('')}`
+      + (items.length < 3 ? `<button class="btn btn-ghost btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add</button>` : '') + `</div>`;
+    let rows = '';
+    for (const it of items) {
+      const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
+      if (r && (r.choking || []).length) rows += _recipeProw('chew', 'tooth', `Make it safe to chew: ${r.title}`, `${r.choking.length} ${r.choking.length === 1 ? 'step' : 'steps'}`, _mpOl(r.choking), true);
+      if (travel && r && r.travel) rows += _recipeProw('travel', 'timer', 'Packing', `${r.travel.pack.length} things`, _mpOl(r.travel.pack), false) + _mpServeProw(r, true);
+    }
+    if (rows) body += `<div class="rcp-prows">${rows}</div>`;
+  }
+  if (travel && items.some(it => it.kind === 'food' || (it.kind === 'recipe' && _mpRecipe(it.id) && !_mpRecipe(it.id).travel))) {
+    body += `<div class="mp-gap-note">Not a packing recipe — serve it fresh where you are.</div>`;
+  }
+  if (!open && opts.serve) { const r = items.map(it => it.kind === 'recipe' && _mpRecipe(it.id)).find(x => x && x.travel); if (r) body += `<div class="rcp-prows">${_mpServeProw(r, false)}</div>`; }
+  if (travel && !items.length && !logged && !(window.RECIPES || []).some(r => r.slot === slot && r.travel && _recipeAllowedForHousehold(r))) {
+    const alts = (window.RECIPES || []).filter(r => r.travel && r.travel.how === 'cool' && r.slot === 'lunch' && _recipeAllowedForHousehold(r) && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(key)).slice(0, 2);
+    body += `<div class="mp-gap-note">No travel ${meta.label.toLowerCase()} yet. These pack well for ${meta.label.toLowerCase()} too:</div>`
+      + `<div class="mp-chips">${alts.map(r => `<button class="sg-chip" data-action="mpPlanSuggestion" data-arg="${escAttr(key + '|' + slot + '|' + r.id)}">${zi('plus')} ${escHtml(r.title)}</button>`).join('')}</div>`;
+  }
+  return `<div class="mp-slot${open ? ' mp-slot--open' : ''}">`
+    + `<span class="mp-slot-ic">${zi(meta.icon)}</span>`
+    + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
+    + `<span class="mp-slot-label">${meta.label} <span class="mp-slot-chev">${zi('chevron-down')}</span></span></button>`
+    + `<span class="mp-slot-act">${act}</span>`
+    + (flagged ? _mpSafeRow(lead) + entries : entries + (lead ? _mpSafeRow(lead) : '')) + body + `</div>`;
+}
+
+// ── Pack for today (travel day) ──
+function _mpPackHtml(key) {
+  const meals = MP_SLOTS.map(s => {
+    const items = _mpLiveItems(key, s);
+    const r = items.map(it => it.kind === 'recipe' && _mpRecipe(it.id)).find(x => x && x.travel);
+    return r ? { r, foods: items.filter(it => it.kind === 'food').map(it => _mpCap(it.name)) } : null;
+  }).filter(Boolean);
+  if (!meals.length) return '';
+  const lines = m => [...m.r.travel.pack, ...m.foods];
+  const rows = `<div class="rcp-prows">${meals.map(m => _recipeProw('travel', (_mpTravelMode(m.r) || _MP_MODE.spot)[0], m.r.title, `${lines(m).length} things`, _mpOl(lines(m)) + _mpKeepsLine(m.r), false)).join('')}</div>`;
+  const total = meals.reduce((n, m) => n + lines(m).length, 0);
+  if (MP_SLOTS.some(s => _mpLoggedAt(key, s) !== null)) {
+    return `<div class="mp-pack">${_recipeProw('travel', 'bag', 'Packed this morning', `${total} things`, rows, false)}</div>`;
+  }
+  const food = meals.filter(m => m.r.travel.how === 'thermos').length;
+  const water = meals.filter(m => _MP_WATER_FLASK.has(m.r.id)).length;
+  const chips = [food ? `<span class="recipe-chip mp-mode">${zi('thermos')}${food} food flask${food > 1 ? 's' : ''}</span>` : '',
+    water ? `<span class="recipe-chip mp-mode">${zi('thermos')}${water} hot-water flask${water > 1 ? 's' : ''}</span>` : '',
+    meals.some(m => m.r.travel.how === 'cool') ? `<span class="recipe-chip mp-mode">${zi('timer')}Ice-pack bag</span>` : ''].join('');
+  const label = key === today() ? 'today' : _MP_WD[_mpDate(key).getDay()].slice(0, 3);
+  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${label}</div><div class="mp-chips">${chips}</div>${rows}</div>`;
+}
+
+// ── The day card ──
+function _mpDayCardHtml(key) {
+  const day = _mpPlan().days[key];
+  const travel = _mpTravelOn(day);
+  const next = _mpNextSlot(key);
+  let lead = '', slots = '';
+  for (const s of MP_SLOTS) {
+    if (s === next) continue;
+    if (s === 'snack' && !_mpLiveItems(key, s).length && key !== _mpSel) continue;
+    slots += _mpSlotHtml(key, s);
+  }
+  if (next) lead = `<div class="mp-lead"><div class="mp-lead-eyebrow">Next</div>${_mpSlotHtml(key, next, { serve: travel })}</div>`;
+  let tomorrow = '';
+  if (key === today() && !next) {
+    const t = _mpAddDays(key, 1);
+    const b = _mpLiveItems(t, 'breakfast');
+    if (b.length) tomorrow = `<div class="mp-tomorrow">Tomorrow: Breakfast — ${escHtml(b.map(_mpItemLabel).join(' + '))}</div>`;
+  }
+  const planned = MP_SLOTS.filter(s => _mpLiveItems(key, s).length).length;
+  const hint = (planned >= 3 && !_mpDayHasIron(key) && !_mpHintsHidden.has(key))
+    ? `<div class="mp-hint">${zi('info')}<span>No iron-rich food planned today. Ragi, dal, poha or palak would add some.</span><button class="btn btn-ghost btn-compact mp-iconbtn" data-action="mpDismissHint" data-arg="${escAttr(key)}" aria-label="Dismiss">${zi('close')}</button></div>` : '';
+  return `<div class="mp-daycard${travel ? ' mp-daycard--travel' : ''}">`
+    + `<div class="mp-dayhead"><span class="mp-daytitle">${escHtml(_mpDayTitle(key))}</span>`
+    + `<button class="btn ${travel ? 'btn-peach' : 'btn-ghost'} btn-compact" data-action="mpToggleTravel" data-arg="${escAttr(key)}" aria-pressed="${travel ? 'true' : 'false'}">${zi('bag')} Travel day: ${travel ? 'on' : 'off'}</button></div>`
+    + (travel ? _mpPackHtml(key) : '') + lead + slots + tomorrow + hint
+    + `<div class="mp-dayfoot"><button class="btn btn-ghost btn-compact" data-action="mpCopyDay" data-arg="${escAttr(key)}">${zi('copy')} Copy day</button>`
+    + `<button class="btn btn-ghost btn-compact" data-action="mpClearDay" data-arg="${escAttr(key)}">${zi('close')} Clear day</button></div></div>`;
+}
+
+// ── The section: header, strip, card ──
+function renderMealPlanSection() {
+  const root = document.getElementById('dietPlanRoot');
+  if (!root) return;
+  if (_mpSheetState) { _mpRenderPending = true; return; }   // never re-render under an open sheet (V-CA-275-3)
+  const t = today();
+  const thisMon = _mpWeekStart(t);
+  if (!_mpSel || !_mpInWindow(_mpSel)) _mpSel = t;
+  if (!_mpWeek || !_mpInWindow(_mpWeek)) _mpWeek = _mpWeekStart(_mpSel);
+  const win = _mpWindow(t);
+  const plan = _mpPlan();
+  const firstUse = !Object.keys(plan.days).length && !load('ziva_mp_seen', false);
+  const prevOk = _mpAddDays(_mpWeek, -7) >= win.lo, nextOk = _mpAddDays(_mpWeek, 7) <= win.hi;
+  const isThisWeek = _mpWeek === thisMon;
+  let h = `<div class="mp-section"><div class="mp-head">${zi('calendar')}<span class="mp-head-title">${isThisWeek ? 'This week\'s plan' : 'Week of ' + escHtml(_mpShortDay(_mpWeek).slice(4))}</span><div class="mp-weeknav">`
+    + (isThisWeek ? '' : '<button class="btn btn-ghost btn-compact" data-action="mpThisWeek">This week</button>')
+    + `<button class="btn btn-ghost btn-compact mp-navbtn mp-navbtn--prev" data-action="mpWeek" data-arg="-1" aria-label="Previous week"${prevOk ? '' : ' disabled'}>${zi('arrow-right')}</button>`
+    + `<button class="btn btn-ghost btn-compact mp-navbtn" data-action="mpWeek" data-arg="1" aria-label="Next week"${nextOk ? '' : ' disabled'}>${zi('arrow-right')}</button></div>`
+    + (!nextOk ? '<div class="mp-navnote">You can plan up to 8 weeks ahead.</div>' : !prevOk ? '<div class="mp-navnote">Plans older than 4 weeks are cleared.</div>' : '') + `</div>`;
+  if (firstUse) h += `<div class="mp-legend"><span><span class="mp-fill mp-fill--full"></span> All meals planned</span><span><span class="mp-fill mp-fill--part"></span> Some</span><span><span class="mp-fill mp-fill--none"></span> None</span></div>`;
+  h += `<div class="mp-strip" role="group" aria-label="Days of the week">`;
+  for (let i = 0; i < 7; i++) {
+    const key = _mpAddDays(_mpWeek, i);
+    const d = _mpDate(key);
+    const day = plan.days[key];
+    const main = ['breakfast', 'lunch', 'dinner'].filter(s => _mpLiveItems(key, s).length).length;
+    const any = MP_SLOTS.some(s => _mpLiveItems(key, s).length);
+    const fill = main === 3 ? 'full' : any ? 'part' : 'none';
+    const travel = _mpTravelOn(day);
+    const cls = ['mp-day', key === t && 'mp-day--today', key === _mpSel && 'mp-day--sel', key < t && 'mp-day--past', travel && 'mp-day--travel'].filter(Boolean).join(' ');
+    const label = `${_MP_WD[d.getDay()].slice(0, 3)} ${d.getDate()} ${_MP_MON[d.getMonth()]}${key === t ? ', today' : ''}${travel ? ', travel day' : ''}, ${fill === 'full' ? 'all meals planned' : fill === 'part' ? 'some meals planned' : 'nothing planned'}`;
+    h += `<button class="${cls}" data-action="mpSelectDay" data-arg="${escAttr(key)}" aria-pressed="${key === _mpSel ? 'true' : 'false'}" aria-label="${escAttr(label)}"${_mpInWindow(key) ? '' : ' disabled'}>`
+      + `<span class="mp-day-wd">${_MP_WD[d.getDay()].charAt(0)}</span><span class="mp-day-num">${d.getDate()}</span><span class="mp-fill mp-fill--${fill}"></span>`
+      + (travel ? `<span class="mp-mark mp-mark--travel">${zi('bag')}</span>` : '<span class="mp-mark"></span>') + `</button>`;
+  }
+  h += `</div>`;
+  h += (!Object.keys(plan.days).length && firstUse) ? `<p class="mp-empty">Plan Ziva's meals for the week: tap a day to start.</p>` + _mpDayCardHtml(_mpSel) : _mpDayCardHtml(_mpSel);
+  h += `</div>`;
+  root.innerHTML = h;
+  // "For travel" sub-note: one statement of the 2 h rule per tab (V-V-275-9).
+  const note = document.querySelector('#dietRecipesRoot .recipes-sub-note--travel');
+  if (note) note.classList.toggle('mp-teaser', _mpTravelOn(plan.days[_mpSel]));
+}
+
+// ── Sheets (a .ql-sheet in the swipe guard's overlay set, V-V-275-19) ──
+function _mpOpenSheet(state, html) {
+  _mpCloseSheet(true);
+  _mpSheetState = state;
+  const ov = document.createElement('div');
+  ov.className = 'ql-sheet-overlay open';
+  ov.id = 'mpSheetOverlay';
+  ov.setAttribute('data-action', 'mpCloseSheet');
+  const sh = document.createElement('div');
+  sh.className = 'ql-sheet mp-sheet';
+  sh.id = 'mpSheet';
+  sh.setAttribute('role', 'dialog');
+  sh.innerHTML = html;
+  document.body.appendChild(ov);
+  document.body.appendChild(sh);
+  requestAnimationFrame(() => sh.classList.add('open'));
+  const input = sh.querySelector('.mp-search');
+  if (input) input.addEventListener('input', () => _mpPickerSearch(input.value));
+}
+function _mpCloseSheet(silent) {
+  ['mpSheet', 'mpSheetOverlay'].forEach(id => { const el = document.getElementById(id); if (el) el.remove(); });
+  const was = !!_mpSheetState;
+  _mpSheetState = null;
+  if (was && !silent) { _mpRenderPending = false; renderMealPlanSection(); }
+}
+function _mpSheetHead(title) {
+  return `<div class="ql-sheet-handle"></div><div class="mp-sheet-head"><div class="mp-picker-title">${escHtml(title)}</div>`
+    + `<button class="btn btn-ghost btn-compact mp-iconbtn" data-action="mpCloseSheet" aria-label="Close">${zi('close')}</button></div>`;
+}
+
+// ── The slot picker (§4.4; CL-5) ──
+function _mpPickable(r, key) {
+  return _recipeAllowedForHousehold(r) && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(key);
+}
+function _mpSuggestions(key, slot) {
+  const age = _mpAgeMonthsOn(key);
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const taken = new Set(_mpLiveItems(key, slot).filter(it => it.kind === 'recipe').map(it => it.id));
+  const pool = (window.RECIPES || []).filter(r => r.slot === slot && _mpPickable(r, key) && !taken.has(r.id) && (!travel || r.travel));
+  const ranked = (typeof _recipeSuggestForZiva === 'function') ? _recipeSuggestForZiva(pool, age) : pool.map(r => ({ r, why: '' }));
+  const seen = new Set(ranked.map(s => s.r.id));
+  const all = ranked.concat(pool.filter(r => !seen.has(r.id)).map(r => ({ r, why: '' })));
+  // Day-aware: when the day has no iron yet, iron recipes come first (V-C-275-16).
+  if (!_mpDayHasIron(key)) all.sort((a, b) => ((b.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0) - ((a.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0));
+  return all.slice(0, 5).map(s => ({ r: s.r, why: (!_mpDayHasIron(key) && (s.r.ingredients || []).some(i => _mpIsIron(i.name))) ? 'Adds iron' : (s.why || _recipeRelevanceTag(s.r)) }));
+}
+function _mpPickRow(r, key, why) {
+  return _recipeRowHtml(r, 'mp', _mpAgeMonthsOn(key), { relevance: why || '', pickAction: 'mpPick', pickArg: r.id, noDetail: true });
+}
+function _mpPickerBody(key, slot) {
+  const st = _mpSheetState;
+  const meta = RECIPE_SLOT_META[slot];
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const current = _mpLiveItems(key, slot);
+  let h = '';
+  if (current.length) h += `<div class="mp-chips">${current.map((it, i) => `<button class="btn btn-ghost btn-compact" data-action="mpRemoveEntry" data-arg="${escAttr(key + '|' + slot + '|' + i)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')} ${escHtml(_mpItemLabel(it))}</button>`).join('')}</div>`;
+  if (current.length >= 3) return h + `<p class="mp-empty">A slot holds up to 3 foods. Remove one to add another.</p>`;
+  h += `<input class="mp-search" type="search" placeholder="Search recipes and foods" aria-label="Search recipes and foods" value="${escAttr(st.q || '')}">`;
+  h += `<div id="mpPickerList">${_mpPickerList(key, slot)}</div>`;
+  return h;
+}
+function _mpPickerList(key, slot) {
+  const st = _mpSheetState;
+  const meta = RECIPE_SLOT_META[slot];
+  const q = (st.q || '').trim().toLowerCase();
+  const age = _mpAgeMonthsOn(key);
+  if (q) {
+    const recipes = (window.RECIPES || []).filter(r => _recipeAllowedForHousehold(r) && r.title.toLowerCase().indexOf(q) >= 0).slice(0, 5);
+    const foodsFound = (typeof window._fdSearchNutrition === 'function') ? window._fdSearchNutrition(q, { max: 5 }) : [];
+    let h = recipes.map(r => _mpPickable(r, key) ? _mpPickRow(r, key, '') : _mpLockedRow(r, key)).join('');
+    h += foodsFound.filter(f => _dietAllowsFood(f.name)).map(f => {
+      const rule = _fdAgeRule(String(f.name).toLowerCase());
+      if (rule && rule.minMonth > age) return `<div class="mp-picker-row mp-picker-row--locked" aria-disabled="true">${_mpZif(f.name)}<span class="mp-picker-row-main">${escHtml(f.name)}<span class="mp-picker-lock">Not before ${rule.minMonth} months</span></span></div>`;
+      return `<button class="mp-picker-row" data-action="mpPickFood" data-arg="${escAttr(f.name)}">${_mpZif(f.name)}<span class="mp-picker-row-main">${escHtml(f.name)}<span class="mp-picker-why">A food</span></span>${zi('plus')}</button>`;
+    }).join('');
+    if (!recipes.length && !foodsFound.length) {
+      const raw = st.q.trim().slice(0, MP_NAME_MAX);
+      h += `<div class="mp-empty">No recipe or food called “${escHtml(raw)}”.</div>`
+        + (_dietAllowsFood(raw) ? `<button class="mp-picker-row" data-action="mpPickFood" data-arg="${escAttr(raw)}">${zi('plus')}<span class="mp-picker-row-main">Add “${escHtml(raw)}” as a food</span></button>` : '');
+    }
+    return h;
+  }
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const sugg = _mpSuggestions(key, slot);
+  let h = `<div class="mp-picker-sec">Suggested for ${escHtml(_MP_WD[_mpDate(key).getDay()])}</div>`;
+  h += sugg.length ? sugg.map(s => _mpPickRow(s.r, key, s.why)).join('')
+    : (travel ? `<div class="mp-gap-note">No travel ${meta.label.toLowerCase()} recipes yet. The travel lunches work for ${meta.label.toLowerCase()} too, or pick from all ${meta.label.toLowerCase()} recipes below.</div>`
+      : `<div class="mp-empty">Keep logging meals and suggestions will get more personal.</div>`);
+  const all = (window.RECIPES || []).filter(r => r.slot === slot && _recipeAllowedForHousehold(r));
+  h += `<button class="mp-picker-row mp-picker-more" data-action="mpPickerAll" aria-expanded="${st.all ? 'true' : 'false'}">${zi(meta.icon)}<span class="mp-picker-row-main">All ${meta.label.toLowerCase()} recipes (${all.length})</span>${zi('chevron-down')}</button>`;
+  if (st.all) {
+    all.sort((a, b) => _recipeEffectiveMinAge(a) - _recipeEffectiveMinAge(b));
+    h += all.map(r => _mpPickable(r, key) ? _mpPickRow(r, key, '') : _mpLockedRow(r, key)).join('');
+  }
+  return h;
+}
+// Locked for her age on that date: the flat whisper, no action, the reason in the row (V-V-275-15).
+function _mpLockedRow(r, key) {
+  const min = _recipeEffectiveMinAge(r);
+  const opens = _mpAddMonths(min);
+  return `<div class="mp-locked">${_recipeRowHtml(r, 'mpl', _mpAgeMonthsOn(key), { relevance: `Can't be planned yet: from ${min} months${opens ? ' · opens ' + opens : ''}`, locked: true, noDetail: true })}</div>`;
+}
+function _mpAddMonths(months) {
+  if (typeof DOB === 'undefined') return '';
+  const d = new Date(DOB.getFullYear(), DOB.getMonth() + months, DOB.getDate(), 12);
+  return `${d.getDate()} ${_MP_MON[d.getMonth()]} ${d.getFullYear()}`;
+}
+function _mpPickerSearch(value) {
+  if (!_mpSheetState || _mpSheetState.kind !== 'picker') return;
+  _mpSheetState.q = value;
+  const list = document.getElementById('mpPickerList');
+  if (list) list.innerHTML = _mpPickerList(_mpSheetState.key, _mpSheetState.slot);
+}
+function _mpOpenPicker(key, slot) {
+  if (!_mpInWindow(key) || MP_SLOTS.indexOf(slot) < 0) return;
+  const state = { kind: 'picker', key, slot, q: '', all: false };
+  _mpSheetState = state;
+  const html = _mpSheetHead(`${RECIPE_SLOT_META[slot].label} · ${_mpDayTitle(key)}`) + `<div class="mp-picker" id="mpPickerBody">${_mpPickerBody(key, slot)}</div>`;
+  _mpSheetState = null;
+  _mpOpenSheet(state, html);
+}
+function _mpRefreshPicker() {
+  const st = _mpSheetState;
+  const body = document.getElementById('mpPickerBody');
+  if (!st || !body) return;
+  body.innerHTML = _mpPickerBody(st.key, st.slot);
+  const input = body.querySelector('.mp-search');
+  if (input) input.addEventListener('input', () => _mpPickerSearch(input.value));
+}
+function _mpAddItem(key, slot, item) {
+  const items = _mpLiveItems(key, slot).slice();
+  if (items.length >= 3) { showQLToast('A slot holds up to 3 foods', 2500); return false; }
+  if (items.some(it => (item.kind === 'recipe' && it.kind === 'recipe' && it.id === item.id) || (item.kind === 'food' && it.kind === 'food' && _sameFood(it.name, item.name)))) return false;
+  items.push(item);
+  return !!_mpSetSlot(key, slot, items);
+}
+
+// ── Add to plan from a recipe (§1.3; CL-1 ≤ 3 taps; the next 7 days, V-V-275-16) ──
+function _mpOpenAddRecipe(id, from) {
+  const r = _mpRecipe(id);
+  if (!r) return;
+  const state = { kind: 'add', id, slot: r.slot, from: from || today() };
+  _mpSheetState = state;
+  const html = _mpSheetHead(`Add ${r.title} to the plan`) + `<div class="mp-picker" id="mpAddBody">${_mpAddBody()}</div>`;
+  _mpSheetState = null;
+  _mpOpenSheet(state, html);
+}
+function _mpAddBody() {
+  const st = _mpSheetState;
+  const r = _mpRecipe(st.id);
+  const t = today();
+  let h = `<div class="mp-picker-sec">Meal</div><div class="mp-chips">`
+    + MP_SLOTS.map(s => `<button class="chip" data-chip="single" data-action="mpAddSlot" data-arg="${s}" aria-pressed="${st.slot === s ? 'true' : 'false'}">${zi(RECIPE_SLOT_META[s].icon)} ${RECIPE_SLOT_META[s].label}</button>`).join('') + `</div>`;
+  h += `<div class="mp-picker-sec">Day</div><div class="mp-daypick">`;
+  for (let i = 0; i < 7; i++) {
+    const key = _mpAddDays(st.from, i);
+    const ok = _mpInWindow(key) && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(key);
+    const d = _mpDate(key);
+    h += `<button class="btn btn-ghost btn-compact mp-daypick-btn" data-action="mpAddToDay" data-arg="${escAttr(key)}"${ok ? '' : ' disabled'} aria-label="${escAttr(_mpDayTitle(key))}">`
+      + `<span class="mp-day-wd">${key === t ? 'Today' : _MP_WD[d.getDay()].slice(0, 3)}</span><span class="mp-day-num">${d.getDate()}</span></button>`;
+  }
+  h += `</div>`;
+  const later = _mpAddDays(st.from, 7);
+  if (_mpInWindow(later)) h += `<button class="btn btn-ghost btn-compact" data-action="mpAddLater">Later days ${zi('arrow-right')}</button>`;
+  return h;
+}
+
+// ── Copy day (§1.7; age re-checked on the target, V-C-275-18) ──
+function _mpOpenCopy(key) {
+  const state = { kind: 'copy', key };
+  _mpSheetState = state;
+  const mon = _mpWeekStart(key);
+  let days = '';
+  for (let i = 0; i < 7; i++) {
+    const t = _mpAddDays(mon, i);
+    if (t === key || !_mpInWindow(t)) continue;
+    days += `<button class="btn btn-ghost btn-compact" data-action="mpCopyTo" data-arg="${escAttr(t)}">${escHtml(_mpShortDay(t))}</button>`;
+  }
+  const nextSame = _mpAddDays(key, 7);
+  if (_mpInWindow(nextSame)) days += `<button class="btn btn-ghost btn-compact" data-action="mpCopyTo" data-arg="${escAttr(nextSame)}">Next week, ${escHtml(_mpShortDay(nextSame))}</button>`;
+  const html = _mpSheetHead(`Copy ${_mpDayTitle(key)} to…`) + `<div class="mp-picker"><p class="mp-empty">Copying replaces that day's meals. Its travel setting stays.</p><div class="mp-chips">${days}</div></div>`;
+  _mpSheetState = null;
+  _mpOpenSheet(state, html);
+}
+function _mpSnapshotDay(key) {
+  const day = _mpPlan().days[key];
+  return { slots: MP_SLOTS.reduce((o, s) => (o[s] = _mpLiveItems(key, s).slice(), o), {}), travel: _mpTravelOn(day) };
+}
+function _mpRestoreDay(key, snap) {
+  MP_SLOTS.forEach(s => _mpSetSlot(key, s, snap.slots[s]));
+  if (snap.travel !== _mpTravelOn(_mpPlan().days[key])) _mpSetTravel(key, snap.travel);
+  renderMealPlanSection();
+}
+function _mpDoCopy(from, to) {
+  const snap = _mpSnapshotDay(to);
+  if (!_mpCopyDay(from, to)) return;
+  _mpCloseSheet(true);
+  _mpSel = to; _mpWeek = _mpWeekStart(to); _mpOpenSlot = null;
+  renderMealPlanSection();
+  showQLToast(`Copied to ${escHtml(_mpShortDay(to))}`, 8000, () => _mpRestoreDay(to, snap));
+}
+
+// ── Actions (one dispatcher, routed from core.js for every data-action="mp*", HR-6) ──
+function mpDispatch(action, arg, btn) {
+  const parts = String(arg || '').split('|');
+  switch (action) {
+    case 'mpSelectDay': if (_mpInWindow(arg)) { _mpSel = arg; _mpOpenSlot = null; save('ziva_mp_seen', true); renderMealPlanSection(); } break;
+    case 'mpWeek': {
+      const target = _mpAddDays(_mpWeek, 7 * (parseInt(arg, 10) || 0));
+      const win = _mpWindow(today());
+      if (target >= _mpWeekStart(win.lo) && target <= win.hi) { _mpWeek = target; _mpSel = (today() >= target && today() <= _mpAddDays(target, 6)) ? today() : target; _mpOpenSlot = null; renderMealPlanSection(); }
+      break;
+    }
+    case 'mpThisWeek': _mpSel = today(); _mpWeek = _mpWeekStart(_mpSel); _mpOpenSlot = null; renderMealPlanSection(); break;
+    case 'mpToggleSlot': _mpOpenSlot = (_mpOpenSlot === arg) ? null : arg; renderMealPlanSection(); break;
+    case 'mpToggleTravel': {
+      const on = !_mpTravelOn(_mpPlan().days[arg]);
+      if (_mpSetTravel(arg, on)) renderMealPlanSection();
+      break;
+    }
+    case 'mpDismissHint': _mpHintsHidden.add(arg); renderMealPlanSection(); break;
+    case 'mpOpenPicker': save('ziva_mp_seen', true); _mpOpenPicker(parts[0], parts[1]); break;
+    case 'mpPickerAll': if (_mpSheetState) { _mpSheetState.all = !_mpSheetState.all; _mpRefreshPicker(); } break;
+    case 'mpPick': {
+      const st = _mpSheetState;
+      const r = st && _mpRecipe(arg);
+      if (!r || !_mpPickable(r, st.key)) return;
+      if (_mpAddItem(st.key, st.slot, { kind: 'recipe', id: r.id })) _mpRefreshPicker();
+      break;
+    }
+    case 'mpPickFood': {
+      const st = _mpSheetState;
+      const name = String(arg || '').trim().slice(0, MP_NAME_MAX);
+      if (!st || !name || !_dietAllowsFood(name)) return;
+      const rule = _fdAgeRule(name.toLowerCase());
+      if (rule && rule.minMonth > _mpAgeMonthsOn(st.key)) return;
+      st.q = '';
+      if (_mpAddItem(st.key, st.slot, { kind: 'food', name: name.toLowerCase() })) _mpRefreshPicker();
+      break;
+    }
+    case 'mpRemoveEntry': {
+      const [key, slot, i] = parts;
+      const items = _mpLiveItems(key, slot).slice();
+      const removed = items.splice(parseInt(i, 10), 1)[0];
+      if (!removed) return;
+      const before = _mpLiveItems(key, slot).slice();
+      _mpSetSlot(key, slot, items);
+      if (_mpSheetState && _mpSheetState.kind === 'picker') _mpRefreshPicker(); else renderMealPlanSection();
+      showQLToast(`Removed ${escHtml(_mpItemLabel(removed))}`, 8000, () => { _mpSetSlot(key, slot, before); if (_mpSheetState && _mpSheetState.kind === 'picker') _mpRefreshPicker(); else renderMealPlanSection(); });
+      break;
+    }
+    case 'mpPlanSuggestion': {
+      const [key, slot, id] = parts;
+      const r = _mpRecipe(id);
+      if (r && _mpPickable(r, key) && _mpAddItem(key, slot, { kind: 'recipe', id })) renderMealPlanSection();
+      break;
+    }
+    case 'mpCloseSheet': _mpCloseSheet(); break;
+    case 'mpAddRecipe': _mpOpenAddRecipe(arg); break;
+    case 'mpAddSlot': if (_mpSheetState && _mpSheetState.kind === 'add' && MP_SLOTS.indexOf(arg) >= 0) { _mpSheetState.slot = arg; document.getElementById('mpAddBody').innerHTML = _mpAddBody(); } break;
+    case 'mpAddLater': if (_mpSheetState && _mpSheetState.kind === 'add') { _mpSheetState.from = _mpAddDays(_mpSheetState.from, 7); document.getElementById('mpAddBody').innerHTML = _mpAddBody(); } break;
+    case 'mpAddToDay': {
+      const st = _mpSheetState;
+      if (!st || st.kind !== 'add') return;
+      const r = _mpRecipe(st.id);
+      if (!r || !_mpPickable(r, arg)) return;
+      const before = _mpLiveItems(arg, st.slot).slice();
+      if (!_mpAddItem(arg, st.slot, { kind: 'recipe', id: r.id })) return;
+      const slot = st.slot;
+      _mpCloseSheet(true);
+      _mpSel = arg; _mpWeek = _mpWeekStart(arg);
+      renderMealPlanSection();
+      showQLToast(`Added to ${escHtml(_mpShortDay(arg))}, ${RECIPE_SLOT_META[slot].label.toLowerCase()}`, 8000, () => { _mpSetSlot(arg, slot, before); renderMealPlanSection(); });
+      break;
+    }
+    case 'mpCopyDay': _mpOpenCopy(arg); break;
+    case 'mpCopyTo': {
+      const st = _mpSheetState;
+      if (!st || st.kind !== 'copy') return;
+      const age = _mpAgeMonthsOn(arg);
+      const gated = MP_SLOTS.flatMap(s => _mpLiveItems(st.key, s)).filter(it => it.kind === 'recipe' && _mpRecipe(it.id) && _recipeEffectiveMinAge(_mpRecipe(it.id)) > age).map(it => _mpRecipe(it.id).title);
+      const from = st.key;
+      if (gated.length) { _mpCloseSheet(true); confirmAction(`${escHtml(gated.join(', '))} ${gated.length > 1 ? 'aren\'t' : 'isn\'t'} for her age on ${escHtml(_mpShortDay(arg))} yet. Copy anyway? ${gated.length > 1 ? 'They' : 'It'} will show a flag on that day.`, () => _mpDoCopy(from, arg), 'Copy anyway'); }
+      else _mpDoCopy(from, arg);
+      break;
+    }
+    case 'mpClearDay': {
+      const key = arg;
+      confirmAction(`<strong>Clear ${escHtml(_mpDayTitle(key))}'s plan?</strong><br>This removes the planned meals for the day. Meals you've logged stay in her diary.`, () => {
+        const snap = _mpSnapshotDay(key);
+        if (!_mpClearDay(key)) return;
+        _mpOpenSlot = null;
+        renderMealPlanSection();
+        showQLToast('Plan cleared', 8000, () => _mpRestoreDay(key, snap));
+      }, 'Clear plan', { danger: true });
+      break;
+    }
+  }
+}
 // EVIDENCE-BASED MILESTONES: Classification Engine + Evidence Accumulator
 // ══════════════════════════════════════════════════════════════════════
 

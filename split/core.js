@@ -839,6 +839,8 @@ function init() {
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
     else if (action === 'toggleRecipeProw' && typeof toggleRecipeProw === 'function') toggleRecipeProw(btn);
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
+    // Meal planner (diet.js): every data-action="mp…" routes to its one dispatcher.
+    else if (/^mp[A-Z]/.test(action) && typeof mpDispatch === 'function') mpDispatch(action, arg, btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'teethTap' && typeof teethTap === 'function') teethTap(arg);
@@ -4694,7 +4696,7 @@ window.addEventListener('popstate', e => {
   }
 });
 
-function confirmAction(msg, callback, btnText) {
+function confirmAction(msg, callback, btnText, opts) {
   // V-K-8 (PR-B) — defensive parsing: the prior `startsWith('delete')` heuristic
   // missed forms like "Are you sure you want to delete this entry?" where the
   // destructive token isn't the leading word. Word-boundary match catches the
@@ -4706,7 +4708,7 @@ function confirmAction(msg, callback, btnText) {
   // Word-boundary preserves the "cleared" mid-word safety (the two `cleared`
   // callers at core.js:690 + intelligence.js:8754 carry explicit btnText anyway).
   const label = btnText || (/\b(delete|remove|clear)\b/i.test(msg) ? 'Delete' : 'Confirm');
-  const btnCls = label === 'Delete' ? 'btn btn-rose' : label === 'Reset' ? 'btn btn-rose' : 'btn btn-sky';
+  const btnCls = (label === 'Delete' || label === 'Reset' || (opts && opts.danger)) ? 'btn btn-rose' : 'btn btn-sky';
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
   overlay.innerHTML = `
@@ -4814,6 +4816,12 @@ function _lookupAllByFoodName(table, name) {
 // caught downstream — the suppression is the only floor. (The allergen-note surface intentionally
 // still fires its calm caution for "seer fish"; the suppression targets only the GREEN affirm.)
 const _FISH_HIGH_MERCURY = ['seer', 'surmai', 'shark', 'sura', 'swordfish', 'marlin', 'king mackerel', 'bigeye'];
+// The cited high-mercury line from the fish record (FOOD_EFFECTS.fish.safeForm.never), so the
+// planner's flag lead quotes the record rather than re-voicing it (canon-cc-013, V-CA-275-12).
+function _mpHighMercuryLine() {
+  const rec = (typeof FOOD_EFFECTS !== 'undefined' && FOOD_EFFECTS.fish && FOOD_EFFECTS.fish.safeForm) ? FOOD_EFFECTS.fish.safeForm.never : null;
+  return Array.isArray(rec) ? (rec.find(l => /^high-mercury/i.test(l)) || '') : '';
+}
 function _isHighMercuryFishHost(name) {
   const n = String(name || '').toLowerCase();
   return _FISH_HIGH_MERCURY.some(t =>
