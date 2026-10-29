@@ -400,21 +400,6 @@ Rationale: Parent holding a baby, tapping one-handed. 44px is ideal (`.chip` cla
 
 **Applies to:** buttons, chips, tappable list items, icon buttons, steppers, toggles, category cards, history headers.
 
-
-### Actions use the house buttons (no bespoke button styles)
-Every tappable action is one of the house components, never a new text-button, outline or dashed style (added 2026-10-29 after the meal-planner mock-ups shipped six bespoke button looks):
-
-| Role | Component | Notes |
-|---|---|---|
-| The one primary action on a screen | `.btn .btn-{domain}` (filled: `btn-sage`, `btn-peach`, `btn-rose`…) | At most one per screen or sheet; the domain colour of the surface |
-| Secondary actions | `.btn .btn-ghost` (+ `.btn-compact` inline) | Copy, Clear, Add, Cancel, "Plan anyway", week navigation |
-| A toggle that is on | `.btn .btn-{domain}` with `aria-pressed="true"`; off is `.btn-ghost` | State also in words ("Travel day: on") |
-| Suggestions to act on | `.sg-chip` | Never the planned-item / food-chip shape |
-| Confirm dialogs | `confirmAction()` / the `.confirm-box` + `.confirm-btns` shell | Ghost secondary, coloured primary; destructive → `btn-rose` |
-| Icon-only actions | `.btn .btn-ghost` round, with `aria-label` | Dismiss, previous / next |
-
-A surface may add layout and the 44px floor around these (HR-8, CL-7); it may not restyle them.
-
 ### HR-9: No persistent editing in overlays
 Overlays are for Read (viewing), Act (confirming), and single-field Quick Actions. Multi-field editing happens in page content or dedicated Flow overlays with dirty flags.
 
@@ -550,6 +535,21 @@ See ARCHITECTURE_PATTERNS.md §13 for the Read/Act/Flow framework.
 **Minimum chip padding:** `var(--sp-6) var(--sp-12)` for standard chips. Compact badges may use `var(--sp-4) var(--sp-8)` minimum.
 
 **Domain-colored chips:** Use the domain's light-bg + text-color tokens for active state.
+
+### Button System
+Every tappable action is one of these house components, never a new text-button, outline or dashed style (added 2026-10-29 after the meal-planner mock-ups shipped six bespoke button looks):
+
+| Role | Component | Notes |
+|---|---|---|
+| Primary action | `.btn .btn-{domain}` (filled: `btn-sage`, `btn-peach`, `btn-rose`…) | One per card or sheet; on new surfaces, one per screen. **Never promoted onto an entry carrying a rose flag** — the flag stays the loudest element |
+| Primary, hero CTA (legacy) | `.btn-primary .bp-{domain}` | 48px; new work prefers `.btn .btn-{domain}` |
+| Secondary actions | `.btn .btn-ghost` (+ `.btn-compact` inline) | Copy, Clear, Add, Cancel, "Plan anyway", week navigation |
+| A single standalone on/off action | `.btn .btn-{domain}` with `aria-pressed="true"`; off is `.btn-ghost` | State also in words ("Travel day: on"). New convention (2026-10-29). Filter and choice groups use the Chip System `.chip` instead |
+| Suggestions to act on | `.sg-chip` | Never the planned-item / food-chip shape |
+| Confirm dialogs | `confirmAction()` / the `.confirm-box` + `.confirm-btns` shell | Ghost secondary, coloured primary; destructive → `btn-rose` |
+| Icon-only actions | `.btn .btn-ghost` round, with `aria-label` | Dismiss, previous / next |
+
+Every action **must** meet HR-8 (≥ 36 px; 44 px is the target on primary surfaces). `.btn` is 40 px, `.btn-compact` 32 px and `.sg-chip` about 24 px by default, so the surface adds the floor around them; it may not otherwise restyle them. Hover feedback is scoped to `@media (hover:hover)`.
 
 ---
 
@@ -879,6 +879,7 @@ The Diet→Library "living shelf" rework (`docs/design/library-redesign/`, wirin
 | 1.4 | 3 Jun 2026 | §10 — Library Living Shelf, Food Detail & Nutrient Colours: the living shelf + journey channel, the food info pop-up (Read overlay), the **nutrient colour system** (`.nutri-chip`, 6 nutrient-domains) and **food-domain chips** (`.fdom-chip`), the tint-fade-on-chips extension, and **`--tc-peach` defined** (retiring its long-standing dangling reference). From `docs/design/library-redesign/`. |
 | 1.5 | 4 Jun 2026 | **Prefix registry** — registered the Library-redesign prefixes `lib-*` (living shelf / wings / pop-up / deck / guides), `fp-*` (food pop-up + verdict band), and reserved `ec-*` (Emergency Card, design stage). **Reconcile with main #219 "Lean landing page":** main registered `ld-*` for Landing; this branch's Safety-guides guide-detail classes were renamed `ld-*` → `lib-guide-*` to vacate the collision. No content/colour-system change. |
 | 1.6 | 5 Jun 2026 | **§9.3 evolution** — the quantity-weighted fingerprint is now the language of *every* recipe card (hero **and** rows), not hero-only; the hero keeps the animated sheen + corner watermark as its distinction, rows carry the static fingerprint. **New §11 — the 6-second rule (text blocks):** lead with the always-visible answer (safety-first), progressive-disclose the rest in teaser-bearing `*-prow` rows, never dump. Registered `rcp-*` (recipe detail: `rcp-safe` lead band + `rcp-prow` disclosure rows). From the Recipes Tier-C render review (PR #228 follow-up). |
+| 1.8 | 29 Oct 2026 | **§5 — Button System.** Every action uses a house button component (role → component table); a surface adds the HR-8 floor but never restyles one; the screen's primary is never promoted onto a rose-flagged entry; `.btn` / `.btn-ghost` hover scoped to `@media (hover:hover)`. From the meal-planner mock-ups (PR #278). |
 | 1.7 | 5 Jun 2026 | **§9.7 — responsive-feeding portions.** Added age-adaptive serving guidance to the recipe detail (`rcp-serving`): the amount to *offer* by age band (WHO IYCF / WHO-PAHO / IAP), framed responsive-feeding ("a guide, not a target; let her appetite lead") — never a quota. Age-gated recipes frame the portion at their own start age. |
 
 ---

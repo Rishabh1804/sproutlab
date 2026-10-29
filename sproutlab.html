@@ -375,9 +375,13 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .btn-lav    { background:#7e66b4; color:white; }
 .btn-sky    { background:#3a7a8a; color:white; }
 .btn-indigo { background:#5a6498; color:white; }
+/* Hover feedback only on devices that truly hover: on touch screens :hover sticks after a tap, and a
+   tapped ghost button would sit in the rose alert colour (V-V-278-25). */
+@media (hover:hover) {
 .btn:hover  { filter:brightness(1.05); transform:translateY(-1px); }
 .btn-ghost  { background:transparent; border:1.5px solid var(--light); color:var(--mid); }
 .btn-ghost:hover { border-color:var(--rose); color:var(--rose); background:var(--rose-light); }
+}
 .btn-compact { font-size:var(--fs-sm); padding:var(--sp-6) var(--sp-12); min-height:32px; border-radius:var(--r-xl); }
 
 /* ── Growth ── */
@@ -5382,7 +5386,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .meal-card.dinner    { background:rgba(201,184,232,0.08); border-color:rgba(201,184,232,0.15); }
 [data-theme="dark"] .meal-card.snack     { background:rgba(240,200,120,0.08); border-color:rgba(240,200,120,0.15); }
 [data-theme="dark"] .btn-ghost { border-color:var(--light); color:var(--mid); }
-[data-theme="dark"] .btn-ghost:hover { border-color:var(--rose); color:var(--rose); background:rgba(242,168,184,0.1); }
+@media (hover:hover) { [data-theme="dark"] .btn-ghost:hover { border-color:var(--rose); color:var(--rose); background:rgba(242,168,184,0.1); } }
 [data-theme="dark"] .chart-filter-btn { background:var(--surface); border-color:var(--light); color:var(--mid); }
 [data-theme="dark"] .milestone-item { background:var(--surface-alt); }
 [data-theme="dark"] .milestone-item.done { background:rgba(181,213,197,0.1); }
@@ -12211,7 +12215,9 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-picker-more[aria-expanded="true"] > .zi { transform:rotate(180deg); }
 
 /* Confirms (new food / allergen) */
-.mp-confirm { max-width:none; width:auto; }
+.mp-confirm { max-width:none; width:auto; text-align:left; }
+.mp-confirm .confirm-btns { flex-direction:column-reverse; align-items:stretch; }
+.mp-confirm .confirm-btns .btn { width:100%; }
 .mp-confirm-title { font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); margin:0 0 var(--sp-6); }
 .mp-confirm-link { margin:0 0 var(--sp-16); }
 

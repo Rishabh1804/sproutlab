@@ -280,15 +280,17 @@ const WEEK = [
 ];
 const mpStrip = (days = WEEK) => `<div class="mp-strip" role="group" aria-label="Days of the week">${days.map(mpDay).join('')}</div>`;
 
-function mpAct(a, slot) {
-  // House buttons: secondary actions are .btn-ghost; the one primary on screen (the next meal's
-  // "She ate this") is promoted to .btn-sage by mpLead.
-  if (a === 'ate') return `<button class="btn btn-ghost btn-compact" data-action="mpAte" data-arg="${slot}">${zi('check')} She ate this</button>`;
+function mpAct(a, slot, primary = false) {
+  // House buttons: secondary actions are .btn-ghost; the one primary on screen is the next meal's
+  // "She ate this" (.btn-sage) — never on an entry carrying a rose flag, where the flag must stay
+  // the loudest thing in the block (V-M-278-13).
+  if (a === 'ate') return `<button class="btn ${primary ? 'btn-sage' : 'btn-ghost'} btn-compact" data-action="mpAte" data-arg="${slot}">${zi('check')} She ate this</button>`;
   if (a === 'add') return `<button class="btn btn-ghost btn-compact" data-action="mpOpenPicker" data-arg="${slot}">${zi('plus')} Add ${SLOT[slot][0].toLowerCase()}</button>`;
   if (a && a.logged) return `<span class="mp-logged">${zi('check')} ${esc(a.logged)}</span>`;
   return '';
 }
-function mpSlot({ slot, items = [], newTag, lead, act = 'ate', open, body = '', mode = false }) {
+function mpSlot({ slot, items = [], newTag, lead, act = 'ate', open, body = '', mode = false, next = false }) {
+  const flagged = lead && lead[0] === 'flag';
   const [label, icon] = SLOT[slot];
   const travel = mode && !(act && act.logged);
   const entries = items.length ? `<div class="mp-entries" data-action="mpToggleSlot" data-arg="${slot}">`
@@ -298,13 +300,11 @@ function mpSlot({ slot, items = [], newTag, lead, act = 'ate', open, body = '', 
     + `<span class="mp-slot-ic">${zi(icon)}</span>`
     + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
     + `<span class="mp-slot-label">${label} <span class="mp-slot-chev">${zi('chevron-down')}</span></span></button>`
-    + `<span class="mp-slot-act">${mpAct(act, slot)}</span>`
-    + entries + (lead ? rcpSafe(lead[0], lead[1]) : '') + body + `</div>`;
+    + `<span class="mp-slot-act">${mpAct(act, slot, next && !flagged)}</span>`
+    + (flagged ? rcpSafe(lead[0], lead[1]) + entries : entries + (lead ? rcpSafe(lead[0], lead[1]) : '')) + body + `</div>`;
 }
-const mpLead = (slotHtml) => {
-  const ghost = 'class="btn btn-ghost btn-compact" data-action="mpAte"';
-  return `<div class="mp-lead"><div class="mp-lead-eyebrow">Next</div>${slotHtml.includes(ghost) ? slotHtml.replace(ghost, 'class="btn btn-sage btn-compact" data-action="mpAte"') : slotHtml}</div>`;
-};
+const mpLead = (slotHtml) => `<div class="mp-lead"><div class="mp-lead-eyebrow">Next</div>${slotHtml}</div>`;
+const mpNext = opts => mpLead(mpSlot({ ...opts, next: true }));
 function mpCard({ title, travel, pack = '', lead = '', slots = [], hint = '', tomorrow = '', foot = true }) {
   return `<div class="mp-daycard${travel ? ' mp-daycard--travel' : ''}">`
     + `<div class="mp-dayhead"><span class="mp-daytitle">${esc(title)}</span>`
@@ -373,12 +373,12 @@ function travelCard(state) {
   if (fresh) return mpCard({ title: 'Friday, 6 Nov', travel: true, pack: packBlock(TRAVEL_DAY), lead: mpLead(b), slots: [l, s, d] });
   return mpCard({ title: 'Friday, 6 Nov', travel: true, pack: packBlock(TRAVEL_DAY, { collapsed: true }), lead: mpLead(l), slots: [b, s, d] });
 }
-const travelSlots = (lunchOpen, fresh) => {
+const travelSlots = (lunchOpen, fresh) => {  // the lead slot (breakfast fresh, else lunch) carries the primary
   const lunch = RECIPES['travel-veg-dalia-flask'];
   return [
-    mpSlot({ slot: 'breakfast', ...rx('travel-flask-oats-banana'), mode: true, act: fresh ? 'ate' : { logged: 'Logged · 8:10 am' },
+    mpSlot({ slot: 'breakfast', ...rx('travel-flask-oats-banana'), mode: true, next: fresh, act: fresh ? 'ate' : { logged: 'Logged · 8:10 am' },
       body: fresh ? serveRow('travel-flask-oats-banana') : '' }),
-    mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask', 'banana'), mode: true, open: lunchOpen,
+    mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask', 'banana'), mode: true, next: !fresh, open: lunchOpen,
       body: fresh ? '' : lunchOpen ? `<div class="rcp-prows">`
         + prow('chew', 'tooth', 'Make it safe to chew', steps(lunch.choking.length), ol(lunch.choking), true)
         + prow('travel', 'timer', 'Packing', `${lunch.travel.pack.length} things`, ol(lunch.travel.pack), false)
@@ -432,10 +432,10 @@ const picker = ({ search = '', noMatch = false } = {}) => `<div class="mp-picker
   + `</div>`;
 
 // The confirmAction shell (core.js): .confirm-box, ghost secondary + coloured primary in .confirm-btns.
-const confirm = (title, body, primary, secondary, extra = '') => `<div class="confirm-box mp-confirm" role="dialog" aria-label="${esc(title)}">`
+const confirm = (title, body, primary, secondary, extra = '', primaryCls = 'btn-sage') => `<div class="confirm-box mp-confirm" role="dialog" aria-label="${esc(title)}">`
   + `<div class="mp-confirm-title">${esc(title)}</div><p>${body}</p>${extra}`
   + `<div class="confirm-btns"><button class="btn btn-ghost" data-action="mpConfirmAnyway">${esc(secondary)}</button>`
-  + `<button class="btn btn-sage" data-action="mpConfirmMove">${esc(primary)}</button></div></div>`;
+  + `<button class="btn ${primaryCls}" data-action="mpConfirmMove">${esc(primary)}</button></div></div>`;
 
 const section = inner => `<div class="mp-section">${inner}</div>`;
 const todayCard = (clock) => {
@@ -443,8 +443,8 @@ const todayCard = (clock) => {
   const l = { slot: 'lunch', ...rx('toddler-veg-khichdi') };
   const d = { slot: 'dinner', ...rx('paneer-bhurji-roti', 'grapes'), lead: ['caution', 'Grapes: quarter lengthways — never whole, and halving is not enough.'] };
   const s = { slot: 'snack', ...rx('soft-fruit-bowl-quartered') };
-  if (clock === '02:00') return mpCard({ title: 'Wednesday, 4 Nov', lead: mpLead(mpSlot(b)), slots: [mpSlot(l), mpSlot(d), mpSlot(s)] });
-  if (clock === '12:00') return mpCard({ title: 'Wednesday, 4 Nov', lead: mpLead(mpSlot(l)),
+  if (clock === '02:00') return mpCard({ title: 'Wednesday, 4 Nov', lead: mpNext(b), slots: [mpSlot(l), mpSlot(d), mpSlot(s)] });
+  if (clock === '12:00') return mpCard({ title: 'Wednesday, 4 Nov', lead: mpNext(l),
     slots: [mpSlot({ ...b, act: { logged: 'Logged · 8:20 am' } }), mpSlot(d), mpSlot(s)] });
   return mpCard({ title: 'Wednesday, 4 Nov', tomorrow: 'Tomorrow: Breakfast — Soft Ragi Dosa Strips with Curd',
     slots: [mpSlot({ ...b, act: { logged: 'Logged · 8:20 am' } }), mpSlot({ ...l, act: { logged: 'Logged · 12:40 pm' } }),
@@ -485,8 +485,8 @@ const PLANNER = [
           mpSlot({ slot: 'dinner', ...rx('aloo-gobhi-matar-roti'), act: '' }), mpSlot({ slot: 'snack', act: 'add' })],
         hint: 'No iron-rich food planned today. Ragi, dal, poha or palak would add some.' }) },
       { label: '2d — egg planned again after a noted reaction (today, Next: Lunch)', width: 360, html: mpCard({ title: 'Wednesday, 4 Nov',
-        lead: mpLead(mpSlot({ slot: 'lunch', ...rx('soft-egg-curry-rice'),
-          lead: ['flag', 'You noted a reaction to egg on 12 Oct. Talk to her doctor before offering egg again.'] })),
+        lead: mpNext({ slot: 'lunch', ...rx('soft-egg-curry-rice'),
+          lead: ['flag', 'You noted a reaction to egg on 12 Oct. Talk to her doctor before offering egg again.'] }),
         slots: [mpSlot({ slot: 'breakfast', ...rx('suji-veg-upma'), act: { logged: 'Logged · 8:20 am' } }), mpSlot({ slot: 'dinner', ...rx('dal-chawal-lauki-sabzi') }), mpSlot({ slot: 'snack', act: 'add' })] }) },
     ],
   },
@@ -528,6 +528,8 @@ const PLANNER = [
       { label: '6b — top allergen', width: 360, html: confirm('Egg is a common allergen, and new for Ziva.',
         'Give egg on its own, with nothing else new for a few days before or after, so if she reacts you’ll know it was the egg. ' + esc(`Best ${EGG_HOW.when}, and ${EGG_HOW.watch}.`),
         'Move to Sun', 'Plan anyway', `<p class="mp-confirm-link"><button class="btn btn-ghost btn-compact" data-action="mpWatchFor">${zi('eye')} What to watch for after egg</button> <span class="rcp-serving-src">NHS · ASCIA</span></p>`) },
+      { label: 'Clear day — destructive confirm (rose primary; logged meals stay)', width: 360, html: confirm('Clear Wednesday’s plan?',
+        'This removes the planned meals for the day. Meals you’ve logged stay in her diary. You can undo for a few seconds after.', 'Clear plan', 'Cancel', '', 'btn-rose') },
     ],
   },
   {
