@@ -3,7 +3,7 @@
 **Spec version:** v0.4 (`pending_review`; all spec-round positions folded). v0.1 recorded the Architect's answers; v0.2 reshaped every surface to the cognitive-load floor (§4.0), accepted by the Architect in full; **v0.3 (2026-10-29) folds the spec-round positions of Vela (V-V-275-1…20) and Ceres (V-C-275-1…18)**; **v0.4 folds Carina's position on §3 (V-CA-275-1…12)**. §10 lists every amendment; where §10 and earlier text disagree, §10 wins.
 **Date:** 2026-10-29
 **Author:** Lyra (Mode-1 Province spec authoring)
-**Status:** Scoping draft with the Architect's answers recorded (§9). D4 is resolved: **Carina** (Foundation) is seated by #275, so P0 is Carina-primary. **Architect decisions (2026-10-29), the recommended answers:** Q1 plan section atop Recipes; Q2 Monday week start; Q3 warn with stronger allergen wording (not refuse); Q4 derived new foods count toward the 3-day rule; Q5 log a recipe as its ingredients, dish title in `note`; Q7 keep 28 days; Q8 the core.js date helpers fixed app-wide in a separate Carina-primary PR; Q9 Tomorrow's Prep and the Outing Planner fold into the plan in v1.1. **Q6 (the `zi-bag` travel icon) stays open** for the P1a Surface Catalog sign-off.
+**Status:** Scoping draft with the Architect's answers recorded (§9). D4 is resolved: **Carina** (Foundation) is seated by #275, so P0 is Carina-primary. **Architect decisions (2026-10-29), the recommended answers:** Q1 plan section atop Recipes; Q2 Monday week start; Q3 warn with stronger allergen wording (not refuse); Q4 derived new foods count toward the 3-day rule; Q5 log a recipe as its ingredients, dish title in `note`; Q7 keep about 28 days (week-aligned, §3.5); Q8 the core.js date helpers fixed app-wide in a separate Carina-primary PR; Q9 Tomorrow's Prep and the Outing Planner fold into the plan in v1.1. **Q6 (the `zi-bag` travel icon) stays open** for the P1a Surface Catalog sign-off.
 **Promoted from:** the Architect, 2026-10-29, verbatim:
 > "On the recipes, from the list let's have an option to select and make meals for a day or a combo, or a new food. We can organise it as days and mark the days of travel in there as well. Then, we can build our own diet plan with the recipes on the app."
 
@@ -113,7 +113,7 @@ Each thread names the Region and data path it rides.
 ## 3. Data model
 
 ### 3.1 Storage key
-`KEYS.mealPlan = 'ziva_meal_plan'` (core.js `KEYS`, foundation seat). There are no persisted defaults (an empty `{}` is valid), so the **joining-device seed rule is not triggered**. The key is **not** in `ALWAYS_POPULATED_KEYS`, because clearing every day is a real user action.
+`KEYS.mealPlan = 'ziva_meal_plan'` (core.js `KEYS`, foundation seat). There are no persisted defaults: the default `{v:1, days:{}}` lives in memory and is saved only on the first real write (V-CA-275-9), so the **joining-device seed rule is not triggered**. The key is **not** in `ALWAYS_POPULATED_KEYS`, because clearing every day is a real user action.
 
 ### 3.2 Shape
 ```
@@ -139,27 +139,28 @@ ziva_meal_plan = {
 
 ### 3.3 Sync and conflicts (two parents, same day)
 - `SYNC_KEYS[KEYS.mealPlan] = { collection: 'plan', model: 'single-doc' }`: **its own document** at `/singles/plan`, not inside `tracking` (V-CA-275-1, §10.4).
-- `SYNC_RENDER_DEPS[KEYS.mealPlan] = { global: 'mealPlan', mergeOnReceive: '_postReceiveMealPlan', renderers: { 'track:diet': ['renderDietRecipes'] } }`. The SYNC_KEYS line and the render-deps line land **in the same commit**, per the PR-ε.0 atomicity note in sync.js.
+- `SYNC_RENDER_DEPS[KEYS.mealPlan] = { global: 'mealPlan', mergeOnReceive: '_postReceiveMealPlan', renderers: { 'track:diet': ['renderMealPlanSection'] } }`, a narrow renderer, never `renderDietRecipes`, and no re-render while a planner sheet is open (V-CA-275-3). The SYNC_KEYS line and the render-deps line land **in the same commit**, per the PR-ε.0 atomicity note in sync.js.
 - **The merge is per field, newest timestamp wins.** It follows the `_postReceiveTeeth` precedent (V-M-116): a whole-document last-write-wins would drop one parent's edit.
   - For each date, for each of `slots.breakfast|lunch|dinner|snack` and `travel`, keep whichever side has the larger `ts`.
   - Parent A editing breakfast and parent B editing dinner on the same day therefore **both survive**. Two edits to the **same slot** resolve to the later one.
   - A day-level `cleared` tombstone wins over any slot whose `ts` is older than it, so a cleared day doesn't come back from the other phone. A slot written after the clear survives.
-  - A validator in the `_postReceiveTeeth` style (date key regex `^\d{4}-\d{2}-\d{2}$`, finite `ts`, entry `kind` in the allowed set) drops malformed remote entries.
-- **Clock skew:** device clocks can disagree. For a meal plan the cost is low: in the rare same-slot race, the "wrong" parent's edit wins, and both parents can see it. Recorded as R2, accepted.
-- Writes go through `save(KEYS.mealPlan, …)`, which already marks the key dirty for sync. The planner never calls Firestore directly.
+  - The merge is order-independent and idempotent, breaks equal `ts` deterministically, masks slots older than `cleared` at render rather than deleting them, takes the larger `v`, and also runs on the push side and pushes back on divergence. Full rules: §10.4 V-CA-275-2, -4, -6.
+  - The validator drops only structurally malformed data and keeps unknown `kind`s and fields (V-CA-275-7).
+- **Clock skew:** every write is stamped by `_mpStamp` (a minimal logical clock, V-CA-275-5), so a phone with a fast clock cannot block the other parent's later edits.
+- Writes go through one load-modify-save helper, `_mpSave(mutator)`, which calls `save(KEYS.mealPlan, …)` and so marks the key dirty for sync (V-CA-275-3). The planner never calls Firestore directly.
 
 ### 3.4 Dates (HR-12)
 - Keys are local `YYYY-MM-DD` strings from `toDateStr(new Date(y, m-1, d))`.
 - **Finding:** the existing `_offsetDateStr` / `addDays` / `ageAt(dateStr)` in core.js parse `new Date('YYYY-MM-DD')`, which is **UTC midnight**. In IST that happens to land on the same local day. In any negative-offset timezone, which a travelling family can be in, it lands on the previous day.
 - The planner therefore uses its own local-safe helpers:
   - `_parseLocalDate(key)` (a new core.js primitive landed in P0, V-CA-275-10) returns local noon for a bare `YYYY-MM-DD` (noon guards against DST edges). The planner uses it rather than a planner-local `_mpParse`, so the two can never drift.
-  - `_mpAddDays(key, n)` and `_mpAgeMonthsOn(key)`, the latter calling `ageAt(_mpParse(key))` with a Date, not a string.
+  - `_mpAddDays(key, n)` and `_mpAgeMonthsOn(key)`, the latter calling `ageAt(_parseLocalDate(key))` with a Date, not a string.
 - Fixing the core.js helpers themselves is a foundation-seat follow-up, raised as **Q8**.
 - The week starts on Monday, computed from the local `getDay()`.
 
 ### 3.5 Retention and budget
 - **Prune on load and on each write, aligned with navigation (V-CA-275-8):** keep from the Monday of the week 4 weeks back to the Sunday of week +8; writes outside that window are refused in words. The prune also runs inside the merge, so a union can't bring a pruned day back.
-- **Estimate:** about 0.6 KB per fully planned day. A 12-week window (4 back + 8 ahead) is about 50 KB, well under 2.5% of the v7 "localStorage < 2 MB" assumption that comes due in Dec 2026. That assumption gets measured on a device export regardless (BUGS.md). The single Firestore document stays far below the 1 MiB doc limit.
+- **Estimate:** about 0.6 KB per fully planned day. A 13-week window (Monday of week −4 to Sunday of week +8) is about 55 KB, well under 2.5% of the v7 "localStorage < 2 MB" assumption that comes due in Dec 2026. That assumption gets measured on a device export regardless (BUGS.md). The single Firestore document stays far below the 1 MiB doc limit.
 - Pruning runs on both devices with the same rule, so it converges. Pruned days are deleted outright, with no tombstone, because the other device prunes them too.
 
 ---
@@ -292,7 +293,7 @@ A "Today's plan" line on Home or in Today So Far is the natural next thread. It 
 
 | PR | Scope | Region | Governor summon-set (canon-cc-008) |
 |---|---|---|---|
-| **P0: data + sync key** *(after D4)* | `KEYS.mealPlan`, the global load in core.js, SYNC_KEYS + SYNC_RENDER_DEPS (one commit), `_postReceiveMealPlan` + validator, the prune rule, local-safe date helpers if they land as foundation primitives. e2e: two-device merge (different slots both survive, clear-day tombstone holds, malformed remote dropped). | Foundation | **Foundation-seat Governor** (post-D4 name), plus **Kael** if `qa-route` shows ripple into the engine. Then Cipher. |
+| **P0: data + sync key** *(after D4)* | `KEYS.mealPlan`, the global load in core.js, SYNC_KEYS + SYNC_RENDER_DEPS (one commit), `_postReceiveMealPlan` + validator, the push-side merge, `_mpStamp`, `_mpSave`, the prune rule, and the `_parseLocalDate` core primitive (all of §10.3's P0 list). e2e: two-device merge (different slots both survive, clear-day tombstone holds, malformed remote dropped) plus the seven P0 cases in §10.3. | Foundation | **Carina**, plus each Governor `qa-route`'s reference consult names (e.g. for `SYNC_RENDER_DEPS`). Then Cipher. |
 | **P1a: Surface Catalog exemplars** | §4.7 exemplars + the new CSS + `zi-bag` + the `#dietPlanRoot` mount. No behaviour. | Shared | **Core trio, Ceres first: Ceres → Maren → Vela**, plus **Carina** (new `zi-bag` sprite symbol) and any Governor the template DOM contract names for `#dietPlanRoot`. Vela checks CL-1…CL-9 on the exemplars. Then Cipher. **Architect sign-off.** |
 | **P1b: planner UI** | Plan section, strip, day card, picker, Add to plan, travel toggle + narrowing + packing rows, copy/clear, age-gate refusal, combo line. e2e: plan, combo, travel narrowing (incl. the dinner gap), copy/clear, locked row on a future date. | Nutrition (+ shared CSS fixes) | **Ceres**, plus **Vela** as a consult on CL-1…CL-9 in the wired build. The core trio again if styles/template change. Then Cipher. |
 | **P2: new-food scheduling + log-from-plan** | `isNew` entries, derived new-to-Ziva markers, `_mpNewFoodConflicts` + the confirm, `_fcCommitItems` extraction (behaviour-neutral for the composer, proved by the existing F-6 e2e), She ate this + Replace/Add sheet + the introduce-offer. e2e: 3-day conflict, recipe ingredient → feedingData sidecar with `sourceFlow:'diet-plan'`, undo, no auto-write to `ziva_foods`. | Nutrition | **Ceres.** Add **Kael** for the data-flow consult (writer + `_islMarkDirty` consumer); qa-route will widen this through the `calls` edges. Then Cipher. |
@@ -309,7 +310,7 @@ Every PR stays draft until its chain completes. `/code-review` does not discharg
 
 ## 8. Risks
 - **R1. The plan reads as a schedule and nags.** Warmth drifts clinical under feature gravity. Mitigation: no adherence states, past days muted rather than red, invitation copy.
-- **R2. Same-slot race on clock skew.** Accepted (§3.3). It's visible and easy to fix on either phone.
+- **R2. Same-slot race on clock skew.** Retired by `_mpStamp` (V-CA-275-5): a fast clock can no longer block the other parent; two edits to the same slot still resolve to the later stamp, visibly on both phones.
 - **R3. A second write path creeps in.** Mitigation: the `_fcCommitItems` extraction, plus an audit-gate assertion (extend `audit-feed-sheet-wiring-v1.sh`) that `_fdWriteStructuredMeal(` is called only from the composer commit.
 - **R4. The travel corpus is thin** (0 dinner, 1 breakfast). The narrowing falls back gracefully. A Ceres corpus PR adding travel dinners and breakfasts is recommended in parallel.
 - **R5. Logging recipe ingredients changes how Today's Meals reads.** The legacy string becomes "rice, moong dal, carrot…" rather than "Toddler Veg Khichdi" (Q5).
