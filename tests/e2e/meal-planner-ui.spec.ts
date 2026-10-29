@@ -300,12 +300,30 @@ test.describe('meal planner UI', () => {
     await expect(chip).toContainText('Toddler Veg Khichdi + Banana');
     const before = await page.evaluate(() => JSON.stringify(((window as any).feedingData || {})[(window as any).today()] || {}));
     await chip.click();
-    const r = await page.evaluate(() => ({ items: (window as any)._fcSheetInstance.items.map((i: any) => i.name), src: (window as any)._fcSheetInstance.items.every((i: any) => i.source === 'plan'),
+    const r = await page.evaluate(() => ({ items: (window as any)._fcSheetInstance.items.map((i: any) => String(i.name).toLowerCase()), src: (window as any)._fcSheetInstance.items.every((i: any) => i.source === 'plan'),
       day: JSON.stringify(((window as any).feedingData || {})[(window as any).today()] || {}) }));
     expect(r.items).toContain('banana');
     expect(r.items).toContain('rice');
     expect(r.src).toBe(true);
     expect(r.day).toBe(before);   // filled, not saved
     await expect(page.locator('.fc-planned-chip')).toHaveCount(0);   // the rail hides once items are present
+  });
+
+  test('a flagged plan entry is shown on the Planned rail and never filled by the tap (V-C-279-12)', async ({ page }) => {
+    await page.evaluate(() => {
+      const w = window as any; const t = w.today();
+      foods.push({ name: 'Banana', reaction: 'watch', date: w._mpAddDays(t, -3) });
+      w._mpSetSlot(t, 'lunch', [{ kind: 'recipe', id: 'toddler-veg-khichdi' }, { kind: 'food', name: 'banana' }]);
+      w.openQuickModal('feed');
+    });
+    await page.locator('#qlMealPills .ql-meal-pill[data-meal="lunch"]').click();
+    const rail = page.locator('.fc-rail-wrap', { has: page.locator('.fc-planned-chip') });
+    await expect(rail.locator('.rcp-safe--flag')).toContainText('You marked banana to watch');
+    await expect(rail.locator('.fc-planned-chip')).not.toHaveClass(/primary/);
+    await expect(rail).toContainText('Not added with the tap: banana');
+    await rail.locator('.fc-planned-chip').click();
+    const names = await page.evaluate(() => (window as any)._fcSheetInstance.items.map((i: any) => String(i.name).toLowerCase()));
+    expect(names).not.toContain('banana');
+    expect(names).toContain('rice');
   });
 });

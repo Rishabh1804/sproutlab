@@ -44423,7 +44423,7 @@ function _recipeDetailHtml(r, ageMonths, opts) {
   }
   h += '</div>';
   // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
-  const ss = _recipeSafetySummary(r, ageMonths);
+  const ss = (opts.lead && opts.lead[0] === 'flag') ? { level: 'flag', icon: 'warn', text: opts.lead[1] } : _recipeSafetySummary(r, ageMonths);
   h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
   // Add to plan (meal planner §1.3): the recipe's one primary action.
   // Shown only when some day in the plan window is old enough for it, and never as the filled
@@ -49462,32 +49462,52 @@ function _fcRenderPrefill(inst) {
 }
 
 // L0 — Planned rail (meal planner). When the plan holds this meal for this day, one tap fills the
-// items with it (a recipe's ingredients, plus free foods); the parent still checks and saves.
+// items with it (a recipe's ingredients, plus free foods). In the Feed sheet the parent then saves;
+// a Diet log card saves on change, as its other rails do, with the usual Undo. The slot's safety
+// lead rides on the chip, and a food it flags (a reaction she had, high-mercury fish, too young on
+// that date) is never filled by the tap: the parent adds it by hand if she really had it (V-C-279-12).
 // Hidden once items are present. The action routes through the planner's mpDispatch.
+function _mpPlanFoodFlagged(name, dateStr) {
+  const lower = String(name).toLowerCase().trim();
+  const rule = _fdAgeRule(lower);
+  return !!(_mpReactionTo(name) || _isHighMercuryFishHost(lower) || (rule && rule.minMonth > _mpAgeMonthsOn(dateStr)));
+}
 function _fcPlannedItems(dateStr, slot) {
   if (typeof _mpLiveItems !== 'function' || !_mpInWindow(dateStr) || MP_SLOTS.indexOf(slot) < 0) return null;
   const items = _mpLiveItems(dateStr, slot);
   if (!items.length) return null;
-  const names = [], labels = [];
+  const foods = [], labels = [], left = [];
+  const add = (name, g) => {
+    if (_mpPlanFoodFlagged(name, dateStr)) { if (!left.some(x => _sameFood(x, name))) left.push(name); return; }
+    if (!foods.some(f => _sameFood(f.name, name))) foods.push({ name, g });
+  };
   items.forEach(it => {
     if (it.kind === 'recipe') {
       const r = _mpRecipe(it.id);
       if (!r) return;
       labels.push(r.title);
-      (r.ingredients || []).forEach(i => { if (i && i.name) names.push(String(i.name)); });
-    } else if (it.kind === 'food' && typeof it.name === 'string') { labels.push(_mpCap(it.name)); names.push(it.name); }
+      (r.ingredients || []).forEach(i => { if (i && i.name) add(String(i.name), i.g); });
+    } else if (it.kind === 'food' && typeof it.name === 'string') { labels.push(_mpCap(it.name)); add(it.name); }
   });
-  return names.length ? { names, labels } : null;
+  if (!labels.length) return null;
+  return { foods, labels, left, lead: _mpSlotLead(items, dateStr) };
 }
 function _fcRenderPlannedRail(inst) {
   if (inst.items.length > 0 || inst.skipped) return '';
   const dateStr = (inst.variant === 'sheet') ? (_qlBackfillDate || inst.dateOf()) : inst.dateOf();
   const p = _fcPlannedItems(dateStr, inst.slot);
   if (!p) return '';
+  const flagged = p.lead && p.lead[0] === 'flag';
+  const sub = p.foods.length ? 'Tap to add: ' + p.foods.map(f => f.name).join(', ') : 'Nothing to add with one tap';
+  const leftLine = p.left.length ? '<div class="fc-repeat-sub">Not added with the tap: ' + escHtml(p.left.join(', ')) + '. Add it yourself only if she had it.</div>' : '';
+  const chip = p.foods.length
+    ? '<div class="fc-repeat-chip' + (flagged ? '' : ' primary') + ' fc-planned-chip" role="button" tabindex="0" data-action="mpApplyPlan" data-arg="' + escAttr(dateStr + '|' + inst.slot) + '">'
+    : '<div class="fc-repeat-chip fc-planned-chip" aria-disabled="true">';
   return '<div class="fc-rail-wrap"><label class="micro-label">Planned</label>' +
-         '<div class="fc-rail"><div class="fc-repeat-chip primary fc-planned-chip" role="button" tabindex="0" data-action="mpApplyPlan" data-arg="' + escAttr(dateStr + '|' + inst.slot) + '">' +
+         (p.lead ? _mpSafeRow(p.lead) : '') +
+         '<div class="fc-rail">' + chip +
            '<div class="fc-repeat-head">' + zi('calendar') + ' ' + escHtml(p.labels.join(' + ')) + '</div>' +
-           '<div class="fc-repeat-sub">Tap to add: ' + escHtml(p.names.join(', ')) + '</div>' +
+           '<div class="fc-repeat-sub">' + escHtml(sub) + '</div>' + leftLine +
          '</div></div></div>';
 }
 
@@ -51753,7 +51773,7 @@ function _mpSlotHtml(key, slot, opts) {
     const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
     const rm = open ? `<button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpRemoveEntry" data-arg="${escAttr(id)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')}</button>` : '';
     return `<div class="mp-item${r ? ' mp-item--recipe' : ''}">${_mpItemHtml(it, travel && logged === null, r ? { arg: id, open: isOpen } : null)}${rm}`
-      + (r && isOpen ? `<div class="mp-recipe-card recipe-detail">${_recipeDetailHtml(r, age, { noPlan: true })}</div>` : '') + `</div>`;
+      + (r && isOpen ? `<div class="mp-recipe-card recipe-detail">${_recipeDetailHtml(r, age, { noPlan: true, lead })}</div>` : '') + `</div>`;
   }).join('')}</div>` : '';
   let body = '';
   if (open && items.length) {
@@ -52072,16 +52092,15 @@ function _mpApplyPlanToComposer(btn, arg) {
   const inst = (typeof _fcInstanceForEl === 'function') ? _fcInstanceForEl(btn) : null;
   const [dateStr, slot] = String(arg || '').split('|');
   const p = inst && _fcPlannedItems(dateStr, slot);
-  if (!p) return;
-  inst.items = [];
-  const seen = new Set();
-  p.names.forEach(n => {
-    const k = String(n).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim();
-    if (!k || seen.has(k)) return;
-    seen.add(k);
-    const d = window._fdResolveQtyDefaults(n);
-    inst.items.push({ name: n, qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(n), source: 'plan' });
+  if (!p || !p.foods.length) return;
+  const cat = window._FOOD_QTY_CATEGORY_DEFAULTS || {};
+  // The diary's own shapes: capitalised names, and a recipe's pinch of spice or spoon of ghee sized as
+  // such rather than as a full serving (V-C-279-15, V-C-279-16).
+  inst.items = p.foods.map(f => {
+    const d = (/\b(oil|ghee|butter)\b/i.test(f.name) && cat['fat-cooking']) || (f.g != null && f.g <= 3 && cat.spice) || window._fdResolveQtyDefaults(f.name);
+    return { name: _fcCapFirst(f.name), qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(f.name), source: 'plan' };
   });
+  if (p.left.length) showQLToast(`Left out ${escHtml(p.left.join(', '))}: add it yourself only if she had it`, 5000);
   inst.sourceFlow = (inst.variant === 'card') ? 'diet-tab' : 'fob-plan';
   _fcAfterItemChange(inst);
 }
