@@ -931,7 +931,8 @@ function _recipeProw(variant, icon, title, teaser, bodyHtml, open) {
 // ingredient row + an always-visible safety summary lead, then progressive-
 // disclosure rows (How to make it · Dos & don'ts · Safety ingredient-by-ingredient
 // · Guidance) — teasers tell what's inside; content invited, not dumped.
-function _recipeDetailHtml(r, ageMonths) {
+function _recipeDetailHtml(r, ageMonths, opts) {
+  opts = opts || {};
   let h = '';
   // (a) Ingredients — the at-a-glance, fingerprint-coloured pills (always visible).
   h += '<div class="recipe-chips">';
@@ -951,7 +952,7 @@ function _recipeDetailHtml(r, ageMonths) {
   // Add to plan (meal planner §1.3): the recipe's one primary action.
   // Shown only when some day in the plan window is old enough for it, and never as the filled
   // primary under a flag (§5, V-V-279-5).
-  if (typeof _mpWindow === 'function' && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(_mpWindow(today()).hi))
+  if (!opts.noPlan && typeof _mpWindow === 'function' && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(_mpWindow(today()).hi))
     h += `<div class="rcp-plan"><button class="btn ${ss.level === 'flag' ? 'btn-ghost' : 'btn-sage'} btn-compact" data-action="mpAddRecipe" data-arg="${escAttr(r.id)}">${zi('calendar')} Add to plan</button></div>`;
   // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
   // amount to OFFER — a guide, never a target; appetite leads. An age-gated
@@ -5898,6 +5899,7 @@ function _fcRender(inst) {
   inst.container.setAttribute('data-fc-slot', inst.slot);
   if (inst.variant === 'sheet') {
     inst.container.innerHTML =
+      _fcRenderPlannedRail(inst) +
       _fcRenderRepeatRail(inst) +
       _fcRenderCombosRail(inst) +
       _fcRenderItemsList(inst) +
@@ -5913,7 +5915,8 @@ function _fcRender(inst) {
     html += '<div class="fc-skipped-note">Marked as skipped</div>';
   } else {
     var hasItems = inst.items.length > 0;
-    html += _fcRenderPrefill(inst);
+    var planned = _fcRenderPlannedRail(inst);
+    html += planned || _fcRenderPrefill(inst);   // the plan outranks the guess
     if (!hasItems && inst.expanded) {
       html += _fcRenderRepeatRail(inst);
       html += _fcRenderCombosRail(inst);
@@ -5980,6 +5983,36 @@ function _fcRenderPrefill(inst) {
            '<button class="fc-prefill-edit" data-action="fcEditPrefill" type="button">Edit first</button>' +
          '</div>' +
          '</div>';
+}
+
+// L0 — Planned rail (meal planner). When the plan holds this meal for this day, one tap fills the
+// items with it (a recipe's ingredients, plus free foods); the parent still checks and saves.
+// Hidden once items are present. The action routes through the planner's mpDispatch.
+function _fcPlannedItems(dateStr, slot) {
+  if (typeof _mpLiveItems !== 'function' || !_mpInWindow(dateStr) || MP_SLOTS.indexOf(slot) < 0) return null;
+  const items = _mpLiveItems(dateStr, slot);
+  if (!items.length) return null;
+  const names = [], labels = [];
+  items.forEach(it => {
+    if (it.kind === 'recipe') {
+      const r = _mpRecipe(it.id);
+      if (!r) return;
+      labels.push(r.title);
+      (r.ingredients || []).forEach(i => { if (i && i.name) names.push(String(i.name)); });
+    } else if (it.kind === 'food' && typeof it.name === 'string') { labels.push(_mpCap(it.name)); names.push(it.name); }
+  });
+  return names.length ? { names, labels } : null;
+}
+function _fcRenderPlannedRail(inst) {
+  if (inst.items.length > 0 || inst.skipped) return '';
+  const dateStr = (inst.variant === 'sheet') ? (_qlBackfillDate || inst.dateOf()) : inst.dateOf();
+  const p = _fcPlannedItems(dateStr, inst.slot);
+  if (!p) return '';
+  return '<div class="fc-rail-wrap"><label class="micro-label">Planned</label>' +
+         '<div class="fc-rail"><div class="fc-repeat-chip primary fc-planned-chip" role="button" tabindex="0" data-action="mpApplyPlan" data-arg="' + escAttr(dateStr + '|' + inst.slot) + '">' +
+           '<div class="fc-repeat-head">' + zi('calendar') + ' ' + escHtml(p.labels.join(' + ')) + '</div>' +
+           '<div class="fc-repeat-sub">Tap to add: ' + escHtml(p.names.join(', ')) + '</div>' +
+         '</div></div></div>';
 }
 
 // L1 — Repeat rail. Hidden once items present (A6). Lazy: only invoked when
@@ -7990,6 +8023,7 @@ let _mpWeek = null;             // Monday of the shown week
 let _mpOpenSlot = null;         // the slot opened on the selected day card
 let _mpHintsHidden = new Set(); // day keys whose iron hint was dismissed this session
 let _mpSheetState = null;       // { kind, ... } while a planner sheet is open
+let _mpOpenEntry = null;        // 'key|slot|i' of the planned recipe whose card is open
 let _mpRenderPending = false;   // a sync render arrived while a sheet was open
 
 const _MP_WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -8182,22 +8216,25 @@ function _mpTravelMode(r) {
   return (r.travel.how === 'spot' && _MP_WATER_FLASK.has(r.id)) ? ['clock', 'Mixed on the spot', '', ''] : _MP_MODE[r.travel.how];
 }
 // A planned recipe: the recipe-row standard at slot size (rail, fingerprint fade, food icon).
-function _mpRecipeEntry(r, travelCue) {
+function _mpRecipeEntry(r, travelCue, act) {
   const fp = _recipeFingerprint(r);
   const style = (fp ? `--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '') + `--rc-rail:${_recipeRailColor(_recipePrimaryGroup(r))}`;
   const n = (r.choking || []).length;
   const mode = travelCue ? _mpTravelMode(r) : null;
   const meta = (mode ? `<span class="mp-cue">${zi(mode[0])} ${escHtml(mode[1])}${mode[3] ? ' · ' + escHtml(mode[3]) : ''}</span>` : '')
     + (n ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${n} ${n === 1 ? 'step' : 'steps'}</span>` : '');
-  return `<span class="mp-entry${fp ? ' mp-entry--gen' : ''}" style="${style}">${_mpZif(((r.ingredients || [])[0] || {}).name)}`
-    + `<span class="mp-entry-main"><span class="mp-entry-t">${escHtml(r.title)}</span>${meta ? `<span class="mp-entry-meta">${meta}</span>` : ''}</span></span>`;
+  const inner = `${_mpZif(((r.ingredients || [])[0] || {}).name)}`
+    + `<span class="mp-entry-main"><span class="mp-entry-t">${escHtml(r.title)}</span>${meta ? `<span class="mp-entry-meta">${meta}</span>` : ''}</span>`;
+  if (!act) return `<span class="mp-entry${fp ? ' mp-entry--gen' : ''}" style="${style}">${inner}</span>`;
+  return `<button class="mp-entry mp-entry--btn${fp ? ' mp-entry--gen' : ''}" style="${style}" data-action="mpToggleEntry" data-arg="${escAttr(act.arg)}" aria-expanded="${act.open ? 'true' : 'false'}">`
+    + inner + `<span class="mp-entry-chev">${zi('chevron-down')}</span></button>`;
 }
 function _mpFoodChip(name) {
   const d = _recipeChipDomain(name);
   return `<span class="recipe-chip${d ? ' fdom-chip--' + d : ''}">${_mpZif(name)}${escHtml(name)}</span>`;
 }
-function _mpItemHtml(it, travelCue) {
-  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? _mpRecipeEntry(r, travelCue) : `<span class="recipe-chip">${zi('info')} Recipe no longer in the list</span>`; }
+function _mpItemHtml(it, travelCue, act) {
+  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? _mpRecipeEntry(r, travelCue, act) : `<span class="recipe-chip">${zi('info')} Recipe no longer in the list</span>`; }
   if (it.kind === 'food') return _mpFoodChip(it.name);
   return `<span class="recipe-chip">${zi('info')} Not shown in this version</span>`;
 }
@@ -8208,7 +8245,7 @@ function _mpItemLabel(it) {
 function _mpSafeRow(lead) {
   return `<div class="rcp-safe rcp-safe--${lead[0]}">${zi(lead[0] === 'flag' ? 'alert-circle' : 'warn')} <span>${escHtml(lead[1])}</span></div>`;
 }
-function _mpOl(lines) { return `<ol class="mp-pack-list">${lines.map(l => `<li>${escHtml(l)}</li>`).join('')}</ol>`; }
+function _mpOl(lines) { return `<ol class="recipe-steps">${lines.map(l => `<li>${escHtml(l)}</li>`).join('')}</ol>`; }
 function _mpKeepsLine(r) {
   const m = _MP_MODE[r.travel.how];
   return `<div class="rcp-serving">${zi(m[0])} <span><strong>How it keeps:</strong> ${escHtml(r.travel.keeps)}${m[2] ? ` <span class="rcp-serving-src">${m[2]}</span>` : ''}</span></div>`;
@@ -8230,18 +8267,28 @@ function _mpSlotHtml(key, slot, opts) {
   const flagged = lead && lead[0] === 'flag';
   // Logging from the plan lands in P2; until then a logged slot shows its diary time.
   const act = logged !== null ? `<span class="mp-logged">${zi('check')} Logged${logged ? ' · ' + escHtml(logged) : ''}</span>`
-    : (!items.length ? `<button class="btn btn-ghost btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add ${meta.label.toLowerCase()}</button>` : '');
-  const entries = items.length ? `<div class="mp-entries" data-action="mpToggleSlot" data-arg="${slot}">${items.map(it => _mpItemHtml(it, travel && logged === null)).join('')}</div>` : '';
+    : (!items.length ? `<button class="btn btn-soft btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add ${meta.label.toLowerCase()}</button>` : '');
+  // Each planned recipe is a button that opens its own recipe card (steps, chew, safety) in place;
+  // an open slot gives every item its own remove (Architect review, #279).
+  const age = _mpAgeMonthsOn(key);
+  const entries = items.length ? `<div class="mp-entries">${items.map((it, i) => {
+    const id = key + '|' + slot + '|' + i;
+    const isOpen = _mpOpenEntry === id;
+    const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
+    const rm = open ? `<button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpRemoveEntry" data-arg="${escAttr(id)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')}</button>` : '';
+    return `<div class="mp-item${r ? ' mp-item--recipe' : ''}">${_mpItemHtml(it, travel && logged === null, r ? { arg: id, open: isOpen } : null)}${rm}`
+      + (r && isOpen ? `<div class="mp-recipe-card recipe-detail">${_recipeDetailHtml(r, age, { noPlan: true })}</div>` : '') + `</div>`;
+  }).join('')}</div>` : '';
   let body = '';
   if (open && items.length) {
-    body += `<div class="mp-chips">${items.map((it, i) => `<button class="btn btn-ghost btn-compact" data-action="mpRemoveEntry" data-arg="${escAttr(key + '|' + slot + '|' + i)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')} ${escHtml(_mpItemLabel(it))}</button>`).join('')}`
-      + (items.length < 3 ? `<button class="btn btn-ghost btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add</button>` : '') + `</div>`;
+    if (items.length < 3) body += `<div class="mp-chips"><button class="btn btn-soft btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add</button></div>`;
     let rows = '';
-    for (const it of items) {
+    items.forEach((it, i) => {
       const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
-      if (r && (r.choking || []).length) rows += _recipeProw('chew', 'tooth', `Make it safe to chew: ${r.title}`, `${r.choking.length} ${r.choking.length === 1 ? 'step' : 'steps'}`, _mpOl(r.choking), true);
-      if (travel && r && r.travel) rows += _recipeProw('travel', 'timer', 'Packing', `${r.travel.pack.length} things`, _mpOl(r.travel.pack), false) + _mpServeProw(r, true);
-    }
+      if (!r || _mpOpenEntry === key + '|' + slot + '|' + i) return;   // an open recipe card already carries these
+      if ((r.choking || []).length) rows += _recipeProw('chew', 'tooth', `Make it safe to chew: ${r.title}`, `${r.choking.length} ${r.choking.length === 1 ? 'step' : 'steps'}`, _mpOl(r.choking), true);
+      if (travel && r.travel) rows += _recipeProw('travel', 'timer', 'Packing', `${r.travel.pack.length} things`, _mpOl(r.travel.pack), false) + _mpServeProw(r, true);
+    });
     if (rows) body += `<div class="rcp-prows">${rows}</div>`;
   }
   if (travel) {
@@ -8314,13 +8361,13 @@ function _mpDayCardHtml(key) {
   }
   const planned = MP_SLOTS.filter(s => _mpLiveItems(key, s).length).length;
   const hint = (planned >= 3 && !_mpDayHasIron(key) && !_mpHintsHidden.has(key))
-    ? `<div class="mp-hint">${zi('info')}<span>No iron-rich food planned ${key === today() ? 'today' : 'for ' + escHtml(_MP_WD[_mpDate(key).getDay()])}. Ragi, dal, poha or palak would add some.</span><button class="btn btn-ghost btn-compact mp-iconbtn" data-action="mpDismissHint" data-arg="${escAttr(key)}" aria-label="Dismiss">${zi('close')}</button></div>` : '';
+    ? `<div class="mp-hint">${zi('info')}<span>No iron-rich food planned ${key === today() ? 'today' : 'for ' + escHtml(_MP_WD[_mpDate(key).getDay()])}. Ragi, dal, poha or palak would add some.</span><button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpDismissHint" data-arg="${escAttr(key)}" aria-label="Dismiss">${zi('close')}</button></div>` : '';
   return `<div class="mp-daycard${travel ? ' mp-daycard--travel' : ''}">`
     + `<div class="mp-dayhead"><span class="mp-daytitle">${escHtml(_mpDayTitle(key))}</span>`
-    + `<button class="btn ${travel ? 'btn-peach' : 'btn-ghost'} btn-compact" data-action="mpToggleTravel" data-arg="${escAttr(key)}" aria-pressed="${travel ? 'true' : 'false'}">${zi('bag')} Travel day: ${travel ? 'on' : 'off'}</button></div>`
+    + `<button class="btn ${travel ? 'btn-peach' : 'btn-soft btn-soft--peach'} btn-compact" data-action="mpToggleTravel" data-arg="${escAttr(key)}" aria-pressed="${travel ? 'true' : 'false'}">${zi('bag')} Travel day: ${travel ? 'on' : 'off'}</button></div>`
     + (travel ? _mpPackHtml(key) : '') + lead + slots + tomorrow + hint
-    + `<div class="mp-dayfoot"><button class="btn btn-ghost btn-compact" data-action="mpCopyDay" data-arg="${escAttr(key)}">${zi('copy')} Copy day</button>`
-    + `<button class="btn btn-ghost btn-compact" data-action="mpClearDay" data-arg="${escAttr(key)}">${zi('close')} Clear day</button></div></div>`;
+    + `<div class="mp-dayfoot"><button class="btn btn-soft btn-compact" data-action="mpCopyDay" data-arg="${escAttr(key)}">${zi('copy')} Copy day</button>`
+    + `<button class="btn btn-soft btn-soft--rose btn-compact" data-action="mpClearDay" data-arg="${escAttr(key)}">${zi('close')} Clear day</button></div></div>`;
 }
 
 // ── The section: header, strip, card ──
@@ -8355,9 +8402,9 @@ function renderMealPlanSection() {
   const prevOk = _mpAddDays(_mpWeek, -7) >= win.lo, nextOk = _mpAddDays(_mpWeek, 7) <= win.hi;
   const isThisWeek = _mpWeek === thisMon;
   let h = `<div class="mp-section"><div class="mp-head">${zi('calendar')}<span class="mp-head-title">${isThisWeek ? 'This week\'s plan' : 'Week of ' + escHtml(_mpShortDay(_mpWeek).slice(4))}</span><div class="mp-weeknav">`
-    + (isThisWeek ? '' : '<button class="btn btn-ghost btn-compact" data-action="mpThisWeek">This week</button>')
-    + `<button class="btn btn-ghost btn-compact mp-navbtn mp-navbtn--prev" data-action="mpWeek" data-arg="-1" aria-label="Previous week"${prevOk ? '' : ' disabled'}>${zi('arrow-right')}</button>`
-    + `<button class="btn btn-ghost btn-compact mp-navbtn" data-action="mpWeek" data-arg="1" aria-label="Next week"${nextOk ? '' : ' disabled'}>${zi('arrow-right')}</button></div>`
+    + (isThisWeek ? '' : '<button class="btn btn-soft btn-compact" data-action="mpThisWeek">This week</button>')
+    + `<button class="btn btn-soft btn-compact mp-navbtn mp-navbtn--prev" data-action="mpWeek" data-arg="-1" aria-label="Previous week"${prevOk ? '' : ' disabled'}>${zi('arrow-right')}</button>`
+    + `<button class="btn btn-soft btn-compact mp-navbtn" data-action="mpWeek" data-arg="1" aria-label="Next week"${nextOk ? '' : ' disabled'}>${zi('arrow-right')}</button></div>`
     + (!nextOk ? '<div class="mp-navnote">You can plan up to 8 weeks ahead.</div>' : !prevOk ? '<div class="mp-navnote">Plans older than 4 weeks are cleared.</div>' : '') + `</div>`;
   if (firstUse) h += `<div class="mp-legend"><span><span class="mp-fill mp-fill--full"></span> All meals planned</span><span><span class="mp-fill mp-fill--part"></span> Some</span><span><span class="mp-fill mp-fill--none"></span> None</span></div>`;
   h += `<div class="mp-strip" role="group" aria-label="Days of the week">`;
@@ -8399,6 +8446,7 @@ function _mpOpenSheet(state, html) {
   sh.innerHTML = html;
   document.body.appendChild(ov);
   document.body.appendChild(sh);
+  document.body.style.overflow = 'hidden';   // the page behind holds still (same lock as the other sheets)
   requestAnimationFrame(() => sh.classList.add('open'));
   const input = sh.querySelector('.mp-search');
   if (input) input.addEventListener('input', () => _mpPickerSearch(input.value));
@@ -8406,12 +8454,13 @@ function _mpOpenSheet(state, html) {
 function _mpCloseSheet(silent) {
   ['mpSheet', 'mpSheetOverlay'].forEach(id => { const el = document.getElementById(id); if (el) el.remove(); });
   const was = !!_mpSheetState;
+  if (was) document.body.style.overflow = '';
   _mpSheetState = null;
   if (was && !silent) { _mpRenderPending = false; renderMealPlanSection(); }
 }
 function _mpSheetHead(title) {
   return `<div class="ql-sheet-handle"></div><div class="mp-sheet-head"><div class="mp-picker-title">${escHtml(title)}</div>`
-    + `<button class="btn btn-ghost btn-compact mp-iconbtn" data-action="mpCloseSheet" aria-label="Close">${zi('close')}</button></div>`;
+    + `<button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpCloseSheet" aria-label="Close">${zi('close')}</button></div>`;
 }
 
 // ── The slot picker (§4.4; CL-5) ──
@@ -8445,7 +8494,7 @@ function _mpPickerBody(key, slot) {
   const travel = _mpTravelOn(_mpPlan().days[key]);
   const current = _mpLiveItems(key, slot);
   let h = '';
-  if (current.length) h += `<div class="mp-chips">${current.map((it, i) => `<button class="btn btn-ghost btn-compact" data-action="mpRemoveEntry" data-arg="${escAttr(key + '|' + slot + '|' + i)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')} ${escHtml(_mpItemLabel(it))}</button>`).join('')}</div>`;
+  if (current.length) h += `<div class="mp-chips">${current.map((it, i) => `<button class="btn btn-soft btn-compact" data-action="mpRemoveEntry" data-arg="${escAttr(key + '|' + slot + '|' + i)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')} ${escHtml(_mpItemLabel(it))}</button>`).join('')}</div>`;
   if (current.length >= 3) return h + `<p class="mp-empty">A slot holds up to 3 foods. Remove one to add another.</p>`;
   h += `<input class="mp-search" type="search" placeholder="Search recipes and foods" aria-label="Search recipes and foods" value="${escAttr(st.q || '')}">`;
   h += `<div id="mpPickerList">${_mpPickerList(key, slot)}</div>`;
@@ -8542,6 +8591,24 @@ function _mpOpenAddRecipe(id, from) {
   _mpSheetState = null;
   _mpOpenSheet(state, html);
 }
+// The composer's Planned rail: fill the meal with the plan (the parent checks and saves).
+function _mpApplyPlanToComposer(btn, arg) {
+  const inst = (typeof _fcInstanceForEl === 'function') ? _fcInstanceForEl(btn) : null;
+  const [dateStr, slot] = String(arg || '').split('|');
+  const p = inst && _fcPlannedItems(dateStr, slot);
+  if (!p) return;
+  inst.items = [];
+  const seen = new Set();
+  p.names.forEach(n => {
+    const k = String(n).toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').trim();
+    if (!k || seen.has(k)) return;
+    seen.add(k);
+    const d = window._fdResolveQtyDefaults(n);
+    inst.items.push({ name: n, qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(n), source: 'plan' });
+  });
+  inst.sourceFlow = (inst.variant === 'card') ? 'diet-tab' : 'fob-plan';
+  _fcAfterItemChange(inst);
+}
 function _mpSheetTop() { const s = document.querySelector('.mp-sheet'); if (s) s.scrollTop = 0; }
 function _mpAddBody() {
   const st = _mpSheetState;
@@ -8554,7 +8621,7 @@ function _mpAddBody() {
     const key = _mpAddDays(st.from, i);
     const ok = _mpInWindow(key) && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(key);
     const d = _mpDate(key);
-    h += `<button class="btn btn-ghost btn-compact mp-daypick-btn" data-action="mpAddToDay" data-arg="${escAttr(key)}"${ok ? '' : ' disabled'} aria-label="${escAttr(_mpDayTitle(key) + (ok ? '' : ', not yet: from ' + _recipeEffectiveMinAge(r) + ' months'))}">`
+    h += `<button class="btn btn-soft btn-compact mp-daypick-btn" data-action="mpAddToDay" data-arg="${escAttr(key)}"${ok ? '' : ' disabled'} aria-label="${escAttr(_mpDayTitle(key) + (ok ? '' : ', not yet: from ' + _recipeEffectiveMinAge(r) + ' months'))}">`
       + `<span class="mp-day-wd">${key === t ? 'Today' : _MP_WD[d.getDay()].slice(0, 3)}</span><span class="mp-day-num">${d.getDate()}</span></button>`;
   }
   h += `</div>`;
@@ -8564,7 +8631,7 @@ function _mpAddBody() {
     h = `<p class="mp-empty">${escHtml(r.title)} can be planned from ${opens ? escHtml(opens) : minAge + ' months'}.</p>` + h;
   }
   const later = _mpAddDays(st.from, 7);
-  if (_mpInWindow(later) && minAge <= _mpAgeMonthsOn(_mpWindow(t).hi)) h += `<button class="btn btn-ghost btn-compact" data-action="mpAddLater">Later days ${zi('arrow-right')}</button>`;
+  if (_mpInWindow(later) && minAge <= _mpAgeMonthsOn(_mpWindow(t).hi)) h += `<button class="btn btn-soft btn-compact" data-action="mpAddLater">Later days ${zi('arrow-right')}</button>`;
   return h;
 }
 
@@ -8577,10 +8644,10 @@ function _mpOpenCopy(key) {
   for (let i = 0; i < 7; i++) {
     const t = _mpAddDays(mon, i);
     if (t === key || !_mpInWindow(t)) continue;
-    days += `<button class="btn btn-ghost btn-compact" data-action="mpCopyTo" data-arg="${escAttr(t)}">${escHtml(_mpShortDay(t))}</button>`;
+    days += `<button class="btn btn-soft btn-compact" data-action="mpCopyTo" data-arg="${escAttr(t)}">${escHtml(_mpShortDay(t))}</button>`;
   }
   const nextSame = _mpAddDays(key, 7);
-  if (_mpInWindow(nextSame)) days += `<button class="btn btn-ghost btn-compact" data-action="mpCopyTo" data-arg="${escAttr(nextSame)}">Next week, ${escHtml(_mpShortDay(nextSame))}</button>`;
+  if (_mpInWindow(nextSame)) days += `<button class="btn btn-soft btn-compact" data-action="mpCopyTo" data-arg="${escAttr(nextSame)}">Next week, ${escHtml(_mpShortDay(nextSame))}</button>`;
   const html = _mpSheetHead(`Copy ${_mpDayTitle(key)} to…`) + `<div class="mp-picker"><p class="mp-empty">Copying replaces that day's meals. Its travel setting stays.</p><div class="mp-chips">${days}</div></div>`;
   _mpSheetState = null;
   _mpOpenSheet(state, html);
@@ -8607,7 +8674,7 @@ function _mpDoCopy(from, to) {
 function mpDispatch(action, arg, btn) {
   const parts = String(arg || '').split('|');
   switch (action) {
-    case 'mpSelectDay': if (_mpInWindow(arg)) { _mpSel = arg; _mpOpenSlot = null; save('ziva_mp_seen', true); renderMealPlanSection(); } break;
+    case 'mpSelectDay': if (_mpInWindow(arg)) { _mpSel = arg; _mpOpenSlot = null; _mpOpenEntry = null; save('ziva_mp_seen', true); renderMealPlanSection(); } break;
     case 'mpWeek': {
       const target = _mpAddDays(_mpWeek, 7 * (parseInt(arg, 10) || 0));
       const win = _mpWindow(today());
@@ -8616,6 +8683,8 @@ function mpDispatch(action, arg, btn) {
     }
     case 'mpThisWeek': _mpSel = today(); _mpWeek = _mpWeekStart(_mpSel); _mpOpenSlot = null; renderMealPlanSection(); break;
     case 'mpToggleSlot': _mpOpenSlot = (_mpOpenSlot === arg) ? null : arg; renderMealPlanSection(); break;
+    case 'mpToggleEntry': _mpOpenEntry = (_mpOpenEntry === arg) ? null : arg; renderMealPlanSection(); break;
+    case 'mpApplyPlan': _mpApplyPlanToComposer(btn, arg); break;
     case 'mpToggleTravel': {
       const on = !_mpTravelOn(_mpPlan().days[arg]);
       if (_mpSetTravel(arg, on)) renderMealPlanSection();
@@ -8646,6 +8715,7 @@ function mpDispatch(action, arg, btn) {
       const items = _mpLiveItems(key, slot).slice();
       const removed = items.splice(parseInt(i, 10), 1)[0];
       if (!removed) return;
+      _mpOpenEntry = null;
       const before = _mpLiveItems(key, slot).slice();
       _mpSetSlot(key, slot, items);
       if (_mpSheetState && _mpSheetState.kind === 'picker') _mpRefreshPicker(); else renderMealPlanSection();

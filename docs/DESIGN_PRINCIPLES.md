@@ -543,11 +543,12 @@ Every tappable action is one of these house components, never a new text-button,
 |---|---|---|
 | Primary action | `.btn .btn-{domain}` (filled: `btn-sage`, `btn-peach`, `btn-rose`…) | One per card or sheet; on new surfaces, one per screen. **Never promoted onto an entry carrying a rose flag** — the flag stays the loudest element |
 | Primary, hero CTA (legacy) | `.btn-primary .bp-{domain}` | 48px; new work prefers `.btn .btn-{domain}` |
-| Secondary actions | `.btn .btn-ghost` (+ `.btn-compact` inline) | Copy, Clear, Add, Cancel, "Plan anyway", week navigation |
+| Secondary actions on a card | `.btn .btn-soft` (+ `.btn-compact` inline) — tinted and raised; sage by default, `btn-soft--peach` for travel, `btn-soft--rose` for clearing | Add, Copy day, Clear day, week navigation, a sheet's day and slot picks. Added 2026-10-29 after Architect review: ghost buttons read as flat black-and-white on a card |
+| Dismissive secondary | `.btn .btn-ghost` | Cancel in a confirm, "Plan anyway" |
 | A single standalone on/off action | `.btn .btn-{domain}` with `aria-pressed="true"`; off is `.btn-ghost` | State also in words ("Travel day: on"). New convention (2026-10-29). Filter and choice groups use the Chip System `.chip` instead |
 | Suggestions to act on | `.sg-chip` | Never the planned-item / food-chip shape |
 | Confirm dialogs | `confirmAction()` / the `.confirm-box` + `.confirm-btns` shell | Ghost secondary, coloured primary; destructive → `btn-rose` |
-| Icon-only actions | `.btn .btn-ghost` round, with `aria-label` | Dismiss, previous / next |
+| Icon-only actions | `.btn .btn-soft` round on a card, `.btn-ghost` in a dialog; always with `aria-label` | Remove, dismiss, previous / next |
 
 Every action **must** meet HR-8 (≥ 36 px; 44 px is the target on primary surfaces). `.btn` is 40 px, `.btn-compact` 32 px and `.sg-chip` about 24 px by default, so the surface adds the floor around them; it may not otherwise restyle them. Hover feedback is scoped to `@media (hover:hover)`.
 
@@ -880,6 +881,7 @@ The Diet→Library "living shelf" rework (`docs/design/library-redesign/`, wirin
 | 1.5 | 4 Jun 2026 | **Prefix registry** — registered the Library-redesign prefixes `lib-*` (living shelf / wings / pop-up / deck / guides), `fp-*` (food pop-up + verdict band), and reserved `ec-*` (Emergency Card, design stage). **Reconcile with main #219 "Lean landing page":** main registered `ld-*` for Landing; this branch's Safety-guides guide-detail classes were renamed `ld-*` → `lib-guide-*` to vacate the collision. No content/colour-system change. |
 | 1.6 | 5 Jun 2026 | **§9.3 evolution** — the quantity-weighted fingerprint is now the language of *every* recipe card (hero **and** rows), not hero-only; the hero keeps the animated sheen + corner watermark as its distinction, rows carry the static fingerprint. **New §11 — the 6-second rule (text blocks):** lead with the always-visible answer (safety-first), progressive-disclose the rest in teaser-bearing `*-prow` rows, never dump. Registered `rcp-*` (recipe detail: `rcp-safe` lead band + `rcp-prow` disclosure rows). From the Recipes Tier-C render review (PR #228 follow-up). |
 | 1.8 | 29 Oct 2026 | **§5 — Button System.** Every action uses a house button component (role → component table); a surface adds the HR-8 floor but never restyles one; the screen's primary is never promoted onto a rose-flagged entry; `.btn` / `.btn-ghost` hover scoped to `@media (hover:hover)`. From the meal-planner mock-ups (PR #278). |
+| 1.9 | 29 Oct 2026 | **§5 — `.btn-soft`.** After Architect review of the wired meal planner, a tinted, raised secondary for actions on a card; `.btn-ghost` stays for dismissive actions in dialogs. The `.btn-ghost` base rule moves out of `@media (hover:hover)`, where it had left phones showing ghost buttons as bare text. Food chips keep their food-group colour and gain a slight lift; `.recipe-steps` get numbered discs (amber for chew, peach for packing). PR #279. |
 | 1.7 | 5 Jun 2026 | **§9.7 — responsive-feeding portions.** Added age-adaptive serving guidance to the recipe detail (`rcp-serving`): the amount to *offer* by age band (WHO IYCF / WHO-PAHO / IAP), framed responsive-feeding ("a guide, not a target; let her appetite lead") — never a quota. Age-gated recipes frame the portion at their own start age. |
 
 ---

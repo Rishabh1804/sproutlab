@@ -217,15 +217,16 @@ test.describe('meal planner UI', () => {
 
   test('travel day: a non-packing recipe is named in its note, and a packed free food carries none (V-V-279-7)', async ({ page }) => {
     const d = await day(page, 1);
-    const notes = await page.evaluate((k) => {
+    await page.evaluate((k) => {
       const w = window as any;
       w._mpSetTravel(k, true);
       w._mpSetSlot(k, 'lunch', [{ kind: 'recipe', id: 'travel-veg-dalia-flask' }, { kind: 'food', name: 'banana' }]);
-      w._mpSetSlot(k, 'dinner', [{ kind: 'recipe', id: 'toddler-veg-khichdi' }]);
+      w._mpSetSlot(k, 'dinner', [{ kind: 'recipe', id: 'sweet-potato-moong-mash' }]);   // not a packing recipe
       w.mpDispatch('mpSelectDay', k);
-      return [...document.querySelectorAll('#dietPlanRoot .mp-gap-note')].map(e => e.textContent || '').filter(n => /not a packing recipe/.test(n));
     }, d);
-    expect(notes).toHaveLength(1);
+    const read = () => page.evaluate(() => [...document.querySelectorAll('#dietPlanRoot .mp-gap-note')].map(e => e.textContent || '').filter(n => /not a packing recipe/.test(n)));
+    await expect.poll(read).toHaveLength(1);   // the render can land a beat later under load
+    const notes = await read();
     expect(notes[0]).toMatch(/^.+: not a packing recipe — serve it fresh where you are\.$/);
     expect(notes[0]).not.toMatch(/Dalia|banana/i);
   });
@@ -241,5 +242,70 @@ test.describe('meal planner UI', () => {
     });
     if (r.late !== null) expect(r.late).toBe(false);
     expect(r.ok).toBe(true);
+  });
+
+  test('a planned recipe opens its own recipe card in the slot, with numbered steps (Architect review)', async ({ page }) => {
+    await page.evaluate(() => {
+      const w = window as any; const t = w.today();
+      w._mpSetSlot(t, 'lunch', [{ kind: 'recipe', id: 'toddler-veg-khichdi' }, { kind: 'food', name: 'banana' }]);
+      w.renderMealPlanSection();
+    });
+    const entry = page.locator('#dietPlanRoot .mp-entry--btn', { hasText: 'Toddler Veg Khichdi' });
+    await expect(entry).toHaveAttribute('aria-expanded', 'false');
+    await entry.click();
+    const card = page.locator('#dietPlanRoot .mp-recipe-card');
+    await expect(card).toBeVisible();
+    await expect(card.locator('.rcp-prow--steps')).toHaveCount(1);
+    await expect(card.locator('[data-action="mpAddRecipe"]')).toHaveCount(0);   // already planned: no Add to plan
+    const disc = await card.locator('.recipe-steps li').first().evaluate(el => getComputedStyle(el, '::before').content);
+    expect(disc).toMatch(/counter/);
+  });
+
+  test('chips and planner buttons carry colour on a touch screen; the ghost base style is not hover-only', async ({ page }) => {
+    await page.evaluate(() => {
+      const w = window as any; w._mpSetSlot(w.today(), 'lunch', [{ kind: 'food', name: 'banana' }]); w.renderMealPlanSection();
+    });
+    const r = await page.evaluate(() => {
+      const chip = document.querySelector('#dietPlanRoot .recipe-chip.fdom-chip--fruits')!;
+      const soft = document.querySelector('#dietPlanRoot .btn-soft')!;
+      return { chipColor: getComputedStyle(chip).color, chipShadow: getComputedStyle(chip).boxShadow, softBg: getComputedStyle(soft).backgroundColor,
+        ghostRuleOutsideHover: [...document.styleSheets].some(ss => { try { return [...ss.cssRules].some((r: any) => r.selectorText === '.btn-ghost' && !(r.parentRule && r.parentRule.media)); } catch { return false; } }) };
+    });
+    expect(r.chipColor).not.toBe('rgb(61, 44, 46)');
+    expect(r.chipShadow).not.toBe('none');
+    expect(r.softBg).not.toBe('rgba(0, 0, 0, 0)');
+    expect(r.ghostRuleOutsideHover).toBe(true);
+  });
+
+  test('an open planner sheet holds the page still, and closing it lets the page scroll again', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      w.mpDispatch('mpOpenPicker', w.today() + '|breakfast');
+      const during = document.body.style.overflow;
+      w.mpDispatch('mpCloseSheet');
+      return { during, after: document.body.style.overflow, contain: getComputedStyle(document.createElement('div')).overscrollBehavior !== undefined };
+    });
+    expect(r.during).toBe('hidden');
+    expect(r.after).toBe('');
+  });
+
+  test('the logging screen offers the planned meal; one tap fills the items, nothing is saved until Save', async ({ page }) => {
+    await page.evaluate(() => {
+      const w = window as any; const t = w.today();
+      w._mpSetSlot(t, 'lunch', [{ kind: 'recipe', id: 'toddler-veg-khichdi' }, { kind: 'food', name: 'banana' }]);
+      w.openQuickModal('feed');
+    });
+    await page.locator('#qlMealPills .ql-meal-pill[data-meal="lunch"]').click();
+    const chip = page.locator('.fc-planned-chip');
+    await expect(chip).toContainText('Toddler Veg Khichdi + Banana');
+    const before = await page.evaluate(() => JSON.stringify(((window as any).feedingData || {})[(window as any).today()] || {}));
+    await chip.click();
+    const r = await page.evaluate(() => ({ items: (window as any)._fcSheetInstance.items.map((i: any) => i.name), src: (window as any)._fcSheetInstance.items.every((i: any) => i.source === 'plan'),
+      day: JSON.stringify(((window as any).feedingData || {})[(window as any).today()] || {}) }));
+    expect(r.items).toContain('banana');
+    expect(r.items).toContain('rice');
+    expect(r.src).toBe(true);
+    expect(r.day).toBe(before);   // filled, not saved
+    await expect(page.locator('.fc-planned-chip')).toHaveCount(0);   // the rail hides once items are present
   });
 });
