@@ -360,9 +360,13 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .btn-lav    { background:#7e66b4; color:white; }
 .btn-sky    { background:#3a7a8a; color:white; }
 .btn-indigo { background:#5a6498; color:white; }
+/* Hover feedback only on devices that truly hover: on touch screens :hover sticks after a tap, and a
+   tapped ghost button would sit in the rose alert colour (V-V-278-25). */
+@media (hover:hover) {
 .btn:hover  { filter:brightness(1.05); transform:translateY(-1px); }
 .btn-ghost  { background:transparent; border:1.5px solid var(--light); color:var(--mid); }
 .btn-ghost:hover { border-color:var(--rose); color:var(--rose); background:var(--rose-light); }
+}
 .btn-compact { font-size:var(--fs-sm); padding:var(--sp-6) var(--sp-12); min-height:32px; border-radius:var(--r-xl); }
 
 /* ── Growth ── */
@@ -5367,7 +5371,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 [data-theme="dark"] .meal-card.dinner    { background:rgba(201,184,232,0.08); border-color:rgba(201,184,232,0.15); }
 [data-theme="dark"] .meal-card.snack     { background:rgba(240,200,120,0.08); border-color:rgba(240,200,120,0.15); }
 [data-theme="dark"] .btn-ghost { border-color:var(--light); color:var(--mid); }
-[data-theme="dark"] .btn-ghost:hover { border-color:var(--rose); color:var(--rose); background:rgba(242,168,184,0.1); }
+@media (hover:hover) { [data-theme="dark"] .btn-ghost:hover { border-color:var(--rose); color:var(--rose); background:rgba(242,168,184,0.1); } }
 [data-theme="dark"] .chart-filter-btn { background:var(--surface); border-color:var(--light); color:var(--mid); }
 [data-theme="dark"] .milestone-item { background:var(--surface-alt); }
 [data-theme="dark"] .milestone-item.done { background:rgba(181,213,197,0.1); }
@@ -12072,6 +12076,135 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .rcp-prow.open .rcp-prow-body { max-height:2400px; }
 .rcp-prow-inner { padding:0 0 var(--sp-12) 38px; }
 .rcp-prow-p { margin:0; font-size:var(--fs-2xs); font-style:italic; color:var(--light); line-height:var(--lh-relaxed); }
+
+/* ── Meal Planner (prefix mp-*; spec docs/specs/meal-planner-v1.md §4, CL-1…CL-12) ──
+   Tokens only, so light/dark follow the theme. Slots never inherit .meal-card tints
+   (V-V-275-11); "planned" never uses the sage good-hue (V-V-275-5); travel and new
+   food read in words, colour only supports them (V-V-275-12/13). */
+.mp-section { margin:var(--sp-8) 0 var(--sp-16); }
+.mp-head { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8); margin:0 0 var(--sp-8); }
+.mp-head > .zi { width:var(--icon-sm); height:var(--icon-sm); color:var(--tc-sage); }
+.mp-head-title { flex:1; min-width:0; font-family:'Fraunces',serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
+.mp-weeknav { display:flex; align-items:center; gap:var(--sp-4); }
+/* Planner actions use the house buttons (.btn + .btn-ghost / .btn-{domain}, .sg-chip, the
+   .confirm-box shell). Only the CL-7 44px floor, icon spacing and the round nav buttons live here. */
+.mp-section .btn, .mp-daycard .btn, .mp-picker .btn, .mp-confirm .btn, .mp-daycard .sg-chip { min-height:44px; gap:var(--sp-6); }
+.mp-section .btn .zi, .mp-daycard .btn .zi, .mp-confirm .btn .zi, .mp-daycard .sg-chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-navbtn, .mp-iconbtn { min-width:44px; padding:0; border-radius:var(--r-full); }
+.mp-navbtn--prev .zi { transform:rotate(180deg); }
+.mp-navbtn[disabled] { opacity:0.45; cursor:default; transform:none; }
+.mp-navnote { flex-basis:100%; font-size:var(--fs-xs); color:var(--mid); }
+.mp-legend { display:flex; flex-wrap:wrap; gap:var(--sp-12); margin:0 0 var(--sp-6); font-size:var(--fs-xs); color:var(--mid); }
+.mp-legend span { display:inline-flex; align-items:center; gap:var(--sp-4); }
+
+/* Week strip — 7 columns that always fit, never scroll (CL-8, V-V-275-4) */
+.mp-strip { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:var(--sp-2); margin:0 0 var(--sp-10); }
+.mp-day { min-width:0; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-2); padding:var(--sp-4) 0; border:2px solid transparent; border-radius:var(--r-md); background:none; font-family:'Nunito',sans-serif; color:var(--text); cursor:pointer; }
+.mp-day-wd { font-size:var(--fs-xs); font-weight:700; color:var(--mid); }
+.mp-day-num { font-family:'Fraunces',serif; font-size:var(--fs-md); line-height:var(--lh-tight); padding-bottom:var(--sp-2); border-bottom:2px solid transparent; }
+.mp-day--today .mp-day-num { font-weight:700; color:var(--tc-sage); border-bottom-color:var(--tc-sage); }
+.mp-day--sel { background:var(--sage-light); border-color:var(--sage); }
+.mp-day--past .mp-day-num { color:var(--mid); }
+.mp-day--past .mp-day-wd { color:var(--light); }
+/* Travel is a dashed peach border: a shape as well as a hue, so it never reads as "selected" in greyscale (V-V-278-3). */
+.mp-day--travel { border-color:var(--peach); border-style:dashed; }
+.mp-day--sel.mp-day--travel { border-style:solid; border-color:var(--sage); }
+.mp-fill { width:var(--sp-10); height:var(--sp-10); border-radius:var(--r-full); border:1.5px solid var(--mid); box-sizing:border-box; }
+.mp-fill--full { background:var(--mid); }
+.mp-fill--part { background:linear-gradient(90deg, var(--mid) 50%, transparent 50%); }
+.mp-day--past .mp-fill { opacity:0.5; }
+.mp-mark { display:inline-flex; min-height:var(--icon-xs); }
+.mp-mark .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-mark--new { color:var(--tc-lav); }
+.mp-mark--travel { color:var(--tc-peach); }
+
+/* Day card */
+.mp-daycard { background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--sage); border-radius:var(--r-xl); padding:var(--sp-12); overflow:hidden; }
+.mp-daycard--travel { border-left-color:var(--peach); }
+.mp-dayhead { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8); margin:0 0 var(--sp-8); }
+.mp-daycard--travel .mp-dayhead { background:var(--peach-light); margin:calc(-1 * var(--sp-12)) calc(-1 * var(--sp-12)) var(--sp-10); padding:var(--sp-10) var(--sp-12); }
+.mp-daytitle { flex:1; min-width:0; font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); }
+
+/* Pack for today + How it keeps (V-C-275-7/8, V-V-275-10) */
+.mp-pack { border:1px solid var(--peach); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); margin:0 0 var(--sp-10); }
+.mp-pack-title { display:flex; align-items:center; gap:var(--sp-6); font-weight:800; font-size:var(--fs-sm); color:var(--tc-peach); }
+.mp-pack-title .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-pack-list { margin:var(--sp-6) 0 0; padding-left:var(--sp-20); font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); }
+
+/* Next-meal lead + slot rows (CL-3, CL-4) */
+.mp-lead { border:1.5px solid var(--light); background:var(--card-bg); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); margin:0 0 var(--sp-6); }
+.mp-lead-eyebrow { font-size:var(--fs-xs); font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--mid); }
+.mp-lead .mp-slot { border-top:none; padding:var(--sp-4) 0 0; }
+.mp-slot { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-8); padding:var(--sp-6) 0; border-top:1px solid var(--card-border); }
+.mp-slot-ic { flex:0 0 auto; color:var(--mid); }
+.mp-slot-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-slot-main { flex:1; min-width:0; min-height:44px; display:flex; align-items:center; padding:0; border:none; background:none; text-align:left; font-family:'Nunito',sans-serif; color:var(--text); cursor:pointer; }
+.mp-slot-label { display:flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:800; color:var(--mid); text-transform:uppercase; letter-spacing:0.05em; }
+.mp-slot-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+.mp-slot-chev .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-slot--open .mp-slot-chev { transform:rotate(180deg); }
+.mp-chew { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--mid); }
+.mp-chew .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-entry-new { display:inline-flex; align-items:center; gap:var(--sp-4); border:1px solid var(--lavender); color:var(--tc-lav); border-radius:var(--r-sm); padding:0 var(--sp-6); font-size:var(--fs-xs); font-weight:800; }
+.mp-entry-new .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-slot .rcp-safe { flex-basis:100%; margin:var(--sp-2) 0 0; }
+.mp-slot-act { flex:0 0 auto; }
+.mp-logged .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-logged { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
+.mp-slot--open .rcp-prows { flex-basis:100%; margin-top:var(--sp-4); }
+.mp-gap-note, .mp-hint, .mp-empty { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
+.mp-hint { display:flex; align-items:flex-start; gap:var(--sp-6); margin:var(--sp-8) 0 0; padding:var(--sp-8) var(--sp-10); border-radius:var(--r-lg); border:1px solid var(--card-border); }
+.mp-hint .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.mp-gap-note { padding:var(--sp-6) 0; }
+.mp-tomorrow { font-size:var(--fs-sm); color:var(--mid); padding:var(--sp-6) 0 var(--sp-2); }
+.mp-dayfoot { display:flex; flex-wrap:wrap; gap:var(--sp-8); margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--card-border); }
+
+/* Planned food — the house standard at slot size (per-recipe --rc-* / --zif-c values ride the
+   CSS-Custom-Property Pivot Convention, DESIGN_PRINCIPLES.md; same as .recipe-row): a recipe is a recipe-row box (food-group
+   rail + grams-weighted fingerprint fade, --rc-* set per recipe as on .recipe-row), a free
+   food is a .recipe-chip with its .fdom-chip food-group wash. */
+.mp-entries { flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); }
+.mp-entry { flex:1 1 100%; min-width:0; display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) var(--sp-10); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-lg); background:var(--card-bg); }
+.mp-entry--gen { background:var(--rc-fl, var(--card-bg)); }
+[data-theme="dark"] .mp-entry--gen { background:var(--rc-fd, var(--surface)); }
+.mp-entry > .zif, .mp-entry > .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
+.mp-entry-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--sp-2); }
+.mp-entry-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-base); color:var(--text); line-height:var(--lh-tight); }
+.mp-entry-meta { display:flex; flex-wrap:wrap; gap:var(--sp-2) var(--sp-10); }
+.mp-cue { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--mid); }
+.mp-cue .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-mode { color:var(--tc-peach); border-color:var(--peach); }
+.mp-mode .zi { width:var(--icon-xs); height:var(--icon-xs); }
+/* Inventory and suggestion chips (pack summary, dinner suggestions): never planned food. */
+.mp-chips { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); margin:var(--sp-6) 0 var(--sp-4); }
+.mp-picker .recipe-row { margin-bottom:var(--sp-6); }
+/* A recipe locked for her age: the flat whisper, no fade or stripe, reason in the row in amber words (V-V-278-23). */
+.mp-locked .recipe-row-gen, [data-theme="dark"] .mp-locked .recipe-row-gen { background:var(--surface-alt); cursor:default; }
+.mp-locked .recipe-row-gen::before { display:none; }
+.mp-locked .recipe-row-title { color:var(--mid); }
+.mp-locked .recipe-row-rel { color:var(--tc-amber); }
+
+/* Slot picker (lives in a .ql-sheet) — top 5 pickable, then All, then new food (CL-5) */
+.mp-picker { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-xl) var(--r-xl) 0 0; padding:var(--sp-12); }
+.mp-picker-title { font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); }
+.mp-search { display:block; width:100%; box-sizing:border-box; min-height:44px; margin:var(--sp-8) 0; padding:0 var(--sp-12); border:1px solid var(--card-border); border-radius:var(--r-lg); background:var(--card-bg); color:var(--text); font-family:'Nunito',sans-serif; font-size:var(--fs-sm); }
+.mp-picker-sec { font-size:var(--fs-xs); font-weight:800; color:var(--mid); text-transform:uppercase; letter-spacing:0.05em; margin:var(--sp-8) 0 var(--sp-2); }
+.mp-picker-row { display:flex; align-items:center; gap:var(--sp-10); width:100%; min-height:48px; padding:var(--sp-6) var(--sp-4); border:none; border-bottom:1px solid var(--card-border); background:none; text-align:left; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); font-weight:700; color:var(--text); cursor:pointer; }
+.mp-picker-row > .zi { width:var(--icon-sm); height:var(--icon-sm); color:var(--mid); flex:0 0 auto; }
+.mp-picker-row-main { flex:1; min-width:0; }
+.mp-picker-why { display:block; font-weight:600; font-size:var(--fs-xs); color:var(--mid); }
+.mp-picker-row--locked { color:var(--mid); cursor:default; }
+.mp-picker-lock { display:block; font-weight:700; font-size:var(--fs-xs); color:var(--tc-amber); }
+.mp-picker-more { color:var(--tc-sage); }
+.mp-picker-more > .zi { transition:transform var(--ease-fast); }
+.mp-picker-more[aria-expanded="true"] > .zi { transform:rotate(180deg); }
+
+/* Confirms (new food / allergen) */
+.mp-confirm { max-width:none; width:auto; text-align:left; }
+.mp-confirm .confirm-btns { flex-direction:column-reverse; align-items:stretch; }
+.mp-confirm .confirm-btns .btn { width:100%; }
+.mp-confirm-title { font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); margin:0 0 var(--sp-6); }
+.mp-confirm-link { margin:0 0 var(--sp-16); }
 
 /* empty / cold-start state */
 .recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
