@@ -27174,6 +27174,37 @@ function _baseFoodName(name) {
 }
 function normalizeFoodName(raw) { return _baseFoodName(raw || ''); }
 
+// Food identity for every "is this the same food?" check against the introduced-
+// foods record (V-CA-276-1, V-K-276-1). The base name, minus a leading bare count
+// ("1 egg", "half banana"), with a conservative plural fold on the last word:
+// "carrots" = "carrot", "potatoes" = "potato", "berries" = "berry" -- while
+// "egg"/"eggplant" and "pea"/"peanut" stay apart. Never a substring test: that folded
+// a new allergen into an older food (egg -> eggplant) and hid its introduction.
+function _foodIdentityKey(name) {
+  const s = String(name || '').toLowerCase().trim()
+    .replace(/^(?:\d+(?:\.\d+)?|a little|half|an?|one|two|three|some)\s+/, '');
+  const parts = _baseFoodName(s).split(' ');
+  let w = parts[parts.length - 1];
+  if (w.length >= 4) {
+    if (/ies$/.test(w)) w = w.slice(0, -3) + 'y';
+    else if (/oes$/.test(w)) w = w.slice(0, -2);
+    else if (/s$/.test(w) && !/(ss|us|is)$/.test(w)) w = w.slice(0, -1);
+  }
+  parts[parts.length - 1] = w;
+  return parts.join(' ');
+}
+function _sameFood(a, b) { return _foodIdentityKey(a) === _foodIdentityKey(b); }
+// Does a logged meal item contain this food? Same food, or the food as a whole word
+// of a dish ("egg bhurji" has egg; "eggplant curry" does not). Read-side only (history,
+// lookback): introductions still need _sameFood.
+function _mealItemHasFood(item, food) {
+  const k = _foodIdentityKey(food);
+  if (!k) return false;
+  const ik = _foodIdentityKey(item);
+  if (ik === k) return true;
+  return new RegExp('(?:^|\\s)' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:\\s|$)').test(ik);
+}
+
 const SKIPPED_MEAL = '—skipped—';
 function isRealMeal(val) { return val && val !== SKIPPED_MEAL; }
 
@@ -43165,8 +43196,7 @@ function _deduplicateFoods() {
 
   foods.forEach(f => {
     const lower = f.name.toLowerCase().trim();
-    const base = _baseFoodName(lower);
-    const key = base || lower;
+    const key = _foodIdentityKey(lower) || lower;   // same identity as addFood (V-CA-276-1)
 
     if (seen.hasOwnProperty(key)) {
       // Merge: keep earliest date, escalate reaction to 'watch' if either is watch
@@ -43177,7 +43207,8 @@ function _deduplicateFoods() {
       seen[key] = deduped.length;
       // Use the cleanest name: prefer shorter or capitalized version
       const cleanName = f.name.trim();
-      deduped.push({ name: cleanName, reaction: f.reaction, date: f.date });
+      // Keep every field (mealSlot etc.), not just name/reaction/date (V-CA-276-4).
+      deduped.push(Object.assign({}, f, { name: cleanName }));
     }
   });
 
@@ -43316,18 +43347,10 @@ function renderFoodCatSubContent(pid, sid) {
     html += `<div style="padding:16px;text-align:center;color:var(--light);font-size:var(--fs-base);">No foods introduced yet</div>`;
   }
 
-  const introducedBases = new Set(foods.map(f => _baseFoodName(f.name.toLowerCase().trim())));
-  const introducedLowerFull = new Set(foods.map(f => f.name.toLowerCase().trim()));
-  const remaining = sub.keys.filter(k => {
-    // Check exact match, base match, or substring match (either direction)
-    if (introducedLowerFull.has(k)) return false;
-    if (introducedBases.has(k)) return false;
-    // Check if any introduced food contains this key or vice versa
-    for (const base of introducedBases) {
-      if (base.includes(k) || k.includes(base)) return false;
-    }
-    return true;
-  });
+  // Same-food identity only, never a substring test: "eggplant" must not hide the
+  // egg key, nor "pea" the peanut key, from what's still to try (V-C-276-3).
+  const introducedKeys = new Set(foods.map(f => _foodIdentityKey(f.name)));
+  const remaining = sub.keys.filter(k => !introducedKeys.has(_foodIdentityKey(k)));
   if (remaining.length > 0) {
     html += `<div style="margin-top:10px;padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:${_foodColorMap[col]};border:1px solid ${_foodBorderMap[col]};">
       <div style="font-size:var(--fs-sm);font-weight:600;color:${_foodTextMap[col]};margin-bottom:6px;">Not yet tried (${remaining.length})</div>
@@ -43353,12 +43376,11 @@ function addFood() {
   const slot = slotEl ? slotEl.value : '';
   if (!val) return;
 
-  // Check if base food already exists
+  // Check if the same food already exists (_fdSameFood: one identity key, plurals
+  // folded). A substring merge folded "egg" into an existing "eggplant" and "peanut"
+  // into "pea", so a top allergen was never recorded as introduced (V-C-275-14).
   const base = _baseFoodName(val.toLowerCase());
-  const existingIdx = foods.findIndex(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  const existingIdx = foods.findIndex(f => _fdSameFood(base, f.name));
   if (existingIdx >= 0) {
     // Update existing: keep earlier date, escalate reaction, fill in meal slot if newly given
     const existing = foods[existingIdx];
@@ -43485,7 +43507,7 @@ let _fdLibFilter = null; // active filter key, or null
 // pumpkin/pumpkin seeds). One predicate, used by both the read (tried badge)
 // and the write (removal filter), so they can never disagree.
 function _fdSameFood(base, foodName) {
-  return _baseFoodName(foodName.toLowerCase().trim()) === base;
+  return _foodIdentityKey(base) === _foodIdentityKey(foodName);
 }
 
 // Is a food (by canonical NUTRITION key / name) already introduced?
@@ -46104,9 +46126,8 @@ const ALL_TIPS = [
     title:'Early allergen exposure is protective',
     body:'Research shows introducing peanut, tree nuts, and egg (yolk first) early reduces allergy risk. Give each new allergen for 3 days before the next.',
     condition: d => {
-      const introduced = new Set(foods.map(f => f.name.toLowerCase()));
-      const allergens = ['peanut','almonds','walnut','cashew','sesame'];
-      const tried = allergens.filter(a => introduced.has(a));
+      const allergens = ['peanut','almond','walnut','cashew','sesame'];
+      const tried = allergens.filter(a => foods.some(f => _sameFood(f.name, a)));
       return tried.length < 3;
     }
   },
@@ -46280,7 +46301,7 @@ const ALL_TIPS = [
     body:'Current research supports early introduction of common allergens: peanut, tree nuts (cashew, walnut, almond), sesame, and wheat. Introduce each alone, one at a time, 3 days apart. Early exposure may reduce allergy risk.',
     condition: d => {
       const allergens = ['peanut','cashew','walnut','almond','sesame','wheat'];
-      const introduced = allergens.filter(a => d.foods && d.foods.some(f => f.name.toLowerCase().includes(a)));
+      const introduced = allergens.filter(a => d.foods && d.foods.some(f => _sameFood(f.name, a)));
       return introduced.length < 3 && d.ageMonths >= 6;
     }
   },
@@ -46462,7 +46483,8 @@ function checkFoodCombo() {
   // ── 3. Check introduction status (normalized) ──
   rawFoods.forEach(food => {
     const norm = normalizeFoodName(food);
-    const isIntroduced = introducedNormSet.has(norm) || [...introducedSet].some(f => f.includes(food) || food.includes(f));
+    // Same-food identity, never substring: logged eggplant must not count egg as introduced (V-C-276-1).
+    const isIntroduced = introducedNormSet.has(norm) || [...introducedSet].some(f => _sameFood(f, food));
     // Not "introduce it alone for 3 days" for a food she should wait on, or a limit-food like
     // salt or juice (Vela V-V-270-13) — the gate / after line already speaks for those.
     const gateR = _fdAgeRule(food);
@@ -46489,6 +46511,9 @@ function checkFoodCombo() {
   // meal's effect is real (Hallberg 1991) but longer-term iron status is not changed
   // (Ames 1999, young children). Everyday dal with a little curd is fine.
   const _ironFoods = rawFoods.filter(f => getFoodTags([f]).tags.includes('iron-rich'));
+  // Used by the pairing suggestion below; dropped by mistake in 67820c9, which made
+  // checkFoodCombo throw whenever no synergy pair was found.
+  const hasIron = tags.includes('iron-rich');
   const _calcFoods = rawFoods.filter(f => ['paneer','cheese','curd','yogurt','dahi','milk'].includes(f));
   if (_ironFoods.some(f => _calcFoods.indexOf(f) === -1) && _calcFoods.some(f => _ironFoods.indexOf(f) === -1)) {
     warnings.push('For her main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
@@ -70273,14 +70298,22 @@ function renderDietFeverBanner() {
     '</div></div>';
 }
 
+function _illnessFoodIntroduced(f, introducedSet) {
+  const intro = [...introducedSet];
+  if (intro.some(i => _sameFood(i, f))) return true;
+  const parts = _foodIdentityKey(f).split(' ').filter(Boolean);
+  return parts.length > 1 && parts.every(p => intro.some(i => _sameFood(i, p)));
+}
+
 function getFeverDietFoods() {
   const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
   const feverFoods = ['khichdi', 'curd', 'banana', 'rice', 'rice porridge', 'dal', 'dal water',
     'coconut water', 'buttermilk', 'pomegranate', 'apple', 'mashed potato', 'idli',
     'sabudana', 'oats porridge', 'ragi porridge', 'curd rice'];
   return feverFoods.filter(f => {
-    const base = _baseFoodName(f);
-    return [...introducedSet].some(i => _baseFoodName(i) === base || i.includes(f) || f.includes(i));
+    // Only foods she has had: the same food, or a dish whose every part she has had
+    // ("curd rice" needs curd AND rice). Never substring -- "pineapple" is not apple (V-K-276-3).
+    return _illnessFoodIntroduced(f, introducedSet);
   });
 }
 
@@ -70937,8 +70970,9 @@ function getDiarrhoeaDietFoods() {
     'coconut water', 'pomegranate', 'apple', 'mashed potato', 'idli', 'curd rice',
     'sabudana', 'oats porridge', 'ragi porridge', 'buttermilk'];
   return deFoods.filter(f => {
-    const base = _baseFoodName(f);
-    return [...introducedSet].some(i => _baseFoodName(i) === base || i.includes(f) || f.includes(i));
+    // Only foods she has had: the same food, or a dish whose every part she has had
+    // ("curd rice" needs curd AND rice). Never substring -- "pineapple" is not apple (V-K-276-3).
+    return _illnessFoodIntroduced(f, introducedSet);
   });
 }
 
@@ -71816,6 +71850,20 @@ function _psfFallbackToast() {
 }
 
 // Scan all meals for a given date and auto-add new foods to Foods Introduced
+// Earliest feedingData day (on or before `upTo`) whose meals hold this food (V-M-276-2).
+function _firstLoggedDate(food, upTo) {
+  const days = Object.keys(feedingData).filter(d => d <= upTo).sort();
+  for (const d of days) {
+    const e = feedingData[d];
+    if (!e) continue;
+    for (const m of ['breakfast','lunch','dinner','snack']) {
+      if (!isRealMeal(e[m])) continue;
+      if (e[m].split(/[,+]/).some(it => it.trim() && _sameFood(it.trim(), food))) return d;
+    }
+  }
+  return upTo;
+}
+
 function autoIntroduceFoodsFromDay(dateStr) {
   const entry = feedingData[dateStr];
   if (!entry) return;
@@ -71826,12 +71874,13 @@ function autoIntroduceFoodsFromDay(dateStr) {
       const clean = f.trim();
       if (clean.length <= 1) return;
       const base = _baseFoodName(clean.toLowerCase());
-      const alreadyExists = foods.some(fi => {
-        const fb = _baseFoodName(fi.name.toLowerCase().trim());
-        return fb === base || fb.includes(base) || base.includes(fb);
-      });
+      // Same-food identity (plurals folded), never substring: "eggplant" must not
+      // stand in for "egg", or a logged allergen is never introduced (V-C-275-14).
+      const alreadyExists = foods.some(fi => _sameFood(fi.name, clean));
       if (!alreadyExists) {
-        foods.push({ name: clean, reaction: 'ok', date: dateStr });
+        // Date it from the first logged meal that holds it, not this save: a food
+        // hidden by the old merge may have been eaten for months (V-M-276-2).
+        foods.push({ name: clean, reaction: 'ok', date: _firstLoggedDate(clean, dateStr) });
         added = true;
       }
     });
@@ -75870,10 +75919,8 @@ function getFoodHistory(foodName) {
   const base = _baseFoodName(lower);
 
   // Find in foods introduced
-  const introduced = foods.find(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  // Same-food identity only, so "egg" never reports eggplant's intro date or reaction (V-C-275-14).
+  const introduced = foods.find(f => _sameFood(f.name, lower));
 
   // Find last time given in feeding data
   let lastDate = null, lastMeal = null, timesSeen = 0;
@@ -75883,14 +75930,17 @@ function getFoodHistory(foodName) {
     if (!entry) continue;
     for (const meal of ['breakfast','lunch','dinner','snack']) {
       if (!isRealMeal(entry[meal])) continue;
-      if (entry[meal].toLowerCase().includes(base) || entry[meal].toLowerCase().includes(lower)) {
+      // Per item, as a whole food or a whole word of a dish -- never a substring of the
+      // meal text, or "egg" counts eggplant meals as "last given" (V-V-276-1).
+      if (entry[meal].split(/[,+]/).some(it => it.trim() && _mealItemHasFood(it.trim(), lower))) {
         timesSeen++;
         if (!lastDate) { lastDate = ds; lastMeal = meal; }
       }
     }
   }
 
-  if (!introduced && !lastDate) return '';
+  // Never-had foods get a line, not a vanished section (V-V-276-3).
+  if (!introduced && !lastDate) return '<div class="combo-body"><div class="t-amber">' + zi('sparkle') + ' Not tried yet: no introduction or meal logged</div></div>';
 
   let html = '<div class="combo-body">';
 
@@ -75942,9 +75992,8 @@ function getFoodSleepCorrelation(rawFoods) {
     const prevFoods = extractDayFoods(prevDay);
     const allDayFoods = [...dayFoods, ...prevFoods]; // dinner could be night-before
 
-    const hasFood = bases.some(base =>
-      allDayFoods.some(df => df.includes(base) || base.includes(df))
-    );
+    // Same matcher as the history card, so "egg" never borrows eggplant nights (V-V-276-2).
+    const hasFood = foodLowers.some(q => allDayFoods.some(df => _mealItemHasFood(df, q)));
 
     const nightData = { duration: dur.total, wakeups: s.wakeUps || 0 };
     if (hasFood) withFood.push(nightData);

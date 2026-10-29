@@ -3535,6 +3535,37 @@ function _baseFoodName(name) {
 }
 function normalizeFoodName(raw) { return _baseFoodName(raw || ''); }
 
+// Food identity for every "is this the same food?" check against the introduced-
+// foods record (V-CA-276-1, V-K-276-1). The base name, minus a leading bare count
+// ("1 egg", "half banana"), with a conservative plural fold on the last word:
+// "carrots" = "carrot", "potatoes" = "potato", "berries" = "berry" -- while
+// "egg"/"eggplant" and "pea"/"peanut" stay apart. Never a substring test: that folded
+// a new allergen into an older food (egg -> eggplant) and hid its introduction.
+function _foodIdentityKey(name) {
+  const s = String(name || '').toLowerCase().trim()
+    .replace(/^(?:\d+(?:\.\d+)?|a little|half|an?|one|two|three|some)\s+/, '');
+  const parts = _baseFoodName(s).split(' ');
+  let w = parts[parts.length - 1];
+  if (w.length >= 4) {
+    if (/ies$/.test(w)) w = w.slice(0, -3) + 'y';
+    else if (/oes$/.test(w)) w = w.slice(0, -2);
+    else if (/s$/.test(w) && !/(ss|us|is)$/.test(w)) w = w.slice(0, -1);
+  }
+  parts[parts.length - 1] = w;
+  return parts.join(' ');
+}
+function _sameFood(a, b) { return _foodIdentityKey(a) === _foodIdentityKey(b); }
+// Does a logged meal item contain this food? Same food, or the food as a whole word
+// of a dish ("egg bhurji" has egg; "eggplant curry" does not). Read-side only (history,
+// lookback): introductions still need _sameFood.
+function _mealItemHasFood(item, food) {
+  const k = _foodIdentityKey(food);
+  if (!k) return false;
+  const ik = _foodIdentityKey(item);
+  if (ik === k) return true;
+  return new RegExp('(?:^|\\s)' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:\\s|$)').test(ik);
+}
+
 const SKIPPED_MEAL = '—skipped—';
 function isRealMeal(val) { return val && val !== SKIPPED_MEAL; }
 

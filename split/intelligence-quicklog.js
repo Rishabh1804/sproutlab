@@ -3434,10 +3434,8 @@ function getFoodHistory(foodName) {
   const base = _baseFoodName(lower);
 
   // Find in foods introduced
-  const introduced = foods.find(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  // Same-food identity only, so "egg" never reports eggplant's intro date or reaction (V-C-275-14).
+  const introduced = foods.find(f => _sameFood(f.name, lower));
 
   // Find last time given in feeding data
   let lastDate = null, lastMeal = null, timesSeen = 0;
@@ -3447,14 +3445,17 @@ function getFoodHistory(foodName) {
     if (!entry) continue;
     for (const meal of ['breakfast','lunch','dinner','snack']) {
       if (!isRealMeal(entry[meal])) continue;
-      if (entry[meal].toLowerCase().includes(base) || entry[meal].toLowerCase().includes(lower)) {
+      // Per item, as a whole food or a whole word of a dish -- never a substring of the
+      // meal text, or "egg" counts eggplant meals as "last given" (V-V-276-1).
+      if (entry[meal].split(/[,+]/).some(it => it.trim() && _mealItemHasFood(it.trim(), lower))) {
         timesSeen++;
         if (!lastDate) { lastDate = ds; lastMeal = meal; }
       }
     }
   }
 
-  if (!introduced && !lastDate) return '';
+  // Never-had foods get a line, not a vanished section (V-V-276-3).
+  if (!introduced && !lastDate) return '<div class="combo-body"><div class="t-amber">' + zi('sparkle') + ' Not tried yet: no introduction or meal logged</div></div>';
 
   let html = '<div class="combo-body">';
 
@@ -3506,9 +3507,8 @@ function getFoodSleepCorrelation(rawFoods) {
     const prevFoods = extractDayFoods(prevDay);
     const allDayFoods = [...dayFoods, ...prevFoods]; // dinner could be night-before
 
-    const hasFood = bases.some(base =>
-      allDayFoods.some(df => df.includes(base) || base.includes(df))
-    );
+    // Same matcher as the history card, so "egg" never borrows eggplant nights (V-V-276-2).
+    const hasFood = foodLowers.some(q => allDayFoods.some(df => _mealItemHasFood(df, q)));
 
     const nightData = { duration: dur.total, wakeups: s.wakeUps || 0 };
     if (hasFood) withFood.push(nightData);
