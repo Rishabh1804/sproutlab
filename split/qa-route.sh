@@ -139,6 +139,30 @@ def file_diff(path):
 if "template.html" in changed and re.search(r"^[+-].*</?symbol\b", file_diff("split/template.html"), re.M):
     add("Carina", "shared file template.html: zi()/zif sprite <symbol> changed (sprite integrity)")
 
+# Template DOM contract (V-K-275-8, Kael's Option-C condition C1): an id or
+# data-action added, removed or renamed in template.html summons every Governor
+# whose files query that id or dispatch that action -- a renamed id is a null
+# lookup in someone else's render.
+dom_note = []
+if "template.html" in changed:
+    vals = set()
+    for line in file_diff("split/template.html").splitlines():
+        if line[:1] in "+-" and not line.startswith(("+++", "---")):
+            vals.update(re.findall(r'(?:\bid|data-action)="([A-Za-z][\w-]{3,})"', line))
+    for other in sorted(glob.glob("split/*.js")):
+        om = os.path.basename(other)
+        prov, gov = MODULE_PROVINCE.get(om, (None, None))
+        if not gov:
+            continue
+        try:
+            text = open(other, encoding="utf-8").read()
+        except Exception:
+            continue
+        for v in sorted(vals):
+            if re.search("['\"#]" + re.escape(v) + "['\"\\s.:\\[]", text):
+                add(gov, f"consult: {om} references template id/action '{v}' (template DOM contract)")
+                dom_note.append(f"  template.html:'{v}'  <-used by--  {om}  [{prov}/{gov}]")
+
 # ── graph-level ripple ──
 ripple_note = []
 if graph_path:
@@ -223,7 +247,7 @@ for m in changed:
             hd = DECL.search(line.split("@@")[-1])      # enclosing top-level declaration
             if hd: names.add(hd.group(1))
         elif line[:1] in "+-" and not line.startswith(("+++", "---")):
-            hd = DECL.match(line[1:].lstrip())
+            hd = DECL.match(line[1:])   # column-0 declarations only (V-K-275-9)
             if hd: names.add(hd.group(1))
     names = {n for n in names if len(n) >= 4}
     # SYNC_RENDER_DEPS names renderers as strings ('renderDietStats'): a changed
@@ -270,10 +294,43 @@ for m in changed:
         if line.startswith("@@"):
             hd = DECL.search(line.split("@@")[-1])
         elif line[:1] in "+-" and not line.startswith(("+++", "---")):
-            hd = DECL.match(line[1:].lstrip())
+            hd = DECL.match(line[1:])   # column-0 declarations only (V-K-275-9)
         if hd and CARE_CONTENT.match(hd.group(1)):
             add("Maren", f"consult: care-content {hd.group(1)} in {m} (care consequence)")
             consult_note.append(f"  {m}:{hd.group(1)}  care-content  [Care/Maren]")
+
+# Engine content in the foundation (V-K-275-1/-2): scoring (modifiers + calc*Score),
+# the v3-3 engine spine, and the engine-parameter registries are MEANING living in
+# foundation files. Carina stays primary; Kael is summoned on the reasoning.
+ENGINE_CONTENT = re.compile(r"^(compute\w+Modifier|calc\w+Score|getZivaScoreTrend7d|getSleepScore24h|_modifierCache|SCORE_LABELS|"
+    r"_predictMilestoneWindow|_getInWindowMilestones|_evaluateRecommendation|_scoreDay|_scoreWindow|_scoreDayHero|"
+    r"_classifyDaySeverity|classifySleep|normalizeSleep|_domainPerRecordScore|_domainDayBonuses|"
+    r"RECOMMENDATION_ROSTER|SEVERITY_THRESHOLDS|DOMAIN_WEIGHTS_HERO|STANDARDS_FALLBACK_CHAIN)$")
+for m in changed:
+    if MODULE_PROVINCE.get(m) != FND:
+        continue
+    for line in file_diff(f"split/{m}").splitlines():
+        hd = None
+        if line.startswith("@@"):
+            hd = DECL.search(line.split("@@")[-1])
+        elif line[:1] in "+-" and not line.startswith(("+++", "---")):
+            hd = DECL.match(line[1:])
+        if hd and ENGINE_CONTENT.match(hd.group(1)):
+            add("Kael", f"consult: engine-content {hd.group(1)} in {m} (scoring / v3-3 spine)")
+            consult_note.append(f"  {m}:{hd.group(1)}  engine-content  [Intelligence (engine)/Kael]")
+
+# Persisted-record write paths outside the foundation (V-K-275-5): a changed
+# save(KEYS.*) / load(KEYS.*) line in another Region's file is a record-integrity
+# question (sync, merge, resurrection) -- Carina consults on it.
+for m in changed:
+    prov = MODULE_PROVINCE.get(m)
+    if not m.endswith(".js") or prov in (None, FND):
+        continue
+    hits = sorted(set(re.findall(r"^[+-](?![+-]).*?\b(?:save|load)\(\s*(KEYS\.\w+)", file_diff(f"split/{m}"), re.M)))
+    for k in hits:
+        add("Carina", f"consult: {m} changes a persisted write/read path {k} (record integrity)")
+        consult_note.append(f"  {m}:{k}  write-path  [Foundation (data & sync)/Carina]")
+consult_note.extend(dom_note)
 
 print("\nCross-province ripple (dependents of changed code in OTHER jurisdictions):")
 if ripple_note:
