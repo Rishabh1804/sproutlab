@@ -8410,7 +8410,12 @@ if (typeof document !== 'undefined' && document.addEventListener) {
 // moment ago shows on its Planned rail without a reload (V-V-279-26).
 function _mpRefreshLogCards() {
   if (typeof _fcInstances === 'undefined') return;
-  _fcInstances.forEach(i => { if (i.variant === 'card' && !i.items.length && i.container && i.container.isConnected) i.render(); });
+  _fcInstances.forEach(i => {
+    if (i.variant !== 'card' || i.items.length || !i.container || !i.container.isConnected) return;
+    const ta = i.container.querySelector('.fc-ta-input');
+    if (ta && (ta === document.activeElement || ta.value)) return;   // never clobber typing (V-CI-279-A)
+    i.render();
+  });
 }
 function renderMealPlanSection() {
   _mpRefreshLogCards();
@@ -8623,8 +8628,10 @@ function _mpOpenAddRecipe(id, from) {
 // The composer's Planned rail: fill the meal with the plan (the parent checks and saves).
 function _mpApplyPlanToComposer(btn, arg) {
   const inst = (typeof _fcInstanceForEl === 'function') ? _fcInstanceForEl(btn) : null;
-  const [dateStr, slot] = String(arg || '').split('|');
-  const p = inst && _fcPlannedItems(dateStr, slot);
+  if (!inst || inst.items.length) return;   // a stale chip never replaces items already there
+  const slot = String(arg || '').split('|')[1];
+  const dateStr = (inst.variant === 'sheet') ? (_qlBackfillDate || inst.dateOf()) : inst.dateOf();   // the date the composer writes to
+  const p = slot === inst.slot && _fcPlannedItems(dateStr, slot);
   if (!p || !p.foods.length) return;
   const cat = window._FOOD_QTY_CATEGORY_DEFAULTS || {};
   // The diary's own shapes: capitalised names, and a recipe's pinch of spice or spoon of ghee sized as
