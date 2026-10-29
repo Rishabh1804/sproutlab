@@ -179,12 +179,12 @@ test.describe('meal plan record', () => {
       w._mpSetSlot(day, 'breakfast', [{ kind: 'recipe', id: 'local-only' }]);
       const remote = { v: 1, days: { [day]: { slots: { dinner: { items: [{ kind: 'food', name: 'kiwi' }], ts: Date.now() } } } } };
       w.__mpSnap(remote);
-      return { shadowIsRemote: JSON.stringify(_syncShadow[KEYS.mealPlan]) === JSON.stringify(remote), dirty: w.syncUnsyncedInfo().count };
+      return { shadowIsRemote: JSON.stringify(_syncShadow[KEYS.mealPlan]) === JSON.stringify(w._mpNormalize(remote, w.today())), dirty: w.syncUnsyncedInfo().count };
     }, D(1));
     expect(r).toEqual({ shadowIsRemote: true, dirty: 1 });
   });
 
-  test('writes outside the window are refused; names are capped and only known shapes are stored', async ({ page }) => {
+  test('writes outside the window are refused; names are capped and entries without a kind are dropped', async ({ page }) => {
     const r = await page.evaluate(() => {
       const w = window as any;
       const far = w._mpAddDays(w.today(), 120), past = w._mpAddDays(w.today(), -60), ok = w._mpAddDays(w.today(), 1);
@@ -196,7 +196,40 @@ test.describe('meal plan record', () => {
     expect(r.refused).toEqual([null, null, null]);
     expect(r.n).toBe(3);
     expect(r.nameLen).toBe(60);
-    expect(r.recipe).toEqual({ kind: 'recipe', id: 'r' });
+    expect(r.recipe).toEqual({ kind: 'recipe', id: 'r', title: 'not stored' });   // extra fields pass through (V-CA-279-4)
+  });
+
+  test('a v1 edit of a slot keeps the v2 entries and fields already in it (V-CA-279-4)', async ({ page }) => {
+    const r = await page.evaluate((d) => {
+      const w = window as any; const day = eval(d);
+      w.__mpSnap({ v: 1, days: { [day]: { slots: { lunch: { items: [{ kind: 'v2-kind', ref: 'x' }, { kind: 'recipe', id: 'r', portion: 'half' }], ts: Date.now() - 1000 } } } } });
+      const items = w._mpLiveItems(day, 'lunch').slice();
+      w._mpSetSlot(day, 'lunch', items.concat([{ kind: 'food', name: 'pear', note: 'v2' }]));
+      return JSON.parse(localStorage.getItem(KEYS.mealPlan)!).days[day].slots.lunch.items;
+    }, D(1));
+    expect(r).toEqual([{ kind: 'v2-kind', ref: 'x' }, { kind: 'recipe', id: 'r', portion: 'half' }, { kind: 'food', name: 'pear', note: 'v2' }]);
+  });
+
+  test('a merge failure on receive keeps local untouched and pushes nothing (V-CA-279-2)', async ({ page }) => {
+    const r = await page.evaluate((d) => {
+      const w = window as any; const day = eval(d);
+      w._mpSetSlot(day, 'breakfast', [{ kind: 'recipe', id: 'local-only' }]);
+      const before = localStorage.getItem(KEYS.mealPlan);
+      const real = w._mpMerge; w._mpMerge = () => { throw new Error('boom'); };
+      try { return { merged: w._postReceiveMealPlan({ v: 1, days: {} }, JSON.parse(before!)), same: localStorage.getItem(KEYS.mealPlan) === before }; }
+      finally { w._mpMerge = real; }
+    }, D(1));
+    expect(r).toEqual({ merged: undefined, same: true });
+  });
+
+  test('the high-mercury species in data.js match the research manifest (drift check, V-CA-279-8)', async ({ page }) => {
+    const fs = await import('node:fs');
+    const man = fs.readFileSync(new URL('../../docs/research/food-effects.manifest.js', import.meta.url), 'utf8');
+    const mline = (man.match(/'HIGH-mercury fish — ([^']+)'/) || [])[1] || '';
+    const dline = (await page.evaluate(() => (window as any)._mpHighMercuryLine())).replace(/^high-mercury fish — /i, '');
+    const species = (s: string) => s.split(',').map(x => x.replace(/\(.*?\)/g, '').trim().toLowerCase()).filter(Boolean).sort();
+    expect(species(mline).length).toBeGreaterThan(3);
+    expect(species(dline)).toEqual(species(mline));
   });
 
   test('the merge is order-independent and idempotent (randomised)', async ({ page }) => {

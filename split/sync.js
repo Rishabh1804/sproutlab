@@ -624,26 +624,27 @@ function _postReceiveVacc(remoteList) {
   return vaccDropSatisfiedPending(remoteList);
 }
 
-// _postReceiveTeeth — tooth-chart merge. Shape { [toothId]: { date, ts } };
-// per tooth the entry with the newer ts wins, so a removal (date:null) made
-// after a remote eruption date survives, and vice versa. Malformed entries drop.
 // _postReceiveMealPlan — meal-planner merge (core.js _mpMerge: per day, per slot and travel
 // flag, newest ts wins; Clear-day tombstones hold; pruned to the window). Never throws: on an
-// internal error it keeps local (V-CA-275-6).
+// internal error it returns undefined and the receive handler skips the save, keeping local
+// untouched and pushing nothing (V-CA-275-6, V-CA-279-2).
 function _postReceiveMealPlan(remotePlan, localPlan) {
   try { return _mpMerge(remotePlan, localPlan, today()); }
-  catch (e) { console.warn('[sync] meal-plan merge failed; keeping local:', e); return _mpNormalize(localPlan, today()); }
+  catch (e) { console.warn('[sync] meal-plan merge failed; keeping local, skipping the save:', e); return undefined; }
 }
-// Does the merged plan carry anything the remote copy lacks? Compared inside a 2-day grace band
-// at each end of the window, so two phones whose clocks straddle a prune cutoff can't push a
-// day back and forth (V-CA-275-8).
+// Does the merged plan carry anything the remote copy lacks? Days within a week of either end
+// of the window are left out: the window moves a week at a time at Monday midnight, and a phone
+// on the other side of that edge must not push those days back and forth (V-CA-275-8, V-CA-279-5).
 function _mpDivergesFromRemote(merged, remote) {
   const t = today(), w = _mpWindow(t);
-  const lo = _mpAddDays(w.lo, 2), hi = _mpAddDays(w.hi, -2);
+  const lo = _mpAddDays(w.lo, 7), hi = _mpAddDays(w.hi, -7);
   const inner = p => { const n = _mpNormalize(p, t); Object.keys(n.days).forEach(k => { if (k < lo || k > hi) delete n.days[k]; }); return _mpStable(n); };
   return inner(merged) !== inner(remote);
 }
 
+// _postReceiveTeeth — tooth-chart merge. Shape { [toothId]: { date, ts } };
+// per tooth the entry with the newer ts wins, so a removal (date:null) made
+// after a remote eruption date survives, and vice versa. Malformed entries drop.
 function _postReceiveTeeth(remoteMap, localMap) {
   var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
   var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
@@ -1602,7 +1603,7 @@ function _syncMergeForPush(local, cloud, key) {
   if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
   // Meal planner: the push honours the same per-field newest-ts merge as the receive, so a
   // reconnect, Retry, import or autosave restore can't undo the other parent's newer edit (V-CA-275-2).
-  if (key === KEYS.mealPlan && typeof _postReceiveMealPlan === 'function') return _postReceiveMealPlan(cloud, local);
+  if (key === KEYS.mealPlan && typeof _postReceiveMealPlan === 'function') { var mp = _postReceiveMealPlan(cloud, local); return mp === undefined ? cloud : mp; }
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
   if (key === KEYS.vacc && Array.isArray(local) && Array.isArray(cloud)) return vaccDropSatisfiedPending(_syncUnionArrays(local, cloud, key));
@@ -2188,6 +2189,8 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
           _saveVal = remoteVal;
         }
       }
+      // Meal planner: a failed merge keeps local and saves nothing (V-CA-279-2).
+      if (key === KEYS.mealPlan && _saveVal === undefined) continue;
 
       anyChanged = true;
       _remoteWriteDepth++;
@@ -2196,11 +2199,18 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       _syncShadow[key] = _syncCloneDeep(_saveVal);
       // pushBackOnDiverge (meal planner, V-CA-275-6): the shadow is what the cloud holds, and when
       // the merge kept newer local fields the cloud lacked, the normal debounced flush re-pushes them.
-      if (_depCfg && _depCfg.pushBackOnDiverge && key === KEYS.mealPlan && _mpDivergesFromRemote(_saveVal, remoteVal)) {
-        _syncShadow[key] = _syncCloneDeep(remoteVal);
-        _syncMarkDirty(key);
-        if (_cfg && _cfg.collection) _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal);
-      }
+      // The shadow is the remote copy as this phone reads it (normalized), so content the merge
+      // pruned or could not read is absent from both sides and never sent as a delete (V-CA-279-1).
+      // A push-back counts toward the circuit breaker like any write (V-CA-279-3), and a failure
+      // here only logs (V-CA-279-6).
+      try {
+        if (_depCfg && _depCfg.pushBackOnDiverge && key === KEYS.mealPlan && _mpDivergesFromRemote(_saveVal, remoteVal)) {
+          _syncShadow[key] = _syncCloneDeep(_mpNormalize(remoteVal, today()));
+          _syncMarkDirty(key);
+          if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) _syncMarkNeedsFull(key);
+          else if (_cfg && _cfg.collection) { _syncCountWrites(1); _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal); }
+        }
+      } catch (e) { console.warn('[sync] meal-plan push-back skipped:', e); }
 
       // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
       // (Findings B, E). Crash-isolated; failure falls through to the

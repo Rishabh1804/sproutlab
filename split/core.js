@@ -4530,16 +4530,17 @@ function _mpDay(plan, key) {
   if (!_mpIsObj(plan.days[key].slots)) plan.days[key].slots = {};
   return plan.days[key];
 }
-// An entry as stored: a recipe by id only, or a free food by name (capped).
+// An entry as stored: a recipe by id, or a free food by name (capped). Unknown kinds and any
+// extra fields came from the record, not the user, and pass through untouched, so a v1 phone
+// editing a slot never deletes what a v2 phone wrote there (V-CA-275-7, V-CA-279-4).
 function _mpCleanItem(it) {
-  if (!_mpIsObj(it)) return null;
-  if (it.kind === 'recipe' && typeof it.id === 'string' && it.id) return { kind: 'recipe', id: it.id };
-  if (it.kind === 'food' && typeof it.name === 'string' && it.name.trim()) {
-    const f = { kind: 'food', name: it.name.trim().slice(0, MP_NAME_MAX) };
-    if (it.isNew) f.isNew = true;
-    return f;
+  if (!_mpIsObj(it) || typeof it.kind !== 'string') return null;
+  if (it.kind === 'recipe') return (typeof it.id === 'string' && it.id) ? Object.assign({}, it) : null;
+  if (it.kind === 'food') {
+    if (typeof it.name !== 'string' || !it.name.trim()) return null;
+    return Object.assign({}, it, { name: it.name.trim().slice(0, MP_NAME_MAX) });
   }
-  return null;
+  return Object.assign({}, it);
 }
 // Set a slot's entries (an empty list writes a tombstone). Refused outside the window.
 function _mpSetSlot(key, slot, items) {
@@ -4712,7 +4713,7 @@ function confirmAction(msg, callback, btnText, opts) {
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
   overlay.innerHTML = `
-    <div class="confirm-box">
+    <div class="confirm-box${opts && opts.cls ? ' ' + opts.cls : ''}">
       <p>${msg}</p>
       <div class="confirm-btns">
         <button class="btn btn-ghost" id="confirmNo">Cancel</button>
@@ -4720,9 +4721,11 @@ function confirmAction(msg, callback, btnText, opts) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  overlay.querySelector('#confirmNo').onclick = () => overlay.remove();
+  // opts.cls adds a class to the box; opts.onCancel runs on Cancel or a backdrop tap.
+  const cancel = () => { overlay.remove(); if (opts && typeof opts.onCancel === 'function') opts.onCancel(); };
+  overlay.querySelector('#confirmNo').onclick = cancel;
   overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); callback(); };
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.onclick = e => { if (e.target === overlay) cancel(); };
 }
 
 // Shared name-normalised table lookup: exact → de-pluralised → whole-word match
@@ -5728,6 +5731,7 @@ function resetAllData() {
     Object.keys(KEY_VERSIONS).forEach(k => localStorage.removeItem('ziva_kv_' + k));
     localStorage.removeItem('ziva_avatar_full');
     localStorage.removeItem('ziva_active_tab');
+    localStorage.removeItem('ziva_mp_seen');      // meal planner first-use legend (device-local)
     localStorage.removeItem('ziva_height_unit');
     localStorage.removeItem('ziva_swipe_tabs');
     localStorage.removeItem('ziva_theme');

@@ -12186,8 +12186,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-sheet .chip { min-height:44px; gap:var(--sp-6); }
 .mp-sheet .chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .mp-sheet .chip[aria-pressed="true"] { background:var(--sage-light); color:var(--tc-sage); border-color:var(--sage); }
-.mp-daypick { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:var(--sp-4); margin:0 0 var(--sp-8); }
-.mp-daypick-btn { min-height:56px; flex-direction:column; gap:var(--sp-2); padding:var(--sp-4) 0; }
+.mp-daypick { display:grid; grid-template-columns:repeat(auto-fit, minmax(44px, 1fr)); gap:var(--sp-4); margin:0 0 var(--sp-8); }
+.mp-sheet .mp-daypick-btn { min-width:44px; min-height:56px; flex-direction:column; gap:var(--sp-2); padding:var(--sp-4) 0; }
 .mp-sheet .btn { min-height:44px; gap:var(--sp-6); }
 .mp-sheet .btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .rcp-plan { margin:var(--sp-8) 0 var(--sp-4); }

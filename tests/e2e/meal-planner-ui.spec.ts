@@ -156,7 +156,7 @@ test.describe('meal planner UI', () => {
       w.mpDispatch('mpSelectDay', k);
     }, d);
     const slot = page.locator('#dietPlanRoot .mp-slot', { hasText: 'Mild Egg Curry' });
-    await expect(slot.locator('.rcp-safe--flag')).toContainText('You noted a reaction to egg');
+    await expect(slot.locator('.rcp-safe--flag')).toContainText('You marked egg to watch. Talk to her doctor');
     const order = await slot.evaluate(el => { const f = el.querySelector('.rcp-safe--flag')!, e = el.querySelector('.mp-entries')!; return !!(f.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING); });
     expect(order).toBe(true);
     expect(await slot.locator('.btn-sage').count()).toBe(0);
@@ -181,5 +181,65 @@ test.describe('meal planner UI', () => {
     const line = await page.evaluate(() => (window as any)._mpHighMercuryLine());
     expect(line).toMatch(/^high-mercury fish/);
     expect(line).toContain('surmai');
+  });
+
+  test('Next names the right meal through the day, and a skipped meal counts as decided (V-V-279-1, V-K-279-2)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any; const t = w.today(); const at = (h: number) => { const d = new Date(); d.setHours(h, 0, 0, 0); return w._mpNextSlot(t, d); };
+      const empty = [6, 9, 13, 18, 23].map(at);
+      w._mpSetSlot(t, 'breakfast', [{ kind: 'food', name: 'banana' }]);
+      const part = [13, 18].map(at);
+      return { empty, part };
+    });
+    expect(r.empty).toEqual(['breakfast', 'breakfast', 'lunch', 'dinner', null]);
+    expect(r.part).toEqual(['lunch', 'dinner']);
+  });
+
+  test('the safety lead: an established oat stays quiet, a new egg is a caution, a reaction outranks it, and grapes get their own form line', async ({ page }) => {
+    const d = await day(page, 1);
+    const r = await page.evaluate((k) => {
+      const w = window as any;
+      const oats = w._mpSlotLead([{ kind: 'food', name: 'oats' }], k);
+      const egg = w._mpSlotLead([{ kind: 'food', name: 'egg' }], k);
+      const grapes = w._mpSlotLead([{ kind: 'food', name: 'grapes' }], k);
+      foods.push({ name: 'Egg', reaction: 'bad', date: w._mpAddDays(w.today(), -3) });
+      const react = w._mpSlotLead([{ kind: 'food', name: 'egg' }, { kind: 'food', name: 'grapes' }], k);
+      return { oats, egg, grapes, react };
+    }, d);
+    expect(r.oats).toBeNull();
+    expect(r.egg[0]).toBe('caution');
+    expect(r.egg[1]).toContain('Egg is a common allergen and new for her');
+    expect(r.grapes[1]).toMatch(/^Grapes: QUARTER lengthwise/);
+    expect(r.grapes[1]).not.toContain('records');
+    expect(r.react[0]).toBe('flag');
+    expect(r.react[1]).toMatch(/^You marked egg to watch\. Talk to her doctor before offering it again\. Grapes: QUARTER/);
+  });
+
+  test('travel day: a non-packing recipe is named in its note, and a packed free food carries none (V-V-279-7)', async ({ page }) => {
+    const d = await day(page, 1);
+    const notes = await page.evaluate((k) => {
+      const w = window as any;
+      w._mpSetTravel(k, true);
+      w._mpSetSlot(k, 'lunch', [{ kind: 'recipe', id: 'travel-veg-dalia-flask' }, { kind: 'food', name: 'banana' }]);
+      w._mpSetSlot(k, 'dinner', [{ kind: 'recipe', id: 'toddler-veg-khichdi' }]);
+      w.mpDispatch('mpSelectDay', k);
+      return [...document.querySelectorAll('#dietPlanRoot .mp-gap-note')].map(e => e.textContent || '').filter(n => /not a packing recipe/.test(n));
+    }, d);
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatch(/^.+: not a packing recipe — serve it fresh where you are\.$/);
+    expect(notes[0]).not.toMatch(/Dalia|banana/i);
+  });
+
+  test('a recipe she is too young for, all through the plan window, has no Add to plan (V-V-279-5)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const hi = w._mpAgeMonthsOn(w._mpWindow(w.today()).hi);
+      const late = w.RECIPES.find((x: any) => w._recipeEffectiveMinAge(x) > hi);
+      const ok = w.RECIPES.find((x: any) => w._recipeEffectiveMinAge(x) <= w._mpAgeMonthsOn(w.today()));
+      const has = (x: any) => x ? /data-action="mpAddRecipe"/.test(w._recipeDetailHtml(x, w._mpAgeMonthsOn(w.today()))) : null;
+      return { late: has(late), ok: has(ok) };
+    });
+    if (r.late !== null) expect(r.late).toBe(false);
+    expect(r.ok).toBe(true);
   });
 });

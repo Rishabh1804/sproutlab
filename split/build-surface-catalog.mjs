@@ -486,7 +486,7 @@ const PLANNER = [
         hint: 'No iron-rich food planned today. Ragi, dal, poha or palak would add some.' }) },
       { label: '2d — egg planned again after a noted reaction (today, Next: Lunch)', width: 360, html: mpCard({ title: 'Wednesday, 4 Nov',
         lead: mpNext({ slot: 'lunch', ...rx('soft-egg-curry-rice'),
-          lead: ['flag', 'You noted a reaction to egg on 12 Oct. Talk to her doctor before offering egg again.'] }),
+          lead: ['flag', 'You marked egg to watch. Talk to her doctor before offering it again.'] }),
         slots: [mpSlot({ slot: 'breakfast', ...rx('suji-veg-upma'), act: { logged: 'Logged · 8:20 am' } }), mpSlot({ slot: 'dinner', ...rx('dal-chawal-lauki-sabzi') }), mpSlot({ slot: 'snack', act: 'add' })] }) },
     ],
   },
