@@ -12073,6 +12073,122 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .rcp-prow-inner { padding:0 0 var(--sp-12) 38px; }
 .rcp-prow-p { margin:0; font-size:var(--fs-2xs); font-style:italic; color:var(--light); line-height:var(--lh-relaxed); }
 
+/* ── Meal Planner (prefix mp-*; spec docs/specs/meal-planner-v1.md §4, CL-1…CL-12) ──
+   Tokens only, so light/dark follow the theme. Slots never inherit .meal-card tints
+   (V-V-275-11); "planned" never uses the sage good-hue (V-V-275-5); travel and new
+   food read in words, colour only supports them (V-V-275-12/13). */
+.mp-section { margin:var(--sp-8) 0 var(--sp-16); }
+.mp-head { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8); margin:0 0 var(--sp-8); }
+.mp-head > .zi { width:var(--icon-sm); height:var(--icon-sm); color:var(--tc-sage); }
+.mp-head-title { flex:1; min-width:0; font-family:'Fraunces',serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
+.mp-weeknav { display:flex; align-items:center; gap:var(--sp-4); }
+.mp-navbtn, .mp-thisweek { min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-4); border:1px solid var(--card-border); background:var(--card-bg); border-radius:var(--r-full); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-xs); color:var(--mid); cursor:pointer; }
+.mp-navbtn { min-width:44px; }
+.mp-thisweek { padding:0 var(--sp-12); color:var(--tc-sage); }
+.mp-navbtn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-navbtn--prev .zi { transform:rotate(180deg); }
+.mp-navbtn[disabled] { opacity:0.45; cursor:default; }
+.mp-navnote { flex-basis:100%; font-size:var(--fs-xs); color:var(--mid); }
+.mp-legend { display:flex; flex-wrap:wrap; gap:var(--sp-12); margin:0 0 var(--sp-6); font-size:var(--fs-xs); color:var(--mid); }
+.mp-legend span { display:inline-flex; align-items:center; gap:var(--sp-4); }
+
+/* Week strip — 7 columns that always fit, never scroll (CL-8, V-V-275-4) */
+.mp-strip { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:var(--sp-2); margin:0 0 var(--sp-10); }
+.mp-day { min-width:0; min-height:56px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-2); padding:var(--sp-4) 0; border:1.5px solid transparent; border-radius:var(--r-md); background:none; font-family:'Nunito',sans-serif; color:var(--text); cursor:pointer; }
+.mp-day-wd { font-size:var(--fs-xs); font-weight:700; color:var(--mid); }
+.mp-day-num { font-family:'Fraunces',serif; font-size:var(--fs-md); line-height:1.1; padding-bottom:var(--sp-2); border-bottom:2px solid transparent; }
+.mp-day--today .mp-day-num { font-weight:700; color:var(--tc-sage); border-bottom-color:var(--tc-sage); }
+.mp-day--sel { background:var(--sage-light); border-color:var(--sage); }
+.mp-day--past .mp-day-wd, .mp-day--past .mp-day-num { color:var(--light); }
+.mp-day--travel { border-color:var(--peach); }
+.mp-day--travel.mp-day--sel { border-color:var(--peach); }
+.mp-fill { width:var(--sp-10); height:var(--sp-10); border-radius:var(--r-full); border:1.5px solid var(--mid); box-sizing:border-box; }
+.mp-fill--full { background:var(--mid); }
+.mp-fill--part { background:linear-gradient(90deg, var(--mid) 50%, transparent 50%); }
+.mp-day--past .mp-fill { opacity:0.5; }
+.mp-mark { display:inline-flex; min-height:var(--icon-xs); }
+.mp-mark .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-mark--new { color:var(--tc-lav); }
+.mp-mark--travel { color:var(--tc-peach); }
+
+/* Day card */
+.mp-daycard { background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--sage); border-radius:var(--r-xl); padding:var(--sp-12); overflow:hidden; }
+.mp-daycard--travel { border-left-color:var(--peach); }
+.mp-dayhead { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8); margin:0 0 var(--sp-8); }
+.mp-daycard--travel .mp-dayhead { background:var(--peach-light); margin:calc(-1 * var(--sp-12)) calc(-1 * var(--sp-12)) var(--sp-10); padding:var(--sp-10) var(--sp-12); }
+.mp-daytitle { flex:1; min-width:0; font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); }
+.mp-travel-toggle .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-travel-toggle { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-6); padding:0 var(--sp-12); border-radius:var(--r-full); border:1px solid var(--card-border); background:var(--card-bg); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-xs); color:var(--mid); cursor:pointer; }
+.mp-travel-toggle[aria-pressed="true"] { border-color:var(--peach); color:var(--tc-peach); }
+
+/* Pack for today + How it keeps (V-C-275-7/8, V-V-275-10) */
+.mp-pack { border:1px solid var(--peach); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); margin:0 0 var(--sp-10); }
+.mp-pack-title { display:flex; align-items:center; gap:var(--sp-6); font-weight:800; font-size:var(--fs-sm); color:var(--tc-peach); }
+.mp-pack-title .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-pack-list { margin:var(--sp-6) 0 0; padding-left:var(--sp-20); font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); }
+.mp-keeps { margin-top:var(--sp-8); padding-top:var(--sp-8); border-top:1px solid var(--card-border); }
+.mp-keeps-title { font-size:var(--fs-xs); font-weight:800; color:var(--mid); text-transform:uppercase; letter-spacing:0.05em; }
+.mp-keeps .rcp-serving { margin:var(--sp-6) 0 0; color:var(--text); }
+
+/* Next-meal lead + slot rows (CL-3, CL-4) */
+.mp-lead { border:1.5px solid var(--card-border); background:var(--surface-alt); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); margin:0 0 var(--sp-6); }
+.mp-lead-eyebrow { font-size:var(--fs-xs); font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--mid); }
+.mp-lead .mp-slot { border-top:none; padding:var(--sp-4) 0 0; }
+.mp-slot { display:flex; flex-wrap:wrap; align-items:flex-start; gap:var(--sp-8); padding:var(--sp-10) 0; border-top:1px solid var(--card-border); }
+.mp-slot-ic { flex:0 0 auto; padding-top:var(--sp-2); color:var(--mid); }
+.mp-slot-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-slot-main { flex:1; min-width:0; min-height:44px; display:block; padding:0; border:none; background:none; text-align:left; font-family:'Nunito',sans-serif; color:var(--text); cursor:pointer; }
+.mp-slot-label { display:flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:800; color:var(--mid); text-transform:uppercase; letter-spacing:0.05em; }
+.mp-slot-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+.mp-slot-chev .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-slot--open .mp-slot-chev { transform:rotate(180deg); }
+.mp-slot-food { display:block; font-size:var(--fs-sm); font-weight:700; color:var(--text); line-height:var(--lh-snug); }
+.mp-slot-empty { font-weight:600; color:var(--mid); }
+.mp-pill { display:inline-flex; align-items:center; gap:var(--sp-2); padding-left:var(--sp-10); border:1px solid var(--card-border); border-radius:var(--r-full); background:var(--surface-alt); font-size:var(--fs-xs); font-weight:700; color:var(--text); }
+.mp-pill-x { min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; border:none; background:none; color:var(--mid); cursor:pointer; }
+.mp-pill-x .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-slot-cues { display:flex; flex-wrap:wrap; gap:var(--sp-6); margin-top:var(--sp-4); }
+.mp-chew { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--tc-amber); }
+.mp-chew .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-entry-new { display:inline-flex; align-items:center; gap:var(--sp-4); border:1px solid var(--lavender); color:var(--tc-lav); border-radius:var(--r-sm); padding:0 var(--sp-6); font-size:var(--fs-xs); font-weight:800; }
+.mp-entry-new .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-slot .rcp-safe { flex-basis:100%; margin:var(--sp-2) 0 0; }
+.mp-slot-act { flex:0 0 auto; }
+.mp-ate-btn, .mp-add-btn { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-12); border-radius:var(--r-full); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-xs); background:var(--card-bg); cursor:pointer; }
+.mp-ate-btn { border:1.5px solid var(--sage); color:var(--tc-sage); }
+.mp-add-btn { border:1.5px dashed var(--light); color:var(--mid); }
+.mp-ate-btn .zi, .mp-add-btn .zi, .mp-logged .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-logged { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
+.mp-slot--open .rcp-prows { flex-basis:100%; margin-top:var(--sp-4); }
+.mp-slot-pills { flex-basis:100%; display:flex; flex-wrap:wrap; gap:var(--sp-6); }
+.mp-gap-note, .mp-hint, .mp-empty { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
+.mp-hint { display:flex; align-items:flex-start; gap:var(--sp-6); margin:var(--sp-8) 0 0; padding:var(--sp-8) var(--sp-10); border-radius:var(--r-lg); background:var(--surface-alt); }
+.mp-hint .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
+.mp-gap-note { padding:var(--sp-6) 0; }
+.mp-tomorrow { font-size:var(--fs-sm); color:var(--mid); padding:var(--sp-6) 0 var(--sp-2); }
+.mp-dayfoot { display:flex; flex-wrap:wrap; gap:var(--sp-12); margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--card-border); }
+.mp-textbtn { min-height:44px; background:none; border:none; padding:0 var(--sp-4); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--mid); cursor:pointer; }
+
+/* Slot picker (lives in a .ql-sheet) — top 5 pickable, then All, then new food (CL-5) */
+.mp-picker { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-xl) var(--r-xl) 0 0; padding:var(--sp-12); }
+.mp-picker-title { font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); }
+.mp-search { display:block; width:100%; box-sizing:border-box; min-height:44px; margin:var(--sp-8) 0; padding:0 var(--sp-12); border:1px solid var(--card-border); border-radius:var(--r-lg); background:var(--card-bg); color:var(--text); font-family:'Nunito',sans-serif; font-size:var(--fs-sm); }
+.mp-picker-sec { font-size:var(--fs-xs); font-weight:800; color:var(--mid); text-transform:uppercase; letter-spacing:0.05em; margin:var(--sp-8) 0 var(--sp-2); }
+.mp-picker-row { display:flex; align-items:center; gap:var(--sp-10); width:100%; min-height:48px; padding:var(--sp-6) var(--sp-4); border:none; border-bottom:1px solid var(--card-border); background:none; text-align:left; font-family:'Nunito',sans-serif; font-size:var(--fs-sm); font-weight:700; color:var(--text); cursor:pointer; }
+.mp-picker-row > .zi { width:var(--icon-sm); height:var(--icon-sm); color:var(--mid); flex:0 0 auto; }
+.mp-picker-row-main { flex:1; min-width:0; }
+.mp-picker-why { display:block; font-weight:600; font-size:var(--fs-xs); color:var(--mid); }
+.mp-picker-row--locked { color:var(--mid); cursor:default; }
+.mp-picker-lock { display:block; font-weight:700; font-size:var(--fs-xs); color:var(--tc-amber); }
+.mp-picker-more { color:var(--tc-sage); }
+
+/* Confirms (new food / allergen) */
+.mp-confirm { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-xl); padding:var(--sp-16); }
+.mp-confirm-title { font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); margin:0 0 var(--sp-6); }
+.mp-confirm-body { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-12); }
+.mp-confirm-actions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-12); }
+.mp-confirm-actions .btn { min-height:44px; }
+
 /* empty / cold-start state */
 .recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
 
