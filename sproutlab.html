@@ -12143,28 +12143,19 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-pack-title { display:flex; align-items:center; gap:var(--sp-6); font-weight:800; font-size:var(--fs-sm); color:var(--tc-peach); }
 .mp-pack-title .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .mp-pack-list { margin:var(--sp-6) 0 0; padding-left:var(--sp-20); font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); }
-.mp-keeps { margin-top:var(--sp-8); padding-top:var(--sp-8); border-top:1px solid var(--card-border); }
-.mp-pack--keeps .mp-keeps { margin-top:0; padding-top:0; border-top:none; }
-.mp-keeps-title { font-size:var(--fs-xs); font-weight:800; color:var(--mid); text-transform:uppercase; letter-spacing:0.05em; }
-.mp-keeps .rcp-serving { margin:var(--sp-6) 0 0; color:var(--text); }
 
 /* Next-meal lead + slot rows (CL-3, CL-4) */
 .mp-lead { border:1.5px solid var(--light); background:var(--card-bg); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); margin:0 0 var(--sp-6); }
 .mp-lead-eyebrow { font-size:var(--fs-xs); font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--mid); }
 .mp-lead .mp-slot { border-top:none; padding:var(--sp-4) 0 0; }
-.mp-slot { display:flex; flex-wrap:wrap; align-items:flex-start; gap:var(--sp-8); padding:var(--sp-10) 0; border-top:1px solid var(--card-border); }
-.mp-slot-ic { flex:0 0 auto; padding-top:var(--sp-2); color:var(--mid); }
+.mp-slot { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-8); padding:var(--sp-10) 0; border-top:1px solid var(--card-border); }
+.mp-slot-ic { flex:0 0 auto; color:var(--mid); }
 .mp-slot-ic .zi { width:var(--icon-sm); height:var(--icon-sm); }
-.mp-slot-main { flex:1; min-width:0; min-height:44px; display:block; padding:0; border:none; background:none; text-align:left; font-family:'Nunito',sans-serif; color:var(--text); cursor:pointer; }
+.mp-slot-main { flex:1; min-width:0; min-height:44px; display:flex; align-items:center; padding:0; border:none; background:none; text-align:left; font-family:'Nunito',sans-serif; color:var(--text); cursor:pointer; }
 .mp-slot-label { display:flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:800; color:var(--mid); text-transform:uppercase; letter-spacing:0.05em; }
 .mp-slot-chev { display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
 .mp-slot-chev .zi { width:var(--icon-xs); height:var(--icon-xs); }
 .mp-slot--open .mp-slot-chev { transform:rotate(180deg); }
-.mp-slot-food { display:block; font-size:var(--fs-sm); font-weight:700; color:var(--text); line-height:var(--lh-snug); }
-.mp-pill { display:inline-flex; align-items:center; gap:var(--sp-2); padding-left:var(--sp-10); border:1px solid var(--card-border); border-radius:var(--r-full); background:var(--surface-alt); font-size:var(--fs-xs); font-weight:700; color:var(--text); }
-.mp-pill-x { min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; border:none; background:none; color:var(--mid); cursor:pointer; }
-.mp-pill-x .zi { width:var(--icon-xs); height:var(--icon-xs); }
-.mp-slot-cues { display:flex; flex-wrap:wrap; gap:var(--sp-6); margin-top:var(--sp-4); }
 .mp-chew { display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--mid); }
 .mp-chew .zi { width:var(--icon-xs); height:var(--icon-xs); }
 .mp-entry-new { display:inline-flex; align-items:center; gap:var(--sp-4); border:1px solid var(--lavender); color:var(--tc-lav); border-radius:var(--r-sm); padding:0 var(--sp-6); font-size:var(--fs-xs); font-weight:800; }
@@ -12177,7 +12168,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-ate-btn .zi, .mp-add-btn .zi, .mp-logged .zi { width:var(--icon-xs); height:var(--icon-xs); }
 .mp-logged { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
 .mp-slot--open .rcp-prows { flex-basis:100%; margin-top:var(--sp-4); }
-.mp-slot-pills { flex-basis:100%; display:flex; flex-wrap:wrap; gap:var(--sp-6); }
 .mp-gap-note, .mp-hint, .mp-empty { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .mp-hint { display:flex; align-items:flex-start; gap:var(--sp-6); margin:var(--sp-8) 0 0; padding:var(--sp-8) var(--sp-10); border-radius:var(--r-lg); border:1px solid var(--card-border); }
 .mp-hint .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
@@ -12185,6 +12175,21 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-tomorrow { font-size:var(--fs-sm); color:var(--mid); padding:var(--sp-6) 0 var(--sp-2); }
 .mp-dayfoot { display:flex; flex-wrap:wrap; gap:var(--sp-12); margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--card-border); }
 .mp-textbtn { min-height:44px; background:none; border:none; padding:0 var(--sp-4); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--mid); cursor:pointer; }
+
+/* Planned food — the house standard at slot size: a recipe is a recipe-row box (food-group
+   rail + grams-weighted fingerprint fade, --rc-* set per recipe as on .recipe-row), a free
+   food is a .recipe-chip with its .fdom-chip food-group wash. */
+.mp-entries { flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); margin-top:var(--sp-4); }
+.mp-entry { flex:1 1 100%; min-width:0; display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-8) var(--sp-10); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-lg); background:var(--card-bg); }
+.mp-entry--gen { background:var(--rc-fl, var(--card-bg)); }
+[data-theme="dark"] .mp-entry--gen { background:var(--rc-fd, var(--surface)); }
+.mp-entry > .zif, .mp-entry > .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
+.mp-entry-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--sp-2); }
+.mp-entry-t { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-snug); }
+.mp-mode { color:var(--tc-peach); border-color:var(--peach); }
+.mp-mode .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-pack .mp-entries { margin:var(--sp-6) 0 var(--sp-4); }
+.mp-picker .recipe-row { margin-bottom:var(--sp-6); }
 
 /* Slot picker (lives in a .ql-sheet) — top 5 pickable, then All, then new food (CL-5) */
 .mp-picker { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-xl) var(--r-xl) 0 0; padding:var(--sp-12); }

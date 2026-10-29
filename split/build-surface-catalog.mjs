@@ -29,21 +29,33 @@ const TEMPLATE = readFileSync(join(ROOT, 'split', 'template.html'), 'utf8');
 const CORE = readFileSync(join(ROOT, 'split', 'core.js'), 'utf8');
 const OUT = join(ROOT, 'docs', 'SURFACE_CATALOG.html');
 
-// The recipe corpus, loaded the way the app loads it (config → data → recipes), so the
-// planner exemplars quote real pack lines, keeps strings and chew-step counts (V-C-278-1…5).
-const RECIPES = (() => {
-  const ctx = { zi: () => '', escHtml: x => x, setTimeout() {}, setInterval() {}, clearTimeout() {}, console,
-    document: { getElementById: () => null, addEventListener() {}, querySelector: () => null },
-    localStorage: { getItem: () => null, setItem() {} }, navigator: {} };
-  ctx.window = ctx;
+// The app's recipe layer, loaded the way the app loads it (config → data → recipes →
+// core → diet) against a stub DOM, so planner exemplars quote the real corpus (pack
+// lines, keeps, chew counts) and draw food with the real standard: the recipe-row
+// fingerprint + rail, zif food icons and .fdom-chip food-group washes.
+const APP = (() => {
+  const noop = () => {};
+  const el = () => new Proxy({ style: {}, dataset: {}, classList: { add: noop, remove: noop, toggle: noop, contains: () => false } }, {
+    get: (t, k) => (k in t ? t[k] : (k === 'querySelectorAll' || k === 'getElementsByClassName') ? () => []
+      : (k === 'innerHTML' || k === 'textContent' || k === 'value') ? '' : noop),
+  });
+  const doc = el();
+  Object.assign(doc, { getElementById: () => null, querySelector: () => null, createElement: el, documentElement: el(), body: el() });
+  const ctx = { console, document: doc, navigator: {}, location: { search: '', hash: '', href: '' },
+    setTimeout: noop, setInterval: noop, clearTimeout: noop, clearInterval: noop, requestAnimationFrame: noop,
+    localStorage: { getItem: () => null, setItem: noop, removeItem: noop }, sessionStorage: { getItem: () => null, setItem: noop },
+    history: { pushState: noop, replaceState: noop }, addEventListener: noop, removeEventListener: noop,
+    matchMedia: () => ({ matches: false, addEventListener: noop, addListener: noop }), getComputedStyle: () => ({ getPropertyValue: () => '' }) };
+  ctx.window = ctx; ctx.self = ctx;
   vm.createContext(ctx);
-  const src = ['config', 'data', 'recipes'].map(f => readFileSync(join(ROOT, 'split', f + '.js'), 'utf8')).join('\n');
-  vm.runInContext(src + '\n;this.__R = RECIPES; this.__FE = FOOD_EFFECTS;', ctx);
-  return Object.assign(Object.fromEntries(ctx.__R.map(r => [r.id, r])), { __FE: ctx.__FE });
+  const src = ['config', 'data', 'recipes', 'core', 'diet'].map(f => readFileSync(join(ROOT, 'split', f + '.js'), 'utf8')).join('\n');
+  vm.runInContext(src + `\n;this.__APP = { R: RECIPES_BY_ID, FE: FOOD_EFFECTS, icon: recipeFoodIcon, dom: _recipeChipDomain,
+    fp: _recipeFingerprint, grp: _recipePrimaryGroup, rail: _recipeRailColor, row: _recipeRowHtml };`, ctx);
+  return ctx.__APP;
 })();
-const FOOD_EFFECTS = RECIPES.__FE;
+const RECIPES = APP.R;
+const FOOD_EFFECTS = APP.FE;
 const EGG_HOW = FOOD_EFFECTS.egg.howToIntroduce;
-delete RECIPES.__FE;
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -191,11 +203,31 @@ const SURFACES = [
 // lines, chew steps and keeps strings mirror recipes.js; the clock, dates and the
 // rule-table lead (_mpNextSlot) are fixed so each exemplar shows one state.
 const SLOT = { breakfast: ['Breakfast', 'sun'], lunch: ['Lunch', 'bowl'], dinner: ['Dinner', 'moon'], snack: ['Snack', 'spoon'] };
+// A slot holds recipes ({r}) and free foods ({f}).
 const rx = (id, extra = '') => {
-  const r = RECIPES[id];
-  if (!r) throw new Error('catalog: no recipe ' + id);
-  return { food: r.title + (extra ? ' + ' + extra : ''), chew: (r.choking || []).length };
+  if (!RECIPES[id]) throw new Error('catalog: no recipe ' + id);
+  return { items: [{ r: id }, ...(extra ? [{ f: extra }] : [])] };
 };
+const zif = ic => ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+// A planned recipe: the recipe-row standard at slot size — food-group rail, grams-weighted
+// fingerprint fade (light/dark), the lead ingredient's food icon (diet.js _recipeRowHtml).
+function recipeEntry(id) {
+  const r = RECIPES[id];
+  const fp = APP.fp(r);
+  const style = (fp ? `--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '') + `--rc-rail:${APP.rail(APP.grp(r))}`;
+  const n = (r.choking || []).length;
+  return `<span class="mp-entry${fp ? ' mp-entry--gen' : ''}" style="${style}">${zif(APP.icon(((r.ingredients || [])[0] || {}).name))}`
+    + `<span class="mp-entry-main"><span class="mp-entry-t">${esc(r.title)}</span>`
+    + (n ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${steps(n)}</span>` : '') + `</span></span>`;
+}
+// A free food, or a recipe named inline: the ingredient-pill standard (.recipe-chip + its .fdom-chip wash).
+function foodChip(name, label = name) {
+  const d = APP.dom(name);
+  return `<span class="recipe-chip${d ? ' fdom-chip--' + d : ''}">${zif(APP.icon(name))}${esc(label)}</span>`;
+}
+const recipeChip = id => foodChip(((RECIPES[id].ingredients || [])[0] || {}).name, RECIPES[id].title);
+const MODE = { thermos: ['thermos', 'In a flask', 'WHO'], cool: ['timer', 'Ice-pack bag', 'WHO · USDA FSIS'], spot: ['clock', 'Made on the spot', ''] };
+const modeChip = how => `<span class="recipe-chip mp-mode">${zi(MODE[how][0])}${MODE[how][1]}</span>`;
 const steps = n => n + (n === 1 ? ' step' : ' steps');
 const rcpSafe = (level, text) => `<div class="rcp-safe rcp-safe--${level}">${zi(level === 'safe' ? 'check' : level === 'flag' ? 'alert-circle' : 'warn')} <span>${esc(text)}</span></div>`;
 
@@ -231,17 +263,18 @@ function mpAct(a, slot) {
   if (a && a.logged) return `<span class="mp-logged">${zi('check')} ${esc(a.logged)}</span>`;
   return '';
 }
-function mpSlot({ slot, food, chew, newTag, lead, act = 'ate', open, body = '' }) {
+function mpSlot({ slot, items = [], newTag, lead, act = 'ate', open, body = '', mode = false }) {
   const [label, icon] = SLOT[slot];
-  const cues = (chew || newTag) ? `<span class="mp-slot-cues">${chew ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${steps(chew)}</span>` : ''}`
-    + `${newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Ziva: ${esc(newTag)}</span>` : ''}</span>` : '';
+  const how = mode && items[0] && items[0].r && RECIPES[items[0].r].travel ? RECIPES[items[0].r].travel.how : '';
+  const entries = items.length ? `<div class="mp-entries" role="button" tabindex="-1" data-action="mpToggleSlot" data-arg="${slot}">`
+    + items.map(it => it.r ? recipeEntry(it.r) : foodChip(it.f)).join('')
+    + (how ? modeChip(how) : '') + (newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Ziva: ${esc(newTag)}</span>` : '') + `</div>` : '';
   return `<div class="mp-slot${open ? ' mp-slot--open' : ''}">`
     + `<span class="mp-slot-ic">${zi(icon)}</span>`
     + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
-    + `<span class="mp-slot-label">${label} <span class="mp-slot-chev">${zi('chevron-down')}</span></span>`
-    + (food ? `<span class="mp-slot-food">${esc(food)}</span>` : '') + `${cues}</button>`
+    + `<span class="mp-slot-label">${label} <span class="mp-slot-chev">${zi('chevron-down')}</span></span></button>`
     + `<span class="mp-slot-act">${mpAct(act, slot)}</span>`
-    + (lead ? rcpSafe(lead[0], lead[1]) : '') + body + `</div>`;
+    + entries + (lead ? rcpSafe(lead[0], lead[1]) : '') + body + `</div>`;
 }
 const mpLead = (slotHtml) => `<div class="mp-lead"><div class="mp-lead-eyebrow">Next</div>${slotHtml}</div>`;
 function mpCard({ title, travel, pack = '', lead = '', slots = [], hint = '', tomorrow = '', foot = true }) {
@@ -259,7 +292,6 @@ const prow = (variant, icon, title, teaser, body, open) =>
   + (teaser ? `<span class="rcp-prow-d">${esc(teaser)}</span>` : '') + `</span><span class="rcp-prow-chev">${zi('arrow-right')}</span></button>`
   + `<div class="rcp-prow-body"><div class="rcp-prow-inner">${body}</div></div></div>`;
 const ol = items => `<ol class="mp-pack-list">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ol>`;
-const pills = names => `<div class="mp-slot-pills">${names.map(n => `<span class="mp-pill">${esc(n)}<button class="mp-pill-x" data-action="mpRemoveEntry" aria-label="Remove ${esc(n)}">${zi('close')}</button></span>`).join('')}</div>`;
 
 // Pack list: the verbatim union of the planned recipes' travel.pack lines, de-duplicated
 // by exact string (V-C-275-7, V-C-278-2). Food flasks are counted by thermos-mode recipe;
@@ -274,24 +306,26 @@ function packLines(ids) {
   });
   return out;
 }
-// How it keeps: each distinct travel.keeps string once, labelled by how it is packed (V-C-278-3).
-const KEEP_MODE = { thermos: ['thermos', 'Flask meal', 'WHO'], cool: ['timer', 'Ice-pack bag', 'WHO · USDA FSIS'], spot: ['clock', 'Made on the spot', ''] };
-function keepsBlock(ids) {
+// How it keeps, verbatim, for one recipe (V-C-278-3): inside that meal's pack row, and
+// as the collapsed "Before you serve" row on the Next lead.
+function keepsLine(r) {
+  const [icon, , src] = MODE[r.travel.how];
+  return `<div class="rcp-serving">${zi(icon)} <span><strong>How it keeps:</strong> ${esc(r.travel.keeps)}`
+    + (src ? ` <span class="rcp-serving-src">${src}</span>` : '') + `</span></div>`;
+}
+// Pack for today: a one-line summary (flask count, ice-pack bag), then one collapsed row per
+// meal — its own pack lines and keeping rule inside. Short at a glance; nothing lost.
+function packBlock(ids, { when = 'today', collapsed = false } = {}) {
   const rs = ids.map(id => RECIPES[id]).filter(r => r.travel);
-  const seen = new Map();
-  for (const r of rs) if (!seen.has(r.travel.keeps)) seen.set(r.travel.keeps, { how: r.travel.how, n: 0 });
-  for (const r of rs) seen.get(r.travel.keeps).n++;
-  return `<div class="mp-keeps"><div class="mp-keeps-title">How it keeps</div>` + [...seen].map(([text, { how, n }]) => {
-    const [icon, label, src] = KEEP_MODE[how];
-    return `<div class="rcp-serving">${zi(icon)} <span><strong>${label}${n > 1 ? 's' : ''}:</strong> ${esc(text)}`
-      + (src ? ` <span class="rcp-serving-src">${src}</span>` : '') + `</span></div>`;
-  }).join('') + `</div>`;
+  if (collapsed) return `<div class="mp-pack">${prow('travel', 'bag', `Packed: ${packLines(ids).length} things`, 'The list from this morning', ol(packLines(ids)), false)}</div>`;
+  const flasks = rs.filter(r => r.travel.how === 'thermos').length;
+  const sum = [flasks ? `<span class="recipe-chip mp-mode">${zi('thermos')}${flasks} food flask${flasks > 1 ? 's' : ''}</span>` : '',
+    rs.some(r => r.travel.how === 'cool') ? modeChip('cool') : ''].join('');
+  const rows = rs.map(r => prow('travel', MODE[r.travel.how][0], r.title, `${r.travel.pack.length} things · ${MODE[r.travel.how][1]}`,
+    ol(r.travel.pack) + keepsLine(r), false)).join('');
+  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${when}</div><div class="mp-entries">${sum}</div><div class="rcp-prows">${rows}</div></div>`;
 }
-function packBlock(ids, { when = 'today', collapsed = false, keepIds = ids } = {}) {
-  const lines = packLines(ids);
-  if (collapsed) return `<div class="mp-pack">${prow('travel', 'bag', `Packed: ${lines.length} things`, 'The list from this morning', ol(lines), false)}</div>`;
-  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${when}</div>${ol(lines)}${keepsBlock(keepIds)}</div>`;
-}
+const serveRow = id => `<div class="rcp-prows">${prow('travel', MODE[RECIPES[id].travel.how][0], 'Before you serve', 'How it keeps', keepsLine(RECIPES[id]), false)}</div>`;
 
 // A travel day seen on the day itself: Pack for today above the lead (CL-3).
 const TRAVEL_DAY = ['travel-flask-oats-banana', 'travel-veg-dalia-flask', 'travel-steamed-ragi-banana-squares'];
@@ -299,29 +333,30 @@ function travelCard(state) {
   const fresh = state === 'fresh';
   const [b, l, s, d] = travelSlots(state === 'lunchOpen', fresh);
   if (fresh) return mpCard({ title: 'Friday, 6 Nov', travel: true, pack: packBlock(TRAVEL_DAY), lead: mpLead(b), slots: [l, s, d] });
-  // Breakfast is logged, so its keeping rule leaves; the rest sit between Next and the slots, still visible.
-  const keeps = `<div class="mp-pack mp-pack--keeps">${keepsBlock(TRAVEL_DAY.slice(1))}</div>`;
-  return mpCard({ title: 'Friday, 6 Nov', travel: true, pack: packBlock(TRAVEL_DAY, { collapsed: true }), lead: mpLead(l) + keeps, slots: [b, s, d] });
+  return mpCard({ title: 'Friday, 6 Nov', travel: true, pack: packBlock(TRAVEL_DAY, { collapsed: true }), lead: mpLead(l), slots: [b, s, d] });
 }
 const travelSlots = (lunchOpen, fresh) => {
   const lunch = RECIPES['travel-veg-dalia-flask'];
   return [
-    mpSlot({ slot: 'breakfast', ...rx('travel-flask-oats-banana'), act: fresh ? 'ate' : { logged: 'Logged · 8:10 am' } }),
-    mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask', 'banana'), open: lunchOpen,
-      body: lunchOpen ? pills([lunch.title, 'Banana']) + `<div class="rcp-prows">`
+    mpSlot({ slot: 'breakfast', ...rx('travel-flask-oats-banana'), mode: true, act: fresh ? 'ate' : { logged: 'Logged · 8:10 am' },
+      body: fresh ? serveRow('travel-flask-oats-banana') : '' }),
+    mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask', 'banana'), mode: true, open: lunchOpen,
+      body: fresh ? '' : lunchOpen ? `<div class="rcp-prows">`
         + prow('chew', 'tooth', 'Make it safe to chew', steps(lunch.choking.length), ol(lunch.choking), true)
-        + prow('travel', 'timer', 'Packing', `${lunch.travel.pack.length} things`, ol(lunch.travel.pack), true)
-        + `</div>` : '' }),
-    mpSlot({ slot: 'snack', ...rx('travel-steamed-ragi-banana-squares') }),
+        + prow('travel', 'timer', 'Packing', `${lunch.travel.pack.length} things`, ol(lunch.travel.pack), false)
+        + prow('travel', 'thermos', 'Before you serve', 'How it keeps', keepsLine(lunch), true)
+        + `</div>` : serveRow('travel-veg-dalia-flask') }),
+    mpSlot({ slot: 'snack', ...rx('travel-steamed-ragi-banana-squares'), mode: true }),
     // Ice-pack options first: a flask packed in the morning may fail its heat check by evening (V-C-278-12a).
-    mpSlot({ slot: 'dinner', act: 'add', body: `<div class="mp-gap-note">No travel dinners in the recipes yet. The travel lunches work for dinner too: ${esc(RECIPES['travel-soft-palak-thepla'].title)} or ${esc(RECIPES['travel-aloo-carrot-paratha-rolls'].title)} in the ice-pack bag, or a flask meal packed fresh nearer dinner.</div>` }),
+    mpSlot({ slot: 'dinner', act: 'add', body: `<div class="mp-gap-note">No travel dinner yet. These pack well for dinner too:</div>`
+      + `<div class="mp-entries">${recipeChip('travel-soft-palak-thepla')}${recipeChip('travel-aloo-carrot-paratha-rolls')}</div>` }),
   ];
 };
-// Two flask meals on a future travel day: the count line (V-C-275-7, V-C-278-1).
+// Two flask meals on a future travel day: the flask count (V-C-275-7, V-C-278-1).
 const twoFlaskCard = () => mpCard({ title: 'Saturday, 7 Nov', travel: true,
   pack: packBlock(['travel-veg-dalia-flask', 'toddler-veg-khichdi'], { when: 'Sat' }),
-  slots: [mpSlot({ slot: 'breakfast', act: 'add' }), mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask'), act: '' }),
-    mpSlot({ slot: 'dinner', ...rx('toddler-veg-khichdi'), act: '' }), mpSlot({ slot: 'snack', act: 'add' })] });
+  slots: [mpSlot({ slot: 'breakfast', act: 'add' }), mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask'), mode: true, act: '' }),
+    mpSlot({ slot: 'dinner', ...rx('toddler-veg-khichdi'), mode: true, act: '' }), mpSlot({ slot: 'snack', act: 'add' })] });
 
 // Picker sheet (a .ql-sheet in the app; shown here without the sheet chrome).
 function pickRow({ icon = 'bowl', title, why, locked, lock, more, expanded, action = 'mpPick' }) {
@@ -332,19 +367,21 @@ function pickRow({ icon = 'bowl', title, why, locked, lock, more, expanded, acti
 }
 // Snack is the slot with a real age-locked recipe for her (Banana & Honey Toast, 24 m+).
 const SNACKS = Object.values(RECIPES).filter(r => r.slot === 'snack').length;
+const AGE_NOW = 14;
+const pickRecipe = (id, why) => APP.row(RECIPES[id], 'mp', AGE_NOW, { relevance: why || '' });
 const picker = ({ search = '', noMatch = false } = {}) => `<div class="mp-picker"><div class="mp-picker-title">Snack · Thursday, 5 Nov</div>`
   + `<input class="mp-search" type="search" placeholder="Search recipes and foods" aria-label="Search recipes and foods" value="${esc(search)}">`
   + (noMatch
     ? `<div class="mp-empty">No recipe or food called “${esc(search)}”.</div>` + pickRow({ icon: 'plus', title: `Add “${search}” as a food`, action: 'mpPickFree' })
     : `<div class="mp-picker-sec">Suggested for Thursday</div>`
-      + pickRow({ icon: 'spoon', title: 'Steamed Veg Sticks with Chana–Til Dip', why: 'Adds iron' })
-      + pickRow({ icon: 'spoon', title: 'Ragi–Banana Mini Pancakes', why: 'Adds iron' })
-      + pickRow({ icon: 'spoon', title: 'Soft Fruit Bowl', why: 'Not had this week' })
-      + pickRow({ icon: 'spoon', title: 'Curd with Papaya & Almond Dust', why: 'A favourite lately' })
-      + pickRow({ icon: 'spoon', title: 'Sweet Potato Jeera Bites', why: 'Not had this week' })
+      + pickRecipe('steamed-veg-sticks-chana-til-dip', 'Adds iron')
+      + pickRecipe('ragi-banana-mini-pancakes', 'Adds iron')
+      + pickRecipe('soft-fruit-bowl-quartered', 'Not had this week')
+      + pickRecipe('curd-papaya-nut-dust', 'A favourite lately')
+      + pickRecipe('sweet-potato-jeera-bites', 'Not had this week')
       + pickRow({ icon: 'spoon', title: `All snack recipes (${SNACKS})`, more: true, expanded: true, action: 'mpPickAll' })
-      + pickRow({ icon: 'spoon', title: 'Plain Jeera Chaas' })
-      + pickRow({ icon: 'spoon', title: 'Banana & Honey Toast (2 y+)', locked: true, lock: 'From 2 years (honey counts as added sugar) · opens 4 Sep 2027' })
+      + pickRecipe('jeera-chaas')
+      + pickRecipe('banana-honey-toast') + `<p class="mp-picker-lock">From 2 years (honey counts as added sugar) · opens 4 Sep 2027 · can’t be planned yet</p>`
       + pickRow({ icon: 'new-food', title: 'Plan a new food', why: 'Foods she has not had yet', action: 'mpPickNew' }))
   + `</div>`;
 
@@ -408,7 +445,7 @@ const PLANNER = [
   },
   {
     id: 'mp-travel', title: 'Planner 3 · Travel day',
-    note: 'Peach stripe, header wash and pack border; the travel state is in words on the toggle ("Travel day: on", V-V-275-13). Pack for today sits under the header, above everything else (CL-3). Its lines are the planned recipes’ own pack lines, merged by exact string; one flask meal here, so no count line (3d shows two). How it keeps lists each keeping rule once, labelled by how it is packed, and stays visible (V-C-275-8). Dinner has no travel recipe: the gap copy offers the ice-pack lunches first (V-C-275-17, V-C-278-12). 3c: after the first log the list collapses to its count, Next comes up under it, and How it keeps follows Next with only the rules for slots not yet logged (breakfast’s leaves) (V-V-278-4). 3b opens lunch: pills, Make it safe to chew and Packing open (Packing opens by default only once the pack list has collapsed, V-V-278-9). No Combo row: it shows only when the combo engine has a note for the pair.',
+    note: 'Short at a glance, nothing lost. Pack for today is one summary line (flask count, ice-pack bag) and one collapsed row per meal; each row holds that meal’s own pack lines and its keeping rule, verbatim. Each travel slot carries a how-it-travels chip (In a flask · Ice-pack bag · Made on the spot); the next meal has a collapsed “Before you serve” row with its keeping rule. After the first log the pack block collapses to “Packed: 8 things”. Dinner has no travel recipe, so it offers the ice-pack lunches as chips. The travel state is in words on the toggle (“Travel day: on”). Food uses the house standard: recipe boxes (food-group rail, fingerprint fade, food icon) and food-group chips.',
     exemplars: [
       { label: '3 — Friday travel day, seen that morning, nothing logged', width: 360, html: travelCard('fresh') },
       { label: '3c — after the first log (breakfast); Next: Lunch', width: 360, html: travelCard('logged') },
@@ -429,7 +466,7 @@ const PLANNER = [
   },
   {
     id: 'mp-picker', title: 'Planner 5 · Slot picker',
-    note: 'Search, then five pickable suggestions before any scroll, each with its reason in words (CL-5). Locked rows never take a top-5 place; in the All list they show the reason inline and cannot be added (V-V-275-15). Then "Plan a new food". No match → "Add “xyz” as a food" (V-V-275-18). Check at large zoom with the toolbar.',
+    note: 'Rows are the real Recipes rows (diet.js _recipeRowHtml): fingerprint, rail, food icon, prep and age; the reason rides the row’s relevance tag. Search, then five pickable suggestions before any scroll (CL-5). Locked rows never take a top-5 place; in the All list they show the reason inline and cannot be added (V-V-275-15). Then "Plan a new food". No match → "Add “xyz” as a food" (V-V-275-18). Check at large zoom with the toolbar.',
     exemplars: [
       { label: 'Suggestions + All list expanded', width: 360, html: picker() },
       { label: 'No match', width: 360, html: picker({ search: 'jowar', noMatch: true }) },
@@ -456,7 +493,7 @@ const PLANNER = [
       { label: 'Pruned week, and the horizon clamp', width: 360, html: section(mpHead({ title: 'Week of 5 Oct', thisWeek: true }) + `<p class="mp-empty">Plans older than 4 weeks are cleared.</p>`)
         + section(mpHead({ title: 'Week of 28 Dec', thisWeek: true, nextDisabled: true, note: 'You can plan up to 8 weeks ahead.' })) },
       { label: 'Fewer than five suggestions', width: 360, html: `<div class="mp-picker"><div class="mp-picker-title">Snack · Thursday, 5 Nov</div>`
-        + pickRow({ icon: 'spoon', title: 'Soft Fruit Bowl', why: 'Fits her age' }) + pickRow({ icon: 'spoon', title: 'Curd & Banana Bowl', why: 'Fits her age' })
+        + pickRecipe('soft-fruit-bowl-quartered', 'Fits her age') + pickRecipe('curd-banana-bowl', 'Fits her age')
         + `<div class="mp-empty">Keep logging meals and suggestions will get more personal.</div>` + pickRow({ icon: 'spoon', title: `All snack recipes (${SNACKS})`, more: true, action: 'mpPickAll' }) + `</div>` },
     ],
   },
