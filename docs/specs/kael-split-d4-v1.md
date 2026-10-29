@@ -68,7 +68,7 @@ The two sides sum to 29,667 ✓. The split is file-level, the same as both prece
 - **Registries are read by reference, not by call.** `data.js` has **zero** inbound `calls` edges. `AGE_RULES` is referenced in diet (15), cards (8), recipes (6), qa (2) and home (1). `FOOD_EFFECTS` is referenced in diet (37), cards (6), qa (1) and recipes (2). `ALLERGENS` is referenced in diet (11), recipes (4) and qa (2). **The graph ripple cannot see a registry edit.** §4 closes that gap.
 - **`SYNC_RENDER_DEPS` names renderers by string** (`renderHome`, `renderDietStats`, `renderGrowth`…). That is also invisible to the graph. A new row arms a re-render inside another Governor's Region.
 - **recipes.js extends foundation registries** (`AGE_RULES_ADD_12_24`, `ALLERGENS_ADD_12_24`). The file is Ceres's, but what those blocks do is foundation work. Ceres stays primary, with a Carina consult on those blocks.
-- **Impurity: scoring lives in core.js.** `calcDietScore` … `calcZivaScore` and the domain modifiers (core.js ≈1,752–2,690, about 940 lines) are *meaning*, not *record*, but they sit on the foundation side because of the file they live in. `getNextUpcomingVacc`, `_dietAllowsFood` and `medDoseSlots` are similar. **v1 position:** follow the file. Carina is primary and Kael gets a symbol-level consult when a diff touches the scoring block. Moving scoring into an engine file is a later `split/` PR (Kael would go to about 13.5K, Carina to about 16.1K). It is not part of D4. See Q4.
+- **Impurity: scoring and the v3-3 engine spine live in core.js.** `calcDietScore` … `calcZivaScore` and the domain modifiers (the scoring block, `SCORE_LABELS` … `getZivaScoreTrend7d`, about 940 lines) are *meaning*, not *record*; so is the v3-3 engine spine (core.js ≈6823–7780: `_predictMilestoneWindow`, `_getInWindowMilestones`, `_evaluateRecommendation`, `_scoreDay`, `_scoreWindow`, `_scoreDayHero`, `_classifyDaySeverity`, `classifySleep`, `normalizeSleep`, `_domainPerRecordScore`, `_domainDayBonuses`), and so are the engine-parameter registries (`RECOMMENDATION_ROSTER`, `SEVERITY_THRESHOLDS`, `DOMAIN_WEIGHTS_HERO`, `STANDARDS_FALLBACK_CHAIN`). They sit on the foundation side because of the file they live in. `getNextUpcomingVacc`, `_dietAllowsFood` and `medDoseSlots` are similar (the first and `medDoseSlots` also being care content, routed to Maren by `CARE_CONTENT`). **v1 position:** follow the file. Carina is primary and Kael gets a symbol-level consult when a diff touches any of these; `qa-route` routes it as `ENGINE_CONTENT`. Moving scoring into an engine file is a later `split/` PR (Kael would go to about 13.5K, Carina to about 16.1K). It is not part of D4. See Q4.
 
 ### Who audits a foundation-registry change the engine consumes
 
@@ -167,6 +167,8 @@ Excluded: **Orinth** is reserved for the planned Kael→Orinth reassessment (PER
 
 ### Shared-module rotation (proposal)
 
+> **Ratified 2026-10-29: Option C**, not B. The core trio (Maren → Ceres → Vela) always reviews; Kael and Carina are conditional. Kael concurred with conditions (V-K-275): C1, the template DOM contract, is mechanized in qa-route; C2 narrows his shared lens to the DOM-shape contract, with cascade and zoom going to Vela; under C3, if C1 regresses, his concurrence reverts to Option B. The proposal text below is kept as the record of the options weighed.
+
 Running five Governors over every `styles.css` edit would cost a lot and add little. Carina's stake in CSS is close to zero. Its stake in `template.html` is real: the zi() sprite (*what an icon is*; Kael previously "audits the sprite list itself") and the app-shell DOM ids that `init()` and boot query.
 
 **Recommended (Option B), split by file:**
@@ -183,6 +185,15 @@ This stays file-level and mechanical, so `qa-route` can compute it without parsi
 **Branch:** `claude/d4-kael-split` (or the session branch). **No `split/*.js`, `styles.css` or `template.html` changes.**
 
 ### `qa-route.sh` changes
+
+> **As built (2026-10-29), beyond the four items below:**
+> - `SYNC_RENDER_DEPS` renderer strings are traced to the file that defines them.
+> - `CARE_CONTENT` → Maren (V-M-275-2).
+> - `ENGINE_CONTENT` (scoring block, v3-3 spine, engine-parameter registries) → Kael (V-K-275-1/2).
+> - Changed `save/load(KEYS.*)` lines outside the foundation → Carina (V-K-275-5).
+> - The template DOM contract: changed ids and data-actions → each Governor whose files reference them (V-K-275-8).
+> - Changed-line declarations are matched at column 0 only.
+> - Shared routing follows Option C (item 3 below is superseded).
 
 1. Add `FND = ("Foundation (data & sync)", "Carina")` and remap `core.js`, `data.js`, `sync.js`, `config.js` and `start.js` to `FND`.
 2. Add a single `GOVERNORS = ("Maren","Ceres","Kael","Vela","Carina")` tuple. Use it in the three fail-safe widen loops (V-K-G2, cross-file resolution) and the `order` list, so no roster literal is left behind.
@@ -254,3 +265,34 @@ Reference consult (registries/constants read in OTHER jurisdictions):
 ---
 
 — Lyra (Mode 1, Architect-directed; canon-gen-001 third ratification draft), 2026-10-29, against `42a4b19`. cc-018 status: `pending_review`. Next: Architect picks the name and answers Q2–Q3 → Lyra authors the Carina spec pair and the PR → Kael Rung 2 → Cipher → merge.
+
+---
+
+## Appendix — open V-K findings transfer ledger (V-K-275-7, 2026-10-29)
+
+Open `V-K` findings in the split files are routed by the new boundary, under their original tags (tag-persistence rule).
+
+**Transfer to Carina, under their original tags:**
+- V-K-273-1 (sync.js `SYNC_ENTRY_IDENTITY`)
+- V-K-268-4b (shadow-after-merge hook)
+- V-K-273-5
+- V-K-267-12 (`formatDate` UTC parse, HR-12 root)
+- V-K-95 (`_offsetDateStr`)
+- V-K-270-9 (resolver rule)
+- V-K-270-29 (`medDoseSlots` name collisions)
+- V-K-267-5 (`__sync_updatedBy`)
+- V-K-267-3 (whole-array write path; joint with V-K-275-5)
+
+**Split:**
+- V-K-273-4: the `calcMedicalScore` raw read goes to Carina, with a Kael consult; the ISL and qa-handlers vaccine readers stay with Kael.
+- V-K-269-10: scoring block, Carina primary, Kael consult.
+
+**Stay with Kael:**
+- V-K-94 (v3-3 spine, consult)
+- V-K-267-10
+- V-K-268-5 (confirm the file before filing)
+
+**Closed:**
+- V-K-268-9 (Region 30K headroom), resolved by D4.
+
+`docs/BUGS.md` attributions are updated as each finding is next touched; Aurelius records this ledger in Codex.
