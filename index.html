@@ -12176,7 +12176,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-dayfoot { display:flex; flex-wrap:wrap; gap:var(--sp-12); margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--card-border); }
 .mp-textbtn { min-height:44px; background:none; border:none; padding:0 var(--sp-4); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--mid); cursor:pointer; }
 
-/* Planned food — the house standard at slot size: a recipe is a recipe-row box (food-group
+/* Planned food — the house standard at slot size (per-recipe --rc-* / --zif-c values ride the
+   CSS-Custom-Property Pivot Convention, DESIGN_PRINCIPLES.md; same as .recipe-row): a recipe is a recipe-row box (food-group
    rail + grams-weighted fingerprint fade, --rc-* set per recipe as on .recipe-row), a free
    food is a .recipe-chip with its .fdom-chip food-group wash. */
 .mp-entries { flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); }
@@ -12191,7 +12192,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-cue .zi { width:var(--icon-xs); height:var(--icon-xs); }
 .mp-mode { color:var(--tc-peach); border-color:var(--peach); }
 .mp-mode .zi { width:var(--icon-xs); height:var(--icon-xs); }
-.mp-pack .mp-entries { margin:var(--sp-6) 0 var(--sp-4); }
+/* Inventory and suggestion chips (pack summary, dinner suggestions): never planned food. */
+.mp-chips { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); margin:var(--sp-6) 0 var(--sp-4); }
 .mp-picker .recipe-row { margin-bottom:var(--sp-6); }
 /* A recipe locked for her age: the flat whisper, no fade or stripe, reason in the row in amber words (V-V-278-23). */
 .mp-locked .recipe-row-gen, [data-theme="dark"] .mp-locked .recipe-row-gen { background:var(--surface-alt); cursor:default; }

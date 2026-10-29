@@ -231,17 +231,19 @@ function foodChip(name, label = name) {
   return `<span class="recipe-chip${d ? ' fdom-chip--' + d : ''}">${zif(APP.icon(name))}${esc(label)}</span>`;
 }
 // How a travel recipe travels: [icon, label, source tag, glance check, the keeps sentence a
-// parent must act on]. The glance check is short (derived from the keeps text); the serve-time
-// sentence is quoted verbatim and asserted to be in every keeps string of that mode, so the
-// short form cannot drift from the full rule (V-C-278-14, V-M-278-9).
+// parent must act on, the corpus anchor for the glance check]. Both the glance check (via its
+// anchor) and the verbatim serve sentence are asserted to appear in every keeps string of that
+// mode, so neither can drift from the full rule (V-C-278-14, V-M-278-9, C-278-9, C-278-10).
 const MODE = {
-  thermos: ['thermos', 'In a flask', 'WHO', 'must be steaming', 'If it is only warm, throw it away'],
-  cool: ['timer', 'Ice-pack bag', 'WHO · USDA FSIS', 'must be fridge-cold', 'If the ice pack has melted, don\'t give it'],
-  spot: ['clock', 'Made on the spot', '', '', ''],
+  thermos: ['thermos', 'In a flask', 'WHO', 'still too hot to eat', 'If it is only warm, throw it away', 'too hot to eat'],
+  cool: ['timer', 'Ice-pack bag', 'WHO · USDA FSIS', 'still fridge-cold', 'If the ice pack has melted, don\'t give it', 'fridge-cold'],
+  spot: ['clock', 'Made on the spot', '', '', '', ''],
 };
 for (const r of Object.values(RECIPES)) {
-  const check = r.travel && MODE[r.travel.how][4];
-  if (check && !r.travel.keeps.includes(check)) throw new Error(`catalog: ${r.id} keeps text no longer says "${check}"`);
+  if (!r.travel) continue;
+  for (const want of [MODE[r.travel.how][4], MODE[r.travel.how][5]]) {
+    if (want && !r.travel.keeps.includes(want)) throw new Error(`catalog: ${r.id} keeps text no longer says "${want}"`);
+  }
 }
 // Spot recipes that need a flask of boiling water (P1b: a corpus field, travel.waterFlask, Ceres).
 const WATER_FLASK = new Set(['travel-flask-oats-banana']);
@@ -287,7 +289,7 @@ function mpAct(a, slot) {
 function mpSlot({ slot, items = [], newTag, lead, act = 'ate', open, body = '', mode = false }) {
   const [label, icon] = SLOT[slot];
   const travel = mode && !(act && act.logged);
-  const entries = items.length ? `<div class="mp-entries" role="button" tabindex="-1" data-action="mpToggleSlot" data-arg="${slot}">`
+  const entries = items.length ? `<div class="mp-entries" data-action="mpToggleSlot" data-arg="${slot}">`
     + items.map(it => it.r ? recipeEntry(it.r, { travel }) : foodChip(it.f)).join('')
     + (newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Ziva: ${esc(newTag)}</span>` : '') + `</div>` : '';
   return `<div class="mp-slot${open ? ' mp-slot--open' : ''}">`
@@ -350,7 +352,7 @@ function packBlock(meals, { when = 'today', collapsed = false } = {}) {
   const sum = [food ? `<span class="recipe-chip mp-mode">${zi('thermos')}${food} food flask${food > 1 ? 's' : ''}</span>` : '',
     water ? `<span class="recipe-chip mp-mode">${zi('thermos')}${water} hot-water flask${water > 1 ? 's' : ''}</span>` : '',
     ms.some(m => RECIPES[m.r].travel.how === 'cool') ? `<span class="recipe-chip mp-mode">${zi('timer')}Ice-pack bag</span>` : ''].join('');
-  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${when}</div><div class="mp-entries">${sum}</div>${rows}</div>`;
+  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${when}</div><div class="mp-chips">${sum}</div>${rows}</div>`;
 }
 const serveProw = (id, open = false) => {
   const how = RECIPES[id].travel.how;
@@ -381,7 +383,7 @@ const travelSlots = (lunchOpen, fresh) => {
     // Ice-pack options first: a flask packed in the morning may fail its heat check by evening (V-C-278-12a).
     // Suggestions are add actions, never the planned-food shape (V-V-278-19).
     mpSlot({ slot: 'dinner', act: 'add', body: `<div class="mp-gap-note">No travel dinner yet. These pack well for dinner too:</div>`
-      + `<div class="mp-entries">${['travel-soft-palak-thepla', 'travel-aloo-carrot-paratha-rolls'].map(id =>
+      + `<div class="mp-chips">${['travel-soft-palak-thepla', 'travel-aloo-carrot-paratha-rolls'].map(id =>
         `<button class="mp-add-btn" data-action="mpPlanSuggestion" data-arg="dinner:${id}">${zi('plus')} ${esc(RECIPES[id].title)}</button>`).join('')}</div>` }),
   ];
 };
@@ -402,6 +404,12 @@ function pickRow({ icon = 'bowl', title, why, locked, lock, more, expanded, acti
 const SNACKS = Object.values(RECIPES).filter(r => r.slot === 'snack').length;
 const AGE_NOW = 14;
 const pickRecipe = (id, why) => APP.row(RECIPES[id], 'mp', AGE_NOW, { relevance: why || '' });
+// A locked row: no action (P1b: opts.locked on _recipeRowHtml). Fails the build if the row's action attribute changes.
+const lockRow = (id, why) => {
+  const h = pickRecipe(id, why);
+  if (!h.includes('data-action="toggleRecipeRow"')) throw new Error('catalog: _recipeRowHtml action changed; locked row would stay actionable');
+  return h.replace('data-action="toggleRecipeRow"', 'aria-disabled="true"');
+};
 const picker = ({ search = '', noMatch = false } = {}) => `<div class="mp-picker"><div class="mp-picker-title">Snack · Thursday, 5 Nov</div>`
   + `<input class="mp-search" type="search" placeholder="Search recipes and foods" aria-label="Search recipes and foods" value="${esc(search)}">`
   + (noMatch
@@ -414,7 +422,7 @@ const picker = ({ search = '', noMatch = false } = {}) => `<div class="mp-picker
       + pickRecipe('sweet-potato-jeera-bites', 'Not had this week')
       + pickRow({ icon: 'spoon', title: `All snack recipes (${SNACKS})`, more: true, expanded: true, action: 'mpPickAll' })
       + pickRecipe('jeera-chaas')
-      + `<div class="mp-locked">${pickRecipe('banana-honey-toast', 'Can’t be planned yet: honey counts as added sugar before 2 · opens 4 Sep 2027').replace('data-action="toggleRecipeRow"', 'aria-disabled="true"')}</div>`
+      + `<div class="mp-locked">${lockRow('banana-honey-toast', 'Can’t be planned yet: honey counts as added sugar before 2 · opens 4 Sep 2027')}</div>`
       + pickRow({ icon: 'new-food', title: 'Plan a new food', why: 'Foods she has not had yet', action: 'mpPickNew' }))
   + `</div>`;
 
@@ -478,7 +486,7 @@ const PLANNER = [
   },
   {
     id: 'mp-travel', title: 'Planner 3 · Travel day',
-    note: 'Short at a glance; nothing lost. Pack for today is one line of what to carry (every flask the day needs, counted: food flasks and hot-water flasks; the ice-pack bag) and one collapsed row per meal, holding its own pack lines, any free food planned with it, and its keeping rule verbatim. After the first log the block collapses to “Packed this morning” with the same rows. Each unlogged travel meal box says how it travels and the check that decides serve-or-not (“In a flask · must be steaming”, “Ice-pack bag · must be fridge-cold”), in neutral ink beside the chew cue. The next meal’s collapsed “Before you serve” row shows the act-on-it sentence verbatim (“If it is only warm, throw it away.”); the full rule is one tap away, and the same row sits in any opened travel slot. Dinner’s gap offers the ice-pack lunches as add buttons, never in the planned-food shape. Travel state is in words on the toggle.',
+    note: 'Short at a glance; nothing lost. Pack for today is one line of what to carry (every flask the day needs, counted: food flasks and hot-water flasks; the ice-pack bag) and one collapsed row per meal, holding its own pack lines, any free food planned with it, and its keeping rule verbatim. After the first log the block collapses to “Packed this morning” with the same rows. Each unlogged travel meal box says how it travels and the check that decides serve-or-not (“In a flask · still too hot to eat”, “Ice-pack bag · still fridge-cold”), in neutral ink beside the chew cue. The next meal’s collapsed “Before you serve” row shows the act-on-it sentence verbatim (“If it is only warm, throw it away.”); the full rule is one tap away, and the same row sits in any opened travel slot. Dinner’s gap offers the ice-pack lunches as add buttons, never in the planned-food shape. Travel state is in words on the toggle.',
     exemplars: [
       { label: '3 — Friday travel day, seen that morning, nothing logged', width: 360, html: travelCard('fresh') },
       { label: '3c — after the first log (breakfast); Next: Lunch', width: 360, html: travelCard('logged') },
