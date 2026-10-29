@@ -164,6 +164,9 @@ const SYNC_KEYS = {
   // Tooth chart — per-tooth newest-ts merge via _postReceiveTeeth (a tombstone
   // with a newer ts beats an older eruption date, so removals don't resurrect).
   [KEYS.teeth]:              { collection: 'milestones',  model: 'single-doc' },
+  // Meal planner — its own doc /singles/plan (V-CA-275-1): tracking is the doc heading for the
+  // 1 MiB limit, and a plan tap shouldn't resend it. Atomic with the SYNC_RENDER_DEPS arm below.
+  [KEYS.mealPlan]:           { collection: 'plan',        model: 'single-doc' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -418,6 +421,10 @@ const SYNC_RENDER_DEPS = {
   [KEYS.milestoneSuppress]: { global: 'milestoneSuppress', mergeOnReceive: '_postReceiveMilestoneSuppress', renderers: { home: ['renderHome'], 'track:milestones': ['renderActiveMilestones'] } },
   [KEYS.activityMeta]:      { global: 'activityMeta',     mergeOnReceive: '_postReceiveActivityMeta',     renderers: { home: ['renderHome'] } },
   [KEYS.teeth]:             { global: 'teethLog',         mergeOnReceive: '_postReceiveTeeth',            renderers: { 'track:milestones': ['renderMsTeeth'] } },
+  // Meal planner — per-field newest-ts merge; a narrow renderer (never renderDietRecipes) that
+  // holds off while a planner sheet is open; pushBackOnDiverge re-pushes newer local fields
+  // the remote copy lacked (V-CA-275-3, -6).
+  [KEYS.mealPlan]:          { global: 'mealPlan',         mergeOnReceive: '_postReceiveMealPlan',         pushBackOnDiverge: true, renderers: { 'track:diet': ['renderMealPlanSection'] } },
 };
 
 // _syncSetGlobal / _syncGetGlobal — paired controlled accessors for module
@@ -455,6 +462,7 @@ function _syncSetGlobal(name, value) {
     // a future dedupeScrapbookByText).
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
+    case 'mealPlan':     mealPlan     = value; return true;
     default: return false;
   }
 }
@@ -476,6 +484,7 @@ function _syncGetGlobal(name) {
     case 'activityLog':  return activityLog;
     case 'scrapbook':    return scrapbook;
     case 'teethLog':     return teethLog;
+    case 'mealPlan':     return mealPlan;
     default: return undefined;
   }
 }
@@ -618,6 +627,23 @@ function _postReceiveVacc(remoteList) {
 // _postReceiveTeeth — tooth-chart merge. Shape { [toothId]: { date, ts } };
 // per tooth the entry with the newer ts wins, so a removal (date:null) made
 // after a remote eruption date survives, and vice versa. Malformed entries drop.
+// _postReceiveMealPlan — meal-planner merge (core.js _mpMerge: per day, per slot and travel
+// flag, newest ts wins; Clear-day tombstones hold; pruned to the window). Never throws: on an
+// internal error it keeps local (V-CA-275-6).
+function _postReceiveMealPlan(remotePlan, localPlan) {
+  try { return _mpMerge(remotePlan, localPlan, today()); }
+  catch (e) { console.warn('[sync] meal-plan merge failed; keeping local:', e); return _mpNormalize(localPlan, today()); }
+}
+// Does the merged plan carry anything the remote copy lacks? Compared inside a 2-day grace band
+// at each end of the window, so two phones whose clocks straddle a prune cutoff can't push a
+// day back and forth (V-CA-275-8).
+function _mpDivergesFromRemote(merged, remote) {
+  const t = today(), w = _mpWindow(t);
+  const lo = _mpAddDays(w.lo, 2), hi = _mpAddDays(w.hi, -2);
+  const inner = p => { const n = _mpNormalize(p, t); Object.keys(n.days).forEach(k => { if (k < lo || k > hi) delete n.days[k]; }); return _mpStable(n); };
+  return inner(merged) !== inner(remote);
+}
+
 function _postReceiveTeeth(remoteMap, localMap) {
   var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
   var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
@@ -1574,6 +1600,9 @@ function _syncMergeForPush(local, cloud, key) {
   // Tooth chart: the push honours the same per-tooth newest-ts contract as the
   // receive, so an offline or imported copy can't overwrite a newer cloud edit.
   if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
+  // Meal planner: the push honours the same per-field newest-ts merge as the receive, so a
+  // reconnect, Retry, import or autosave restore can't undo the other parent's newer edit (V-CA-275-2).
+  if (key === KEYS.mealPlan && typeof _postReceiveMealPlan === 'function') return _postReceiveMealPlan(cloud, local);
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
   if (key === KEYS.vacc && Array.isArray(local) && Array.isArray(cloud)) return vaccDropSatisfiedPending(_syncUnionArrays(local, cloud, key));
@@ -2165,6 +2194,13 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       try { save(key, _saveVal); }
       finally { _remoteWriteDepth--; }
       _syncShadow[key] = _syncCloneDeep(_saveVal);
+      // pushBackOnDiverge (meal planner, V-CA-275-6): the shadow is what the cloud holds, and when
+      // the merge kept newer local fields the cloud lacked, the normal debounced flush re-pushes them.
+      if (_depCfg && _depCfg.pushBackOnDiverge && key === KEYS.mealPlan && _mpDivergesFromRemote(_saveVal, remoteVal)) {
+        _syncShadow[key] = _syncCloneDeep(remoteVal);
+        _syncMarkDirty(key);
+        if (_cfg && _cfg.collection) _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal);
+      }
 
       // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
       // (Findings B, E). Crash-isolated; failure falls through to the
