@@ -543,7 +543,7 @@ Every tappable action is one of these house components, never a new text-button,
 |---|---|---|
 | Primary action | `.btn .btn-{domain}` (filled: `btn-sage`, `btn-peach`, `btn-rose`…) | One per card or sheet; on new surfaces, one per screen. **Never promoted onto an entry carrying a rose flag** — the flag stays the loudest element |
 | Primary, hero CTA (legacy) | `.btn-primary .bp-{domain}` | 48px; new work prefers `.btn .btn-{domain}` |
-| Secondary actions on a card | `.btn .btn-soft` (+ `.btn-compact` inline) — tinted and raised; sage by default, `btn-soft--peach` for travel, `btn-soft--rose` for clearing | Add, Copy day, Clear day, week navigation, a sheet's day and slot picks. Added 2026-10-29 after Architect review: ghost buttons read as flat black-and-white on a card |
+| Secondary actions on a card | `.btn .btn-soft` (+ `.btn-compact` inline) — tinted and raised; sage by default, `btn-soft--peach` for travel, `btn-soft--rose` for clearing (tinted only, destructive card actions only, never inside an entry carrying a rose flag, so the flag stays the loudest element) | Add, Copy day, Clear day, week navigation, a sheet's day and slot picks. Added 2026-10-29 after Architect review: ghost buttons read as flat black-and-white on a card |
 | Dismissive secondary | `.btn .btn-ghost` | Cancel in a confirm, "Plan anyway" |
 | A single standalone on/off action | `.btn .btn-{domain}` with `aria-pressed="true"`; off is `.btn-ghost` | State also in words ("Travel day: on"). New convention (2026-10-29). Filter and choice groups use the Chip System `.chip` instead |
 | Suggestions to act on | `.sg-chip` | Never the planned-item / food-chip shape |
