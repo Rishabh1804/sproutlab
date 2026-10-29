@@ -1,6 +1,6 @@
 # Meal Planner v1: plan Ziva's days from the Recipes corpus
 
-**Spec version:** v0.1 (`pending_review` for Governor spec review; Architect answers recorded 2026-10-29)
+**Spec version:** v0.2 (`pending_review` for Governor spec review). v0.1 recorded the Architect's answers; **v0.2 (2026-10-29) reshapes every surface to the cognitive-load floor** (§4.0), accepted by the Architect in full.
 **Date:** 2026-10-29
 **Author:** Lyra (Mode-1 Province spec authoring)
 **Status:** Scoping draft with the Architect's answers recorded (§9). D4 is resolved: **Carina** (Foundation) is seated by #275, so P0 is Carina-primary. **Architect decisions (2026-10-29), the recommended answers:** Q1 plan section atop Recipes; Q2 Monday week start; Q3 warn with stronger allergen wording (not refuse); Q4 derived new foods count toward the 3-day rule; Q5 log a recipe as its ingredients, dish title in `note`; Q7 keep 28 days; Q8 the core.js date helpers fixed app-wide in a separate Carina-primary PR; Q9 Tomorrow's Prep and the Outing Planner fold into the plan in v1.1. **Q6 (the `zi-bag` travel icon) stays open** for the P1a Surface Catalog sign-off.
@@ -43,18 +43,18 @@ Each thread names the Region and data path it rides.
 **The job:** *"On Sunday evening I want to sketch the week. On the day, I want to glance at what's next, and tap once when she's eaten it. When we travel I want to know what packs and how."*
 
 ### 1.1 Plan a day
-1. Open Diet → Recipes. The **Plan** section sits at the top (§4.1). Today's day card is open.
-2. Tap an empty slot (Breakfast / Lunch / Dinner / Snack). The slot picker opens (§4.4).
-3. Tap a recipe. It joins the slot immediately; there is no Save button (HR-9 Act intent). The picker stays open so a second or third item can make a combo. Close it with ×.
+1. Open Diet → Recipes. The **Plan** section sits at the top (§4.1). Today's card opens on **the next meal** (§4.3).
+2. Tap a slot line (Breakfast / Lunch / Dinner / Snack). An empty one reads "+ Add lunch"; it opens the slot picker (§4.4).
+3. Tap a suggestion. It joins the slot immediately; there is no Save button (HR-9 Act intent). The picker stays open so a second or third item can make a combo. Close it with ×.
 
 ### 1.2 Plan a week as a strip of days
-- The week strip is 7 day chips, Monday to Sunday, with the current week shown by default. Prev/next arrows move by a week. The strip scrolls horizontally, and swipe guard 2 keeps its own pan.
-- Each chip shows the weekday, the date number, a 4-dot slot-fill indicator, and markers for travel and new food.
+- The week strip is 7 day chips, Monday to Sunday, with the current week shown by default. **All 7 fit the width at 360px; the strip never scrolls horizontally**, so it never competes with swipe-between-tabs (one gesture, one result). Week navigation is a pair of ‹ › buttons in the **section header**, not at the strip's ends.
+- Each chip shows the weekday initial, the date number and **one fill cue**: a filled ring (every slot planned), a half ring (some planned) or an outline (none). It counts nothing and shows no percentages. A single marker sits under it when the day is a travel day or carries a new food.
 - Tapping a chip opens that day's card below the strip.
 - **Horizon:** 8 weeks ahead. Days further out are not selectable, which keeps the doc bounded.
 
 ### 1.3 Fill a slot from the list, or build a combo
-- **From the Recipes list:** every recipe's expanded detail gets an **Add to plan** button (`data-action="mpAddRecipe"`). It opens a small Act sheet: a day row (the 7 days of the strip's week), with the slot preselected from `r.slot` and changeable.
+- **From the Recipes list:** every recipe's expanded detail gets an **Add to plan** button (`data-action="mpAddRecipe"`). It opens a small Act sheet: a day row (the 7 days of the strip's week, today preselected), with the slot preselected from `r.slot` and changeable. **Add to plan → pick a day → done is 3 taps or fewer** (§4.0).
 - **Combo:** a slot holds 1–3 entries (cap 3). An entry is either `{kind:'recipe', id}` or `{kind:'food', name}`. When a slot has 2 or more entries, the day card shows one combo guidance line from the resolver.
 - **Free food:** the picker's typeahead reuses `window._fdSearchNutrition`. It searches NUTRITION, the foods Ziva has been introduced to, and her recent foods.
 
@@ -76,10 +76,11 @@ Each thread names the Region and data path it rides.
 - The day card has a **Travel day** toggle (`data-action="mpToggleTravel"`). When on, the card takes the peach outing treatment (§4.5).
 - **Suggestions narrow** to `r.travel` recipes for that slot, grouped by `RECIPE_TRAVEL_META` (spot → thermos → cool), the same grouping the Recipes "For travel" section uses.
 - **Corpus gap:** 10 recipes are tagged for travel (lunch 4, snack 5, breakfast 1, dinner 0). Dinner on a travel day has no travel recipe. The picker shows this, with a calm line under the travel group: "No packed dinner recipes yet. Plan a home meal, or pick a travel lunch." It then lists the full slot list below. This is not a dead end. Ceres may also want to add travel dinners to the corpus (§8 R4).
-- Each planned travel recipe shows a **Packing for travel** row on the day card: `travel.keeps` plus the `travel.pack` list. It reuses the `_recipeProw('travel', …)` markup from the recipe detail. Above the slots, one note gives the 2 h / 1 h-above-32 °C rule with the WHO · USDA FSIS source line. That is the same sentence the Recipes travel section uses, held as one shared constant.
+- **One "Pack for today" list leads the travel day** (lead with the answer: on a trip the question is *what do I pack?*). It merges the `travel.pack` lines of every planned recipe into one checklist, removes duplicates (two flask meals → one "pre-heated flask" line), and states the 2 h / 1 h-above-32 °C rule **once**, with the WHO · USDA FSIS source line. That rule sentence is one shared constant with the Recipes travel section.
+- Per-recipe `travel.keeps` detail sits in a **collapsed** `_recipeProw('travel', …)` row on each slot, with a one-line preview ("Hot in a flask" / "Kept cool"). The rule is not repeated inside it (§4.0: no text twice on one screen).
 
 ### 1.6 One tap: "she ate this"
-- Every filled slot on a **today or past** day shows **She ate this** (`data-action="mpLogSlot"`). Future days don't show it.
+- Every filled slot on a **today or past** day shows **She ate this** (`data-action="mpLogSlot"`). Future days don't show it. **One tap logs it**, with the 8-second undo (§4.0).
 - The tap expands the slot's entries into feeding items:
   - **Recipe →** its ingredients, minus spices (`_RECIPE_TRACE_RE` spice terms). Ghee and oil are kept, because the fat-context detector (`_refreshTodayMedWithFat`) reads them. Whether a dish should log as a single named item is **open question Q5**.
   - **Free food →** one item.
@@ -91,6 +92,7 @@ Each thread names the Region and data path it rides.
 - After logging, the slot shows a quiet sage check ("Logged 12:40"), read from `_fdReadDayMeal`. The plan entry is left untouched.
 
 ### 1.7 Copy a day; clear a day
+- Copy and Clear are plain text buttons at the **foot** of the day card, still visible but out of the way of the meals (§4.3).
 - **Copy day** (`data-action="mpCopyDay"`) opens an Act sheet with the 7 days of the current week plus "next week, same day". Copying overwrites the target's slots and keeps its travel flag. Each copied entry is re-checked for age gates and the 3-day rule against the target date, and any conflict shows in the confirm before the write.
 - **Clear day** (`data-action="mpClearDay"`) asks for confirmation ("Clear Wed's plan?") and writes a tombstone (§3.3). The undo toast lasts 8 seconds.
 
@@ -165,6 +167,21 @@ ziva_meal_plan = {
 
 All surfaces go through the design floor (`docs/DESIGN_PRINCIPLES.md`) before build. Every exemplar is rendered in the Surface Catalog and signed off first (§4.7).
 
+### 4.0 Cognitive-load acceptance criteria (binding, v0.2)
+The design floor's 6-second rule (§11), the half-awake test and the one-gesture rule, turned into pass/fail checks. The project scorecard (roadmap Phase 1a) does not exist yet, so these are the planner's own gate. Vela audits them at P1a on the exemplars and at P1b on the wired build. Cipher checks them at Edict V.
+
+| # | Criterion | Limit |
+|---|---|---|
+| CL-1 | Plan a meal from a recipe (Add to plan → day → done; slot preset) | ≤ 3 taps |
+| CL-2 | Log a planned meal ("She ate this") | 1 tap, plus an 8 s undo |
+| CL-3 | Today's card on open | The **next meal** leads. Nothing sits above it except a safety lead. |
+| CL-4 | Each slot until tapped | One line: food names, plus the safety lead when there is one, plus one action. |
+| CL-5 | Slot picker before scroll or search | ≤ 5 choices |
+| CL-6 | Repeated text on one screen | None (the 2 h rule appears once) |
+| CL-7 | Controls and disclosure | Every control ≥ 44 px; every collapsed row carries a one-line preview and a chevron |
+| CL-8 | Week strip at 360 px | No horizontal scroll; no gesture that competes with tab swiping |
+| CL-9 | Decoding load | One fill cue per day (no counts, no percentages); safety in words, never colour alone |
+
 ### 4.1 Where it lives: a **Plan section at the top of Diet → Recipes** (recommended)
 | Option | For | Against |
 |---|---|---|
@@ -175,31 +192,28 @@ All surfaces go through the design floor (`docs/DESIGN_PRINCIPLES.md`) before bu
 The section header reads "This week's plan", with a `zi('list')` icon in Fraunces (`recipes-sec-label` pattern). It sits above "Suggested for Ziva". On first use it is a single invitation line: "Plan Ziva's meals for the week: tap a day to start." It has no empty grid.
 
 ### 4.2 Week strip
-- `.mp-strip`: horizontal flex of 7 `.mp-day` chips (min 44×56, HR-8), with prev/next arrow buttons at each end (`zi('arrow-right')`, one rotated with a class).
+- `.mp-strip`: a 7-column grid of `.mp-day` chips (min 44×56, HR-8) that fills the width and **never scrolls** (CL-8). The week ‹ › buttons live in the section header (`zi('arrow-right')`, one rotated with a class).
 - Chip contents, top to bottom:
-  - weekday (Nunito `--fs-xs`)
+  - weekday initial (Nunito `--fs-xs`)
   - date (Fraunces `--fs-md`)
-  - a 4-dot fill row (`.mp-dots`: sage dot = filled slot, `--light` outline = empty)
-  - one marker line, either a travel icon (peach) or a new-food icon (`zi('sprout')`, lavender)
+  - **one fill ring** (`.mp-fill` + `--full` / `--part` / `--none`: sage ring, sage half ring, `--light` outline). No dots, no counts (CL-9).
+  - one marker, only when needed: a travel icon (peach) or a new-food icon (`zi('sprout')`, lavender)
 - Today gets a sage outline. The selected day gets a filled `--sage-light` background plus a border (tint law 2: never a bare fill). Past days are muted to `--mid` text but stay fully tappable.
 
 ### 4.3 Day card
 - `.mp-daycard` is a cream card with a domain stripe: sage normally, peach on a travel day.
-- **Header:** "Wednesday, 4 Nov" (via a named date formatter, HR-10), the Travel day toggle, and an overflow row with Copy / Clear (text buttons, not hidden menus).
-- Four `.mp-slot` rows, each showing the `RECIPE_SLOT_META` icon and label. Under that:
-  - Each entry is a pill (reusing `.recipe-chip` + `.fdom-chip--*` for free foods). Recipe entries show the title, with a new-to-Ziva lavender tag where one applies.
-  - The safety lead, when level is `flag` or `caution`, reuses `.rcp-safe .rcp-safe--{level}` and is always visible.
-  - The combo line, when there are 2+ entries.
-  - The travel packing row, on travel days.
-  - She ate this, or the logged check.
-  - An empty slot reads "+ Add breakfast" (`data-action="mpOpenPicker"`).
-- **The half-awake test:** at 2 AM, a parent sees what is planned for each slot in one line, whether anything needs care (the safety lead, in text and not colour alone), and one obvious button. There are no percentages and no dense grids. Text wraps freely (HR-10, no ellipsis).
+- **Header:** "Wednesday, 4 Nov" (via a named date formatter, HR-10) and the Travel day toggle. Nothing else.
+- **Lead (CL-3):** on today's card, the **next meal** by time of day (the existing `detectMealType` slot, or the next unlogged one after it) opens first, styled as the card's lead: "Next: Lunch — Toddler Veg Khichdi", its safety lead if any, and **She ate this**. On a travel day the **Pack for today** list (§1.5) sits directly under the header, above the lead. On other days no slot leads; all four are one-liners.
+- **Four `.mp-slot` rows, one line each until tapped (CL-4):** the `RECIPE_SLOT_META` icon, the label, and the planned food names in words ("Ragi pancakes + pear"), with a new-to-Ziva lavender tag where one applies. Two things stay visible even when the row is collapsed: the safety lead (`.rcp-safe--{level}`, flag or caution, §9.7 safety-first) and the one action (She ate this, the logged check, or "+ Add lunch" for an empty slot).
+- **Tap a slot to open it:** the pills (removable), then two collapsed `rcp-prow` rows with previews: **Combo guidance** ("Good pair — iron with vitamin C") when there are 2+ entries, and **Packing** ("Hot in a flask") on travel days. Nothing else opens by default.
+- **Foot:** Copy day · Clear day as plain text buttons (CL-7), below the slots.
+- **The half-awake test:** at 2 AM, a parent sees the next meal and one obvious button first, what each other slot holds in one line, and whether anything needs care, in words. There are no percentages, no dense grids, and no text repeated on the screen (CL-6). Text wraps freely (HR-10, no ellipsis).
 
 ### 4.4 Slot picker
 - A bottom sheet (`.ql-sheet` family, Flow/Act). Taps add immediately, there is no Save button, and the round trip stays under 30 seconds (HR-9).
-- **Order:** the current combo entries (removable) → a segmented filter **Recipes · Food · New food** → a list.
-- The **Recipes** list reuses the row markup in a compact variant `_recipeRowHtml(r, 'p', age, {compact:true, planDate})`: icon, title and age badge, with no expand-in-place inside the sheet. It is ranked by `_recipeSuggestForZiva` for that slot, then the rest by age. Rows age-locked for the planned date are rendered but disabled.
-- On a travel day the list shows the travel groups first, then the gap note (§1.5), then the rest.
+- **Order (CL-5):** the current combo entries (removable, when any) → a **search box** (recipes and foods together, via `window._fdSearchNutrition` plus the corpus) → **the top 5 suggestions for this slot**, ranked by `_recipeSuggestForZiva` → one row **"All lunch recipes (18)"** that expands the full list → one row **"Plan a new food"** that switches the list to `getUntriedSuggestions(n)` (§1.4). There is no three-way segmented filter.
+- Suggestion and list rows reuse the row markup in a compact variant `_recipeRowHtml(r, 'p', age, {compact:true, planDate})`: icon, title and age badge, with no expand-in-place inside the sheet. Rows age-locked for the planned date are rendered but disabled, with the gate's reason one tap away.
+- On a travel day the top suggestions come from the travel recipes for the slot, then the gap note (§1.5) when there are none, then "All … recipes".
 - The household gate `_recipeAllowedForHousehold` applies (Pass A). Recipes it withholds are not offered.
 
 ### 4.5 Travel-day treatment (peach = outing domain)
@@ -210,22 +224,23 @@ The section header reads "This week's plan", with a `zi('list')` icon in Fraunce
 **Reused:** `.recipe-chip`, `.fdom-chip--*`, `.rcp-safe--*`, `.rcp-prow--travel`, `.recipe-age-badge`, `.recipe-group-head`, `.recipes-sec-label`, `.recipes-sub-note`, `.rcp-serving-src`, `.ql-sheet` family, `.chip[data-chip="single"]`, `.icon-peach`.
 
 **New (all tokens, light and dark):**
-- `.mp-section`, `.mp-strip`, `.mp-day` (+ `--today`, `--sel`, `--past`, `--travel`), `.mp-dots`, `.mp-dot--on`
-- `.mp-daycard` (+ `--travel`), `.mp-dayhead`, `.mp-slot`, `.mp-slot-empty`, `.mp-entry-new`
-- `.mp-ate-btn`, `.mp-logged`, `.mp-combo-line`, `.mp-gap-note`, `.mp-picker-row--locked`
+- `.mp-section`, `.mp-strip`, `.mp-day` (+ `--today`, `--sel`, `--past`, `--travel`), `.mp-fill` (+ `--full`, `--part`, `--none`)
+- `.mp-daycard` (+ `--travel`), `.mp-dayhead`, `.mp-lead`, `.mp-slot` (+ `--open`), `.mp-slot-empty`, `.mp-entry-new`, `.mp-dayfoot`
+- `.mp-pack` (the Pack for today list), `.mp-ate-btn`, `.mp-logged`, `.mp-gap-note`, `.mp-picker-row--locked`, `.mp-picker-more`
 
-Estimate: about 90–120 CSS lines. **Template:** one `zi-bag` symbol, plus a `#dietPlanRoot` mount inside `#diet-sub-recipes` above `#dietRecipesRoot`. **Both files are shared, so all four Governors review them.**
+Estimate: about 90–120 CSS lines. **Template:** one `zi-bag` symbol, plus a `#dietPlanRoot` mount inside `#diet-sub-recipes` above `#dietRecipesRoot`. **Both files are shared, so the core trio (Maren → Ceres → Vela, Ceres first) reviews them; the new `zi-bag` symbol also brings in Carina, and the `#dietPlanRoot` id brings in each Governor whose files reference it.**
 
 ### 4.7 Surface Catalog exemplars (in `split/build-surface-catalog.mjs` before any feature wiring)
-1. Week strip: a mixed week (today, selected, past, travel, new-food, empty).
-2. Day card, normal: 3 slots filled (one combo, one safety caution lead), 1 empty.
-3. Day card, travel: thermos lunch + cool snack with packing rows, the dinner gap note, and the peach treatment.
+1. Week strip at 360 px: a mixed week (today, selected, past, travel, new-food; full, part and empty fill rings), with no horizontal scroll.
+2. Today's card: the **next-meal lead** (with She ate this), one slot with a caution safety lead, one combo slot collapsed to one line, one empty slot.
+3. Day card, travel: the **Pack for today** list (merged, the 2 h rule once), a thermos lunch and a cool snack collapsed to one line each, the dinner gap note, and the peach treatment.
+3b. The same travel card with the lunch slot **opened**: pills, then the collapsed Combo and Packing rows with previews.
 4. Day card, past day: one slot logged (sage check), one with She ate this.
-5. Slot picker: Recipes filter showing a locked row (15m+ on a December date) and a new-to-Ziva tag.
+5. Slot picker: search box, **top 5** suggestions (one locked 15m+ on a December date, one new-to-Ziva tag), "All lunch recipes (18)", "Plan a new food".
 6. New-food conflict confirm (Move to Sat / Plan anyway).
 7. Section first-use empty state.
 
-Each is shown light and dark at all three zoom tiers. **Architect sign-off gates P1 wiring.**
+Each is shown light and dark at all three zoom tiers, and each is checked against CL-1…CL-9 (§4.0). **Architect sign-off gates P1 wiring.**
 
 ---
 
@@ -267,8 +282,8 @@ A "Today's plan" line on Home or in Today So Far is the natural next thread. It 
 | PR | Scope | Region | Governor summon-set (canon-cc-008) |
 |---|---|---|---|
 | **P0: data + sync key** *(after D4)* | `KEYS.mealPlan`, the global load in core.js, SYNC_KEYS + SYNC_RENDER_DEPS (one commit), `_postReceiveMealPlan` + validator, the prune rule, local-safe date helpers if they land as foundation primitives. e2e: two-device merge (different slots both survive, clear-day tombstone holds, malformed remote dropped). | Foundation | **Foundation-seat Governor** (post-D4 name), plus **Kael** if `qa-route` shows ripple into the engine. Then Cipher. |
-| **P1a: Surface Catalog exemplars** | §4.7 exemplars + the new CSS + `zi-bag` + the `#dietPlanRoot` mount. No behaviour. | Shared | **All four, in order: Ceres → Maren → Kael → Vela.** Then Cipher. **Architect sign-off.** |
-| **P1b: planner UI** | Plan section, strip, day card, picker, Add to plan, travel toggle + narrowing + packing rows, copy/clear, age-gate refusal, combo line. e2e: plan, combo, travel narrowing (incl. the dinner gap), copy/clear, locked row on a future date. | Nutrition (+ shared CSS fixes) | **Ceres.** Add all four if styles/template change again. Then Cipher. |
+| **P1a: Surface Catalog exemplars** | §4.7 exemplars + the new CSS + `zi-bag` + the `#dietPlanRoot` mount. No behaviour. | Shared | **Core trio, Ceres first: Ceres → Maren → Vela**, plus **Carina** (new `zi-bag` sprite symbol) and any Governor the template DOM contract names for `#dietPlanRoot`. Vela checks CL-1…CL-9 on the exemplars. Then Cipher. **Architect sign-off.** |
+| **P1b: planner UI** | Plan section, strip, day card, picker, Add to plan, travel toggle + narrowing + packing rows, copy/clear, age-gate refusal, combo line. e2e: plan, combo, travel narrowing (incl. the dinner gap), copy/clear, locked row on a future date. | Nutrition (+ shared CSS fixes) | **Ceres**, plus **Vela** as a consult on CL-1…CL-9 in the wired build. The core trio again if styles/template change. Then Cipher. |
 | **P2: new-food scheduling + log-from-plan** | `isNew` entries, derived new-to-Ziva markers, `_mpNewFoodConflicts` + the confirm, `_fcCommitItems` extraction (behaviour-neutral for the composer, proved by the existing F-6 e2e), She ate this + Replace/Add sheet + the introduce-offer. e2e: 3-day conflict, recipe ingredient → feedingData sidecar with `sourceFlow:'diet-plan'`, undo, no auto-write to `ziva_foods`. | Nutrition | **Ceres.** Add **Kael** for the data-flow consult (writer + `_islMarkDirty` consumer); qa-route will widen this through the `calls` edges. Then Cipher. |
 | **v1.1: today's plan surfacing + convergence** | Home / Today So Far line. Tomorrow's Prep reads the plan, and `ziva_tomorrow_planned` retires via a migration. The Outing Planner offers "mark tomorrow as a travel day". | Care + Surfacing + Nutrition | **Maren + Vela + Ceres** (+ shared if CSS changes). Then Cipher. |
 
@@ -278,7 +293,8 @@ Every PR stays draft until its chain completes. `/code-review` does not discharg
 
 ## 7. Spec-iteration state (SPEC_ITERATION_PROCESS)
 - **Done:** Pass 1 (scope from the verbatim ask), Pass 2 (code grounding across recipes/diet/sync/core/home), Pass 3 (cross-Region threads, which surfaced the Outing Planner + Tomorrow's Prep overlap, the UTC date-parse hazard, and the travel-dinner gap).
-- **Remaining:** Architect answers (§9) → Ceres spec-round audit (food safety, the 3-day rule semantics, dish-vs-ingredients logging) → Vela consult on surfaces (the half-awake test on the exemplars) → foundation-seat review of §3.3 once D4 seats it → v1 ratification.
+- **Done (v0.1–v0.2):** Architect answers (§9); the cognitive-load pass (§4.0, accepted 2026-10-29).
+- **Remaining:** Ceres spec-round audit (food safety, the 3-day rule semantics, dish-vs-ingredients logging) → Vela consult on surfaces (CL-1…CL-9 and the half-awake test) → Carina review of §3 (the record and its sync merge) → v1 ratification.
 
 ## 8. Risks
 - **R1. The plan reads as a schedule and nags.** Warmth drifts clinical under feature gravity. Mitigation: no adherence states, past days muted rather than red, invitation copy.
@@ -289,7 +305,7 @@ Every PR stays draft until its chain completes. `/code-review` does not discharg
 - **R6. The D4 dependency stalls P0.** P1a (exemplars) can proceed before D4. P1b needs P0's global. A local-only interim is ruled out by Decided-1.
 - **R7. Three surfaces plan ahead until v1.1 converges them** (Outing, Tomorrow's Prep, Planner). Until then a parent could plan tomorrow in two places. Mitigation: v1.1 is sequenced immediately after P2.
 
-## 9. Open questions for the Architect
+## 9. Open questions for the Architect (answered 2026-10-29 except Q6; see the header)
 1. **Placement.** Plan section atop Recipes (recommended), a fifth sub-tab, or a toggle?
 2. **Week start.** Monday (recommended) or Sunday?
 3. **Allergen clash.** When two new foods fall within 3 days and one is a top allergen, should the planner **refuse** (stricter), or warn with "Plan anyway" as it does for other foods (recommended: warn, stronger copy)?
