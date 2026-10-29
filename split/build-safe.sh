@@ -77,6 +77,7 @@ cp "$OUT" "$INDEX"
 
 # Surface the audit-gate output (it was on STDERR, captured to log).
 # Show the tail so the parent sees PASS lines without re-running the suite.
+grep '^WARN' "$LOG" >&2 || true
 tail -10 "$LOG" >&2
 
 echo "Build OK: $OUT ($SIZE bytes); mirrored to $INDEX." >&2

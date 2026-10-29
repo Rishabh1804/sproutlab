@@ -239,7 +239,7 @@ function mpSlot({ slot, food, chew, newTag, lead, act = 'ate', open, body = '' }
     + `<span class="mp-slot-ic">${zi(icon)}</span>`
     + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
     + `<span class="mp-slot-label">${label} <span class="mp-slot-chev">${zi('chevron-down')}</span></span>`
-    + (food ? `<span class="mp-slot-food">${esc(food)}</span>` : act === 'add' ? '' : '<span class="mp-slot-food"><span class="mp-slot-empty">Nothing planned</span></span>') + `${cues}</button>`
+    + (food ? `<span class="mp-slot-food">${esc(food)}</span>` : '') + `${cues}</button>`
     + `<span class="mp-slot-act">${mpAct(act, slot)}</span>`
     + (lead ? rcpSafe(lead[0], lead[1]) : '') + body + `</div>`;
 }
@@ -326,7 +326,7 @@ const twoFlaskCard = () => mpCard({ title: 'Saturday, 7 Nov', travel: true,
 // Picker sheet (a .ql-sheet in the app; shown here without the sheet chrome).
 function pickRow({ icon = 'bowl', title, why, locked, lock, more, expanded, action = 'mpPick' }) {
   const cls = 'mp-picker-row' + (locked ? ' mp-picker-row--locked' : '') + (more ? ' mp-picker-more' : '');
-  return `<button class="${cls}" data-action="${action}"${locked ? ' aria-disabled="true"' : ''}${more ? ` aria-expanded="${expanded ? 'true' : 'false'}"` : ''}>${zi(icon)}<span class="mp-picker-row-main">${esc(title)}`
+  return `<button class="${cls}"${locked ? ' aria-disabled="true"' : ` data-action="${action}"`}${more ? ` aria-expanded="${expanded ? 'true' : 'false'}"` : ''}>${zi(icon)}<span class="mp-picker-row-main">${esc(title)}`
     + (why ? `<span class="mp-picker-why">${esc(why)}</span>` : '') + (lock ? `<span class="mp-picker-lock">${esc(lock)}</span>` : '')
     + `</span>${more ? zi('chevron-down') : ''}</button>`;
 }
@@ -374,6 +374,7 @@ const PLANNER = [
     exemplars: [
       { label: '360 px — this week', width: 360, html: section(mpHead() + mpStrip()) },
       { label: '320 px — this week', width: 320, html: section(mpHead() + mpStrip()) },
+      { label: '360 px — Friday (a travel day) selected: solid selection border wins over the dashed travel border', width: 360, html: section(mpHead() + mpStrip(WEEK.map(d => ({ ...d, sel: d.num === 6 })))) },
     ],
   },
   {
@@ -387,7 +388,7 @@ const PLANNER = [
   },
   {
     id: 'mp-safety', title: 'Planner 2b–2c · Safety stacking and the day hint',
-    note: '2b: two new foods in one meal (egg, a top allergen, and kiwi) ride the amber safety channel in words, not lavender (V-V-275-12, -14); the new-to-Ziva tag stays a tag. Peanut is established and clean, so it carries no repeated watch line (V-C-275-10). 2c: three slots planned, none iron-rich → one worded, dismissable hint (V-C-275-16). No score. Both cards are Thursday, a future day, so no slot offers She ate this (spec §1.6, V-M-278-1). 2d: she had a reaction noted to egg, and egg is planned again: a rose flag lead, not the routine amber (V-C-275-5, V-M-278-4); its She ate this opens the consequence card first (V-C-275-13, warn-and-allow), and the entry never counts as a clean introduction. Copy from FOOD_EFFECTS egg (seekCare, highRiskNote).',
+    note: '2b: two new foods in one meal (egg, a top allergen, and kiwi) ride the amber safety channel in words, not lavender (V-V-275-12, -14); the new-to-Ziva tag stays a tag. Peanut is established and clean, so it carries no repeated watch line (V-C-275-10). 2c: three slots planned, none iron-rich → one worded, dismissable hint (V-C-275-16). No score. Both cards are Thursday, a future day, so no slot offers She ate this (spec §1.6, V-M-278-1). 2d: she had a reaction noted to egg, and egg is planned again: a rose flag lead, not the routine amber (V-C-275-5, V-M-278-4); its She ate this opens the consequence card first (V-C-275-13, warn-and-allow), and the entry never counts as a clean introduction. The lead paraphrases FOOD_EFFECTS egg highRiskNote; seekCare renders in the consequence card.',
     exemplars: [
       { label: '2b — two new foods in one meal, one a top allergen; an established allergen stays quiet', width: 360, html: mpCard({ title: 'Thursday, 5 Nov', slots: [
         mpSlot({ slot: 'breakfast', ...rx('egg-bhurji-soft-roti', 'kiwi'), newTag: 'egg, kiwi', act: '',
