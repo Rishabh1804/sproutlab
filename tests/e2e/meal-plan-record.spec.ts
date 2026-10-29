@@ -223,8 +223,8 @@ test.describe('meal plan record', () => {
   });
 
   test('the high-mercury species in data.js match the research manifest (drift check, V-CA-279-8)', async ({ page }) => {
-    const fs = await import('node:fs');
-    const man = fs.readFileSync(new URL('../../docs/research/food-effects.manifest.js', import.meta.url), 'utf8');
+    const fs = require('fs');
+    const man = fs.readFileSync('docs/research/food-effects.manifest.js', 'utf8');
     const mline = (man.match(/'HIGH-mercury fish — ([^']+)'/) || [])[1] || '';
     const dline = (await page.evaluate(() => (window as any)._mpHighMercuryLine())).replace(/^high-mercury fish — /i, '');
     const species = (s: string) => s.split(',').map(x => x.replace(/\(.*?\)/g, '').trim().toLowerCase()).filter(Boolean).sort();
