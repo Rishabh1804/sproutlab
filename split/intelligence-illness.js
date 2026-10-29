@@ -2427,10 +2427,9 @@ function autoIntroduceFoodsFromDay(dateStr) {
       const clean = f.trim();
       if (clean.length <= 1) return;
       const base = _baseFoodName(clean.toLowerCase());
-      const alreadyExists = foods.some(fi => {
-        const fb = _baseFoodName(fi.name.toLowerCase().trim());
-        return fb === base || fb.includes(base) || base.includes(fb);
-      });
+      // Exact base match only: a substring match let "eggplant" stand in for
+      // "egg", so a logged allergen was never auto-introduced (V-C-275-14).
+      const alreadyExists = foods.some(fi => _baseFoodName(fi.name.toLowerCase().trim()) === base);
       if (!alreadyExists) {
         foods.push({ name: clean, reaction: 'ok', date: dateStr });
         added = true;

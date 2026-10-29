@@ -336,12 +336,11 @@ function addFood() {
   const slot = slotEl ? slotEl.value : '';
   if (!val) return;
 
-  // Check if base food already exists
+  // Check if base food already exists. Exact base match only (_fdSameFood): a
+  // substring merge folded "egg" into an existing "eggplant" and "peanut" into
+  // "peas", so a top allergen was never recorded as introduced (V-C-275-14).
   const base = _baseFoodName(val.toLowerCase());
-  const existingIdx = foods.findIndex(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  const existingIdx = foods.findIndex(f => _fdSameFood(base, f.name));
   if (existingIdx >= 0) {
     // Update existing: keep earlier date, escalate reaction, fill in meal slot if newly given
     const existing = foods[existingIdx];

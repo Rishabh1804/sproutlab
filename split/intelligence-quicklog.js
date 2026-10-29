@@ -3434,10 +3434,8 @@ function getFoodHistory(foodName) {
   const base = _baseFoodName(lower);
 
   // Find in foods introduced
-  const introduced = foods.find(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  // Exact base match only, so "egg" never reports eggplant's intro date or reaction (V-C-275-14).
+  const introduced = foods.find(f => _baseFoodName(f.name.toLowerCase().trim()) === base);
 
   // Find last time given in feeding data
   let lastDate = null, lastMeal = null, timesSeen = 0;

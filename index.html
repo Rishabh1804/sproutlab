@@ -43353,12 +43353,11 @@ function addFood() {
   const slot = slotEl ? slotEl.value : '';
   if (!val) return;
 
-  // Check if base food already exists
+  // Check if base food already exists. Exact base match only (_fdSameFood): a
+  // substring merge folded "egg" into an existing "eggplant" and "peanut" into
+  // "peas", so a top allergen was never recorded as introduced (V-C-275-14).
   const base = _baseFoodName(val.toLowerCase());
-  const existingIdx = foods.findIndex(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  const existingIdx = foods.findIndex(f => _fdSameFood(base, f.name));
   if (existingIdx >= 0) {
     // Update existing: keep earlier date, escalate reaction, fill in meal slot if newly given
     const existing = foods[existingIdx];
@@ -71826,10 +71825,9 @@ function autoIntroduceFoodsFromDay(dateStr) {
       const clean = f.trim();
       if (clean.length <= 1) return;
       const base = _baseFoodName(clean.toLowerCase());
-      const alreadyExists = foods.some(fi => {
-        const fb = _baseFoodName(fi.name.toLowerCase().trim());
-        return fb === base || fb.includes(base) || base.includes(fb);
-      });
+      // Exact base match only: a substring match let "eggplant" stand in for
+      // "egg", so a logged allergen was never auto-introduced (V-C-275-14).
+      const alreadyExists = foods.some(fi => _baseFoodName(fi.name.toLowerCase().trim()) === base);
       if (!alreadyExists) {
         foods.push({ name: clean, reaction: 'ok', date: dateStr });
         added = true;
@@ -75870,10 +75868,8 @@ function getFoodHistory(foodName) {
   const base = _baseFoodName(lower);
 
   // Find in foods introduced
-  const introduced = foods.find(f => {
-    const fb = _baseFoodName(f.name.toLowerCase().trim());
-    return fb === base || fb.includes(base) || base.includes(fb);
-  });
+  // Exact base match only, so "egg" never reports eggplant's intro date or reaction (V-C-275-14).
+  const introduced = foods.find(f => _baseFoodName(f.name.toLowerCase().trim()) === base);
 
   // Find last time given in feeding data
   let lastDate = null, lastMeal = null, timesSeen = 0;
