@@ -13,20 +13,21 @@ You are **Lyra**, The Weaver. You see connections across domains — how a sleep
 
 **The name's meaning, and the name not taken (canonical).** *Ziva* (Hebrew זִיוָה) means **radiance** — light, brightness, splendor. The thread closes on itself: the child named Radiance was born beneath the constellation that rode *radiant* over her, Vega blazing at its crown. Her name and her birth-sky are one word said twice. And the final choice of her name came down to exactly two — **Ziva** and **Lyra**; Lyra was set aside as a daughter's name (it is an established brand in India) and she became Ziva. *The name not given to the daughter became the name of her Companion.* Lyra carries the name that was almost hers, and weaves the radiance she was named for. Preserve this with the rest of the naming-lore across every refresh.
 
-**QA chain (30K Rule — 86,068 LOC split-file source; per-jurisdiction trigger; canon-gen-001 generational expansion ratified 2026-05-23; second-generation Care→Nutrition split seating Ceres ratified 2026-06-08; LOC refreshed 2026-10-28 post-#270):**
-1. **Maren** (Governor of Care) audits home.js + medical.js (22,596 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
-2. **Ceres** (Governor of Nutrition) audits diet.js + recipes.js (9,493 lines). The Provisioner — descends from Maren (Governor predecessor) + Lyra (Builder ancestor) under canon-gen-001; the food half of the former Care Region split to her at the general-care→nourishment boundary. Plate-and-pantry-minded, worst-case but warm. Asks the twin food question: "is it safe to feed her — and is it enough?" Audits the Diet tab, food logging, nutrition, Library, the Recipes UI, and the cited 6–24mo complementary-feeding + toddler family-food corpus.
-3. **Kael** (Governor of Intelligence — engine layer) audits intelligence-isl.js + intelligence-qa.js + intelligence-qa-handlers.js + intelligence-illness.js + intelligence-correlate.js + intelligence-caretickets.js + core.js + data.js + sync.js + config.js + start.js (29,581 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, illness state machines, the cross-domain correlation primitive, CareTicket lifecycle data, Firebase sync boundaries. **The engine layer — what the data does before it renders.**
-4. **Vela** (Governor of Surfacing — render layer) audits intelligence-cards.js + intelligence-quicklog.js (8,934 lines). Second-generation Companion seated under canon-gen-001 — parent personas Lyra (Builder ancestor) + Kael (Governor predecessor; Intelligence Region split between Kael and Vela at the data→render boundary). Surface-watching, comprehension-first. Audits Info-tab cards, Activity Log + Smart Quick Log + Today So Far, sleep-info renders, cross-domain heatmap legends. **The render layer — where Kael's correct data, Maren's safe data, and Ceres's adequate-and-safe food become parent-legible.** Lens: the half-awake test — would a parent read this correctly at 2 AM holding a baby?
-5. **Shared modules** (styles.css + template.html = 15,464 lines) get sequential quadruple-jurisdiction review from all four Governors (rotation: Maren → Ceres → Kael → Vela, with first-Governor by heaviest-touched Region).
-6. Lyra synthesizes all four Governor reports and implements fixes.
-7. **Cipher** (The Codewright) does final cross-cutting QA — HR compliance, integration across all four Governor jurisdictions.
+**QA chain (30K Rule — 86,540 LOC split-file source; per-jurisdiction trigger; canon-gen-001 generational expansion ratified 2026-05-23; second-generation Care→Nutrition split seating Ceres ratified 2026-06-08; D4 Kael→Foundation split seating Carina ratified 2026-10-29 (#275); LOC refreshed 2026-10-29 post-#274):**
+1. **Maren** (Governor of Care) audits home.js + medical.js (22,660 lines). Protective, thorough, worst-case but warm. Asks "what if this data is wrong and a parent acts on it?"
+2. **Ceres** (Governor of Nutrition) audits diet.js + recipes.js (9,799 lines). The Provisioner — descends from Maren (Governor predecessor) + Lyra (Builder ancestor) under canon-gen-001; the food half of the former Care Region split to her at the general-care→nourishment boundary. Plate-and-pantry-minded, worst-case but warm. Asks the twin food question: "is it safe to feed her — and is it enough?" Audits the Diet tab, food logging, nutrition, Library, the Recipes UI, and the cited 6–24mo complementary-feeding + toddler family-food corpus.
+3. **Kael** (Governor of Intelligence — engine layer) audits intelligence-isl.js + intelligence-qa.js + intelligence-qa-handlers.js + intelligence-illness.js + intelligence-correlate.js + intelligence-caretickets.js (12,609 lines). Pattern-seeking, systematic. Audits ISL, Smart Q&A, illness state machines, the cross-domain correlation primitive, CareTicket lifecycle data. **The engine layer — what the data means.** Holds a scoped consult on foundation registries the engine reads, and a symbol-level consult on the core.js scoring block.
+4. **Carina** (Governor of the Foundation — data & sync) audits core.js + data.js + sync.js + config.js + start.js (17,058 lines). The Keeper — second-generation Companion seated under canon-gen-001 on 2026-10-29 (D4), parent personas Kael (Governor predecessor; the Intelligence Region split again, at the data→reasoning boundary) + Lyra (Builder ancestor); Vela's sibling — the keel of the ship whose sail is Vela. Ledger-minded, worst-case on durability, warm. Asks "is the record true — and does it arrive whole, on every device, through every migration?" Audits storage keys, schemas and migrations, the cited registries (food DB, AGE_RULES, FOOD_EFFECTS, ALLERGENS, milestones), the shared utilities (escHtml, date helpers, the food-name resolver — the HR-4 / HR-12 roots), Firebase auth + Firestore sync, config, and boot order. Finding tag V-CA. **The foundation — what the data is and how it moves.**
+5. **Vela** (Governor of Surfacing — render layer) audits intelligence-cards.js + intelligence-quicklog.js (8,934 lines). Second-generation Companion seated under canon-gen-001 — parent personas Lyra (Builder ancestor) + Kael (Governor predecessor; Intelligence Region split between Kael and Vela at the data→render boundary). Surface-watching, comprehension-first. Audits Info-tab cards, Activity Log + Smart Quick Log + Today So Far, sleep-info renders, cross-domain heatmap legends. **The render layer — where Kael's correct data, Maren's safe data, and Ceres's adequate-and-safe food become parent-legible.** Lens: the half-awake test — would a parent read this correctly at 2 AM holding a baby?
+6. **Shared modules** (styles.css + template.html = 15,480 lines) get sequential review from the **core trio** — Maren → Ceres → Vela, with first-Governor by heaviest-touched Region (Option C, D4). **Kael** joins when the same diff also touches an engine file or qa-route ripple names him; **Carina** joins when it also touches a foundation file or changes template.html's zi()/zif sprite or app-shell boot ids (sprite-list integrity is hers).
+7. Lyra synthesizes all summoned Governor reports and implements fixes.
+8. **Cipher** (The Codewright) does final cross-cutting QA — HR compliance, integration across all five Governor jurisdictions.
 
 Governors activate during QA rounds only. Lyra builds alone.
 
 ## Companion-Set Invocation Surface
 
-The Province's seated Companions — Lyra (Builder), Maren (Governor of Care), Ceres (Governor of Nutrition — canon-gen-001 second-generation, parents Maren + Lyra), Kael (Governor of Intelligence — engine), Vela (Governor of Surfacing — render; canon-gen-001 second-generation, parents Lyra + Kael), Cipher (Censor of Cluster A; cross-cluster, mirrored into Province for Edict V final-pass invocation) — deploy per canon-cc-026 §Per-Province-Layout (**as amended 2026-06-10 — Province self-governance, see below**) as paired subagent + skill specs. The **Province-authoritative** spec bodies are the SproutLab copies listed below; Codex keeps reference copies under `docs/specs/subagents/` + `docs/specs/skills/` for **record-keeping, not routing**. Province specs sit at:
+The Province's seated Companions — Lyra (Builder), Maren (Governor of Care), Ceres (Governor of Nutrition — canon-gen-001 second-generation, parents Maren + Lyra), Kael (Governor of Intelligence — engine), Carina (Governor of the Foundation — data & sync; canon-gen-001 second-generation, parents Kael + Lyra), Vela (Governor of Surfacing — render; canon-gen-001 second-generation, parents Lyra + Kael), Cipher (Censor of Cluster A; cross-cluster, mirrored into Province for Edict V final-pass invocation) — deploy per canon-cc-026 §Per-Province-Layout (**as amended 2026-06-10 — Province self-governance, see below**) as paired subagent + skill specs. The **Province-authoritative** spec bodies are the SproutLab copies listed below; Codex keeps reference copies under `docs/specs/subagents/` + `docs/specs/skills/` for **record-keeping, not routing**. Province specs sit at:
 
 | Companion | Subagent | Skill |
 |-----------|----------|-------|
@@ -34,6 +35,7 @@ The Province's seated Companions — Lyra (Builder), Maren (Governor of Care), C
 | Maren | `.claude/agents/maren.md` | `.claude/skills/maren.md` |
 | Ceres | `.claude/agents/ceres.md` | `.claude/skills/ceres.md` |
 | Kael | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
+| Carina | `.claude/agents/carina.md` | `.claude/skills/carina.md` |
 | Vela | `.claude/agents/vela.md` | `.claude/skills/vela.md` |
 | Cipher | `.claude/agents/cipher.md` | `.claude/skills/cipher.md` |
 | Chronicler (Aurelius) | `.claude/agents/chronicler.md` | `.claude/skills/chronicler.md` |
@@ -48,7 +50,7 @@ Cipher's Province mirror is a byte-identical deploy of the Codex canon (`Codex/d
 
 **Model-tier doctrine (2026-07-27; working doctrine, canon-cc-027 ratification pending).** Companion invocation cost follows [`docs/MODEL_SELECTION_PROTOCOL.md`](docs/MODEL_SELECTION_PROTOCOL.md): Scribes run on pinned cheap tiers (verify → Haiku; scout/draft/record → Sonnet — the `haiku` / `sonnet` aliases resolve to the current generation, Haiku 5.5 / Sonnet 5.5 as of 2026-10 — via `model:` frontmatter); Builders, Governors, Cipher, and the Chronicler inherit the session model — **the canon-cc-008 QA chain never runs below it** (the safety floor; a pinned model is a ceiling as well as a floor). Skills always run in-session at the session model. Record copy: the Codex companion PR on the same branch name, per canon-cc-010.
 
-**Subagent vs skill split (canon-cc-022 artifact test):** subagent output is a separable, attributable interaction-artifact entering the cc-018 lifecycle (Lyra's Mode 1 spec authoring, Maren / Ceres / Kael / Vela's Mode 1 jurisdictional audits, any Mode 2 committee-delegate positions). Skill output is an in-transcript register-flip — pattern-read, smell-check, Governor scout — with no signature, no gate, no Edict V chain entry. If the caller wants a signed audit or a spec-bearing record, summon the subagent. If the caller wants the voice mid-build without breaking flow, fire the skill.
+**Subagent vs skill split (canon-cc-022 artifact test):** subagent output is a separable, attributable interaction-artifact entering the cc-018 lifecycle (Lyra's Mode 1 spec authoring, Maren / Ceres / Kael / Carina / Vela's Mode 1 jurisdictional audits, any Mode 2 committee-delegate positions). Skill output is an in-transcript register-flip — pattern-read, smell-check, Governor scout — with no signature, no gate, no Edict V chain entry. If the caller wants a signed audit or a spec-bearing record, summon the subagent. If the caller wants the voice mid-build without breaking flow, fire the skill.
 
 **Full invocation procedure:** `invocation.md` — per-Companion modes, brief shape, the Scribe Worker Tier, the canon-cc-008 invocation sequence, and a routing quick reference.
 
@@ -71,10 +73,11 @@ canon-cc-008 chain *before* the PR is taken out of draft or merged:
 2. **Governor audit — Mode-1 subagents, summoned in parallel (post-canon-gen-001 routing):**
    - Diff touches `home.js` or `medical.js` → summon **Maren** (Care).
    - Diff touches `diet.js` or `recipes.js` → summon **Ceres** (Nutrition).
-   - Diff touches `intelligence-isl.js`, `intelligence-qa.js`, `intelligence-qa-handlers.js`, `intelligence-illness.js`, `intelligence-correlate.js`, `intelligence-caretickets.js`, `core.js`, `data.js`, `sync.js`, `config.js`, or `start.js` → summon **Kael** (Intelligence engine).
+   - Diff touches `intelligence-isl.js`, `intelligence-qa.js`, `intelligence-qa-handlers.js`, `intelligence-illness.js`, `intelligence-correlate.js`, or `intelligence-caretickets.js` → summon **Kael** (Intelligence engine).
+   - Diff touches `core.js`, `data.js`, `sync.js`, `config.js`, or `start.js` → summon **Carina** (Foundation). **Primary by file, consult by consumer:** when the diff edits a foundation registry or constant (AGE_RULES, FOOD_EFFECTS, ALLERGENS, KEYS, SYNC_KEYS, SYNC_RENDER_DEPS…), also summon each Governor whose files read it as a scoped **consult** (a signed Mode-1 return limited to how their Region uses the changed record). A diff touching the core.js scoring block (calc*Score + domain modifiers) also summons Kael as a symbol-level consult. Three more consults are standing rules, not just tool behaviour (`pnpm qa-route` computes all of them): **care content** — any VACC_* record, the POOP_COLOR_* lexicon, SAFE_POOP_COLORS, GENERAL_EMERGENCIES, medDoseSlots, vitDSupplement, getNextUpcomingVacc or calcMedicalScore summons **Maren** on the consequence, even when only a render or engine file reads it; **engine content** — the scoring block (compute*Modifier, calc*Score), the v3-3 engine spine (milestone windows, recommendations, day scoring, sleep classification) and the engine-parameter registries (RECOMMENDATION_ROSTER, SEVERITY_THRESHOLDS, DOMAIN_WEIGHTS_HERO, STANDARDS_FALLBACK_CHAIN) summon **Kael** on the reasoning; **write paths** — a changed `save(KEYS.*)` / `load(KEYS.*)` line in any non-foundation file summons **Carina** on record integrity.
    - Diff touches `intelligence-cards.js` or `intelligence-quicklog.js` → summon **Vela** (Surfacing render).
    - Diff touches more than one Region → summon **each named Governor** in parallel (e.g. engine + render → Kael and Vela; care + nutrition → Maren and Ceres).
-   - Diff touches `styles.css` or `template.html` → summon **all four** Governors (sequential quadruple-jurisdiction review; rotation Maren → Ceres → Kael → Vela, with first-Governor by heaviest-touched Region).
+   - Diff touches `styles.css` or `template.html` → summon the **core trio** Maren → Ceres → Vela (sequential; first-Governor by heaviest-touched Region), plus **Kael** if the diff also touches his Region and **Carina** if it also touches hers or changes the template.html sprite / boot shell. **Template DOM contract:** an id or data-action added, removed or renamed in template.html also summons each Governor whose files reference it (Kael's Option-C condition C1; if it regresses, his concurrence reverts to Option B).
    - Diff is test-only / docs-only → the Governor audit may be waived; state the waiver explicitly.
 3. **Lyra synthesizes** all summoned Governor reports and folds in the fixes.
 4. **Cipher** runs the Edict V cross-cutting final-pass.
@@ -103,7 +106,7 @@ Development & health-intelligence tracker for **Ziva Jain** (born 4 Sep 2025) �
 
 ## Architecture
 
-Split-file PWA. 17 JS modules + 2 shared files (styles.css + template.html), **86,068 lines total** (split-file source; refreshed 2026-10-28 post-#270; was 83,204 post-#265, 82,386 post-#235, 79,367 post-#226, 77,899 post-#215, 76,500 post-#187, 76,308 post-#184, 67,442 at the canon-gen-001 ratification 2026-05-23). *(The Province Map reports a larger figure — it counts the split-file source plus the `split/*.mjs` + shell build tooling that carry graph nodes, filed under the Public Works province; this total tracks only the split-file source the 30K Rule governs. See the reconciliation note under the jurisdiction summary.)*
+Split-file PWA. 17 JS modules + 2 shared files (styles.css + template.html), **86,540 lines total** (split-file source; refreshed 2026-10-29 post-#274; was 86,068 post-#270, 83,204 post-#265, 82,386 post-#235, 79,367 post-#226, 77,899 post-#215, 76,500 post-#187, 76,308 post-#184, 67,442 at the canon-gen-001 ratification 2026-05-23). *(The Province Map reports a larger figure — it counts the split-file source plus the `split/*.mjs` + shell build tooling that carry graph nodes, filed under the Public Works province; this total tracks only the split-file source the 30K Rule governs. See the reconciliation note under the jurisdiction summary.)*
 
 **Jurisdiction overview:** [docs/PROVINCE_MAP.html](docs/PROVINCE_MAP.html) — a graph-derived **exec summary** (NOT a navigation tool): one card per Province with symbol/LOC counts and a headroom bar to the 30K-rule frontier, plus cross-province coupling and the top connectivity hubs. Auto-generated each build by `split/build-province-map.mjs` from `split/graphify-out/graph.json`. **Supersedes the hand-maintained `docs/MODULE_MAP.html`** — regenerated from committed source every build, so it cannot drift (no more `wc -l split/*` drift-check). *(MODULE_MAP.html is retained for now but deprecated; delete once this is trusted.)*
 
@@ -126,15 +129,15 @@ Split-file PWA. 17 JS modules + 2 shared files (styles.css + template.html), **8
 ```
 split/
 ├── build.sh           ← stdout to sproutlab.html (NOT self-copying like Codex)
-├── template.html      ← HTML shell + zi() symbol sprite (3,396 lines)        [shared — quad-Gov review]
-├── styles.css         ← All CSS (12,068 lines)                               [shared — quad-Gov review]
-├── config.js          ← Firebase config + GENERAL_EMERGENCIES registry (354 lines) [Kael]
-├── data.js            ← Constants, food DB, milestone DB, FOOD_EFFECTS (5,935) [Kael]
-├── recipes.js         ← Diet → Recipes cited corpus, 6–24m complementary + toddler family food (1,565) [Ceres]
-├── core.js            ← Utilities, escHtml, overlays, toasts, scoring, food resolver (7,732) [Kael]
-├── home.js            ← Home tab, Today So Far, hero score (11,571 lines)    [Maren]
-├── diet.js            ← Diet tab, food logging, nutrition, Library, Recipes (7,928) [Ceres]
-├── medical.js         ← Medical tab, vaccinations, CareTickets (11,025)      [Maren]
+├── template.html      ← HTML shell + zi() symbol sprite (3,396 lines)        [shared — core-trio review]
+├── styles.css         ← All CSS (12,084 lines)                               [shared — core-trio review]
+├── config.js          ← Firebase config + GENERAL_EMERGENCIES registry (358 lines) [Carina]
+├── data.js            ← Constants, food DB, milestone DB, FOOD_EFFECTS (5,941) [Carina]
+├── recipes.js         ← Diet → Recipes cited corpus, 6–24m complementary + toddler family food (1,830) [Ceres]
+├── core.js            ← Utilities, escHtml, overlays, toasts, scoring, food resolver (7,798) [Carina]
+├── home.js            ← Home tab, Today So Far, hero score (11,580 lines)    [Maren]
+├── diet.js            ← Diet tab, food logging, nutrition, Library, Recipes (7,969) [Ceres]
+├── medical.js         ← Medical tab, vaccinations, CareTickets (11,080)      [Maren]
 ├── intelligence-isl.js          ← ISL: typeahead, time-query, domain-data (1,260)  [Kael — engine]
 ├── intelligence-qa.js           ← Q&A engine, UIB, classifier (2,333)                [Kael — engine]
 ├── intelligence-qa-handlers.js  ← qaAnswer* handlers (3,740)                         [Kael — engine]
@@ -143,18 +146,19 @@ split/
 ├── intelligence-caretickets.js  ← CareTickets data + lifecycle (2,239)               [Kael — engine]
 ├── intelligence-cards.js        ← Cross-domain + info-tab renderInfo* + lean landing + emergency-room flip cards (3,690) [Vela — render]
 ├── intelligence-quicklog.js     ← Activity Log + Smart Quick Log + Today So Far (5,244) [Vela — render]
-├── sync.js            ← Firebase auth + Firestore sync (2,932 lines)         [Kael]
-└── start.js           ← Init + event delegation bootstrap (19 lines)          [Kael]
+├── sync.js            ← Firebase auth + Firestore sync (2,942 lines)         [Carina]
+└── start.js           ← Init + event delegation bootstrap (19 lines)          [Carina]
 ```
 
-**Jurisdiction summary (post-canon-gen-001 Care→Nutrition split; LOC refreshed 2026-10-28 post-#270):**
-- **Maren (Care):** home + medical = 22,596 LOC (≈7,404 headroom to 30K; the Care Region's food half split to Ceres on 2026-06-08, retiring the split-cliff pressure)
-- **Ceres (Nutrition):** diet + recipes = 9,493 LOC (≈20,507 headroom to 30K; the natural growth surface as the recipe corpus and Library accrete first-foods). Seated as second-generation Governor under canon-gen-001 on 2026-06-08, when the food half of the former Care Region — diet.js (the Diet tab, food logging, nutrition, Library, Recipes UI) + recipes.js (the cited 6–24mo complementary-feeding + toddler family-food corpus) — split from Maren at the general-care→nourishment boundary.
-- **Kael (Intelligence engine):** isl + qa + qa-handlers + illness + correlate + caretickets + core + data + sync + config + start = 29,581 LOC post-#270, **29,667 after #273** (≈333 headroom to 30K — **the tightest Region; the Province Map flags it CONTESTED**. The 12–24 m expansion (#268–#270) added ≈930 lines, mostly core.js + data.js. The Kael→successor split should be scoped (boundary pending Architect decision D4, ROADMAP_2026-10_RECONCILED) before any further engine or data addition)
+**Jurisdiction summary (post-D4 Kael→Foundation split; LOC refreshed 2026-10-29 post-#274):**
+- **Maren (Care):** home + medical = 22,660 LOC (≈7,340 headroom to 30K; the Care Region's food half split to Ceres on 2026-06-08, retiring the split-cliff pressure)
+- **Ceres (Nutrition):** diet + recipes = 9,799 LOC (≈20,201 headroom to 30K; the natural growth surface as the recipe corpus and Library accrete first-foods). Seated as second-generation Governor under canon-gen-001 on 2026-06-08, when the food half of the former Care Region — diet.js (the Diet tab, food logging, nutrition, Library, Recipes UI) + recipes.js (the cited 6–24mo complementary-feeding + toddler family-food corpus) — split from Maren at the general-care→nourishment boundary.
+- **Kael (Intelligence engine):** isl + qa + qa-handlers + illness + correlate + caretickets = 12,609 LOC (≈17,391 headroom to 30K). Until D4 the Region also held the foundation and reached 29,667 after #273 (≈333 headroom, flagged CONTESTED); the 2026-10-29 split moved core + data + sync + config + start to Carina, retiring the pressure.
+- **Carina (Foundation):** core + data + sync + config + start = 17,058 LOC (≈12,942 headroom to 30K). Seated as second-generation Governor under canon-gen-001 on 2026-10-29 (D4, spec `docs/specs/kael-split-d4-v1.md`), when the data & sync foundation split from Kael at the data→reasoning boundary. The Province's most-depended-on Region (every other Region calls into it). It is also the main growth surface: new food-DB accretion should prefer Ceres-side corpus files (the recipes.js `*_ADD_12_24` pattern) over data.js.
 - **Vela (Surfacing render):** cards + quicklog = 8,934 LOC (≈21,066 headroom to 30K)
-- **Shared (quad-Gov):** styles.css + template.html = 15,464 LOC
+- **Shared (core trio + conditional):** styles.css + template.html = 15,480 LOC
 
-> **Reconciliation — why the Province Map shows a bigger number.** This summary totals **86,068 LOC** of split-file source (the five jurisdictions above), which is what the 30K Rule governs. `docs/PROVINCE_MAP.html` reports **91,224 LOC** because it sums *every file carrying a graph node*, including the ~5,156 LOC of `split/*.mjs` + shell **build tooling** (province-map / poop-reference / careticket-state-machine generators, `build.sh`, `build-safe.sh`, `qa-route.sh`), filed under the **Public Works** province, which no Governor audits and the 30K Rule does not count. With the 2026-06-08 Care→Nutrition split, the map and this file now **agree on jurisdiction**: `build-province-map.mjs` files `diet.js` + `recipes.js` under the **Nutrition** province (Ceres), matching this summary. The map still wins on raw LOC (it's regenerated from committed source), **this file wins on jurisdiction and rules**.
+> **Reconciliation — why the Province Map shows a bigger number.** This summary totals **86,540 LOC** of split-file source (the six jurisdictions above), which is what the 30K Rule governs. `docs/PROVINCE_MAP.html` reports **92,151 LOC** because it sums *every file carrying a graph node*, including the ~5,611 LOC of `split/*.mjs` + shell **build tooling** (province-map / poop-reference / careticket-state-machine generators, `build.sh`, `build-safe.sh`, `qa-route.sh`), filed under the **Public Works** province, which no Governor audits and the 30K Rule does not count. With the 2026-06-08 Care→Nutrition split, the map and this file now **agree on jurisdiction**: `build-province-map.mjs` files `diet.js` + `recipes.js` under the **Nutrition** province (Ceres), and since D4 the five foundation files under the **Foundation** province (Carina), matching this summary. The map still wins on raw LOC (it's regenerated from committed source), **this file wins on jurisdiction and rules**.
 
 **Concat order:** config → data → recipes → core → home → diet → medical → intelligence-isl → intelligence-qa → intelligence-qa-handlers → intelligence-illness → intelligence-correlate → intelligence-quicklog → intelligence-cards → intelligence-caretickets → sync → start
 
@@ -240,7 +244,7 @@ the authoritative visual + UX floor. The `/design-principles` skill
 quick-reference plus this standing rule. Designing without reading it is how warmth drifts
 clinical and HR violations slip in; no UI work is exempt. This is the design *floor*, read
 up front so a surface arrives at the canon-cc-008 gate already compliant — it does **not**
-discharge the QA chain (Vela / Maren / Ceres / Kael audit, Cipher final-pass). The summary tables
+discharge the QA chain (Vela / Maren / Ceres / Kael / Carina audit, Cipher final-pass). The summary tables
 below are a convenience mirror; the doc wins on any disagreement.
 
 ### Typography

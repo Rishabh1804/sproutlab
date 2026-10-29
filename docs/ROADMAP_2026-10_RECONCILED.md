@@ -88,7 +88,7 @@ what unblocks the most.
 5. Milk / curd / paneer reach the cow-milk allergen card; "til chikki" → choking floor; plain "lassi" sugar gate.
 6. Pin Chart.js to an exact version (one line, build.sh).
 
-**C. Kael Region split spec (≈ 419 lines of headroom).** Lyra drafts, Architect ratifies the boundary. Blocks
+**C. Kael Region split spec — DONE 2026-10-29 (#275): Carina seated for the Foundation; see `specs/kael-split-d4-v1.md`.** *(Was: ≈ 419 lines of headroom.)* Lyra drafts, Architect ratifies the boundary. Blocks
 every engine-side item below, including the CareTicket thresholds.
 
 **D. Age-overdue engine work (after C):** age-banded CareTicket thresholds; texture ladder 'family' stage (one
@@ -122,7 +122,7 @@ content surface when its human dependencies exist. Note: e2e cannot run in the r
 - **D1 — v3.0.** Keep v3.0 (arcs v3-1 / 2 / 4 / 7 / 9 still to spec and build) as a target, fold its open arcs into this sequence, or retire the v3.0 label.
 - ~~**D2 — Open draft PRs.**~~ **Resolved 2026-10-28:** both revived and merged — #254 Surface Catalog (four-Governor round, Home fade dropped, stylesheet linked) and #257 Model Selection Protocol (refreshed to the current models; scribe-scout on Sonnet).
 - **D3 — v7 leftovers.** Snapshot Sharing, Inline Insights / Parent Celebration, CareTickets Phase 2: drop or carry. (CareTicket list views are visible "coming soon" stubs today.)
-- **D4 — Kael split boundary** (step C), on Lyra's spec.
+- ~~**D4 — Kael split boundary** (step C), on Lyra's spec.~~ **Resolved 2026-10-29 (#275):** foundation vs engine. **Carina** (new Governor of the Foundation) takes core + data + sync + config + start (17,058); Kael keeps the six intelligence-* engine files (12,609). Shared-module review → core trio (Maren → Ceres → Vela) + conditional Kael / Carina; `qa-route` gains reference consults. Unblocks step D and the B.5 food-data fixes (now Carina-primary with consults). Queued: symbol-level ripple in qa-route; a later PR may move the core.js scoring block to an engine file. The Kael→Orinth reassessment stands as-is.
 - **D5 — i18n / Hindi this year**, given the content surface waits on a named paediatrician.
 
 ## 5. Housekeeping not in this PR

@@ -66,7 +66,7 @@ target. Treat the infographic's "Opus 4.7 / 4.8" rows as one collapsed row:
 | scribe-draft | `sonnet` | Composition from a brief; commanding Companion reviews the return. |
 | scribe-record | `sonnet` | Chronicle stubs and running notes; Sonnet's writing is strong. |
 | Lyra (Builder) | *(none — inherit)* | Spec authoring and architecture decisions are judgment work. |
-| Maren / Ceres / Kael / Vela (Governors) | *(none — inherit)* | Safety floor — see §4. |
+| Maren / Ceres / Kael / Carina / Vela (Governors) | *(none — inherit)* | Safety floor — see §4. |
 | Cipher (Censor) | *(none — inherit)* | The Edict V final-pass is the last gate before merge. |
 | Chronicler (Aurelius) | *(none — inherit)* | Subagent modes produce canonical, attributable records (committee synthesis, cc-017 artifacts); dissent-preservation is judgment work. In-transcript skill-mode chronicling runs at session model by construction. |
 

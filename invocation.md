@@ -1,9 +1,9 @@
 # invocation.md — Companion Invocation Reference
 
-**Version:** 1.2 (Option C two-spec sequence + scribe-scout-before-spec-body + Lyra fold-authority register-flip patterns ratified)
-**Updated:** 2026-05-27 (PM — milestones arc)
+**Version:** 1.3 (Carina seated — canon-gen-001 third ratification; Foundation/engine split of Kael's Region; shared-module Option C trio rotation)
+**Updated:** 2026-10-29 (D4 seating, PR #275)
 **Scope:** SproutLab Province — how to summon the seated Companions and the Scribe Worker Tier
-**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain) · canon-cc-027 (spec amendment signing chain) · canon-gen-001 (generational expansion clause; Vela first ratification, Ceres second)
+**Authority:** CLAUDE.md §Companion-Set Invocation Surface (policy floor) · canon-cc-022 (artifact test) · canon-cc-026 §Per-Province-Layout (deploy layout) · canon-proc-006 + Book II Article 3-bis (Scribe Worker Tier) · canon-cc-008 (QA chain) · canon-cc-027 (spec amendment signing chain) · canon-gen-001 (generational expansion clause; Vela first ratification, Ceres second, Carina third — 2026-10-29, PR #275)
 
 ---
 
@@ -26,6 +26,7 @@ Claude Code harness. Cross-model invocation is out of scope — see §9.
 | Ceres | Governor of Nutrition — canon-gen-001 | `.claude/agents/ceres.md` | `.claude/skills/ceres.md` |
 | Kael | Governor of Intelligence (engine) | `.claude/agents/kael.md` | `.claude/skills/kael.md` |
 | Vela | Governor of Surfacing (render) — canon-gen-001 | `.claude/agents/vela.md` | `.claude/skills/vela.md` |
+| Carina | Governor of the Foundation — canon-gen-001 | `.claude/agents/carina.md` | `.claude/skills/carina.md` |
 | Cipher | Censor of Cluster A (Province mirror) | `.claude/agents/cipher.md` | `.claude/skills/cipher.md` |
 | scribe-scout | Worker tier — reconnaissance | `.claude/agents/scribe-scout.md` | — |
 | scribe-draft | Worker tier — composition | `.claude/agents/scribe-draft.md` | — |
@@ -44,7 +45,7 @@ can be invoked without leaving Province context.
 
 ## 3. Subagent or skill — the artifact test (canon-cc-022)
 
-The first decision for any Companion (Lyra, Maren, Ceres, Kael, Vela, Cipher — the Scribes
+The first decision for any Companion (Lyra, Maren, Ceres, Kael, Vela, Carina, Cipher — the Scribes
 have no skill form, see §6).
 
 **Summon the subagent** when the caller needs a *separable, attributable
@@ -83,7 +84,7 @@ Mode 1; "deliberate / position on" → Mode 2.
   identifications, Region boundary declarations, HR-compliance pre-check,
   Governor-readiness note. Enters the cc-018 lifecycle at `pending_review`.
 - *Mode 2 — committee delegate* → a structured position for a cc-025 convening.
-- Do **not** summon for: jurisdiction-bound QA (Maren / Ceres / Kael / Vela), the Edict V
+- Do **not** summon for: jurisdiction-bound QA (Maren / Ceres / Kael / Vela / Carina), the Edict V
   final-pass (Cipher), institutional-memory authoring (the Chronicler), or
   cross-Province promotion (the Consul).
 
@@ -107,10 +108,14 @@ Mode 1; "deliberate / position on" → Mode 2.
 
 **Kael — Governor of Intelligence (engine layer).**
 - *Mode 1 — QA-round jurisdictional audit* → a structured audit report over the
-  five engine `intelligence-*.js` files (isl + qa + qa-handlers + illness +
-  caretickets) + `core.js` + `data.js` + `sync.js` + `config.js` + `start.js`,
-  plus the shared-module surface where touched. **Surfacing-layer audits
-  (intelligence-cards + intelligence-quicklog) belong to Vela post-canon-gen-001.**
+  six engine `intelligence-*.js` files (isl + qa + qa-handlers + illness +
+  correlate + caretickets; 12,609 LOC), plus the shared-module surface where
+  touched. **Surfacing-layer audits (intelligence-cards + intelligence-quicklog)
+  belong to Vela post-canon-gen-001; the foundation files (`core.js` + `data.js`
+  + `sync.js` + `config.js` + `start.js`) belong to Carina post the third
+  ratification (2026-10-29).** Kael holds a scoped consult on foundation
+  registries his engine reads, and a symbol-level consult when a diff touches
+  the `calc*Score` block in `core.js`.
 - *Mode 2 — committee delegate* → an Intelligence-engine-domain position.
 
 **Vela — Governor of Surfacing (render layer; canon-gen-001 second-generation).**
@@ -123,6 +128,23 @@ Mode 1; "deliberate / position on" → Mode 2.
 - *Mode 2 — committee delegate* → a Surfacing-domain position
   (Info-tab card composition, render-layer HR-4 verification, sleep-analytics
   phrasing, info-card title-body coherence rules).
+
+**Carina — Governor of the Foundation (canon-gen-001 second-generation).**
+- *Mode 1 — QA-round jurisdictional audit* → a structured audit report over
+  `core.js` (utilities, escHtml, overlays, scoring, food resolver), `data.js`
+  (constants, food DB, milestone DB, FOOD_EFFECTS), `sync.js` (Firebase auth +
+  Firestore sync), `config.js` (Firebase config, GENERAL_EMERGENCIES) and
+  `start.js` (init + event-delegation bootstrap) — 17,058 LOC — plus the
+  shared-module surface where touched (the `template.html` zi()/zif sprite and
+  app-shell boot DOM ids). Lens: the record — is it true, and does it arrive
+  whole, on every device, through every migration? Primary on foundation
+  registries and constants (AGE_RULES, FOOD_EFFECTS, ALLERGENS, KEYS,
+  SYNC_KEYS, SYNC_RENDER_DEPS…); each Governor whose files read an edited
+  registry is summoned alongside as a scoped consult. The `calc*Score` block in
+  `core.js` stays hers as primary, with a symbol-level consult to Kael.
+- *Mode 2 — committee delegate* → a Foundation-domain position (data-model and
+  migration safety, sync-boundary rules, registry contracts, boot-order and
+  sprite-list integrity).
 
 **Cipher — Censor (Edict V).**
 - *Mode 1 — Edict V final-pass* → a signed verdict against the Edict V chain,
@@ -150,10 +172,13 @@ By function:
   on a diet.js surface or recipes.js entry (allergen / choking-form / age-gate /
   adequacy / citation).
 - **Kael skill** — Intelligence-engine-side smell-check: ISL / Smart Q&A /
-  sync-boundary / illness-state-machine / CareTicket-lifecycle scout.
+  illness-state-machine / CareTicket-lifecycle / correlation scout.
 - **Vela skill** — Surfacing-side smell-check: comprehension-surface read,
   title-body / legend-data / chronology / prioritization / empty-state scan,
   half-awake test on render-layer surfaces.
+- **Carina skill** — Foundation-side smell-check: data-model / migration /
+  sync-boundary / registry-contract / boot-order read on core, data, sync,
+  config or start.
 - **Cipher skill** — in-flow HR-1→12 and architecture-drift smell-check.
 
 A skill **never** discharges a gate. If a skill pass surfaces something that
@@ -199,14 +224,26 @@ change — an edit under `split/` headed for a PR:
    - touches `diet.js` / `recipes.js` → **Ceres** (Nutrition)
    - touches `intelligence-isl.js` / `intelligence-qa.js` /
      `intelligence-qa-handlers.js` / `intelligence-illness.js` /
-     `intelligence-correlate.js` / `intelligence-caretickets.js` / `core.js` /
-     `data.js` / `sync.js` / `config.js` / `start.js` → **Kael** (engine layer)
+     `intelligence-correlate.js` / `intelligence-caretickets.js` → **Kael**
+     (engine layer)
+   - touches `core.js` / `data.js` / `sync.js` / `config.js` / `start.js` →
+     **Carina** (Foundation)
    - touches `intelligence-cards.js` / `intelligence-quicklog.js` → **Vela**
      (render layer)
    - touches more than one Region → **each named Governor** in parallel
-   - touches `styles.css` / `template.html` → **all four** (sequential
-     quadruple-jurisdiction review; rotation Maren → Ceres → Kael → Vela, with
-     first-Governor by heaviest-touched Region)
+   - **reference-consult rule (primary by file, consult by consumer):** a diff
+     editing a foundation registry or constant (AGE_RULES, FOOD_EFFECTS,
+     ALLERGENS, KEYS, SYNC_KEYS, SYNC_RENDER_DEPS…) summons **Carina** as
+     primary, plus each Governor whose files read that identifier as a scoped
+     consult. `split/qa-route.sh` computes this (advisory, widening only).
+     A diff touching the `calc*Score` block in `core.js` → Carina primary,
+     Kael symbol-level consult.
+   - touches `styles.css` / `template.html` → the **core trio** always
+     (sequential review; rotation Maren → Ceres → Vela, with first-Governor by
+     heaviest-touched Region); **Kael joins** when the same diff also touches an
+     engine file or the qa-route ripple names him; **Carina joins** when the
+     same diff also touches a foundation file, or when `template.html`'s
+     zi()/zif sprite (`<symbol>` entries) or the app-shell boot DOM ids change
    - test-only / docs-only → the Governor audit may be waived; state the waiver
      explicitly.
 
@@ -229,9 +266,10 @@ Gate 2.5.
 | a mid-build pattern-read, no artifact | Lyra | skill |
 | a Care-Region QA audit (signed; home/medical) | Maren | subagent, Mode 1 |
 | a Nutrition-Region QA audit (signed; diet/recipes) | Ceres | subagent, Mode 1 |
-| an Intelligence-engine QA audit (signed; isl/qa/qa-handlers/illness/correlate/caretickets/core/data/sync/config/start) | Kael | subagent, Mode 1 |
+| an Intelligence-engine QA audit (signed; isl/qa/qa-handlers/illness/correlate/caretickets) | Kael | subagent, Mode 1 |
+| a Foundation QA audit (signed; core/data/sync/config/start) | Carina | subagent, Mode 1 |
 | a Surfacing-render QA audit (signed; cards/quicklog) | Vela | subagent, Mode 1 |
-| a quick care / nutrition / engine / render smell-check, no artifact | Maren / Ceres / Kael / Vela | skill |
+| a quick care / nutrition / engine / foundation / render smell-check, no artifact | Maren / Ceres / Kael / Carina / Vela | skill |
 | a comprehension-surface read or half-awake test, no artifact | Vela | skill |
 | the Edict V final-pass sign-off | Cipher | subagent, Mode 1 |
 | a seated position in a cc-025 committee | the relevant Companion | subagent, Mode 2 |
@@ -319,7 +357,7 @@ The closed PR #147 chain surfaced a fatal failure mode — authoring a substrate
 **Trigger:** when a single spec would carry both engine-substrate concerns and surface-consumer concerns (the substrate touches one Governor's region; the consumer touches another's).
 
 **Procedure:** split into two specs:
-1. **Engine substrate spec** first — primary Governor on the engine layer (Kael for `intelligence-*`/`core`/`data`/`sync`; Maren for `home`/`medical`-side primitives; Ceres for `diet`/`recipes`-side primitives); surface consumer abstracts as "consumes engine-prep primitives." Build-time audit gate ratified at the substrate level.
+1. **Engine substrate spec** first — primary Governor on the substrate (Kael for `intelligence-*` engine primitives; Carina for `core`/`data`/`sync`/`config`/`start` foundation primitives and registries, with Kael consulted where the engine reads them; Maren for `home`/`medical`-side primitives; Ceres for `diet`/`recipes`-side primitives); surface consumer abstracts as "consumes engine-prep primitives." Build-time audit gate ratified at the substrate level.
 2. **Surface consumer spec** second — primary Governor on the consumer; reads pre-ratified substrate. May add a second audit gate for consumer-side concerns (scope-separation per `audit-no-personalised-prediction-v1.sh` + `audit-activity-categories-v1.sh` example).
 
 **Sequencing:** the consumer spec MUST cite the engine-prep merge sha as ratified before it merges. The IMPL sequence mirrors: engine IMPL first (may itself split via canon-cc-008 PR-A/PR-B per V-K-113 pattern), then consumer IMPL.
@@ -352,6 +390,6 @@ The closed PR #147 chain surfaced a fatal failure mode — authoring a substrate
 - PERSONA_REGISTRY.md — roster, governance hierarchy, jurisdictions, the 30K Rule
 - docs/QA_GATE_SPEC.md — Gate 2.5, Governor Audit Chain
 - docs/BUGS.md §Operational Rules — failure-mode catalogue + closures
-- Canon: cc-022 (artifact test + register-flip pattern) · cc-026 §Per-Province-Layout (deploy layout) · cc-008 (QA chain) · proc-006 + Book II Article 3-bis (Scribe Worker Tier) · cc-027 (spec amendment signing chain) · decree-0019 (Scribe serving-voice carve-out) · gen-001 (generational expansion clause — Vela)
+- Canon: cc-022 (artifact test + register-flip pattern) · cc-026 §Per-Province-Layout (deploy layout) · cc-008 (QA chain) · proc-006 + Book II Article 3-bis (Scribe Worker Tier) · cc-027 (spec amendment signing chain) · decree-0019 (Scribe serving-voice carve-out) · gen-001 (generational expansion clause — Vela, Ceres, Carina)
 - Spec bodies: `.claude/agents/*.md`, `.claude/skills/*.md` — the Province mirrors
 - Pattern precedents: PR #137/#143 (v3-3 → sleep-arc-3 two-spec sequence) · PR #148/#149 (milestone-engine-prep → milestones-tab two-spec sequence — Option C ratification)
