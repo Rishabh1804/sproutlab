@@ -22707,9 +22707,10 @@ const RECIPES = [
   // molars. A recipe that packs for a day out also carries `travel`:
   //   { how: 'spot' | 'thermos' | 'cool', keeps, pack:[…] }
   //   spot    — carried dry or whole, made or cut at mealtime (nothing cooked sits out)
-  //   thermos — packed piping hot in a pre-heated flask, served still steaming (> 60 °C)
+  //   thermos — packed boiling hot into a pre-heated flask (label "Hot in a flask"); must still be
+  //             too hot to eat at once when opened (WHO: hot food > 60 °C), else thrown away
   //   cool    — cooked at home; ≤ 2 h at room temperature (≤ 1 h above 32 °C), longer
-  //             only in an insulated bag with an ice pack while it still feels cold
+  //             only in an insulated bag with an ice pack while it is frozen and the food fridge-cold
   // The time limits are WHO Five Keys + USDA FSIS (who5k / fsis), the same for every
   // cooked food; no recipe claims a longer room-temperature life than that.
   // ─────────────────────────── BREAKFAST ───────────────────────────
