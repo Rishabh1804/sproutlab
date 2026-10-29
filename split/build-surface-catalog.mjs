@@ -19,6 +19,7 @@
 // → inputs/steppers → composer rails/lists → toasts/overlays → interactions.
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import vm from 'node:vm';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -27,6 +28,19 @@ const ROOT = join(__dirname, '..');
 const TEMPLATE = readFileSync(join(ROOT, 'split', 'template.html'), 'utf8');
 const CORE = readFileSync(join(ROOT, 'split', 'core.js'), 'utf8');
 const OUT = join(ROOT, 'docs', 'SURFACE_CATALOG.html');
+
+// The recipe corpus, loaded the way the app loads it (config → data → recipes), so the
+// planner exemplars quote real pack lines, keeps strings and chew-step counts (V-C-278-1…5).
+const RECIPES = (() => {
+  const ctx = { zi: () => '', escHtml: x => x, setTimeout() {}, setInterval() {}, clearTimeout() {}, console,
+    document: { getElementById: () => null, addEventListener() {}, querySelector: () => null },
+    localStorage: { getItem: () => null, setItem() {} }, navigator: {} };
+  ctx.window = ctx;
+  vm.createContext(ctx);
+  const src = ['config', 'data', 'recipes'].map(f => readFileSync(join(ROOT, 'split', f + '.js'), 'utf8')).join('\n');
+  vm.runInContext(src + '\n;this.__R = RECIPES;', ctx);
+  return Object.fromEntries(ctx.__R.map(r => [r.id, r]));
+})();
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -174,11 +188,17 @@ const SURFACES = [
 // lines, chew steps and keeps strings mirror recipes.js; the clock, dates and the
 // rule-table lead (_mpNextSlot) are fixed so each exemplar shows one state.
 const SLOT = { breakfast: ['Breakfast', 'sun'], lunch: ['Lunch', 'bowl'], dinner: ['Dinner', 'moon'], snack: ['Snack', 'spoon'] };
+const rx = (id, extra = '') => {
+  const r = RECIPES[id];
+  if (!r) throw new Error('catalog: no recipe ' + id);
+  return { food: r.title + (extra ? ' + ' + extra : ''), chew: (r.choking || []).length };
+};
+const steps = n => n + (n === 1 ? ' step' : ' steps');
 const rcpSafe = (level, text) => `<div class="rcp-safe rcp-safe--${level}">${zi(level === 'safe' ? 'check' : 'warn')} <span>${esc(text)}</span></div>`;
 
 function mpDay({ date, wd, num, aria, today, sel, past, travel, fill = 'none', mark }) {
   const cls = ['mp-day', today && 'mp-day--today', sel && 'mp-day--sel', past && 'mp-day--past', travel && 'mp-day--travel'].filter(Boolean).join(' ');
-  const m = mark === 'new' ? `<span class="mp-mark mp-mark--new">${zi('new')}</span>`
+  const m = mark === 'new' ? `<span class="mp-mark mp-mark--new">${zi('new-food')}</span>`
     : mark === 'travel' ? `<span class="mp-mark mp-mark--travel">${zi('bag')}</span>` : '<span class="mp-mark"></span>';
   return `<button class="${cls}" data-action="mpSelectDay" data-arg="${date}" aria-pressed="${sel ? 'true' : 'false'}" aria-label="${esc(aria)}">`
     + `<span class="mp-day-wd">${wd}</span><span class="mp-day-num">${num}</span><span class="mp-fill mp-fill--${fill}"></span>${m}</button>`;
@@ -210,8 +230,8 @@ function mpAct(a, slot) {
 }
 function mpSlot({ slot, food, chew, newTag, lead, act = 'ate', open, body = '' }) {
   const [label, icon] = SLOT[slot];
-  const cues = (chew || newTag) ? `<span class="mp-slot-cues">${chew ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${esc(chew)}</span>` : ''}`
-    + `${newTag ? `<span class="mp-entry-new">${zi('new')} New to Ziva: ${esc(newTag)}</span>` : ''}</span>` : '';
+  const cues = (chew || newTag) ? `<span class="mp-slot-cues">${chew ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${steps(chew)}</span>` : ''}`
+    + `${newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Ziva: ${esc(newTag)}</span>` : ''}</span>` : '';
   return `<div class="mp-slot${open ? ' mp-slot--open' : ''}">`
     + `<span class="mp-slot-ic">${zi(icon)}</span>`
     + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
@@ -238,38 +258,66 @@ const prow = (variant, icon, title, teaser, body, open) =>
 const ol = items => `<ol class="mp-pack-list">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ol>`;
 const pills = names => `<div class="mp-slot-pills">${names.map(n => `<span class="mp-pill">${esc(n)}<button class="mp-pill-x" data-action="mpRemoveEntry" aria-label="Remove ${esc(n)}">${zi('close')}</button></span>`).join('')}</div>`;
 
-const KEEPS_FLASK = 'Packed boiling hot into a pre-heated flask filled to the top, it should still be too hot to eat straight away when you open it. If it is only warm, throw it away — warm rice and grains are where germs grow.';
-const KEEPS_COOL = 'Cooked food: 2 hours at most at room temperature, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. With an ice pack in an insulated bag it can last until a meal later the same day, as long as the ice pack is still frozen and the food still feels fridge-cold. If the ice pack has melted, don\'t give it.';
-const keeps = `<div class="mp-keeps"><div class="mp-keeps-title">How it keeps</div>`
-  + `<div class="rcp-serving">${zi('thermos')} <span><strong>Flask meals:</strong> ${esc(KEEPS_FLASK)}</span></div>`
-  + `<div class="rcp-serving">${zi('timer')} <span><strong>Cool snack:</strong> ${esc(KEEPS_COOL)} <span class="rcp-serving-src">WHO · USDA FSIS</span></span></div></div>`;
-const packOpen = `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for today</div>` + ol([
-  '2 food flasks, one per meal: fill each with boiling water for 5 minutes, then empty it',
-  'The khichdi, boiling hot, filled to the top and closed straight away',
-  'A jar of ground quick oats mixed with the almond powder and cinnamon',
-  'A whole banana, a cup with a lid, and a spoon',
-  'Ragi–banana squares in a lidded box, with an ice pack in an insulated bag',
-]) + keeps + `</div>`;
-const packDone = `<div class="mp-pack">${prow('travel', 'bag', 'Packed: 5 things', 'Tap to see the list', ol(['2 food flasks…']), false)}${keeps}</div>`;
+// Pack list: the verbatim union of the planned recipes' travel.pack lines, de-duplicated
+// by exact string (V-C-275-7, V-C-278-2). Food flasks are counted by thermos-mode recipe;
+// with two or more, one count line replaces each recipe's own pre-heat line (V-C-278-1, -12b).
+function packLines(ids) {
+  const rs = ids.map(id => RECIPES[id]).filter(r => r.travel);
+  const flasks = rs.filter(r => r.travel.how === 'thermos').length;
+  const out = flasks > 1 ? [`${flasks} food flasks, one per flask meal: fill each with boiling water for 5 minutes, then empty it`] : [];
+  for (const r of rs) r.travel.pack.forEach((line, i) => {
+    if (flasks > 1 && r.travel.how === 'thermos' && i === 0) return;
+    if (!out.includes(line)) out.push(line);
+  });
+  return out;
+}
+// How it keeps: each distinct travel.keeps string once, labelled by how it is packed (V-C-278-3).
+const KEEP_MODE = { thermos: ['thermos', 'Flask meal', 'WHO'], cool: ['timer', 'Ice-pack bag', 'WHO · USDA FSIS'], spot: ['clock', 'Made there', ''] };
+function keepsBlock(ids) {
+  const rs = ids.map(id => RECIPES[id]).filter(r => r.travel);
+  const seen = new Map();
+  for (const r of rs) if (!seen.has(r.travel.keeps)) seen.set(r.travel.keeps, { how: r.travel.how, n: 0 });
+  for (const r of rs) seen.get(r.travel.keeps).n++;
+  return `<div class="mp-keeps"><div class="mp-keeps-title">How it keeps</div>` + [...seen].map(([text, { how, n }]) => {
+    const [icon, label, src] = KEEP_MODE[how];
+    return `<div class="rcp-serving">${zi(icon)} <span><strong>${label}${n > 1 ? 's' : ''}:</strong> ${esc(text)}`
+      + (src ? ` <span class="rcp-serving-src">${src}</span>` : '') + `</span></div>`;
+  }).join('') + `</div>`;
+}
+function packBlock(ids, { when = 'today', collapsed = false } = {}) {
+  const lines = packLines(ids);
+  const list = collapsed ? prow('travel', 'bag', `Packed: ${lines.length} things`, 'Tap to see the list', ol(lines), false)
+    : `<div class="mp-pack-title">${zi('bag')} Pack for ${when}</div>` + ol(lines);
+  return `<div class="mp-pack">${list}${keepsBlock(ids)}</div>`;
+}
 
 // A travel day seen on the day itself: Pack for today above the lead (CL-3).
+const TRAVEL_DAY = ['travel-flask-oats-banana', 'travel-veg-dalia-flask', 'travel-steamed-ragi-banana-squares'];
 function travelCard(state) {
   const fresh = state === 'fresh';
   const [b, l, s, d] = travelSlots(state === 'lunchOpen', fresh);
-  return mpCard({ title: 'Friday, 6 Nov', travel: true, pack: state === 'logged' || state === 'lunchOpen' ? packDone : packOpen,
+  return mpCard({ title: 'Friday, 6 Nov', travel: true, pack: packBlock(TRAVEL_DAY, { collapsed: !fresh }),
     lead: mpLead(fresh ? b : l), slots: fresh ? [l, s, d] : [b, s, d] });
 }
-const travelSlots = (lunchOpen, fresh) => [
-  mpSlot({ slot: 'breakfast', food: 'Oats & Banana from a Flask', chew: '2 steps', act: fresh ? 'ate' : { logged: 'Logged · 8:10 am' } }),
-  mpSlot({ slot: 'lunch', food: 'Veg Dalia Khichdi in a Flask + steamed carrot', chew: '2 steps', open: lunchOpen,
-    body: lunchOpen ? pills(['Veg Dalia Khichdi in a Flask', 'Steamed carrot']) + `<div class="rcp-prows">`
-      + prow('chew', 'tooth', 'Make it safe to chew', '2 steps', ol(['Cook until everything mashes between finger and thumb', 'Pack it slightly runny — it thickens in the flask']), true)
-      + prow('dos', 'chat', 'Combo guidance', 'Grain + vegetable: a good pair', '<p class="mp-gap-note">Dalia and carrot together give her grain and a vegetable in one bowl.</p>', false)
-      + prow('travel', 'timer', 'Packing', '3 things', ol(['A food flask: fill it with boiling water for 5 minutes, then empty it', 'The khichdi, boiling hot, filled to the top and closed straight away', 'A bowl to cool her portion in, and a spoon']), true)
-      + `</div>` : '' }),
-  mpSlot({ slot: 'snack', food: 'Steamed Ragi–Banana Squares', chew: '2 steps' }),
-  mpSlot({ slot: 'dinner', act: 'add', body: `<div class="mp-gap-note">No travel dinners in the recipes yet. The travel lunches work for dinner too: Veg Dalia Khichdi in a Flask, Soft Palak Thepla for the Road, Soft Aloo–Carrot Paratha Rolls.</div>` }),
-];
+const travelSlots = (lunchOpen, fresh) => {
+  const lunch = RECIPES['travel-veg-dalia-flask'];
+  return [
+    mpSlot({ slot: 'breakfast', ...rx('travel-flask-oats-banana'), act: fresh ? 'ate' : { logged: 'Logged · 8:10 am' } }),
+    mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask', 'banana'), open: lunchOpen,
+      body: lunchOpen ? pills([lunch.title, 'Banana']) + `<div class="rcp-prows">`
+        + prow('chew', 'tooth', 'Make it safe to chew', steps(lunch.choking.length), ol(lunch.choking), true)
+        + prow('travel', 'timer', 'Packing', `${lunch.travel.pack.length} things`, ol(lunch.travel.pack), true)
+        + `</div>` : '' }),
+    mpSlot({ slot: 'snack', ...rx('travel-steamed-ragi-banana-squares') }),
+    // Ice-pack options first: a flask packed in the morning may fail its heat check by evening (V-C-278-12a).
+    mpSlot({ slot: 'dinner', act: 'add', body: `<div class="mp-gap-note">No travel dinners in the recipes yet. The travel lunches work for dinner too: ${esc(RECIPES['travel-soft-palak-thepla'].title)} or ${esc(RECIPES['travel-aloo-carrot-paratha-rolls'].title)} in the ice-pack bag, or a flask meal packed fresh nearer dinner.</div>` }),
+  ];
+};
+// Two flask meals on a future travel day: the count line (V-C-275-7, V-C-278-1).
+const twoFlaskCard = () => mpCard({ title: 'Saturday, 7 Nov', travel: true,
+  pack: packBlock(['travel-veg-dalia-flask', 'toddler-veg-khichdi'], { when: 'Sat' }),
+  slots: [mpSlot({ slot: 'breakfast', act: 'add' }), mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask'), act: '' }),
+    mpSlot({ slot: 'dinner', ...rx('toddler-veg-khichdi'), act: '' }), mpSlot({ slot: 'snack', act: 'add' })] });
 
 // Picker sheet (a .ql-sheet in the app; shown here without the sheet chrome).
 function pickRow({ icon = 'bowl', title, why, locked, lock, more, action = 'mpPick' }) {
@@ -284,7 +332,7 @@ const picker = ({ search = '', noMatch = false } = {}) => `<div class="mp-picker
   + (noMatch
     ? `<div class="mp-empty">No recipe or food called “${esc(search)}”.</div>` + pickRow({ icon: 'plus', title: `Add “${search}” as a food`, action: 'mpPickFree' })
     : `<div class="mp-picker-sec">Suggested for Thursday</div>`
-      + pickRow({ icon: 'spoon', title: 'Steamed Veg Sticks with Chana–Til Dip', why: 'Adds iron: Thursday has none yet' })
+      + pickRow({ icon: 'spoon', title: 'Steamed Veg Sticks with Chana–Til Dip', why: 'Adds iron' })
       + pickRow({ icon: 'spoon', title: 'Ragi–Banana Mini Pancakes', why: 'Adds iron' })
       + pickRow({ icon: 'spoon', title: 'Soft Fruit Bowl', why: 'Not had this week' })
       + pickRow({ icon: 'spoon', title: 'Curd with Papaya & Almond Dust', why: 'A favourite lately' })
@@ -292,8 +340,8 @@ const picker = ({ search = '', noMatch = false } = {}) => `<div class="mp-picker
       + pickRow({ icon: 'spoon', title: 'All snack recipes', more: true, action: 'mpPickAll' })
       + `<div class="mp-picker-sec">All snack recipes</div>`
       + pickRow({ icon: 'spoon', title: 'Plain Jeera Chaas' })
-      + pickRow({ icon: 'spoon', title: 'Banana & Honey Toast (2 y+)', locked: true, lock: 'From 24 months · opens 4 Sep 2027' })
-      + pickRow({ icon: 'new', title: 'Plan a new food', why: 'Foods she has not had yet', action: 'mpPickNew' }))
+      + pickRow({ icon: 'spoon', title: 'Banana & Honey Toast (2 y+)', locked: true, lock: 'From 2 years (honey counts as added sugar) · opens 4 Sep 2027' })
+      + pickRow({ icon: 'new-food', title: 'Plan a new food', why: 'Foods she has not had yet', action: 'mpPickNew' }))
   + `</div>`;
 
 const confirm = (title, body, primary, secondary, extra = '') => `<div class="mp-confirm" role="dialog" aria-label="${esc(title)}">`
@@ -303,15 +351,15 @@ const confirm = (title, body, primary, secondary, extra = '') => `<div class="mp
 
 const section = inner => `<div class="mp-section">${inner}</div>`;
 const todayCard = (clock) => {
-  const b = { slot: 'breakfast', food: 'Ragi–Oats Milk Porridge with Pear', chew: '2 steps', lead: ['safe', 'Fine for her age. Pear: cook soft or grate.'] };
-  const l = { slot: 'lunch', food: 'Toddler Veg Khichdi', chew: '2 steps' };
-  const d = { slot: 'dinner', food: 'Paneer–Tomato Bhurji with Roti + grapes', lead: ['caution', 'Grapes: quarter lengthways — never whole, and halving is not enough.'] };
-  const s = { slot: 'snack', food: 'Soft Fruit Bowl' };
+  const b = { slot: 'breakfast', ...rx('ragi-oats-milk-porridge-pear') };
+  const l = { slot: 'lunch', ...rx('toddler-veg-khichdi') };
+  const d = { slot: 'dinner', ...rx('paneer-bhurji-roti', 'grapes'), lead: ['caution', 'Grapes: quarter lengthways — never whole, and halving is not enough.'] };
+  const s = { slot: 'snack', ...rx('soft-fruit-bowl-quartered') };
   if (clock === '02:00') return mpCard({ title: 'Wednesday, 4 Nov', lead: mpLead(mpSlot(b)), slots: [mpSlot(l), mpSlot(d), mpSlot(s)] });
   if (clock === '12:00') return mpCard({ title: 'Wednesday, 4 Nov', lead: mpLead(mpSlot(l)),
-    slots: [mpSlot({ ...b, lead: null, act: { logged: 'Logged · 8:20 am' } }), mpSlot(d), mpSlot(s)] });
+    slots: [mpSlot({ ...b, act: { logged: 'Logged · 8:20 am' } }), mpSlot(d), mpSlot(s)] });
   return mpCard({ title: 'Wednesday, 4 Nov', tomorrow: 'Tomorrow: Breakfast — Soft Ragi Dosa Strips with Curd',
-    slots: [mpSlot({ ...b, lead: null, act: { logged: 'Logged · 8:20 am' } }), mpSlot({ ...l, act: { logged: 'Logged · 12:40 pm' } }),
+    slots: [mpSlot({ ...b, act: { logged: 'Logged · 8:20 am' } }), mpSlot({ ...l, act: { logged: 'Logged · 12:40 pm' } }),
       mpSlot({ ...d, act: { logged: 'Logged · 7:15 pm' } }), mpSlot({ ...s, act: { logged: 'Logged · 4:00 pm' } })] });
 };
 
@@ -326,7 +374,7 @@ const PLANNER = [
   },
   {
     id: 'mp-today', title: 'Planner 2 · Today’s card at three clocks',
-    note: 'The next meal leads by the `_mpNextSlot` rule table (V-V-275-2): before the breakfast window → Breakfast; mid-day → Lunch; after dinner → no lead, one quiet "Tomorrow:" line, never a "done" phrase. The lead is the slot row promoted, never repeated below (CL-3, CL-4). Collapsed slots are one row of content: food in words, the safety lead and chew cue when present, one action. Breakfast carries a `safe` lead with a chew cue; dinner carries a free-food form lead (grapes) in the amber channel.',
+    note: 'The next meal leads by the `_mpNextSlot` rule table (V-V-275-2): before the breakfast window → Breakfast; mid-day → Lunch; after dinner → no lead, one quiet "Tomorrow:" line, never a "done" phrase. The lead is the slot row promoted, never repeated below (CL-3, CL-4). Collapsed slots are one row of content: food in words, the safety lead and chew cue when present, one action. A recipe at level `safe` shows no lead row, only its chew cue (the lead row is for caution and flag, §4.3); dinner carries a free-food form lead (grapes) in the amber channel. Chew counts come from each recipe’s own steps.',
     exemplars: [
       { label: '02:00 — Next: Breakfast', width: 360, html: todayCard('02:00') },
       { label: '12:00 — Next: Lunch', width: 360, html: todayCard('12:00') },
@@ -335,27 +383,28 @@ const PLANNER = [
   },
   {
     id: 'mp-safety', title: 'Planner 2b–2c · Safety stacking and the day hint',
-    note: '2b: a promoted combo caution and a new top allergen ride the amber safety channel in words, not lavender (V-V-275-12, -14); the new-to-Ziva tag stays a tag. Peanut is established and clean, so it carries no repeated watch line (V-C-275-10). 2c: three slots planned, none iron-rich → one worded, dismissable hint (V-C-275-16). No score.',
+    note: '2b: two new foods in one meal (egg, a top allergen, and kiwi) ride the amber safety channel in words, not lavender (V-V-275-12, -14); the new-to-Ziva tag stays a tag. Peanut is established and clean, so it carries no repeated watch line (V-C-275-10). 2c: three slots planned, none iron-rich → one worded, dismissable hint (V-C-275-16). No score.',
     exemplars: [
       { label: '2b — combo caution + new allergen; established allergen quiet', width: 360, html: mpCard({ title: 'Thursday, 5 Nov', slots: [
-        mpSlot({ slot: 'breakfast', food: 'Soft Egg Bhurji with Roti + kiwi', newTag: 'egg', chew: '1 step',
-          lead: ['caution', 'Egg is a common allergen and new for her, and kiwi is new too. Give egg on its own day so you can tell what caused a reaction.'] }),
-        mpSlot({ slot: 'lunch', food: 'Veg Poha with Ground Peanut', chew: '1 step' }),
+        mpSlot({ slot: 'breakfast', ...rx('egg-bhurji-soft-roti', 'kiwi'), newTag: 'egg, kiwi',
+          lead: ['caution', 'Egg and kiwi are both new, in the same meal. If she reacts, it will be hard to tell which caused it. Give new foods one at a time, a few days apart.'] }),
+        mpSlot({ slot: 'lunch', ...rx('veg-poha-ground-peanut') }),
         mpSlot({ slot: 'dinner', act: 'add' }), mpSlot({ slot: 'snack', act: 'add' }),
       ] }) },
       { label: '2c — no iron-rich food planned', width: 360, html: mpCard({ title: 'Thursday, 5 Nov',
-        slots: [mpSlot({ slot: 'breakfast', food: 'Oats & Apple Porridge' }), mpSlot({ slot: 'lunch', food: 'Veg Curd Rice (Thayir Sadam)' }),
-          mpSlot({ slot: 'dinner', food: 'Sambar Rice with Pumpkin & Carrot' }), mpSlot({ slot: 'snack', act: 'add' })],
-        hint: 'No iron-rich food planned today. Ragi, dal, egg or greens would add some.' }) },
+        slots: [mpSlot({ slot: 'breakfast', ...rx('paneer-paratha-fingers') }), mpSlot({ slot: 'lunch', ...rx('thayir-sadam-veg') }),
+          mpSlot({ slot: 'dinner', ...rx('aloo-gobhi-matar-roti') }), mpSlot({ slot: 'snack', act: 'add' })],
+        hint: 'No iron-rich food planned today. Ragi, dal, poha or palak would add some.' }) },
     ],
   },
   {
     id: 'mp-travel', title: 'Planner 3 · Travel day',
-    note: 'Peach stripe, header wash and pack border; the travel state is in words on the toggle ("Travel day: on", V-V-275-13). Pack for today sits under the header, above everything else (CL-3): flasks de-duplicated to a count (V-C-275-7). How it keeps stays visible (V-C-275-8). Dinner has no travel recipe, so the gap copy leads with "The travel lunches work for dinner too" (V-C-275-17). 3b opens lunch: pills, Make it safe to chew open, Combo collapsed, Packing open. 3c: after the first log the list collapses to a count; How it keeps stays.',
+    note: 'Peach stripe, header wash and pack border; the travel state is in words on the toggle ("Travel day: on", V-V-275-13). Pack for today sits under the header, above everything else (CL-3). Its lines are the planned recipes’ own pack lines, merged by exact string; one flask meal here, so no count line (3d shows two). How it keeps lists each keeping rule once, labelled by how it is packed, and stays visible (V-C-275-8). Dinner has no travel recipe: the gap copy offers the ice-pack lunches first (V-C-275-17, V-C-278-12). 3c: after the first log the list collapses to its count. 3b opens lunch: pills, Make it safe to chew and Packing open. No Combo row: it shows only when the combo engine has a note for the pair.',
     exemplars: [
       { label: '3 — Friday travel day, seen that morning, nothing logged', width: 360, html: travelCard('fresh') },
       { label: '3c — after the first log (breakfast); Next: Lunch', width: 360, html: travelCard('logged') },
       { label: '3b — the same card, lunch opened', width: 360, html: travelCard('lunchOpen') },
+      { label: '3d — two flask meals on a future travel day (Pack for Sat)', width: 360, html: twoFlaskCard() },
     ],
   },
   {
@@ -363,9 +412,9 @@ const PLANNER = [
     note: 'A logged slot stamps the slot-window centre on a past date, never the tap time (CL-10, V-V-275-3): "Logged · around 1 pm". No lead on non-today cards.',
     exemplars: [
       { label: 'Tue 3 Nov', width: 360, html: mpCard({ title: 'Tuesday, 3 Nov', slots: [
-        mpSlot({ slot: 'breakfast', food: 'Suji & Veg Upma', act: { logged: 'Logged · around 8 am' } }),
-        mpSlot({ slot: 'lunch', food: 'Dal–Chawal with Lauki Sabzi', act: { logged: 'Logged · around 1 pm' } }),
-        mpSlot({ slot: 'dinner', food: 'Mild Egg Curry with Rice' }), mpSlot({ slot: 'snack', act: 'add' }),
+        mpSlot({ slot: 'breakfast', ...rx('suji-veg-upma'), act: { logged: 'Logged · around 8 am' } }),
+        mpSlot({ slot: 'lunch', ...rx('dal-chawal-lauki-sabzi'), act: { logged: 'Logged · around 1 pm' } }),
+        mpSlot({ slot: 'dinner', ...rx('soft-egg-curry-rice') }), mpSlot({ slot: 'snack', act: 'add' }),
       ] }) },
     ],
   },
@@ -379,13 +428,13 @@ const PLANNER = [
   },
   {
     id: 'mp-confirm', title: 'Planner 6–6b · Confirms',
-    note: '6: a second new food within 3 days of another. 6b: the top-allergen confirm, V-C-275-3 copy. Primary is the safe move (Move to Sat); Plan anyway is secondary text. Sentences are to be source-verified at P1a sign-off (canon-cc-013); any without a source is dropped.',
+    note: '6: a second new food a few days from another, both dates named. 6b: the top-allergen confirm. Primary is the safe move, to a day that is not a travel day; Plan anyway is secondary text. Source check (canon-cc-013, V-C-278-8): the one-at-a-time sentence is NHS Start4Life; the “3 days” wait and “best at home, early in the day” had no RECIPE_SOURCES backing, so the wait reads “a few days” and the home sentence is dropped (V-C-275-3 amended).',
     exemplars: [
-      { label: '6 — new-food conflict', width: 360, html: confirm('Kiwi is new, and so is papaya on Thursday.',
-        'Space new foods 3 days apart, so if she reacts you’ll know which one it was. Sunday is clear.', 'Move to Sun', 'Plan anyway') },
+      { label: '6 — new-food conflict', width: 360, html: confirm('Mango and kiwi are both new this week.',
+        'Kiwi is planned for Thursday 5 Nov and mango for Saturday 7 Nov. Give new foods one at a time, a few days apart, so if she reacts you’ll know which one it was.', 'Move mango to Mon 9 Nov', 'Plan anyway') },
       { label: '6b — top allergen', width: 360, html: confirm('Egg is a common allergen, and new for Ziva.',
-        'Give egg on its own, with nothing else new for 3 days before or after, so if she reacts you’ll know it was the egg. Best at home and early in the day, when you can watch her for a few hours.',
-        'Move to Sat', 'Plan anyway', `<p class="mp-confirm-body"><button class="mp-textbtn" data-action="mpWatchFor">What to watch for after egg</button> <span class="rcp-serving-src">NHS</span></p>`) },
+        'Give egg on its own, with nothing else new for a few days before or after, so if she reacts you’ll know it was the egg.',
+        'Move to Sun', 'Plan anyway', `<p class="mp-confirm-body"><button class="mp-textbtn" data-action="mpWatchFor">What to watch for after egg</button> <span class="rcp-serving-src">NHS</span></p>`) },
     ],
   },
   {
