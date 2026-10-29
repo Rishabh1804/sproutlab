@@ -15,6 +15,13 @@
 #      too — file-level routing alone would miss that. Advisory, not gating:
 #      it widens the summon-set, never narrows it.
 #
+#   3. REFERENCE CONSULT (D4, 2026-10-29): registries and constants in the
+#      foundation files (AGE_RULES, FOOD_EFFECTS, ALLERGENS, KEYS, SYNC_KEYS,
+#      SYNC_RENDER_DEPS…) are read by NAME, never called, so the graph has no
+#      edge to them. For each top-level name a foundation hunk touches, every
+#      other Governor whose files reference it is added as a scoped consult —
+#      "primary by file, consult by consumer". Also advisory, also widen-only.
+#
 # Usage:
 #   bash split/qa-route.sh [<base-ref>]      # diff vs base-ref (default: origin/main)
 #   bash split/qa-route.sh --staged          # diff the staged index only
@@ -34,6 +41,7 @@ cd "$REPO_ROOT"
 if [ "${1:-}" = "--staged" ]; then
   mapfile -t CHANGED < <(git diff --cached --name-only)
   SCOPE="staged index"
+  DIFF_MODE="staged"
 else
   BASE="${1:-origin/main}"
   if ! git rev-parse --verify "$BASE" >/dev/null 2>&1; then
@@ -42,6 +50,7 @@ else
   # changes since base, plus uncommitted working-tree changes
   mapfile -t CHANGED < <( { git diff --name-only "$BASE"...HEAD 2>/dev/null; git diff --name-only; git diff --cached --name-only; } | sort -u )
   SCOPE="vs $BASE (+ working tree)"
+  DIFF_MODE="$BASE"
 fi
 
 echo "canon-cc-008 routing oracle — scope: $SCOPE"
@@ -66,11 +75,12 @@ fi
 GRAPH_ARG="$GRAPH"
 [ -f "$GRAPH" ] || GRAPH_ARG=""
 
-python3 - "$GRAPH_ARG" "${CHANGED_MODULES[@]}" <<'PY'
-import sys, json, collections
+python3 - "$GRAPH_ARG" "$DIFF_MODE" "${CHANGED_MODULES[@]}" <<'PY'
+import sys, json, collections, re, subprocess, glob, os
 
 graph_path = sys.argv[1]
-changed = sorted(set(sys.argv[2:]))
+diff_mode = sys.argv[2]
+changed = sorted(set(sys.argv[3:]))
 
 # module -> (province, governor). Mirror of CLAUDE.md canon-cc-008 routing +
 # the post-canon-gen-001 jurisdiction map. Single source for this script.
@@ -78,14 +88,19 @@ CARE = ("Care", "Maren")
 NUTR = ("Nutrition", "Ceres")
 ENG  = ("Intelligence (engine)", "Kael")
 REN  = ("Surfacing (render)", "Vela")
-SHARED = ("Shared territory", "Maren + Ceres + Kael + Vela (quad)")
+FND  = ("Foundation (data & sync)", "Carina")
+SHARED = ("Shared territory", "Maren + Ceres + Vela (core trio; Kael / Carina conditional)")
+# Single roster: every fail-safe widen loop and the print order read this, so
+# no Governor list is ever hand-copied (D4).
+GOVERNORS = ("Maren", "Ceres", "Kael", "Vela", "Carina")
+SHARED_TRIO = ("Maren", "Ceres", "Vela")
 MODULE_PROVINCE = {
     "home.js": CARE, "medical.js": CARE,
     "diet.js": NUTR, "recipes.js": NUTR,
     "intelligence-isl.js": ENG, "intelligence-qa.js": ENG,
     "intelligence-qa-handlers.js": ENG, "intelligence-illness.js": ENG,
     "intelligence-correlate.js": ENG, "intelligence-caretickets.js": ENG,
-    "core.js": ENG, "data.js": ENG, "sync.js": ENG, "config.js": ENG, "start.js": ENG,
+    "core.js": FND, "data.js": FND, "sync.js": FND, "config.js": FND, "start.js": FND,
     "intelligence-cards.js": REN, "intelligence-quicklog.js": REN,
     "styles.css": SHARED, "template.html": SHARED,
 }
@@ -99,10 +114,30 @@ for m in changed:
     prov, gov = MODULE_PROVINCE.get(m, ("(unmapped)", "(unknown — flag to Lyra)"))
     print(f"  - {m:32s} -> {prov} [{gov}]")
     if m in ("styles.css", "template.html"):
-        for g in ("Maren", "Ceres", "Kael", "Vela"):
-            add(g, f"shared file {m} (quad-Gov review)")
+        # Option C (D4): the render-heavy trio always reviews; Kael and Carina
+        # join when this diff also touches their Region (direct edit or ripple,
+        # computed below) — Carina also on any sprite <symbol> change.
+        for g in SHARED_TRIO:
+            add(g, f"shared file {m} (core-trio review)")
     else:
         add(gov, f"direct edit: {m}")
+
+def file_diff(path):
+    """-U0 diff of one file in the same scope as the changed-file list."""
+    cmds = ([["git", "diff", "--cached", "-U0", "--", path]] if diff_mode == "staged" else
+            [["git", "diff", "-U0", f"{diff_mode}...HEAD", "--", path], ["git", "diff", "-U0", "--", path],
+             ["git", "diff", "--cached", "-U0", "--", path]])
+    out = []
+    for c in cmds:
+        try:
+            out.append(subprocess.run(c, capture_output=True, text=True).stdout)
+        except Exception:
+            pass
+    return "\n".join(out)
+
+# Carina joins a template.html review when the zi()/zif sprite changes.
+if "template.html" in changed and re.search(r"^[+-].*</?symbol\b", file_diff("split/template.html"), re.M):
+    add("Carina", "shared file template.html: zi()/zif sprite <symbol> changed (sprite integrity)")
 
 # ── graph-level ripple ──
 ripple_note = []
@@ -138,7 +173,7 @@ if graph_path:
         if any(out_calls.get(lf, 0) > 0 for lf in LEAVES):
             ripple_note.append("  !! DIRECTION INVARIANT BROKEN (V-K-G2): a known leaf has outgoing calls;")
             ripple_note.append("     ripple may be inverted. FAIL-SAFE: summoning ALL Governors.")
-            for gname in ("Maren", "Ceres", "Kael", "Vela"):
+            for gname in GOVERNORS:
                 add(gname, "fail-safe: graph edge-direction invariant broken (V-K-G2)")
         # Resolution invariant: the modules are script-globals that call each other
         # constantly, so zero cross-file calls means the extractor stopped resolving
@@ -150,7 +185,7 @@ if graph_path:
         if len(calls) < 500 or xfile / max(1, len(calls)) < 0.15:
             ripple_note.append(f"  !! CROSS-FILE RESOLUTION BROKEN: {len(calls)} calls edges, {xfile} cross-file;")
             ripple_note.append("     ripple is blind (pin graphifyy==0.9.6). FAIL-SAFE: summoning ALL Governors.")
-            for gname in ("Maren", "Ceres", "Kael", "Vela"):
+            for gname in GOVERNORS:
                 add(gname, "fail-safe: graph cross-file call resolution broken")
         # downstream: who CALLS into a changed module (reverse of calls edge =
         # dependents). edge source --calls--> target ; if target lives in a
@@ -176,6 +211,53 @@ if graph_path:
 else:
     ripple_note.append("  (no graph.json — run `pnpm graph` for cross-province ripple analysis)")
 
+# ── reference consult (D4): names a foundation hunk touches, read elsewhere ──
+consult_note = []
+DECL = re.compile(r"(?:const|let|var|function)\s+([A-Za-z_$][\w$]*)")
+for m in changed:
+    if MODULE_PROVINCE.get(m) != FND:
+        continue
+    names = set()
+    for line in file_diff(f"split/{m}").splitlines():
+        if line.startswith("@@"):
+            hd = DECL.search(line.split("@@")[-1])      # enclosing top-level declaration
+            if hd: names.add(hd.group(1))
+        elif line[:1] in "+-" and not line.startswith(("+++", "---")):
+            hd = DECL.match(line[1:].lstrip())
+            if hd: names.add(hd.group(1))
+    names = {n for n in names if len(n) >= 4}
+    # SYNC_RENDER_DEPS names renderers as strings ('renderDietStats'): a changed
+    # row arms a re-render in the Region that DEFINES that function.
+    targets = set()
+    for line in file_diff(f"split/{m}").splitlines():
+        if line[:1] in "+-" and not line.startswith(("+++", "---")):
+            targets.update(re.findall(r"['\"]((?:render|draw)[A-Za-z0-9_]+)['\"]", line))
+    for t in sorted(targets):
+        for other in sorted(glob.glob("split/*.js")):
+            om = os.path.basename(other)
+            prov, gov = MODULE_PROVINCE.get(om, (None, None))
+            if not gov or MODULE_PROVINCE.get(om) == FND:
+                continue
+            try:
+                if re.search(r"function\s+" + re.escape(t) + r"\s*\(", open(other, encoding="utf-8").read()):
+                    add(gov, f"consult: {m} names renderer {t} defined in {om}")
+                    consult_note.append(f"  {m}:'{t}'  --renders-->  {om}  [{prov}/{gov}]")
+            except Exception:
+                pass
+    for other in sorted(glob.glob("split/*.js")):
+        om = os.path.basename(other)
+        prov, gov = MODULE_PROVINCE.get(om, (None, None))
+        if not gov or MODULE_PROVINCE.get(om) == FND:
+            continue
+        try:
+            text = open(other, encoding="utf-8").read()
+        except Exception:
+            continue
+        for n in sorted(names):
+            if re.search(r"(?<![\w$])" + re.escape(n) + r"(?![\w$])", text):
+                add(gov, f"consult: {om} reads {n} (reference ripple from {m})")
+                consult_note.append(f"  {m}:{n}  <-reads--  {om}  [{prov}/{gov}]")
+
 print("\nCross-province ripple (dependents of changed code in OTHER jurisdictions):")
 if ripple_note:
     for r in ripple_note:
@@ -183,8 +265,15 @@ if ripple_note:
 else:
     print("  none detected — change appears jurisdiction-local.")
 
+print("\nReference consult (foundation registries/constants read in OTHER jurisdictions):")
+if consult_note:
+    for r in consult_note:
+        print(r)
+else:
+    print("  none — no foundation hunk, or its names are not read elsewhere.")
+
 print("\n================  SUMMON SET (canon-cc-008 step 2)  ================")
-order = ["Maren", "Ceres", "Kael", "Vela", "Maren + Ceres + Kael + Vela (quad)"]
+order = list(GOVERNORS)
 for gov in sorted(summon, key=lambda x: order.index(x) if x in order else 99):
     print(f"  SUMMON {gov}")
     for r in sorted(summon[gov]):

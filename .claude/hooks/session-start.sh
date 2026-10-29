@@ -1,7 +1,7 @@
 #!/bin/bash
 # SessionStart hook — materialize Companion subagent + skill specs into the
-# harness's agent-discovery directories so the five seated Companions
-# (lyra, maren, kael, vela, cipher) plus the four scribes are available as
+# harness's agent-discovery directories so the seated Companions
+# (lyra, maren, ceres, kael, carina, vela, cipher) plus the four scribes are available as
 # `subagent_type` values via the Agent tool.
 #
 # WHY THE REWRITE (companion auto-load fix):
@@ -89,7 +89,7 @@ fi
 # SproutLab GOVERNS its own Companion specs. Codex is record-keeping, NOT the
 # routing/governance authority for SproutLab. The Codex overlay therefore only
 # ADDS specs the Province does not ship (e.g. consul); it never clobbers a
-# Province-owned spec (lyra / maren / kael / vela / ceres / cipher / chronicler).
+# Province-owned spec (lyra / maren / kael / carina / vela / ceres / cipher / chronicler).
 # (Was: "Codex wins on name collision" — reversed so Province-authored lore,
 # e.g. Lyra's naming-lore, survives every session-start materialization.)
 copy_specs() {
