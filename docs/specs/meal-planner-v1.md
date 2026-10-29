@@ -1,6 +1,6 @@
 # Meal Planner v1: plan Ziva's days from the Recipes corpus
 
-**Spec version:** v0.2 (`pending_review` for Governor spec review). v0.1 recorded the Architect's answers; **v0.2 (2026-10-29) reshapes every surface to the cognitive-load floor** (§4.0), accepted by the Architect in full.
+**Spec version:** v0.3 (`pending_review`). v0.1 recorded the Architect's answers; v0.2 reshaped every surface to the cognitive-load floor (§4.0), accepted by the Architect in full; **v0.3 (2026-10-29) folds the spec-round positions of Vela (V-V-275-1…20) and Ceres (V-C-275-1…18)**. §10 lists every amendment; where §10 and earlier text disagree, §10 wins.
 **Date:** 2026-10-29
 **Author:** Lyra (Mode-1 Province spec authoring)
 **Status:** Scoping draft with the Architect's answers recorded (§9). D4 is resolved: **Carina** (Foundation) is seated by #275, so P0 is Carina-primary. **Architect decisions (2026-10-29), the recommended answers:** Q1 plan section atop Recipes; Q2 Monday week start; Q3 warn with stronger allergen wording (not refuse); Q4 derived new foods count toward the 3-day rule; Q5 log a recipe as its ingredients, dish title in `note`; Q7 keep 28 days; Q8 the core.js date helpers fixed app-wide in a separate Carina-primary PR; Q9 Tomorrow's Prep and the Outing Planner fold into the plan in v1.1. **Q6 (the `zi-bag` travel icon) stays open** for the P1a Surface Catalog sign-off.
@@ -76,8 +76,9 @@ Each thread names the Region and data path it rides.
 - The day card has a **Travel day** toggle (`data-action="mpToggleTravel"`). When on, the card takes the peach outing treatment (§4.5).
 - **Suggestions narrow** to `r.travel` recipes for that slot, grouped by `RECIPE_TRAVEL_META` (spot → thermos → cool), the same grouping the Recipes "For travel" section uses.
 - **Corpus gap:** 10 recipes are tagged for travel (lunch 4, snack 5, breakfast 1, dinner 0). Dinner on a travel day has no travel recipe. The picker shows this, with a calm line under the travel group: "No packed dinner recipes yet. Plan a home meal, or pick a travel lunch." It then lists the full slot list below. This is not a dead end. Ceres may also want to add travel dinners to the corpus (§8 R4).
-- **One "Pack for today" list leads the travel day** (lead with the answer: on a trip the question is *what do I pack?*). It merges the `travel.pack` lines of every planned recipe into one checklist, removes duplicates (two flask meals → one "pre-heated flask" line), and states the 2 h / 1 h-above-32 °C rule **once**, with the WHO · USDA FSIS source line. That rule sentence is one shared constant with the Recipes travel section.
-- Per-recipe `travel.keeps` detail sits in a **collapsed** `_recipeProw('travel', …)` row on each slot, with a one-line preview ("Hot in a flask" / "Kept cool"). The rule is not repeated inside it (§4.0: no text twice on one screen).
+- **One "Pack for today" list leads the travel day** (lead with the answer: on a trip the question is *what do I pack?*). It merges the `travel.pack` lines of every planned recipe into one plain list (no tick boxes; §3.2 stores no tick state), de-duplicated by **exact string only**. Each flask meal needs **its own** full flask, so two flask meals read "2 food flasks, one per meal" (V-C-275-7). An always-visible **How it keeps** block under the list shows each distinct `travel.keeps` string once, so the flask discard rule and the ice-pack rule are never hidden; the shared 2 h / 1 h-above-32 °C rule constant appears only when no planned keeps string already states it (V-C-275-8). That rule sentence is one shared constant with the Recipes travel section.
+- The per-slot `_recipeProw('travel', …)` row is collapsed by default (its preview names the mode); the keeping rules themselves are already visible in How it keeps above. A non-travel recipe or free food on a travel day shows "Not a packing recipe — serve it fresh where you are" instead (V-C-275-17).
+- **Lifecycle (V-V-275-10):** the pack list leads until the day's first slot is logged, then collapses to a row previewed "Packed: 4 things". How it keeps stays visible all day. On a selected future day the label is "Pack for Sat".
 
 ### 1.6 One tap: "she ate this"
 - Every filled slot on a **today or past** day shows **She ate this** (`data-action="mpLogSlot"`). Future days don't show it. **One tap logs it**, with the 8-second undo (§4.0).
@@ -172,15 +173,18 @@ The design floor's 6-second rule (§11), the half-awake test and the one-gesture
 
 | # | Criterion | Limit |
 |---|---|---|
-| CL-1 | Plan a meal from a recipe (Add to plan → day → done; slot preset) | ≤ 3 taps |
-| CL-2 | Log a planned meal ("She ate this") | 1 tap, plus an 8 s undo |
-| CL-3 | Today's card on open | The **next meal** leads. Nothing sits above it except a safety lead, or, on a travel day only, the Pack for today list (the travel day's answer). |
-| CL-4 | Each slot until tapped | One line: food names, plus the safety lead when there is one, plus one action. |
-| CL-5 | Slot picker before scroll or search | ≤ 5 choices |
-| CL-6 | Repeated text on one screen | None (the 2 h rule appears once) |
-| CL-7 | Controls and disclosure | Every control ≥ 44 px; every collapsed row carries a one-line preview and a chevron |
-| CL-8 | Week strip at 360 px | No horizontal scroll; no gesture that competes with tab swiping |
-| CL-9 | Decoding load | One fill cue per day (no counts, no percentages); safety in words, never colour alone |
+| CL-1 | Plan a meal from a recipe (Add to plan → day → done; slot preset; the day row is the **next 7 days** from today, V-V-275-16) | ≤ 3 taps |
+| CL-2 | Log a planned meal ("She ate this") on a clear entry | 1 tap, plus an 8 s undo. An entry whose lead is a flag opens the consequence card first (V-C-275-13). |
+| CL-3 | Today's card on open | The **next meal** leads, by the §10 rule table (V-V-275-2). Nothing sits above it except a safety lead, or, on a travel day only, the Pack for today block (the travel day's answer). |
+| CL-4 | Each slot until tapped | One **row of content** (wrapping is allowed at any zoom, HR-10): food names, the safety lead and chew cue when present, and one action. The lead slot is the promoted row, never repeated below (V-V-275-1). |
+| CL-5 | Slot picker before scroll or search | ≤ 5 choices, all pickable on that date (locked rows never take a top-5 place, V-V-275-15), at every zoom tier |
+| CL-6 | Repeated text on one **screen**, where a screen is the whole tab or sheet, not the viewport | None. The 2 h rule appears once per tab (V-V-275-9); an established allergen does not repeat a watch line on every slot (V-C-275-10). |
+| CL-7 | Controls and disclosure | ≥ 44 × 44 px everywhere except the strip chips: ≥ 40 px wide × ≥ 56 px tall (above the HR-8 36 px floor, V-V-275-4). Every collapsed row carries a one-line preview and a chevron. |
+| CL-8 | Week strip at 360 px and 320 px | No horizontal scroll; no gesture that competes with tab swiping; every planner overlay matches the `handleSwipe` overlay guard (V-V-275-19) |
+| CL-9 | Decoding load | One neutral fill cue per day (no counts, no percentages, never the sage "good" hue, V-V-275-5); safety and state in words, never colour alone (V-V-275-12, -13) |
+| CL-10 | Write chronology | "She ate this" never stamps the tap time onto a past date or far outside the slot window (V-V-275-3) |
+| CL-11 | Section stack | At 360 × 740, default zoom, a non-travel today card with slots collapsed: the Plan section is ≤ one viewport, and the top of "Suggested for Ziva" stays reachable without hunting (V-V-275-8) |
+| CL-12 | Themes, greyscale, zoom | Every state above holds in light and dark, in greyscale, and at all three zoom tiers |
 
 ### 4.1 Where it lives: a **Plan section at the top of Diet → Recipes** (recommended)
 | Option | For | Against |
@@ -196,23 +200,24 @@ The section header reads "This week's plan", with a `zi('list')` icon in Fraunce
 - Chip contents, top to bottom:
   - weekday initial (Nunito `--fs-xs`)
   - date (Fraunces `--fs-md`)
-  - **one fill ring** (`.mp-fill` + `--full` / `--part` / `--none`: sage ring, sage half ring, `--light` outline). No dots, no counts (CL-9).
+  - **one fill disc** (`.mp-fill` + `--full` / `--part` / `--none`: solid disc, half disc, outline circle) in neutral ink (`--mid`), never sage. "Full" means breakfast + lunch + dinner planned; snack is optional. Past days render it muted, so a plan never reads as a record. Each chip has an `aria-label` ("Wed 4 Nov, all meals planned"). No dots, no counts (CL-9, V-V-275-5).
   - one marker, only when needed: a travel icon (peach) or a new-food icon (`zi('sprout')`, lavender)
-- Today gets a sage outline. The selected day gets a filled `--sage-light` background plus a border (tint law 2: never a bare fill). Past days are muted to `--mid` text but stay fully tappable.
+- **Today:** the date numeral in bold `--tc-sage` with a short bar under it; no outline. **Selected:** `--sage-light` fill plus border (tint law 2). Each cue must survive alone in greyscale (V-V-275-6). Past days are muted to `--mid` text but stay fully tappable.
+- **Markers (V-V-275-7):** at most one glyph. New food wins (safety-relevant, an icon other than `zi('sprout')`); a travel day is then carried by the chip's peach border.
 
 ### 4.3 Day card
 - `.mp-daycard` is a cream card with a domain stripe: sage normally, peach on a travel day.
 - **Header:** "Wednesday, 4 Nov" (via a named date formatter, HR-10) and the Travel day toggle. Nothing else.
-- **Lead (CL-3):** on today's card, the **next meal** by time of day (the existing `detectMealType` slot, or the next unlogged one after it) opens first, styled as the card's lead: "Next: Lunch — Toddler Veg Khichdi", its safety lead if any, and **She ate this**. On a travel day the **Pack for today** list (§1.5) sits directly under the header, above the lead. On other days no slot leads; all four are one-liners.
+- **Lead (CL-3):** on today's card, the **next meal** by the §10 rule table (`_mpNextSlot`, never raw `detectMealType`, V-V-275-2) opens first, as the promoted row (the remaining slots render below it, without repeating it), styled as the card's lead: "Next: Lunch — Toddler Veg Khichdi", its safety lead if any, and **She ate this**. On a travel day the **Pack for today** list (§1.5) sits directly under the header, above the lead. On other days no slot leads; all four are one-liners.
 - **Four `.mp-slot` rows, one line each until tapped (CL-4):** the `RECIPE_SLOT_META` icon, the label, and the planned food names in words ("Ragi pancakes + pear"), with a new-to-Ziva lavender tag where one applies. Two things stay visible even when the row is collapsed: the safety lead (`.rcp-safe--{level}`, flag or caution, §9.7 safety-first) and the one action (She ate this, the logged check, or "+ Add lunch" for an empty slot).
-- **Tap a slot to open it:** the pills (removable), then two collapsed `rcp-prow` rows with previews: **Combo guidance** ("Good pair — iron with vitamin C") when there are 2+ entries, and **Packing** ("Hot in a flask") on travel days. Nothing else opens by default.
+- **Tap a slot to open it:** the pills (removable); the **Make it safe to chew** row **open by default** whenever `r.choking` is non-empty (V-C-275-9, matching V-C-270-3); then collapsed rows with previews: **Combo guidance** (positive or neutral pairing notes only; a combo caution or flag becomes the slot's visible safety lead, V-V-275-14) and **Packing** on travel days.
 - **Foot:** Copy day · Clear day as plain text buttons (CL-7), below the slots.
 - **The half-awake test:** at 2 AM, a parent sees the next meal and one obvious button first, what each other slot holds in one line, and whether anything needs care, in words. There are no percentages, no dense grids, and no text repeated on the screen (CL-6). Text wraps freely (HR-10, no ellipsis).
 
 ### 4.4 Slot picker
 - A bottom sheet (`.ql-sheet` family, Flow/Act). Taps add immediately, there is no Save button, and the round trip stays under 30 seconds (HR-9).
-- **Order (CL-5):** the current combo entries (removable, when any) → a **search box** (recipes and foods together, via `window._fdSearchNutrition` plus the corpus) → **the top 5 suggestions for this slot**, ranked by `_recipeSuggestForZiva` → one row **"All lunch recipes (18)"** that expands the full list → one row **"Plan a new food"** that switches the list to `getUntriedSuggestions(n)` (§1.4). There is no three-way segmented filter.
-- Suggestion and list rows reuse the row markup in a compact variant `_recipeRowHtml(r, 'p', age, {compact:true, planDate})`: icon, title and age badge, with no expand-in-place inside the sheet. Rows age-locked for the planned date are rendered but disabled, with the gate's reason one tap away.
+- **Order (CL-5):** the current combo entries (removable, when any) → a **search box** (recipes and foods together, via `window._fdSearchNutrition` plus the corpus; no match offers "Add 'xyz' as a food") → **the top 5 pickable suggestions for this slot**, ranked by `_recipeSuggestForZiva` plus a day-aware boost for the group the day lacks (iron first, V-C-275-16) → one row **"All lunch recipes (18)"** that expands the full list → one row **"Plan a new food"** that switches the list to `getUntriedSuggestions(n)` (§1.4). There is no three-way segmented filter.
+- Suggestion and list rows reuse the row markup in a compact variant `_recipeRowHtml(r, 'p', age, {compact:true, planDate})`: icon, title and age badge, with no expand-in-place inside the sheet. Rows age-locked for the planned date never appear in the top 5. In the "All" list they show their reason inline in words ("From 15 months · opens 4 Dec") with the age badge, and cannot be added (V-V-275-15, resolving the §1.4 / §4.4 contradiction).
 - On a travel day the top suggestions come from the travel recipes for the slot, then the gap note (§1.5) when there are none, then "All … recipes".
 - The household gate `_recipeAllowedForHousehold` applies (Pass A). Recipes it withholds are not offered.
 
@@ -231,16 +236,22 @@ The section header reads "This week's plan", with a `zi('list')` icon in Fraunce
 Estimate: about 90–120 CSS lines. **Template:** one `zi-bag` symbol, plus a `#dietPlanRoot` mount inside `#diet-sub-recipes` above `#dietRecipesRoot`. **Both files are shared, so the core trio (Maren → Ceres → Vela, Ceres first) reviews them; the new `zi-bag` symbol also brings in Carina, and the `#dietPlanRoot` id brings in each Governor whose files reference it.**
 
 ### 4.7 Surface Catalog exemplars (in `split/build-surface-catalog.mjs` before any feature wiring)
-1. Week strip at 360 px: a mixed week (today, selected, past, travel, new-food; full, part and empty fill rings), with no horizontal scroll.
-2. Today's card: the **next-meal lead** (with She ate this), one slot with a caution safety lead, one combo slot collapsed to one line, one empty slot.
-3. Day card, travel: the **Pack for today** list (merged, the 2 h rule once), a thermos lunch and a cool snack collapsed to one line each, the dinner gap note, and the peach treatment.
-3b. The same travel card with the lunch slot **opened**: pills, then the collapsed Combo and Packing rows with previews.
-4. Day card, past day: one slot logged (sage check), one with She ate this.
-5. Slot picker: search box, **top 5** suggestions (one locked 15m+ on a December date, one new-to-Ziva tag), "All lunch recipes (18)", "Plan a new food".
-6. New-food conflict confirm (Move to Sat / Plan anyway).
-7. Section first-use empty state.
+1. **Week strip** at 360 px and 320 px, default and large zoom, light, dark and greyscale: today+selected+full; past+full (muted); a chip carrying the new-food marker on a travel day; a 3-meal day (no snack) rendering as full.
+2. **Today's card at three clocks:** 02:00 → "Next: Breakfast"; 12:00 → "Next: Lunch"; 23:30 → no lead (or the quiet "Tomorrow:" line). The lead slot does not repeat below. Include one recipe at level `safe` carrying a chew cue ("Make it safe to chew: 2 steps"), one free food with a form lead (grapes: "quarter lengthways"), and one combo slot collapsed to one line.
+2b. **Safety stacking:** a slot carrying a promoted combo caution and a new top-allergen food, shown in the amber safety channel in words (not lavender); an established allergen shows no repeated watch line.
+2c. **The day hint:** 3 slots planned, none iron-rich: "No iron-rich food planned today. Ragi, dal, egg or greens would add some."
+3. **Travel day:** Pack for today (two flask meals → "2 food flasks, one per meal"), the always-visible How it keeps block, a thermos lunch and a cool snack collapsed to one line each with chew cues, the dinner gap copy ("The travel lunches work for dinner too"), a vegetable pill and a breakfast row on the peach card (light and dark), and "Travel day" in words. The page context shows the "For travel" section's rule collapsed to a teaser (one 2 h statement per tab).
+3b. **The same travel card, lunch opened:** pills, Make it safe to chew open, collapsed Combo and Packing rows.
+3c. **After the first log:** the pack list collapsed to "Packed: 4 things"; How it keeps still visible.
+4. **Past day:** one slot "Logged · around 1 pm" (slot-centre stamp, not the tap time), one with She ate this.
+5. **Slot picker at large zoom:** search box, five pickable suggestions visible without scrolling inside the sheet, "All lunch recipes (18)" expanded to show a locked row with its inline reason, "Plan a new food", and a no-match search state.
+6. **New-food conflict confirm** (Move to Sat / Plan anyway).
+6b. **Top-allergen confirm** with the V-C-275-3 copy and its NHS source line.
+7. **Empty states:** first use with the one-time fill legend; an empty non-first-use day; the horizon-clamped ›; a pruned week (plans older than 4 weeks are cleared); fewer than 5 suggestions for a new user.
+8. **Header on next week:** "Week of 9 Nov" plus the "This week" button.
+9. **Section stack:** the Plan section at 360 × 740 with the top of "Suggested for Ziva" in reach (CL-11).
 
-Each is shown light and dark at all three zoom tiers, and each is checked against CL-1…CL-9 (§4.0). **Architect sign-off gates P1 wiring.**
+Each is shown light and dark at all three zoom tiers, and each is checked against CL-1…CL-12 (§4.0). **Architect sign-off gates P1 wiring.**
 
 ---
 
@@ -315,3 +326,67 @@ Every PR stays draft until its chain completes. `/code-review` does not discharg
 7. **Retention.** Keep 28 days of past plans (recommended), or longer for a future "planned vs ate" view?
 8. **The core.js date helpers.** Ask the foundation seat to make `_offsetDateStr` / `addDays` / `ageAt(string)` local-safe app-wide (recommended, as a separate PR), or keep the fix planner-local?
 9. **v1.1 convergence.** Should Tomorrow's Prep and the Outing Planner fold into the plan (recommended), or stay independent?
+
+---
+
+## 10. Spec-round amendments (v0.3, 2026-10-29)
+
+Positions: **Vela** (Mode 2, support-with-amendments, V-V-275-1…20) and **Ceres** (Mode 2, support-with-amendments, V-C-275-1…18). Lyra synthesis below; all are adopted. **Reconciliation:** Vela's pack-list lifecycle (-10) and Ceres's always-visible keeping rules (-8) are both kept. The pack list collapses after the first log; How it keeps never does.
+
+### 10.1 Surfaces and cognitive load (Vela)
+- **V-V-275-1** The lead is the next slot's row promoted, not a fifth element.
+- **V-V-275-2** `_mpNextSlot(dateKey, now)` rule table, wrapping (never calling raw) `detectMealType` / `_qlComputeMealWindow`:
+
+| Situation | Lead |
+|---|---|
+| Order | breakfast → lunch → dinner; snack only if planned; logged slots skipped |
+| Before the breakfast window (incl. 00:00–07:00) | Breakfast (never "Snack" from the fall-through) |
+| After the dinner window, or all planned slots logged | No lead. Optionally one quiet line "Tomorrow: Breakfast — X" if tomorrow is planned. Never a "done" or adherence phrase. |
+| The next slot is unplanned | "Next: Lunch — + Add lunch" |
+| Staleness | Recompute on render and on `visibilitychange` |
+
+- **V-V-275-3** Write chronology (CL-10). Today: stamp now, unless now is past the slot window's end, in which case stamp the window centre and show "Logged" or "around 1 pm". Past days: always the slot-window centre. Pair-notes: Ceres (writer), Kael (adaptive-window consumer).
+- **V-V-275-4** Strip geometry: `1fr` columns, `--sp-2` gap, strip outside any padded card, chips ≥ 40 × 56 px (CL-7).
+- **V-V-275-5** Neutral fill disc; "full" = three meals; muted on past days; `aria-label`; one-time legend at first use.
+- **V-V-275-6** Today vs selected de-stacked (bold numeral + bar vs fill + border); greyscale-safe.
+- **V-V-275-7** One marker per chip; new food wins; travel then rides the chip border.
+- **V-V-275-8** Section stack (CL-11). The Plan section sits under the "Recipes" h1; no lead on non-today days; Suggested → For travel → Browse keep their order; nothing new above Suggested without a CL review.
+- **V-V-275-9** When the selected day is a travel day, the "For travel" `recipes-sub-note` (diet.js) collapses to a teaser row ("How long packed food keeps · WHO · USDA FSIS"). Both read one shared constant.
+- **V-V-275-10** Pack list lifecycle (§1.5): plain list, collapses after the first log, "Pack for Sat" on future days. Ticks need a §3.2 field first (not in v1).
+- **V-V-275-11** Slot colour quarantine: planner slots never inherit `.meal-card.{breakfast|lunch|dinner|snack}` tints. Icon plus word only (§4.6 non-reuse).
+- **V-V-275-12** The new-food tag reads "New to Ziva: kiwi", `--tc-lav` text on an outlined tag (shape-distinct from `.fdom-chip`), not `zi('sprout')`. A new top allergen or a 3-day conflict rides the amber safety channel in words.
+- **V-V-275-13** Travel in words: "Travel day" header text and "Travel day: on". Peach on stripe, wash and left border only.
+- **V-V-275-14** A combo caution or flag is promoted to the slot's visible safety lead.
+- **V-V-275-15** Locked rows out of the top 5; inline reason in the All list; no tap needed to explain.
+- **V-V-275-16** The Add to plan day row is the next 7 days from today, with › within the 8-week horizon; past days are not offered.
+- **V-V-275-17** Header reads "This week's plan" only on the current week, otherwise "Week of 9 Nov" plus a "This week" button; ‹ › clamp at 4 weeks back / 8 ahead with a one-line reason.
+- **V-V-275-18** Empty-state copy: no-match search → "Add 'xyz' as a food"; fewer than 5 suggestions → reuse "Keep logging meals…"; a pruned week says plans older than 4 weeks are cleared; an all-locked slot and a slot at its cap of 3 say so in words.
+- **V-V-275-19** Every planner overlay matches the `handleSwipe` overlay guard (`.ql-sheet.open` / `.confirm-overlay`). A swipe on the strip falls through to tab navigation by design; no week-swipe.
+- **V-V-275-20** Register the `mp-*` prefix in DESIGN_PRINCIPLES §4 before code (distinct from home.js `tp-*`).
+
+### 10.2 Food safety and adequacy (Ceres)
+- **V-C-275-1** 3-day semantics. The formula stays. It compares introduction events of distinct base foods: a repeat of the same food is exposure, not a clash; two new foods in one recipe or one combo are a Δ = 0 clash. Anchors are introduction days measured from the planned date: `foods[].date`, the first appearance in `feedingData`, and planned entries new as of their date. "New" is computed live as "no introduction before date D", including for stored `isNew` entries. Past days never warn.
+- **V-C-275-2** Use the existing `_fdIsFoodTried` / `_fdSameFood` predicate. Exclude only the pure spices and herbs (turmeric, cinnamon, cumin, coriander, cardamom, pepper, mint, ginger, garlic); never exclude a food with an allergen note, age rule or FOOD_EFFECTS record. Pair-note Carina: `_FOOD_ALIASES` coverage for corpus ingredient names.
+- **V-C-275-3** Top-allergen confirm copy (exemplar 6b). Title: "Egg is a common allergen, and new for Ziva." Body: "Give egg on its own, with nothing else new for 3 days before or after, so if she reacts you'll know it was the egg. Best at home and early in the day, when you can watch her for a few hours." Buttons: **Move to Sat** (primary), Plan anyway (secondary). A one-tap link to the FOOD_EFFECTS `watchFor`. Cited via an existing `RECIPE_SOURCES` key; each sentence's source is verified at P1a, and any sentence without a source is dropped (canon-cc-013). Name both when both foods are allergens. After Plan anyway, the lead reads "Egg and kiwi are both new this week. It will be hard to tell which caused a reaction."
+- **V-C-275-4** A new food on a travel day gets the confirm (allergen copy for a top allergen); the picker demotes "Plan a new food" on travel days. Move to Sat picks a day that clears every window (including the moved food's own), passes the age gate on that date, sits inside the horizon, and for an allergen is not a travel day.
+- **V-C-275-5** A food with `reaction:'watch'` gets a worded caution lead ("You noted a reaction to egg on 12 Oct") and never counts as a clean introduction. Pair-note Maren: re-exposure after a reaction.
+- **V-C-275-6** The date's age (`_mpAgeMonthsOn`) feeds the gate **and** the lead. Stored entries are re-checked live; one that became gated shows a flag lead and is kept, never silently dropped. Free-typed names go through `_fdAgeRule` and `_dietAllowsFood`. High-mercury fish free foods get a flag lead via `_isHighMercuryFishHost` (pair-note Carina). Recorded: `getUntriedSuggestions` / `_recipeSuggestForZiva` gate on today's age, which is conservative for future dates and accepted.
+- **V-C-275-7** Pack lines de-duplicate by exact string only; one flask per flask meal, shown as a count.
+- **V-C-275-8** The always-visible How it keeps block; the shared rule constant only when no planned keeps string states it.
+- **V-C-275-9** The chew cue on the collapsed line whenever `r.choking` is non-empty; the chew row open by default when the slot opens (and the Packing row too on travel days); a free-food lead built from `_recipeIngredientSafety` signals including `safeForm.note`, carrying both the allergen and the form for peanut and tree nuts.
+- **V-C-275-10** A planner variant of the summary drops established, clean allergens from the watch clause and says "new — watch for 3 days" only for foods new as of the date. The shared `_recipeSafetySummary` text is not edited (pair-note Maren).
+- **V-C-275-11** `_MP_LOG_DROP` holds the pure spices and herbs only. Ghee, oil, lemon, sweeteners and salt are kept in the log. Same predicate as -2.
+- **V-C-275-12** Logged quantities use the recipe's `ing.g` / `ing.qty`; `_fdResolveQtyDefaults` is only the fallback.
+- **V-C-275-13** "She ate this" on an entry whose lead is a flag opens `foodConsequenceCard` first (warn-and-allow per V-M-205), then `_fcCommitItems`.
+- **V-C-275-14** The introduce-offer never uses `addFood`. A headless intro helper is pulled out of `foodLibToggleTried`'s `_commitTried`: exact-base match via `_fdSameFood`, a date parameter, the age-gate consequence at that date's age, reactions only ever escalated, the parent picks ok / watch. The offer stays on the day card until acted on or dismissed. **Separate live bug:** `addFood`'s substring merge (egg → eggplant, peanut → peas) gets its own Ceres PR, tracked under this tag until filed.
+- **V-C-275-15** Replace is fully restored by the 8 s undo; if the replaced items include a first exposure, the confirm says so. Add with de-dupe stays primary.
+- **V-C-275-16** Day-aware picker ranking (iron, then protein, then fruit and vegetables), and one worded, dismissable day hint when 3+ slots are planned with no iron source. At most one gap shown. Optional: "No main meal planned yet" when lunch and dinner hold only snack items. No score (Warmth). Pair-notes: Vela (render), Maren (Caldikind–iron spacing, v1.1).
+- **V-C-275-17** Travel gap copy leads with "The travel lunches work for dinner too", then the full list. A corpus PR with 2–3 travel dinners and 2 travel breakfasts runs in parallel, ideally before v1.1, and is not a prerequisite.
+- **V-C-275-18** Copy day onto a travel day applies -17 to the copied entries, as well as the age and 3-day re-checks.
+
+### 10.3 What each phase now needs
+- **P1a (exemplars):** V-V-275-1, -2, -4…-8, -12, -13, -15, -17, -18; V-C-275-3, -7, -8, -9 (exemplars 1–9 in §4.7). Register `mp-*` (V-V-275-20).
+- **P1b (planner UI):** V-V-275-9, -10, -11, -14, -16, -19; V-C-275-4, -5, -6, -10, -16, -17, -18.
+- **P2 (new food + log-from-plan):** V-V-275-3; V-C-275-1, -2, -11, -12, -13, -14, -15.
+- **Separate Ceres PRs:** the `addFood` substring-merge fix (V-C-275-14); travel dinners and breakfasts for the corpus (V-C-275-17).
+- **Remaining review:** Carina on §3 (the record and its merge) and the alias coverage (V-C-275-2) before P0.
