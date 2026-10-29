@@ -994,11 +994,12 @@ function _recipeDetailHtml(r, ageMonths) {
   // Travel set: how long it keeps away from a fridge, and what to pack.
   const tm = r.travel && RECIPE_TRAVEL_META[r.travel.how];
   if (tm) {
-    let body = r.travel.keeps ? `<p class="rcp-prow-p">${escHtml(r.travel.keeps)}</p>` : '';
+    let body = r.travel.keeps ? `<div class="rcp-serving">${zi('timer')} <span>${escHtml(r.travel.keeps)}</span></div>` : '';
     if (Array.isArray(r.travel.pack) && r.travel.pack.length) {
       body += `<ol class="recipe-steps">${r.travel.pack.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol>`;
     }
-    rows += _recipeProw('travel', 'timer', 'Packing for travel', tm.label, body, false);
+    // Open by default: the keeping time is safety content, like the chew prep (V-C-274-8).
+    rows += _recipeProw('travel', 'timer', 'Packing for travel', tm.label, body, true);
   }
   if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
     let body = '<div class="combo-dos">';
@@ -1190,7 +1191,7 @@ function renderDietRecipes() {
   const travel = surfaced.filter(r => r.travel && RECIPE_TRAVEL_META[r.travel.how]);
   if (travel.length) {
     html += `<div class="col-full"><div class="recipes-sec-label">For travel</div>`;
-    html += `<p class="recipes-sub-note">Food that packs well for a day out or a journey. Cooked food is safe for 2 hours at room temperature, or 1 hour on a hot day (above 32 °C). After that, keep it hot in a flask or cold with an ice pack. Each recipe says how to pack it.</p>`;
+    html += `<p class="recipes-sub-note">Food that packs well for a day out or a journey. Cooked food can sit out for 2 hours at most, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. For a longer trip, pack it hot in a flask or cold with an ice pack straight away, not after it has been sitting out. Each recipe says how to pack it. <span class="rcp-serving-src">WHO · USDA FSIS</span></p>`;
     for (const how of RECIPE_TRAVEL_ORDER) {
       const inHow = travel.filter(r => r.travel.how === how);
       if (!inHow.length) continue;
