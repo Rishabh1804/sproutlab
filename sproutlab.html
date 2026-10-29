@@ -21867,6 +21867,9 @@ const RECIPE_SOURCES = {
   nhsteeth: { org: 'NHS', doc: 'Baby teething — eruption timeline' },
   her:      { org: 'AAP/HER', doc: 'Recommended drinks for young children 0–5 (2019 consensus)' },
   unicefin: { org: 'UNICEF India', doc: 'Early childhood nutrition' },
+  // Travel set (2026-10-29) — food-safety time limits, fetched 2026-10-29:
+  who5k:    { org: 'WHO', doc: 'Five Keys to Safer Food · cooked food ≤ 2 h at room temperature; keep hot food > 60 °C' },
+  fsis:     { org: 'USDA FSIS', doc: '"Danger Zone" 40–140 °F · ≤ 2 h out, ≤ 1 h above 90 °F (32 °C)' },
 };
 
 // Each recipe:
@@ -22394,6 +22397,8 @@ const RECIPES = [
     texture: 'family', portion: '¾–1 medium katori',
     ingredients: [{ name: 'rice', qty: '3 tbsp (30 g)', g: 30 }, { name: 'moong dal', qty: '1 tbsp (15 g)', g: 15 }, { name: 'carrot', qty: '2 tbsp, diced small', g: 20 }, { name: 'beans', qty: '1 tbsp, finely chopped', g: 15 }, { name: 'peas', qty: '1 tbsp', g: 10 }, { name: 'ghee', qty: '1½ tsp', g: 7 }, { name: 'cumin', qty: 'a pinch', g: 1 }],
     foodGroups: ['grains', 'vegs', 'dairy', 'spices'], mddGroups: ['grains', 'pulses', 'vitA', 'otherFV'], allergens: [], choking: ['Cook until the vegetables mash between finger and thumb', 'Squash peas'],
+    travel: { how: 'thermos', keeps: 'Packed boiling hot into a pre-heated flask filled to the top, it should still be too hot to eat straight away when you open it. If it is only warm, throw it away — warm rice and grains are where germs grow.',
+      pack: ['Pre-heat a food flask with boiling water for 5 minutes, then empty it', 'Fill it to the top with the khichdi at a boil, slightly runny, and close it at once', 'A bowl to cool her portion in, and a spoon'] },
     cuisine: 'Indian',
     steps: [
       'Wash rice and moong dal; soak 15 min.',
@@ -22403,7 +22408,7 @@ const RECIPES = [
     ],
     dos: ['Now a textured khichdi with soft pieces, not a purée — texture helps her learn to chew', 'Three vegetables, one pot', 'Ghee adds energy for a busy toddler'],
     donts: ['No salt in her portion', 'Remove any whole spice (bay leaf, clove, peppercorn)', 'Serve fresh; do not re-heat twice'],
-    source: ['whopaho', 'iap16', 'icmr'],
+    source: ['whopaho', 'iap16', 'icmr', 'who5k'],
   },
   {
     id: 'dal-palak-roti', title: 'Dal Palak with Soft Roti', slot: 'lunch', minAgeMonths: 12, prepMinutes: 25,
@@ -22621,6 +22626,8 @@ const RECIPES = [
     texture: 'family', portion: '3 mini pancakes (≈ ½ medium katori)',
     ingredients: [{ name: 'ragi', qty: '2 tbsp flour (20 g)', g: 20 }, { name: 'banana', qty: '½ ripe, mashed', g: 40 }, { name: 'curd', qty: '1 tbsp', g: 20 }, { name: 'ghee', qty: '½ tsp', g: 3 }],
     foodGroups: ['grains', 'fruits', 'dairy'], mddGroups: ['grains', 'otherFV'], allergens: ['cow milk'], choking: ['Soft, spongy — squashes between finger and thumb'],
+    travel: { how: 'cool', keeps: 'Cooked food: 2 hours at most at room temperature, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. With an ice pack in an insulated bag it can last until a meal later the same day, as long as the ice pack is still frozen and the food still feels fridge-cold. If the ice pack has melted, don\'t give it.',
+      pack: ['Let the pancakes cool a short while, covered, then pack them in a lidded box — the clock starts when they come off the tawa', 'An insulated bag with an ice pack for longer trips'] },
     cuisine: 'Indian',
     steps: [
       'Mash ripe banana; whisk in ragi flour, curd and a splash of water to a thick batter.',
@@ -22629,7 +22636,7 @@ const RECIPES = [
     ],
     dos: ['Banana sweetens with no added sugar', 'Egg-free, so it suits every diet preference', 'Easy to hold'],
     donts: ['No sugar, jaggery or honey', "Don't cook on high heat — the outside burns before the middle sets", 'Serve the same day'],
-    source: ['icmr', 'who', 'nhsbsl'],
+    source: ['icmr', 'who', 'nhsbsl', 'who5k', 'fsis'],
   },
   {
     id: 'steamed-veg-sticks-chana-til-dip', title: 'Steamed Veg Sticks with Chana–Til Dip', slot: 'snack', minAgeMonths: 12, prepMinutes: 20,
@@ -22651,6 +22658,8 @@ const RECIPES = [
     texture: 'family', portion: '½ medium katori soft cubes',
     ingredients: [{ name: 'sweet potato', qty: '½ small orange-fleshed, cubed (50 g)', g: 50 }, { name: 'ghee', qty: '½ tsp', g: 3 }, { name: 'cumin', qty: 'a pinch, roasted & ground', g: 1 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
     foodGroups: ['vegs', 'dairy', 'spices'], mddGroups: ['vitA'], allergens: [], choking: ['Steam until fork-soft; cubes no bigger than a fingertip, or thick fingers she can bite'],
+    travel: { how: 'cool', keeps: 'Cooked food: 2 hours at most at room temperature, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. With an ice pack in an insulated bag it can last until a meal later the same day, as long as the ice pack is still frozen and the food still feels fridge-cold. If the ice pack has melted, don\'t give it.',
+      pack: ['Pack the cooled cubes in a lidded box, with a small spoon', 'An insulated bag with an ice pack for longer trips'] },
     cuisine: 'Indian',
     steps: [
       'Steam sweet potato cubes 10 min until very soft.',
@@ -22659,7 +22668,7 @@ const RECIPES = [
     ],
     dos: ['Shakarkandi chaat without the salt and chaat masala', 'Vitamin A plus a little fat to absorb it', 'Naturally sweet'],
     donts: ['No chaat masala or black salt (both salty)', "Don't roast crisp", 'No sugar'],
-    source: ['icmr', 'nhssalt', 'nhsbsl'],
+    source: ['icmr', 'nhssalt', 'nhsbsl', 'who5k', 'fsis'],
   },
   {
     id: 'curd-papaya-nut-dust', title: 'Curd with Papaya & Almond Dust', slot: 'snack', minAgeMonths: 12, prepMinutes: 5,
@@ -22691,6 +22700,259 @@ const RECIPES = [
     donts: ['No salt or black salt (adult chaas is usually salted)', 'No sugar (no sweet lassi before 2)', 'Not a replacement for water or breast milk'],
     source: ['nhs', 'icmr', 'who'],
   },
+
+  // ═══ MORE TODDLER FAMILY FOOD + THE TRAVEL SET (2026-10-29, the 13-month checklist) ═══
+  // Mom's ask: "more food recipes, and more to give her while travelling". Same toddler
+  // shape as above (texture/portion/choking/mddGroups/allergens), for six teeth and no
+  // molars. A recipe that packs for a day out also carries `travel`:
+  //   { how: 'spot' | 'thermos' | 'cool', keeps, pack:[…] }
+  //   spot    — carried dry or whole, made or cut at mealtime (nothing cooked sits out)
+  //   thermos — packed boiling hot into a pre-heated flask (label "Hot in a flask"); must still be
+  //             too hot to eat at once when opened (WHO: hot food > 60 °C), else thrown away
+  //   cool    — cooked at home; ≤ 2 h at room temperature (≤ 1 h above 32 °C), longer
+  //             only in an insulated bag with an ice pack while it is frozen and the food fridge-cold
+  // The time limits are WHO Five Keys + USDA FSIS (who5k / fsis), the same for every
+  // cooked food; no recipe claims a longer room-temperature life than that.
+  // ─────────────────────────── BREAKFAST ───────────────────────────
+  {
+    id: 'veg-sevai-upma', title: 'Vegetable Sevai Upma', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 15,
+    texture: 'family', portion: '¾ medium katori',
+    ingredients: [{ name: 'vermicelli', qty: '⅓ cup wheat sevai (30 g)', g: 30 }, { name: 'carrot', qty: '1 tbsp, finely grated', g: 15 }, { name: 'peas', qty: '1 tbsp, squashed', g: 12 }, { name: 'tomato', qty: '1 tbsp, chopped', g: 15 }, { name: 'ghee', qty: '1 tsp', g: 5 }],
+    foodGroups: ['grains', 'vegs', 'dairy'], mddGroups: ['grains', 'vitA', 'otherFV'], allergens: ['wheat'], choking: ['Cook the sevai until it is very soft and breaks when pressed — undercooked strands are chewy', 'Squash every pea; leave out mustard seeds, curry leaves and whole cashews'],
+    cuisine: 'Indian (South)',
+    steps: [
+      'Dry-roast the sevai in ½ tsp ghee until light golden; set aside.',
+      'Soften the grated carrot, squashed peas and tomato in the rest of the ghee with a pinch of turmeric.',
+      'Add 1 cup water, bring to a boil, add the sevai and cook covered on low until soft and the water is absorbed (5–6 min).',
+      'Take her portion out before salting the family pot. Cool and serve.',
+    ],
+    dos: ['Roasting first keeps the strands from clumping', 'A soft, easy breakfast she can scoop or pick up', 'Swap in any soft-cooked vegetable you have', 'Serve with a few spoons of curd for protein'],
+    donts: ['No salt in her portion', 'No green chilli or whole spices', "Don't leave it dry — add a splash of water if it firms up"],
+    source: ['icmr', 'iap16', 'nhssalt'],
+  },
+  {
+    id: 'soft-moong-pongal', title: 'Soft Moong Dal Pongal', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 25,
+    texture: 'family', portion: '¾ medium katori',
+    ingredients: [{ name: 'rice', qty: '3 tbsp raw (30 g)', g: 30 }, { name: 'moong dal', qty: '1½ tbsp (15 g)', g: 15 }, { name: 'ghee', qty: '1½ tsp', g: 7 }, { name: 'cumin', qty: 'a pinch', g: 1 }, { name: 'ginger', qty: 'a tiny pinch, grated', g: 1 }],
+    foodGroups: ['grains', 'dairy', 'spices'], mddGroups: ['grains', 'pulses'], allergens: [], choking: ['Leave out the whole cashews and whole black peppercorns of family pongal — both are choking hazards', 'Cook until it mashes between finger and thumb'],
+    cuisine: 'Indian (South)',
+    steps: [
+      'Dry-roast the moong dal lightly, then rinse it with the rice.',
+      'Pressure-cook with 1¼ cups water and a pinch of turmeric until very soft (4–5 whistles); mash well.',
+      'Warm the ghee, add cumin and grated ginger for a few seconds, and stir it in.',
+      'Take her portion out before any salt. Loosen with warm water if it has thickened.',
+    ],
+    dos: ['Rice plus moong dal makes a good protein pair', 'Ghee adds the energy a small tummy needs', 'Thins easily, so it also suits a day she is unwell'],
+    donts: ['No salt in her portion', 'NEVER whole cashews or peppercorns in her bowl', "Don't let it set into a thick lump — serve soft"],
+    source: ['icmr', 'iap16', 'nhssalt'],
+  },
+  // ─────────────────────────── LUNCH ───────────────────────────
+  {
+    id: 'mild-kadhi-chawal', title: 'Mild Kadhi–Chawal', slot: 'lunch', minAgeMonths: 12, prepMinutes: 25,
+    texture: 'family', portion: '¾ medium katori rice + 3 tbsp kadhi',
+    ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'curd', qty: '4 tbsp full-fat (80 g)', g: 80 }, { name: 'besan', qty: '2 tsp (8 g)', g: 8 }, { name: 'ghee', qty: '1 tsp', g: 5 }, { name: 'cumin', qty: 'a pinch', g: 1 }],
+    foodGroups: ['grains', 'dairy', 'spices'], mddGroups: ['grains', 'dairy', 'pulses'], allergens: ['cow milk'], choking: ['No pakoras in her kadhi — fried dumplings are hard and chewy', 'Remove curry leaves, dried chilli and whole methi seeds before serving'],
+    cuisine: 'Indian (North)',
+    steps: [
+      'Whisk curd, besan, a pinch of turmeric and 1 cup water until smooth.',
+      'Simmer on low, stirring, for 10–12 min until it thickens slightly and the raw besan taste goes.',
+      'Temper cumin in ghee (no chilli) and pour it over.',
+      'Take her portion out before salt, and serve over soft rice.',
+    ],
+    dos: ['Curd plus besan gives dairy and pulse in one bowl', 'Keep stirring as it heats so the curd does not split', 'Plain, soft rice soaks up the kadhi well'],
+    donts: ['No sugar — Gujarati kadhi often adds it; none before 2', 'No salt or chilli in her portion', 'No pakoras for her yet'],
+    source: ['icmr', 'nhssalt', 'nhsbsl'],
+  },
+  {
+    id: 'lauki-chana-dal-rice', title: 'Lauki–Chana Dal with Rice', slot: 'lunch', minAgeMonths: 12, prepMinutes: 35,
+    texture: 'family', portion: '¾ medium katori rice + 3 tbsp dal',
+    ingredients: [{ name: 'rice', qty: '4 tbsp raw (40 g)', g: 40 }, { name: 'chana dal', qty: '1½ tbsp, soaked (15 g)', g: 15 }, { name: 'bottle gourd', qty: '3 tbsp, diced', g: 35 }, { name: 'tomato', qty: '1 tbsp', g: 15 }, { name: 'ghee', qty: '1 tsp', g: 5 }],
+    foodGroups: ['grains', 'vegs', 'dairy'], mddGroups: ['grains', 'pulses', 'otherFV'], allergens: [], choking: ['Chana dal must be cooked until it mashes completely — firm dal is hard to gum', 'Lauki cooked until it falls apart'],
+    cuisine: 'Indian',
+    steps: [
+      'Soak chana dal for 1 hour.',
+      'Pressure-cook it with diced lauki, tomato and a pinch of turmeric until very soft (5–6 whistles); mash lightly.',
+      'Temper a pinch of cumin in ghee and stir it in.',
+      'Take her portion out before salt, and serve with soft rice.',
+    ],
+    dos: ['Chana dal brings iron and protein; soaking helps it cook soft', 'Lauki makes the dal light and moist', 'Good family dal — her portion just skips the salt'],
+    donts: ['No salt or chilli in her portion', "Don't serve if any dal is still firm", 'Serve fresh'],
+    source: ['icmr', 'iap16', 'nhssalt'],
+  },
+  // ─────────────────────────── DINNER ───────────────────────────
+  {
+    id: 'sweet-potato-paneer-tikki', title: 'Soft Sweet Potato & Paneer Tikki', slot: 'dinner', minAgeMonths: 12, prepMinutes: 20,
+    texture: 'family', portion: '2 small tikkis (≈ ½ medium katori) with soft rice and dal, or a roti',
+    ingredients: [{ name: 'sweet potato', qty: '½ small orange-fleshed, steamed & mashed (50 g)', g: 50 }, { name: 'paneer', qty: '2 tbsp, finely crumbled (25 g)', g: 25 }, { name: 'besan', qty: '1 tsp, to bind (5 g)', g: 5 }, { name: 'coriander', qty: '1 tsp, finely chopped', g: 2 }, { name: 'ghee', qty: '1 tsp', g: 5 }],
+    foodGroups: ['vegs', 'dairy', 'grains', 'spices'], mddGroups: ['vitA', 'dairy'], allergens: ['cow milk'], choking: ['Shallow-cook on low until warmed through and soft — no crisp crust', 'Flatten thin and cut into strips she can hold'],
+    cuisine: 'Indian',
+    steps: [
+      'Mash steamed sweet potato with finely crumbled paneer, besan and coriander.',
+      'Shape into small, thin patties.',
+      'Cook on a low tawa with ghee, 2 min per side, until set and warmed through.',
+      'Cool and cut into strips.',
+    ],
+    dos: ['Vitamin A from sweet potato with fat from paneer and ghee to absorb it', 'A finger food she can feed herself — serve it with soft rice and dal or a roti to make it a full dinner', 'The mix keeps a few hours in the fridge — shape and cook just before dinner'],
+    donts: ['No salt or chaat masala in her tikki', "Don't deep-fry or brown them crisp", 'Crumble paneer fine — no cubes'],
+    source: ['icmr', 'nhsbsl', 'nhssalt'],
+  },
+  {
+    id: 'egg-avocado-roti-roll', title: 'Egg & Avocado Roti Roll', slot: 'dinner', minAgeMonths: 12, prepMinutes: 15,
+    texture: 'family', portion: '½ egg + 1 tbsp avocado on 1 soft roti, rolled and cut',
+    ingredients: [{ name: 'egg', qty: '½ hard-boiled (25 g)', g: 25 }, { name: 'avocado', qty: '1 tbsp ripe, mashed (15 g)', g: 15 }, { name: 'wheat flour', qty: '1 soft roti (30 g atta)', g: 30 }, { name: 'lemon', qty: 'a few drops', g: 2 }],
+    foodGroups: ['nonveg', 'fruits', 'grains'], mddGroups: ['eggs', 'grains', 'otherFV'], allergens: ['egg', 'wheat'], choking: ['Mash the egg into the avocado — no chunks of white', 'Roll the roti and cut it into short pieces'],
+    cuisine: 'Indian-fusion',
+    steps: [
+      'Boil an egg 10 min until fully firm; cool, peel and mash half of it.',
+      'Mash in ripe avocado and a few drops of lemon to a smooth spread.',
+      'Spread thinly on a soft, warm roti, roll it up and cut into short pieces.',
+    ],
+    dos: ['Egg is the animal-source food WHO asks for daily; avocado adds healthy fat', 'Ready in minutes from a boiled egg', 'Soft enough for her to bite with her front teeth'],
+    donts: ['No mayonnaise, salt or ketchup', 'No runny yolk', 'Make it fresh — mashed avocado browns and egg should not sit out'],
+    source: ['who', 'icmr', 'nhsbsl'],
+  },
+  // ─────────────────────────── SNACK ───────────────────────────
+  {
+    id: 'beetroot-raita-roti', title: 'Beetroot Raita with Roti Strips', slot: 'snack', minAgeMonths: 12, prepMinutes: 15,
+    texture: 'family', portion: '3 tbsp raita + ½ soft roti in strips',
+    ingredients: [{ name: 'curd', qty: '3 tbsp full-fat (60 g)', g: 60 }, { name: 'beetroot', qty: '1 tbsp, boiled & finely grated', g: 15 }, { name: 'wheat flour', qty: '½ soft roti (15 g atta)', g: 15 }, { name: 'cumin', qty: 'a pinch, roasted & ground', g: 1 }],
+    foodGroups: ['dairy', 'vegs', 'grains', 'spices'], mddGroups: ['dairy', 'grains', 'otherFV'], allergens: ['cow milk', 'wheat'], choking: ['Boil the beetroot until soft before grating — raw beetroot shreds are hard', 'Tear the roti into strips for dipping'],
+    cuisine: 'Indian',
+    steps: [
+      'Boil or pressure-cook a beetroot until soft; cool, peel and grate finely.',
+      'Whisk curd smooth and fold in the beetroot and roasted cumin.',
+      'Serve with soft roti strips to dip.',
+    ],
+    dos: ['A bright pink bowl many toddlers like to try', 'Dipping is good practice for her hands', 'Beetroot can turn pee and poo red — harmless'],
+    donts: ['No salt or black salt in her raita', 'No sugar', "Don't use raw grated beetroot"],
+    source: ['icmr', 'nhsbsl', 'nhssalt'],
+  },
+
+  // ─────────────────────────── THE TRAVEL SET ───────────────────────────
+  {
+    id: 'travel-banana-sattu-mash', title: 'Banana–Sattu Mash (No Cooking)', slot: 'snack', minAgeMonths: 12, prepMinutes: 3,
+    texture: 'family', portion: '½ medium katori',
+    ingredients: [{ name: 'banana', qty: '1 small ripe (60 g)', g: 60 }, { name: 'sattu', qty: '1 tbsp roasted chana sattu (10 g)', g: 10 }, { name: 'cardamom', qty: 'a pinch, ground', g: 1 }],
+    foodGroups: ['fruits', 'grains', 'spices'], mddGroups: ['pulses', 'otherFV'], allergens: [], choking: ['Mix the sattu right into the banana so no dry flour is left — a puff of dry flour can make her cough', 'Thin with a little water to a soft, spoonable paste'],
+    cuisine: 'Indian (East)',
+    travel: { how: 'spot', keeps: 'Sattu keeps for weeks in a dry, sealed jar, and the banana travels whole. Mix it when she is ready to eat, and finish it within 2 hours (1 hour on a hot day).',
+      pack: ['A small jar of sattu and a measuring spoon', 'A whole ripe banana (it travels in its own peel)', 'A bowl, spoon and a little boiled or bottled drinking water'] },
+    steps: [
+      'Peel the banana and mash it in a bowl with a fork.',
+      'Sprinkle in the sattu and a pinch of cardamom and mix until smooth.',
+      'Add water a teaspoon at a time until soft and spoonable.',
+    ],
+    dos: ['Sattu is roasted chana, already cooked and rich in protein and iron', 'Needs no stove, fridge or hot water', 'Banana sweetens it, so no sugar is needed'],
+    donts: ['Never give dry sattu on its own', 'No sugar or jaggery', 'Use plain sattu, not the salted drink mix', 'Use 100% chana sattu — some blends add barley or wheat'],
+    source: ['icmr', 'who', 'whopaho', 'who5k', 'fsis'],
+  },
+  {
+    id: 'travel-flask-oats-banana', title: 'Oats & Banana from a Flask', slot: 'breakfast', minAgeMonths: 12, prepMinutes: 8,
+    texture: 'family', portion: '¾ medium katori',
+    ingredients: [{ name: 'oats', qty: '3 tbsp quick oats, ground coarse (20 g)', g: 20 }, { name: 'banana', qty: '½ ripe, mashed', g: 40 }, { name: 'almond', qty: '½ tsp, ground to a fine powder', g: 2 }, { name: 'cinnamon', qty: 'a pinch', g: 1 }],
+    foodGroups: ['grains', 'fruits', 'nuts', 'spices'], mddGroups: ['grains', 'otherFV'], allergens: ['tree nut'], choking: ['Almond as a fine powder only — never whole or chopped', 'Let the oats soften fully; stir out any dry lumps'],
+    cuisine: 'Global',
+    travel: { how: 'spot', keeps: 'Make the dry mix at home; it keeps for weeks in a sealed jar. The porridge is made fresh and eaten at once.',
+      pack: ['A jar of ground quick oats mixed with the almond powder and cinnamon', 'A flask of water that was boiling when you filled it', 'A whole banana, a cup with a lid, and a spoon'] },
+    steps: [
+      'At home, grind quick oats coarsely and mix in the almond powder and cinnamon. Store dry.',
+      'On the way, put 3 tbsp of the mix in a cup and pour over about ½ cup water from the flask, still steaming.',
+      'Cover and leave 5 minutes, then stir until soft and creamy.',
+      'Mash in the banana, check it is only warm, and serve.',
+    ],
+    dos: ['Hot water from a good flask softens quick oats completely', 'Ground almond keeps her tree-nut exposure going safely', 'A warm breakfast anywhere, from a car seat to a train berth'],
+    donts: ['Use quick oats — whole rolled oats will not soften enough', 'Never feed it hot; always test the temperature first', 'No sugar, honey or flavoured instant packets'],
+    source: ['nhs', 'nhsbsl', 'who5k'],
+  },
+  {
+    id: 'travel-fruit-cut-on-spot', title: 'Travel Fruit, Cut on the Spot', slot: 'snack', minAgeMonths: 12, prepMinutes: 3,
+    texture: 'family', portion: '½ medium katori (≈ 50–75 g fruit)',
+    ingredients: [{ name: 'banana', qty: '½, in soft pieces', g: 40 }, { name: 'chiku', qty: '½ very ripe, seeded', g: 30 }, { name: 'pear', qty: '¼ very ripe, peeled', g: 25 }],
+    foodGroups: ['fruits'], mddGroups: ['otherFV'], allergens: [], choking: ['Very ripe, soft fruit only — a hard pear or raw apple piece is a choking risk', 'Take out every shiny black chiku seed', 'Small soft pieces, or long fingers she can bite'],
+    cuisine: 'Indian',
+    travel: { how: 'spot', keeps: 'Whole fruit keeps all day. Once it is cut, eat it within 2 hours (1 hour on a hot day).',
+      pack: ['Whole fruit: banana, very ripe chiku and pear (or a ripe mango in season)', 'A small, clean knife in a cover and a lidded box', 'Safe drinking water to rinse the fruit, and soap or sanitiser for your hands'] },
+    steps: [
+      'Wash your hands and the fruit before you cut.',
+      'Peel and cut the fruit into small soft pieces at snack time — not before you leave.',
+      'Serve in the box lid for her to pick up.',
+    ],
+    dos: ['Whole fruit needs no fridge and no stove', 'Cutting at mealtime keeps it fresh and clean', 'Ripe mango in season adds vitamin A'],
+    donts: ['No raw apple or hard guava pieces', 'No chaat masala or salt', 'Never whole grapes — quarter them if you bring any'],
+    source: ['nhsbsl', 'who5k', 'icmr', 'fsis'],
+  },
+  {
+    id: 'travel-veg-dalia-flask', title: 'Veg Dalia Khichdi in a Flask', slot: 'lunch', minAgeMonths: 12, prepMinutes: 25,
+    texture: 'family', portion: '¾–1 medium katori',
+    ingredients: [{ name: 'dalia', qty: '2 tbsp broken wheat (25 g)', g: 25 }, { name: 'moong dal', qty: '1 tbsp (12 g)', g: 12 }, { name: 'carrot', qty: '2 tbsp, diced', g: 20 }, { name: 'bottle gourd', qty: '2 tbsp, diced', g: 20 }, { name: 'ghee', qty: '1½ tsp', g: 7 }],
+    foodGroups: ['grains', 'vegs', 'dairy'], mddGroups: ['grains', 'pulses', 'vitA', 'otherFV'], allergens: ['wheat'], choking: ['Cook until everything mashes between finger and thumb', 'Pack it slightly runny — it thickens in the flask'],
+    cuisine: 'Indian',
+    travel: { how: 'thermos', keeps: 'Packed boiling hot into a pre-heated flask filled to the top, it should still be too hot to eat straight away when you open it. If it is only warm, throw it away — warm rice and grains are where germs grow.',
+      pack: ['A food flask: fill it with boiling water for 5 minutes, then empty it', 'The khichdi, boiling hot, filled to the top and closed straight away', 'A bowl to cool her portion in, and a spoon'] },
+    steps: [
+      'Pressure-cook dalia, moong dal, carrot and lauki with turmeric and 1½ cups water until very soft (4–5 whistles).',
+      'Mash to a soft, slightly runny texture and stir in the ghee.',
+      'Bring it back to a boil, then pour it straight into the pre-heated flask and close it.',
+      'At mealtime spoon her portion into a bowl and let it cool to warm before feeding.',
+    ],
+    dos: ['A full hot lunch away from home', 'Pre-heating the flask keeps it hot for longer', 'Dalia plus moong dal makes a protein-rich bowl', 'Rice-free, so it is the better flask meal for a long journey'],
+    donts: ['Never pack it lukewarm — warm food is where germs grow fastest', 'No salt in her portion', "Don't keep leftovers from the flask for later"],
+    source: ['who5k', 'icmr', 'iap16'],
+  },
+  {
+    id: 'travel-soft-palak-thepla', title: 'Soft Palak Thepla for the Road', slot: 'lunch', minAgeMonths: 12, prepMinutes: 25,
+    texture: 'family', portion: '1 small thepla + ½ banana',
+    ingredients: [{ name: 'wheat flour', qty: '3 tbsp atta (30 g)', g: 30 }, { name: 'besan', qty: '1 tbsp (10 g)', g: 10 }, { name: 'spinach', qty: '2 tbsp, blanched & puréed (25 g)', g: 25 }, { name: 'curd', qty: '1 tbsp, in the dough', g: 15 }, { name: 'ghee', qty: '1½ tsp', g: 7 }, { name: 'banana', qty: '½, to go with it', g: 40 }],
+    foodGroups: ['grains', 'vegs', 'dairy', 'fruits'], mddGroups: ['grains', 'pulses', 'vitA', 'otherFV'], allergens: ['wheat', 'cow milk'], choking: ['Keep it soft — the dry, crisp thepla adults carry on trips is too hard for her', 'Tear into strips; if it has firmed up, skip it rather than force it'],
+    cuisine: 'Indian (Gujarati)',
+    travel: { how: 'cool', keeps: 'Cooked food: 2 hours at most at room temperature, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. With an ice pack in an insulated bag it can last until a meal later the same day, as long as the ice pack is still frozen and the food still feels fridge-cold. If the ice pack has melted, don\'t give it.',
+      pack: ['Stack the theplas warm in a clean cloth so the steam keeps them soft. For the ice-pack bag, let them cool a short while, covered, then wrap in foil and pack — the clock started when they came off the tawa', 'An insulated bag with an ice pack for longer trips', 'A whole banana to peel beside it, instead of curd that spoils in the heat'] },
+    steps: [
+      'Blanch spinach 1 minute, cool and purée.',
+      'Knead atta, besan, the spinach purée, curd, a pinch of turmeric and 1 tsp ghee into a soft dough. Rest 10 min.',
+      'Roll small, thin theplas and cook on a medium tawa with a little ghee until cooked through with light spots, still soft.',
+      'Stack them warm in a cloth, then pack.',
+    ],
+    dos: ['Curd and ghee in the dough keep the thepla soft for longer', 'Spinach adds iron and vitamin A', 'Eat-with-hands lunch for a car, bus or train'],
+    donts: ['No salt, sugar or chilli in her dough', "Don't cook it crisp or dry", 'No curd dip on hot days — it spoils fast without cooling'],
+    source: ['icmr', 'who5k', 'fsis'],
+  },
+  {
+    id: 'travel-aloo-carrot-paratha-rolls', title: 'Soft Aloo–Carrot Paratha Rolls', slot: 'lunch', minAgeMonths: 12, prepMinutes: 25,
+    texture: 'family', portion: '1 small paratha, rolled and cut into 4',
+    ingredients: [{ name: 'wheat flour', qty: '3 tbsp atta (30 g)', g: 30 }, { name: 'potato', qty: '3 tbsp, boiled & mashed (40 g)', g: 40 }, { name: 'carrot', qty: '1 tbsp, finely grated', g: 15 }, { name: 'coriander', qty: '1 tsp, finely chopped', g: 2 }, { name: 'ghee', qty: '1½ tsp', g: 7 }],
+    foodGroups: ['grains', 'vegs', 'dairy', 'spices'], mddGroups: ['grains', 'vitA'], allergens: ['wheat'], choking: ['Cook soft, not crisp, and roll thin so the filling is in every bite', 'Cut the roll into short pieces', 'If it has firmed up in the ice-pack bag, skip it rather than force it'],
+    cuisine: 'Indian (North)',
+    travel: { how: 'cool', keeps: 'Cooked food: 2 hours at most at room temperature, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. With an ice pack in an insulated bag it can last until a meal later the same day, as long as the ice pack is still frozen and the food still feels fridge-cold. If the ice pack has melted, don\'t give it.',
+      pack: ['Roll and cut the paratha at home. For the ice-pack bag, let the pieces cool a short while, covered, then wrap in foil and pack — the clock started when they came off the tawa', 'An insulated bag with an ice pack for longer trips', 'A napkin or bib'] },
+    steps: [
+      'Mash boiled potato smooth with grated carrot and coriander (no salt, no chilli).',
+      'Stuff into a small ball of soft atta dough, seal and roll thin.',
+      'Cook on a medium tawa with ghee until cooked through and soft, with light spots.',
+      'Roll up while warm, cut into 4 short pieces and wrap.',
+    ],
+    dos: ['A whole meal she can hold — grain and vegetables in one', 'Soft potato filling suits gums and front teeth', 'Easy to cook alongside the family breakfast', 'Add protein on the road: pair it with the banana–sattu mash'],
+    donts: ['No salt or chilli in her filling', "Don't cook crisp", 'Throw away what is left after the time limit — don\'t save it for later'],
+    source: ['icmr', 'who5k', 'fsis'],
+  },
+  {
+    id: 'travel-steamed-ragi-banana-squares', title: 'Steamed Ragi–Banana Squares', slot: 'snack', minAgeMonths: 12, prepMinutes: 30,
+    texture: 'family', portion: '2 small squares (≈ ½ medium katori)',
+    ingredients: [{ name: 'ragi', qty: '3 tbsp flour (30 g)', g: 30 }, { name: 'suji', qty: '1 tbsp (15 g)', g: 15 }, { name: 'banana', qty: '1 ripe, mashed (80 g)', g: 80 }, { name: 'curd', qty: '2 tbsp (40 g)', g: 40 }, { name: 'ghee', qty: '1 tsp', g: 5 }],
+    foodGroups: ['grains', 'fruits', 'dairy'], mddGroups: ['grains', 'dairy', 'otherFV'], allergens: ['wheat', 'cow milk'], choking: ['Soft and spongy — it should squash between finger and thumb', 'Cut into small squares; no hard edges'],
+    cuisine: 'Indian',
+    travel: { how: 'cool', keeps: 'Cooked food: 2 hours at most at room temperature, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. With an ice pack in an insulated bag it can last until a meal later the same day, as long as the ice pack is still frozen and the food still feels fridge-cold. If the ice pack has melted, don\'t give it.',
+      pack: ['Let the squares cool a short while, covered, then pack in a lidded box — the clock starts when they come out of the steamer', 'An insulated bag with an ice pack for longer trips'] },
+    steps: [
+      'Mix ragi flour, suji, mashed banana, curd and a little water into a thick batter; rest 10 min.',
+      'Pour into a small steel tin greased with ghee.',
+      'Steam in a covered pan or a pressure cooker without the whistle for 20 min, until a knife comes out clean.',
+      'Cool, then cut into small squares.',
+    ],
+    dos: ['A soft steamed bake with no oven and no sugar — banana does the sweetening', 'Ragi brings calcium and iron', 'Easy to hold in the car'],
+    donts: ['No sugar, jaggery or honey', 'Not store-bought cake or muffins — those carry added sugar', 'Eat it the same day'],
+    source: ['icmr', 'who5k', 'nhsbsl', 'fsis'],
+  },
 ];
 
 // ── Food-icon map — ingredient base name → { icon: zif-* sprite id, c: food
@@ -22704,6 +22966,7 @@ const FOOD_ICON = {
   // grains & cereals
   rice: { icon: 'rice', c: '#d8c79f' }, ragi: { icon: 'millet', c: '#b06a44' },
   oats: { icon: 'oats', c: '#d4bb7c' }, wheat: { icon: 'wheat', c: '#d9a945' },
+  vermicelli: { icon: 'wheat', c: '#e2c48a' },
   bread: { icon: 'wheat', c: '#d9a945' }, suji: { icon: 'suji', c: '#e7dcc2' },
   poha: { icon: 'suji', c: '#e7dcc2' }, dalia: { icon: 'dalia', c: '#d8c0a0' },
   barley: { icon: 'barley', c: '#d6c486' }, quinoa: { icon: 'quinoa', c: '#d2b288' },
@@ -22712,7 +22975,7 @@ const FOOD_ICON = {
   'moong dal': { icon: 'dal', c: '#9bb24a' }, 'toor dal': { icon: 'dal', c: '#e8bd4e' },
   'masoor dal': { icon: 'dal', c: '#d98a55' }, 'chana dal': { icon: 'dal', c: '#cda05c' },
   'urad dal': { icon: 'dal', c: '#7a7066' }, dal: { icon: 'dal', c: '#9bb24a' },
-  chana: { icon: 'chana', c: '#cda05c' }, rajma: { icon: 'rajma', c: '#9c4338' },
+  chana: { icon: 'chana', c: '#cda05c' }, sattu: { icon: 'chana', c: '#d8b27a' }, rajma: { icon: 'rajma', c: '#9c4338' },
   peanut: { icon: 'peanut', c: '#d9b27a' }, sprouts: { icon: 'sprouts', c: '#86c258' },
   // vegetables
   carrot: { icon: 'carrot', c: '#e8843a' }, spinach: { icon: 'spinach', c: '#5a9a42' },
@@ -22726,6 +22989,7 @@ const FOOD_ICON = {
   banana: { icon: 'banana', c: '#e9c44a' }, apple: { icon: 'apple', c: '#d2473f' },
   pear: { icon: 'pear', c: '#bcc758' }, mango: { icon: 'mango', c: '#f0a83a' },
   avocado: { icon: 'avocado', c: '#5f7f33' }, date: { icon: 'date', c: '#7a4a2c' },
+  chiku: { icon: 'date', c: '#a0714a' },
   papaya: { icon: 'papaya', c: '#e88a4a' }, pomegranate: { icon: 'pomegranate', c: '#c23a52' },
   blueberry: { icon: 'blueberry', c: '#5560a8' }, coconut: { icon: 'coconut', c: '#9c7a52' },
   // dairy & fats
@@ -22744,6 +23008,7 @@ const FOOD_ICON = {
   mutton: { icon: 'mutton', c: '#c8746a' },
   // spices & sweeteners
   turmeric: { icon: 'turmeric', c: '#e0962e' }, cinnamon: { icon: 'cinnamon', c: '#a5623a' },
+  cardamom: { icon: 'cumin', c: '#8fa86a' },
   cumin: { icon: 'cumin', c: '#9c7548' }, coriander: { icon: 'coriander', c: '#5a9a42' },
   mint: { icon: 'mint', c: '#5aa05a' }, ginger: { icon: 'ginger', c: '#d6b483' },
   jaggery: { icon: 'jaggery', c: '#a5623a' }, honey: { icon: 'honey', c: '#e8a93a' },
@@ -43423,6 +43688,14 @@ const RECIPE_SLOT_META = {
   snack:     { label: 'Snack',     icon: 'spoon' },
 };
 const RECIPE_SLOT_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'];
+// Travel set (recipes.js r.travel.how) — how the food is packed, in the order a
+// parent reaches for it: nothing cooked sitting out → hot in a flask → kept cold.
+const RECIPE_TRAVEL_META = {
+  spot:    { label: 'Made on the spot',  icon: 'leaf' },
+  thermos: { label: 'Hot in a flask',    icon: 'flame' },
+  cool:    { label: 'Cooked at home, kept cool', icon: 'snow' },
+};
+const RECIPE_TRAVEL_ORDER = ['spot', 'thermos', 'cool'];
 // Polarity → flag chrome (mirrors renderFoodDetailSheet FD_POLARITY, M-S / K-6).
 const _RECIPE_FD_POLARITY = {
   encourage:   { cls: 'fd-flag-encourage',   ic: 'sprout' },
@@ -43735,6 +44008,16 @@ function _recipeDetailHtml(r, ageMonths) {
     const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
     rows += _recipeProw('steps', 'chef', 'How to make it', teaser, body, false);
   }
+  // Travel set: how long it keeps away from a fridge, and what to pack.
+  const tm = r.travel && RECIPE_TRAVEL_META[r.travel.how];
+  if (tm) {
+    let body = r.travel.keeps ? `<div class="rcp-serving">${zi('timer')} <span>${escHtml(r.travel.keeps)}</span></div>` : '';
+    if (Array.isArray(r.travel.pack) && r.travel.pack.length) {
+      body += `<ol class="recipe-steps">${r.travel.pack.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol>`;
+    }
+    // Open by default: the keeping time is safety content, like the chew prep (V-C-274-8).
+    rows += _recipeProw('travel', 'timer', 'Packing for travel', tm.label, body, true);
+  }
   if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
     let body = '<div class="combo-dos">';
     if (r.dos) body += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
@@ -43920,6 +44203,23 @@ function renderDietRecipes() {
     html += `<div class="recipe-empty">${zi('spoon')} Keep logging meals for a few days and personalised recipe ideas will appear here. Meanwhile, browse the catalog below.</div>`;
   }
   html += '</div>';
+
+  // ── (a2) For travel — the recipes that pack for a day out, grouped by how they travel ──
+  const travel = surfaced.filter(r => r.travel && RECIPE_TRAVEL_META[r.travel.how]);
+  if (travel.length) {
+    html += `<div class="col-full"><div class="recipes-sec-label">For travel</div>`;
+    html += `<p class="recipes-sub-note">Food that packs well for a day out or a journey. Cooked food can sit out for 2 hours at most, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. For a longer trip, pack it hot in a flask or cold with an ice pack straight away, not after it has been sitting out. Each recipe says how to pack it. <span class="rcp-serving-src">WHO · USDA FSIS</span></p>`;
+    for (const how of RECIPE_TRAVEL_ORDER) {
+      const inHow = travel.filter(r => r.travel.how === how);
+      if (!inHow.length) continue;
+      inHow.sort((a, b) => _recipeEffectiveMinAge(a) - _recipeEffectiveMinAge(b));
+      const meta = RECIPE_TRAVEL_META[how];
+      html += `<div class="recipe-group"><div class="recipe-group-head">${zi(meta.icon)}<span class="recipe-group-title">${escHtml(meta.label)}</span><span class="recipe-group-count">${inHow.length}</span></div>`;
+      for (const r of inHow) html += _recipeRowHtml(r, 't', ageMonths, { showSlot: true });
+      html += '</div>';
+    }
+    html += '</div>';
+  }
 
   // ── (b) Browsable catalog grouped by meal slot ──
   html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;

@@ -671,6 +671,14 @@ const RECIPE_SLOT_META = {
   snack:     { label: 'Snack',     icon: 'spoon' },
 };
 const RECIPE_SLOT_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'];
+// Travel set (recipes.js r.travel.how) — how the food is packed, in the order a
+// parent reaches for it: nothing cooked sitting out → hot in a flask → kept cold.
+const RECIPE_TRAVEL_META = {
+  spot:    { label: 'Made on the spot',  icon: 'leaf' },
+  thermos: { label: 'Hot in a flask',    icon: 'flame' },
+  cool:    { label: 'Cooked at home, kept cool', icon: 'snow' },
+};
+const RECIPE_TRAVEL_ORDER = ['spot', 'thermos', 'cool'];
 // Polarity → flag chrome (mirrors renderFoodDetailSheet FD_POLARITY, M-S / K-6).
 const _RECIPE_FD_POLARITY = {
   encourage:   { cls: 'fd-flag-encourage',   ic: 'sprout' },
@@ -983,6 +991,16 @@ function _recipeDetailHtml(r, ageMonths) {
     const teaser = `${r.steps.length} steps${r.prepMinutes ? ' · ' + r.prepMinutes + ' min' : ''}`;
     rows += _recipeProw('steps', 'chef', 'How to make it', teaser, body, false);
   }
+  // Travel set: how long it keeps away from a fridge, and what to pack.
+  const tm = r.travel && RECIPE_TRAVEL_META[r.travel.how];
+  if (tm) {
+    let body = r.travel.keeps ? `<div class="rcp-serving">${zi('timer')} <span>${escHtml(r.travel.keeps)}</span></div>` : '';
+    if (Array.isArray(r.travel.pack) && r.travel.pack.length) {
+      body += `<ol class="recipe-steps">${r.travel.pack.map(x => `<li>${escHtml(x)}</li>`).join('')}</ol>`;
+    }
+    // Open by default: the keeping time is safety content, like the chew prep (V-C-274-8).
+    rows += _recipeProw('travel', 'timer', 'Packing for travel', tm.label, body, true);
+  }
   if ((r.dos && r.dos.length) || (r.donts && r.donts.length)) {
     let body = '<div class="combo-dos">';
     if (r.dos) body += r.dos.map(d => `<div class="do">${zi('check')} ${escHtml(d)}</div>`).join('');
@@ -1168,6 +1186,23 @@ function renderDietRecipes() {
     html += `<div class="recipe-empty">${zi('spoon')} Keep logging meals for a few days and personalised recipe ideas will appear here. Meanwhile, browse the catalog below.</div>`;
   }
   html += '</div>';
+
+  // ── (a2) For travel — the recipes that pack for a day out, grouped by how they travel ──
+  const travel = surfaced.filter(r => r.travel && RECIPE_TRAVEL_META[r.travel.how]);
+  if (travel.length) {
+    html += `<div class="col-full"><div class="recipes-sec-label">For travel</div>`;
+    html += `<p class="recipes-sub-note">Food that packs well for a day out or a journey. Cooked food can sit out for 2 hours at most, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. For a longer trip, pack it hot in a flask or cold with an ice pack straight away, not after it has been sitting out. Each recipe says how to pack it. <span class="rcp-serving-src">WHO · USDA FSIS</span></p>`;
+    for (const how of RECIPE_TRAVEL_ORDER) {
+      const inHow = travel.filter(r => r.travel.how === how);
+      if (!inHow.length) continue;
+      inHow.sort((a, b) => _recipeEffectiveMinAge(a) - _recipeEffectiveMinAge(b));
+      const meta = RECIPE_TRAVEL_META[how];
+      html += `<div class="recipe-group"><div class="recipe-group-head">${zi(meta.icon)}<span class="recipe-group-title">${escHtml(meta.label)}</span><span class="recipe-group-count">${inHow.length}</span></div>`;
+      for (const r of inHow) html += _recipeRowHtml(r, 't', ageMonths, { showSlot: true });
+      html += '</div>';
+    }
+    html += '</div>';
+  }
 
   // ── (b) Browsable catalog grouped by meal slot ──
   html += `<div class="col-full"><div class="recipes-sec-label">Browse recipes</div>`;
