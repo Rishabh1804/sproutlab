@@ -174,7 +174,7 @@ The design floor's 6-second rule (§11), the half-awake test and the one-gesture
 |---|---|---|
 | CL-1 | Plan a meal from a recipe (Add to plan → day → done; slot preset) | ≤ 3 taps |
 | CL-2 | Log a planned meal ("She ate this") | 1 tap, plus an 8 s undo |
-| CL-3 | Today's card on open | The **next meal** leads. Nothing sits above it except a safety lead. |
+| CL-3 | Today's card on open | The **next meal** leads. Nothing sits above it except a safety lead, or, on a travel day only, the Pack for today list (the travel day's answer). |
 | CL-4 | Each slot until tapped | One line: food names, plus the safety lead when there is one, plus one action. |
 | CL-5 | Slot picker before scroll or search | ≤ 5 choices |
 | CL-6 | Repeated text on one screen | None (the 2 h rule appears once) |
