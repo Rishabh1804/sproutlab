@@ -326,4 +326,12 @@ test.describe('meal planner UI', () => {
     expect(names).not.toContain('banana');
     expect(names).toContain('rice');
   });
+
+  test('a meal planned now shows on the Diet log card without a reload (V-V-279-26)', async ({ page }) => {
+    await page.evaluate(() => { const w = window as any; w.switchDietSub(document.querySelector('[data-diet-sub=log]')); });
+    await page.evaluate(() => { const w = window as any; w.switchDietSub(document.querySelector('[data-diet-sub=recipes]')); });
+    await page.evaluate(() => { const w = window as any; w._mpSetSlot(w.today(), 'dinner', [{ kind: 'food', name: 'pear' }]); w.renderMealPlanSection(); });
+    await page.evaluate(() => { const w = window as any; w.switchDietSub(document.querySelector('[data-diet-sub=log]')); });
+    await expect(page.locator('.fc-card-dinner .fc-planned-chip')).toContainText('Pear');
+  });
 });

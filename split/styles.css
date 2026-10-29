@@ -12187,13 +12187,15 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-entry { flex:1 1 100%; min-width:0; display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) var(--sp-10); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-lg); background:var(--card-bg); }
 .mp-entry { box-shadow:0 1px 3px var(--shadow); }
 .mp-entry--btn { font:inherit; text-align:left; cursor:pointer; min-height:44px; }
-.mp-entry-chev { flex:0 0 auto; display:inline-flex; color:var(--light); transition:transform var(--ease-fast); }
+.mp-entry-chev { flex:0 0 auto; display:inline-flex; color:var(--mid); transition:transform var(--ease-fast); }
 .mp-entry-chev .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .mp-entry--btn[aria-expanded="true"] .mp-entry-chev { transform:rotate(180deg); }
 .mp-item { flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); min-width:0; }
 .mp-item:not(.mp-item--recipe) { flex:0 1 auto; }
 .mp-item--recipe > .mp-entry { flex:1 1 0; }
 .mp-item .mp-iconbtn { flex:0 0 auto; }
+.mp-recipe-card-foot { display:flex; justify-content:center; margin-top:var(--sp-8); }
+.mp-recipe-card-foot .zi { transform:rotate(180deg); }
 .mp-recipe-card { flex-basis:100%; margin:0 0 var(--sp-4); padding:var(--sp-10) var(--sp-12); border:1px solid var(--card-border); border-radius:var(--r-lg); background:var(--card-bg); }
 .mp-entry--gen { background:var(--rc-fl, var(--card-bg)); }
 [data-theme="dark"] .mp-entry--gen { background:var(--rc-fd, var(--surface)); }

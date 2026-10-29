@@ -8297,7 +8297,8 @@ function _mpSlotHtml(key, slot, opts) {
     const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
     const rm = open ? `<button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpRemoveEntry" data-arg="${escAttr(id)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')}</button>` : '';
     return `<div class="mp-item${r ? ' mp-item--recipe' : ''}">${_mpItemHtml(it, travel && logged === null, r ? { arg: id, open: isOpen } : null)}${rm}`
-      + (r && isOpen ? `<div class="mp-recipe-card recipe-detail">${_recipeDetailHtml(r, age, { noPlan: true, lead })}</div>` : '') + `</div>`;
+      + (r && isOpen ? `<div class="mp-recipe-card recipe-detail">${_recipeDetailHtml(r, age, { noPlan: true, lead })}`
+        + `<div class="mp-recipe-card-foot"><button class="btn btn-soft btn-compact" data-action="mpToggleEntry" data-arg="${escAttr(id)}">${zi('chevron-down')} Close recipe</button></div></div>` : '') + `</div>`;
   }).join('')}</div>` : '';
   let body = '';
   if (open && items.length) {
@@ -8405,7 +8406,14 @@ if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') _mpRefreshIfStale(); });
   setInterval(_mpRefreshIfStale, 60000);
 }
+// The Diet log cards draw once; an empty one re-draws when the plan changes, so a meal planned a
+// moment ago shows on its Planned rail without a reload (V-V-279-26).
+function _mpRefreshLogCards() {
+  if (typeof _fcInstances === 'undefined') return;
+  _fcInstances.forEach(i => { if (i.variant === 'card' && !i.items.length && i.container && i.container.isConnected) i.render(); });
+}
 function renderMealPlanSection() {
+  _mpRefreshLogCards();
   const root = document.getElementById('dietPlanRoot');
   if (!root) return;
   _mpSeenCache = null;   // re-read foods and the diary on every render
@@ -8590,6 +8598,7 @@ function _mpRefreshPicker() {
   const body = document.getElementById('mpPickerBody');
   if (!st || !body) return;
   body.innerHTML = _mpPickerBody(st.key, st.slot);
+  _mpRefreshLogCards();
   const input = body.querySelector('.mp-search');
   if (input) input.addEventListener('input', () => _mpPickerSearch(input.value));
 }
@@ -8681,6 +8690,7 @@ function _mpRestoreDay(key, snap) {
   renderMealPlanSection();
 }
 function _mpDoCopy(from, to) {
+  _mpOpenEntry = null;
   const snap = _mpSnapshotDay(to);
   if (!_mpCopyDay(from, to)) return;
   _mpCloseSheet(true);
@@ -8701,8 +8711,17 @@ function mpDispatch(action, arg, btn) {
       break;
     }
     case 'mpThisWeek': _mpSel = today(); _mpWeek = _mpWeekStart(_mpSel); _mpOpenSlot = null; renderMealPlanSection(); break;
-    case 'mpToggleSlot': _mpOpenSlot = (_mpOpenSlot === arg) ? null : arg; renderMealPlanSection(); break;
-    case 'mpToggleEntry': _mpOpenEntry = (_mpOpenEntry === arg) ? null : arg; renderMealPlanSection(); break;
+    case 'mpToggleSlot': _mpOpenSlot = (_mpOpenSlot === arg) ? null : arg; _mpOpenEntry = null; renderMealPlanSection(); break;
+    case 'mpToggleEntry': {
+      const closing = _mpOpenEntry === arg;
+      _mpOpenEntry = closing ? null : arg;
+      renderMealPlanSection();
+      if (closing) {   // closed from the card's foot: bring its entry back into view (V-V-279-27)
+        const e = [...document.querySelectorAll('#dietPlanRoot .mp-entry--btn')].find(b => b.getAttribute('data-arg') === arg);
+        if (e && e.scrollIntoView) e.scrollIntoView({ block: 'nearest' });
+      }
+      break;
+    }
     case 'mpApplyPlan': _mpApplyPlanToComposer(btn, arg); break;
     case 'mpToggleTravel': {
       const on = !_mpTravelOn(_mpPlan().days[arg]);
@@ -8713,6 +8732,7 @@ function mpDispatch(action, arg, btn) {
     case 'mpOpenPicker': save('ziva_mp_seen', true); _mpOpenPicker(parts[0], parts[1]); break;
     case 'mpPickerAll': if (_mpSheetState) { _mpSheetState.all = !_mpSheetState.all; _mpRefreshPicker(); } break;
     case 'mpPick': {
+      _mpOpenEntry = null;
       const st = _mpSheetState;
       const r = st && _mpRecipe(arg);
       if (!r || !_mpPickable(r, st.key)) return;
@@ -8782,6 +8802,7 @@ function mpDispatch(action, arg, btn) {
       confirmAction(`<strong>Clear ${escHtml(_mpDayTitle(key))}'s plan?</strong><br>This removes the planned meals for the day. Meals you've logged stay in her diary.`, () => {
         const snap = _mpSnapshotDay(key);
         if (!_mpClearDay(key)) return;
+        _mpOpenEntry = null;
         _mpOpenSlot = null;
         renderMealPlanSection();
         showQLToast('Plan cleared', 8000, () => _mpRestoreDay(key, snap));
