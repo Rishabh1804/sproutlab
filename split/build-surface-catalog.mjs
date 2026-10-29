@@ -211,23 +211,44 @@ const rx = (id, extra = '') => {
 const zif = ic => ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
 // A planned recipe: the recipe-row standard at slot size — food-group rail, grams-weighted
 // fingerprint fade (light/dark), the lead ingredient's food icon (diet.js _recipeRowHtml).
-function recipeEntry(id) {
+function recipeEntry(id, { travel = false } = {}) {
   const r = RECIPES[id];
   const fp = APP.fp(r);
   const style = (fp ? `--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '') + `--rc-rail:${APP.rail(APP.grp(r))}`;
   const n = (r.choking || []).length;
+  // On a travel day the box says how it travels and the check that decides "serve or not"
+  // (V-M-278-9): the one cue a parent must see without tapping. Neutral ink, like the chew cue.
+  const how = travel && r.travel ? travelMode(id) : null;
+  const meta = (how ? `<span class="mp-cue">${zi(how[0])} ${esc(how[1])}${how[3] ? ' · ' + esc(how[3]) : ''}</span>` : '')
+    + (n ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${steps(n)}</span>` : '');
   return `<span class="mp-entry${fp ? ' mp-entry--gen' : ''}" style="${style}">${zif(APP.icon(((r.ingredients || [])[0] || {}).name))}`
     + `<span class="mp-entry-main"><span class="mp-entry-t">${esc(r.title)}</span>`
-    + (n ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${steps(n)}</span>` : '') + `</span></span>`;
+    + (meta ? `<span class="mp-entry-meta">${meta}</span>` : '') + `</span></span>`;
 }
 // A free food, or a recipe named inline: the ingredient-pill standard (.recipe-chip + its .fdom-chip wash).
 function foodChip(name, label = name) {
   const d = APP.dom(name);
   return `<span class="recipe-chip${d ? ' fdom-chip--' + d : ''}">${zif(APP.icon(name))}${esc(label)}</span>`;
 }
-const recipeChip = id => foodChip(((RECIPES[id].ingredients || [])[0] || {}).name, RECIPES[id].title);
-const MODE = { thermos: ['thermos', 'In a flask', 'WHO'], cool: ['timer', 'Ice-pack bag', 'WHO · USDA FSIS'], spot: ['clock', 'Made on the spot', ''] };
-const modeChip = how => `<span class="recipe-chip mp-mode">${zi(MODE[how][0])}${MODE[how][1]}</span>`;
+// How a travel recipe travels: [icon, label, source tag, glance check, the keeps sentence a
+// parent must act on]. The glance check is short (derived from the keeps text); the serve-time
+// sentence is quoted verbatim and asserted to be in every keeps string of that mode, so the
+// short form cannot drift from the full rule (V-C-278-14, V-M-278-9).
+const MODE = {
+  thermos: ['thermos', 'In a flask', 'WHO', 'must be steaming', 'If it is only warm, throw it away'],
+  cool: ['timer', 'Ice-pack bag', 'WHO · USDA FSIS', 'must be fridge-cold', 'If the ice pack has melted, don\'t give it'],
+  spot: ['clock', 'Made on the spot', '', '', ''],
+};
+for (const r of Object.values(RECIPES)) {
+  const check = r.travel && MODE[r.travel.how][4];
+  if (check && !r.travel.keeps.includes(check)) throw new Error(`catalog: ${r.id} keeps text no longer says "${check}"`);
+}
+// Spot recipes that need a flask of boiling water (P1b: a corpus field, travel.waterFlask, Ceres).
+const WATER_FLASK = new Set(['travel-flask-oats-banana']);
+const travelMode = id => {
+  const how = RECIPES[id].travel.how;
+  return how === 'spot' && WATER_FLASK.has(id) ? ['clock', 'Mixed on the spot', '', ''] : MODE[how];
+};
 const steps = n => n + (n === 1 ? ' step' : ' steps');
 const rcpSafe = (level, text) => `<div class="rcp-safe rcp-safe--${level}">${zi(level === 'safe' ? 'check' : level === 'flag' ? 'alert-circle' : 'warn')} <span>${esc(text)}</span></div>`;
 
@@ -265,10 +286,10 @@ function mpAct(a, slot) {
 }
 function mpSlot({ slot, items = [], newTag, lead, act = 'ate', open, body = '', mode = false }) {
   const [label, icon] = SLOT[slot];
-  const how = mode && items[0] && items[0].r && RECIPES[items[0].r].travel ? RECIPES[items[0].r].travel.how : '';
+  const travel = mode && !(act && act.logged);
   const entries = items.length ? `<div class="mp-entries" role="button" tabindex="-1" data-action="mpToggleSlot" data-arg="${slot}">`
-    + items.map(it => it.r ? recipeEntry(it.r) : foodChip(it.f)).join('')
-    + (how ? modeChip(how) : '') + (newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Ziva: ${esc(newTag)}</span>` : '') + `</div>` : '';
+    + items.map(it => it.r ? recipeEntry(it.r, { travel }) : foodChip(it.f)).join('')
+    + (newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Ziva: ${esc(newTag)}</span>` : '') + `</div>` : '';
   return `<div class="mp-slot${open ? ' mp-slot--open' : ''}">`
     + `<span class="mp-slot-ic">${zi(icon)}</span>`
     + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
@@ -306,29 +327,39 @@ function packLines(ids) {
   });
   return out;
 }
-// How it keeps, verbatim, for one recipe (V-C-278-3): inside that meal's pack row, and
-// as the collapsed "Before you serve" row on the Next lead.
+// How it keeps, verbatim, for one recipe (V-C-278-3): inside that meal's pack row, and in the
+// "Before you serve" row whose subtitle is the act-on-it sentence (V-C-278-14).
 function keepsLine(r) {
   const [icon, , src] = MODE[r.travel.how];
   return `<div class="rcp-serving">${zi(icon)} <span><strong>How it keeps:</strong> ${esc(r.travel.keeps)}`
     + (src ? ` <span class="rcp-serving-src">${src}</span>` : '') + `</span></div>`;
 }
-// Pack for today: a one-line summary (flask count, ice-pack bag), then one collapsed row per
-// meal — its own pack lines and keeping rule inside. Short at a glance; nothing lost.
-function packBlock(ids, { when = 'today', collapsed = false } = {}) {
-  const rs = ids.map(id => RECIPES[id]).filter(r => r.travel);
-  if (collapsed) return `<div class="mp-pack">${prow('travel', 'bag', `Packed: ${packLines(ids).length} things`, 'The list from this morning', ol(packLines(ids)), false)}</div>`;
-  const flasks = rs.filter(r => r.travel.how === 'thermos').length;
-  const sum = [flasks ? `<span class="recipe-chip mp-mode">${zi('thermos')}${flasks} food flask${flasks > 1 ? 's' : ''}</span>` : '',
-    rs.some(r => r.travel.how === 'cool') ? modeChip('cool') : ''].join('');
-  const rows = rs.map(r => prow('travel', MODE[r.travel.how][0], r.title, `${r.travel.pack.length} things · ${MODE[r.travel.how][1]}`,
-    ol(r.travel.pack) + keepsLine(r), false)).join('');
-  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${when}</div><div class="mp-entries">${sum}</div><div class="rcp-prows">${rows}</div></div>`;
+// One pack row per meal: the recipe's own pack lines, then each free food planned with it as a
+// plain line (V-C-278-16), then its keeping rule. Before packing it opens the block; after the
+// first log the block collapses to "Packed this morning" holding the same rows (V-C-278-17, V-M-278-10).
+const mealPackLines = m => [...RECIPES[m.r].travel.pack, ...(m.f || []).map(f => f.charAt(0).toUpperCase() + f.slice(1))];
+function packBlock(meals, { when = 'today', collapsed = false } = {}) {
+  const ms = meals.filter(m => RECIPES[m.r].travel);
+  const total = ms.reduce((n, m) => n + mealPackLines(m).length, 0);
+  const rows = `<div class="rcp-prows">` + ms.map(m => prow('travel', travelMode(m.r)[0], RECIPES[m.r].title, `${mealPackLines(m).length} things`,
+    ol(mealPackLines(m)) + keepsLine(RECIPES[m.r]), false)).join('') + `</div>`;
+  if (collapsed) return `<div class="mp-pack">${prow('travel', 'bag', 'Packed this morning', `${total} things`, rows, false)}</div>`;
+  // Every flask the day needs: food flasks (thermos meals) and hot-water flasks (V-C-278-15, V-V-278-18).
+  const food = ms.filter(m => RECIPES[m.r].travel.how === 'thermos').length;
+  const water = ms.filter(m => WATER_FLASK.has(m.r)).length;
+  const sum = [food ? `<span class="recipe-chip mp-mode">${zi('thermos')}${food} food flask${food > 1 ? 's' : ''}</span>` : '',
+    water ? `<span class="recipe-chip mp-mode">${zi('thermos')}${water} hot-water flask${water > 1 ? 's' : ''}</span>` : '',
+    ms.some(m => RECIPES[m.r].travel.how === 'cool') ? `<span class="recipe-chip mp-mode">${zi('timer')}Ice-pack bag</span>` : ''].join('');
+  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${when}</div><div class="mp-entries">${sum}</div>${rows}</div>`;
 }
-const serveRow = id => `<div class="rcp-prows">${prow('travel', MODE[RECIPES[id].travel.how][0], 'Before you serve', 'How it keeps', keepsLine(RECIPES[id]), false)}</div>`;
+const serveProw = (id, open = false) => {
+  const how = RECIPES[id].travel.how;
+  return prow('travel', MODE[how][0], 'Before you serve', MODE[how][4] ? MODE[how][4] + '.' : 'How it keeps', keepsLine(RECIPES[id]), open);
+};
+const serveRow = id => `<div class="rcp-prows">${serveProw(id)}</div>`;
 
 // A travel day seen on the day itself: Pack for today above the lead (CL-3).
-const TRAVEL_DAY = ['travel-flask-oats-banana', 'travel-veg-dalia-flask', 'travel-steamed-ragi-banana-squares'];
+const TRAVEL_DAY = [{ r: 'travel-flask-oats-banana' }, { r: 'travel-veg-dalia-flask', f: ['banana'] }, { r: 'travel-steamed-ragi-banana-squares' }];
 function travelCard(state) {
   const fresh = state === 'fresh';
   const [b, l, s, d] = travelSlots(state === 'lunchOpen', fresh);
@@ -344,17 +375,19 @@ const travelSlots = (lunchOpen, fresh) => {
       body: fresh ? '' : lunchOpen ? `<div class="rcp-prows">`
         + prow('chew', 'tooth', 'Make it safe to chew', steps(lunch.choking.length), ol(lunch.choking), true)
         + prow('travel', 'timer', 'Packing', `${lunch.travel.pack.length} things`, ol(lunch.travel.pack), false)
-        + prow('travel', 'thermos', 'Before you serve', 'How it keeps', keepsLine(lunch), true)
+        + serveProw('travel-veg-dalia-flask', true)
         + `</div>` : serveRow('travel-veg-dalia-flask') }),
     mpSlot({ slot: 'snack', ...rx('travel-steamed-ragi-banana-squares'), mode: true }),
     // Ice-pack options first: a flask packed in the morning may fail its heat check by evening (V-C-278-12a).
+    // Suggestions are add actions, never the planned-food shape (V-V-278-19).
     mpSlot({ slot: 'dinner', act: 'add', body: `<div class="mp-gap-note">No travel dinner yet. These pack well for dinner too:</div>`
-      + `<div class="mp-entries">${recipeChip('travel-soft-palak-thepla')}${recipeChip('travel-aloo-carrot-paratha-rolls')}</div>` }),
+      + `<div class="mp-entries">${['travel-soft-palak-thepla', 'travel-aloo-carrot-paratha-rolls'].map(id =>
+        `<button class="mp-add-btn" data-action="mpPlanSuggestion" data-arg="dinner:${id}">${zi('plus')} ${esc(RECIPES[id].title)}</button>`).join('')}</div>` }),
   ];
 };
 // Two flask meals on a future travel day: the flask count (V-C-275-7, V-C-278-1).
 const twoFlaskCard = () => mpCard({ title: 'Saturday, 7 Nov', travel: true,
-  pack: packBlock(['travel-veg-dalia-flask', 'toddler-veg-khichdi'], { when: 'Sat' }),
+  pack: packBlock([{ r: 'travel-veg-dalia-flask' }, { r: 'toddler-veg-khichdi' }], { when: 'Sat' }),
   slots: [mpSlot({ slot: 'breakfast', act: 'add' }), mpSlot({ slot: 'lunch', ...rx('travel-veg-dalia-flask'), mode: true, act: '' }),
     mpSlot({ slot: 'dinner', ...rx('toddler-veg-khichdi'), mode: true, act: '' }), mpSlot({ slot: 'snack', act: 'add' })] });
 
@@ -381,7 +414,7 @@ const picker = ({ search = '', noMatch = false } = {}) => `<div class="mp-picker
       + pickRecipe('sweet-potato-jeera-bites', 'Not had this week')
       + pickRow({ icon: 'spoon', title: `All snack recipes (${SNACKS})`, more: true, expanded: true, action: 'mpPickAll' })
       + pickRecipe('jeera-chaas')
-      + pickRecipe('banana-honey-toast') + `<p class="mp-picker-lock">From 2 years (honey counts as added sugar) · opens 4 Sep 2027 · can’t be planned yet</p>`
+      + `<div class="mp-locked">${pickRecipe('banana-honey-toast', 'Can’t be planned yet: honey counts as added sugar before 2 · opens 4 Sep 2027').replace('data-action="toggleRecipeRow"', 'aria-disabled="true"')}</div>`
       + pickRow({ icon: 'new-food', title: 'Plan a new food', why: 'Foods she has not had yet', action: 'mpPickNew' }))
   + `</div>`;
 
@@ -445,7 +478,7 @@ const PLANNER = [
   },
   {
     id: 'mp-travel', title: 'Planner 3 · Travel day',
-    note: 'Short at a glance, nothing lost. Pack for today is one summary line (flask count, ice-pack bag) and one collapsed row per meal; each row holds that meal’s own pack lines and its keeping rule, verbatim. Each travel slot carries a how-it-travels chip (In a flask · Ice-pack bag · Made on the spot); the next meal has a collapsed “Before you serve” row with its keeping rule. After the first log the pack block collapses to “Packed: 8 things”. Dinner has no travel recipe, so it offers the ice-pack lunches as chips. The travel state is in words on the toggle (“Travel day: on”). Food uses the house standard: recipe boxes (food-group rail, fingerprint fade, food icon) and food-group chips.',
+    note: 'Short at a glance; nothing lost. Pack for today is one line of what to carry (every flask the day needs, counted: food flasks and hot-water flasks; the ice-pack bag) and one collapsed row per meal, holding its own pack lines, any free food planned with it, and its keeping rule verbatim. After the first log the block collapses to “Packed this morning” with the same rows. Each unlogged travel meal box says how it travels and the check that decides serve-or-not (“In a flask · must be steaming”, “Ice-pack bag · must be fridge-cold”), in neutral ink beside the chew cue. The next meal’s collapsed “Before you serve” row shows the act-on-it sentence verbatim (“If it is only warm, throw it away.”); the full rule is one tap away, and the same row sits in any opened travel slot. Dinner’s gap offers the ice-pack lunches as add buttons, never in the planned-food shape. Travel state is in words on the toggle.',
     exemplars: [
       { label: '3 — Friday travel day, seen that morning, nothing logged', width: 360, html: travelCard('fresh') },
       { label: '3c — after the first log (breakfast); Next: Lunch', width: 360, html: travelCard('logged') },
