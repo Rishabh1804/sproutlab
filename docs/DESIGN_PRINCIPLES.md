@@ -400,6 +400,21 @@ Rationale: Parent holding a baby, tapping one-handed. 44px is ideal (`.chip` cla
 
 **Applies to:** buttons, chips, tappable list items, icon buttons, steppers, toggles, category cards, history headers.
 
+
+### Actions use the house buttons (no bespoke button styles)
+Every tappable action is one of the house components, never a new text-button, outline or dashed style (added 2026-10-29 after the meal-planner mock-ups shipped six bespoke button looks):
+
+| Role | Component | Notes |
+|---|---|---|
+| The one primary action on a screen | `.btn .btn-{domain}` (filled: `btn-sage`, `btn-peach`, `btn-rose`…) | At most one per screen or sheet; the domain colour of the surface |
+| Secondary actions | `.btn .btn-ghost` (+ `.btn-compact` inline) | Copy, Clear, Add, Cancel, "Plan anyway", week navigation |
+| A toggle that is on | `.btn .btn-{domain}` with `aria-pressed="true"`; off is `.btn-ghost` | State also in words ("Travel day: on") |
+| Suggestions to act on | `.sg-chip` | Never the planned-item / food-chip shape |
+| Confirm dialogs | `confirmAction()` / the `.confirm-box` + `.confirm-btns` shell | Ghost secondary, coloured primary; destructive → `btn-rose` |
+| Icon-only actions | `.btn .btn-ghost` round, with `aria-label` | Dismiss, previous / next |
+
+A surface may add layout and the 44px floor around these (HR-8, CL-7); it may not restyle them.
+
 ### HR-9: No persistent editing in overlays
 Overlays are for Read (viewing), Act (confirming), and single-field Quick Actions. Multi-field editing happens in page content or dedicated Flow overlays with dirty flags.
 

@@ -12097,12 +12097,13 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-head > .zi { width:var(--icon-sm); height:var(--icon-sm); color:var(--tc-sage); }
 .mp-head-title { flex:1; min-width:0; font-family:'Fraunces',serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); }
 .mp-weeknav { display:flex; align-items:center; gap:var(--sp-4); }
-.mp-navbtn, .mp-thisweek { min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-4); border:1px solid var(--card-border); background:var(--card-bg); border-radius:var(--r-full); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-xs); color:var(--mid); cursor:pointer; }
-.mp-navbtn { min-width:44px; }
-.mp-thisweek { padding:0 var(--sp-12); color:var(--tc-sage); }
-.mp-navbtn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+/* Planner actions use the house buttons (.btn + .btn-ghost / .btn-{domain}, .sg-chip, the
+   .confirm-box shell). Only the CL-7 44px floor, icon spacing and the round nav buttons live here. */
+.mp-section .btn, .mp-daycard .btn, .mp-picker .btn, .mp-confirm .btn, .mp-daycard .sg-chip { min-height:44px; gap:var(--sp-6); }
+.mp-section .btn .zi, .mp-daycard .btn .zi, .mp-confirm .btn .zi, .mp-daycard .sg-chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-navbtn, .mp-iconbtn { min-width:44px; padding:0; border-radius:var(--r-full); }
 .mp-navbtn--prev .zi { transform:rotate(180deg); }
-.mp-navbtn[disabled] { opacity:0.45; cursor:default; }
+.mp-navbtn[disabled] { opacity:0.45; cursor:default; transform:none; }
 .mp-navnote { flex-basis:100%; font-size:var(--fs-xs); color:var(--mid); }
 .mp-legend { display:flex; flex-wrap:wrap; gap:var(--sp-12); margin:0 0 var(--sp-6); font-size:var(--fs-xs); color:var(--mid); }
 .mp-legend span { display:inline-flex; align-items:center; gap:var(--sp-4); }
@@ -12134,9 +12135,6 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-dayhead { display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8); margin:0 0 var(--sp-8); }
 .mp-daycard--travel .mp-dayhead { background:var(--peach-light); margin:calc(-1 * var(--sp-12)) calc(-1 * var(--sp-12)) var(--sp-10); padding:var(--sp-10) var(--sp-12); }
 .mp-daytitle { flex:1; min-width:0; font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); }
-.mp-travel-toggle .zi { width:var(--icon-sm); height:var(--icon-sm); }
-.mp-travel-toggle { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-6); padding:0 var(--sp-12); border-radius:var(--r-full); border:1px solid var(--card-border); background:var(--card-bg); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-xs); color:var(--mid); cursor:pointer; }
-.mp-travel-toggle[aria-pressed="true"] { border-color:var(--peach); color:var(--tc-peach); }
 
 /* Pack for today + How it keeps (V-C-275-7/8, V-V-275-10) */
 .mp-pack { border:1px solid var(--peach); border-radius:var(--r-lg); padding:var(--sp-10) var(--sp-12); margin:0 0 var(--sp-10); }
@@ -12162,10 +12160,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-entry-new .zi { width:var(--icon-xs); height:var(--icon-xs); }
 .mp-slot .rcp-safe { flex-basis:100%; margin:var(--sp-2) 0 0; }
 .mp-slot-act { flex:0 0 auto; }
-.mp-ate-btn, .mp-add-btn { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-12); border-radius:var(--r-full); font-family:'Nunito',sans-serif; font-weight:800; font-size:var(--fs-xs); background:var(--card-bg); cursor:pointer; }
-.mp-ate-btn { border:1.5px solid var(--sage); color:var(--tc-sage); }
-.mp-add-btn { border:1.5px dashed var(--light); color:var(--mid); }
-.mp-ate-btn .zi, .mp-add-btn .zi, .mp-logged .zi { width:var(--icon-xs); height:var(--icon-xs); }
+.mp-logged .zi { width:var(--icon-xs); height:var(--icon-xs); }
 .mp-logged { min-height:44px; display:inline-flex; align-items:center; gap:var(--sp-4); font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
 .mp-slot--open .rcp-prows { flex-basis:100%; margin-top:var(--sp-4); }
 .mp-gap-note, .mp-hint, .mp-empty { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
@@ -12173,8 +12168,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-hint .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; }
 .mp-gap-note { padding:var(--sp-6) 0; }
 .mp-tomorrow { font-size:var(--fs-sm); color:var(--mid); padding:var(--sp-6) 0 var(--sp-2); }
-.mp-dayfoot { display:flex; flex-wrap:wrap; gap:var(--sp-12); margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--card-border); }
-.mp-textbtn { min-height:44px; background:none; border:none; padding:0 var(--sp-4); font-family:'Nunito',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--mid); cursor:pointer; }
+.mp-dayfoot { display:flex; flex-wrap:wrap; gap:var(--sp-8); margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--card-border); }
 
 /* Planned food — the house standard at slot size (per-recipe --rc-* / --zif-c values ride the
    CSS-Custom-Property Pivot Convention, DESIGN_PRINCIPLES.md; same as .recipe-row): a recipe is a recipe-row box (food-group
@@ -12217,11 +12211,9 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .mp-picker-more[aria-expanded="true"] > .zi { transform:rotate(180deg); }
 
 /* Confirms (new food / allergen) */
-.mp-confirm { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-xl); padding:var(--sp-16); }
+.mp-confirm { max-width:none; width:auto; }
 .mp-confirm-title { font-family:'Fraunces',serif; font-size:var(--fs-md); font-weight:600; color:var(--text); margin:0 0 var(--sp-6); }
-.mp-confirm-body { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin:0 0 var(--sp-12); }
-.mp-confirm-actions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-12); }
-.mp-confirm-actions .btn { min-height:44px; }
+.mp-confirm-link { margin:0 0 var(--sp-16); }
 
 /* empty / cold-start state */
 .recipe-empty { padding:var(--sp-16); text-align:center; color:var(--light); font-size:var(--fs-sm); line-height:var(--lh-relaxed); }
