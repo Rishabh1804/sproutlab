@@ -874,14 +874,22 @@ function renderDietFeverBanner() {
     '</div></div>';
 }
 
+function _illnessFoodIntroduced(f, introducedSet) {
+  const intro = [...introducedSet];
+  if (intro.some(i => _sameFood(i, f))) return true;
+  const parts = _foodIdentityKey(f).split(' ').filter(Boolean);
+  return parts.length > 1 && parts.every(p => intro.some(i => _sameFood(i, p)));
+}
+
 function getFeverDietFoods() {
   const introducedSet = new Set((foods || []).map(f => f.name.toLowerCase().trim()));
   const feverFoods = ['khichdi', 'curd', 'banana', 'rice', 'rice porridge', 'dal', 'dal water',
     'coconut water', 'buttermilk', 'pomegranate', 'apple', 'mashed potato', 'idli',
     'sabudana', 'oats porridge', 'ragi porridge', 'curd rice'];
   return feverFoods.filter(f => {
-    const base = _baseFoodName(f);
-    return [...introducedSet].some(i => _baseFoodName(i) === base || i.includes(f) || f.includes(i));
+    // Only foods she has had: the same food, or a dish whose every part she has had
+    // ("curd rice" needs curd AND rice). Never substring -- "pineapple" is not apple (V-K-276-3).
+    return _illnessFoodIntroduced(f, introducedSet);
   });
 }
 
@@ -1538,8 +1546,9 @@ function getDiarrhoeaDietFoods() {
     'coconut water', 'pomegranate', 'apple', 'mashed potato', 'idli', 'curd rice',
     'sabudana', 'oats porridge', 'ragi porridge', 'buttermilk'];
   return deFoods.filter(f => {
-    const base = _baseFoodName(f);
-    return [...introducedSet].some(i => _baseFoodName(i) === base || i.includes(f) || f.includes(i));
+    // Only foods she has had: the same food, or a dish whose every part she has had
+    // ("curd rice" needs curd AND rice). Never substring -- "pineapple" is not apple (V-K-276-3).
+    return _illnessFoodIntroduced(f, introducedSet);
   });
 }
 
@@ -2417,6 +2426,20 @@ function _psfFallbackToast() {
 }
 
 // Scan all meals for a given date and auto-add new foods to Foods Introduced
+// Earliest feedingData day (on or before `upTo`) whose meals hold this food (V-M-276-2).
+function _firstLoggedDate(food, upTo) {
+  const days = Object.keys(feedingData).filter(d => d <= upTo).sort();
+  for (const d of days) {
+    const e = feedingData[d];
+    if (!e) continue;
+    for (const m of ['breakfast','lunch','dinner','snack']) {
+      if (!isRealMeal(e[m])) continue;
+      if (e[m].split(/[,+]/).some(it => it.trim() && _sameFood(it.trim(), food))) return d;
+    }
+  }
+  return upTo;
+}
+
 function autoIntroduceFoodsFromDay(dateStr) {
   const entry = feedingData[dateStr];
   if (!entry) return;
@@ -2427,11 +2450,13 @@ function autoIntroduceFoodsFromDay(dateStr) {
       const clean = f.trim();
       if (clean.length <= 1) return;
       const base = _baseFoodName(clean.toLowerCase());
-      // Exact base match only: a substring match let "eggplant" stand in for
-      // "egg", so a logged allergen was never auto-introduced (V-C-275-14).
-      const alreadyExists = foods.some(fi => _baseFoodName(fi.name.toLowerCase().trim()) === base);
+      // Same-food identity (plurals folded), never substring: "eggplant" must not
+      // stand in for "egg", or a logged allergen is never introduced (V-C-275-14).
+      const alreadyExists = foods.some(fi => _sameFood(fi.name, clean));
       if (!alreadyExists) {
-        foods.push({ name: clean, reaction: 'ok', date: dateStr });
+        // Date it from the first logged meal that holds it, not this save: a food
+        // hidden by the old merge may have been eaten for months (V-M-276-2).
+        foods.push({ name: clean, reaction: 'ok', date: _firstLoggedDate(clean, dateStr) });
         added = true;
       }
     });
