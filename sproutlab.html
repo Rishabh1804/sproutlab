@@ -52127,7 +52127,7 @@ function mpDispatch(action, arg, btn) {
       const age = _mpAgeMonthsOn(arg);
       const gated = MP_SLOTS.flatMap(s => _mpLiveItems(st.key, s)).filter(it =>
         (it.kind === 'recipe' && _mpRecipe(it.id) && _recipeEffectiveMinAge(_mpRecipe(it.id)) > age)
-        || (it.kind === 'food' && (_fdAgeRule(it.name.toLowerCase()) || { minMonth: 0 }).minMonth > age)).map(_mpItemLabel);
+        || (it.kind === 'food' && typeof it.name === 'string' && (_fdAgeRule(it.name.toLowerCase()) || { minMonth: 0 }).minMonth > age)).map(_mpItemLabel);
       const from = st.key;
       if (gated.length) { _mpCloseSheet(true); confirmAction(`${escHtml(gated.join(', '))} ${gated.length > 1 ? 'aren\'t' : 'isn\'t'} for her age on ${escHtml(_mpShortDay(arg))} yet. Copy anyway? ${gated.length > 1 ? 'They' : 'It'} will show a flag on that day.`, () => _mpDoCopy(from, arg), 'Copy anyway', { cls: 'mp-confirm', onCancel: renderMealPlanSection }); }
       else _mpDoCopy(from, arg);
