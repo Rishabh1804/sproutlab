@@ -341,7 +341,7 @@ else:
 
 print("\nReference consult (foundation registries/constants read in OTHER jurisdictions):")
 if consult_note:
-    for r in consult_note:
+    for r in dict.fromkeys(consult_note):   # de-dupe: a hunk header and a changed line can name the same declaration
         print(r)
 else:
     print("  none — no foundation hunk, or its names are not read elsewhere.")
