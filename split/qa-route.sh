@@ -258,6 +258,23 @@ for m in changed:
                 add(gov, f"consult: {om} reads {n} (reference ripple from {m})")
                 consult_note.append(f"  {m}:{n}  <-reads--  {om}  [{prov}/{gov}]")
 
+# Care-content in the foundation (V-M-275-2): records whose CONTENT is parent-facing
+# care guidance always summon Maren on consequence, even when only a render or
+# engine file reads them (GENERAL_EMERGENCIES is read only by cards.js).
+CARE_CONTENT = re.compile(r"^(GENERAL_EMERGENCIES|VACC_\w+|SAFE_POOP_COLORS|POOP_COLOR\w*|medDoseSlots|vitDSupplement|getNextUpcomingVacc|calcMedicalScore)$")
+for m in changed:
+    if MODULE_PROVINCE.get(m) != FND:
+        continue
+    for line in file_diff(f"split/{m}").splitlines():
+        hd = None
+        if line.startswith("@@"):
+            hd = DECL.search(line.split("@@")[-1])
+        elif line[:1] in "+-" and not line.startswith(("+++", "---")):
+            hd = DECL.match(line[1:].lstrip())
+        if hd and CARE_CONTENT.match(hd.group(1)):
+            add("Maren", f"consult: care-content {hd.group(1)} in {m} (care consequence)")
+            consult_note.append(f"  {m}:{hd.group(1)}  care-content  [Care/Maren]")
+
 print("\nCross-province ripple (dependents of changed code in OTHER jurisdictions):")
 if ripple_note:
     for r in ripple_note:
