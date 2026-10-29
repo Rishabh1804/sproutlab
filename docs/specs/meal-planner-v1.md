@@ -1,9 +1,9 @@
 # Meal Planner v1: plan Ziva's days from the Recipes corpus
 
-**Spec version:** v0 (DRAFT, `pending_review`)
+**Spec version:** v0.1 (`pending_review` for Governor spec review; Architect answers recorded 2026-10-29)
 **Date:** 2026-10-29
 **Author:** Lyra (Mode-1 Province spec authoring)
-**Status:** Scoping draft. The open questions in §9 need Architect answers before P1 opens. P0 also waits on D4 (the Kael split). The new foundation seat must be seated before its first PR.
+**Status:** Scoping draft with the Architect's answers recorded (§9). D4 is resolved: **Carina** (Foundation) is seated by #275, so P0 is Carina-primary. **Architect decisions (2026-10-29), the recommended answers:** Q1 plan section atop Recipes; Q2 Monday week start; Q3 warn with stronger allergen wording (not refuse); Q4 derived new foods count toward the 3-day rule; Q5 log a recipe as its ingredients, dish title in `note`; Q7 keep 28 days; Q8 the core.js date helpers fixed app-wide in a separate Carina-primary PR; Q9 Tomorrow's Prep and the Outing Planner fold into the plan in v1.1. **Q6 (the `zi-bag` travel icon) stays open** for the P1a Surface Catalog sign-off.
 **Promoted from:** the Architect, 2026-10-29, verbatim:
 > "On the recipes, from the list let's have an option to select and make meals for a day or a combo, or a new food. We can organise it as days and mark the days of travel in there as well. Then, we can build our own diet plan with the recipes on the app."
 
@@ -234,9 +234,9 @@ Each is shown light and dark at all three zoom tiers. **Architect sign-off gates
 ### 5.1 Region declaration
 | Region | Files | Est. LOC | Notes |
 |---|---|---|---|
-| Foundation seat (post-D4) | core.js (`KEYS.mealPlan`, load into the `mealPlan` global), sync.js (SYNC_KEYS + SYNC_RENDER_DEPS + `_postReceiveMealPlan`) | ~70 | Kael's region is CONTESTED (≈333 headroom). P0 must land after D4 so it doesn't push the engine over 30K. |
+| Foundation (Carina) | core.js (`KEYS.mealPlan`, load into the `mealPlan` global), sync.js (SYNC_KEYS + SYNC_RENDER_DEPS + `_postReceiveMealPlan`) | ~70 | Carina's Region has ≈12.9K headroom after D4. Edits to KEYS / SYNC_KEYS / SYNC_RENDER_DEPS bring in reference consults (qa-route); `save/load(KEYS.mealPlan)` lines in diet.js bring Carina in on write-path integrity. |
 | Nutrition (Ceres) | diet.js (`_mp*` planner, picker, conflicts, `_fcCommitItems` extraction, Add to plan on the recipe detail) | ~650–800 | diet.js ≈7.9K. Nutrition has ≈20.5K headroom. |
-| Shared (all four) | styles.css (~110), template.html (~10) | ~120 | Sequential quadruple review. Ceres goes first (heaviest-touched). |
+| Shared (core trio) | styles.css (~110), template.html (~10) | ~120 | Option C: Maren → Ceres → Vela, with Ceres first (heaviest-touched). A new `zi-bag` sprite symbol means **Carina joins**; a new `#dietPlanRoot` id brings in each Governor whose files reference it (template DOM contract). |
 | Care / Surfacing | none in v1 | 0 | §5.3 |
 | recipes.js | none (read-only) | 0 | Travel-dinner additions would be a separate Ceres corpus PR (R4). |
 

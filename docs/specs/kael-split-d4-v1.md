@@ -13,7 +13,7 @@
 
 ## What D4 is
 
-D4 seats a **fifth Governor**, the third Companion ratified under canon-gen-001, splitting Kael's Region at the **foundation→engine boundary**. The new seat (name to be chosen by the Architect, written `Carina` below) takes the data and sync foundation. Kael keeps the intelligence engine.
+D4 seats a **fifth Governor**, the third Companion ratified under canon-gen-001, splitting Kael's Region at the **foundation→engine boundary**. The new seat (named **Carina** by the Architect, 2026-10-29) takes the data and sync foundation. Kael keeps the intelligence engine.
 
 D4 is a **doctrinal and tooling arc, not a code arc.** No `split/*.js`, `styles.css` or `template.html` line changes. The deliverables are: persona authoring, jurisdiction reassignment, routing updates across the policy floor and the two routing tools (`qa-route.sh`, `build-province-map.mjs`), and a regenerated `PROVINCE_MAP.html`.
 
@@ -83,7 +83,7 @@ The two sides sum to 29,667 ✓. The split is file-level, the same as both prece
 
 ## 2. The new seat
 
-### Identity (proposed — name reserved to the Architect)
+### Identity (ratified 2026-10-29 — named Carina by the Architect)
 
 - **Title:** Governor of the Foundation (data & sync). The Region is called **Foundation**.
 - **Archetype:** **The Keeper.** This is distinct from both parents (Kael the Seeker, Lyra the Weaver) and from the siblings (Maren the Guardian, Ceres the Provisioner, Vela the Surfacer). The Guardian protects the child. The Keeper protects the *record of* the child.
@@ -137,31 +137,31 @@ Excluded: **Orinth** is reserved for the planned Kael→Orinth reassessment (PER
 `.claude/` is git-ignored, so new and edited persona specs must be `git add -f`'d (lesson from the Ceres seating).
 
 **New**
-- [ ] `.claude/agents/{seat}.md`: subagent spec in the house shape (frontmatter `tools: Read, Grep, Glob, Bash`; Province-authoritative header comment; generational note; Modes; Voice; Heuristics; Per-Region jurisdiction; Return shape; Conventions with the tag; Non-negotiables; Failure modes, including "re-auditing Kael's reasoning"; Modulators; empty Compass; References).
-- [ ] `.claude/skills/{seat}.md`: the skill-mode counterpart.
-- [ ] `docs/specs/kael-split-d4-v1.md`: this spec, status updated to `ratified` once signed.
+- [x] `.claude/agents/{seat}.md`: subagent spec in the house shape (frontmatter `tools: Read, Grep, Glob, Bash`; Province-authoritative header comment; generational note; Modes; Voice; Heuristics; Per-Region jurisdiction; Return shape; Conventions with the tag; Non-negotiables; Failure modes, including "re-auditing Kael's reasoning"; Modulators; empty Compass; References).
+- [x] `.claude/skills/{seat}.md`: the skill-mode counterpart.
+- [x] `docs/specs/kael-split-d4-v1.md`: this spec, status updated to `ratified` once signed.
 
 **Persona specs**
-- [ ] `.claude/agents/kael.md` and `.claude/skills/kael.md`: remove the five foundation files from the description, jurisdiction, heuristics, HR checks and "do not summon" clauses; add the registry-consult standing; LOC becomes 12,609; shared-module text per the rotation below; refresh the stale "109 SVG symbols" line to point at ICON_REFERENCE.
-- [ ] `.claude/agents/{maren,ceres,vela}.md` and their skills: "quadruple" becomes the new rotation text; add Carina to the sibling lists and "do not summon" clauses. In Ceres clause (b), "food-DATA layer → Kael" becomes "→ Carina".
-- [ ] `.claude/agents/lyra.md` and `.claude/skills/lyra.md`: the per-Province lens gains a Foundation bullet and the Intelligence bullet narrows. This is in-Province, so the canon-cc-015 self-profile carveout does not bite: it is jurisdiction text, not identity.
+- [x] `.claude/agents/kael.md` and `.claude/skills/kael.md`: remove the five foundation files from the description, jurisdiction, heuristics, HR checks and "do not summon" clauses; add the registry-consult standing; LOC becomes 12,609; shared-module text per the rotation below; refresh the stale "109 SVG symbols" line to point at ICON_REFERENCE.
+- [x] `.claude/agents/{maren,ceres,vela}.md` and their skills: "quadruple" becomes the new rotation text; add Carina to the sibling lists and "do not summon" clauses. In Ceres clause (b), "food-DATA layer → Kael" becomes "→ Carina".
+- [x] `.claude/agents/lyra.md` and `.claude/skills/lyra.md`: the per-Province lens gains a Foundation bullet and the Intelligence bullet narrows. This is in-Province, so the canon-cc-015 self-profile carveout does not bite: it is jurisdiction text, not identity.
 
 **Policy floor and routing docs**
-- [ ] `CLAUDE.md`: QA chain list (five Governors, new entry after Kael); Companion-Set table row; subagent/skill table; Gate routing bullets; file-tree tags (`[Carina]` on core / data / sync / config / start); jurisdiction summary (Foundation 17,058, Kael 12,609, retire the CONTESTED note); reconciliation note; the shared-module bullet.
-- [ ] `AGENTS.md`: routing list (lines ~31–33).
-- [ ] `invocation.md`: roster table, Briefs (new Carina entry; Kael's narrowed), skill descriptions, QA chain routing (~199–208), routing quick reference (~231–235), engine-substrate guidance (~322), version bump, canon-gen-001 authority line.
-- [ ] `docs/QA_GATE_SPEC.md`: Gate 2.5 header ("five Governors… third at the foundation→engine boundary"), a new Foundation row, Kael's row narrowed, the shared-module row, the reference-consult rule, and a mapping note like the existing recipes.js one.
-- [ ] `PERSONA_REGISTRY.md`: version 1.4.0; hierarchy diagram; 30K table; a Carina Governor section; Kael section narrowed; genealogy row `2nd | Carina | SproutLab Foundation | Lyra + Kael | foundation→engine boundary at core + data + sync + config + start`; synergy pairs (Kael + Carina engine-on-record; Carina + Ceres registry-into-plate; Lyra + Carina build-and-persist); Future Scaling (retire the state-machine forecast).
-- [ ] `Memory.md`: a canon-gen-001 third-ratification entry; the LOC line; the roster row.
-- [ ] `docs/SPROUTLAB_QUICK_REFERENCE.md` (lines ~23–25, 57) and `docs/MODEL_SELECTION_PROTOCOL.md` (Governors row, which inherits the session model per the safety floor).
-- [ ] `docs/ROADMAP_2026-10_RECONCILED.md`: mark **D4 resolved 2026-10-29 (#PR)** in §4; mark step C done and unblock D and B.5.
+- [x] `CLAUDE.md`: QA chain list (five Governors, new entry after Kael); Companion-Set table row; subagent/skill table; Gate routing bullets; file-tree tags (`[Carina]` on core / data / sync / config / start); jurisdiction summary (Foundation 17,058, Kael 12,609, retire the CONTESTED note); reconciliation note; the shared-module bullet.
+- [x] `AGENTS.md`: routing list (lines ~31–33).
+- [x] `invocation.md`: roster table, Briefs (new Carina entry; Kael's narrowed), skill descriptions, QA chain routing (~199–208), routing quick reference (~231–235), engine-substrate guidance (~322), version bump, canon-gen-001 authority line.
+- [x] `docs/QA_GATE_SPEC.md`: Gate 2.5 header ("five Governors… third at the foundation→engine boundary"), a new Foundation row, Kael's row narrowed, the shared-module row, the reference-consult rule, and a mapping note like the existing recipes.js one.
+- [x] `PERSONA_REGISTRY.md`: version 1.4.0; hierarchy diagram; 30K table; a Carina Governor section; Kael section narrowed; genealogy row `2nd | Carina | SproutLab Foundation | Lyra + Kael | foundation→engine boundary at core + data + sync + config + start`; synergy pairs (Kael + Carina engine-on-record; Carina + Ceres registry-into-plate; Lyra + Carina build-and-persist); Future Scaling (retire the state-machine forecast).
+- [x] `Memory.md`: a canon-gen-001 third-ratification entry; the LOC line; the roster row.
+- [x] `docs/SPROUTLAB_QUICK_REFERENCE.md` (lines ~23–25, 57) and `docs/MODEL_SELECTION_PROTOCOL.md` (Governors row, which inherits the session model per the safety floor).
+- [x] `docs/ROADMAP_2026-10_RECONCILED.md`: mark **D4 resolved 2026-10-29 (#PR)** in §4; mark step C done and unblock D and B.5.
 
 **Tooling**
-- [ ] `split/qa-route.sh`: see §4.
-- [ ] `split/build-province-map.mjs`: add `FND='foundation'`; move the five files from `ENG` to `FND`; add `[FND]: { name:'Provincia Fundamenti', latin:'the data & sync foundation', gov:'Carina', accent:'#f2a8b8', jurisdiction:true }` (rose is the only domain accent the map isn't using yet); update the `SHARED` gov string.
-- [ ] `docs/PROVINCE_MAP.html`: regenerated by `pnpm build`, committed. `sproutlab.html` / `index.html` must come out byte-identical, and any diff there is a stop signal.
-- [ ] `.claude/hooks/session-start.sh`: comments only (lines 4 and 92 list the Province roster). The materialization loop globs `*.md`, so the new spec deploys without any logic change.
-- [ ] Deprecated `docs/MODULE_MAP.html`: no update. Note in the PR that it stays stale until it is deleted.
+- [x] `split/qa-route.sh`: see §4.
+- [x] `split/build-province-map.mjs`: add `FND='foundation'`; move the five files from `ENG` to `FND`; add `[FND]: { name:'Provincia Fundamenti', latin:'the data & sync foundation', gov:'Carina', accent:'#f2a8b8', jurisdiction:true }` (rose is the only domain accent the map isn't using yet); update the `SHARED` gov string.
+- [x] `docs/PROVINCE_MAP.html`: regenerated by `pnpm build`, committed. `sproutlab.html` / `index.html` must come out byte-identical, and any diff there is a stop signal.
+- [x] `.claude/hooks/session-start.sh`: comments only (lines 4 and 92 list the Province roster). The materialization loop globs `*.md`, so the new spec deploys without any logic change.
+- [x] Deprecated `docs/MODULE_MAP.html`: no update. Note in the PR that it stays stale until it is deleted.
 
 **Record-keeping (separate Codex PR on the same branch name, canon-cc-010):** reference copies of the new spec pair and the amended Kael pair; the canon-gen-001 third ratification goes in the canon ledger, recorded by Aurelius.
 
@@ -222,7 +222,7 @@ Cross-province ripple (dependents of changed code in OTHER jurisdictions):
   none detected — change appears jurisdiction-local.
 Reference consult (registries/constants read in OTHER jurisdictions):
   (only if the hunk touches SYNC_RENDER_DEPS, e.g.)
-  SYNC_RENDER_DEPS row -> renderDietStats  [Nutrition/Ceres]
+  SYNC_RENDER_DEPS row -> renderDietStats  [Care/Maren]   (renderDietStats is defined in home.js)
 ================  SUMMON SET (canon-cc-008 step 2)  ================
   SUMMON Carina
       - direct edit: sync.js
@@ -233,7 +233,7 @@ Reference consult (registries/constants read in OTHER jurisdictions):
 
 ### Audit chain for the D4 PR
 
-1. **Build and self-check:** `pnpm build` is clean; the HTML is byte-identical; `PROVINCE_MAP.html` regenerates with six province cards (Foundation shows about 17K of 30K); `bash split/qa-route.sh --staged` on a scratch sync.js touch reproduces the "after" output. Revert the scratch file.
+1. **Build and self-check:** `pnpm build` is clean; the HTML is byte-identical; `PROVINCE_MAP.html` regenerates with seven province cards (Foundation shows about 17K of 30K); `bash split/qa-route.sh --staged` on a scratch sync.js touch reproduces the "after" output. Revert the scratch file.
 2. **Governor audit: waivable.** No `split/` jurisdiction module is touched, so `qa-route` reports "MAY be waived". **The Architect states the waiver explicitly.**
    *Separately and not waivable:* canon-gen-001 rule 5 puts **Kael on Rung 2** of the new spec pair, to check that the boundary is drawn precisely. Kael's own amended spec takes Rung 2 from **Maren** (cross-Governor peer review). This is spec review, not the Gate 2.5 audit.
 3. **Lyra synthesizes** the Rung-2 returns.
@@ -254,17 +254,17 @@ Reference consult (registries/constants read in OTHER jurisdictions):
 - **R5 — The foundation is the growth surface.** core.js plus data.js gained about 930 lines in three PRs. At that pace there are roughly 12,900 lines of runway. Food-DB accretion should keep going to Ceres-side corpus files (the `recipes.js` `*_ADD_12_24` pattern), not to data.js.
 
 **Open questions**
-- **Q1 — The name:** Carina, Vesta or Atlas (or another), and therefore the finding-tag prefix.
-- **Q2 — Shared-module rotation:** Option B (recommended), A or C.
-- **Q3 — Reference consults:** ship the qa-route reference-consult layer in this PR (recommended: it is what makes "primary by file, consult by consumer" mechanical), or keep D4 purely docs and land it as a fast follow-up before the meal planner.
-- **Q4 — Scoring:** accept the file-level impurity with a symbol consult (v1), or schedule a later `split/` PR that moves `calc*Score` and the modifiers into an engine file.
-- **Q5 — Symbol-level ripple** in qa-route: queue it as roadmap tooling, or leave it.
-- **Q6 — Kael→Orinth:** does D4 retire the planned reassessment, keep it as is, or bring it forward now that Kael's Region is pure reasoning?
-- **Q7 — Province accent:** rose is the only domain accent the map doesn't use, but it means "medical alert" in the app. Accept it on an internal docs map, or reassign.
+- **Q1 — The name:** Carina, Vesta or Atlas (or another), and therefore the finding-tag prefix. **Resolved: Carina (V-CA).**
+- **Q2 — Shared-module rotation:** Option B (recommended), A or C. **Resolved: Option C.**
+- **Q3 — Reference consults:** ship the qa-route reference-consult layer in this PR (recommended: it is what makes "primary by file, consult by consumer" mechanical), or keep D4 purely docs and land it as a fast follow-up before the meal planner. **Resolved: shipped in this PR.**
+- **Q4 — Scoring:** accept the file-level impurity with a symbol consult (v1), or schedule a later `split/` PR that moves `calc*Score` and the modifiers into an engine file. **Resolved: v1 file-level, Kael symbol consult (extended to the v3-3 spine, V-K-275-1).**
+- **Q5 — Symbol-level ripple** in qa-route: queue it as roadmap tooling, or leave it. **Resolved: queued as roadmap tooling.**
+- **Q6 — Kael→Orinth:** does D4 retire the planned reassessment, keep it as is, or bring it forward now that Kael's Region is pure reasoning? **Resolved: unchanged.**
+- **Q7 — Province accent:** rose is the only domain accent the map doesn't use, but it means "medical alert" in the app. Accept it on an internal docs map, or reassign. **Resolved: rose.**
 
 ---
 
-— Lyra (Mode 1, Architect-directed; canon-gen-001 third ratification draft), 2026-10-29, against `42a4b19`. cc-018 status: `pending_review`. Next: Architect picks the name and answers Q2–Q3 → Lyra authors the Carina spec pair and the PR → Kael Rung 2 → Cipher → merge.
+— Lyra (Mode 1, Architect-directed; canon-gen-001 third ratification draft), 2026-10-29, against `42a4b19`. cc-018 status: `ratified` by the Architect 2026-10-29 (Q1–Q7 answered, see header). Done: Carina spec pair and PR #275; Rung 2 — Maren on Kael (V-M-275-1..13), Kael on Carina (V-K-275-1..9, Mode-2 concur-with-conditions C1–C3), Kael on Maren (V-K-275-10..12), all folded; Cipher Edict V amended (R1–R5), folded. Next: Architect merge (Rung 1); Aurelius records in Codex.
 
 ---
 

@@ -74,10 +74,10 @@ canon-cc-008 chain *before* the PR is taken out of draft or merged:
    - Diff touches `home.js` or `medical.js` → summon **Maren** (Care).
    - Diff touches `diet.js` or `recipes.js` → summon **Ceres** (Nutrition).
    - Diff touches `intelligence-isl.js`, `intelligence-qa.js`, `intelligence-qa-handlers.js`, `intelligence-illness.js`, `intelligence-correlate.js`, or `intelligence-caretickets.js` → summon **Kael** (Intelligence engine).
-   - Diff touches `core.js`, `data.js`, `sync.js`, `config.js`, or `start.js` → summon **Carina** (Foundation). **Primary by file, consult by consumer:** when the diff edits a foundation registry or constant (AGE_RULES, FOOD_EFFECTS, ALLERGENS, KEYS, SYNC_KEYS, SYNC_RENDER_DEPS…), also summon each Governor whose files read it as a scoped **consult** (a signed Mode-1 return limited to how their Region uses the changed record). A diff touching the core.js scoring block (calc*Score + domain modifiers) also summons Kael as a symbol-level consult. `pnpm qa-route` computes the consults.
+   - Diff touches `core.js`, `data.js`, `sync.js`, `config.js`, or `start.js` → summon **Carina** (Foundation). **Primary by file, consult by consumer:** when the diff edits a foundation registry or constant (AGE_RULES, FOOD_EFFECTS, ALLERGENS, KEYS, SYNC_KEYS, SYNC_RENDER_DEPS…), also summon each Governor whose files read it as a scoped **consult** (a signed Mode-1 return limited to how their Region uses the changed record). A diff touching the core.js scoring block (calc*Score + domain modifiers) also summons Kael as a symbol-level consult. Three more consults are standing rules, not just tool behaviour (`pnpm qa-route` computes all of them): **care content** — any VACC_* record, the POOP_COLOR_* lexicon, SAFE_POOP_COLORS, GENERAL_EMERGENCIES, medDoseSlots, vitDSupplement, getNextUpcomingVacc or calcMedicalScore summons **Maren** on the consequence, even when only a render or engine file reads it; **engine content** — the scoring block (compute*Modifier, calc*Score), the v3-3 engine spine (milestone windows, recommendations, day scoring, sleep classification) and the engine-parameter registries (RECOMMENDATION_ROSTER, SEVERITY_THRESHOLDS, DOMAIN_WEIGHTS_HERO, STANDARDS_FALLBACK_CHAIN) summon **Kael** on the reasoning; **write paths** — a changed `save(KEYS.*)` / `load(KEYS.*)` line in any non-foundation file summons **Carina** on record integrity.
    - Diff touches `intelligence-cards.js` or `intelligence-quicklog.js` → summon **Vela** (Surfacing render).
    - Diff touches more than one Region → summon **each named Governor** in parallel (e.g. engine + render → Kael and Vela; care + nutrition → Maren and Ceres).
-   - Diff touches `styles.css` or `template.html` → summon the **core trio** Maren → Ceres → Vela (sequential; first-Governor by heaviest-touched Region), plus **Kael** if the diff also touches his Region and **Carina** if it also touches hers or changes the template.html sprite / boot shell.
+   - Diff touches `styles.css` or `template.html` → summon the **core trio** Maren → Ceres → Vela (sequential; first-Governor by heaviest-touched Region), plus **Kael** if the diff also touches his Region and **Carina** if it also touches hers or changes the template.html sprite / boot shell. **Template DOM contract:** an id or data-action added, removed or renamed in template.html also summons each Governor whose files reference it (Kael's Option-C condition C1; if it regresses, his concurrence reverts to Option B).
    - Diff is test-only / docs-only → the Governor audit may be waived; state the waiver explicitly.
 3. **Lyra synthesizes** all summoned Governor reports and folds in the fixes.
 4. **Cipher** runs the Edict V cross-cutting final-pass.
@@ -130,14 +130,14 @@ Split-file PWA. 17 JS modules + 2 shared files (styles.css + template.html), **8
 split/
 ├── build.sh           ← stdout to sproutlab.html (NOT self-copying like Codex)
 ├── template.html      ← HTML shell + zi() symbol sprite (3,396 lines)        [shared — core-trio review]
-├── styles.css         ← All CSS (12,068 lines)                               [shared — core-trio review]
-├── config.js          ← Firebase config + GENERAL_EMERGENCIES registry (354 lines) [Carina]
-├── data.js            ← Constants, food DB, milestone DB, FOOD_EFFECTS (5,935) [Carina]
-├── recipes.js         ← Diet → Recipes cited corpus, 6–24m complementary + toddler family food (1,565) [Ceres]
-├── core.js            ← Utilities, escHtml, overlays, toasts, scoring, food resolver (7,732) [Carina]
-├── home.js            ← Home tab, Today So Far, hero score (11,571 lines)    [Maren]
-├── diet.js            ← Diet tab, food logging, nutrition, Library, Recipes (7,928) [Ceres]
-├── medical.js         ← Medical tab, vaccinations, CareTickets (11,025)      [Maren]
+├── styles.css         ← All CSS (12,084 lines)                               [shared — core-trio review]
+├── config.js          ← Firebase config + GENERAL_EMERGENCIES registry (358 lines) [Carina]
+├── data.js            ← Constants, food DB, milestone DB, FOOD_EFFECTS (5,941) [Carina]
+├── recipes.js         ← Diet → Recipes cited corpus, 6–24m complementary + toddler family food (1,830) [Ceres]
+├── core.js            ← Utilities, escHtml, overlays, toasts, scoring, food resolver (7,798) [Carina]
+├── home.js            ← Home tab, Today So Far, hero score (11,580 lines)    [Maren]
+├── diet.js            ← Diet tab, food logging, nutrition, Library, Recipes (7,969) [Ceres]
+├── medical.js         ← Medical tab, vaccinations, CareTickets (11,080)      [Maren]
 ├── intelligence-isl.js          ← ISL: typeahead, time-query, domain-data (1,260)  [Kael — engine]
 ├── intelligence-qa.js           ← Q&A engine, UIB, classifier (2,333)                [Kael — engine]
 ├── intelligence-qa-handlers.js  ← qaAnswer* handlers (3,740)                         [Kael — engine]
@@ -158,7 +158,7 @@ split/
 - **Vela (Surfacing render):** cards + quicklog = 8,934 LOC (≈21,066 headroom to 30K)
 - **Shared (core trio + conditional):** styles.css + template.html = 15,480 LOC
 
-> **Reconciliation — why the Province Map shows a bigger number.** This summary totals **86,540 LOC** of split-file source (the six jurisdictions above), which is what the 30K Rule governs. `docs/PROVINCE_MAP.html` reports **91,224 LOC** because it sums *every file carrying a graph node*, including the ~5,156 LOC of `split/*.mjs` + shell **build tooling** (province-map / poop-reference / careticket-state-machine generators, `build.sh`, `build-safe.sh`, `qa-route.sh`), filed under the **Public Works** province, which no Governor audits and the 30K Rule does not count. With the 2026-06-08 Care→Nutrition split, the map and this file now **agree on jurisdiction**: `build-province-map.mjs` files `diet.js` + `recipes.js` under the **Nutrition** province (Ceres), and since D4 the five foundation files under the **Foundation** province (Carina), matching this summary. The map still wins on raw LOC (it's regenerated from committed source), **this file wins on jurisdiction and rules**.
+> **Reconciliation — why the Province Map shows a bigger number.** This summary totals **86,540 LOC** of split-file source (the six jurisdictions above), which is what the 30K Rule governs. `docs/PROVINCE_MAP.html` reports **92,151 LOC** because it sums *every file carrying a graph node*, including the ~5,611 LOC of `split/*.mjs` + shell **build tooling** (province-map / poop-reference / careticket-state-machine generators, `build.sh`, `build-safe.sh`, `qa-route.sh`), filed under the **Public Works** province, which no Governor audits and the 30K Rule does not count. With the 2026-06-08 Care→Nutrition split, the map and this file now **agree on jurisdiction**: `build-province-map.mjs` files `diet.js` + `recipes.js` under the **Nutrition** province (Ceres), and since D4 the five foundation files under the **Foundation** province (Carina), matching this summary. The map still wins on raw LOC (it's regenerated from committed source), **this file wins on jurisdiction and rules**.
 
 **Concat order:** config → data → recipes → core → home → diet → medical → intelligence-isl → intelligence-qa → intelligence-qa-handlers → intelligence-illness → intelligence-correlate → intelligence-quicklog → intelligence-cards → intelligence-caretickets → sync → start
 
@@ -244,7 +244,7 @@ the authoritative visual + UX floor. The `/design-principles` skill
 quick-reference plus this standing rule. Designing without reading it is how warmth drifts
 clinical and HR violations slip in; no UI work is exempt. This is the design *floor*, read
 up front so a surface arrives at the canon-cc-008 gate already compliant — it does **not**
-discharge the QA chain (Vela / Maren / Ceres / Kael audit, Cipher final-pass). The summary tables
+discharge the QA chain (Vela / Maren / Ceres / Kael / Carina audit, Cipher final-pass). The summary tables
 below are a convenience mirror; the doc wins on any disagreement.
 
 ### Typography
