@@ -69,6 +69,9 @@ const KEYS = {
   //   travel:{ on, ts }, cleared:ts } } }. Per-field newest-ts merge (_mpMerge); own doc
   //   /singles/plan. Never persisted as a default (V-CA-275-9), not in ALWAYS_POPULATED_KEYS.
   mealPlan:          'ziva_meal_plan',
+  // profile: the child and the household's place (spec docs/specs/privacy-v1.md §3.1). Synced
+  // single doc; the source of the birth date, solids start and name once the bundle is empty (P2).
+  profile:           'ziva_profile',
 };
 
 function load(key, def) {
@@ -512,8 +515,14 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
 // ─────────────────────────────────────────
 // DEFAULT DATA (pre-loaded)
 // ─────────────────────────────────────────
-const DOB        = new Date(2025, 8, 4, 17, 9); // Sep 4, 2025 at 17:09 IST
-const SOLIDS_START = new Date(2026, 2, 6); // Mar 6, 2026
+// The child's birth date and solids start come from the profile record (privacy-v1 §3.1). They are
+// module-wide `let`s so every existing reader keeps working; _profApply refreshes them whenever the
+// profile loads or syncs. _PROFILE_FALLBACK is TEMPORARY (P1 only): P2 empties it, and with no
+// profile the app shows Welcome instead of a child.
+const _PROFILE_FALLBACK = { name: 'Ziva', dob: '2025-09-04T17:09', solidsStart: '2026-03-06' };
+let DOB = new Date(2025, 8, 4, 17, 9);
+let SOLIDS_START = new Date(2026, 2, 6);
+let profile = null;
 
 // Default pediatrician (seeded on first load)
 const DEFAULT_DOCTORS = [
@@ -576,6 +585,47 @@ let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, m
 let activityMeta, milestoneSuppress;
 // teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
 let teethLog;
+// ── PROFILE (privacy-v1 §3.1) ──
+// { v:1, child:{ name, dob:'YYYY-MM-DDTHH:mm', solidsStart:'YYYY-MM-DD'|null }, place:{ city, tz }, ts }
+const _PROF_DOB_RE = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/;
+function _profParse(str) {
+  const m = _PROF_DOB_RE.exec(String(str || ''));
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], m[4] ? +m[4] : 12, m[5] ? +m[5] : 0);   // HR-12: local parts
+  return (d.getFullYear() === +m[1] && d.getMonth() === +m[2] - 1 && d.getDate() === +m[3]) ? d : null;
+}
+// Keeps a well-formed profile (unknown fields pass through for later versions); anything else is null.
+function _profNormalize(p) {
+  if (!p || typeof p !== 'object' || !p.child || typeof p.child !== 'object') return null;
+  const c = p.child;
+  if (typeof c.name !== 'string' || !c.name.trim() || !_profParse(c.dob)) return null;
+  const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: c.name.trim().slice(0, 40) }) });
+  if (c.solidsStart != null && !_profParse(c.solidsStart)) out.child.solidsStart = null;
+  if (typeof out.ts !== 'number') out.ts = 0;
+  return out;
+}
+function _profChild() { return (profile && profile.child) || _PROFILE_FALLBACK; }
+function childName() { return _profChild().name; }
+function childPlace() { return (profile && profile.place) || null; }
+// Refresh the module-wide date anchors from the profile (or the P1 fallback).
+function _profApply() {
+  const c = _profChild();
+  const dob = _profParse(c.dob) || _profParse(_PROFILE_FALLBACK.dob);
+  DOB = dob;
+  SOLIDS_START = _profParse(c.solidsStart) || (c === _PROFILE_FALLBACK ? _profParse(_PROFILE_FALLBACK.solidsStart) : null) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
+  _ZIVA_DOB = toDateStr(dob);
+  _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+}
+// Save the profile (setup / Confirm details, P2). Returns the saved record or null if invalid.
+function _profSave(child, place) {
+  const next = _profNormalize({ v: 1, child, place: place || (profile && profile.place) || null, ts: Math.max(Date.now(), ((profile && profile.ts) || 0) + 1) });
+  if (!next) return null;
+  profile = next;
+  save(KEYS.profile, profile);
+  _profApply();
+  return profile;
+}
+
 // mealPlan: the meal planner's record (see KEYS.mealPlan). Writes go through _mpSave.
 let mealPlan;
 
@@ -1468,6 +1518,8 @@ function init() {
   teethLog = load(KEYS.teeth, null) || {};
   if (typeof teethLog !== 'object' || teethLog === null || Array.isArray(teethLog)) teethLog = {};
   // The in-memory default is never saved; the first real planner write persists it (V-CA-275-9).
+  try { profile = _profNormalize(load(KEYS.profile, null)); } catch (e) { profile = null; }
+  _profApply();
   try { mealPlan = _mpNormalize(load(KEYS.mealPlan, null), today()); }
   catch (e) { console.warn('[meal-plan] load failed, starting empty:', e); mealPlan = { v: 1, days: {} }; }
 
@@ -7108,8 +7160,8 @@ function _bugInit() {
 // Ziva's DOB anchor — single source of truth for age math.
 // Hardcoded per CLAUDE.md §Ziva Context: born 4 Sep 2025.
 // HR-12: stored as YYYY-MM-DD; Date.parse with UTC suffix to avoid local-tz drift.
-const _ZIVA_DOB = '2025-09-04';
-const _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+let _ZIVA_DOB = '2025-09-04';                                   // refreshed by _profApply
+let _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
 
 // Age accessor — used by _evaluateRecommendation to map a date into the standard's age-range.
 // HR-12 safe: parses dateStr at UTC midnight; subtracts UTC-anchored DOB; integer day count.

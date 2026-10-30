@@ -167,6 +167,9 @@ const SYNC_KEYS = {
   // Meal planner — its own doc /singles/plan (V-CA-275-1): tracking is the doc heading for the
   // 1 MiB limit, and a plan tap shouldn't resend it. Atomic with the SYNC_RENDER_DEPS arm below.
   [KEYS.mealPlan]:           { collection: 'plan',        model: 'single-doc' },
+  // Profile — the child's name and dates and the household's place (privacy-v1 §3.1). Its own
+  // small doc; the newer whole record wins (_postReceiveProfile).
+  [KEYS.profile]:            { collection: 'profile',     model: 'single-doc' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
@@ -424,6 +427,7 @@ const SYNC_RENDER_DEPS = {
   // Meal planner — per-field newest-ts merge; a narrow renderer (never renderDietRecipes) that
   // holds off while a planner sheet is open; pushBackOnDiverge re-pushes newer local fields
   // the remote copy lacked (V-CA-275-3, -6).
+  [KEYS.profile]:           { global: 'profile',          mergeOnReceive: '_postReceiveProfile',          renderers: { home: ['renderHome'], landing: ['renderLanding'] } },
   [KEYS.mealPlan]:          { global: 'mealPlan',         mergeOnReceive: '_postReceiveMealPlan',         pushBackOnDiverge: true, renderers: { 'track:diet': ['renderMealPlanSection'] } },
 };
 
@@ -463,6 +467,7 @@ function _syncSetGlobal(name, value) {
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
     case 'mealPlan':     mealPlan     = value; return true;
+    case 'profile':      profile      = _profNormalize(value); _profApply(); return true;
     default: return false;
   }
 }
@@ -485,6 +490,7 @@ function _syncGetGlobal(name) {
     case 'scrapbook':    return scrapbook;
     case 'teethLog':     return teethLog;
     case 'mealPlan':     return mealPlan;
+    case 'profile':      return profile;
     default: return undefined;
   }
 }
@@ -628,6 +634,14 @@ function _postReceiveVacc(remoteList) {
 // flag, newest ts wins; Clear-day tombstones hold; pruned to the window). Never throws: on an
 // internal error it returns undefined and the receive handler skips the save, keeping local
 // untouched and pushing nothing (V-CA-275-6, V-CA-279-2).
+// _postReceiveProfile — the profile is one small record: the newer ts wins whole; a malformed side
+// never replaces a good one.
+function _postReceiveProfile(remote, local) {
+  const r = _profNormalize(remote), l = _profNormalize(local);
+  if (!r) return l || local;
+  if (!l) return r;
+  return (r.ts >= l.ts) ? r : l;
+}
 function _postReceiveMealPlan(remotePlan, localPlan) {
   try { return _mpMerge(remotePlan, localPlan, today()); }
   catch (e) { console.warn('[sync] meal-plan merge failed; keeping local, skipping the save:', e); return undefined; }
