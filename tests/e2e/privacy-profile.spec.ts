@@ -220,6 +220,22 @@ test.describe('child sex: growth standard and pronouns', () => {
     expect(r.other).toBeNull();
   });
 
+  test('a phone out of storage says so and stays on the question, never reloading into it (Cipher A1)', async ({ page }) => {
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('ziva_profile', JSON.stringify({ v: 1, child: { name: 'Asha', dob: '2025-09-01', solidsStart: null }, place: null, ts: 1 }));
+      sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/index.html?nosync');
+    const gate = page.locator('#prfGate');
+    await expect(gate).toContainText('One more detail');
+    await page.evaluate(() => { const orig = Storage.prototype.setItem; Storage.prototype.setItem = function (k: string, v: string) { if (/^ziva_profile/.test(k)) throw new DOMException('full', 'QuotaExceededError'); return orig.call(this, k, v); }; });
+    await gate.locator('.prf-sex-opt', { hasText: 'Boy' }).click();
+    await gate.locator('[data-action="prfSave"]').click();
+    await gate.locator('[data-action="prfSave"]').click();
+    await expect(page.locator('#prfErr')).toContainText("didn't save");
+    await expect(gate).toHaveCount(1);
+    expect(await page.evaluate(() => (window as any).childSex())).toBeNull();   // memory holds only what the disk does
+  });
+
   test('Settings shows the sex prefilled', async ({ page }) => {
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() => typeof (window as any).prfDispatch === 'function');
