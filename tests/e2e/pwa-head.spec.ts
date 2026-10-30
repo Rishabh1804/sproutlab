@@ -21,7 +21,7 @@ test('index.html head links the manifest and carries the PWA meta tags', async (
   expect(head).toMatch(/<meta name="mobile-web-app-capable" content="yes">/);
   expect(head).toMatch(/<meta name="apple-mobile-web-app-capable" content="yes">/);
   expect(head).toMatch(/<meta name="apple-mobile-web-app-status-bar-style" content="default">/);
-  expect(head).toMatch(/<meta name="apple-mobile-web-app-title" content="Ziva's Dashboard">/);
+  expect(head).toMatch(/<meta name="apple-mobile-web-app-title" content="SproutLab">/);
   expect(head).toMatch(/<link rel="apple-touch-icon" href="apple-touch-icon\.png">/);
 });
 

@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-// PR-K Phase 3 — the "Today for Ziva" hero card, the Home tab's lede.
+// PR-K Phase 3 — the "Today for <child>" hero card, the Home tab's lede.
 
-test('Today for Ziva card renders as the Home lede', async ({ page }) => {
+test('Today for (child) card renders as the Home lede', async ({ page }) => {
   await page.goto('/index.html?nosync');
   const card = page.locator('#todayHeroCard');
   await card.waitFor({ state: 'visible' });
 
   // Headline, age and date are all populated (no placeholder dashes).
-  await expect(page.locator('.th-title')).toHaveText('Today for Ziva');
+  await expect(page.locator('.th-title')).toHaveText('Today for Asha');
   await expect(page.locator('#thAge')).not.toHaveText('—');
   await expect(page.locator('#thAge')).toContainText('old');
   await expect(page.locator('#thDate')).not.toHaveText('—');

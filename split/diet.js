@@ -645,7 +645,7 @@ function foodLibDetail(name) {
 
 // ═══════════════════════════════════════════════════════════════════════
 // Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md)
-// One lazy-rendered panel, three stacked sections: (a) "Suggested for Ziva"
+// One lazy-rendered panel, three stacked sections: (a) "Suggested for the child"
 // (logged-data-driven, ranked by §4) with a featured hero card, (b) a
 // browsable catalog grouped by meal slot, (c) expand-in-place detail. Corpus =
 // window.RECIPES (cited, recipes.js). TWO separate passes (§5):
@@ -909,7 +909,7 @@ function _recipeSafetySummary(r, ageMonths) {
   }
   if (lead.length) return { level: 'caution', icon: 'note', text: lead.join(' ') };
   return { level: 'safe', icon: 'check',
-    text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
+    text: 'Every ingredient is age-appropriate for ' + childNameHtml() + '. Introduce any new food on its own and watch for 3 days.' };
 }
 
 // A recipe progressive-disclosure row (§ the 6-second rule): icon + title +
@@ -956,7 +956,7 @@ function _recipeDetailHtml(r, ageMonths, opts) {
     h += `<div class="rcp-plan"><button class="btn ${ss.level === 'flag' ? 'btn-ghost' : 'btn-sage'} btn-compact" data-action="mpAddRecipe" data-arg="${escAttr(r.id)}">${zi('calendar')} Add to plan</button></div>`;
   // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
   // amount to OFFER — a guide, never a target; appetite leads. An age-gated
-  // recipe (effMin > Ziva's age) frames the portion at its own start age.
+  // recipe (effMin > the child's age) frames the portion at its own start age.
   if (typeof _recipeServing === 'function') {
     const ageNow = Math.floor(ageMonths);
     const effMin = _recipeEffectiveMinAge(r);
@@ -968,7 +968,7 @@ function _recipeDetailHtml(r, ageMonths, opts) {
     const own = !gated && r.portion;
     const band = _recipeServing(r.slot, servAge);
     const serving = own ? `${r.portion}. A toddler ${r.slot === 'snack' ? 'snack' : 'meal'} is ${band}` : band;
-    const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
+    const label = gated ? `Serving from ${effMin} months` : `Serving for ${childNameHtml()} (${ageNow} mo)`;
     // M-1 (Maren): anchor the amount's OWN source on the line, independent of r.source.
     const src = own ? 'ICMR-NIN · WHO/PAHO · IAP' : 'WHO/PAHO · IAP';
     h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
@@ -1070,7 +1070,7 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   </div>`;
 }
 
-// The featured "Suggested for Ziva" hero (top pick) — the GENERATIVE card
+// The featured "Suggested for the child" hero (top pick) — the GENERATIVE card
 // (§9.3/§9.4): a grams-weighted wavelength fingerprint stripe + warm-wave sheen
 // + corner zif watermark, the Fraunces-italic composed voice (strict no's lead),
 // the data-driven why, a prep·age·slot meta line, and a "See recipe →" CTA.
@@ -1100,7 +1100,7 @@ function _recipeHeroHtml(r, whyText, ageMonths) {
   return `<div class="recipe-hero recipe-hero-gen dt-${grp}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
     ${wm}
     <div class="recipe-hero-head">
-      <span class="recipe-hero-eyebrow">${zi('sparkle')} Suggested for Ziva</span>
+      <span class="recipe-hero-eyebrow">${zi('sparkle')} Suggested for ${childNameHtml()}</span>
       ${slot ? `<span class="recipe-hero-badge">${escHtml(slot.label)}</span>` : ''}
     </div>
     <h3 class="recipe-hero-title">${escHtml(r.title)}</h3>
@@ -1146,7 +1146,7 @@ function _recipeSuggestForZiva(surfaced, ageMonths) {
       }
       if (typeof isFoodFavorite === 'function' && isFoodFavorite(base)) score += 1;
     }
-    // age-fit tiebreak: a recipe close to Ziva's age scores a hair higher
+    // age-fit tiebreak: a recipe close to the child's age scores a hair higher
     score += Math.max(0, 1 - Math.abs(ageMonths - (r.minAgeMonths || ageMonths)) * 0.05);
     // From 1, lead with family food and keep moving her on from purées (V-C-270-6).
     if (ageMonths >= 12) {
@@ -1172,11 +1172,11 @@ function renderDietRecipes() {
   let html = '';
 
   // Panel header (LOCKED 05-meal-rows): "Recipes" + the sourced-from-logs subtitle.
-  html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for Ziva's stage · cooked from what you log.</p></div>`;
+  html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for ${childNameHtml()}'s stage · cooked from what you log.</p></div>`;
   // The meal planner's Plan section (meal-planner-v1 §4.1), filled by renderMealPlanSection.
   html += `<div class="col-full" id="dietPlanRoot"></div>`;
 
-  // ── (a) Suggested for Ziva — featured generative hero + "More for Ziva" rows ──
+  // ── (a) Suggested for the child — featured generative hero + "More for the child" rows ──
   const suggested = _recipeSuggestForZiva(surfaced, ageMonths);
   html += `<div class="col-full">`;
   if (suggested.length) {
@@ -1185,7 +1185,7 @@ function renderDietRecipes() {
     html += _recipeHeroHtml(top.r, topWhy, ageMonths);
     const more = suggested.slice(1);
     if (more.length) {
-      html += `<div class="recipe-group-head recipe-more-head">${zi('sprout')}<span class="recipe-group-title">More for Ziva</span><span class="recipe-group-count">${more.length}</span></div>`;
+      html += `<div class="recipe-group-head recipe-more-head">${zi('sprout')}<span class="recipe-group-title">More for ${childNameHtml()}</span><span class="recipe-group-count">${more.length}</span></div>`;
       for (const s of more) html += _recipeRowHtml(s.r, 's', ageMonths, { showSlot: true });
     }
   } else {
@@ -1566,7 +1566,7 @@ var LIB_SHELVES = [
   { pol: 'inform',      label: 'Good to know',           icon: 'info' }
 ];
 
-// Ziva's journey with a food, from the foods[] log. Real data only:
+// the child's journey with a food, from the foods[] log. Real data only:
 // _fdIsFoodTried + the entry's reaction ('ok'|'watch') + isFoodFavorite.
 // Established (graduated) = favourite + settled + introduced >= 21 days ago.
 function _libJourney(name) {
@@ -1668,7 +1668,7 @@ function _libBookHtml(key, eff, pol) {
     if (!j.tried) {
       journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
     } else if (j.established) {
-      journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+      journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
     } else if (j.reaction === 'watch') {
       journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
     } else {
@@ -1686,7 +1686,7 @@ function _libBookHtml(key, eff, pol) {
     body + siren + go + '</button></div>';
 }
 
-// "Suggested for Ziva" lead — the entry point the eye lands on first. Up to 3
+// "Suggested for the child" lead — the entry point the eye lands on first. Up to 3
 // untried priority-allergen foods (the early-introduction shelf), real-data-driven
 // (FOOD_EFFECTS + _effPolarity + _fdIsFoodTried). Empty once they're all introduced.
 function _libSuggestions() {
@@ -1708,7 +1708,7 @@ function _libLeadHtml() {
       zi('sprout') + escHtml(_libDisplayName(k, FOOD_EFFECTS[k])) + '</button>';
   }).join('');
   return '<div class="lib-lead">' +
-    '<div class="lib-lead-h">' + zi('star') + 'Suggested for Ziva</div>' +
+    '<div class="lib-lead-h">' + zi('star') + 'Suggested for ' + childNameHtml() + '</div>' +
     '<div class="lib-lead-sub">Worth introducing early — regular exposure lowers the chance of an allergy.</div>' +
     '<div class="lib-lead-chips">' + chips + '</div></div>';
 }
@@ -1766,7 +1766,7 @@ function libToggleGroup(btn) {
 function _libJourneyChip(pol, j) {
   if (pol === 'warn') return '';
   if (!j.tried) return '<span class="fp-journey fp-journey--untried"><span class="fp-dot"></span>Not tried yet</span>';
-  if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
   return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
 }
@@ -2086,7 +2086,7 @@ function _libLookupRow(name) {
   var j = _libJourney(name);
   var journeyHtml = '';
   if (!j.tried) journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
-  else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   else if (j.reaction === 'watch') journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
   else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
   return '<button class="lib-book lib-book--lookup' + dt + '" data-action="' + action + '" data-arg="' + escHtml(arg) + '">' +
@@ -2162,7 +2162,7 @@ function _libCorpusPopHtml(name, j) {
   var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
   if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
-    '<p class="lib-prow-p">In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
+    '<p class="lib-prow-p">In ' + childNameHtml() + '&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
   var body = '<div class="fp-body fp-body--rows">' +
     _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], verHead, tagsLine) +
     '<div class="lib-prows">' + rows + '</div></div>';
@@ -2362,14 +2362,14 @@ function _libCloseDeck() {
 // Doc-prep identity helpers. The doctor card leads with the PATIENT (name as the card
 // title, vitals beneath) — a clinical handoff, not app branding (Architect, PR#235).
 // Name is sourced from the household profile so the card stays flexible — no new hardcode.
-// TODO(legacy-name-debt): 'Ziva' is the last-resort fallback only; the app still hardcodes
+// TODO(legacy-name-debt): 'the child' is the last-resort fallback only; the app still hardcodes
 // the name in several places (core.js avatar alt, medical.js chart labels) — a flexible-name
 // migration is known debt, tracked for a later session (Architect, PR#235).
 function _emDocName() {
   // Trim-guard (Maren V-M-237): reject a blank/whitespace household name so the doctor
   // card's title slot can never render empty — a nameless medical handoff.
   try { if (typeof _syncHousehold !== 'undefined' && _syncHousehold && typeof _syncHousehold.name === 'string' && _syncHousehold.name.trim()) return _syncHousehold.name.trim(); } catch (e) {}
-  return 'Ziva';
+  return '' + childNameCapHtml() + '';
 }
 function _emDocVitals() {
   var bits = [];
@@ -2848,7 +2848,7 @@ function renderDietChokingIntro() {
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
-  // thrusts (child 1y+ technique since Ziva turned one) + "NO adrenaline".
+  // thrusts (child 1y+ technique since the child turned one) + "NO adrenaline".
   pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
@@ -3016,7 +3016,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    body:'' + childNameCapHtml() + '\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
     condition: () => getAgeInMonths() < 12,
   },
   {
@@ -3105,7 +3105,7 @@ const ALL_TIPS = [
   {
     type:'info', icon:zi('flame'),
     title:'Hot weather hydration',
-    body:'Jamshedpur summers are intense. Offer extra water sips between meals and include hydrating foods — watermelon, cucumber, bottle gourd, and muskmelon.',
+    body:'Hot summer days: offer extra water sips between meals and include hydrating foods — watermelon, cucumber, bottle gourd, and muskmelon.',
     condition: () => {
       const month = new Date().getMonth(); // 0-indexed
       return month >= 2 && month <= 5; // Mar–Jun
@@ -3571,7 +3571,7 @@ function checkFoodCombo() {
   } else {
     if (benefits.length > 0) headline = benefits[0].split('—')[0].trim();
     else if (nutritionHighlights) headline = `Good choice! Rich in ${nutritionHighlights.split(',').slice(0, 3).join(',')}`;
-    else headline = 'Looks good for Ziva\'s age!';
+    else headline = 'Looks good for ' + childNameHtml() + '\'s age!';
   }
 
   // Diet-preference note (4-class gate): flag only foods OUTSIDE the current preference —
@@ -3591,9 +3591,9 @@ function checkFoodCombo() {
     // "outside your preference" note (the 2 AM under-warn). The body warning still always surfaces.
     if (verdict !== 'avoid') {
       verdict = 'caution'; verdictEmoji = zi('warn');
-      headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
+      headline = `Note: ${offPref.join(', ')} is outside ${childNameHtml()}\'s ${prefLabel} preference`;
     }
-    warnings.push(`Ziva's diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
+    warnings.push(`${childNameCapHtml()}'s diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
   }
 
   // ── 8b. food-effects headline (food-effects v2 §3.1, M-S-2) ──
@@ -3931,7 +3931,7 @@ function renderComboResult(r) {
     html += `<div class="combo-section"><div class="combo-section-title">${zi('handshake')} Pairs well with</div><div class="combo-body">${r.pairs_well_with}</div></div>`;
   }
 
-  // Ziva's history with these foods
+  // the child's history with these foods
   const queryFoods2 = r._queryFoods || [];
   if (queryFoods2.length > 0) {
     let historyHtml = '';
@@ -3940,7 +3940,7 @@ function renderComboResult(r) {
       if (h) historyHtml += h;
     });
     if (historyHtml) {
-      html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} Ziva\'s History</div>${historyHtml}</div>`;
+      html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} ${childNameHtml()}\'s History</div>${historyHtml}</div>`;
     }
 
     // Sleep correlation
@@ -6770,7 +6770,7 @@ function renderDomainHero(domainKey) {
       </div>
       <div class="dsh-info">
         <div class="dsh-domain-name">${lbl.emoji} ${lbl.label.charAt(0).toUpperCase() + lbl.label.slice(1)}</div>
-        <div class="dsh-domain-sublabel">${domSubs[domainKey]} · ${weight} of Ziva Score</div>
+        <div class="dsh-domain-sublabel">${domSubs[domainKey]} · ${weight} of Sprout Score</div>
       </div>
     </div>
     <div class="dsh-components">`;
@@ -7596,7 +7596,7 @@ function renderWeeklySummary() {
   let html = `<div style="font-size:var(--fs-xs);color:var(--light);margin-bottom:8px;">${weekLabel}</div>`;
 
   const rows = [];
-  if (zs.score !== null) rows.push({ icon: zi('sparkle'), label: 'Ziva Score', val: trend.avg7d || zs.score, delta: trend.delta });
+  if (zs.score !== null) rows.push({ icon: zi('sparkle'), label: 'Sprout Score', val: trend.avg7d || zs.score, delta: trend.delta });
   if (sleepT.score.current != null) rows.push({ icon: zi('moon'), label: 'Sleep', val: sleepT.score.current + '/100' });
   rows.push({ icon: zi('bowl'), label: 'Diet', val: dietS.score + ' · ' + vs.uniqueFoods + ' foods' });
   if (poopT.freq.current > 0) rows.push({ icon: zi('diaper'), label: 'Poop', val: poopT.freq.current + '/day' });
@@ -7761,7 +7761,7 @@ function renderInsightsCross() {
       </div>`;
 
       if (best.avg - worst.avg >= 5) {
-        html += `<div class="insight-narrative in-indigo">${zi('link')} On days with <strong>${best.label} logged</strong>, avg sleep score is <strong>${best.avg}</strong> vs <strong>${worst.avg}</strong> on ${worst.label} days. ${best.label === '3 meals' ? 'Full meals may help Ziva sleep better — well-fed babies settle easier.' : 'Interesting pattern — keep logging to see if it holds.'}</div>`;
+        html += `<div class="insight-narrative in-indigo">${zi('link')} On days with <strong>${best.label} logged</strong>, avg sleep score is <strong>${best.avg}</strong> vs <strong>${worst.avg}</strong> on ${worst.label} days. ${best.label === '3 meals' ? 'Full meals may help ' + childNameHtml() + ' sleep better — well-fed babies settle easier.' : 'Interesting pattern — keep logging to see if it holds.'}</div>`;
       }
     }
   }
@@ -8456,7 +8456,7 @@ function renderMealPlanSection() {
       + (travel ? `<span class="mp-mark mp-mark--travel">${zi('bag')}</span>` : '<span class="mp-mark"></span>') + `</button>`;
   }
   h += `</div>`;
-  h += (!Object.keys(plan.days).length && firstUse) ? `<p class="mp-empty">Plan Ziva's meals for the week: tap a day to start.</p>` + _mpDayCardHtml(_mpSel) : _mpDayCardHtml(_mpSel);
+  h += (!Object.keys(plan.days).length && firstUse) ? `<p class="mp-empty">Plan ${childNameHtml()}'s meals for the week: tap a day to start.</p>` + _mpDayCardHtml(_mpSel) : _mpDayCardHtml(_mpSel);
   h += `</div>`;
   root.innerHTML = h;
   // "For travel" sub-note: one statement of the 2 h rule per tab (V-V-275-9).

@@ -305,7 +305,7 @@ function _qaRoutine() {
   schedule.sort(function(a, b) { return a.sort - b.sort; });
 
   if (schedule.length === 0) {
-    return { title: 'Ziva\'s Routine', headline: 'Not enough data yet', icon: 'clock', domain: 'indigo', sections: [], dataGap: 'Log meals and sleep with times to build a routine picture.' };
+    return { title: '' + childNameCapHtml() + '\'s Routine', headline: 'Not enough data yet', icon: 'clock', domain: 'indigo', sections: [], dataGap: 'Log meals and sleep with times to build a routine picture.' };
   }
 
   var items = schedule.map(function(s) {
@@ -327,7 +327,7 @@ function _qaRoutine() {
 
   var age = ageAt();
   return {
-    title: 'Ziva\'s Typical Day',
+    title: '' + childNameCapHtml() + '\'s Typical Day',
     headline: 'Based on last 7 days avg',
     icon: 'clock',
     domain: 'indigo',
@@ -613,7 +613,7 @@ function _qaDoctorPrep() {
 
   return {
     title: 'Doctor Visit Prep',
-    headline: 'Ziva \u00b7 ' + fmtAgeMonths(age.months),
+    headline: '' + childNameCapHtml() + ' \u00b7 ' + fmtAgeMonths(age.months),
     icon: 'steth',
     domain: 'sky',
     sections: sections,
@@ -671,7 +671,7 @@ function _qaShareToday() {
   var text = formatSummaryAsText(summary);
   return {
     title: 'Share Today\'s Summary',
-    headline: 'Ziva \u00b7 ' + formatDate(today()),
+    headline: '' + childNameCapHtml() + ' \u00b7 ' + formatDate(today()),
     icon: 'link',
     domain: 'indigo',
     sections: [{ label: 'Preview', icon: zi('note'), items: [
@@ -697,7 +697,7 @@ function _qaShareToday() {
 function formatSummaryAsText(summary) {
   var age = ageAt();
   var lines = [];
-  lines.push('*Ziva (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
+  lines.push('*' + childNameHtml() + ' (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
   if (summary.scores && summary.scores.overall !== null) lines.push('Score: ' + summary.scores.overall + '/100');
   lines.push('');
 
@@ -738,7 +738,7 @@ function qaAnswerAge() {
   var weeksOld = Math.floor(totalDays / 7);
 
   return {
-    title: 'Ziva\'s Age',
+    title: '' + childNameCapHtml() + '\'s Age',
     headline: fmtAgeLong(age.months, age.days) + ' old',
     icon: 'baby',
     domain: 'rose',
@@ -1017,7 +1017,7 @@ function qaAnswerWeightGain(intentId) {
 
     if (w.stale) {
       dataItems.push({ text: 'Last weighed ' + w.daysSince + ' days ago — consider a new measurement', signal: 'warn' });
-      actionItems.push({ text: 'Weigh Ziva to update growth tracking', signal: 'action' });
+      actionItems.push({ text: 'Weigh ' + childNameHtml() + ' to update growth tracking', signal: 'action' });
     }
   }
 
@@ -1398,7 +1398,7 @@ function qaAnswerOverall(intentId) {
       return {
         icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Not enough data yet',
         sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
-          { text: 'Log sleep, meals, and poop to see the Ziva Score', signal: 'info' },
+          { text: 'Log sleep, meals, and poop to see the Sprout Score', signal: 'info' },
           { text: 'Each domain needs at least a few days of data', signal: 'action' }
         ]}],
         confidence: null,
@@ -1406,7 +1406,7 @@ function qaAnswerOverall(intentId) {
       };
     }
 
-    var headline = 'Ziva Score: ' + zs.score + '/100';
+    var headline = 'Sprout Score: ' + zs.score + '/100';
     var trend = getZivaScoreTrend7d();
     if (trend && trend.delta) {
       if (trend.delta > 0) headline += ' (↑' + trend.delta + ')';
@@ -1493,7 +1493,7 @@ function qaAnswerOverall(intentId) {
     return {
       icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Unable to compute score',
       sections: [{ label: 'WHAT TO DO', icon: zi('info'), items: [
-        { text: 'Log sleep, meals, and poop to build your Ziva Score', signal: 'action' }
+        { text: 'Log sleep, meals, and poop to build your Sprout Score', signal: 'action' }
       ]}],
       confidence: null, dataGap: 'Need more data'
     };

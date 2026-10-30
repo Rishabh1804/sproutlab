@@ -55,7 +55,7 @@ test.describe('food-effects v2 — R1 combo checker (both poles + floor)', () =>
       && typeof getFoodEffect === 'function'
       && typeof getAgeInMonths === 'function'
       && !!document.getElementById('comboInput'), null, { timeout: 10_000 });
-    // Sanity: Ziva is between the nut floor (6mo) and the honey ceiling (12mo),
+    // Sanity: the child is between the nut floor (6mo) and the honey ceiling (12mo),
     // so "peanut" is age-appropriate and "honey" is below its floor.
     const mo = await page.evaluate(() => getAgeInMonths());
     expect(mo, 'test relies on 6 < age < 12 months').toBeGreaterThan(6);
@@ -91,7 +91,7 @@ test.describe('food-effects v2 — R1 combo checker (both poles + floor)', () =>
   });
 
   test('below the soft floor → age AVOID, and the floor still renders (M-S-4)', async ({ page }) => {
-    // "whole almond" hits the 60-month choking gate (well above Ziva's age), so it
+    // "whole almond" hits the 60-month choking gate (well above the child's age), so it
     // is a below-floor avoid — but the tree-nut record's floor must still surface.
     const r = await runCombo(page, 'whole almond');
     expect(r.resultClass, 'below-floor → avoid').toContain('avoid');

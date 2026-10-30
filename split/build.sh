@@ -227,14 +227,14 @@ cat <<'HEAD'
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Ziva's Dashboard</title>
+  <title>SproutLab</title>
   <!-- PWA install contract — regression guard: tests/e2e/pwa-head.spec.ts -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#fdf0f3">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Ziva's Dashboard">
+  <meta name="apple-mobile-web-app-title" content="SproutLab">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
 HEAD

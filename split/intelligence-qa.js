@@ -1109,7 +1109,7 @@ function qaHandleFoodSafety(classified) {
     }
   }
 
-  // 6. Ziva's history with this food
+  // 6. the child's history with this food
   var historyItems = [];
   rawFoods.forEach(function(food) {
     var base = _baseFoodName(food);
@@ -1211,7 +1211,7 @@ function qaHandleFoodSafety(classified) {
     });
   }
 
-  // Ziva's history
+  // the child's history
   if (historyItems.length > 0) {
     sections.push({
       label: 'ZIVA\'S HISTORY',

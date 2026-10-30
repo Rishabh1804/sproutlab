@@ -38,7 +38,9 @@ import re, sys, os, glob
 
 # ─── Scope B — personalised-prediction prose (V-K-106 broadened) ──────────
 SCOPE_B = re.compile(
-    r"Ziva (will|should|might|is going to|is expected to|is on track to)"
+    # privacy-v1 P2b: the name now comes from the profile, so the subject is any of the old literal,
+    # "your child", or an interpolated childName*Html() (quoted or template form).
+    r"(?:Ziva|your child|childName(?:Cap)?Html\(\)(?:\}|\s*\+\s*['\"])?) (will|should|might|is going to|is expected to|is on track to)"
     r"\s+(be\s+)?[\w\s\-]{1,40}?\s+(by|at|around)\s+(month|week|day|\d)",
     re.IGNORECASE,
 )
@@ -56,6 +58,9 @@ SELF_TEST_ADVERSARIAL = [
     'Ziva will pull-to-stand by 9 months',
     'Ziva will say first words by 12 months',
     'Ziva should walk by month 12',
+    'Your child will sit by 6 months',
+    '${childNameHtml()} will walk by 12 months',
+    "' + childNameCapHtml() + ' should crawl by month 9",
 ]
 for adv in SELF_TEST_ADVERSARIAL:
     if not SCOPE_B.search(adv):
@@ -126,7 +131,7 @@ if total == 0:
     print(
         'audit-no-personalised-prediction-v1: PASS '
         f'(Scope B: 0 personalised-prediction; Scope A: 0 hardcoded source / 0 unverified parens; '
-        f'self-test: 5/5 adversarial inputs matched; scanned {len(files)} files)'
+        f'self-test: {len(SELF_TEST_ADVERSARIAL)}/{len(SELF_TEST_ADVERSARIAL)} adversarial inputs matched; scanned {len(files)} files)'
     )
     sys.exit(0)
 

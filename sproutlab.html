@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Ziva's Dashboard</title>
+  <title>SproutLab</title>
   <!-- PWA install contract — regression guard: tests/e2e/pwa-head.spec.ts -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#fdf0f3">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Ziva's Dashboard">
+  <meta name="apple-mobile-web-app-title" content="SproutLab">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
 /* ──────────────────────────────────────────────────────────────────────────
@@ -12314,7 +12314,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js" defer></script>
 </head>
 <body>
-<!-- ═══ Ziva Sketch Icon Set ═══ -->
+<!-- ═══ the child Sketch Icon Set ═══ -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
 <defs>
 <symbol id="zi-lotus" viewBox="0 0 24 24"><path d="M12 21c0 0-4-3.5-4-8c0-3 1.5-5 4-7c2.5 2 4 4 4 7c0 4.5-4 8-4 8z" fill="currentColor" opacity="0.15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21c0 0-7-2-8-7c-.5-2.5.5-5 3-6c1 2 2.5 4 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 21c0 0 7-2 8-7c.5-2.5-.5-5-3-6c-1 2-2.5 4-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
@@ -12432,7 +12432,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <symbol id="zi-ios-share" viewBox="0 0 24 24"><path d="M7 10v9a1.5 1.5 0 001.5 1.5h7A1.5 1.5 0 0017 19v-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 14V3M8.5 6.5L12 3l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-undo" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 9h10a6 6 0 016 6v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-tooth" viewBox="0 0 24 24"><path d="M7.5 3.5c-2.5 0-4 2-4 4.5 0 2.2.9 3.6 1.6 5.2.6 1.4.8 3 1.1 4.6.3 1.9.8 3.2 1.8 3.2 1.3 0 1.6-1.8 2-3.6.3-1.4.8-2.4 2-2.4s1.7 1 2 2.4c.4 1.8.7 3.6 2 3.6 1 0 1.5-1.3 1.8-3.2.3-1.6.5-3.2 1.1-4.6.7-1.6 1.6-3 1.6-5.2 0-2.5-1.5-4.5-4-4.5-1.8 0-2.8 1-4.5 1s-2.7-1-4.5-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
-<!-- Meal planner (spec meal-planner-v1 §4, 2026-10-29): travel bag, plan calendar, food flask (thermos), new-to-Ziva food badge (zi-new-food means a food new to Ziva, nothing else). Reserved until P1b wires diet.js: only the Surface Catalog uses them today. -->
+<!-- Meal planner (spec meal-planner-v1 §4, 2026-10-29): travel bag, plan calendar, food flask (thermos), new-to-the child food badge (zi-new-food means a food new to the child, nothing else). Reserved until P1b wires diet.js: only the Surface Catalog uses them today. -->
 <symbol id="zi-bag" viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="17" height="12.5" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M9 7.5v-2A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5v2M3.5 12.5h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10.5 12.5v2h3v-2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><circle cx="8.5" cy="14" r="1" fill="currentColor"/><circle cx="12" cy="14" r="1" fill="currentColor"/><circle cx="15.5" cy="14" r="1" fill="currentColor"/><circle cx="8.5" cy="17.3" r="1" fill="currentColor"/></symbol>
 <symbol id="zi-thermos" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M8.5 7V4.5A1.5 1.5 0 0110 3h4a1.5 1.5 0 011.5 1.5V7M7 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10.5 14c.6.8.6 1.7 0 2.5M13.5 14c.6.8.6 1.7 0 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
@@ -12624,7 +12624,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     </div>
     <input type="file" id="avatarInput" accept="image/*" data-change-action="handleAvatar">
     <div class="header-info">
-      <h1><span id="greetingText">Hello</span>, <span id="babyName">Ziva</span> <span id="greetingEmoji"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></span></h1>
+      <h1><span id="greetingText">Hello</span>, <span id="babyName" data-child-name-cap>Your child</span> <span id="greetingEmoji"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></span></h1>
       <p id="headerSub">Loading...</p>
       <div class="d-flex items-center gap-12 flex-wrap mt-6">
         <span class="t-md t-mid" id="headerDateTime">—</span>
@@ -12665,7 +12665,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
       <div class="card col-full card-hero welcome-guide" id="welcomeGuide" style="display:none;">
         <div class="wg-header">
-          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Welcome to Ziva's Dashboard</div>
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Welcome to SproutLab</div>
           <button class="wg-close" data-action="dismissWelcomeGuide" aria-label="Close">&times;</button>
         </div>
         <div class="t-sm t-light mt-4" id="wgSubtitle">A quick walkthrough to get you started — 5 steps</div>
@@ -12675,7 +12675,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="wg-step-num">1</div>
             <div class="wg-step-body">
               <strong>Log meals with Quick Log</strong>
-              <span>Tap the <strong>+</strong> button at the bottom → <strong>Feed</strong> → pick a meal (B/L/D/S) → type what Ziva ate → Save. Takes 10 seconds.</span>
+              <span>Tap the <strong>+</strong> button at the bottom → <strong>Feed</strong> → pick a meal (B/L/D/S) → type what <span data-child-name>your child</span> ate → Save. Takes 10 seconds.</span>
             </div>
           </div>
           <div class="wg-step" data-step="1">
@@ -12688,22 +12688,22 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="wg-step" data-step="2">
             <div class="wg-step-num">3</div>
             <div class="wg-step-body">
-              <strong>The Ziva Score</strong>
-              <span>The big number on Home combines sleep, diet, poop, medical & milestones into one score. <strong>It drops when data isn't logged</strong> — not because Ziva is doing poorly, but because the app needs your input. Tap it to see the breakdown.</span>
+              <strong>The Sprout Score</strong>
+              <span>The big number on Home combines sleep, diet, poop, medical & milestones into one score. <strong>It drops when data isn't logged</strong> — not because <span data-child-name>your child</span> is doing poorly, but because the app needs your input. Tap it to see the breakdown.</span>
             </div>
           </div>
           <div class="wg-step" data-step="3">
             <div class="wg-step-num">4</div>
             <div class="wg-step-body">
               <strong>"Can I Give This?"</strong>
-              <span>In the <strong>Track → Diet</strong> tab, scroll to the <strong>Can I Give This?</strong> card. Type any food to check if it's safe for Ziva's age, what nutrients it has, and what to pair it with.</span>
+              <span>In the <strong>Track → Diet</strong> tab, scroll to the <strong>Can I Give This?</strong> card. Type any food to check if it's safe for <span data-child-name>your child</span>'s age, what nutrients it has, and what to pair it with.</span>
             </div>
           </div>
           <div class="wg-step" data-step="4">
             <div class="wg-step-num">5</div>
             <div class="wg-step-body">
               <strong>Add new foods to the tracker</strong>
-              <span>In <strong>Track → Diet</strong>, find the <strong>Foods Introduced</strong> card. Type the food name, set the date, and mark it OK or Watch. This builds Ziva's food history and powers the nutrition analysis.</span>
+              <span>In <strong>Track → Diet</strong>, find the <strong>Foods Introduced</strong> card. Type the food name, set the date, and mark it OK or Watch. This builds <span data-child-name>your child</span>'s food history and powers the nutrition analysis.</span>
             </div>
           </div>
         </div>
@@ -12718,7 +12718,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <!-- ─── TODAY FOR ZIVA — the Home lede (PR-K) ─── -->
       <div class="card col-full today-hero" id="todayHeroCard" style="display:none;">
         <div class="th-head">
-          <div class="th-title">Today for Ziva</div>
+          <div class="th-title">Today for <span data-child-name>your child</span></div>
           <div class="th-age" id="thAge">—</div>
         </div>
         <div class="th-date" id="thDate">—</div>
@@ -12762,7 +12762,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
             <div class="ziva-score-hero" id="homeHeroScore" style="display:none;">
               <div class="zs-ring" id="zsRing" data-open-score="1">
                 <div class="zs-number" id="zsNumber">—</div>
-                <div class="zs-label">Ziva Score</div>
+                <div class="zs-label">Sprout Score</div>
                 <div class="zs-trend" id="zsTrend"></div>
               </div>
               <div class="zs-domains" id="zsDomains"></div>
@@ -12823,7 +12823,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div class="qa-card">
           <div class="qa-input-wrap">
             <span class="qa-input-icon"><svg class="zi"><use href="#zi-scope"/></svg></span>
-            <input type="text" class="qa-input" id="qaInput" placeholder="Ask about Ziva..." autocomplete="off" />
+            <input type="text" class="qa-input" id="qaInput" placeholder="Ask a question..." autocomplete="off" />
             <button class="qa-clear" id="qaClear" aria-label="Clear">&times;</button>
           </div>
           <div class="qa-chips" id="qaChips"></div>
@@ -12961,7 +12961,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-chart"/></svg></div> Growth Overview <button class="help-btn" aria-label="Help" data-help="help-growth"><span class="t-sm">ⓘ</span></button></div>
           <button class="btn-primary bp-rose" data-action="openGrowthModal">+ Measure</button>
         </div>
-        <div class="help-tip" id="help-growth">Percentiles compare Ziva to other babies her age. The 54th percentile means she's heavier than 54% of girls. Anything between 3rd and 97th is normal — what matters most is that she stays on her own curve over time, not the exact number.</div>
+        <div class="help-tip" id="help-growth">Percentiles compare <span data-child-name>your child</span> to other babies her age. The 54th percentile means she's heavier than 54% of girls. Anything between 3rd and 97th is normal — what matters most is that she stays on her own curve over time, not the exact number.</div>
         <div class="percentile-badges">
           <div class="pbadge" id="pbadge-wtpct"><div class="pbadge-icon t-rose"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg></div><div class="pbadge-val" id="wtPct">—</div><div class="pbadge-label">Weight %ile</div></div>
           <div class="pbadge" id="pbadge-htpct"><div class="pbadge-icon t-sky"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg></div><div class="pbadge-val" id="htPct">—</div><div class="pbadge-label">Height %ile</div></div>
@@ -13024,7 +13024,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <!-- FUN SIZE COMPARISON -->
       <div class="card card-info col-half">
         <div class="card-header">
-          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-balloon"/></svg></div> How Big is Ziva?</div>
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-balloon"/></svg></div> How big is <span data-child-name>your child</span>?</div>
         </div>
         <div id="sizeComparison" class="fx-col g8"></div>
       </div>
@@ -13189,7 +13189,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <span class="collapse-chevron" id="vaccCoverageChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="vaccCoveragePreview" class="mt-8"></div>
-        <div class="help-tip" id="help-coverage">Cross-checks Ziva's vaccination record against the complete IAP schedule. <strong>IAP</strong> = mandatory per Indian Academy of Pediatrics. <strong>IAP-Rec</strong> = strongly recommended by IAP. <strong>Private</strong> = optional, available at private clinics. Missing vaccines shown in red — discuss with your paediatrician.</div>
+        <div class="help-tip" id="help-coverage">Cross-checks <span data-child-name>your child</span>'s vaccination record against the complete IAP schedule. <strong>IAP</strong> = mandatory per Indian Academy of Pediatrics. <strong>IAP-Rec</strong> = strongly recommended by IAP. <strong>Private</strong> = optional, available at private clinics. Missing vaccines shown in red — discuss with your paediatrician.</div>
         <div id="vaccCoverageBody" class="collapse-body" style="display:none;">
           <div id="vaccCoverageContent" class="mt-10"></div>
         </div>
@@ -13298,7 +13298,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
               <button data-action="dateNext" aria-label="Next day">›</button>
             </div>
           </div>
-          <div class="help-tip" id="help-meals">Log what Ziva eats each day. Tap a "Your usual" or suggested combo, or type a food — each meal saves the moment you tap, with an Undo if you slip. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
+          <div class="help-tip" id="help-meals">Log what <span data-child-name>your child</span> eats each day. Tap a "Your usual" or suggested combo, or type a food — each meal saves the moment you tap, with an Undo if you slip. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
 
           <div id="dietIntelBanner"></div>
 
@@ -13336,7 +13336,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         </button>
 
         <div id="dietLibBrowse" class="col-full">
-        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-Ziva
+        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-the child
              lead card is prepended by renderLibShelves. The foods log is collapsed by
              default (S3c density fix) — the shelves are the browse, the log is a drawer. -->
         <div id="dietShelvesRoot"></div>
@@ -13421,7 +13421,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="card-header">
             <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chef"/></svg></div> Can I Give This?</div>
           </div>
-          <div class="combo-desc">Ask about any food or combination — get safety info, a recipe, and dos &amp; don'ts for Ziva's age.</div>
+          <div class="combo-desc">Ask about any food or combination — get safety info, a recipe, and dos &amp; don'ts for <span data-child-name>your child</span>'s age.</div>
           <div class="flex-gap8-wrap-mb">
             <input type="text" id="comboInput" class="form-input input-ctx-sage combo-input" placeholder="e.g. moringa + ragi, egg yolk, paneer with rice...">
             <button class="btn btn-sage disabled-state btn-min80" data-action="checkFoodCombo" id="comboCheckBtn" >Check <svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></button>
@@ -13443,9 +13443,9 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       </div>
     </div>
 
-    <!-- ═══ RECIPES SUB-TAB — suggested-for-Ziva + browsable cited corpus ═══
+    <!-- ═══ RECIPES SUB-TAB — suggested-for-the child + browsable cited corpus ═══
          WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md §2. One panel, three
-         stacked sections (no nested tabs): (a) "Suggested for Ziva" logged-data-
+         stacked sections (no nested tabs): (a) "Suggested for the child" logged-data-
          driven cards, (b) browsable catalog grouped by meal slot, (c) expand-in-
          place detail. renderDietRecipes() (diet.js, lazy-rendered when this
          sub-tab opens) fills #dietRecipesRoot. Corpus = window.RECIPES (cited,
@@ -13730,7 +13730,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
         <!-- Domain score hero (relocated per V-M-100 + G3; preserved ID).
              Architect correction post-spec ratification: hero on TOP — the
-             score card anchors the parent's view of where Ziva is overall
+             score card anchors the parent's view of where the child is overall
              before they scan the active-evidence list below. Spec body had
              the evidence-driven primary above the hero; live use surfaced
              that hero-as-anchor reads better. -->
@@ -13851,7 +13851,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
           <!-- NIGHT FORM -->
           <div id="sleepNightCard">
-            <div class="help-tip d-none" id="help-sleep">Track Ziva's bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
+            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
             <div class="fx-col g12">
               <div>
                 <label class="micro-label">Date</label>
@@ -13992,7 +13992,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div class="card-header">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Log Poop</div>
         </div>
-        <div class="help-tip d-none" id="help-poop">Track Ziva's diaper changes. Monitoring colour, consistency, and frequency helps spot digestive issues early. At 6–7 months with solids starting, changes in poop are normal and expected.</div>
+        <div class="help-tip d-none" id="help-poop">Track <span data-child-name>your child</span>'s diaper changes. Monitoring colour, consistency, and frequency helps spot digestive issues early. At 6–7 months with solids starting, changes in poop are normal and expected.</div>
         <div class="fx-col g12 mt-8">
           <div>
             <label class="micro-label">Date</label>
@@ -14898,7 +14898,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   <div class="app-footer">
     <div class="footer-text footer-text-style">
       <span>Built for</span>
-      <span class="footer-name">Ziva</span>
+      <span class="footer-name" data-child-name-cap>Your child</span>
       <svg class="zi footer-heart"><use href="#zi-heart"/></svg>
     </div>
   </div>
@@ -15193,7 +15193,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <div class="score-popup" id="scorePopup">
   <div class="score-popup-handle"></div>
   <div class="score-popup-header">
-    <div class="score-popup-title"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Ziva Score</div>
+    <div class="score-popup-title"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Sprout Score</div>
     <button class="score-popup-close" data-action="closeScorePopup">&times;</button>
   </div>
   <div class="sp-hero" id="spHero"></div>
@@ -15450,8 +15450,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 </div><!-- /sidebar -->
 <div class="avatar-lightbox" id="avatarLightbox" data-action="closeAvatarSelf">
   <button class="lb-close" data-action="closeAvatarLightbox" aria-label="Close photo">&times;</button>
-  <img id="lbImage" src="" alt="Ziva">
-  <div class="lb-name">Ziva <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></div>
+  <img id="lbImage" src="" alt="Your child">
+  <div class="lb-name"><span data-child-name-cap>Your child</span> <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></div>
   <div class="lb-sub" id="lbSub"></div>
   <div class="lb-actions">
     <button class="lb-btn" data-action="changeAvatar"><svg class="zi" aria-hidden="true"><use href="#zi-camera"/></svg> Change Photo</button>
@@ -15672,7 +15672,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
       <input type="text" id="docName" class="modal-input">
       <input type="text" id="docTitle" class="modal-input">
       <input type="tel" id="docPhone" class="modal-input">
-      <input type="text" id="docAddress" class="modal-input" placeholder="Address (e.g. Bistupur, Jamshedpur)">
+      <input type="text" id="docAddress" class="modal-input" placeholder="Address">
       <input type="url" id="docLocation" class="modal-input">
       <label class="collapse-hdr-flex">
         <input type="checkbox" id="docPrimary"> Set as primary doctor
@@ -15773,10 +15773,11 @@ const DEFAULT_REGION = 'jamshedpur';
 // the hospital list to avoid presenting Jamshedpur-specific phone
 // numbers to a non-Jamshedpur parent. 108/112 CTAs remain (108 national).
 function currentRegion() {
-  return {
-    region: EMERGENCY_CONTACTS[DEFAULT_REGION] ? DEFAULT_REGION : 'jamshedpur',
-    confidence: 'default'
-  };
+  // privacy-v1: the region is the family's own town when it matches a region we hold contacts
+  // for; otherwise the national numbers only (confidence 'default' suppresses the hospital list).
+  var city = (typeof profile !== 'undefined' && profile && profile.place && profile.place.city) ? String(profile.place.city).toLowerCase().trim() : '';
+  var known = city && Object.keys(EMERGENCY_CONTACTS).find(function(k) { return k === city || String(EMERGENCY_CONTACTS[k].label || '').toLowerCase() === city; });
+  return known ? { region: known, confidence: 'known' } : { region: DEFAULT_REGION, confidence: 'default' };
 }
 
 // SEQUENCE_CRITICAL_IDS: entries whose whatToDo order carries safety
@@ -15848,7 +15849,7 @@ if (typeof window !== 'undefined') {
 //     resuscitation authority) for that line, not NHS. Pediatrician
 //     sign-off remains desirable but is no longer a blocking uncertainty.
 //
-// AGE STEP — 1 year+ (2026-09-24, the 12-month audit): Ziva turned one on
+// AGE STEP — 1 year+ (2026-09-24, the 12-month audit): the child turned one on
 //   2026-09-04, so the INFANT techniques above are retired from this registry.
 //   `unresponsive` and `choking` now carry the CHILD (1 year to puberty) protocol,
 //   verified against the live NHS pages: "How to resuscitate a child" (mod.
@@ -15880,7 +15881,7 @@ if (typeof window !== 'undefined') {
 // allergic-reaction). Distinct registry from SEQUENCE_CRITICAL_IDS (that
 // governs the symptom-checker's whatToDo <ol> step-order); this governs
 // the Room's item order. Builder proposal for the Maren audit:
-//   • M-4 anaphylaxis ruled IN — Ziva is in active allergen introduction;
+//   • M-4 anaphylaxis ruled IN — the child is in active allergen introduction;
 //     a sudden airway / whole-body reaction is distinct from choking and
 //     poison and the food-room cross-link does not cover it (§5.3 M-4).
 //   • Only `unresponsive` is pinned-open per the locked wireframe;
@@ -15892,7 +15893,7 @@ const GENERAL_EMERGENCIES = [
     severity: 'critical', callLead: true,
     immediate: [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
-      // Child (1 year+) technique since Ziva turned one (2026-09-24 12-month audit): mouth-to-mouth
+      // Child (1 year+) technique since the child turned one (2026-09-24 12-month audit): mouth-to-mouth
       // with the nose pinched, heel of ONE hand, 5 cm — NHS 'How to resuscitate a child' (mod. 2026-08-07).
       // Breathing check + two-hand note + plainer landmark (Maren V-M-266-12; RCUK 2025 paediatric
       // BLS: look, listen and feel for no more than 10 s; lower half of the sternum, two hands if needed).
@@ -15939,7 +15940,7 @@ const GENERAL_EMERGENCIES = [
     id: 'choking', icon: 'warn', name: 'Choking (object)',
     severity: 'urgent', callLead: true,
     immediate: [
-      // Child (1 year+) technique since Ziva turned one: back blows then ABDOMINAL thrusts —
+      // Child (1 year+) technique since the child turned one: back blows then ABDOMINAL thrusts —
       // NHS 'How to stop a child from choking' (mod. 2025-09-24). Infant chest thrusts retired.
       // Action-first wording (Vela V-V-266-5); "shout for help" first and ONE round before calling
       // (Maren V-M-266-8 — NHS: call 999 if it doesn't come out after back blows + thrusts).
@@ -17626,7 +17627,7 @@ const VACC_SCHEDULE = [
 
   // ── 12 MONTHS ──
   { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many states give JE free at government centres in districts where it circulates (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
   { name:'MCV-2', age:'12 months', windowEnd:23, after:'MCV-1', completesSeries:true, type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
   { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 
@@ -17868,7 +17869,7 @@ const FOOD_SUGGESTIONS = {
 // UPCOMING EVENTS — holidays, birthdays, custom
 // ─────────────────────────────────────────
 
-// ── Indian Holidays 2026–2027 (major national + Jharkhand-relevant) ──
+// ── Indian Holidays 2026–2027 (major national) ──
 const INDIAN_HOLIDAYS = [
   { date:'2026-01-14', title:'Makar Sankranti',       type:'holiday', icon:zi('star') },
   { date:'2026-01-26', title:'Republic Day',           type:'holiday', icon:zi('flag-in') },
@@ -17883,7 +17884,6 @@ const INDIAN_HOLIDAYS = [
   { date:'2026-07-17', title:'Muharram',               type:'holiday', icon:zi('moon') },
   { date:'2026-08-15', title:'Independence Day',       type:'holiday', icon:zi('flag-in') },
   { date:'2026-08-28', title:'Raksha Bandhan',         type:'holiday', icon:zi('baby') },
-  { date:'2026-09-04', title:'Ziva\'s 1st Birthday ', type:'birthday', icon:zi('party') },
   { date:'2026-09-04', title:'Krishna Janmashtami',    type:'holiday', icon:zi('star') },
   { date:'2026-09-14', title:'Ganesh Chaturthi',       type:'holiday', icon:zi('baby') },
   { date:'2026-09-16', title:'Milad un-Nabi',          type:'holiday', icon:zi('moon') },
@@ -17892,7 +17892,6 @@ const INDIAN_HOLIDAYS = [
   { date:'2026-11-08', title:'Diwali',                 type:'holiday', icon:zi('diya') },
   { date:'2026-11-11', title:'Bhai Dooj',              type:'holiday', icon:zi('baby') },
   { date:'2026-11-15', title:'Chhath Puja',            type:'holiday', icon:zi('sun') },
-  { date:'2026-11-15', title:'Jharkhand Foundation Day',type:'holiday', icon:zi('star') },
   { date:'2026-11-24', title:'Guru Nanak Jayanti',     type:'holiday', icon:zi('diya') },
   { date:'2026-12-25', title:'Christmas',              type:'holiday', icon:zi('star') },
   // 2027
@@ -17938,7 +17937,6 @@ const EVENT_ACTIVITIES = {
     'Navratri':          [{ icon:zi('star'), text:'Hold her and sway to garba music — vestibular stimulation and rhythm bonding' }, { icon:zi('bell'), text:'Give her a small bell or rattle to shake to the beat — cause-effect and motor skills' }],
     'Bhai Dooj':         [{ icon:zi('baby'), text:'Let siblings or cousins do tilak on each other — she can watch the ritual and faces up close' }, { icon:zi('spoon'), text:'Offer her a new fruit as her special "treat" — taste exploration on a sweet-themed day' }],
     'Guru Nanak Jayanti': [{ icon:zi('star'), text:'Play soft kirtan music — soothing new melodic patterns for auditory development' }, { icon:zi('baby'), text:'Practice "sharing" by handing toys back and forth — builds social reciprocity' }],
-    'Jharkhand Foundation Day': [{ icon:zi('sprout'), text:'Outdoor walk in a local park — connect with nature in your home state' }, { icon:zi('star'), text:'Play Jharkhandi tribal music — unique rhythms and instruments expand her sound world' }],
     _default:            [{ icon:zi('party'), text:'Dress her up and take photos — she\'ll love seeing these when she\'s older' }, { icon:zi('baby'), text:'Family time together — let her soak in the festive atmosphere, sounds, and faces' }],
   },
   vacation: [
@@ -18910,7 +18908,7 @@ const FOOD_EFFECTS = {
   // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
   // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
   // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
-  // abdominal-thrusts + call-112 (child 1y+ technique since Ziva turned one; NEVER adrenaline).
+  // abdominal-thrusts + call-112 (child 1y+ technique since the child turned one; NEVER adrenaline).
   // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
   // gate doesn't apply).
   // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
@@ -18960,7 +18958,7 @@ const FOOD_EFFECTS = {
     // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
     severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
-    // the hazard, milk-spec §9). Child 1y+ (Ziva turned one 2026-09-04): 5 back blows + 5 abdominal
+    // the hazard, milk-spec §9). Child 1y+ (the child turned one 2026-09-04): 5 back blows + 5 abdominal
     // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
     seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
@@ -19236,7 +19234,7 @@ const SUB_SUGGESTIONS = {
 // UIB SESSION 2: SEASONAL + ACCEPTANCE + OUTING + HYDRATION
 // ════════════════════════════════════════
 
-// ── Seasonal Availability Database (Jamshedpur, Jharkhand) ──
+// ── Seasonal Availability Database (eastern India) ──
 var SEASONAL_AVAILABILITY = {
   // availability: 'peak' (abundant/cheap), 'available' (findable), 'scarce' (hard/expensive), 'unavailable'
   // month indices: 0=Jan, 11=Dec
@@ -19610,7 +19608,7 @@ window.CURATED_COMBOS = [
     minAgeMonths: 8 },
 ];
 
-// Curated combo lookup — returns entries matching slot + Ziva's current age.
+// Curated combo lookup — returns entries matching slot + the child's current age.
 window._fdGetCuratedCombosForMeal = function(meal, ageMonths) {
   if (!meal || !Array.isArray(CURATED_COMBOS)) return [];
   return CURATED_COMBOS.filter(function(c) {
@@ -19900,30 +19898,30 @@ window.ACTIVITY_CATEGORIES = [
 // or emptyState.
 window._MILESTONE_NARRATION_TEMPLATES = {
   fullData: {
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. Last evidence: {lastEvidenceText} ({lastEvidenceRelative}).',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. Last evidence: {lastEvidenceText} ({lastEvidenceRelative}).',
   },
   midState: {
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. No new evidence this week — quiet stretch.',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. No new evidence this week — quiet stretch.',
   },
   betweenWindow: {
     // V-V-54 fold: in-window.length === 0 + recent-evidence === Y
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. {recentConfirmedMilestone} confirmed {lastEvidenceRelative}. No milestones currently in-window — between-window stretch.',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. {recentConfirmedMilestone} confirmed {lastEvidenceRelative}. No milestones currently in-window — between-window stretch.',
   },
   emptyState: {
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. No milestones in-window yet — early days. Tap Library to explore what\'s next.',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. No milestones in-window yet — early days. Tap Library to explore what\'s next.',
   },
 };
 
 // MS_ACTIVITY_LEVEL_NARRATIONS — warm contextual prose per activityLevel tier.
 // Architect feedback 2026-05-27: "what's happening with the info we select in
-// 'How was Ziva today?' right now I select peak and it just stays there, not
+// 'How was the child today?' right now I select peak and it just stays there, not
 // much state change happens. For a parent the effect of this option must be
 // apparent."
 //
 // Used by renderMsActivityLevelStrip to surface an inline status BELOW the
 // chips after the parent selects a tier — closes the missing-consequence
 // gap. Honesty floor (CV3-006): the prose is observational + supportive,
-// never predictive ("Ziva will do X because of today's Peak") which would
+// never predictive ("the child will do X because of today's Peak") which would
 // trip audit-no-personalised-prediction-v1.sh Scope B. Tier-keyed by 1-4
 // matching the chip tiers; engine-extensibility floor for future 5th tier
 // lands as a new key without surface refactor.
@@ -19931,7 +19929,7 @@ window.MS_ACTIVITY_LEVEL_NARRATIONS = {
   1: 'Quiet days are gentle. Good time for cuddles, read-aloud, and rest — often follows a stretch of higher-energy days.',
   2: 'Settled play days build steady comfort. The unspectacular days matter just as much.',
   3: 'Engaged, high-output days often surface new skills. Watch for milestones unfolding.',
-  4: 'Big-energy days mean Ziva\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
+  4: 'Big-energy days mean your child\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
 };
 
 // WHO Motor Development Study + WHO developmental milestones
@@ -20555,7 +20553,7 @@ const MILESTONE_TIDBITS = [
   },
   {
     match: ['responds to name', 'respond'],
-    unlocks: 'Can now play name games, simple call-and-response, and early "where\'s Ziva?" peek-a-boo variations.',
+    unlocks: 'Can now play name games, simple call-and-response, and early "where\'s the baby?" peek-a-boo variations.',
     doctor: 'Consistent name response is screened at 9 months. Achieving this early is a strong language comprehension signal.',
     funFact: 'Babies can recognise their own name from as early as 4.5 months, but consistent head-turning takes another 1–2 months of practice.',
   },
@@ -20585,7 +20583,7 @@ const MILESTONE_TIDBITS = [
   },
   {
     match: ['stranger', 'familiar faces'],
-    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let Ziva warm up at her own pace.',
+    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let your child warm up at her own pace.',
     doctor: 'Stranger awareness is actually a positive cognitive milestone — it means she can distinguish familiar from unfamiliar.',
     funFact: 'Babies can distinguish their mother\'s face from others within hours of birth, but active stranger wariness peaks around 8 months.',
   },
@@ -20759,7 +20757,7 @@ const VACC_GUIDANCE = {
     note: 'Protects against chickenpox. Not in the government programme, so usually given privately.',
   },
   'je': {
-    dos: ['Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres — ask at her next visit', 'Private inactivated vaccine: two doses 28 days apart; government live vaccine: 9–12 and 16–24 months'],
+    dos: ['Many states give JE free at government centres in districts where it circulates — ask at the next visit', 'Private inactivated vaccine: two doses 28 days apart; government live vaccine: 9–12 and 16–24 months'],
     donts: ['Don\'t skip it if you live in an endemic district — JE can cause lasting brain damage'],
     note: 'Japanese encephalitis spreads through mosquito bites in rural, rice-growing areas.',
   },
@@ -20780,18 +20778,18 @@ const SYMPTOM_DB = [
     condition: function(q, mo) { return mo < 3 || q.match(/10[3-5]|above 102|very high|burning/i); },
     summary: 'Sponge with lukewarm water, light clothing, breastfeed often, call doctor for medication',
     whatToDo: [
-      'Sponge Ziva with lukewarm water (never cold). Keep her lightly dressed.',
+      'Sponge your child with lukewarm water (never cold). Keep her lightly dressed.',
       'Breastfeed frequently to prevent dehydration.',
       'Call your pediatrician for medication advice before giving anything.',
       'Monitor her temperature every 30 minutes.'
     ],
     precautions: [
       'Watch for stiff neck, rash, or difficulty breathing alongside the fever.',
-      'Note if Ziva becomes unusually limp, drowsy, or hard to wake.',
+      'Note if your child becomes unusually limp, drowsy, or hard to wake.',
       'Track when the fever started and the highest reading you have observed.'
     ],
     doNot: [
-      { text: 'Give aspirin to Ziva', critical: true },
+      { text: 'Give aspirin to your child', critical: true },
       { text: 'Give any fever medication without doctor advice', critical: true },
       { text: 'Use ice or cold water for sponging', critical: false },
       { text: 'Over-bundle her in blankets or clothing', critical: false }
@@ -20802,7 +20800,7 @@ const SYMPTOM_DB = [
       'Fever lasts more than 24 hours without improvement',
       'Fever with stiff neck or non-blanching rash',
       'Fever with difficulty breathing',
-      'Ziva is unusually limp, unresponsive, or hard to wake'
+      'Your child is unusually limp, unresponsive, or hard to wake'
     ],
     lifeThreat: false,
     callDoctor: true
@@ -20814,14 +20812,14 @@ const SYMPTOM_DB = [
     title: 'Mild Fever (99–101°F / 37.2–38.3°C)',
     summary: 'Monitor every 2 hours, light clothing, offer fluids, escalate above 102°F (38.9°C)',
     whatToDo: [
-      'Monitor Ziva’s temperature every 2 hours.',
+      'Monitor your child’s temperature every 2 hours.',
       'Keep her comfortable and lightly dressed.',
       'Offer breast milk or fluids frequently.',
       'A mild fever within 48 hours of vaccination is usually normal.'
     ],
     precautions: [
       'Watch for the temperature climbing above 102°F (38.9°C).',
-      'Note if Ziva becomes lethargic, refuses to feed, or develops a rash.',
+      'Note if your child becomes lethargic, refuses to feed, or develops a rash.',
       'Track whether the fever followed a recent vaccination.'
     ],
     doNot: [
@@ -20831,13 +20829,13 @@ const SYMPTOM_DB = [
     emergency: [
       'Fever rises above 102°F (38.9°C)',
       'Fever persists beyond 48 hours',
-      'Ziva becomes lethargic or refuses to feed',
+      'Your child becomes lethargic or refuses to feed',
       'Rash develops alongside the fever'
     ],
     lifeThreat: false,
     triage: true,
     triageQuestions: [
-      { q: 'Is Ziva under 3 months old?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is your child under 3 months old?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Has the fever lasted more than 48 hours?', yesSeverity: 'warning', noSeverity: null },
       { q: 'Is she unusually lethargic or refusing fluids?', yesSeverity: 'emergency', noSeverity: null }
     ],
@@ -20850,7 +20848,7 @@ const SYMPTOM_DB = [
     title: 'Vomiting',
     summary: 'Small frequent feeds, keep upright after feeds, watch for dehydration signs',
     whatToDo: [
-      'Keep Ziva upright for 20–30 minutes after feeding.',
+      'Keep your child upright for 20–30 minutes after feeding.',
       'Offer small, frequent feeds instead of large ones.',
       'If breastfeeding, continue normally — do not stop.',
       'Avoid introducing new foods until vomiting stops.'
@@ -20901,7 +20899,7 @@ const SYMPTOM_DB = [
       'Blood or mucus in the stool',
       'Fewer than 4 wet diapers in 24 hours',
       'Sunken eyes or fontanelle',
-      'Ziva is unusually lethargic',
+      'Your child is unusually lethargic',
       'Diarrhoea lasts more than 48 hours'
     ],
     lifeThreat: false,
@@ -20914,7 +20912,7 @@ const SYMPTOM_DB = [
     title: 'Skin Rash',
     summary: 'Note recent foods, keep area clean, glass-test for non-blanching, watch breathing',
     whatToDo: [
-      'Note what Ziva ate or was exposed to in the previous 24–48 hours.',
+      'Note what your child ate or was exposed to in the previous 24–48 hours.',
       'Keep the area clean and dry.',
       'Use mittens if needed to prevent scratching.',
       'Apply a mild, fragrance-free moisturizer for dry patches.'
@@ -20935,7 +20933,7 @@ const SYMPTOM_DB = [
       'Swelling of face, lips, or tongue',
       'Difficulty breathing or swallowing',
       'Hives plus breathing trouble (possible anaphylaxis)',
-      'Ziva seems very unwell, limp, or drowsy'
+      'Your child seems very unwell, limp, or drowsy'
     ],
     lifeThreat: false,
     callDoctor: true
@@ -20955,19 +20953,19 @@ const SYMPTOM_DB = [
     precautions: [
       'Watch for rapid or laboured breathing, chest retractions, or wheezing.',
       'Note any blue tint around lips or nails.',
-      'Track whether Ziva is still feeding willingly.'
+      'Track whether your child is still feeding willingly.'
     ],
     doNot: [
       { text: 'Give OTC cough or cold medicines to a baby', critical: true },
       { text: 'Use Vicks, menthol, or camphor products on a baby', critical: true },
-      { text: 'Expose Ziva to cigarette smoke', critical: false }
+      { text: 'Expose your child to cigarette smoke', critical: false }
     ],
     emergency: [
       'Breathing becomes rapid or laboured (chest retractions visible)',
       'Wheezing or gasping for breath',
       'Blue tint around lips or nails',
       'Cough persists more than 7 days',
-      'Ziva refuses to feed'
+      'Your child refuses to feed'
     ],
     lifeThreat: false,
     triage: true,
@@ -20985,7 +20983,7 @@ const SYMPTOM_DB = [
     title: 'Breathing Difficulty',
     summary: 'Keep upright, clear nose with saline, count breaths, call 108 if severe',
     whatToDo: [
-      'Keep Ziva upright.',
+      'Keep your child upright.',
       'Clear her nose with saline drops and a nasal aspirator.',
       'Stay calm so she stays calm.',
       'Count her breaths for a full minute while she is calm (normal at 1–2 years: under 40, usually about 24–39). 40 or more at rest is fast breathing — call the doctor.'
@@ -21005,7 +21003,7 @@ const SYMPTOM_DB = [
       'Blue tint around lips, fingernails, or mouth (cyanosis)',
       'More than 60 breaths per minute',
       'Grunting or stridor (high-pitched whistle on inhale)',
-      'Ziva is too breathless to feed or cry',
+      'Your child is too breathless to feed or cry',
       'Sudden onset after a possible choking episode'
     ],
     lifeThreat: true,
@@ -21037,7 +21035,7 @@ const SYMPTOM_DB = [
       'Refusal lasts more than 24 hours',
       'Refusal combined with fever or lethargy',
       'Fewer wet diapers than usual',
-      'Ziva seems in pain while swallowing'
+      'Your child seems in pain while swallowing'
     ],
     lifeThreat: false,
     triage: true,
@@ -21081,7 +21079,7 @@ const SYMPTOM_DB = [
       'Fever of 40°C (104°F) or more, or any fever with a stiff neck, a rash that doesn\'t fade when pressed, or drowsiness that is hard to wake from',
       'A fit (seizure), or fast or hard breathing',
       'Gums bleed heavily or look infected',
-      'Ziva is inconsolable for hours'
+      'Your child is inconsolable for hours'
     ],
     lifeThreat: false,
     callDoctor: false
@@ -21112,7 +21110,7 @@ const SYMPTOM_DB = [
       'No stool for 5+ days alongside visible discomfort',
       'Blood in the stool',
       'Abdomen is hard, swollen, or distended',
-      'Ziva is in obvious pain or refusing to feed'
+      'Your child is in obvious pain or refusing to feed'
     ],
     lifeThreat: false,
     callDoctor: false
@@ -21142,7 +21140,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Cry is high-pitched and unlike her normal crying',
       'Crying accompanied by fever or vomiting',
-      'Ziva draws her legs up to her abdomen repeatedly (possible intussusception)',
+      'Your child draws her legs up to her abdomen repeatedly (possible intussusception)',
       'Nothing calms her for more than 3 hours'
     ],
     lifeThreat: false,
@@ -21179,7 +21177,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Redness with thick yellow or green discharge',
       'Swelling around the eye or eyelid',
-      'Ziva rubs her eyes constantly or seems in pain',
+      'Your child rubs her eyes constantly or seems in pain',
       'Vision seems affected (not tracking or focusing)'
     ],
     lifeThreat: false,
@@ -21192,14 +21190,14 @@ const SYMPTOM_DB = [
     title: 'Ear Pain / Pulling',
     summary: 'Keep head elevated during sleep, watch for fever or fluid, never insert anything',
     whatToDo: [
-      'Keep Ziva’s head slightly elevated during sleep.',
+      'Keep your child’s head slightly elevated during sleep.',
       'Note whether ear-pulling started after a recent cold.',
       'Track whether the pulling is combined with fever or fussiness.'
     ],
     precautions: [
       'Ear-pulling alone is often just exploration at this age.',
       'Ear infections often follow upper respiratory infections.',
-      'Note any change in how Ziva responds to your voice (hearing concerns).',
+      'Note any change in how your child responds to your voice (hearing concerns).',
       'Ear-pulling with a fever of 38.3°C (101°F) or more: call her doctor the same day; it is often an ear infection.'
     ],
     doNot: [
@@ -21211,7 +21209,7 @@ const SYMPTOM_DB = [
       'Fluid or pus draining from the ear',
       'Fever of 40°C (104°F) or more, or a red, swollen, tender area behind the ear that pushes the ear outward',
       'A fit (seizure), or fast or hard breathing',
-      'Ziva is inconsolable, especially when lying down',
+      'Your child is inconsolable, especially when lying down',
       'Hearing seems noticeably affected'
     ],
     lifeThreat: false,
@@ -21225,7 +21223,7 @@ const SYMPTOM_DB = [
     summary: 'Stay calm, cold compress, observe 24h, wake every 2h while sleeping',
     whatToDo: [
       'Stay calm. Apply a cold compress wrapped in cloth to any bump for 10–15 minutes.',
-      'Observe Ziva closely for the next 24 hours.',
+      'Observe your child closely for the next 24 hours.',
       'Let her rest but check on her every 2 hours while sleeping.',
       'Note the height of the fall and what she landed on.'
     ],
@@ -21251,7 +21249,7 @@ const SYMPTOM_DB = [
     lifeThreat: true,
     triage: true,
     triageQuestions: [
-      { q: 'Did Ziva lose consciousness, even briefly?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Did your child lose consciousness, even briefly?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Has she vomited more than once since the fall?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Is she unusually sleepy or hard to wake?', yesSeverity: 'emergency', noSeverity: null }
     ],
@@ -21283,7 +21281,7 @@ const SYMPTOM_DB = [
       'Swelling of lips, tongue, or throat',
       'Difficulty breathing or swallowing',
       'Wheezing or noisy breathing',
-      'Ziva becomes limp, pale, or unresponsive',
+      'Your child becomes limp, pale, or unresponsive',
       'Sudden widespread hives plus breathing trouble (anaphylaxis)'
     ],
     lifeThreat: true,
@@ -21314,7 +21312,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Sunken fontanelle (soft spot)',
       'No wet diaper for 6 or more hours',
-      'Ziva is lethargic, limp, or unusually sleepy',
+      'Your child is lethargic, limp, or unusually sleepy',
       'Dry mouth with no tears when crying',
       'Skin does not spring back when gently pinched'
     ],
@@ -21358,7 +21356,7 @@ const SYMPTOM_DB = [
     title: 'Seizure / Convulsion',
     summary: 'Lay her on her side, clear the area, time the seizure, do not restrain',
     whatToDo: [
-      'Lay Ziva on her side on a flat surface (recovery position).',
+      'Lay your child on her side on a flat surface (recovery position).',
       'Clear the area around her of hard or sharp objects.',
       'Loosen any tight clothing around her neck.',
       'Time the seizure from start to finish.',
@@ -21366,7 +21364,7 @@ const SYMPTOM_DB = [
     ],
     precautions: [
       'Most seizures stop on their own within a few minutes.',
-      'After the seizure, Ziva will likely be sleepy and confused — this is normal.',
+      'After the seizure, your child will likely be sleepy and confused — this is normal.',
       'Note what happened just before the seizure (fever, head bump, missed feed).'
     ],
     doNot: [
@@ -21392,7 +21390,7 @@ const SYMPTOM_DB = [
     title: 'Choking',
     summary: 'If she can cough, let her. If silent and not breathing, back blows then abdominal thrusts',
     whatToDo: [
-      'If Ziva is coughing forcefully, let her keep coughing — do not interfere.',
+      'If your child is coughing forcefully, let her keep coughing — do not interfere.',
       'If she cannot cry, cough, or breathe, lay her face-down across your lap with her head low, or support her leaning forward.',
       'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
       'Still stuck? Kneel behind her, make a fist between her belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
@@ -21428,7 +21426,7 @@ const SYMPTOM_DB = [
     title: 'Head Injury',
     summary: 'Stabilize and observe, apply cold compress to bumps, wake every 2h for 24h',
     whatToDo: [
-      'Stay calm. Keep Ziva still while you assess her.',
+      'Stay calm. Keep your child still while you assess her.',
       'Apply a cold compress wrapped in cloth to any visible bump for 10–15 minutes.',
       'Observe her closely for the next 24 hours.',
       'Wake her every 2 hours while she sleeps to check responsiveness.',
@@ -21533,7 +21531,7 @@ const ESCALATING_TIPS = {
   'no-feed-today': [
     'Even partial meals matter — log what she\'s had so far to track her intake pattern.',
     'If appetite is low, try smaller, more frequent offerings. Teething or illness can suppress hunger temporarily.',
-    'Repeated low intake days this month. If Ziva is consistently refusing meals, discuss with your paediatrician at the next visit.',
+    'Repeated low intake days this month. If your child is consistently refusing meals, discuss with your paediatrician at the next visit.',
   ],
   'poop-gap': [
     'Tummy massage (clockwise circles), warm bath, high-fibre foods (pear, prune, papaya), and tummy time can help stimulate bowel movement.',
@@ -21564,7 +21562,7 @@ const ESCALATING_TIPS = {
   'food-variety-stale': [
     'Introduce one new food at a time with a 3-day gap. Try different textures and colours to build acceptance.',
     'Variety exposure in the first year shapes long-term food preferences. Even if she rejects a food, offer it again in a week — it can take 10-15 exposures.',
-    'Ziva has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
+    'Your child has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
   ],
   'food-correlation': [
     'This is a pattern SproutLab spotted in the log — this food has appeared close to a few unusual nappies. A pattern is not a diagnosis, and with a small number of days coincidence is very likely. Keep offering the food normally and note the stool each time so the picture gets clearer.',
@@ -21574,24 +21572,24 @@ const ESCALATING_TIPS = {
   'food-group-gap': [
     'Try adding one food from this group to a meal this week. Variety builds both nutrition and acceptance.',
     'This food group has been missing for a while. Each group provides different micronutrients that are hard to replace. Even small amounts count.',
-    'Extended gaps in this food group may lead to nutrient deficiencies. If Ziva consistently refuses foods from this group, discuss alternatives with your paediatrician.',
+    'Extended gaps in this food group may lead to nutrient deficiencies. If your child consistently refuses foods from this group, discuss alternatives with your paediatrician.',
   ],
   'vacc-reminder': [
     'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
   ],
   'supp-streak-broken': [
-    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
+    'Vitamin D3 helps your child absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
     'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking each dose to a meal or her milk makes it hard to forget.',
-    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
+    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for your child.',
   ],
   'low-iron': [
     'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',
     'Iron stores from birth deplete around 6 months. At this age, dietary iron becomes critical. Try adding iron-rich foods to at least one meal daily — ragi at breakfast is an easy win.',
-    'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If Ziva seems unusually tired or pale, discuss iron levels with your paediatrician.',
+    'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If your child seems unusually tired or pale, discuss iron levels with your paediatrician.',
   ],
   'low-calcium': [
     'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
-    'Calcium and Vitamin D work together for bone health. Since Ziva takes a Vitamin D supplement, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
+    'Calcium and Vitamin D work together for bone health. Since your child takes a Vitamin D supplement, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
     'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
   ],
   'low-protein': [
@@ -21606,7 +21604,7 @@ const ESCALATING_TIPS = {
   ],
   'meal-monotony': [
     'Try swapping one meal — if breakfast is always ragi, try oats or dalia. If lunch is always dal rice, try a vegetable khichdi. Small changes count.',
-    'Repeated meals can lead to nutrient gaps and reduce Ziva\'s willingness to try new tastes later. The first year is the best window for building food acceptance.',
+    'Repeated meals can lead to nutrient gaps and reduce your child\'s willingness to try new tastes later. The first year is the best window for building food acceptance.',
     'Same meals for an extended period. Variety in the first year builds the foundation for lifelong eating habits. Even rotating between 3-4 different breakfasts makes a difference.',
   ],
 };
@@ -21717,7 +21715,7 @@ const RECOMMENDATION_ROSTER = {
       ]},
     },
     severityMessages: {
-      gentle: { strength: 'short-by-1h',  text: 'Ziva\'s sleep ran a bit short today — try an earlier wind-down tomorrow.' },
+      gentle: { strength: 'short-by-1h',  text: 'Your child\'s sleep ran a bit short today — try an earlier wind-down tomorrow.' },
       firm:   { strength: 'short-by-2h+', text: 'Two-plus hours short on sleep. Consider an extra nap or earlier bedtime.' },
       urgent: { strength: 'critical',     text: 'Significant sleep deficit. A calm, dim evening + earlier bedtime tonight.' },
     },
@@ -22584,7 +22582,7 @@ const RECIPES = [
       'Temper a pinch of cumin in ½ tsp ghee and pour it over (strain out any whole seeds she cannot manage).',
       'Serve at room temperature.',
     ],
-    dos: ['Cooling, probiotic, a summer staple in Jamshedpur heat', 'Counts toward the ICMR-NIN 350 ml a day of milk/curd', 'Two vegetables slipped in'],
+    dos: ['Cooling, probiotic, a summer staple in the heat', 'Counts toward the ICMR-NIN 350 ml a day of milk/curd', 'Two vegetables slipped in'],
     donts: ['No salt in her portion', "Don't heat the curd", "Don't serve fridge-cold"],
     source: ['icmr', 'iap16', 'nhsbsl'],
   },
@@ -23385,7 +23383,7 @@ const TODDLER_FEEDING = {
 // change live in data.js itself (the source-reading safety gates read them there).
 //  Food Library expansion for 12–24 months (Ceres jurisdiction), merged into the
 //  data.js tables at parse time by _mergeFoodLib1224() below.
-//  Drafted 2026-09-24 for Ziva (12.7 mo, 4 teeth, Jamshedpur).
+//  Drafted 2026-09-24 for the child (12.7 mo, 4 teeth).
 // 
 //  ── SOURCES (all fetched 2026-09-24) ─────────────────────────────────────
 //  [WHO23]  https://iris.who.int/server/api/core/bitstreams/5abca011-4db2-4cf1-b959-45b756f7b600/content
@@ -23691,7 +23689,7 @@ const FOOD_SYNERGIES_ADD_12_24 = [
   ['mustard greens', 'ghee', 'Ghee helps absorb vitamin A from sarson', 'absorption'],
 ];
 
-// ── 9. SEASONAL_AVAILABILITY — Jamshedpur (UNCONFIRMED regional knowledge; add-if-absent) ─
+// ── 9. SEASONAL_AVAILABILITY — eastern India (UNCONFIRMED regional knowledge; add-if-absent) ─
 const SEASONAL_AVAILABILITY_ADD_12_24 = {
   'chiku':          { months:[0,1,2,3,9,10,11], availability:'peak', other:'available' },
   'custard apple':  { months:[7,8,9,10], availability:'peak' },
@@ -23752,7 +23750,7 @@ window._recipeComposeTagline = _recipeComposeTagline;
 window._recipeServing = _recipeServing;
 window._FOOD_LIB_1224_MERGE = _FOOD_LIB_1224_MERGE;
 // ─────────────────────────────────────────
-// SVG ICON HELPER — Ziva Sketch icon set
+// SVG ICON HELPER — the child Sketch icon set
 // ─────────────────────────────────────────
 function zi(name) { return `<svg class="zi" aria-hidden="true"><use href="#zi-${name}"/></svg>`; }
 
@@ -24275,18 +24273,34 @@ function _profParse(str) {
   const d = new Date(+m[1], +m[2] - 1, +m[3], m[4] ? +m[4] : 12, m[5] ? +m[5] : 0);   // HR-12: local parts
   return (d.getFullYear() === +m[1] && d.getMonth() === +m[2] - 1 && d.getDate() === +m[3]) ? d : null;
 }
+// The name is shown inside HTML all over the app, and some of that copy is escaped again on the way
+// out. So the stored name carries no markup characters, and a straight apostrophe becomes ’: that
+// keeps it safe in any context and unchanged by a second escHtml (HR-4).
+function _profCleanName(n) { return String(n).replace(/[<>&"`]/g, '').replace(/'/g, '\u2019').replace(/\s+/g, ' ').trim().slice(0, 40); }
 // Keeps a well-formed profile (unknown fields pass through for later versions); anything else is null.
 function _profNormalize(p) {
   if (!p || typeof p !== 'object' || !p.child || typeof p.child !== 'object') return null;
   const c = p.child;
   if (typeof c.name !== 'string' || !c.name.trim() || !_profParse(c.dob)) return null;
-  const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: c.name.trim().slice(0, 40) }) });
+  const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: _profCleanName(c.name) }) });
+  if (!out.child.name) return null;
   if (c.solidsStart != null && !_profParse(c.solidsStart)) out.child.solidsStart = null;
   if (typeof out.ts !== 'number') out.ts = 0;
   return out;
 }
 function _profChild() { return (profile && profile.child) || _PROFILE_FALLBACK; }
 function childName() { return _profChild().name; }
+// The child's name for copy, safe in HTML as stored (see _profCleanName). With no profile it reads
+// "your child", so a string built before the profile loads still makes sense.
+function childNameHtml() { return (profile && profile.child && profile.child.name) || 'your child'; }
+function childNameCapHtml() { return (profile && profile.child && profile.child.name) || 'Your child'; }
+// "Born 15 Jan 2024" (+ " · City" when the family gave one), for the header and the visit summary.
+function _profBornLine(withPlace) {
+  if (!profile) return '';
+  const born = 'Born ' + DOB.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const city = withPlace && profile.place && profile.place.city ? ' · ' + profile.place.city : '';
+  return born + city;
+}
 function childPlace() { return (profile && profile.place) || null; }
 // Refresh the module-wide date anchors from the profile (or the P1 fallback).
 function _profApply() {
@@ -24296,6 +24310,11 @@ function _profApply() {
   SOLIDS_START = _profParse(c.solidsStart) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
   _ZIVA_DOB = toDateStr(dob);
   _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+  // The template's name slots follow the profile (privacy-v1 P2b).
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll('[data-child-name]').forEach(el => { el.textContent = childNameHtml(); });
+    document.querySelectorAll('[data-child-name-cap]').forEach(el => { el.textContent = childNameCapHtml(); });
+  }
   // A changed birth date must not leave an age-keyed result behind (K-280-1).
   if (typeof _clearModifierCache === 'function') _clearModifierCache();
   if (typeof _islClearAll === 'function') _islClearAll();
@@ -25410,7 +25429,7 @@ function init() {
   const av = load(KEYS.avatar, null);
   if (av) {
     const el = document.getElementById('avatarEl');
-    el.innerHTML = `<img src="${av}" alt="Ziva">`;
+    el.innerHTML = `<img src="${av}" alt="${childNameHtml()}">`;
   }
 
   // CareTickets: validate + prune before first render
@@ -27494,7 +27513,7 @@ function saveCrop() {
   } else {
     // Save as main avatar (Home tab)
     const el = document.getElementById('avatarEl');
-    el.innerHTML = `<img src="${croppedSrc}" alt="Ziva">`;
+    el.innerHTML = `<img src="${croppedSrc}" alt="${childNameHtml()}">`;
     save(KEYS.avatar, croppedSrc);
     try { localStorage.setItem('ziva_avatar_full', fullSrc); } catch {}
   }
@@ -27533,7 +27552,7 @@ function closeAvatarLightbox() {
   if (lb.classList.contains('open')) {
     lb.classList.remove('open');
     // Reset lightbox name back to default
-    lb.querySelector('.lb-name').innerHTML = 'Ziva ' + zi('sprout');
+    lb.querySelector('.lb-name').innerHTML = '' + childNameCapHtml() + ' ' + zi('sprout');
     if (history.state?.overlay === 'lightbox') history.back();
   }
 }
@@ -27863,7 +27882,7 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     <div class="ziva-score-hero">
       <div class="zs-ring" style="${ringStyle}" data-open-score="1">
         <div class="zs-number">${zs.score}</div>
-        <div class="zs-label">Ziva Score</div>
+        <div class="zs-label">Sprout Score</div>
         <div class="zs-trend">${trendText}</div>
       </div>
       <div class="zs-domains">${domainPills}</div>
@@ -29212,7 +29231,7 @@ function exportData() {
     if (navigator.share) {
       try {
         var file = new File([jsonStr], fileName, { type: 'application/json' });
-        navigator.share({ title: "Ziva's Dashboard Backup", files: [file] })
+        navigator.share({ title: "SproutLab backup", files: [file] })
           .catch(function(shareErr) {
             // Share cancelled or failed — try anchor download
             if (shareErr.name !== 'AbortError') _exportViaAnchor(jsonStr, fileName);
@@ -30542,7 +30561,7 @@ function _bugCaptureState() {
         if (_lastKnownScores[k] !== null) domainScores[k] = _lastKnownScores[k];
       });
     }
-    // Grab the displayed Ziva Score from the DOM if available
+    // Grab the displayed Sprout Score from the DOM if available
     var scoreEl = document.getElementById('zsNumber');
     if (scoreEl && scoreEl.textContent) {
       var parsed = parseInt(scoreEl.textContent, 10);
@@ -30624,7 +30643,7 @@ function _bugFormatMessage(state, description, errorObj) {
   lines.push('Screen: ' + state.screen + ' \u00B7 DPR: ' + state.dpr);
 
   if (state.zivaScore !== null) {
-    lines.push('Ziva Score: ' + state.zivaScore + ' \u00B7 Data: ' + state.dataDays + ' days');
+    lines.push('Sprout Score: ' + state.zivaScore + ' \u00B7 Data: ' + state.dataDays + ' days');
   }
   if (state.modifierWeight > 0) {
     lines.push('Modifier: ' + Math.round(state.modifierWeight * 100) + '% active');
@@ -30673,7 +30692,7 @@ function _bugRenderContext(state) {
     ' &middot; Screen: ' + escHtml(state.screen) + '</div>';
 
   if (state.zivaScore !== null) {
-    html += '<div class="bug-context-row"><span class="bug-context-label">Ziva Score:</span> ' + state.zivaScore +
+    html += '<div class="bug-context-row"><span class="bug-context-label">Sprout Score:</span> ' + state.zivaScore +
       ' &middot; Data days: ' + state.dataDays + '</div>';
   }
 
@@ -30921,8 +30940,8 @@ function _bugInit() {
 //   for the single static DOB → ms-of-epoch baseline.
 // ─────────────────────────────────────────────────────────────────────────
 
-// Ziva's DOB anchor — single source of truth for age math.
-// Hardcoded per CLAUDE.md §Ziva Context: born 4 Sep 2025.
+// the child's DOB anchor — single source of truth for age math.
+// Set from the profile by _profApply (privacy-v1 §3.1).
 // HR-12: stored as YYYY-MM-DD; Date.parse with UTC suffix to avoid local-tz drift.
 let _ZIVA_DOB = '';                                             // set by _profApply in init()
 let _ZIVA_DOB_MS = 0;                                            // set by _profApply in init()
@@ -30974,7 +30993,7 @@ function _msStandardFor(standards, key) {
 // _predictMilestoneWindow — Primitive 1.
 // Clinical-range predictor for a single milestone. PURE function. NEVER
 // personalised — returns the typical clinical band from the active reference
-// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a Ziva-specific prediction.
+// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a the child-specific prediction.
 // Audit-no-personalised-prediction-v1.sh enforces the honesty floor at build.
 function _predictMilestoneWindow(milestoneId, opts) {
   opts = opts || {};
@@ -31916,8 +31935,8 @@ function updateHeader() {
     dtEl.innerHTML = `${zi('clock')} ${escHtml(dayName)}, ${escHtml(dateStr)} · ${escHtml(timeStr)}${moonSuffix}`;
   }
 
-  document.getElementById('headerSub').textContent =
-    `Born 4 Sep 2025 · ${fmtAgeShort(months, days)} · Jamshedpur`;
+  const _born = _profBornLine(false), _city = (profile && profile.place && profile.place.city) || '';
+  document.getElementById('headerSub').textContent = [_born, fmtAgeShort(months, days), _city].filter(Boolean).join(' · ');
 
   // home precise age
   const ageEl = document.getElementById('homePreciseAge');
@@ -32090,10 +32109,22 @@ setInterval(() => {
 function fetchWeather() {
   var weatherEl = document.getElementById('headerWeather');
   if (!weatherEl) return;
-  // Jamshedpur coordinates
-  var lat = 22.8;
-  var lon = 86.18;
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia/Kolkata')
+  // The family's town from the profile (privacy-v1 §3.1); no town, no weather line.
+  var place = (typeof profile !== 'undefined' && profile && profile.place) || null;
+  if (!place || (!place.city && place.lat == null)) { weatherEl.textContent = ''; return; }
+  if (place.lat == null || place.lon == null) {
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&name=' + encodeURIComponent(place.city))
+      .then(function(r) { return r.json(); })
+      .then(function(g) {
+        var hit = g && g.results && g.results[0];
+        if (!hit) return;
+        _profSave(profile.child, Object.assign({}, place, { lat: Math.round(hit.latitude * 100) / 100, lon: Math.round(hit.longitude * 100) / 100, tz: place.tz || hit.timezone || null }));
+        fetchWeather();
+      }).catch(function() {});
+    return;
+  }
+  var lat = place.lat, lon = place.lon, tz = encodeURIComponent(place.tz || 'auto');
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=' + tz)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.current) {
@@ -32257,7 +32288,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // ─────────────────────────────────────────
 // HOME TAB RENDER
 // ─────────────────────────────────────────
-// ── "Today for Ziva" — the Home lede (PR-K) ──
+// ── "Today for the child" — the Home lede (PR-K) ──
 // A warm, scannable card that answers the one question a tired parent opens
 // the app with: what matters today? Headline + age + date, then the single
 // highest-priority item (an action or watch alert) — or a calm all-clear.
@@ -32542,7 +32573,7 @@ function renderRemindersAndAlerts() {
   if (activeMeds.length) {
     const trackingSince = medChecks._trackingSince || todayStr;
     activeMeds.forEach(m => {
-      const startDate = m.start || '2025-09-04';
+      const startDate = m.start || toDateStr(DOB);
       const earliest = startDate > trackingSince ? startDate : trackingSince;
       for (let i = 1; i <= 14; i++) {
         const d = new Date(); d.setDate(d.getDate() - i);
@@ -32790,7 +32821,7 @@ function getActiveCareSignals() {
     // idx matches renderRemindersAndAlerts' supp-alert-${idx} (same activeMeds
     // filter, same order) so the due-today deep-link lands on that med's card.
     activeMeds.forEach(function(m, idx) {
-      var startDate = m.start || '2025-09-04';
+      var startDate = m.start || toDateStr(DOB);
       var earliest = startDate > trackingSince ? startDate : trackingSince;
       var missed = 0;
       var firstMissedDs = null;  // most-recent missed day (i=1 backwards)
@@ -34157,7 +34188,7 @@ function _msRelativeTime(ts) {
 
 // activityLevel:1-4 chip strip (Primitive 1) — single-tap chip; reads
 // _getActivityLevelToday and writes via _setActivityLevelToday. Honest no-
-// signal at activityLevel:null (empty-state prompt: "How was Ziva today?";
+// signal at activityLevel:null (empty-state prompt: "How was the child today?";
 // V-V-65 fold: prompt-as-label-above-strip; non-scrolling at 320px).
 function renderMsActivityLevelStrip() {
   const el = document.getElementById('msActivityLevelStrip');
@@ -34183,14 +34214,14 @@ function renderMsActivityLevelStrip() {
       + '<div class="ms-al-chip-desc">' + escHtml(t.desc) + '</div>'
       + '</button>';
   }).join('');
-  // Prompt swaps once a level is logged — "How was Ziva today?" → "Today's
+  // Prompt swaps once a level is logged — "How was the child today?" → "Today's
   // energy" — so the question/answer relationship reads as resolved.
   // Inline status surfaces the consequence: which tier was logged + a
   // warm contextual narration. CV3-006 Warmth axis closure on the
   // Architect's "the effect must be apparent" feedback. The status reads
   // BELOW the chip strip because the selected chip is the answer; the
   // status is the system's acknowledgement + context.
-  const prompt = (currentLevel == null) ? 'How was Ziva today?' : 'Today\'s energy';
+  const prompt = (currentLevel == null) ? 'How was ' + childNameHtml() + ' today?' : 'Today\'s energy';
   let statusHtml = '';
   if (currentLevel != null) {
     const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === currentLevel);
@@ -34320,7 +34351,7 @@ function _renderMsInWindowCard(item, opts) {
   // window.windowStatus (V-V-57 rename). "early band"/"in band"/"late band"
   // is the parent-legible framing — never "soonest-to-age-out".
   const bandLabel = _msWindowBandLabel(win);
-  const ageText = 'Ziva is ' + ageM + 'm ' + ageRem + 'd' + (bandLabel ? ' — ' + bandLabel : '');
+  const ageText = '' + childNameCapHtml() + ' is ' + ageM + 'm ' + ageRem + 'd' + (bandLabel ? ' — ' + bandLabel : '');
   // Status pill: confirmed / practicing / not-yet (V-V-57). Tooltip MUST
   // include the word "Practicing" per Maren V-V-50 watch-list.
   const statusLabel = {
@@ -34843,7 +34874,7 @@ function _msAgeMonthsAt(isoDate) {
 // Trajectory ribbon (Patterns sub-tab; return-visit surface 2). MAJOR
 // OVERHAUL post-Architect feedback 2026-05-27 (V-V-49 collapse rebated):
 // - Temporal X-axis (age in months) replaces evenly-spaced markers; markers
-//   land at the age they were celebrated/started/expected, conveying Ziva's
+//   land at the age they were celebrated/started/expected, conveying the child's
 //   journey along time rather than as a flat dot sequence.
 // - 3 distinct visual states (over V-V-49 2-state collapse): "celebrated"
 //   (sage filled) / "practicing" (amber filled + sage ring halo) / "coming
@@ -34852,8 +34883,8 @@ function _msAgeMonthsAt(isoDate) {
 //   state cleanly. The labels also no longer share the "or" pattern that
 //   collapsed two distinct journey-states into one chip.
 // - Month-axis ticks every 3 months along the bottom with labels.
-// - Dashed vertical "now" indicator at Ziva's current age — gives the
-//   parent the answer to "where is Ziva today?" without reading prose.
+// - Dashed vertical "now" indicator at the child's current age — gives the
+//   parent the answer to "where is the child today?" without reading prose.
 // - All markers tappable when they have a milestone id (V-V-48 contract).
 // - SVG <title> for native hover/long-press tooltip showing milestone text.
 function renderMsTrajectoryRibbon() {
@@ -34929,7 +34960,7 @@ function renderMsTrajectoryRibbon() {
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
       + zi('chart') + '</div> Trajectory</div></div>'
-      + '<div class="t-sub-light text-center py-4">Ziva\'s journey is just beginning — milestones will appear here as she grows.</div>';
+      + '<div class="t-sub-light text-center py-4">' + childNameCapHtml() + '\'s journey is just beginning — milestones will appear here as she grows.</div>';
     return;
   }
 
@@ -35045,13 +35076,13 @@ function renderMsTrajectoryRibbon() {
     + '<span class="ms-traj-legend-item" data-state="comingup">' + swatchSVG('comingup') + ' ' + nCom + ' coming up</span>'
     + '</div>';
 
-  // Narrative caption — warmer than "X markers on Ziva's timeline".
+  // Narrative caption — warmer than "X markers on the child's timeline".
   // Phrases the picture as a journey, not as a count of dots. Half-awake-test
   // anchor: a tired parent should grok the present-state from the caption
   // alone, without parsing the markers.
   let caption;
   if (nCel > 0 && nCom > 0) {
-    caption = 'Ziva has celebrated ' + nCel + ', is working on ' + nPra
+    caption = '' + childNameCapHtml() + ' has celebrated ' + nCel + ', is working on ' + nPra
       + (nPra === 1 ? '' : '')
       + ', with ' + nCom + ' more on the horizon. Tap a marker for details.';
   } else if (nCel > 0) {
@@ -35059,7 +35090,7 @@ function renderMsTrajectoryRibbon() {
   } else if (nPra > 0) {
     caption = nPra + ' milestone' + (nPra === 1 ? '' : 's') + ' in progress. Tap a marker for details.';
   } else {
-    caption = nCom + ' coming up — Ziva\'s journey is just starting.';
+    caption = nCom + ' coming up — ' + childNameCapHtml() + '\'s journey is just starting.';
   }
 
   el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
@@ -36049,7 +36080,7 @@ function confirmRegressionCheck(idx) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
   overlay.innerHTML = `<div class="modal" style="max-width:360px;">
     <h3>Update: ${escHtml(m.text)}</h3>
-    <p style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:12px;">Currently ${stageMeta.icon} ${stageMeta.label}. Where is Ziva now?</p>
+    <p style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:12px;">Currently ${stageMeta.icon} ${stageMeta.label}. Where is ${childNameHtml()} now?</p>
     <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;">${options}</div>
     <div class="modal-btns" style="margin-top:12px;">
       <button class="btn btn-ghost" onclick="this.closest('.confirm-overlay').remove()">Cancel</button>
@@ -37384,7 +37415,7 @@ function renderDietIntelBanner() {
 
       if (best.length > 0) {
         html += '<div class="dib-card dib-synergy">';
-        html += '<div style="font-weight:600;margin-bottom:6px;">' + zi('bulb') + ' ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from Ziva\'s favorites</div>';
+        html += '<div style="font-weight:600;margin-bottom:6px;">' + zi('bulb') + ' ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from ' + childNameHtml() + '\'s favorites</div>';
         best.forEach(function(t, idx) {
           var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
           html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
@@ -39494,7 +39525,7 @@ function renderPoopLog() {
   // Full log
   const recent = poopData.slice(0, 30);
   if (recent.length === 0) {
-    el.innerHTML = `<div class="t-sub" style="text-align:center;padding:20px;">No entries yet. Log Ziva's first poop!</div>`;
+    el.innerHTML = `<div class="t-sub" style="text-align:center;padding:20px;">No entries yet. Log ${childNameHtml()}'s first poop!</div>`;
     return;
   }
 
@@ -39727,7 +39758,7 @@ function renderHomePoop() {
     el.innerHTML = `<div class="info-strip is-amber tappable" data-tab="poop">
       <span><svg class="zi"><use href="#zi-diaper"/></svg></span>
       <div><strong class="tc-amber">No poop logged yet</strong>
-      <div class="t-sub">Tap to start tracking Ziva's diapers</div></div>
+      <div class="t-sub">Tap to start tracking ${childNameHtml()}'s diapers</div></div>
     </div>`;
     return;
   }
@@ -40434,7 +40465,7 @@ function computeBaselines() {
       const ds = toDateStr(d);
       const trackStart = medChecks._trackingSince || todayStr;
       if (ds < trackStart) continue;
-      if (ds < (m.start || '2025-09-04')) continue;
+      if (ds < (m.start || toDateStr(DOB))) continue;
       total30++;
       if (medCheckIsDone(medDayVal(m, ds))) given30++;
     }
@@ -40627,7 +40658,7 @@ const SYNTHESIS_RULES = [
   {
     ids: ['sleep-score-drop', 'hard-stool-streak', 'food-reaction'],
     title: 'New food → digestive upset → poor sleep',
-    body: 'A new food was introduced, followed by hard stools and disrupted sleep. These are likely connected. Simplify Ziva\'s diet for a couple of days and monitor.',
+    body: 'A new food was introduced, followed by hard stools and disrupted sleep. These are likely connected. Simplify ' + childNameHtml() + '\'s diet for a couple of days and monitor.',
     tip: 'Go back to well-tolerated foods (dal-rice, ragi porridge) for 2-3 days. Keep up fluids. Sleep should recover as digestion settles.',
     icon: zi('link'), severity: 'watch',
   },
@@ -40641,7 +40672,7 @@ const SYNTHESIS_RULES = [
   {
     ids: ['food-reaction', 'hard-stool-streak'],
     title: 'New food + hard stools — likely dietary adjustment',
-    body: 'A recently introduced food coincides with hard stools. Ziva\'s gut may need time to adjust to the new food.',
+    body: 'A recently introduced food coincides with hard stools. ' + childNameCapHtml() + '\'s gut may need time to adjust to the new food.',
     tip: 'Pause the new food for a few days. If stools normalize, try reintroducing in smaller quantities. Mark the food as "Watch" in the diet tab.',
     icon: zi('link'), severity: 'watch',
   },
@@ -40748,7 +40779,7 @@ function computeAlerts() {
           id: 'no-feed-today', key,
           severity: 'watch', icon: zi('bowl'),
           title: 'No meals logged today',
-          body: 'It\'s past 11 AM and no meals have been logged for Ziva today.',
+          body: 'It\'s past 11 AM and no meals have been logged for ' + childNameHtml() + ' today.',
           tip: getEscalatedTip('no-feed-today'),
           action: { label: 'Log Feed', fn: 'openQuickModal("feed")' },
           tab: 'diet'        });
@@ -40761,7 +40792,7 @@ function computeAlerts() {
   if (sortedPoop.length > 0) {
     const lastPoopDate = sortedPoop[0].date;
     const daysSince = Math.floor((new Date(todayStr) - new Date(lastPoopDate)) / 86400000);
-    // Use baseline gap to set thresholds — if Ziva normally goes every 2 days, 4 is abnormal
+    // Use baseline gap to set thresholds — if the child normally goes every 2 days, 4 is abnormal
     // If normally every day, 3 is abnormal
     const baseGap = bl.poopAvgGapDays || 1;
     const infoThresh = Math.max(3, Math.floor(baseGap + 1.5));
@@ -40964,7 +40995,7 @@ function computeAlerts() {
     // V-K-66: schema-aware "yesterday missed" check — handles both string and object shapes.
     const ydDone = medCheckIsDone(ydStatus);
     const ydSkipped = medCheckSkipped(ydStatus);
-    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydDone && (ydSkipped || !ydStatus || parseMedCheck(ydStatus).status === 'partial'));
+    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || toDateStr(DOB)) && (!ydDone && (ydSkipped || !ydStatus || parseMedCheck(ydStatus).status === 'partial'));
     // Count how long the prior streak was before it broke
     if (wasMissedYd && streak === 0) {
       let priorStreak = 0;
@@ -41045,7 +41076,7 @@ function computeAlerts() {
         id: 'iron-no-vitc', key,
         severity: 'info', icon: zi('target'),
         title: 'Iron meals missing Vitamin C pairing',
-        body: 'Ziva had iron-rich foods ' + bl.ironDays7d + ' times this week but never paired with Vitamin C, which can double iron absorption.',
+        body: '' + childNameCapHtml() + ' had iron-rich foods ' + bl.ironDays7d + ' times this week but never paired with Vitamin C, which can double iron absorption.',
         tip: getEscalatedTip('iron-no-vitc'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
         tab: 'diet'      });
@@ -41060,7 +41091,7 @@ function computeAlerts() {
         id: 'meal-monotony', key,
         severity: 'info', icon: zi('hourglass'),
         title: 'Same meals for ' + bl.sameMealStreak + ' days in a row',
-        body: 'Ziva has been eating the exact same meals for ' + bl.sameMealStreak + ' days. Variety ensures broader nutrient coverage and builds taste acceptance.',
+        body: '' + childNameCapHtml() + ' has been eating the exact same meals for ' + bl.sameMealStreak + ' days. Variety ensures broader nutrient coverage and builds taste acceptance.',
         tip: getEscalatedTip('meal-monotony'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
         tab: 'diet'      });
@@ -41079,8 +41110,8 @@ function computeAlerts() {
         const firstMissing = missingMeals[0];
         const sev = loggedMeals.length === 0 ? 'watch' : 'info';
         const bodyMsg = loggedMeals.length === 0
-          ? 'No meals logged today. Log what Ziva ate or mark meals as skipped.'
-          : loggedMeals.length + '/3 meals logged. Log the rest or skip if Ziva didn\'t eat.';
+          ? 'No meals logged today. Log what ' + childNameHtml() + ' ate or mark meals as skipped.'
+          : loggedMeals.length + '/3 meals logged. Log the rest or skip if ' + childNameHtml() + ' didn\'t eat.';
         alerts.push({
           id: 'missing-meal', key,
           severity: sev, icon: zi('bowl'),
@@ -41158,7 +41189,7 @@ function computeAlerts() {
               id: 'dinner-bed-gap', key,
               severity: 'watch', icon: zi('clock'),
               title: 'Dinner→bed gap is only ' + gapMins + ' min',
-              body: 'Ziva had dinner at ' + formatTimeShort(dinnerTime) + ' and bedtime was ' + formatTimeShort(bedtime) + '. A gap under 60 minutes can cause discomfort, reflux, or restless sleep.',
+              body: '' + childNameCapHtml() + ' had dinner at ' + formatTimeShort(dinnerTime) + ' and bedtime was ' + formatTimeShort(bedtime) + '. A gap under 60 minutes can cause discomfort, reflux, or restless sleep.',
               tip: 'Aim for 60–90 minutes between the last meal and bedtime. Tomorrow, try shifting dinner 15–20 minutes earlier.',
               action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
               tab: 'sleep'            });
@@ -41210,7 +41241,7 @@ function computeAlerts() {
       id: 'first-sleepthrough', key,
       severity: 'positive', icon: zi('sparkle'),
       title: 'First full night\'s sleep!',
-      body: 'Ziva slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
+      body: '' + childNameCapHtml() + ' slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
       tip: 'This doesn\'t mean every night will be like this — but it shows she CAN do it. Keep the same bedtime routine that worked.',
       action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
       tab: 'sleep'    });
@@ -41236,7 +41267,7 @@ function computeAlerts() {
       id: 'consistent-digestion', key,
       severity: 'positive', icon: zi('check'),
       title: 'Digestion has been stable for ' + bl.poopConsistentStreak + '+ entries',
-      body: 'All recent poops have been normal or soft consistency. Ziva\'s tummy is happy!',
+      body: 'All recent poops have been normal or soft consistency. ' + childNameCapHtml() + '\'s tummy is happy!',
       tip: 'Stable digestion means her gut is adjusting well to her current diet. A great time to try a new food if you haven\'t recently.',
       action: null, tab: 'poop'    });
   }
@@ -41274,7 +41305,7 @@ function computeAlerts() {
       severity: 'positive', icon: zi('note'),
       title: bl.mealLoggingStreak + '-day meal logging streak!',
       body: 'All 3 meals logged for ' + bl.mealLoggingStreak + ' consecutive days. Consistent tracking gives the best insights.',
-      tip: 'Your data is building a clear picture of Ziva\'s eating patterns. The more consistent the logging, the better the insights.',
+      tip: 'Your data is building a clear picture of ' + childNameHtml() + '\'s eating patterns. The more consistent the logging, the better the insights.',
       action: null, tab: 'diet'    });
   }
 
@@ -41285,7 +41316,7 @@ function computeAlerts() {
       id: 'growth-on-track', key,
       severity: 'positive', icon: zi('chart'),
       title: 'Growth on track for ' + bl.growthConsistentWeeks + '+ weeks',
-      body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. Ziva is growing beautifully.',
+      body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. ' + childNameCapHtml() + ' is growing beautifully.',
       tip: 'Consistent, healthy weight gain is more important than hitting a specific number. Keep up the balanced nutrition.',
       action: null, tab: 'growth'    });
   }
@@ -41322,7 +41353,7 @@ function computeAlerts() {
       id: 'iron-rich-week', key,
       severity: 'positive', icon: zi('drop'),
       title: 'Iron-rich week — ' + bl.ironDays7d + '/7 days!',
-      body: 'Ziva had iron-rich foods on ' + bl.ironDays7d + ' of the last 7 days. This is excellent for preventing anaemia and supporting brain development.',
+      body: '' + childNameCapHtml() + ' had iron-rich foods on ' + bl.ironDays7d + ' of the last 7 days. This is excellent for preventing anaemia and supporting brain development.',
       tip: bl.ironVitCPairCount >= 2 ? 'And you paired iron with Vitamin C ' + bl.ironVitCPairCount + ' times — maximum absorption!' : 'Tip: pair iron meals with Vitamin C (lemon, amla, orange) to boost absorption even further.',
       action: null, tab: 'diet'    });
   }
@@ -42391,11 +42422,11 @@ function renderInsightsStats() { /* v2.4: DORMANT — insights cards replaced by
       <div class="hsp-label">Gain/wk</div>
     </div>
   `;
-  // Add Ziva Score and Milestone pills dynamically
+  // Add Sprout Score and Milestone pills dynamically
   const zsR = calcZivaScore();
   if (zsR.score !== null) {
     const zsColor = zsR.score >= 75 ? 'hsp-sage' : zsR.score >= 60 ? 'hsp-peach' : 'hsp-rose';
-    el.innerHTML += `<div class="home-stat-pill ${zsColor}"><div class="hsp-icon"><svg class="zi"><use href="#zi-sparkle"/></svg></div><div class="hsp-val">${zsR.score}</div><div class="hsp-label">Ziva Score</div></div>`;
+    el.innerHTML += `<div class="home-stat-pill ${zsColor}"><div class="hsp-icon"><svg class="zi"><use href="#zi-sparkle"/></svg></div><div class="hsp-val">${zsR.score}</div><div class="hsp-label">Sprout Score</div></div>`;
   }
   const msR = calcMilestoneScore();
   const msColor = msR.score >= 75 ? 'hsp-sage' : msR.score >= 45 ? 'hsp-peach' : 'hsp-rose';
@@ -42428,7 +42459,7 @@ function renderInsightsPulse() {
     const weekLabel = formatDate(toDateStr(weekStart)).split(',')[0] + ' – ' + formatDate(today()).split(',')[0];
 
     const rows = [];
-    if (zs.score !== null) rows.push({ icon:zi('sparkle'), label:'Ziva Score', val: (trend.avg7d || zs.score) + '/100', cls: zs.score >= 70 ? 'tc-good' : zs.score >= 40 ? 'tc-warn' : 'tc-bad' });
+    if (zs.score !== null) rows.push({ icon:zi('sparkle'), label:'Sprout Score', val: (trend.avg7d || zs.score) + '/100', cls: zs.score >= 70 ? 'tc-good' : zs.score >= 40 ? 'tc-warn' : 'tc-bad' });
     if (sleepT.score.current != null) rows.push({ icon:zi('moon'), label:'Sleep', val: sleepT.score.current + '/100', cls: sleepT.score.current >= 70 ? 'tc-good' : sleepT.score.current >= 40 ? 'tc-warn' : 'tc-bad' });
     rows.push({ icon:zi('bowl'), label:'Diet', val: dietS.score + ' · ' + vs.uniqueFoods + ' foods', cls: dietS.score >= 70 ? 'tc-good' : dietS.score >= 40 ? 'tc-warn' : 'tc-bad' });
     if (poopT.freq.current > 0) {
@@ -44109,7 +44140,7 @@ function foodLibDetail(name) {
 
 // ═══════════════════════════════════════════════════════════════════════
 // Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md)
-// One lazy-rendered panel, three stacked sections: (a) "Suggested for Ziva"
+// One lazy-rendered panel, three stacked sections: (a) "Suggested for the child"
 // (logged-data-driven, ranked by §4) with a featured hero card, (b) a
 // browsable catalog grouped by meal slot, (c) expand-in-place detail. Corpus =
 // window.RECIPES (cited, recipes.js). TWO separate passes (§5):
@@ -44373,7 +44404,7 @@ function _recipeSafetySummary(r, ageMonths) {
   }
   if (lead.length) return { level: 'caution', icon: 'note', text: lead.join(' ') };
   return { level: 'safe', icon: 'check',
-    text: 'Every ingredient is age-appropriate for Ziva. Introduce any new food on its own and watch for 3 days.' };
+    text: 'Every ingredient is age-appropriate for ' + childNameHtml() + '. Introduce any new food on its own and watch for 3 days.' };
 }
 
 // A recipe progressive-disclosure row (§ the 6-second rule): icon + title +
@@ -44420,7 +44451,7 @@ function _recipeDetailHtml(r, ageMonths, opts) {
     h += `<div class="rcp-plan"><button class="btn ${ss.level === 'flag' ? 'btn-ghost' : 'btn-sage'} btn-compact" data-action="mpAddRecipe" data-arg="${escAttr(r.id)}">${zi('calendar')} Add to plan</button></div>`;
   // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
   // amount to OFFER — a guide, never a target; appetite leads. An age-gated
-  // recipe (effMin > Ziva's age) frames the portion at its own start age.
+  // recipe (effMin > the child's age) frames the portion at its own start age.
   if (typeof _recipeServing === 'function') {
     const ageNow = Math.floor(ageMonths);
     const effMin = _recipeEffectiveMinAge(r);
@@ -44432,7 +44463,7 @@ function _recipeDetailHtml(r, ageMonths, opts) {
     const own = !gated && r.portion;
     const band = _recipeServing(r.slot, servAge);
     const serving = own ? `${r.portion}. A toddler ${r.slot === 'snack' ? 'snack' : 'meal'} is ${band}` : band;
-    const label = gated ? `Serving from ${effMin} months` : `Serving for Ziva (${ageNow} mo)`;
+    const label = gated ? `Serving from ${effMin} months` : `Serving for ${childNameHtml()} (${ageNow} mo)`;
     // M-1 (Maren): anchor the amount's OWN source on the line, independent of r.source.
     const src = own ? 'ICMR-NIN · WHO/PAHO · IAP' : 'WHO/PAHO · IAP';
     h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
@@ -44534,7 +44565,7 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   </div>`;
 }
 
-// The featured "Suggested for Ziva" hero (top pick) — the GENERATIVE card
+// The featured "Suggested for the child" hero (top pick) — the GENERATIVE card
 // (§9.3/§9.4): a grams-weighted wavelength fingerprint stripe + warm-wave sheen
 // + corner zif watermark, the Fraunces-italic composed voice (strict no's lead),
 // the data-driven why, a prep·age·slot meta line, and a "See recipe →" CTA.
@@ -44564,7 +44595,7 @@ function _recipeHeroHtml(r, whyText, ageMonths) {
   return `<div class="recipe-hero recipe-hero-gen dt-${grp}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
     ${wm}
     <div class="recipe-hero-head">
-      <span class="recipe-hero-eyebrow">${zi('sparkle')} Suggested for Ziva</span>
+      <span class="recipe-hero-eyebrow">${zi('sparkle')} Suggested for ${childNameHtml()}</span>
       ${slot ? `<span class="recipe-hero-badge">${escHtml(slot.label)}</span>` : ''}
     </div>
     <h3 class="recipe-hero-title">${escHtml(r.title)}</h3>
@@ -44610,7 +44641,7 @@ function _recipeSuggestForZiva(surfaced, ageMonths) {
       }
       if (typeof isFoodFavorite === 'function' && isFoodFavorite(base)) score += 1;
     }
-    // age-fit tiebreak: a recipe close to Ziva's age scores a hair higher
+    // age-fit tiebreak: a recipe close to the child's age scores a hair higher
     score += Math.max(0, 1 - Math.abs(ageMonths - (r.minAgeMonths || ageMonths)) * 0.05);
     // From 1, lead with family food and keep moving her on from purées (V-C-270-6).
     if (ageMonths >= 12) {
@@ -44636,11 +44667,11 @@ function renderDietRecipes() {
   let html = '';
 
   // Panel header (LOCKED 05-meal-rows): "Recipes" + the sourced-from-logs subtitle.
-  html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for Ziva's stage · cooked from what you log.</p></div>`;
+  html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for ${childNameHtml()}'s stage · cooked from what you log.</p></div>`;
   // The meal planner's Plan section (meal-planner-v1 §4.1), filled by renderMealPlanSection.
   html += `<div class="col-full" id="dietPlanRoot"></div>`;
 
-  // ── (a) Suggested for Ziva — featured generative hero + "More for Ziva" rows ──
+  // ── (a) Suggested for the child — featured generative hero + "More for the child" rows ──
   const suggested = _recipeSuggestForZiva(surfaced, ageMonths);
   html += `<div class="col-full">`;
   if (suggested.length) {
@@ -44649,7 +44680,7 @@ function renderDietRecipes() {
     html += _recipeHeroHtml(top.r, topWhy, ageMonths);
     const more = suggested.slice(1);
     if (more.length) {
-      html += `<div class="recipe-group-head recipe-more-head">${zi('sprout')}<span class="recipe-group-title">More for Ziva</span><span class="recipe-group-count">${more.length}</span></div>`;
+      html += `<div class="recipe-group-head recipe-more-head">${zi('sprout')}<span class="recipe-group-title">More for ${childNameHtml()}</span><span class="recipe-group-count">${more.length}</span></div>`;
       for (const s of more) html += _recipeRowHtml(s.r, 's', ageMonths, { showSlot: true });
     }
   } else {
@@ -45030,7 +45061,7 @@ var LIB_SHELVES = [
   { pol: 'inform',      label: 'Good to know',           icon: 'info' }
 ];
 
-// Ziva's journey with a food, from the foods[] log. Real data only:
+// the child's journey with a food, from the foods[] log. Real data only:
 // _fdIsFoodTried + the entry's reaction ('ok'|'watch') + isFoodFavorite.
 // Established (graduated) = favourite + settled + introduced >= 21 days ago.
 function _libJourney(name) {
@@ -45132,7 +45163,7 @@ function _libBookHtml(key, eff, pol) {
     if (!j.tried) {
       journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
     } else if (j.established) {
-      journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+      journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
     } else if (j.reaction === 'watch') {
       journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
     } else {
@@ -45150,7 +45181,7 @@ function _libBookHtml(key, eff, pol) {
     body + siren + go + '</button></div>';
 }
 
-// "Suggested for Ziva" lead — the entry point the eye lands on first. Up to 3
+// "Suggested for the child" lead — the entry point the eye lands on first. Up to 3
 // untried priority-allergen foods (the early-introduction shelf), real-data-driven
 // (FOOD_EFFECTS + _effPolarity + _fdIsFoodTried). Empty once they're all introduced.
 function _libSuggestions() {
@@ -45172,7 +45203,7 @@ function _libLeadHtml() {
       zi('sprout') + escHtml(_libDisplayName(k, FOOD_EFFECTS[k])) + '</button>';
   }).join('');
   return '<div class="lib-lead">' +
-    '<div class="lib-lead-h">' + zi('star') + 'Suggested for Ziva</div>' +
+    '<div class="lib-lead-h">' + zi('star') + 'Suggested for ' + childNameHtml() + '</div>' +
     '<div class="lib-lead-sub">Worth introducing early — regular exposure lowers the chance of an allergy.</div>' +
     '<div class="lib-lead-chips">' + chips + '</div></div>';
 }
@@ -45230,7 +45261,7 @@ function libToggleGroup(btn) {
 function _libJourneyChip(pol, j) {
   if (pol === 'warn') return '';
   if (!j.tried) return '<span class="fp-journey fp-journey--untried"><span class="fp-dot"></span>Not tried yet</span>';
-  if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
   return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
 }
@@ -45550,7 +45581,7 @@ function _libLookupRow(name) {
   var j = _libJourney(name);
   var journeyHtml = '';
   if (!j.tried) journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
-  else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for Ziva</span>';
+  else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   else if (j.reaction === 'watch') journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
   else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
   return '<button class="lib-book lib-book--lookup' + dt + '" data-action="' + action + '" data-arg="' + escHtml(arg) + '">' +
@@ -45626,7 +45657,7 @@ function _libCorpusPopHtml(name, j) {
   var np = entry ? _libNutriTokenParts(entry.nutrients, 5) : null;
   if (np) rows += _libPopRow('nutri', 'leaf', 'Nutrition', np.teaser, np.body, false);
   if (!rows) rows = _libPopRow('why', 'info', 'About this food', '',
-    '<p class="lib-prow-p">In Ziva&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
+    '<p class="lib-prow-p">In ' + childNameHtml() + '&rsquo;s food library. Introduce on its own and watch for a few days.</p>', true);
   var body = '<div class="fp-body fp-body--rows">' +
     _libVerdictBand(verClass, _LIB_VERDICT_ICON[verClass], verHead, tagsLine) +
     '<div class="lib-prows">' + rows + '</div></div>';
@@ -45826,14 +45857,14 @@ function _libCloseDeck() {
 // Doc-prep identity helpers. The doctor card leads with the PATIENT (name as the card
 // title, vitals beneath) — a clinical handoff, not app branding (Architect, PR#235).
 // Name is sourced from the household profile so the card stays flexible — no new hardcode.
-// TODO(legacy-name-debt): 'Ziva' is the last-resort fallback only; the app still hardcodes
+// TODO(legacy-name-debt): 'the child' is the last-resort fallback only; the app still hardcodes
 // the name in several places (core.js avatar alt, medical.js chart labels) — a flexible-name
 // migration is known debt, tracked for a later session (Architect, PR#235).
 function _emDocName() {
   // Trim-guard (Maren V-M-237): reject a blank/whitespace household name so the doctor
   // card's title slot can never render empty — a nameless medical handoff.
   try { if (typeof _syncHousehold !== 'undefined' && _syncHousehold && typeof _syncHousehold.name === 'string' && _syncHousehold.name.trim()) return _syncHousehold.name.trim(); } catch (e) {}
-  return 'Ziva';
+  return '' + childNameCapHtml() + '';
 }
 function _emDocVitals() {
   var bits = [];
@@ -46312,7 +46343,7 @@ function renderDietChokingIntro() {
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
-  // thrusts (child 1y+ technique since Ziva turned one) + "NO adrenaline".
+  // thrusts (child 1y+ technique since the child turned one) + "NO adrenaline".
   pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
@@ -46480,7 +46511,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'Ziva\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    body:'' + childNameCapHtml() + '\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
     condition: () => getAgeInMonths() < 12,
   },
   {
@@ -46569,7 +46600,7 @@ const ALL_TIPS = [
   {
     type:'info', icon:zi('flame'),
     title:'Hot weather hydration',
-    body:'Jamshedpur summers are intense. Offer extra water sips between meals and include hydrating foods — watermelon, cucumber, bottle gourd, and muskmelon.',
+    body:'Hot summer days: offer extra water sips between meals and include hydrating foods — watermelon, cucumber, bottle gourd, and muskmelon.',
     condition: () => {
       const month = new Date().getMonth(); // 0-indexed
       return month >= 2 && month <= 5; // Mar–Jun
@@ -47035,7 +47066,7 @@ function checkFoodCombo() {
   } else {
     if (benefits.length > 0) headline = benefits[0].split('—')[0].trim();
     else if (nutritionHighlights) headline = `Good choice! Rich in ${nutritionHighlights.split(',').slice(0, 3).join(',')}`;
-    else headline = 'Looks good for Ziva\'s age!';
+    else headline = 'Looks good for ' + childNameHtml() + '\'s age!';
   }
 
   // Diet-preference note (4-class gate): flag only foods OUTSIDE the current preference —
@@ -47055,9 +47086,9 @@ function checkFoodCombo() {
     // "outside your preference" note (the 2 AM under-warn). The body warning still always surfaces.
     if (verdict !== 'avoid') {
       verdict = 'caution'; verdictEmoji = zi('warn');
-      headline = `Note: ${offPref.join(', ')} is outside Ziva\'s ${prefLabel} preference`;
+      headline = `Note: ${offPref.join(', ')} is outside ${childNameHtml()}\'s ${prefLabel} preference`;
     }
-    warnings.push(`Ziva's diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
+    warnings.push(`${childNameCapHtml()}'s diet preference is ${prefLabel}. ${offPref.join(', ')} is outside it.`);
   }
 
   // ── 8b. food-effects headline (food-effects v2 §3.1, M-S-2) ──
@@ -47395,7 +47426,7 @@ function renderComboResult(r) {
     html += `<div class="combo-section"><div class="combo-section-title">${zi('handshake')} Pairs well with</div><div class="combo-body">${r.pairs_well_with}</div></div>`;
   }
 
-  // Ziva's history with these foods
+  // the child's history with these foods
   const queryFoods2 = r._queryFoods || [];
   if (queryFoods2.length > 0) {
     let historyHtml = '';
@@ -47404,7 +47435,7 @@ function renderComboResult(r) {
       if (h) historyHtml += h;
     });
     if (historyHtml) {
-      html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} Ziva\'s History</div>${historyHtml}</div>`;
+      html += `<div class="combo-section"><div class="combo-section-title">${zi('note')} ${childNameHtml()}\'s History</div>${historyHtml}</div>`;
     }
 
     // Sleep correlation
@@ -50234,7 +50265,7 @@ function renderDomainHero(domainKey) {
       </div>
       <div class="dsh-info">
         <div class="dsh-domain-name">${lbl.emoji} ${lbl.label.charAt(0).toUpperCase() + lbl.label.slice(1)}</div>
-        <div class="dsh-domain-sublabel">${domSubs[domainKey]} · ${weight} of Ziva Score</div>
+        <div class="dsh-domain-sublabel">${domSubs[domainKey]} · ${weight} of Sprout Score</div>
       </div>
     </div>
     <div class="dsh-components">`;
@@ -51060,7 +51091,7 @@ function renderWeeklySummary() {
   let html = `<div style="font-size:var(--fs-xs);color:var(--light);margin-bottom:8px;">${weekLabel}</div>`;
 
   const rows = [];
-  if (zs.score !== null) rows.push({ icon: zi('sparkle'), label: 'Ziva Score', val: trend.avg7d || zs.score, delta: trend.delta });
+  if (zs.score !== null) rows.push({ icon: zi('sparkle'), label: 'Sprout Score', val: trend.avg7d || zs.score, delta: trend.delta });
   if (sleepT.score.current != null) rows.push({ icon: zi('moon'), label: 'Sleep', val: sleepT.score.current + '/100' });
   rows.push({ icon: zi('bowl'), label: 'Diet', val: dietS.score + ' · ' + vs.uniqueFoods + ' foods' });
   if (poopT.freq.current > 0) rows.push({ icon: zi('diaper'), label: 'Poop', val: poopT.freq.current + '/day' });
@@ -51225,7 +51256,7 @@ function renderInsightsCross() {
       </div>`;
 
       if (best.avg - worst.avg >= 5) {
-        html += `<div class="insight-narrative in-indigo">${zi('link')} On days with <strong>${best.label} logged</strong>, avg sleep score is <strong>${best.avg}</strong> vs <strong>${worst.avg}</strong> on ${worst.label} days. ${best.label === '3 meals' ? 'Full meals may help Ziva sleep better — well-fed babies settle easier.' : 'Interesting pattern — keep logging to see if it holds.'}</div>`;
+        html += `<div class="insight-narrative in-indigo">${zi('link')} On days with <strong>${best.label} logged</strong>, avg sleep score is <strong>${best.avg}</strong> vs <strong>${worst.avg}</strong> on ${worst.label} days. ${best.label === '3 meals' ? 'Full meals may help ' + childNameHtml() + ' sleep better — well-fed babies settle easier.' : 'Interesting pattern — keep logging to see if it holds.'}</div>`;
       }
     }
   }
@@ -51920,7 +51951,7 @@ function renderMealPlanSection() {
       + (travel ? `<span class="mp-mark mp-mark--travel">${zi('bag')}</span>` : '<span class="mp-mark"></span>') + `</button>`;
   }
   h += `</div>`;
-  h += (!Object.keys(plan.days).length && firstUse) ? `<p class="mp-empty">Plan Ziva's meals for the week: tap a day to start.</p>` + _mpDayCardHtml(_mpSel) : _mpDayCardHtml(_mpSel);
+  h += (!Object.keys(plan.days).length && firstUse) ? `<p class="mp-empty">Plan ${childNameHtml()}'s meals for the week: tap a day to start.</p>` + _mpDayCardHtml(_mpSel) : _mpDayCardHtml(_mpSel);
   h += `</div>`;
   root.innerHTML = h;
   // "For travel" sub-note: one statement of the 2 h rule per tab (V-V-275-9).
@@ -53004,8 +53035,8 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
-  lines.push('BORN Born 4 Sep 2025 · Jamshedpur');
+  lines.push('BABY ' + childNameHtml() + ' · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
+  if (_profBornLine(true)) lines.push('BORN ' + _profBornLine(true).replace(/^Born /, ''));
   lines.push('');
 
   // Growth
@@ -53079,7 +53110,7 @@ function showFullDoctorSummary() {
 
   lines.push('');
   lines.push('═══════════════════════════════');
-  lines.push('Generated from Ziva\'s Dashboard');
+  lines.push('Generated from SproutLab');
 
   const text = lines.join('\n');
   // Clean text for copy/share — strip internal markers
@@ -53089,7 +53120,7 @@ function showFullDoctorSummary() {
   const printWin = window.open('', '_blank');
   if (printWin) {
     printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Ziva — Visit Summary</title>
+      <title>${childNameCapHtml()} — Visit Summary</title>
       <style>
         body{font-family:system-ui,-apple-system,sans-serif;padding:24px;max-width:600px;margin:0 auto;color:#333;font-size:var(--icon-sm);line-height:1.6;}
         h1{font-size:var(--icon-md);margin:0 0 4px;} h2{font-size:var(--icon-sm);margin:18px 0 4px;text-transform:uppercase;letter-spacing:var(--ls-normal);color:#888;border-bottom:1px solid #eee;padding-bottom:4px;}
@@ -53101,12 +53132,12 @@ function showFullDoctorSummary() {
       </style></head><body>`);
     
     printWin.document.write(`<h1>${zi('steth')} Paediatrician Visit Summary</h1>`);
-    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)}${months >= 12 ? ' (' + months + ' months)' : ''} · Generated ${formatDate(today())}</div>`);
+    printWin.document.write(`<div class="meta">${childNameCapHtml()} · ${fmtAgeShort(months, days)}${months >= 12 ? ' (' + months + ' months)' : ''} · Generated ${formatDate(today())}</div>`);
     printWin.document.write(`<div class="actions">`);
     printWin.document.write(`<button class="btn-print" data-action="printDashboard">${zi('note')} Print</button>`);
     printWin.document.write(`<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('raw').textContent).then(()=>this.textContent='Copied!')">${zi('note')} Copy</button>`);
     if (navigator.share) {
-      printWin.document.write(`<button class="btn-share" onclick="navigator.share({title:'Ziva Visit Summary',text:document.getElementById('raw').textContent})">${zi('note')} Share</button>`);
+      printWin.document.write(`<button class="btn-share" onclick="navigator.share({title:'${childNameHtml()} Visit Summary',text:document.getElementById('raw').textContent})">${zi('note')} Share</button>`);
     }
     printWin.document.write(`</div>`);
 
@@ -53164,10 +53195,10 @@ function renderGrowthFacts() {
     const vb = GROWTH_VELOCITY_12_24;
     if (mo >= 12) {
       if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
-        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. Ziva is growing steadily.` });
+        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. ${childNameCapHtml()} is growing steadily.` });
       }
     } else if (gPerDay >= 15 && gPerDay <= 40) {
-      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. Ziva is growing beautifully.` });
+      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. ${childNameCapHtml()} is growing beautifully.` });
     } else if (gPerDay > 40) {
       facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage as she is establishing her growth curve on solids.` });
     }
@@ -53186,7 +53217,7 @@ function renderGrowthFacts() {
     const moExact = ageMonthsAt(lwFact.date);
     const whoInterp = getGrowthRef(moExact);
     const pctW = calcPercentile(lwFact.wt, whoInterp.w3, whoInterp.w50, whoInterp.w97, whoInterp.w15, whoInterp.w85);
-    facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means Ziva is heavier than ${pctW.pct}% of girls her age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
+    facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of girls her age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
   }
   if (lh) {
     const htWho = getGrowthRef(ageMonthsAt(lh.date));
@@ -53217,7 +53248,7 @@ function renderGrowthFacts() {
   }
 
   // WHO context
-  facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of Ziva\'s health — a single reading means less than the pattern across visits. Keep logging!` });
+  facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of ${childNameHtml()}\'s health — a single reading means less than the pattern across visits. Keep logging!` });
 
   el.innerHTML = facts.map(f => `
     <div class="growth-fact ${f.type}${f.dismiss ? ' has-dismiss' : ''}">${f.dismiss ? `<button class="ctx-alert-dismiss" data-action="${f.dismiss}" aria-label="Dismiss">&times;</button>` : ''}
@@ -53234,7 +53265,7 @@ function dismissGrowthWhoNote() {
 }
 // @@INSERT_DATA_BLOCK_3@@
 
-// ── Ziva's monthly milestones (auto-generated from DOB) ──
+// ── the child's monthly milestones (auto-generated from DOB) ──
 function getZivaMonthDays() {
   const events = [];
   for (let m = 7; m <= 24; m++) {
@@ -53242,8 +53273,8 @@ function getZivaMonthDays() {
     d.setMonth(d.getMonth() + m);
     const dateStr = toDateStr(d);
     if (m === 12) continue; // skip — covered by "1st Birthday" in INDIAN_HOLIDAYS
-    if (m === 24) { events.push({ date:dateStr, title:"Ziva's 2nd Birthday", type:'birthday', icon:zi('party'), auto:true }); continue; }
-    events.push({ date:dateStr, title:`Ziva turns ${fmtAgeMonths(m)}`, type:'birthday', icon:zi('sprout'), auto:true });
+    if (m === 24) { events.push({ date:dateStr, title:"" + childNameCapHtml() + "'s 2nd Birthday", type:'birthday', icon:zi('party'), auto:true }); continue; }
+    events.push({ date:dateStr, title:`${childNameCapHtml()} turns ${fmtAgeMonths(m)}`, type:'birthday', icon:zi('sprout'), auto:true });
   }
   return events;
 }
@@ -53279,7 +53310,7 @@ function getUpcomingEvents(daysAhead) {
     }
   });
 
-  // 2. Ziva monthly days
+  // 2. the child monthly days
   getZivaMonthDays().forEach(z => {
     if (z.date >= todayStr && z.date <= cutoffStr) {
       all.push({ ...z, source:'auto' });
@@ -53358,7 +53389,7 @@ function renderUpcomingEvents() {
         </div>
         ${activities ? `
           <button class="ms-tidbit-toggle mt-6" data-action="toggleDisplayFlex" data-arg="${actId}">
-            ${zi('star')} Ziva activity ideas ${zi('chevron-down')}
+            ${zi('star')} ${childNameHtml()} activity ideas ${zi('chevron-down')}
           </button>
           <div id="${actId}" style="display:none;margin-top:6px;flex-direction:column;gap:var(--sp-4);">
             ${activities.map(a => `
@@ -53616,7 +53647,7 @@ function renderGrowth() {
 
 // Growth reference = WHO only (2026-09-24, 12-month audit, Architect decision). The former
 // "India (IAP)", Euro-Growth and China overlay tables were retired: the India table did not match
-// the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading Ziva high), the China
+// the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading the child high), the China
 // table matched neither Li 2009 nor WS/T 423-2022, and the Euro-Growth source could not be verified.
 // IAP 2015 itself recommends the WHO 2006 standards under 5. `_referenceStandard` still selects the
 // MILESTONE and SLEEP standards; it no longer changes growth percentiles.
@@ -53815,9 +53846,9 @@ function drawChart(canvasId) {
   datasets.push({ label:'WHO 50th', data: WHO_W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const wtPointR = zoom ? 7 : 5;
   const wtHoverR = zoom ? 10 : 7;
-  datasets.push({ label:'Ziva', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
+  datasets.push({ label:'' + childNameCapHtml() + '', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _chartInst = new Chart(ctx.getContext('2d'), {
@@ -53830,7 +53861,7 @@ function drawChart(canvasId) {
         tooltip:{ ..._ct.tooltip, callbacks:{
           title: i => {
             const ageStr = `Age: ${i[0].parsed.x.toFixed(1)}m`;
-            if (zoom && i[0].dataset.label === 'Ziva') {
+            if (zoom && i[0].dataset.label === '' + childNameCapHtml() + '') {
               const pt = zivaPoints[i[0].dataIndex];
               return pt && pt.date ? `${ageStr} · ${formatDate(pt.date)}` : ageStr;
             }
@@ -53893,9 +53924,9 @@ function drawHeightChart(canvasId) {
   datasets.push({ label:'WHO 50th', data: WHO_H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const htPointR = zoom ? 7 : 5;
   const htHoverR = zoom ? 10 : 7;
-  datasets.push({ label:'Ziva', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
+  datasets.push({ label:'' + childNameCapHtml() + '', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _hChartInst = new Chart(ctx.getContext('2d'), {
@@ -53908,7 +53939,7 @@ function drawHeightChart(canvasId) {
         tooltip:{ ..._ct.tooltip, callbacks:{
           title: i => {
             const ageStr = `Age: ${i[0].parsed.x.toFixed(1)}m`;
-            if (zoom && i[0].dataset.label === 'Ziva') {
+            if (zoom && i[0].dataset.label === '' + childNameCapHtml() + '') {
               const pt = zivaHtPoints[i[0].dataIndex];
               return pt && pt.date ? `${ageStr} · ${formatDate(pt.date)}` : ageStr;
             }
@@ -55049,7 +55080,7 @@ function _renderSymptomCheckerResults(matches, opts) {
     }
   }
 
-  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts — you know Ziva best.</div>';
+  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts — you know ' + childNameHtml() + ' best.</div>';
 
   return html;
 }
@@ -55085,7 +55116,7 @@ function checkSymptoms() {
   });
 
   if (matches.length === 0) {
-    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing what you\'re seeing differently, or check the quick chips above. If you\'re concerned about Ziva, always trust your instincts and call your paediatrician.</div>' + _scDoctorCardHTML('mild') + '</div>';
+    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing what you\'re seeing differently, or check the quick chips above. If you\'re concerned about ' + childNameHtml() + ', always trust your instincts and call your paediatrician.</div>' + _scDoctorCardHTML('mild') + '</div>';
     return;
   }
 
@@ -55744,7 +55775,7 @@ function _vaccOpenReactionModal(vaccNames) {
   ).join('');
 
   content.innerHTML = `<div class="vc-reaction-form" data-vacc-names="${escAttr(JSON.stringify(vaccNames))}">
-    <h3 class="modal-title">How is Ziva after ${namesLabel}?</h3>
+    <h3 class="modal-title">How is ${childNameHtml()} after ${namesLabel}?</h3>
     ${namesList}
     <div class="t-sub mb-10">Given today &middot; ${formatDate(todayStr)}</div>
 
@@ -56751,7 +56782,7 @@ function renderMedD3PatternCard() {
   // CR-6: adherence denominator must respect d3Med.start AND medChecks._trackingSince —
   // pre-fix divided by the full 14-day window unconditionally, giving wildly different
   // numbers vs computeSupplementAdherence on the same screen for a recently-activated med.
-  const medStart = d3Med.start || '2025-09-04';
+  const medStart = d3Med.start || toDateStr(DOB);
   const trackStart = medChecks._trackingSince || '0000-00-00';
   const effectiveStart = medStart > trackStart ? medStart : trackStart;
   const eligibleDays = days.filter(d => d.date >= effectiveStart);
@@ -58670,7 +58701,7 @@ function renderHomeSleep() {
     el.innerHTML = `<div class="info-strip is-indigo tappable" data-tab="sleep">
       <span><svg class="zi"><use href="#zi-moon"/></svg></span>
       <div><strong class="tc-indigo">No sleep logged yet</strong>
-      <div class="t-sub">Tap to start tracking Ziva's sleep</div></div>
+      <div class="t-sub">Tap to start tracking ${childNameHtml()}'s sleep</div></div>
     </div>`;
     return;
   }
@@ -59176,11 +59207,11 @@ function renderInfoPoopFrequency() {
       html += '<div class="si-insight si-insight-info">Frequency has dropped from ' + data.avg14d + ' to ' + data.avg7d + '/day. Could be dietary — check fibre intake.</div>';
     }
     if (data.regularity >= 70 && !data.gapAlert && !data.highCountAlert) {
-      html += '<div class="si-insight si-insight-good">Ziva has a regular pattern — most poops happen in the ' + data.mostCommonTime + '.</div>';
+      html += '<div class="si-insight si-insight-good">' + childNameCapHtml() + ' has a regular pattern — most poops happen in the ' + data.mostCommonTime + '.</div>';
     } else if (data.regularity < 50 && !data.gapAlert && !data.highCountAlert) {
       html += '<div class="si-insight si-insight-info">Poop timing is unpredictable. This is normal at this age but watch for discomfort.</div>';
     } else if (!data.gapAlert && !data.highCountAlert && data.freqTrend !== 'dropping') {
-      html += '<div class="si-insight si-insight-info">Moderate regularity — Ziva\'s pattern is developing. Avg ' + data.avg7d + '/day.</div>';
+      html += '<div class="si-insight si-insight-info">Moderate regularity — ' + childNameCapHtml() + '\'s pattern is developing. Avg ' + data.avg7d + '/day.</div>';
     }
     insightEl.innerHTML = html;
   }
@@ -59669,7 +59700,7 @@ function renderInfoPoopColorAnomaly() {
   if (insightEl) {
     let html = '';
     if (data.overallSeverity === 'safe') {
-      html += '<div class="si-insight si-insight-good">Healthy color range. Brown and yellow are expected at Ziva\'s age.</div>';
+      html += '<div class="si-insight si-insight-good">Healthy color range. Brown and yellow are expected at ' + childNameHtml() + '\'s age.</div>';
     } else if (data.overallSeverity === 'diet-related') {
       html += '<div class="si-insight si-insight-info">Some color variations detected but all appear diet-related — no concern.</div>';
     } else if (data.overallSeverity === 'needs-attention') {
@@ -59789,7 +59820,7 @@ function renderInfoPoopAmountTrend() {
     if (data.trend === 'smaller') {
       html += '<div class="si-insight si-insight-warn">Poop amounts have been getting smaller — watch for constipation signs.</div>';
     } else if (data.largeAfterGap >= 2) {
-      html += '<div class="si-insight si-insight-info">Several large poops after long gaps — Ziva may be holding. Check for discomfort.</div>';
+      html += '<div class="si-insight si-insight-info">Several large poops after long gaps — ' + childNameCapHtml() + ' may be holding. Check for discomfort.</div>';
     } else if (data.constipationSignal) {
       html += '<div class="si-insight si-insight-warn">Small + hard stools detected — a constipation signal. Increase fluids and fibre.</div>';
     } else if (data.diarrhoeaSignal) {
@@ -61371,7 +61402,7 @@ function computeIllnessSleepImpact() {
   if (avgSickDuration && avgHealthyDuration) {
     const diff = (parseFloat(avgHealthyDuration) - parseFloat(avgSickDuration)).toFixed(1);
     if (diff > 0.5) {
-      insights.push({ type: 'info', text: 'Ziva sleeps about ' + diff + 'h less on sick nights (' + avgSickDuration + 'h vs ' + avgHealthyDuration + 'h healthy). Disruption is normal during illness.' });
+      insights.push({ type: 'info', text: '' + childNameCapHtml() + ' sleeps about ' + diff + 'h less on sick nights (' + avgSickDuration + 'h vs ' + avgHealthyDuration + 'h healthy). Disruption is normal during illness.' });
     }
   }
   if (avgSickWakeUps && avgHealthyWakeUps) {
@@ -61936,7 +61967,7 @@ function computeTextureProgression() {
     const firstAvg = firstHalf.reduce((s, d) => s + stageIdx[d.dominant], 0) / firstHalf.length;
     const secondAvg = secondHalf.reduce((s, d) => s + stageIdx[d.dominant], 0) / secondHalf.length;
     if (secondAvg < firstAvg - 0.3) {
-      insights.push({ type: 'warn', text: 'Texture seems to be going backwards recently. If Ziva is refusing chunks, try offering both purees and chunks at the same meal.' });
+      insights.push({ type: 'warn', text: 'Texture seems to be going backwards recently. If ' + childNameHtml() + ' is refusing chunks, try offering both purees and chunks at the same meal.' });
     }
   }
 
@@ -65733,7 +65764,7 @@ function qaHandleFoodSafety(classified) {
     }
   }
 
-  // 6. Ziva's history with this food
+  // 6. the child's history with this food
   var historyItems = [];
   rawFoods.forEach(function(food) {
     var base = _baseFoodName(food);
@@ -65835,7 +65866,7 @@ function qaHandleFoodSafety(classified) {
     });
   }
 
-  // Ziva's history
+  // the child's history
   if (historyItems.length > 0) {
     sections.push({
       label: 'ZIVA\'S HISTORY',
@@ -67262,7 +67293,7 @@ function _qaRoutine() {
   schedule.sort(function(a, b) { return a.sort - b.sort; });
 
   if (schedule.length === 0) {
-    return { title: 'Ziva\'s Routine', headline: 'Not enough data yet', icon: 'clock', domain: 'indigo', sections: [], dataGap: 'Log meals and sleep with times to build a routine picture.' };
+    return { title: '' + childNameCapHtml() + '\'s Routine', headline: 'Not enough data yet', icon: 'clock', domain: 'indigo', sections: [], dataGap: 'Log meals and sleep with times to build a routine picture.' };
   }
 
   var items = schedule.map(function(s) {
@@ -67284,7 +67315,7 @@ function _qaRoutine() {
 
   var age = ageAt();
   return {
-    title: 'Ziva\'s Typical Day',
+    title: '' + childNameCapHtml() + '\'s Typical Day',
     headline: 'Based on last 7 days avg',
     icon: 'clock',
     domain: 'indigo',
@@ -67570,7 +67601,7 @@ function _qaDoctorPrep() {
 
   return {
     title: 'Doctor Visit Prep',
-    headline: 'Ziva \u00b7 ' + fmtAgeMonths(age.months),
+    headline: '' + childNameCapHtml() + ' \u00b7 ' + fmtAgeMonths(age.months),
     icon: 'steth',
     domain: 'sky',
     sections: sections,
@@ -67628,7 +67659,7 @@ function _qaShareToday() {
   var text = formatSummaryAsText(summary);
   return {
     title: 'Share Today\'s Summary',
-    headline: 'Ziva \u00b7 ' + formatDate(today()),
+    headline: '' + childNameCapHtml() + ' \u00b7 ' + formatDate(today()),
     icon: 'link',
     domain: 'indigo',
     sections: [{ label: 'Preview', icon: zi('note'), items: [
@@ -67654,7 +67685,7 @@ function _qaShareToday() {
 function formatSummaryAsText(summary) {
   var age = ageAt();
   var lines = [];
-  lines.push('*Ziva (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
+  lines.push('*' + childNameHtml() + ' (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
   if (summary.scores && summary.scores.overall !== null) lines.push('Score: ' + summary.scores.overall + '/100');
   lines.push('');
 
@@ -67695,7 +67726,7 @@ function qaAnswerAge() {
   var weeksOld = Math.floor(totalDays / 7);
 
   return {
-    title: 'Ziva\'s Age',
+    title: '' + childNameCapHtml() + '\'s Age',
     headline: fmtAgeLong(age.months, age.days) + ' old',
     icon: 'baby',
     domain: 'rose',
@@ -67974,7 +68005,7 @@ function qaAnswerWeightGain(intentId) {
 
     if (w.stale) {
       dataItems.push({ text: 'Last weighed ' + w.daysSince + ' days ago — consider a new measurement', signal: 'warn' });
-      actionItems.push({ text: 'Weigh Ziva to update growth tracking', signal: 'action' });
+      actionItems.push({ text: 'Weigh ' + childNameHtml() + ' to update growth tracking', signal: 'action' });
     }
   }
 
@@ -68355,7 +68386,7 @@ function qaAnswerOverall(intentId) {
       return {
         icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Not enough data yet',
         sections: [{ label: 'WHAT WE NEED', icon: zi('info'), items: [
-          { text: 'Log sleep, meals, and poop to see the Ziva Score', signal: 'info' },
+          { text: 'Log sleep, meals, and poop to see the Sprout Score', signal: 'info' },
           { text: 'Each domain needs at least a few days of data', signal: 'action' }
         ]}],
         confidence: null,
@@ -68363,7 +68394,7 @@ function qaAnswerOverall(intentId) {
       };
     }
 
-    var headline = 'Ziva Score: ' + zs.score + '/100';
+    var headline = 'Sprout Score: ' + zs.score + '/100';
     var trend = getZivaScoreTrend7d();
     if (trend && trend.delta) {
       if (trend.delta > 0) headline += ' (↑' + trend.delta + ')';
@@ -68450,7 +68481,7 @@ function qaAnswerOverall(intentId) {
     return {
       icon: 'lotus', domain: 'rose', title: 'Overall Status', headline: 'Unable to compute score',
       sections: [{ label: 'WHAT TO DO', icon: zi('info'), items: [
-        { text: 'Log sleep, meals, and poop to build your Ziva Score', signal: 'action' }
+        { text: 'Log sleep, meals, and poop to build your Sprout Score', signal: 'action' }
       ]}],
       confidence: null, dataGap: 'Need more data'
     };
@@ -71044,7 +71075,7 @@ function renderFeverEpisodeCard() {
   // Guidance
   html += '<div class="fe-section-title">Guidance</div>';
   html += '<div class="fe-guidance"><ul class="ep-list">';
-  html += '<li>Keep Ziva lightly dressed — do not over-bundle</li>';
+  html += '<li>Keep ' + childNameHtml() + ' lightly dressed — do not over-bundle</li>';
   html += '<li>Offer breast milk or fluids frequently</li>';
   html += '<li>Sponge with lukewarm water (never cold)</li>';
   if (sev.tier === 'high' || sev.tier === 'critical') {
@@ -71383,7 +71414,7 @@ function feResolvePrompt() {
   // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
   // this at midnight post-episode — 'Resolve' names the action verb
   // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
-  confirmAction('Has Ziva\'s temperature been normal (below 99°F) for at least 6 hours?', function() {
+  confirmAction('Has ' + childNameHtml() + '\'s temperature been normal (below 99°F) for at least 6 hours?', function() {
     resolveFeverEpisode('');
     showQLToast('' + zi('check') + ' Fever episode resolved');
   }, 'Resolve');
@@ -71566,7 +71597,7 @@ function renderDietFeverBanner() {
     '<div class="fe-diet-title">' + zi('flame') + ' Fever Active — Diet Guidance</div>' +
     '<div class="fe-diet-body">' +
     '<strong>Prioritize:</strong> Breast milk (most important), light foods (khichdi, dal water, curd rice, banana, rice porridge), hydrating foods (coconut water, ORS, soups).<br><br>' +
-    '<strong>Avoid:</strong> New food introductions, heavy proteins, fried foods. Do not force meals if Ziva refuses.<br><br>' +
+    '<strong>Avoid:</strong> New food introductions, heavy proteins, fried foods. Do not force meals if ' + childNameHtml() + ' refuses.<br><br>' +
     '<em>Appetite loss during fever is normal. Offer small amounts frequently.</em>' +
     '</div></div>';
 }
@@ -72103,7 +72134,7 @@ function deResolvePrompt() {
   // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
   // this at midnight post-episode — 'Resolve' names the action verb
   // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
-  confirmAction('Has Ziva\'s stool consistency returned to normal? (No loose/watery stools for at least 12 hours)', function() {
+  confirmAction('Has ' + childNameHtml() + '\'s stool consistency returned to normal? (No loose/watery stools for at least 12 hours)', function() {
     resolveDiarrhoeaEpisode('');
     showQLToast('' + zi('check') + ' Diarrhoea episode resolved');
   }, 'Resolve');
@@ -72408,7 +72439,7 @@ function renderVomitingEpisodeCard() {
 
   // Guidance
   html += '<div class="fe-section-title">Guidance</div><div class="fe-guidance"><ul class="ep-list">';
-  html += '<li>Keep Ziva upright for 20–30 minutes after feeds</li>';
+  html += '<li>Keep ' + childNameHtml() + ' upright for 20–30 minutes after feeds</li>';
   html += '<li>Offer small, frequent feeds — not large volumes</li>';
   html += '<li>Continue breastfeeding normally</li>';
   html += '<li>Avoid new foods until vomiting stops</li>';
@@ -77028,7 +77059,7 @@ function openHomeFoodQuery() {
         <button class="ql-modal-close" data-action="closeHomeFoodQuery">&times;</button>
       </div>
       <div>
-        <div class="guidance-text">Check any food — safety, nutrition, best pairings, and Ziva's history with it.</div>
+        <div class="guidance-text">Check any food — safety, nutrition, best pairings, and ${childNameHtml()}'s history with it.</div>
         <div class="flex-gap8-wrap-mb">
           <input type="text" id="homeFoodQueryInput" placeholder="e.g. kiwi, paneer + rice..." style="flex:1;min-width:160px;padding:10px 14px;border-radius:var(--r-lg);border:1.5px solid var(--sage-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sage-light);color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')runHomeFoodQuery()">
           <button class="btn btn-sage" data-action="runHomeFoodQuery" style="min-width:70px;">Check</button>
@@ -77170,7 +77201,7 @@ function runHomeFoodQuery() {
   const comboResultEl = document.getElementById('comboResult');
   let resultHtml = comboResultEl ? comboResultEl.innerHTML : '';
 
-  // Add Ziva's history with this food
+  // Add the child's history with this food
   let historyHtml = '';
   rawFoods.forEach(food => {
     const history = getFoodHistory(food);
@@ -77180,13 +77211,13 @@ function runHomeFoodQuery() {
   // Add sleep correlation if available
   let sleepHtml = getFoodSleepCorrelation(rawFoods);
 
-  if (historyHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">${zi('list')} Ziva's History</div>${historyHtml}</div>`;
+  if (historyHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">${zi('list')} ${childNameHtml()}'s History</div>${historyHtml}</div>`;
   if (sleepHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">${zi('zzz')} Sleep Connection</div>${sleepHtml}</div>`;
 
   resultEl.innerHTML = resultHtml;
 }
 
-// Get Ziva's history with a specific food — last given, frequency, reaction, poop after
+// Get the child's history with a specific food — last given, frequency, reaction, poop after
 function getFoodHistory(foodName) {
   const lower = foodName.toLowerCase().trim();
   const base = _baseFoodName(lower);
@@ -77385,7 +77416,8 @@ if (window.visualViewport) {
 // ── FOOD INTELLIGENCE: INTRODUCTION RATE ──
 
 function computeIntroductionRate() {
-  if (!foods || !foods.length) return { weeks: [], total: 0, avgPerWeek: 0, trend: 'no data' };
+  // A new family starts with no foods: the same shape as below, so renderers never read undefined.
+  if (!foods || !foods.length) return { weeks: [], total: 0, avgPerWeek: 0, trend: 'no data', thisWeek: { weekStart: '', count: 0, foods: [] } };
 
   // Sort foods by date
   const sorted = foods.slice().sort((a, b) => a.date.localeCompare(b.date));
@@ -77921,7 +77953,7 @@ function renderInfoSleepEfficiency() {
     if (data.avgEff < 80) {
       html += '<div class="si-insight si-insight-warn">Frequent wake-ups are reducing sleep quality. Check for teething, hunger, or room temperature.</div>';
     } else if (data.avgEff >= 90) {
-      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — Ziva is sleeping through most of the night.</div>';
+      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — ' + childNameCapHtml() + ' is sleeping through most of the night.</div>';
     } else {
       html += '<div class="si-insight si-insight-info">Sleep efficiency is in the normal range. Fewer wake-ups would push it higher.</div>';
     }
@@ -78092,10 +78124,10 @@ function renderInfoSleepWakeWindows() {
       html += '<div class="si-insight si-insight-warn">' + data.overtiredCount + ' overtired windows detected this week — may cause harder settling.</div>';
     }
     if (data.overtiredCount === 0 && data.undertiredCount === 0 && inRange) {
-      html += '<div class="si-insight si-insight-good">Wake windows are well-timed for Ziva\'s age. Nice work.</div>';
+      html += '<div class="si-insight si-insight-good">Wake windows are well-timed for ' + childNameHtml() + '\'s age. Nice work.</div>';
     }
     if (data.undertiredCount >= 3) {
-      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — Ziva may not be tired enough, which can cause nap refusal.</div>';
+      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — ' + childNameCapHtml() + ' may not be tired enough, which can cause nap refusal.</div>';
     }
     insightEl.innerHTML = html;
   }
@@ -78183,7 +78215,7 @@ function renderInfoSleepReport() {
   if (detailsEl) {
     let html = '<div class="si-report-hero">';
 
-    // Score ring (Ziva Score style)
+    // Score ring (Sprout Score style)
     const ringClass = 'zs-score-' + lbl.label;
     html += '<div class="si-report-ring ' + ringClass + '" style="background:' + _siRingBg(lbl.label) + ';border-color:' + _siRingBorder(lbl.label) + ';">';
     html += '<div class="si-report-number" style="color:' + _siRingText(lbl.label) + ';">' + data.avgScore + '</div>';
@@ -78232,7 +78264,7 @@ function renderInfoSleepReport() {
   }
 }
 
-// Ring color helpers (match Ziva Score ring styling)
+// Ring color helpers (match Sprout Score ring styling)
 function _siRingBg(label) {
   const m = { excellent:'linear-gradient(135deg,#d4f5e0,#b8eacc)', great:'linear-gradient(135deg,#e0f0fa,#cce5f5)', good:'linear-gradient(135deg,#fef6e8,#fcecd0)', fair:'linear-gradient(135deg,#fef0e0,#fce0c0)', attention:'linear-gradient(135deg,#fde8ed,#f8d0d8)' };
   return m[label] || m.good;
@@ -78319,9 +78351,9 @@ function computeNapTransition() {
 
   // Typical transition age
   let transitionNote = '';
-  if (ageM < 12) transitionNote = 'Most babies transition from 2 to 1 nap between 12–18 months. At ' + ageM + ' months, Ziva is not expected to be ready yet.';
-  else if (ageM <= 18) transitionNote = 'Ziva is in the typical transition window (12–18 months). Watch these signals closely.';
-  else transitionNote = 'At ' + ageM + ' months, Ziva may be ready if signals align.';
+  if (ageM < 12) transitionNote = 'Most babies transition from 2 to 1 nap between 12–18 months. At ' + ageM + ' months, ' + childNameHtml() + ' is not expected to be ready yet.';
+  else if (ageM <= 18) transitionNote = '' + childNameCapHtml() + ' is in the typical transition window (12–18 months). Watch these signals closely.';
+  else transitionNote = 'At ' + ageM + ' months, ' + childNameHtml() + ' may be ready if signals align.';
 
   return {
     insufficient: false, signals, metCount, readiness,
@@ -78553,7 +78585,7 @@ function renderInfoSleepDayNight() {
     if (gapDelta >= 8) {
       html += '<div class="si-insight si-insight-info">A longer gap between last nap and bedtime correlates with better nights (+' + gapDelta + ' pts).</div>';
     } else if (gapDelta <= -8) {
-      html += '<div class="si-insight si-insight-warn">A longer gap before bed is linked to worse sleep (' + gapDelta + ' pts). Ziva may be getting overtired.</div>';
+      html += '<div class="si-insight si-insight-warn">A longer gap before bed is linked to worse sleep (' + gapDelta + ' pts). ' + childNameCapHtml() + ' may be getting overtired.</div>';
     }
     if (!html) {
       html = '<div class="si-insight si-insight-info">No strong pattern yet — more data will reveal nap-night correlations.</div>';
@@ -78757,7 +78789,7 @@ function renderInfoSleepBestNight() {
   if (factorsEl) {
     let html = '';
     if (data.factors.length === 0) {
-      html = '<div class="si-nodata">No clear patterns found yet — more data will reveal what drives Ziva\'s best nights.</div>';
+      html = '<div class="si-nodata">No clear patterns found yet — more data will reveal what drives ' + childNameHtml() + '\'s best nights.</div>';
     } else {
       data.factors.forEach(f => {
         const impactColor = f.positive ? 'var(--tc-sage)' : 'var(--tc-amber)';
@@ -78985,7 +79017,7 @@ function renderInfoSleepRegression() {
   if (insightEl) {
     let html = '';
     if (data.severity === 'none') {
-      html += '<div class="si-insight si-insight-good">No sleep regression detected. Ziva\'s sleep has been stable.</div>';
+      html += '<div class="si-insight si-insight-good">No sleep regression detected. ' + childNameCapHtml() + '\'s sleep has been stable.</div>';
     } else if (data.severity === 'mild') {
       html += '<div class="si-insight si-insight-info">A mild dip is normal — it often resolves within a few days. Keep the routine consistent.</div>';
     } else if (data.severity === 'moderate') {
@@ -78994,7 +79026,7 @@ function renderInfoSleepRegression() {
       html += '<div class="si-insight si-insight-warn">Significant sleep disruption detected. This is likely developmental and typically lasts 1–3 weeks. Maintain consistency — this will pass.</div>';
     }
     if (data.ageWindow && data.severity !== 'none') {
-      html += '<div class="si-insight si-insight-info">Ziva is in the ' + data.ageWindow.label + ' window — a well-documented period of sleep disruption tied to neurological development.</div>';
+      html += '<div class="si-insight si-insight-info">' + childNameCapHtml() + ' is in the ' + data.ageWindow.label + ' window — a well-documented period of sleep disruption tied to neurological development.</div>';
     }
     insightEl.innerHTML = html;
   }
@@ -79258,7 +79290,7 @@ function _cdBarHtml(label, value, maxVal, suffix, color, rawLabel) {
 // Allergen Introduction (analysis prototype)
 // ════════════════════════════════════════
 // The analysis layer ON TOP of the food-effects-v2 resolver spine: tracks the
-// high-priority "introduce-early" allergens and where Ziva is with each —
+// high-priority "introduce-early" allergens and where the child is with each —
 // ready to try / watching the 3-day window / tolerated / reaction noted —
 // sourced from the SAME getFoodEffect + _lookupByFoodName resolver the
 // consequence surfaces use (so a logged "almond"/"cashew" correctly counts as
@@ -80452,7 +80484,7 @@ function renderInfoMilestoneSleepCorrelation() {
       var rate = Math.round((coOccurrences / bursts.length) * 100);
       iHtml += '<div class="si-insight si-insight-warn">' + coOccurrences + ' of ' + bursts.length + ' milestone bursts coincided with sleep disruption (' + rate + '%) — consistent with developmental leap patterns</div>';
     } else if (bursts.length > 0 && coOccurrences === 0) {
-      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — Ziva handles developmental leaps well</div>';
+      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — ' + childNameCapHtml() + ' handles developmental leaps well</div>';
     }
     if (bursts.length === 0 && weeksWithBothData.length >= 4) {
       iHtml += '<div class="si-insight si-insight-info">No milestone bursts detected in the last ' + numWeeks + ' weeks — steady development pace</div>';
@@ -80566,7 +80598,7 @@ function renderLanding() {
   // Same data, right voice for the front door (Vela V-V-1).
   let summary;
   if (totalCount === 0) {
-    summary = 'A fresh day with Ziva — nothing logged yet.';
+    summary = 'A fresh day with ' + childNameHtml() + ' — nothing logged yet.';
   } else {
     const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
     summary = (typeof _tsfGenerateSummary === 'function')
@@ -80624,7 +80656,7 @@ function renderLanding() {
   html += '<button class="ld-door ld-door-ask" data-action="ldAsk">'
         +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
         +   '<span class="ld-door-label">Ask</span>'
-        +   '<span class="ld-door-sub">About Ziva</span>'
+        +   '<span class="ld-door-sub">About ' + childNameHtml() + '</span>'
         + '</button>';
   html += '</div>';
 
@@ -80857,7 +80889,7 @@ function _geDocFace(e) {
   });
   if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
   rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
-  var _docName = (typeof _emDocName === 'function' ? _emDocName() : 'Ziva');
+  var _docName = (typeof _emDocName === 'function' ? _emDocName() : '' + childNameCapHtml() + '');
   var _docVitals = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
   return '<div class="docface"><div class="doc"><div class="doc-body">'
     + '<div class="doc-brand"><b>' + escHtml(_docName) + '</b><span>Emergency summary</span></div>'
@@ -80992,7 +81024,7 @@ function _geStampVal(container, id) {
 function _geDocText(e, container) {
   var d = e.doc; if (!d) return '';
   var _v = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
-  var L = [(typeof _emDocName === 'function' ? _emDocName() : 'Ziva') + ' — Emergency summary'];
+  var L = [(typeof _emDocName === 'function' ? _emDocName() : '' + childNameCapHtml() + '') + ' — Emergency summary'];
   if (_v) L.push(_v);                                    // V-V-237: omit empty vitals line (no double gap)
   L.push('', 'Suspected: ' + d.suspected);
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
@@ -82138,7 +82170,7 @@ function renderInfoStreak() {
   gridEl.innerHTML = gHtml;
 
   let msg;
-  if (current >= 30)      msg = 'A full month of complete meal logs — the diet insights are now built on a rich, reliable picture of Ziva\'s eating.';
+  if (current >= 30)      msg = 'A full month of complete meal logs — the diet insights are now built on a rich, reliable picture of ' + childNameHtml() + '\'s eating.';
   else if (current >= 14) msg = 'Two weeks straight! Logging this consistent makes the weekly nutrient views genuinely trustworthy.';
   else if (current >= 7)  msg = 'A full week logged — the weekly nutrient views now have a complete picture to work with.';
   else if (current >= 3)  msg = 'Nice start. A few more days and the weekly insights will rest on a full picture.';
@@ -83595,10 +83627,10 @@ function ctOpenTemplatePicker() {
   }
 
   // Age caveat (> 12 months)
-  var dobMs = new Date('2025-09-04').getTime();
+  var dobMs = DOB.getTime();
   var ageMonths = Math.floor((Date.now() - dobMs) / (30.44 * 86400000));
   if (ageMonths > 12) {
-    html += '<div class="ct-age-note">Ziva is ' + ageMonths + ' months old. Tracking targets are set for 6\u201312 months \u2014 check with your pediatrician.</div>';
+    html += '<div class="ct-age-note">' + childNameCapHtml() + ' is ' + ageMonths + ' months old. Tracking targets are set for 6\u201312 months \u2014 check with your pediatrician.</div>';
   }
 
   // Incident templates
@@ -85116,7 +85148,7 @@ const SYNC_KEYS = {
 //             and is never a deliberate user action
 //   vacc    — the vaccination schedule; parent edits entries, never deletes
 //             the whole schedule
-//   meds    — Ziva's active medications (Vit D3 at minimum); clear-all is a
+//   meds    — the child's active medications (Vit D3 at minimum); clear-all is a
 //             medical-safety concern, never a user intent
 //
 // vaccBooked is MEANINGFUL_NULL territory (spec §8), not ALWAYS_POPULATED.
@@ -87525,7 +87557,7 @@ function syncOpenHouseholdModal(mode) {
   var body = isCreate
     ? '<div class="fx-col g12">' +
         '<label class="sync-modal-label">Baby\'s name</label>' +
-        '<input type="text" id="syncBabyName" class="sync-modal-input" placeholder="e.g. Ziva" autocomplete="off">' +
+        '<input type="text" id="syncBabyName" class="sync-modal-input" placeholder="e.g. ' + childNameCapHtml() + '" autocomplete="off">' +
         '<label class="sync-modal-label">Date of birth</label>' +
         '<input type="date" id="syncBabyDob" class="sync-modal-input">' +
         '<button class="btn btn-sky btn-full-base" data-action="syncConfirmCreate">' +

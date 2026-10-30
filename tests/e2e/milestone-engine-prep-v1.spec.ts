@@ -270,7 +270,7 @@ test('regression-guard-milestone-engine-prep-v1-predict-window-dob-override: opt
     };
   });
   expect(r.overriddenAgeDays).toBe(0);
-  expect(r.todayAgeDays).toBeGreaterThan(0); // Ziva is born 4 Sep 2025; today is later
+  expect(r.todayAgeDays).toBeGreaterThan(0); // the child is born 4 Sep 2025; today is later
 });
 
 test('regression-guard-milestone-engine-prep-v1-in-window-explicit-state-injection: opts.standards/milestones inject cleanly (V-K-108)', async ({ page }) => {

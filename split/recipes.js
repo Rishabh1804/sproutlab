@@ -661,7 +661,7 @@ const RECIPES = [
       'Temper a pinch of cumin in ½ tsp ghee and pour it over (strain out any whole seeds she cannot manage).',
       'Serve at room temperature.',
     ],
-    dos: ['Cooling, probiotic, a summer staple in Jamshedpur heat', 'Counts toward the ICMR-NIN 350 ml a day of milk/curd', 'Two vegetables slipped in'],
+    dos: ['Cooling, probiotic, a summer staple in the heat', 'Counts toward the ICMR-NIN 350 ml a day of milk/curd', 'Two vegetables slipped in'],
     donts: ['No salt in her portion', "Don't heat the curd", "Don't serve fridge-cold"],
     source: ['icmr', 'iap16', 'nhsbsl'],
   },
@@ -1462,7 +1462,7 @@ const TODDLER_FEEDING = {
 // change live in data.js itself (the source-reading safety gates read them there).
 //  Food Library expansion for 12–24 months (Ceres jurisdiction), merged into the
 //  data.js tables at parse time by _mergeFoodLib1224() below.
-//  Drafted 2026-09-24 for Ziva (12.7 mo, 4 teeth, Jamshedpur).
+//  Drafted 2026-09-24 for the child (12.7 mo, 4 teeth).
 // 
 //  ── SOURCES (all fetched 2026-09-24) ─────────────────────────────────────
 //  [WHO23]  https://iris.who.int/server/api/core/bitstreams/5abca011-4db2-4cf1-b959-45b756f7b600/content
@@ -1768,7 +1768,7 @@ const FOOD_SYNERGIES_ADD_12_24 = [
   ['mustard greens', 'ghee', 'Ghee helps absorb vitamin A from sarson', 'absorption'],
 ];
 
-// ── 9. SEASONAL_AVAILABILITY — Jamshedpur (UNCONFIRMED regional knowledge; add-if-absent) ─
+// ── 9. SEASONAL_AVAILABILITY — eastern India (UNCONFIRMED regional knowledge; add-if-absent) ─
 const SEASONAL_AVAILABILITY_ADD_12_24 = {
   'chiku':          { months:[0,1,2,3,9,10,11], availability:'peak', other:'available' },
   'custard apple':  { months:[7,8,9,10], availability:'peak' },

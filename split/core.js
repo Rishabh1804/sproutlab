@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────
-// SVG ICON HELPER — Ziva Sketch icon set
+// SVG ICON HELPER — the child Sketch icon set
 // ─────────────────────────────────────────
 function zi(name) { return `<svg class="zi" aria-hidden="true"><use href="#zi-${name}"/></svg>`; }
 
@@ -522,18 +522,34 @@ function _profParse(str) {
   const d = new Date(+m[1], +m[2] - 1, +m[3], m[4] ? +m[4] : 12, m[5] ? +m[5] : 0);   // HR-12: local parts
   return (d.getFullYear() === +m[1] && d.getMonth() === +m[2] - 1 && d.getDate() === +m[3]) ? d : null;
 }
+// The name is shown inside HTML all over the app, and some of that copy is escaped again on the way
+// out. So the stored name carries no markup characters, and a straight apostrophe becomes ’: that
+// keeps it safe in any context and unchanged by a second escHtml (HR-4).
+function _profCleanName(n) { return String(n).replace(/[<>&"`]/g, '').replace(/'/g, '\u2019').replace(/\s+/g, ' ').trim().slice(0, 40); }
 // Keeps a well-formed profile (unknown fields pass through for later versions); anything else is null.
 function _profNormalize(p) {
   if (!p || typeof p !== 'object' || !p.child || typeof p.child !== 'object') return null;
   const c = p.child;
   if (typeof c.name !== 'string' || !c.name.trim() || !_profParse(c.dob)) return null;
-  const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: c.name.trim().slice(0, 40) }) });
+  const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: _profCleanName(c.name) }) });
+  if (!out.child.name) return null;
   if (c.solidsStart != null && !_profParse(c.solidsStart)) out.child.solidsStart = null;
   if (typeof out.ts !== 'number') out.ts = 0;
   return out;
 }
 function _profChild() { return (profile && profile.child) || _PROFILE_FALLBACK; }
 function childName() { return _profChild().name; }
+// The child's name for copy, safe in HTML as stored (see _profCleanName). With no profile it reads
+// "your child", so a string built before the profile loads still makes sense.
+function childNameHtml() { return (profile && profile.child && profile.child.name) || 'your child'; }
+function childNameCapHtml() { return (profile && profile.child && profile.child.name) || 'Your child'; }
+// "Born 15 Jan 2024" (+ " · City" when the family gave one), for the header and the visit summary.
+function _profBornLine(withPlace) {
+  if (!profile) return '';
+  const born = 'Born ' + DOB.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const city = withPlace && profile.place && profile.place.city ? ' · ' + profile.place.city : '';
+  return born + city;
+}
 function childPlace() { return (profile && profile.place) || null; }
 // Refresh the module-wide date anchors from the profile (or the P1 fallback).
 function _profApply() {
@@ -543,6 +559,11 @@ function _profApply() {
   SOLIDS_START = _profParse(c.solidsStart) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
   _ZIVA_DOB = toDateStr(dob);
   _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+  // The template's name slots follow the profile (privacy-v1 P2b).
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll('[data-child-name]').forEach(el => { el.textContent = childNameHtml(); });
+    document.querySelectorAll('[data-child-name-cap]').forEach(el => { el.textContent = childNameCapHtml(); });
+  }
   // A changed birth date must not leave an age-keyed result behind (K-280-1).
   if (typeof _clearModifierCache === 'function') _clearModifierCache();
   if (typeof _islClearAll === 'function') _islClearAll();
@@ -1657,7 +1678,7 @@ function init() {
   const av = load(KEYS.avatar, null);
   if (av) {
     const el = document.getElementById('avatarEl');
-    el.innerHTML = `<img src="${av}" alt="Ziva">`;
+    el.innerHTML = `<img src="${av}" alt="${childNameHtml()}">`;
   }
 
   // CareTickets: validate + prune before first render
@@ -3741,7 +3762,7 @@ function saveCrop() {
   } else {
     // Save as main avatar (Home tab)
     const el = document.getElementById('avatarEl');
-    el.innerHTML = `<img src="${croppedSrc}" alt="Ziva">`;
+    el.innerHTML = `<img src="${croppedSrc}" alt="${childNameHtml()}">`;
     save(KEYS.avatar, croppedSrc);
     try { localStorage.setItem('ziva_avatar_full', fullSrc); } catch {}
   }
@@ -3780,7 +3801,7 @@ function closeAvatarLightbox() {
   if (lb.classList.contains('open')) {
     lb.classList.remove('open');
     // Reset lightbox name back to default
-    lb.querySelector('.lb-name').innerHTML = 'Ziva ' + zi('sprout');
+    lb.querySelector('.lb-name').innerHTML = '' + childNameCapHtml() + ' ' + zi('sprout');
     if (history.state?.overlay === 'lightbox') history.back();
   }
 }
@@ -4110,7 +4131,7 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     <div class="ziva-score-hero">
       <div class="zs-ring" style="${ringStyle}" data-open-score="1">
         <div class="zs-number">${zs.score}</div>
-        <div class="zs-label">Ziva Score</div>
+        <div class="zs-label">Sprout Score</div>
         <div class="zs-trend">${trendText}</div>
       </div>
       <div class="zs-domains">${domainPills}</div>
@@ -5459,7 +5480,7 @@ function exportData() {
     if (navigator.share) {
       try {
         var file = new File([jsonStr], fileName, { type: 'application/json' });
-        navigator.share({ title: "Ziva's Dashboard Backup", files: [file] })
+        navigator.share({ title: "SproutLab backup", files: [file] })
           .catch(function(shareErr) {
             // Share cancelled or failed — try anchor download
             if (shareErr.name !== 'AbortError') _exportViaAnchor(jsonStr, fileName);
@@ -6789,7 +6810,7 @@ function _bugCaptureState() {
         if (_lastKnownScores[k] !== null) domainScores[k] = _lastKnownScores[k];
       });
     }
-    // Grab the displayed Ziva Score from the DOM if available
+    // Grab the displayed Sprout Score from the DOM if available
     var scoreEl = document.getElementById('zsNumber');
     if (scoreEl && scoreEl.textContent) {
       var parsed = parseInt(scoreEl.textContent, 10);
@@ -6871,7 +6892,7 @@ function _bugFormatMessage(state, description, errorObj) {
   lines.push('Screen: ' + state.screen + ' \u00B7 DPR: ' + state.dpr);
 
   if (state.zivaScore !== null) {
-    lines.push('Ziva Score: ' + state.zivaScore + ' \u00B7 Data: ' + state.dataDays + ' days');
+    lines.push('Sprout Score: ' + state.zivaScore + ' \u00B7 Data: ' + state.dataDays + ' days');
   }
   if (state.modifierWeight > 0) {
     lines.push('Modifier: ' + Math.round(state.modifierWeight * 100) + '% active');
@@ -6920,7 +6941,7 @@ function _bugRenderContext(state) {
     ' &middot; Screen: ' + escHtml(state.screen) + '</div>';
 
   if (state.zivaScore !== null) {
-    html += '<div class="bug-context-row"><span class="bug-context-label">Ziva Score:</span> ' + state.zivaScore +
+    html += '<div class="bug-context-row"><span class="bug-context-label">Sprout Score:</span> ' + state.zivaScore +
       ' &middot; Data days: ' + state.dataDays + '</div>';
   }
 
@@ -7168,8 +7189,8 @@ function _bugInit() {
 //   for the single static DOB → ms-of-epoch baseline.
 // ─────────────────────────────────────────────────────────────────────────
 
-// Ziva's DOB anchor — single source of truth for age math.
-// Hardcoded per CLAUDE.md §Ziva Context: born 4 Sep 2025.
+// the child's DOB anchor — single source of truth for age math.
+// Set from the profile by _profApply (privacy-v1 §3.1).
 // HR-12: stored as YYYY-MM-DD; Date.parse with UTC suffix to avoid local-tz drift.
 let _ZIVA_DOB = '';                                             // set by _profApply in init()
 let _ZIVA_DOB_MS = 0;                                            // set by _profApply in init()
@@ -7221,7 +7242,7 @@ function _msStandardFor(standards, key) {
 // _predictMilestoneWindow — Primitive 1.
 // Clinical-range predictor for a single milestone. PURE function. NEVER
 // personalised — returns the typical clinical band from the active reference
-// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a Ziva-specific prediction.
+// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a the child-specific prediction.
 // Audit-no-personalised-prediction-v1.sh enforces the honesty floor at build.
 function _predictMilestoneWindow(milestoneId, opts) {
   opts = opts || {};

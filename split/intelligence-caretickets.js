@@ -903,10 +903,10 @@ function ctOpenTemplatePicker() {
   }
 
   // Age caveat (> 12 months)
-  var dobMs = new Date('2025-09-04').getTime();
+  var dobMs = DOB.getTime();
   var ageMonths = Math.floor((Date.now() - dobMs) / (30.44 * 86400000));
   if (ageMonths > 12) {
-    html += '<div class="ct-age-note">Ziva is ' + ageMonths + ' months old. Tracking targets are set for 6\u201312 months \u2014 check with your pediatrician.</div>';
+    html += '<div class="ct-age-note">' + childNameCapHtml() + ' is ' + ageMonths + ' months old. Tracking targets are set for 6\u201312 months \u2014 check with your pediatrician.</div>';
   }
 
   // Incident templates

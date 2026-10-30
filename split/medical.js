@@ -720,8 +720,8 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY Ziva Jain · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
-  lines.push('BORN Born 4 Sep 2025 · Jamshedpur');
+  lines.push('BABY ' + childNameHtml() + ' · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
+  if (_profBornLine(true)) lines.push('BORN ' + _profBornLine(true).replace(/^Born /, ''));
   lines.push('');
 
   // Growth
@@ -795,7 +795,7 @@ function showFullDoctorSummary() {
 
   lines.push('');
   lines.push('═══════════════════════════════');
-  lines.push('Generated from Ziva\'s Dashboard');
+  lines.push('Generated from SproutLab');
 
   const text = lines.join('\n');
   // Clean text for copy/share — strip internal markers
@@ -805,7 +805,7 @@ function showFullDoctorSummary() {
   const printWin = window.open('', '_blank');
   if (printWin) {
     printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Ziva — Visit Summary</title>
+      <title>${childNameCapHtml()} — Visit Summary</title>
       <style>
         body{font-family:system-ui,-apple-system,sans-serif;padding:24px;max-width:600px;margin:0 auto;color:#333;font-size:var(--icon-sm);line-height:1.6;}
         h1{font-size:var(--icon-md);margin:0 0 4px;} h2{font-size:var(--icon-sm);margin:18px 0 4px;text-transform:uppercase;letter-spacing:var(--ls-normal);color:#888;border-bottom:1px solid #eee;padding-bottom:4px;}
@@ -817,12 +817,12 @@ function showFullDoctorSummary() {
       </style></head><body>`);
     
     printWin.document.write(`<h1>${zi('steth')} Paediatrician Visit Summary</h1>`);
-    printWin.document.write(`<div class="meta">Ziva Jain · ${fmtAgeShort(months, days)}${months >= 12 ? ' (' + months + ' months)' : ''} · Generated ${formatDate(today())}</div>`);
+    printWin.document.write(`<div class="meta">${childNameCapHtml()} · ${fmtAgeShort(months, days)}${months >= 12 ? ' (' + months + ' months)' : ''} · Generated ${formatDate(today())}</div>`);
     printWin.document.write(`<div class="actions">`);
     printWin.document.write(`<button class="btn-print" data-action="printDashboard">${zi('note')} Print</button>`);
     printWin.document.write(`<button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('raw').textContent).then(()=>this.textContent='Copied!')">${zi('note')} Copy</button>`);
     if (navigator.share) {
-      printWin.document.write(`<button class="btn-share" onclick="navigator.share({title:'Ziva Visit Summary',text:document.getElementById('raw').textContent})">${zi('note')} Share</button>`);
+      printWin.document.write(`<button class="btn-share" onclick="navigator.share({title:'${childNameHtml()} Visit Summary',text:document.getElementById('raw').textContent})">${zi('note')} Share</button>`);
     }
     printWin.document.write(`</div>`);
 
@@ -880,10 +880,10 @@ function renderGrowthFacts() {
     const vb = GROWTH_VELOCITY_12_24;
     if (mo >= 12) {
       if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
-        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. Ziva is growing steadily.` });
+        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. ${childNameCapHtml()} is growing steadily.` });
       }
     } else if (gPerDay >= 15 && gPerDay <= 40) {
-      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. Ziva is growing beautifully.` });
+      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. ${childNameCapHtml()} is growing beautifully.` });
     } else if (gPerDay > 40) {
       facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage as she is establishing her growth curve on solids.` });
     }
@@ -902,7 +902,7 @@ function renderGrowthFacts() {
     const moExact = ageMonthsAt(lwFact.date);
     const whoInterp = getGrowthRef(moExact);
     const pctW = calcPercentile(lwFact.wt, whoInterp.w3, whoInterp.w50, whoInterp.w97, whoInterp.w15, whoInterp.w85);
-    facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means Ziva is heavier than ${pctW.pct}% of girls her age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
+    facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of girls her age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
   }
   if (lh) {
     const htWho = getGrowthRef(ageMonthsAt(lh.date));
@@ -933,7 +933,7 @@ function renderGrowthFacts() {
   }
 
   // WHO context
-  facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of Ziva\'s health — a single reading means less than the pattern across visits. Keep logging!` });
+  facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of ${childNameHtml()}\'s health — a single reading means less than the pattern across visits. Keep logging!` });
 
   el.innerHTML = facts.map(f => `
     <div class="growth-fact ${f.type}${f.dismiss ? ' has-dismiss' : ''}">${f.dismiss ? `<button class="ctx-alert-dismiss" data-action="${f.dismiss}" aria-label="Dismiss">&times;</button>` : ''}
@@ -950,7 +950,7 @@ function dismissGrowthWhoNote() {
 }
 // @@INSERT_DATA_BLOCK_3@@
 
-// ── Ziva's monthly milestones (auto-generated from DOB) ──
+// ── the child's monthly milestones (auto-generated from DOB) ──
 function getZivaMonthDays() {
   const events = [];
   for (let m = 7; m <= 24; m++) {
@@ -958,8 +958,8 @@ function getZivaMonthDays() {
     d.setMonth(d.getMonth() + m);
     const dateStr = toDateStr(d);
     if (m === 12) continue; // skip — covered by "1st Birthday" in INDIAN_HOLIDAYS
-    if (m === 24) { events.push({ date:dateStr, title:"Ziva's 2nd Birthday", type:'birthday', icon:zi('party'), auto:true }); continue; }
-    events.push({ date:dateStr, title:`Ziva turns ${fmtAgeMonths(m)}`, type:'birthday', icon:zi('sprout'), auto:true });
+    if (m === 24) { events.push({ date:dateStr, title:"" + childNameCapHtml() + "'s 2nd Birthday", type:'birthday', icon:zi('party'), auto:true }); continue; }
+    events.push({ date:dateStr, title:`${childNameCapHtml()} turns ${fmtAgeMonths(m)}`, type:'birthday', icon:zi('sprout'), auto:true });
   }
   return events;
 }
@@ -995,7 +995,7 @@ function getUpcomingEvents(daysAhead) {
     }
   });
 
-  // 2. Ziva monthly days
+  // 2. the child monthly days
   getZivaMonthDays().forEach(z => {
     if (z.date >= todayStr && z.date <= cutoffStr) {
       all.push({ ...z, source:'auto' });
@@ -1074,7 +1074,7 @@ function renderUpcomingEvents() {
         </div>
         ${activities ? `
           <button class="ms-tidbit-toggle mt-6" data-action="toggleDisplayFlex" data-arg="${actId}">
-            ${zi('star')} Ziva activity ideas ${zi('chevron-down')}
+            ${zi('star')} ${childNameHtml()} activity ideas ${zi('chevron-down')}
           </button>
           <div id="${actId}" style="display:none;margin-top:6px;flex-direction:column;gap:var(--sp-4);">
             ${activities.map(a => `
@@ -1332,7 +1332,7 @@ function renderGrowth() {
 
 // Growth reference = WHO only (2026-09-24, 12-month audit, Architect decision). The former
 // "India (IAP)", Euro-Growth and China overlay tables were retired: the India table did not match
-// the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading Ziva high), the China
+// the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading the child high), the China
 // table matched neither Li 2009 nor WS/T 423-2022, and the Euro-Growth source could not be verified.
 // IAP 2015 itself recommends the WHO 2006 standards under 5. `_referenceStandard` still selects the
 // MILESTONE and SLEEP standards; it no longer changes growth percentiles.
@@ -1531,9 +1531,9 @@ function drawChart(canvasId) {
   datasets.push({ label:'WHO 50th', data: WHO_W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const wtPointR = zoom ? 7 : 5;
   const wtHoverR = zoom ? 10 : 7;
-  datasets.push({ label:'Ziva', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
+  datasets.push({ label:'' + childNameCapHtml() + '', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _chartInst = new Chart(ctx.getContext('2d'), {
@@ -1546,7 +1546,7 @@ function drawChart(canvasId) {
         tooltip:{ ..._ct.tooltip, callbacks:{
           title: i => {
             const ageStr = `Age: ${i[0].parsed.x.toFixed(1)}m`;
-            if (zoom && i[0].dataset.label === 'Ziva') {
+            if (zoom && i[0].dataset.label === '' + childNameCapHtml() + '') {
               const pt = zivaPoints[i[0].dataIndex];
               return pt && pt.date ? `${ageStr} · ${formatDate(pt.date)}` : ageStr;
             }
@@ -1609,9 +1609,9 @@ function drawHeightChart(canvasId) {
   datasets.push({ label:'WHO 50th', data: WHO_H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const htPointR = zoom ? 7 : 5;
   const htHoverR = zoom ? 10 : 7;
-  datasets.push({ label:'Ziva', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
+  datasets.push({ label:'' + childNameCapHtml() + '', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','Ziva'];
+  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _hChartInst = new Chart(ctx.getContext('2d'), {
@@ -1624,7 +1624,7 @@ function drawHeightChart(canvasId) {
         tooltip:{ ..._ct.tooltip, callbacks:{
           title: i => {
             const ageStr = `Age: ${i[0].parsed.x.toFixed(1)}m`;
-            if (zoom && i[0].dataset.label === 'Ziva') {
+            if (zoom && i[0].dataset.label === '' + childNameCapHtml() + '') {
               const pt = zivaHtPoints[i[0].dataIndex];
               return pt && pt.date ? `${ageStr} · ${formatDate(pt.date)}` : ageStr;
             }
@@ -2765,7 +2765,7 @@ function _renderSymptomCheckerResults(matches, opts) {
     }
   }
 
-  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts — you know Ziva best.</div>';
+  html += '<div style="font-size:var(--fs-xs);color:var(--light);margin-top:10px;line-height:var(--lh-relaxed);font-style:italic;">This is guidance only, not medical advice. When in doubt, always call your paediatrician. Trust your instincts — you know ' + childNameHtml() + ' best.</div>';
 
   return html;
 }
@@ -2801,7 +2801,7 @@ function checkSymptoms() {
   });
 
   if (matches.length === 0) {
-    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing what you\'re seeing differently, or check the quick chips above. If you\'re concerned about Ziva, always trust your instincts and call your paediatrician.</div>' + _scDoctorCardHTML('mild') + '</div>';
+    resultEl.innerHTML = '<div class="sc-result sc-mild"><div class="sc-title">No matching symptoms found</div><div class="sc-section-body">Try describing what you\'re seeing differently, or check the quick chips above. If you\'re concerned about ' + childNameHtml() + ', always trust your instincts and call your paediatrician.</div>' + _scDoctorCardHTML('mild') + '</div>';
     return;
   }
 
@@ -3460,7 +3460,7 @@ function _vaccOpenReactionModal(vaccNames) {
   ).join('');
 
   content.innerHTML = `<div class="vc-reaction-form" data-vacc-names="${escAttr(JSON.stringify(vaccNames))}">
-    <h3 class="modal-title">How is Ziva after ${namesLabel}?</h3>
+    <h3 class="modal-title">How is ${childNameHtml()} after ${namesLabel}?</h3>
     ${namesList}
     <div class="t-sub mb-10">Given today &middot; ${formatDate(todayStr)}</div>
 
@@ -4467,7 +4467,7 @@ function renderMedD3PatternCard() {
   // CR-6: adherence denominator must respect d3Med.start AND medChecks._trackingSince —
   // pre-fix divided by the full 14-day window unconditionally, giving wildly different
   // numbers vs computeSupplementAdherence on the same screen for a recently-activated med.
-  const medStart = d3Med.start || '2025-09-04';
+  const medStart = d3Med.start || toDateStr(DOB);
   const trackStart = medChecks._trackingSince || '0000-00-00';
   const effectiveStart = medStart > trackStart ? medStart : trackStart;
   const eligibleDays = days.filter(d => d.date >= effectiveStart);
@@ -6386,7 +6386,7 @@ function renderHomeSleep() {
     el.innerHTML = `<div class="info-strip is-indigo tappable" data-tab="sleep">
       <span><svg class="zi"><use href="#zi-moon"/></svg></span>
       <div><strong class="tc-indigo">No sleep logged yet</strong>
-      <div class="t-sub">Tap to start tracking Ziva's sleep</div></div>
+      <div class="t-sub">Tap to start tracking ${childNameHtml()}'s sleep</div></div>
     </div>`;
     return;
   }
@@ -6892,11 +6892,11 @@ function renderInfoPoopFrequency() {
       html += '<div class="si-insight si-insight-info">Frequency has dropped from ' + data.avg14d + ' to ' + data.avg7d + '/day. Could be dietary — check fibre intake.</div>';
     }
     if (data.regularity >= 70 && !data.gapAlert && !data.highCountAlert) {
-      html += '<div class="si-insight si-insight-good">Ziva has a regular pattern — most poops happen in the ' + data.mostCommonTime + '.</div>';
+      html += '<div class="si-insight si-insight-good">' + childNameCapHtml() + ' has a regular pattern — most poops happen in the ' + data.mostCommonTime + '.</div>';
     } else if (data.regularity < 50 && !data.gapAlert && !data.highCountAlert) {
       html += '<div class="si-insight si-insight-info">Poop timing is unpredictable. This is normal at this age but watch for discomfort.</div>';
     } else if (!data.gapAlert && !data.highCountAlert && data.freqTrend !== 'dropping') {
-      html += '<div class="si-insight si-insight-info">Moderate regularity — Ziva\'s pattern is developing. Avg ' + data.avg7d + '/day.</div>';
+      html += '<div class="si-insight si-insight-info">Moderate regularity — ' + childNameCapHtml() + '\'s pattern is developing. Avg ' + data.avg7d + '/day.</div>';
     }
     insightEl.innerHTML = html;
   }
@@ -7385,7 +7385,7 @@ function renderInfoPoopColorAnomaly() {
   if (insightEl) {
     let html = '';
     if (data.overallSeverity === 'safe') {
-      html += '<div class="si-insight si-insight-good">Healthy color range. Brown and yellow are expected at Ziva\'s age.</div>';
+      html += '<div class="si-insight si-insight-good">Healthy color range. Brown and yellow are expected at ' + childNameHtml() + '\'s age.</div>';
     } else if (data.overallSeverity === 'diet-related') {
       html += '<div class="si-insight si-insight-info">Some color variations detected but all appear diet-related — no concern.</div>';
     } else if (data.overallSeverity === 'needs-attention') {
@@ -7505,7 +7505,7 @@ function renderInfoPoopAmountTrend() {
     if (data.trend === 'smaller') {
       html += '<div class="si-insight si-insight-warn">Poop amounts have been getting smaller — watch for constipation signs.</div>';
     } else if (data.largeAfterGap >= 2) {
-      html += '<div class="si-insight si-insight-info">Several large poops after long gaps — Ziva may be holding. Check for discomfort.</div>';
+      html += '<div class="si-insight si-insight-info">Several large poops after long gaps — ' + childNameCapHtml() + ' may be holding. Check for discomfort.</div>';
     } else if (data.constipationSignal) {
       html += '<div class="si-insight si-insight-warn">Small + hard stools detected — a constipation signal. Increase fluids and fibre.</div>';
     } else if (data.diarrhoeaSignal) {
@@ -9087,7 +9087,7 @@ function computeIllnessSleepImpact() {
   if (avgSickDuration && avgHealthyDuration) {
     const diff = (parseFloat(avgHealthyDuration) - parseFloat(avgSickDuration)).toFixed(1);
     if (diff > 0.5) {
-      insights.push({ type: 'info', text: 'Ziva sleeps about ' + diff + 'h less on sick nights (' + avgSickDuration + 'h vs ' + avgHealthyDuration + 'h healthy). Disruption is normal during illness.' });
+      insights.push({ type: 'info', text: '' + childNameCapHtml() + ' sleeps about ' + diff + 'h less on sick nights (' + avgSickDuration + 'h vs ' + avgHealthyDuration + 'h healthy). Disruption is normal during illness.' });
     }
   }
   if (avgSickWakeUps && avgHealthyWakeUps) {
@@ -9652,7 +9652,7 @@ function computeTextureProgression() {
     const firstAvg = firstHalf.reduce((s, d) => s + stageIdx[d.dominant], 0) / firstHalf.length;
     const secondAvg = secondHalf.reduce((s, d) => s + stageIdx[d.dominant], 0) / secondHalf.length;
     if (secondAvg < firstAvg - 0.3) {
-      insights.push({ type: 'warn', text: 'Texture seems to be going backwards recently. If Ziva is refusing chunks, try offering both purees and chunks at the same meal.' });
+      insights.push({ type: 'warn', text: 'Texture seems to be going backwards recently. If ' + childNameHtml() + ' is refusing chunks, try offering both purees and chunks at the same meal.' });
     }
   }
 

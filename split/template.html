@@ -1,4 +1,4 @@
-<!-- ═══ Ziva Sketch Icon Set ═══ -->
+<!-- ═══ the child Sketch Icon Set ═══ -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
 <defs>
 <symbol id="zi-lotus" viewBox="0 0 24 24"><path d="M12 21c0 0-4-3.5-4-8c0-3 1.5-5 4-7c2.5 2 4 4 4 7c0 4.5-4 8-4 8z" fill="currentColor" opacity="0.15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21c0 0-7-2-8-7c-.5-2.5.5-5 3-6c1 2 2.5 4 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 21c0 0 7-2 8-7c.5-2.5-.5-5-3-6c-1 2-2.5 4-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
@@ -116,7 +116,7 @@
 <symbol id="zi-ios-share" viewBox="0 0 24 24"><path d="M7 10v9a1.5 1.5 0 001.5 1.5h7A1.5 1.5 0 0017 19v-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 14V3M8.5 6.5L12 3l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-undo" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 9h10a6 6 0 016 6v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-tooth" viewBox="0 0 24 24"><path d="M7.5 3.5c-2.5 0-4 2-4 4.5 0 2.2.9 3.6 1.6 5.2.6 1.4.8 3 1.1 4.6.3 1.9.8 3.2 1.8 3.2 1.3 0 1.6-1.8 2-3.6.3-1.4.8-2.4 2-2.4s1.7 1 2 2.4c.4 1.8.7 3.6 2 3.6 1 0 1.5-1.3 1.8-3.2.3-1.6.5-3.2 1.1-4.6.7-1.6 1.6-3 1.6-5.2 0-2.5-1.5-4.5-4-4.5-1.8 0-2.8 1-4.5 1s-2.7-1-4.5-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
-<!-- Meal planner (spec meal-planner-v1 §4, 2026-10-29): travel bag, plan calendar, food flask (thermos), new-to-Ziva food badge (zi-new-food means a food new to Ziva, nothing else). Reserved until P1b wires diet.js: only the Surface Catalog uses them today. -->
+<!-- Meal planner (spec meal-planner-v1 §4, 2026-10-29): travel bag, plan calendar, food flask (thermos), new-to-the child food badge (zi-new-food means a food new to the child, nothing else). Reserved until P1b wires diet.js: only the Surface Catalog uses them today. -->
 <symbol id="zi-bag" viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="17" height="12.5" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M9 7.5v-2A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5v2M3.5 12.5h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10.5 12.5v2h3v-2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><circle cx="8.5" cy="14" r="1" fill="currentColor"/><circle cx="12" cy="14" r="1" fill="currentColor"/><circle cx="15.5" cy="14" r="1" fill="currentColor"/><circle cx="8.5" cy="17.3" r="1" fill="currentColor"/></symbol>
 <symbol id="zi-thermos" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M8.5 7V4.5A1.5 1.5 0 0110 3h4a1.5 1.5 0 011.5 1.5V7M7 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10.5 14c.6.8.6 1.7 0 2.5M13.5 14c.6.8.6 1.7 0 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
@@ -308,7 +308,7 @@
     </div>
     <input type="file" id="avatarInput" accept="image/*" data-change-action="handleAvatar">
     <div class="header-info">
-      <h1><span id="greetingText">Hello</span>, <span id="babyName">Ziva</span> <span id="greetingEmoji"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></span></h1>
+      <h1><span id="greetingText">Hello</span>, <span id="babyName" data-child-name-cap>Your child</span> <span id="greetingEmoji"><svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></span></h1>
       <p id="headerSub">Loading...</p>
       <div class="d-flex items-center gap-12 flex-wrap mt-6">
         <span class="t-md t-mid" id="headerDateTime">—</span>
@@ -349,7 +349,7 @@
       <!-- ─── WELCOME GUIDE (first-open, dismissable) ─── -->
       <div class="card col-full card-hero welcome-guide" id="welcomeGuide" style="display:none;">
         <div class="wg-header">
-          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Welcome to Ziva's Dashboard</div>
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-sparkle"/></svg></div> Welcome to SproutLab</div>
           <button class="wg-close" data-action="dismissWelcomeGuide" aria-label="Close">&times;</button>
         </div>
         <div class="t-sm t-light mt-4" id="wgSubtitle">A quick walkthrough to get you started — 5 steps</div>
@@ -359,7 +359,7 @@
             <div class="wg-step-num">1</div>
             <div class="wg-step-body">
               <strong>Log meals with Quick Log</strong>
-              <span>Tap the <strong>+</strong> button at the bottom → <strong>Feed</strong> → pick a meal (B/L/D/S) → type what Ziva ate → Save. Takes 10 seconds.</span>
+              <span>Tap the <strong>+</strong> button at the bottom → <strong>Feed</strong> → pick a meal (B/L/D/S) → type what <span data-child-name>your child</span> ate → Save. Takes 10 seconds.</span>
             </div>
           </div>
           <div class="wg-step" data-step="1">
@@ -372,22 +372,22 @@
           <div class="wg-step" data-step="2">
             <div class="wg-step-num">3</div>
             <div class="wg-step-body">
-              <strong>The Ziva Score</strong>
-              <span>The big number on Home combines sleep, diet, poop, medical & milestones into one score. <strong>It drops when data isn't logged</strong> — not because Ziva is doing poorly, but because the app needs your input. Tap it to see the breakdown.</span>
+              <strong>The Sprout Score</strong>
+              <span>The big number on Home combines sleep, diet, poop, medical & milestones into one score. <strong>It drops when data isn't logged</strong> — not because <span data-child-name>your child</span> is doing poorly, but because the app needs your input. Tap it to see the breakdown.</span>
             </div>
           </div>
           <div class="wg-step" data-step="3">
             <div class="wg-step-num">4</div>
             <div class="wg-step-body">
               <strong>"Can I Give This?"</strong>
-              <span>In the <strong>Track → Diet</strong> tab, scroll to the <strong>Can I Give This?</strong> card. Type any food to check if it's safe for Ziva's age, what nutrients it has, and what to pair it with.</span>
+              <span>In the <strong>Track → Diet</strong> tab, scroll to the <strong>Can I Give This?</strong> card. Type any food to check if it's safe for <span data-child-name>your child</span>'s age, what nutrients it has, and what to pair it with.</span>
             </div>
           </div>
           <div class="wg-step" data-step="4">
             <div class="wg-step-num">5</div>
             <div class="wg-step-body">
               <strong>Add new foods to the tracker</strong>
-              <span>In <strong>Track → Diet</strong>, find the <strong>Foods Introduced</strong> card. Type the food name, set the date, and mark it OK or Watch. This builds Ziva's food history and powers the nutrition analysis.</span>
+              <span>In <strong>Track → Diet</strong>, find the <strong>Foods Introduced</strong> card. Type the food name, set the date, and mark it OK or Watch. This builds <span data-child-name>your child</span>'s food history and powers the nutrition analysis.</span>
             </div>
           </div>
         </div>
@@ -402,7 +402,7 @@
       <!-- ─── TODAY FOR ZIVA — the Home lede (PR-K) ─── -->
       <div class="card col-full today-hero" id="todayHeroCard" style="display:none;">
         <div class="th-head">
-          <div class="th-title">Today for Ziva</div>
+          <div class="th-title">Today for <span data-child-name>your child</span></div>
           <div class="th-age" id="thAge">—</div>
         </div>
         <div class="th-date" id="thDate">—</div>
@@ -446,7 +446,7 @@
             <div class="ziva-score-hero" id="homeHeroScore" style="display:none;">
               <div class="zs-ring" id="zsRing" data-open-score="1">
                 <div class="zs-number" id="zsNumber">—</div>
-                <div class="zs-label">Ziva Score</div>
+                <div class="zs-label">Sprout Score</div>
                 <div class="zs-trend" id="zsTrend"></div>
               </div>
               <div class="zs-domains" id="zsDomains"></div>
@@ -507,7 +507,7 @@
         <div class="qa-card">
           <div class="qa-input-wrap">
             <span class="qa-input-icon"><svg class="zi"><use href="#zi-scope"/></svg></span>
-            <input type="text" class="qa-input" id="qaInput" placeholder="Ask about Ziva..." autocomplete="off" />
+            <input type="text" class="qa-input" id="qaInput" placeholder="Ask a question..." autocomplete="off" />
             <button class="qa-clear" id="qaClear" aria-label="Clear">&times;</button>
           </div>
           <div class="qa-chips" id="qaChips"></div>
@@ -645,7 +645,7 @@
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-chart"/></svg></div> Growth Overview <button class="help-btn" aria-label="Help" data-help="help-growth"><span class="t-sm">ⓘ</span></button></div>
           <button class="btn-primary bp-rose" data-action="openGrowthModal">+ Measure</button>
         </div>
-        <div class="help-tip" id="help-growth">Percentiles compare Ziva to other babies her age. The 54th percentile means she's heavier than 54% of girls. Anything between 3rd and 97th is normal — what matters most is that she stays on her own curve over time, not the exact number.</div>
+        <div class="help-tip" id="help-growth">Percentiles compare <span data-child-name>your child</span> to other babies her age. The 54th percentile means she's heavier than 54% of girls. Anything between 3rd and 97th is normal — what matters most is that she stays on her own curve over time, not the exact number.</div>
         <div class="percentile-badges">
           <div class="pbadge" id="pbadge-wtpct"><div class="pbadge-icon t-rose"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg></div><div class="pbadge-val" id="wtPct">—</div><div class="pbadge-label">Weight %ile</div></div>
           <div class="pbadge" id="pbadge-htpct"><div class="pbadge-icon t-sky"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg></div><div class="pbadge-val" id="htPct">—</div><div class="pbadge-label">Height %ile</div></div>
@@ -708,7 +708,7 @@
       <!-- FUN SIZE COMPARISON -->
       <div class="card card-info col-half">
         <div class="card-header">
-          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-balloon"/></svg></div> How Big is Ziva?</div>
+          <div class="card-title"><div class="icon icon-peach"><svg class="zi"><use href="#zi-balloon"/></svg></div> How big is <span data-child-name>your child</span>?</div>
         </div>
         <div id="sizeComparison" class="fx-col g8"></div>
       </div>
@@ -873,7 +873,7 @@
           <span class="collapse-chevron" id="vaccCoverageChevron"><svg class="zi"><use href="#zi-chevron-down"/></svg></span>
         </div>
         <div id="vaccCoveragePreview" class="mt-8"></div>
-        <div class="help-tip" id="help-coverage">Cross-checks Ziva's vaccination record against the complete IAP schedule. <strong>IAP</strong> = mandatory per Indian Academy of Pediatrics. <strong>IAP-Rec</strong> = strongly recommended by IAP. <strong>Private</strong> = optional, available at private clinics. Missing vaccines shown in red — discuss with your paediatrician.</div>
+        <div class="help-tip" id="help-coverage">Cross-checks <span data-child-name>your child</span>'s vaccination record against the complete IAP schedule. <strong>IAP</strong> = mandatory per Indian Academy of Pediatrics. <strong>IAP-Rec</strong> = strongly recommended by IAP. <strong>Private</strong> = optional, available at private clinics. Missing vaccines shown in red — discuss with your paediatrician.</div>
         <div id="vaccCoverageBody" class="collapse-body" style="display:none;">
           <div id="vaccCoverageContent" class="mt-10"></div>
         </div>
@@ -982,7 +982,7 @@
               <button data-action="dateNext" aria-label="Next day">›</button>
             </div>
           </div>
-          <div class="help-tip" id="help-meals">Log what Ziva eats each day. Tap a "Your usual" or suggested combo, or type a food — each meal saves the moment you tap, with an Undo if you slip. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
+          <div class="help-tip" id="help-meals">Log what <span data-child-name>your child</span> eats each day. Tap a "Your usual" or suggested combo, or type a food — each meal saves the moment you tap, with an Undo if you slip. The insights below each meal show nutritional benefits — like when iron and Vitamin C are paired together. Don't worry about exact quantities at this age — exposure and variety matter more than amounts.</div>
 
           <div id="dietIntelBanner"></div>
 
@@ -1020,7 +1020,7 @@
         </button>
 
         <div id="dietLibBrowse" class="col-full">
-        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-Ziva
+        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-the child
              lead card is prepended by renderLibShelves. The foods log is collapsed by
              default (S3c density fix) — the shelves are the browse, the log is a drawer. -->
         <div id="dietShelvesRoot"></div>
@@ -1105,7 +1105,7 @@
           <div class="card-header">
             <div class="card-title"><div class="icon icon-sage"><svg class="zi"><use href="#zi-chef"/></svg></div> Can I Give This?</div>
           </div>
-          <div class="combo-desc">Ask about any food or combination — get safety info, a recipe, and dos &amp; don'ts for Ziva's age.</div>
+          <div class="combo-desc">Ask about any food or combination — get safety info, a recipe, and dos &amp; don'ts for <span data-child-name>your child</span>'s age.</div>
           <div class="flex-gap8-wrap-mb">
             <input type="text" id="comboInput" class="form-input input-ctx-sage combo-input" placeholder="e.g. moringa + ragi, egg yolk, paneer with rice...">
             <button class="btn btn-sage disabled-state btn-min80" data-action="checkFoodCombo" id="comboCheckBtn" >Check <svg class="zi" aria-hidden="true"><use href="#zi-sparkle"/></svg></button>
@@ -1127,9 +1127,9 @@
       </div>
     </div>
 
-    <!-- ═══ RECIPES SUB-TAB — suggested-for-Ziva + browsable cited corpus ═══
+    <!-- ═══ RECIPES SUB-TAB — suggested-for-the child + browsable cited corpus ═══
          WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md §2. One panel, three
-         stacked sections (no nested tabs): (a) "Suggested for Ziva" logged-data-
+         stacked sections (no nested tabs): (a) "Suggested for the child" logged-data-
          driven cards, (b) browsable catalog grouped by meal slot, (c) expand-in-
          place detail. renderDietRecipes() (diet.js, lazy-rendered when this
          sub-tab opens) fills #dietRecipesRoot. Corpus = window.RECIPES (cited,
@@ -1414,7 +1414,7 @@
 
         <!-- Domain score hero (relocated per V-M-100 + G3; preserved ID).
              Architect correction post-spec ratification: hero on TOP — the
-             score card anchors the parent's view of where Ziva is overall
+             score card anchors the parent's view of where the child is overall
              before they scan the active-evidence list below. Spec body had
              the evidence-driven primary above the hero; live use surfaced
              that hero-as-anchor reads better. -->
@@ -1535,7 +1535,7 @@
 
           <!-- NIGHT FORM -->
           <div id="sleepNightCard">
-            <div class="help-tip d-none" id="help-sleep">Track Ziva's bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
+            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
             <div class="fx-col g12">
               <div>
                 <label class="micro-label">Date</label>
@@ -1676,7 +1676,7 @@
         <div class="card-header">
           <div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Log Poop</div>
         </div>
-        <div class="help-tip d-none" id="help-poop">Track Ziva's diaper changes. Monitoring colour, consistency, and frequency helps spot digestive issues early. At 6–7 months with solids starting, changes in poop are normal and expected.</div>
+        <div class="help-tip d-none" id="help-poop">Track <span data-child-name>your child</span>'s diaper changes. Monitoring colour, consistency, and frequency helps spot digestive issues early. At 6–7 months with solids starting, changes in poop are normal and expected.</div>
         <div class="fx-col g12 mt-8">
           <div>
             <label class="micro-label">Date</label>
@@ -2582,7 +2582,7 @@
   <div class="app-footer">
     <div class="footer-text footer-text-style">
       <span>Built for</span>
-      <span class="footer-name">Ziva</span>
+      <span class="footer-name" data-child-name-cap>Your child</span>
       <svg class="zi footer-heart"><use href="#zi-heart"/></svg>
     </div>
   </div>
@@ -2877,7 +2877,7 @@
 <div class="score-popup" id="scorePopup">
   <div class="score-popup-handle"></div>
   <div class="score-popup-header">
-    <div class="score-popup-title"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Ziva Score</div>
+    <div class="score-popup-title"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg> Sprout Score</div>
     <button class="score-popup-close" data-action="closeScorePopup">&times;</button>
   </div>
   <div class="sp-hero" id="spHero"></div>
@@ -3134,8 +3134,8 @@
 </div><!-- /sidebar -->
 <div class="avatar-lightbox" id="avatarLightbox" data-action="closeAvatarSelf">
   <button class="lb-close" data-action="closeAvatarLightbox" aria-label="Close photo">&times;</button>
-  <img id="lbImage" src="" alt="Ziva">
-  <div class="lb-name">Ziva <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></div>
+  <img id="lbImage" src="" alt="Your child">
+  <div class="lb-name"><span data-child-name-cap>Your child</span> <svg class="zi" aria-hidden="true"><use href="#zi-sprout"/></svg></div>
   <div class="lb-sub" id="lbSub"></div>
   <div class="lb-actions">
     <button class="lb-btn" data-action="changeAvatar"><svg class="zi" aria-hidden="true"><use href="#zi-camera"/></svg> Change Photo</button>
@@ -3356,7 +3356,7 @@
       <input type="text" id="docName" class="modal-input">
       <input type="text" id="docTitle" class="modal-input">
       <input type="tel" id="docPhone" class="modal-input">
-      <input type="text" id="docAddress" class="modal-input" placeholder="Address (e.g. Bistupur, Jamshedpur)">
+      <input type="text" id="docAddress" class="modal-input" placeholder="Address">
       <input type="url" id="docLocation" class="modal-input">
       <label class="collapse-hdr-flex">
         <input type="checkbox" id="docPrimary"> Set as primary doctor

@@ -185,7 +185,7 @@ const SYNC_KEYS = {
 //             and is never a deliberate user action
 //   vacc    — the vaccination schedule; parent edits entries, never deletes
 //             the whole schedule
-//   meds    — Ziva's active medications (Vit D3 at minimum); clear-all is a
+//   meds    — the child's active medications (Vit D3 at minimum); clear-all is a
 //             medical-safety concern, never a user intent
 //
 // vaccBooked is MEANINGFUL_NULL territory (spec §8), not ALWAYS_POPULATED.
@@ -2594,7 +2594,7 @@ function syncOpenHouseholdModal(mode) {
   var body = isCreate
     ? '<div class="fx-col g12">' +
         '<label class="sync-modal-label">Baby\'s name</label>' +
-        '<input type="text" id="syncBabyName" class="sync-modal-input" placeholder="e.g. Ziva" autocomplete="off">' +
+        '<input type="text" id="syncBabyName" class="sync-modal-input" placeholder="e.g. ' + childNameCapHtml() + '" autocomplete="off">' +
         '<label class="sync-modal-label">Date of birth</label>' +
         '<input type="date" id="syncBabyDob" class="sync-modal-input">' +
         '<button class="btn btn-sky btn-full-base" data-action="syncConfirmCreate">' +

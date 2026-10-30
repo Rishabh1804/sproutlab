@@ -55,10 +55,11 @@ const DEFAULT_REGION = 'jamshedpur';
 // the hospital list to avoid presenting Jamshedpur-specific phone
 // numbers to a non-Jamshedpur parent. 108/112 CTAs remain (108 national).
 function currentRegion() {
-  return {
-    region: EMERGENCY_CONTACTS[DEFAULT_REGION] ? DEFAULT_REGION : 'jamshedpur',
-    confidence: 'default'
-  };
+  // privacy-v1: the region is the family's own town when it matches a region we hold contacts
+  // for; otherwise the national numbers only (confidence 'default' suppresses the hospital list).
+  var city = (typeof profile !== 'undefined' && profile && profile.place && profile.place.city) ? String(profile.place.city).toLowerCase().trim() : '';
+  var known = city && Object.keys(EMERGENCY_CONTACTS).find(function(k) { return k === city || String(EMERGENCY_CONTACTS[k].label || '').toLowerCase() === city; });
+  return known ? { region: known, confidence: 'known' } : { region: DEFAULT_REGION, confidence: 'default' };
 }
 
 // SEQUENCE_CRITICAL_IDS: entries whose whatToDo order carries safety
@@ -130,7 +131,7 @@ if (typeof window !== 'undefined') {
 //     resuscitation authority) for that line, not NHS. Pediatrician
 //     sign-off remains desirable but is no longer a blocking uncertainty.
 //
-// AGE STEP — 1 year+ (2026-09-24, the 12-month audit): Ziva turned one on
+// AGE STEP — 1 year+ (2026-09-24, the 12-month audit): the child turned one on
 //   2026-09-04, so the INFANT techniques above are retired from this registry.
 //   `unresponsive` and `choking` now carry the CHILD (1 year to puberty) protocol,
 //   verified against the live NHS pages: "How to resuscitate a child" (mod.
@@ -162,7 +163,7 @@ if (typeof window !== 'undefined') {
 // allergic-reaction). Distinct registry from SEQUENCE_CRITICAL_IDS (that
 // governs the symptom-checker's whatToDo <ol> step-order); this governs
 // the Room's item order. Builder proposal for the Maren audit:
-//   • M-4 anaphylaxis ruled IN — Ziva is in active allergen introduction;
+//   • M-4 anaphylaxis ruled IN — the child is in active allergen introduction;
 //     a sudden airway / whole-body reaction is distinct from choking and
 //     poison and the food-room cross-link does not cover it (§5.3 M-4).
 //   • Only `unresponsive` is pinned-open per the locked wireframe;
@@ -174,7 +175,7 @@ const GENERAL_EMERGENCIES = [
     severity: 'critical', callLead: true,
     immediate: [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
-      // Child (1 year+) technique since Ziva turned one (2026-09-24 12-month audit): mouth-to-mouth
+      // Child (1 year+) technique since the child turned one (2026-09-24 12-month audit): mouth-to-mouth
       // with the nose pinched, heel of ONE hand, 5 cm — NHS 'How to resuscitate a child' (mod. 2026-08-07).
       // Breathing check + two-hand note + plainer landmark (Maren V-M-266-12; RCUK 2025 paediatric
       // BLS: look, listen and feel for no more than 10 s; lower half of the sternum, two hands if needed).
@@ -221,7 +222,7 @@ const GENERAL_EMERGENCIES = [
     id: 'choking', icon: 'warn', name: 'Choking (object)',
     severity: 'urgent', callLead: true,
     immediate: [
-      // Child (1 year+) technique since Ziva turned one: back blows then ABDOMINAL thrusts —
+      // Child (1 year+) technique since the child turned one: back blows then ABDOMINAL thrusts —
       // NHS 'How to stop a child from choking' (mod. 2025-09-24). Infant chest thrusts retired.
       // Action-first wording (Vela V-V-266-5); "shout for help" first and ONE round before calling
       // (Maren V-M-266-8 — NHS: call 999 if it doesn't come out after back blows + thrusts).

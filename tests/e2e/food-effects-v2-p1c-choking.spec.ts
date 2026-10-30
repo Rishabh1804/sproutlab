@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
 //     forms wait until ~5"), NEVER the rose 'avoid' siren and NEVER the sage encourage benefit.
 //   • THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): back
 //     blows + abdominal thrusts (child 1y+ technique since 2026-09 — the under-1 chest-thrust
-//     protocol was retired when Ziva turned one), and NO adrenaline / auto-injector.
+//     protocol was retired when the child turned one), and NO adrenaline / auto-injector.
 //   • ALIAS PRECISION (the carry-forward lesson, M-F-1 / K-M-1): the record is reached by MANY
 //     aliases; the curated set fires on the unambiguous hazard forms (grape, popcorn, supari,
 //     roasted gram…) but NEVER on a safe homograph (chana dal, cooked carrot, sevai), and never
