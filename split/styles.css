@@ -2396,7 +2396,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   .stat-pills-grid { grid-template-columns:repeat(3, 1fr); gap:var(--sp-8); }
 }
 
-/* ─── "Today for Ziva" — the Home lede (PR-K) ─── */
+/* ─── "Today for <child>" — the Home lede (PR-K) ─── */
 .today-hero {
   background:linear-gradient(135deg, var(--peach-light), var(--warm));
   border:1px solid rgba(250,212,180,0.5);
@@ -4866,7 +4866,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 
 /* Footer text */
 /* Footer credit — special treatment now that it sits front-and-centre on the
-   lean landing. "Ziva" wears the hero's wavelength gradient (a bookend to the
+   lean landing. The name wears the hero's wavelength gradient (a bookend to the
    warm-wave stripe); the heart beats softly (reduced-motion floor); Fraunces
    italic = the warm "voice" (§9.6). Replaces the old inline opacity:0.4 dim. */
 .app-footer { text-align:center; padding:var(--sp-24) 0 var(--sp-8); }
@@ -4891,7 +4891,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   animation:ld-wave 4.4s ease-in-out infinite;
 }
 /* Dark parity (Vela V-V-3): the light wavelength pastels wash toward the dark
-   footer surface — "Ziva" is the one word the footer exists to say. Lift the
+   footer surface — the child's name is the one word the footer exists to say. Lift the
    stops to the dark-tuned --tc-* hues (the §9.2 hue-swap the doors use), same
    wavelength order (rose→peach→amber→sage→sky→indigo→lavender). */
 [data-theme="dark"] .footer-name {
@@ -6059,7 +6059,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   background:linear-gradient(135deg, rgba(60,45,35,0.4), rgba(50,35,60,0.3));
 }
 
-/* ── Ziva Score Hero ── */
+/* ── Sprout Score Hero ── */
 .ziva-score-hero {
   display:flex; align-items:center; gap:var(--sp-16);
   padding:var(--sp-8) 0 var(--sp-12); margin-bottom:var(--sp-8);
@@ -6456,7 +6456,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    no truncation, it wraps). The domain-hero pills drop to one column at
    medium and large zoom, as they already do at <=400px (the base 2-column
    rule above carries minmax(0,1fr) so longer details never push the grid
-   wider). The Home Ziva-Score pills use a 4-column grid at zoom: two per row,
+   wider). The Home Sprout-Score pills use a 4-column grid at zoom: two per row,
    and the fifth (Milestones) takes the whole last row instead of sitting alone. */
 .dsh-domain-name, .dsh-domain-sublabel, .dcp-name, .dcp-detail, .zsd-label, .zsd-score { overflow-wrap:break-word; }
 :root[data-zoom="med"]  .dsh-components,
@@ -8225,7 +8225,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .food-fav-star:active { transform:scale(0.9); }
 [data-theme="dark"] .food-fav-star { color:var(--light); }
 [data-theme="dark"] .food-fav-star.active { color:var(--tc-amber); }
-/* ── Dark mode: Ziva Score + Cards ── */
+/* ── Dark mode: Sprout Score + Cards ── */
 [data-theme="dark"] .zs-score-excellent .zs-ring { background:linear-gradient(135deg, rgba(111,207,151,0.15), rgba(45,134,89,0.15)); border-color:rgba(111,207,151,0.4); }
 [data-theme="dark"] .zs-score-excellent .zs-number { color:#6fcf97; }
 [data-theme="dark"] .zs-score-excellent .zs-label,
@@ -11626,7 +11626,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* expand-in-place detail (content reuses .enc-form / .cons-severe / .enc-emergency) */
 .lib-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
-/* Suggested-for-Ziva lead card — the entry point the eye lands on */
+/* Suggested-for-the-child lead card — the entry point the eye lands on */
 .lib-lead { background:var(--sage-light); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); border-left:3px solid var(--sage); }
 .lib-lead-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-sage); }
 .lib-lead-h .zi { width:var(--icon-base); height:var(--icon-base); }
@@ -11906,7 +11906,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    05-meal-rows). Two-channel colour (DESIGN_PRINCIPLES §Tint System):
    a DOMAIN LEFT-RAIL (border-left in the primary ingredient's FOOD_TAX
    domain) + a FOOD-DOMAIN WHISPER FADE (.dt-*, transparent→accent, never a
-   flat fill). Featured "Suggested for Ziva" hero on top; browsable catalog
+   flat fill). Featured "Suggested for <child>" hero on top; browsable catalog
    grouped by meal slot as full-width .recipe-row rows; expand-in-place detail
    reuses .combo-*/.fd-flag*. Light + dark first-class (dark hue-swaps).
    ═══════════════════════════════════════════════════════════════════════ */
@@ -11936,7 +11936,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipes-sec-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); margin:var(--sp-4) 0 var(--sp-8); }
 .recipes-sub-note { font-size:var(--fs-sm); color:var(--mid); margin:0 0 var(--sp-12); line-height:var(--lh-relaxed); }
 
-/* Featured "Suggested for Ziva" hero card */
+/* Featured "Suggested for <child>" hero card */
 .recipe-hero { position:relative; overflow:hidden; border-radius:var(--r-2xl); padding:var(--sp-20) var(--sp-20) var(--sp-16); box-shadow:0 8px 32px var(--shadow); margin-bottom:var(--sp-10); background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); cursor:pointer; }
 .recipe-hero-eyebrow { display:inline-flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-2xs); font-weight:800; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sage); margin-bottom:var(--sp-6); }
 .recipe-hero-eyebrow .zi { width:15px; height:15px; }
@@ -11948,7 +11948,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipes-h1 { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-2xl); color:var(--text); margin:0 0 2px; }
 .recipes-subtitle { font-size:var(--fs-sm); color:var(--mid); margin:0; line-height:var(--lh-relaxed); }
 
-/* ── Generative "Suggested for Ziva" hero (§9.3/§9.4) ──
+/* ── Generative "Suggested for <child>" hero (§9.3/§9.4) ──
    grams-weighted wavelength FADE body (--rc-fl light / --rc-fd dark) + a 4px
    warm-wave STRIPE (--rc-stripe) with a sheen sweep (reuses @keyframes ld-wave)
    + a corner zif watermark. Two-channel colour: the domain left-rail leads,
@@ -12268,3 +12268,25 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .qa-recipe-card-main { flex:1; min-width:0; }
 .qa-recipe-card-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); }
 .qa-recipe-card-cta { font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
+
+/* ── Profile gate (privacy-v1 §3.3): Welcome, set up, confirm details ── */
+.prf-gate { position:fixed; inset:0; z-index:10000; background:var(--cream); overflow-y:auto; overscroll-behavior:contain; display:flex; align-items:flex-start; justify-content:center; padding:var(--sp-32) var(--sp-16); }
+.prf-card { width:100%; max-width:420px; display:flex; flex-direction:column; gap:var(--sp-12); }
+.prf-icon { width:56px; height:56px; border-radius:var(--r-full); background:var(--sage-light); color:var(--tc-sage); display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px var(--shadow); }
+.prf-icon .zi { width:28px; height:28px; }
+.prf-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-2xl); color:var(--text); margin:0; line-height:var(--lh-tight); }
+.prf-lead { font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+.prf-note { font-size:var(--fs-sm); color:var(--light); margin:0; }
+.prf-form { display:flex; flex-direction:column; gap:var(--sp-12); }
+.prf-field { display:flex; flex-direction:column; gap:var(--sp-4); }
+.prf-label { font-weight:700; color:var(--text); }
+.prf-opt { font-weight:400; color:var(--light); }
+.prf-err { font-size:var(--fs-sm); color:var(--tc-rose); margin:0; min-height:1em; }
+.prf-btn { width:100%; min-height:48px; gap:var(--sp-8); }
+.prf-btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.prf-check { font-size:var(--fs-sm); font-weight:700; color:var(--tc-sage); margin:0; min-height:1em; }
+.vacc-empty-note { display:flex; align-items:flex-start; gap:var(--sp-6); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); padding:var(--sp-8) 0; }
+.vacc-empty-note .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:var(--sp-2); }
+.prf-field .form-input { min-height:48px; }
+.prf-label { font-size:var(--fs-base); }
+.form-input[aria-invalid="true"] { border-color:var(--tc-rose); }

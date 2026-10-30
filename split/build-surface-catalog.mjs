@@ -108,7 +108,7 @@ function domainHero({ key, word, sub, weight, score, comps, stale }) {
       </div>
       <div class="dsh-info">
         <div class="dsh-domain-name">${zi(lb.emoji)} ${esc(cap(lb.label))}</div>
-        <div class="dsh-domain-sublabel">${esc(sub)} · ${esc(weight)} of Ziva Score</div>
+        <div class="dsh-domain-sublabel">${esc(sub)} · ${esc(weight)} of Sprout Score</div>
       </div>
     </div>
     <div class="dsh-components">${pills}</div>
@@ -129,7 +129,7 @@ function homeHero({ score, trend, trendDown, domains }) {
     <div class="ziva-score-hero zs-score-${scoreLabel(score).label}">
       <div class="zs-ring">
         <div class="zs-number">${score}</div>
-        <div class="zs-label">Ziva Score</div>
+        <div class="zs-label">Sprout Score</div>
         <div class="zs-trend${trendDown ? ' trend-down' : ''}">${esc(trend)}</div>
       </div>
       <div class="zs-domains">${dpills}</div>
@@ -141,7 +141,7 @@ function homeHero({ score, trend, trendDown, domains }) {
 const SURFACES = [
   {
     id: 'hero-ziva',
-    title: 'Ziva Score hero (Home)',
+    title: 'Sprout Score hero (Home)',
     note: 'The home front-door hero — composite score ring + per-domain pills, `.ziva-score-hero.zs-score-{label}`, shown inside its real Home vitals card (`.card.card-hero.hero-home` → `.vitals-expanded-inner`), whose rainbow it leans on. Stale domains carry `.zsd-stale`; an untracked domain shows "—". Domain pills reflow two per row at medium/large zoom, with the fifth taking the whole last row. Tap a pill to jump to that tab; tap the ring for the score popup.',
     exemplars: [
       { label: 'Strong week', html: homeHero({ score: 84, trend: '↑ +4 vs last week', domains: [
@@ -295,7 +295,7 @@ function mpSlot({ slot, items = [], newTag, lead, act = 'ate', open, body = '', 
   const travel = mode && !(act && act.logged);
   const entries = items.length ? `<div class="mp-entries" data-action="mpToggleSlot" data-arg="${slot}">`
     + items.map(it => it.r ? recipeEntry(it.r, { travel }) : foodChip(it.f)).join('')
-    + (newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Ziva: ${esc(newTag)}</span>` : '') + `</div>` : '';
+    + (newTag ? `<span class="mp-entry-new">${zi('new-food')} New to Asha: ${esc(newTag)}</span>` : '') + `</div>` : '';
   return `<div class="mp-slot${open ? ' mp-slot--open' : ''}">`
     + `<span class="mp-slot-ic">${zi(icon)}</span>`
     + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
@@ -472,7 +472,7 @@ const PLANNER = [
   },
   {
     id: 'mp-safety', title: 'Planner 2b–2c · Safety stacking and the day hint',
-    note: '2b: two new foods in one meal (egg, a top allergen, and kiwi) ride the amber safety channel in words, not lavender (V-V-275-12, -14); the new-to-Ziva tag stays a tag. Peanut is established and clean, so it carries no repeated watch line (V-C-275-10). 2c: three slots planned, none iron-rich → one worded, dismissable hint (V-C-275-16). No score. Both cards are Thursday, a future day, so no slot offers She ate this (spec §1.6, V-M-278-1). 2d: she had a reaction noted to egg, and egg is planned again: a rose flag lead, not the routine amber (V-C-275-5, V-M-278-4); its She ate this opens the consequence card first (V-C-275-13, warn-and-allow), and the entry never counts as a clean introduction. The lead paraphrases FOOD_EFFECTS egg highRiskNote; seekCare renders in the consequence card.',
+    note: '2b: two new foods in one meal (egg, a top allergen, and kiwi) ride the amber safety channel in words, not lavender (V-V-275-12, -14); the new-to-child tag stays a tag. Peanut is established and clean, so it carries no repeated watch line (V-C-275-10). 2c: three slots planned, none iron-rich → one worded, dismissable hint (V-C-275-16). No score. Both cards are Thursday, a future day, so no slot offers She ate this (spec §1.6, V-M-278-1). 2d: she had a reaction noted to egg, and egg is planned again: a rose flag lead, not the routine amber (V-C-275-5, V-M-278-4); its She ate this opens the consequence card first (V-C-275-13, warn-and-allow), and the entry never counts as a clean introduction. The lead paraphrases FOOD_EFFECTS egg highRiskNote; seekCare renders in the consequence card.',
     exemplars: [
       { label: '2b — two new foods in one meal, one a top allergen; an established allergen stays quiet', width: 360, html: mpCard({ title: 'Thursday, 5 Nov', slots: [
         mpSlot({ slot: 'breakfast', ...rx('egg-bhurji-soft-roti', 'kiwi'), newTag: 'egg, kiwi', act: '',
@@ -525,7 +525,7 @@ const PLANNER = [
     exemplars: [
       { label: '6 — new-food conflict', width: 360, html: confirm('Mango and kiwi are both new this week.',
         'Kiwi is planned for Thursday 5 Nov and mango for Saturday 7 Nov. Give new foods one at a time, a few days apart, so if she reacts you’ll know which one it was.', 'Move mango to Mon 9 Nov', 'Plan anyway') },
-      { label: '6b — top allergen', width: 360, html: confirm('Egg is a common allergen, and new for Ziva.',
+      { label: '6b — top allergen', width: 360, html: confirm('Egg is a common allergen, and new for Asha.',
         'Give egg on its own, with nothing else new for a few days before or after, so if she reacts you’ll know it was the egg. ' + esc(`Best ${EGG_HOW.when}, and ${EGG_HOW.watch}.`),
         'Move to Sun', 'Plan anyway', `<p class="mp-confirm-link"><button class="btn btn-ghost btn-compact" data-action="mpWatchFor">${zi('eye')} What to watch for after egg</button> <span class="rcp-serving-src">NHS · ASCIA</span></p>`) },
       { label: 'Clear day — destructive confirm (rose primary; logged meals stay)', width: 360, html: confirm('Clear Wednesday’s plan?',
@@ -537,7 +537,7 @@ const PLANNER = [
     note: 'First use is one invitation line plus the one-time fill legend, never an empty grid. A pruned week says why. The › button clamps at 8 weeks ahead with a one-line reason (V-V-275-17). Fewer than five suggestions reuses the existing "Keep logging meals…" line.',
     exemplars: [
       { label: 'First use', width: 360, html: section(mpHead() + `<div class="mp-legend"><span><span class="mp-fill mp-fill--full"></span> All meals planned</span><span><span class="mp-fill mp-fill--part"></span> Some</span><span><span class="mp-fill mp-fill--none"></span> None</span></div>`
-        + mpStrip(WEEK.map(d => ({ ...d, sel: false, fill: 'none', mark: null, travel: false, aria: d.aria.replace(/, (all|some) meals planned.*$|, nothing planned$/, ', nothing planned') }))) + `<p class="mp-empty">Plan Ziva’s meals for the week: tap a day to start.</p>`) },
+        + mpStrip(WEEK.map(d => ({ ...d, sel: false, fill: 'none', mark: null, travel: false, aria: d.aria.replace(/, (all|some) meals planned.*$|, nothing planned$/, ', nothing planned') }))) + `<p class="mp-empty">Plan Asha’s meals for the week: tap a day to start.</p>`) },
       { label: 'Empty day (not first use)', width: 360, html: mpCard({ title: 'Sunday, 8 Nov', foot: false, slots: ['breakfast', 'lunch', 'dinner', 'snack'].map(s => mpSlot({ slot: s, act: 'add' })) }) },
       { label: 'Pruned week, and the horizon clamp', width: 360, html: section(mpHead({ title: 'Week of 5 Oct', thisWeek: true }) + `<p class="mp-empty">Plans older than 4 weeks are cleared.</p>`)
         + section(mpHead({ title: 'Week of 28 Dec', thisWeek: true, nextDisabled: true, note: 'You can plan up to 8 weeks ahead.' })) },
@@ -556,9 +556,9 @@ const PLANNER = [
   },
   {
     id: 'mp-stack', title: 'Planner 9 · Section stack (CL-11)',
-    note: 'At 360 × 740, default zoom, a non-travel today card with slots collapsed: the Plan section stays within one viewport and the top of "Suggested for Ziva" is in reach without hunting. Measured in the screenshot pass.',
+    note: 'At 360 × 740, default zoom, a non-travel today card with slots collapsed: the Plan section stays within one viewport and the top of "Suggested for Asha" is in reach without hunting. Measured in the screenshot pass.',
     exemplars: [
-      { label: 'Recipes tab top, 360 px', width: 360, html: section(mpHead() + mpStrip() + todayCard('12:00')) + `<div class="recipes-sec-label">Suggested for Ziva</div><p class="recipes-sub-note">Picked for her age, what she has had lately, and what this week is missing.</p>` },
+      { label: 'Recipes tab top, 360 px', width: 360, html: section(mpHead() + mpStrip() + todayCard('12:00')) + `<div class="recipes-sec-label">Suggested for Asha</div><p class="recipes-sub-note">Picked for her age, what she has had lately, and what this week is missing.</p>` },
     ],
   },
 ];
@@ -585,7 +585,7 @@ function specimen(s) {
 }
 
 const ROADMAP = [
-  ['Heroes', 'live', 'Ziva Score + per-tab domain heroes'],
+  ['Heroes', 'live', 'Sprout Score + per-tab domain heroes'],
   ['Meal planner', 'review', 'P1a mock-ups (spec meal-planner-v1 §4.7): week strip, day card, travel day, picker, confirms, empty states — awaiting sign-off'],
   ['Cards', 'next', 'action / info / stat cards'],
   ['Chips & pills', 'planned', 'domain chips, food chips, status pills'],

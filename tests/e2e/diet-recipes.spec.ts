@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 // Diet → Recipes sub-tab (WIRING_PLAN docs/design/recipes-tab/WIRING_PLAN.md §9).
-// The Recipes tab: a "Suggested for Ziva" ranked section + a browsable cited
+// The Recipes tab: a "Suggested for the child" ranked section + a browsable cited
 // catalog grouped by meal slot, both gated by the shipped 4-class diet
 // preference (SURFACING only). Two separate passes:
 //   Pass A — surfacing (_dietAllowsFood): hides off-preference recipes.
@@ -75,12 +75,12 @@ test.describe('Diet → Recipes sub-tab', () => {
   });
 
   // 4 — recipe-level age: the honey toast is gated to 24 m (added-sugar gate, 2026-09-24), so it
-  // stays withheld at Ziva's real age until Sep 2027. An age-gated recipe is withheld from
+  // stays withheld at the child's real age until Sep 2027. An age-gated recipe is withheld from
   // "Suggested" but shown in the catalog WITH an age badge + .fd-flag-aged detail
   test('honey recipe withheld from Suggested, age-flagged in catalog detail', async ({ page }) => {
     await setPref(page, 'nonveg');
     const html = await renderInto(page);
-    // The honey (2 y+) recipe must NOT be the featured hero (Ziva is under 2).
+    // The honey (2 y+) recipe must NOT be the featured hero (the child is under 2).
     const heroBlock = html.split('Browse recipes')[0];
     expect(heroBlock).not.toContain('Banana &amp; Honey Toast');
     // It IS in the catalog, carrying the age badge + the aged safety flag.
@@ -95,7 +95,7 @@ test.describe('Diet → Recipes sub-tab', () => {
     const html = await renderInto(page);
     const heroAndSuggested = html.split('Browse recipes')[0];
     // Dal–Rice with Palak (spinach, leafy + iron) is a strong gap-fill candidate.
-    expect(heroAndSuggested).toContain('Suggested for Ziva');
+    expect(heroAndSuggested).toContain('Suggested for Asha');
     expect(html).toContain('Dal');   // a dal/leafy recipe is present in the corpus
   });
 

@@ -17,7 +17,7 @@
 //
 // SAFETY INVARIANTS baked in (RECIPE_RESEARCH.md, cross-verified ≥2 sources):
 //   • No honey / added salt < 12 m; no added sugar — honey included — < 24 m (fruit sweetens;
-//     WHO free sugars + DGA 2020–25 count honey as added sugar; 2026-09-24 12-month audit).
+//     WHO free sugars + DGA 2020–25 count honey as added sugar; the 12-month audit).
 //   • Allergens (egg, fish, nuts, dairy, sesame) introduced early ~6 m, one
 //     at a time — never laundered as a prevention claim.
 //   • Nuts NEVER whole — ground fine / smooth paste (choking).
@@ -661,7 +661,7 @@ const RECIPES = [
       'Temper a pinch of cumin in ½ tsp ghee and pour it over (strain out any whole seeds she cannot manage).',
       'Serve at room temperature.',
     ],
-    dos: ['Cooling, probiotic, a summer staple in Jamshedpur heat', 'Counts toward the ICMR-NIN 350 ml a day of milk/curd', 'Two vegetables slipped in'],
+    dos: ['Cooling, probiotic, a summer staple in the heat', 'Counts toward the ICMR-NIN 350 ml a day of milk/curd', 'Two vegetables slipped in'],
     donts: ['No salt in her portion', "Don't heat the curd", "Don't serve fridge-cold"],
     source: ['icmr', 'iap16', 'nhsbsl'],
   },
@@ -677,7 +677,7 @@ const RECIPES = [
       'Lift out her piece, flake it with your fingers and remove every bone.',
       'Mash the flaked fish and lauki into soft rice with a little gravy. Take her portion out before salt or chilli.',
     ],
-    dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'The local jhol, made mild'],
+    dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'A Bengali-style jhol, made mild'],
     donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new to her, watch her for about 2 hours after the first meal'],
     source: ['icmr', 'nhsbsl', 'who'],
   },
@@ -1462,7 +1462,7 @@ const TODDLER_FEEDING = {
 // change live in data.js itself (the source-reading safety gates read them there).
 //  Food Library expansion for 12–24 months (Ceres jurisdiction), merged into the
 //  data.js tables at parse time by _mergeFoodLib1224() below.
-//  Drafted 2026-09-24 for Ziva (12.7 mo, 4 teeth, Jamshedpur).
+//  Drafted for a 12–24 m toddler.
 // 
 //  ── SOURCES (all fetched 2026-09-24) ─────────────────────────────────────
 //  [WHO23]  https://iris.who.int/server/api/core/bitstreams/5abca011-4db2-4cf1-b959-45b756f7b600/content
@@ -1768,7 +1768,7 @@ const FOOD_SYNERGIES_ADD_12_24 = [
   ['mustard greens', 'ghee', 'Ghee helps absorb vitamin A from sarson', 'absorption'],
 ];
 
-// ── 9. SEASONAL_AVAILABILITY — Jamshedpur (UNCONFIRMED regional knowledge; add-if-absent) ─
+// ── 9. SEASONAL_AVAILABILITY — eastern India (UNCONFIRMED regional knowledge; add-if-absent) ─
 const SEASONAL_AVAILABILITY_ADD_12_24 = {
   'chiku':          { months:[0,1,2,3,9,10,11], availability:'peak', other:'available' },
   'custard apple':  { months:[7,8,9,10], availability:'peak' },

@@ -1,8 +1,8 @@
 {
-  "name": "Ziva's Dashboard",
-  "short_name": "Ziva's Dashboard",
-  "description": "Baby tracker and nutrition dashboard for Ziva",
-  "version": "2026.10.29-31",
+  "name": "SproutLab",
+  "short_name": "SproutLab",
+  "description": "Baby tracker and nutrition dashboard",
+  "version": "2026.10.30-13",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fdf0f3",

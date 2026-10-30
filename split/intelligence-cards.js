@@ -256,7 +256,7 @@ function _cdBarHtml(label, value, maxVal, suffix, color, rawLabel) {
 // Allergen Introduction (analysis prototype)
 // ════════════════════════════════════════
 // The analysis layer ON TOP of the food-effects-v2 resolver spine: tracks the
-// high-priority "introduce-early" allergens and where Ziva is with each —
+// high-priority "introduce-early" allergens and where the child is with each —
 // ready to try / watching the 3-day window / tolerated / reaction noted —
 // sourced from the SAME getFoodEffect + _lookupByFoodName resolver the
 // consequence surfaces use (so a logged "almond"/"cashew" correctly counts as
@@ -1450,7 +1450,7 @@ function renderInfoMilestoneSleepCorrelation() {
       var rate = Math.round((coOccurrences / bursts.length) * 100);
       iHtml += '<div class="si-insight si-insight-warn">' + coOccurrences + ' of ' + bursts.length + ' milestone bursts coincided with sleep disruption (' + rate + '%) — consistent with developmental leap patterns</div>';
     } else if (bursts.length > 0 && coOccurrences === 0) {
-      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — Ziva handles developmental leaps well</div>';
+      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — ' + childNameHtml() + ' handles developmental leaps well</div>';
     }
     if (bursts.length === 0 && weeksWithBothData.length >= 4) {
       iHtml += '<div class="si-insight si-insight-info">No milestone bursts detected in the last ' + numWeeks + ' weeks — steady development pace</div>';
@@ -1564,7 +1564,7 @@ function renderLanding() {
   // Same data, right voice for the front door (Vela V-V-1).
   let summary;
   if (totalCount === 0) {
-    summary = 'A fresh day with Ziva — nothing logged yet.';
+    summary = 'A fresh day with ' + childNameHtml() + ' — nothing logged yet.';
   } else {
     const summaryCtx = { illnessPosture: (typeof getActiveIllnessPosture === 'function' ? getActiveIllnessPosture() : null) };
     summary = (typeof _tsfGenerateSummary === 'function')
@@ -1622,7 +1622,7 @@ function renderLanding() {
   html += '<button class="ld-door ld-door-ask" data-action="ldAsk">'
         +   '<span class="icon icon-lav">' + zi('crystal') + '</span>'
         +   '<span class="ld-door-label">Ask</span>'
-        +   '<span class="ld-door-sub">About Ziva</span>'
+        +   '<span class="ld-door-sub">About ' + childNameHtml() + '</span>'
         + '</button>';
   html += '</div>';
 
@@ -1855,7 +1855,7 @@ function _geDocFace(e) {
   });
   if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
   rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
-  var _docName = (typeof _emDocName === 'function' ? _emDocName() : 'Ziva');
+  var _docName = (typeof _emDocName === 'function' ? _emDocName() : '' + childNameCapHtml() + '');
   var _docVitals = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
   return '<div class="docface"><div class="doc"><div class="doc-body">'
     + '<div class="doc-brand"><b>' + escHtml(_docName) + '</b><span>Emergency summary</span></div>'
@@ -1990,7 +1990,7 @@ function _geStampVal(container, id) {
 function _geDocText(e, container) {
   var d = e.doc; if (!d) return '';
   var _v = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
-  var L = [(typeof _emDocName === 'function' ? _emDocName() : 'Ziva') + ' — Emergency summary'];
+  var L = [(typeof _emDocName === 'function' ? _emDocName() : '' + childNameCapHtml() + '') + ' — Emergency summary'];
   if (_v) L.push(_v);                                    // V-V-237: omit empty vitals line (no double gap)
   L.push('', 'Suspected: ' + d.suspected);
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
@@ -3136,7 +3136,7 @@ function renderInfoStreak() {
   gridEl.innerHTML = gHtml;
 
   let msg;
-  if (current >= 30)      msg = 'A full month of complete meal logs — the diet insights are now built on a rich, reliable picture of Ziva\'s eating.';
+  if (current >= 30)      msg = 'A full month of complete meal logs — the diet insights are now built on a rich, reliable picture of ' + childNameHtml() + '\'s eating.';
   else if (current >= 14) msg = 'Two weeks straight! Logging this consistent makes the weekly nutrient views genuinely trustworthy.';
   else if (current >= 7)  msg = 'A full week logged — the weekly nutrient views now have a complete picture to work with.';
   else if (current >= 3)  msg = 'Nice start. A few more days and the weekly insights will rest on a full picture.';
@@ -3631,9 +3631,11 @@ function saveWeatherCache() {
 let _weatherFetchInFlight = false;
 function fetchHistoricalWeather(startDate, endDate) {
   if (_weatherFetchInFlight) return Promise.resolve();
+  const _c = (typeof _profCoords === 'function') ? _profCoords() : null;
+  if (!_c) return Promise.resolve();
   _weatherFetchInFlight = true;
-  const lat = 22.8, lon = 86.18;
-  return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=Asia/Kolkata&start_date=${startDate}&end_date=${endDate}`)
+  const lat = _c.lat, lon = _c.lon;
+  return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=${_c.tz}&start_date=${startDate}&end_date=${endDate}`)
     .then(r => r.json())
     .then(data => {
       _weatherFetchInFlight = false;

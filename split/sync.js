@@ -167,10 +167,16 @@ const SYNC_KEYS = {
   // Meal planner — its own doc /singles/plan (V-CA-275-1): tracking is the doc heading for the
   // 1 MiB limit, and a plan tap shouldn't resend it. Atomic with the SYNC_RENDER_DEPS arm below.
   [KEYS.mealPlan]:           { collection: 'plan',        model: 'single-doc' },
+  // Profile — the child's name and dates and the household's place (privacy-v1 §3.1). Its own
+  // small doc; the newer whole record wins (_postReceiveProfile).
+  [KEYS.profile]:            { collection: 'profile',     model: 'single-doc' },
 };
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
 // Keys where an empty state is never a valid user intent — only a bug signal.
+// privacy-v1 (V-CA-280-14): the bundle no longer seeds any of these, so a new family starts empty
+// and the original reasons (seeded doctor, persist-defaults) no longer hold. Membership is under
+// review: an emptied key on one phone is rejected here and can be pushed back by the other.
 // For these keys, a listener snapshot delivering [] or {} with local non-empty
 // is skipped with a warning. For any key NOT in this set, legitimate user
 // deletions (clear-all) propagate normally via listener overwrite.
@@ -182,7 +188,7 @@ const SYNC_KEYS = {
 //             and is never a deliberate user action
 //   vacc    — the vaccination schedule; parent edits entries, never deletes
 //             the whole schedule
-//   meds    — Ziva's active medications (Vit D3 at minimum); clear-all is a
+//   meds    — the child's active medications (Vit D3 at minimum); clear-all is a
 //             medical-safety concern, never a user intent
 //
 // vaccBooked is MEANINGFUL_NULL territory (spec §8), not ALWAYS_POPULATED.
@@ -424,6 +430,7 @@ const SYNC_RENDER_DEPS = {
   // Meal planner — per-field newest-ts merge; a narrow renderer (never renderDietRecipes) that
   // holds off while a planner sheet is open; pushBackOnDiverge re-pushes newer local fields
   // the remote copy lacked (V-CA-275-3, -6).
+  [KEYS.profile]:           { global: 'profile',          mergeOnReceive: '_postReceiveProfile',          renderers: { home: ['renderHome'], landing: ['renderLanding'] } },
   [KEYS.mealPlan]:          { global: 'mealPlan',         mergeOnReceive: '_postReceiveMealPlan',         pushBackOnDiverge: true, renderers: { 'track:diet': ['renderMealPlanSection'] } },
 };
 
@@ -463,6 +470,12 @@ function _syncSetGlobal(name, value) {
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
     case 'mealPlan':     mealPlan     = value; return true;
+    case 'profile': {
+      var _prevDob = profile && profile.child ? profile.child.dob : null;
+      profile = _profNormalize(value); _profApply();
+      if (typeof _prfOnProfile === 'function') _prfOnProfile(_prevDob);
+      return true;
+    }
     default: return false;
   }
 }
@@ -485,6 +498,7 @@ function _syncGetGlobal(name) {
     case 'scrapbook':    return scrapbook;
     case 'teethLog':     return teethLog;
     case 'mealPlan':     return mealPlan;
+    case 'profile':      return profile;
     default: return undefined;
   }
 }
@@ -628,6 +642,16 @@ function _postReceiveVacc(remoteList) {
 // flag, newest ts wins; Clear-day tombstones hold; pruned to the window). Never throws: on an
 // internal error it returns undefined and the receive handler skips the save, keeping local
 // untouched and pushing nothing (V-CA-275-6, V-CA-279-2).
+// _postReceiveProfile — the profile is one small record: the newer ts wins whole; a malformed side
+// never replaces a good one.
+function _postReceiveProfile(remote, local) {
+  const r = _profNormalize(remote), l = _profNormalize(local);
+  if (!r) return l || local;
+  if (!l) return r;
+  if (l.pre && !r.pre) return r;          // a profile typed before joining yields to the household's (V-CA-280-12)
+  if (r.pre && !l.pre) return l;
+  return (r.ts >= l.ts) ? r : l;
+}
 function _postReceiveMealPlan(remotePlan, localPlan) {
   try { return _mpMerge(remotePlan, localPlan, today()); }
   catch (e) { console.warn('[sync] meal-plan merge failed; keeping local, skipping the save:', e); return undefined; }
@@ -1603,6 +1627,8 @@ function _syncMergeForPush(local, cloud, key) {
   if (key === KEYS.teeth && typeof _postReceiveTeeth === 'function') return _postReceiveTeeth(cloud, local);
   // Meal planner: the push honours the same per-field newest-ts merge as the receive, so a
   // reconnect, Retry, import or autosave restore can't undo the other parent's newer edit (V-CA-275-2).
+  // Profile: the push keeps the newer whole record, like the receive (V-CA-280-1).
+  if (key === KEYS.profile && typeof _postReceiveProfile === 'function') { var _pp = _postReceiveProfile(cloud, local); if (_pp && _pp.pre) { _pp = Object.assign({}, _pp); delete _pp.pre; } return _pp; }
   if (key === KEYS.mealPlan && typeof _postReceiveMealPlan === 'function') { var mp = _postReceiveMealPlan(cloud, local); return mp === undefined ? cloud : mp; }
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
@@ -2405,6 +2431,7 @@ function _syncSeedFirestore(hId) {
   allKeys.forEach(function(key) {
     var config = SYNC_KEYS[key];
     if (config.model !== 'single-doc') return;
+    if (key === KEYS.profile) return;   // written only if the household has none (below, V-CA-280-12)
     var val = load(key, null);
     if (val === null || val === undefined) return; // skip empty
     if (Array.isArray(val) && val.length === 0) return; // skip empty arrays
@@ -2421,6 +2448,18 @@ function _syncSeedFirestore(hId) {
     });
     promises.push(hRef.collection('singles').doc(col).set(payload, { merge: true }));
   });
+  // The profile: seeded only when the household has none, and never as provisional.
+  var _prof = load(KEYS.profile, null);
+  if (_prof && typeof _prof === 'object') {
+    var _profRef = hRef.collection('singles').doc(SYNC_KEYS[KEYS.profile].collection);
+    promises.push(_profRef.get().then(function(d) {
+      if (d.exists && d.data() && d.data()[KEYS.profile]) return;
+      var p = {}; p[KEYS.profile] = Object.assign({}, _prof); delete p[KEYS.profile].pre;
+      p.__sync_updatedBy = { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' };
+      p.__sync_syncedAt = firebase.firestore.FieldValue.serverTimestamp();
+      return _profRef.set(p, { merge: true });
+    }));
+  }
 
   return Promise.all(promises).then(function() {
     _syncIsMigrating = false;
@@ -2578,7 +2617,7 @@ function syncOpenHouseholdModal(mode) {
   var body = isCreate
     ? '<div class="fx-col g12">' +
         '<label class="sync-modal-label">Baby\'s name</label>' +
-        '<input type="text" id="syncBabyName" class="sync-modal-input" placeholder="e.g. Ziva" autocomplete="off">' +
+        '<input type="text" id="syncBabyName" class="sync-modal-input" placeholder="e.g. ' + childNameCapHtml() + '" autocomplete="off">' +
         '<label class="sync-modal-label">Date of birth</label>' +
         '<input type="date" id="syncBabyDob" class="sync-modal-input">' +
         '<button class="btn btn-sky btn-full-base" data-action="syncConfirmCreate">' +

@@ -3270,7 +3270,7 @@ function openHomeFoodQuery() {
         <button class="ql-modal-close" data-action="closeHomeFoodQuery">&times;</button>
       </div>
       <div>
-        <div class="guidance-text">Check any food — safety, nutrition, best pairings, and Ziva's history with it.</div>
+        <div class="guidance-text">Check any food — safety, nutrition, best pairings, and ${childNameHtml()}'s history with it.</div>
         <div class="flex-gap8-wrap-mb">
           <input type="text" id="homeFoodQueryInput" placeholder="e.g. kiwi, paneer + rice..." style="flex:1;min-width:160px;padding:10px 14px;border-radius:var(--r-lg);border:1.5px solid var(--sage-light);font-family:'Nunito',sans-serif;font-size:var(--fs-base);background:var(--sage-light);color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')runHomeFoodQuery()">
           <button class="btn btn-sage" data-action="runHomeFoodQuery" style="min-width:70px;">Check</button>
@@ -3412,7 +3412,7 @@ function runHomeFoodQuery() {
   const comboResultEl = document.getElementById('comboResult');
   let resultHtml = comboResultEl ? comboResultEl.innerHTML : '';
 
-  // Add Ziva's history with this food
+  // Add the child's history with this food
   let historyHtml = '';
   rawFoods.forEach(food => {
     const history = getFoodHistory(food);
@@ -3422,13 +3422,13 @@ function runHomeFoodQuery() {
   // Add sleep correlation if available
   let sleepHtml = getFoodSleepCorrelation(rawFoods);
 
-  if (historyHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">${zi('list')} Ziva's History</div>${historyHtml}</div>`;
+  if (historyHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">${zi('list')} ${childNameHtml()}'s History</div>${historyHtml}</div>`;
   if (sleepHtml) resultHtml += `<div class="combo-section"><div class="combo-section-title">${zi('zzz')} Sleep Connection</div>${sleepHtml}</div>`;
 
   resultEl.innerHTML = resultHtml;
 }
 
-// Get Ziva's history with a specific food — last given, frequency, reaction, poop after
+// Get the child's history with a specific food — last given, frequency, reaction, poop after
 function getFoodHistory(foodName) {
   const lower = foodName.toLowerCase().trim();
   const base = _baseFoodName(lower);
@@ -3627,7 +3627,8 @@ if (window.visualViewport) {
 // ── FOOD INTELLIGENCE: INTRODUCTION RATE ──
 
 function computeIntroductionRate() {
-  if (!foods || !foods.length) return { weeks: [], total: 0, avgPerWeek: 0, trend: 'no data' };
+  // A new family starts with no foods: the same shape as below, so renderers never read undefined.
+  if (!foods || !foods.length) return { weeks: [], total: 0, avgPerWeek: 0, trend: 'no data', thisWeek: { weekStart: '', count: 0, foods: [] } };
 
   // Sort foods by date
   const sorted = foods.slice().sort((a, b) => a.date.localeCompare(b.date));
@@ -4163,7 +4164,7 @@ function renderInfoSleepEfficiency() {
     if (data.avgEff < 80) {
       html += '<div class="si-insight si-insight-warn">Frequent wake-ups are reducing sleep quality. Check for teething, hunger, or room temperature.</div>';
     } else if (data.avgEff >= 90) {
-      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — Ziva is sleeping through most of the night.</div>';
+      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — ' + childNameHtml() + ' is sleeping through most of the night.</div>';
     } else {
       html += '<div class="si-insight si-insight-info">Sleep efficiency is in the normal range. Fewer wake-ups would push it higher.</div>';
     }
@@ -4334,10 +4335,10 @@ function renderInfoSleepWakeWindows() {
       html += '<div class="si-insight si-insight-warn">' + data.overtiredCount + ' overtired windows detected this week — may cause harder settling.</div>';
     }
     if (data.overtiredCount === 0 && data.undertiredCount === 0 && inRange) {
-      html += '<div class="si-insight si-insight-good">Wake windows are well-timed for Ziva\'s age. Nice work.</div>';
+      html += '<div class="si-insight si-insight-good">Wake windows are well-timed for ' + childNameHtml() + '\'s age. Nice work.</div>';
     }
     if (data.undertiredCount >= 3) {
-      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — Ziva may not be tired enough, which can cause nap refusal.</div>';
+      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — ' + childNameHtml() + ' may not be tired enough, which can cause nap refusal.</div>';
     }
     insightEl.innerHTML = html;
   }
@@ -4425,7 +4426,7 @@ function renderInfoSleepReport() {
   if (detailsEl) {
     let html = '<div class="si-report-hero">';
 
-    // Score ring (Ziva Score style)
+    // Score ring (Sprout Score style)
     const ringClass = 'zs-score-' + lbl.label;
     html += '<div class="si-report-ring ' + ringClass + '" style="background:' + _siRingBg(lbl.label) + ';border-color:' + _siRingBorder(lbl.label) + ';">';
     html += '<div class="si-report-number" style="color:' + _siRingText(lbl.label) + ';">' + data.avgScore + '</div>';
@@ -4474,7 +4475,7 @@ function renderInfoSleepReport() {
   }
 }
 
-// Ring color helpers (match Ziva Score ring styling)
+// Ring color helpers (match Sprout Score ring styling)
 function _siRingBg(label) {
   const m = { excellent:'linear-gradient(135deg,#d4f5e0,#b8eacc)', great:'linear-gradient(135deg,#e0f0fa,#cce5f5)', good:'linear-gradient(135deg,#fef6e8,#fcecd0)', fair:'linear-gradient(135deg,#fef0e0,#fce0c0)', attention:'linear-gradient(135deg,#fde8ed,#f8d0d8)' };
   return m[label] || m.good;
@@ -4561,9 +4562,9 @@ function computeNapTransition() {
 
   // Typical transition age
   let transitionNote = '';
-  if (ageM < 12) transitionNote = 'Most babies transition from 2 to 1 nap between 12–18 months. At ' + ageM + ' months, Ziva is not expected to be ready yet.';
-  else if (ageM <= 18) transitionNote = 'Ziva is in the typical transition window (12–18 months). Watch these signals closely.';
-  else transitionNote = 'At ' + ageM + ' months, Ziva may be ready if signals align.';
+  if (ageM < 12) transitionNote = 'Most babies transition from 2 to 1 nap between 12–18 months. At ' + ageM + ' months, ' + childNameHtml() + ' is not expected to be ready yet.';
+  else if (ageM <= 18) transitionNote = '' + childNameCapHtml() + ' is in the typical transition window (12–18 months). Watch these signals closely.';
+  else transitionNote = 'At ' + ageM + ' months, ' + childNameHtml() + ' may be ready if signals align.';
 
   return {
     insufficient: false, signals, metCount, readiness,
@@ -4795,7 +4796,7 @@ function renderInfoSleepDayNight() {
     if (gapDelta >= 8) {
       html += '<div class="si-insight si-insight-info">A longer gap between last nap and bedtime correlates with better nights (+' + gapDelta + ' pts).</div>';
     } else if (gapDelta <= -8) {
-      html += '<div class="si-insight si-insight-warn">A longer gap before bed is linked to worse sleep (' + gapDelta + ' pts). Ziva may be getting overtired.</div>';
+      html += '<div class="si-insight si-insight-warn">A longer gap before bed is linked to worse sleep (' + gapDelta + ' pts). ' + childNameCapHtml() + ' may be getting overtired.</div>';
     }
     if (!html) {
       html = '<div class="si-insight si-insight-info">No strong pattern yet — more data will reveal nap-night correlations.</div>';
@@ -4999,7 +5000,7 @@ function renderInfoSleepBestNight() {
   if (factorsEl) {
     let html = '';
     if (data.factors.length === 0) {
-      html = '<div class="si-nodata">No clear patterns found yet — more data will reveal what drives Ziva\'s best nights.</div>';
+      html = '<div class="si-nodata">No clear patterns found yet — more data will reveal what drives ' + childNameHtml() + '\'s best nights.</div>';
     } else {
       data.factors.forEach(f => {
         const impactColor = f.positive ? 'var(--tc-sage)' : 'var(--tc-amber)';
@@ -5227,7 +5228,7 @@ function renderInfoSleepRegression() {
   if (insightEl) {
     let html = '';
     if (data.severity === 'none') {
-      html += '<div class="si-insight si-insight-good">No sleep regression detected. Ziva\'s sleep has been stable.</div>';
+      html += '<div class="si-insight si-insight-good">No sleep regression detected. ' + childNameCapHtml() + '\'s sleep has been stable.</div>';
     } else if (data.severity === 'mild') {
       html += '<div class="si-insight si-insight-info">A mild dip is normal — it often resolves within a few days. Keep the routine consistent.</div>';
     } else if (data.severity === 'moderate') {
@@ -5236,7 +5237,7 @@ function renderInfoSleepRegression() {
       html += '<div class="si-insight si-insight-warn">Significant sleep disruption detected. This is likely developmental and typically lasts 1–3 weeks. Maintain consistency — this will pass.</div>';
     }
     if (data.ageWindow && data.severity !== 'none') {
-      html += '<div class="si-insight si-insight-info">Ziva is in the ' + data.ageWindow.label + ' window — a well-documented period of sleep disruption tied to neurological development.</div>';
+      html += '<div class="si-insight si-insight-info">' + childNameCapHtml() + ' is in the ' + data.ageWindow.label + ' window — a well-documented period of sleep disruption tied to neurological development.</div>';
     }
     insightEl.innerHTML = html;
   }

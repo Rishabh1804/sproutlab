@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────
-// SVG ICON HELPER — Ziva Sketch icon set
+// SVG ICON HELPER — SproutLab sketch icon set
 // ─────────────────────────────────────────
 function zi(name) { return `<svg class="zi" aria-hidden="true"><use href="#zi-${name}"/></svg>`; }
 
@@ -69,6 +69,9 @@ const KEYS = {
   //   travel:{ on, ts }, cleared:ts } } }. Per-field newest-ts merge (_mpMerge); own doc
   //   /singles/plan. Never persisted as a default (V-CA-275-9), not in ALWAYS_POPULATED_KEYS.
   mealPlan:          'ziva_meal_plan',
+  // profile: the child and the household's place (spec docs/specs/privacy-v1.md §3.1). Synced
+  // single doc; the source of the birth date, solids start and name once the bundle is empty (P2).
+  profile:           'ziva_profile',
 };
 
 function load(key, def) {
@@ -158,7 +161,7 @@ function medCheckGivenAt(val) {
   return p ? p.givenAt : null;
 }
 
-// ── Dose slots + the Vitamin D supplement (2026-09-24, Caldikind-P NF 2.5 ml twice daily) ──
+// ── Dose slots + the Vitamin D supplement (a supplement given more than once a day) ──
 // A med taken N times a day is logged as N independent slots — medChecks[date][slotKey] —
 // so the existing Done / Done at / Skip / Adjust flow works per dose unchanged. Once-daily
 // meds keep their bare name as the key (full back-compat with the Vit D3 drops history).
@@ -185,7 +188,7 @@ function medDoseSlots(m) {
   return labels.map(function(l) { return { key: m.name + ' · ' + l, label: l }; });
 }
 // Active meds expanded to one entry per dose slot: `name` is the medChecks key (and reads
-// as "Caldikind-P NF · evening"), `baseName` the med itself.
+// as "<supplement> · evening"), `baseName` the med itself.
 function activeMedDoses() {
   var out = [];
   (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).forEach(function(m) {
@@ -273,51 +276,7 @@ function medDayVal(m, ds) {
   if (!done.length) return ps.some(function(p) { return p && p.status === 'skipped'; }) ? { status: 'skipped' } : undefined;
   return { status: 'partial', givenAt: done[0].givenAt };
 }
-// One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
-// stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
-// date keeps the sync identity (name + start) the same on both phones, so they merge.
-function _migrateCaldikind20260924() {
-  try {
-    if (localStorage.getItem('ziva_mig_caldikind') === '1') return;
-    localStorage.setItem('ziva_mig_caldikind', '1');
-    if (!Array.isArray(meds) || meds.some(function(m) { return /caldikind/i.test(m.name || ''); })) return;
-    var drops = meds.filter(function(m) { return m.active && /\bd3\b|vitamin\s*d\b/i.test(m.name || ''); });
-    if (!drops.length) return;
-    drops.forEach(function(m) { m.active = false; });
-    meds.push(Object.assign({}, DEFAULT_MEDS[0]));
-    save(KEYS.meds, meds);
-  } catch (e) { console.warn('[migrate] caldikind:', e); }
-}
-// Second pass (2026-10-28, parent report: the old drops still showed as due). The first pass
-// returned early when Caldikind was already listed (added by hand on 24 Sep, "keep both" on the
-// stop prompt) and its name test missed entries like "Vit D drops", so on such a phone the
-// drops stayed active. Her doctor confirmed Caldikind alone. One-shot per device under a new
-// flag: with an active calcium + Vitamin D supplement, stop every other active Vitamin D
-// supplement that started before it. One started later was added on purpose and is left alone.
-function _migrateVitDSingle20261028() {
-  try {
-    if (localStorage.getItem('ziva_mig_vitd_single') === '1') return;
-    localStorage.setItem('ziva_mig_vitd_single', '1');
-    if (!Array.isArray(meds)) return;
-    var cal = meds.filter(function(m) { return m.active && isCalciumSupplement(m) && isVitDSupplement(m); })
-      .sort(function(a, b) { return String(a.start || '').localeCompare(String(b.start || '')); })[0];
-    if (!cal) return;
-    if (!cal.start) return;   // no start date to compare against (Maren/Kael on #273)
-    var calStart = String(cal.start);
-    var old = meds.filter(function(m) {
-      return m !== cal && m.active && isVitDSupplement(m) && !isCalciumSupplement(m) && String(m.start || '') < calStart;
-    });
-    if (!old.length) return;
-    old.forEach(function(m) { m.active = false; });
-    save(KEYS.meds, meds);
-    // Say what changed and how to undo it (Maren N-3); after load, once the toast host exists.
-    setTimeout(function() {
-      // showQLToast sets innerHTML — escape the parent-typed names (HR-4).
-      if (typeof showQLToast === 'function') showQLToast('Stopped ' + escHtml(old.map(function(m) { return m.name; }).join(', ')) + ': ' + escHtml(cal.name) + ' already has Vitamin D. You can restart it in Medicines.', 6000);
-    }, 2500);
-  } catch (e) { console.warn('[migrate] vitd-single:', e); }
-}
-// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
+// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from the supplement" on an
 // iron drop must not match — Maren S-4). With two active, the most recently started wins.
 function isVitDSupplement(m) {
   var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
@@ -512,46 +471,24 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
 // ─────────────────────────────────────────
 // DEFAULT DATA (pre-loaded)
 // ─────────────────────────────────────────
-const DOB        = new Date(2025, 8, 4, 17, 9); // Sep 4, 2025 at 17:09 IST
-const SOLIDS_START = new Date(2026, 2, 6); // Mar 6, 2026
+// The child's birth date and solids start come from the profile record (privacy-v1 §3.1). They are
+// module-wide `let`s so every existing reader keeps working; _profApply refreshes them whenever the
+// profile loads or syncs. With no profile the Welcome / Confirm gate covers the app; underneath it,
+// a neutral stand-in (born today, no name) keeps every age computation finite (K-280-2, HR-13).
+const _PROFILE_FALLBACK = { name: 'your child', dob: null, solidsStart: null };
+let DOB = new Date();
+let SOLIDS_START = new Date();
+let profile = null;
 
 // Default pediatrician (seeded on first load)
-const DEFAULT_DOCTORS = [
-  {
-    name: 'Dr. RK Agarwal',
-    phone: '+919835167975',
-    phoneDisplay: '+91 98351 67975',
-    location: 'https://maps.app.goo.gl/gG64c9BBAf7pGo7MA',
-    address: 'Bistupur, Jamshedpur',
-    title: 'Pediatrician',
-    primary: true,
-  }
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_DOCTORS = [];
 
-const DEFAULT_GROWTH = [
-  { date:'2025-09-04', wt:3.45, ht:50 },
-  { date:'2026-03-05', wt:7.12, ht:64 },
-  { date:'2026-03-18', wt:7.45, ht:65 },
-  { date:'2026-03-20', wt:7.55, ht:66 },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_GROWTH = [];
 
-const DEFAULT_FEEDING = {
-  '2026-03-06': { breakfast:'', lunch:'Khichdi (solids start)', dinner:'Khichdi + veg puree' },
-  '2026-03-07': { breakfast:'¼ Banana puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-08': { breakfast:'¼ Banana puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-09': { breakfast:'Pear puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-10': { breakfast:'Pear puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-11': { breakfast:'Boiled apple', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-16': { breakfast:'Boiled apple', lunch:'Khichdi + veg puree', dinner:'Avocado + banana + blueberry' },
-  '2026-03-17': { breakfast:'Banana puree', lunch:'Rice + masoor dal khichdi, carrot, beetroot, beans + ghee', dinner:'Avocado + banana + blueberry' },
-  '2026-03-18': { breakfast:'Apple puree (½)', lunch:'Ragi porridge + apple + almonds + walnut + date + ghee', dinner:'' },
-  '2026-03-19': { breakfast:'Banana puree', lunch:'Ragi porridge + apple (no nuts)', dinner:'Avocado + apple + blueberry' },
-  '2026-03-20': { breakfast:'Pear puree', lunch:'Ragi porridge + pear + almonds + walnut + ghee', dinner:'Avocado + pear + blueberry' },
-  '2026-03-22': { breakfast:'', lunch:'', dinner:'Avocado, Blueberry, apple' },
-  '2026-03-23': { breakfast:'', lunch:'Rice, Masoor dal, Beetroot, Carrot, Ghee', dinner:'Avocado, Blueberry, Banana' },
-  '2026-03-24': { breakfast:'Apple puree', lunch:'Ragi porridge, Almonds, Walnut, Banana', dinner:'Avocado, Blueberry, Apple puree' },
-  '2026-03-25': { breakfast:'Pear', lunch:'Masoor dal khichdi, Beetroot, Carrot, Moringa, Ghee', dinner:'' },
-};
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_FEEDING = {};
 
 const MS_STAGES = ['not_started','emerging','practicing','consistent','mastered'];
 const MS_STAGE_META = {
@@ -576,6 +513,90 @@ let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, m
 let activityMeta, milestoneSuppress;
 // teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
 let teethLog;
+// ── PROFILE (privacy-v1 §3.1) ──
+// { v:1, child:{ name, dob:'YYYY-MM-DDTHH:mm', solidsStart:'YYYY-MM-DD'|null }, place:{ city, tz }, ts }
+const _PROF_DOB_RE = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/;
+function _profParse(str) {
+  const m = _PROF_DOB_RE.exec(String(str || ''));
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], m[4] ? +m[4] : 12, m[5] ? +m[5] : 0);   // HR-12: local parts
+  return (d.getFullYear() === +m[1] && d.getMonth() === +m[2] - 1 && d.getDate() === +m[3]) ? d : null;
+}
+// The name is shown inside HTML all over the app, and some of that copy is escaped again on the way
+// out. So the stored name carries no markup characters, and a straight apostrophe becomes ’: that
+// keeps it safe in any context and unchanged by a second escHtml (HR-4).
+function _profCleanName(n) { return String(n).replace(/[<>&"`\\]/g, '').replace(/'/g, '\u2019').replace(/\s+/g, ' ').trim().slice(0, 40); }
+// Keeps a well-formed profile (unknown fields pass through for later versions); anything else is null.
+function _profNormalize(p) {
+  if (!p || typeof p !== 'object' || !p.child || typeof p.child !== 'object') return null;
+  const c = p.child;
+  if (typeof c.name !== 'string' || !c.name.trim() || !_profParse(c.dob)) return null;
+  const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: _profCleanName(c.name) }) });
+  if (!out.child.name) return null;
+  if (c.solidsStart != null && !_profParse(c.solidsStart)) out.child.solidsStart = null;
+  if (out.place && typeof out.place === 'object' && out.place.city != null) out.place = Object.assign({}, out.place, { city: _profCleanName(out.place.city) || null });
+  if (typeof out.ts !== 'number') out.ts = 0;
+  return out;
+}
+function _profChild() { return (profile && profile.child) || _PROFILE_FALLBACK; }
+function childName() { return _profChild().name; }
+// The child's name for copy, safe in HTML as stored (see _profCleanName). With no profile it reads
+// "your child", so a string built before the profile loads still makes sense.
+function childNameHtml() { return (profile && profile.child && profile.child.name) || 'your child'; }
+function childNameCapHtml() { return (profile && profile.child && profile.child.name) || 'Your child'; }
+// "Born 15 Jan 2024" (+ " · City" when the family gave one), for the header and the visit summary.
+function _profBornLine(withPlace) {
+  if (!profile) return '';
+  const born = 'Born ' + DOB.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const city = withPlace && profile.place && profile.place.city ? ' · ' + profile.place.city : '';
+  return born + city;
+}
+// The family's coordinates for weather, once geocoded from their town (home.js fetchWeather), or
+// null: no town, no weather fetch.
+function _profCoords() {
+  const p = profile && profile.place;
+  if (!p || !p.city) return null;
+  const g = _profGeoGet(p.city);
+  return g ? { lat: g.lat, lon: g.lon, tz: encodeURIComponent(p.tz || g.tz || 'auto') } : null;
+}
+// Geocoded towns, device-local (not synced: derived data). { "<town lowercased>": { lat, lon, tz } }
+function _profGeoGet(city) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); return m[String(city).toLowerCase().trim()] || null; } catch (e) { return null; } }
+function _profGeoPut(city, g) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); m[String(city).toLowerCase().trim()] = g; localStorage.setItem('ziva_geo_cache', JSON.stringify(m)); } catch (e) {} }
+function childPlace() { return (profile && profile.place) || null; }
+// Refresh the module-wide date anchors from the profile (or the P1 fallback).
+let _profAppliedOnce = false;
+function _profApply() {
+  const c = _profChild();
+  const dob = _profParse(c.dob) || _profParse(today()) || new Date();
+  DOB = dob;
+  SOLIDS_START = _profParse(c.solidsStart) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
+  _ZIVA_DOB = toDateStr(dob);
+  _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+  // JS-built name copy (the landing) follows too, once the app has rendered (V-V-280-8).
+  if (_profAppliedOnce && typeof renderLanding === 'function' && document.getElementById('tab-landing')) { try { renderLanding(); } catch (e) {} }
+  _profAppliedOnce = true;
+  // The template's name slots follow the profile (privacy-v1 P2b).
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll('[data-child-name]').forEach(el => { el.textContent = childNameHtml(); });
+    document.querySelectorAll('[data-child-name-cap]').forEach(el => { el.textContent = childNameCapHtml(); });
+  }
+  // A changed birth date must not leave an age-keyed result behind (K-280-1).
+  if (typeof _clearModifierCache === 'function') _clearModifierCache();
+  if (typeof _islClearAll === 'function') _islClearAll();
+}
+// Save the profile (setup / Confirm details, P2). Returns the saved record or null if invalid.
+function _profSave(child, place) {
+  // Typed on a device not yet attached to a household: provisional, so the household's own profile
+  // wins when this device joins (V-CA-280-12).
+  const provisional = typeof _syncLedgerActive === 'function' ? !_syncLedgerActive() : true;
+  const next = _profNormalize({ v: 1, child, place: place || (profile && profile.place) || null, ts: Math.max(Date.now(), ((profile && profile.ts) || 0) + 1), pre: provisional || undefined });
+  if (!next) return null;
+  profile = next;
+  save(KEYS.profile, profile);
+  _profApply();
+  return profile;
+}
+
 // mealPlan: the meal planner's record (see KEYS.mealPlan). Writes go through _mpSave.
 let mealPlan;
 
@@ -1281,6 +1302,8 @@ function init() {
     }
     // ── Device Sync actions ──
     else if (action === 'syncSignIn') syncSignIn();
+    // Profile gate (privacy-v1 §3.3): every data-action="prf…" routes to prfDispatch.
+    else if (/^prf[A-Z]/.test(action) && typeof prfDispatch === 'function') prfDispatch(action, arg);
     else if (action === 'syncSignOut') { confirmAction('Sign out? Synced data will be cleared from this device.', syncSignOut, 'Sign Out'); }
     else if (action === 'syncOpenHouseholdModal') syncOpenHouseholdModal(arg);
     else if (action === 'syncCloseHouseholdModal') _syncCloseHouseholdModal();
@@ -1399,13 +1422,11 @@ function init() {
   document.querySelectorAll('.zi-check-placeholder').forEach(el => { el.innerHTML = zi('check'); });
   document.querySelectorAll('.zi-warn-placeholder').forEach(el => { el.innerHTML = zi('warn'); });
 
-  // Selective migration — only reset keys whose version changed
+  // Key versions are stamped, never acted on by deleting. They once reset a key to the bundle's
+  // seed data; the bundle now ships no records (privacy-v1 §3.2), so a reset would only erase a
+  // family's own records: a restored or copied record without its stamp, or any future bump.
   Object.entries(KEY_VERSIONS).forEach(([key, ver]) => {
-    const storedVer = localStorage.getItem('ziva_kv_' + key);
-    if (storedVer !== ver) {
-      localStorage.removeItem(KEYS[key]);
-      localStorage.setItem('ziva_kv_' + key, ver);
-    }
+    if (localStorage.getItem('ziva_kv_' + key) !== ver) localStorage.setItem('ziva_kv_' + key, ver);
   });
 
   growthData  = load(KEYS.growth, null)     || DEFAULT_GROWTH;
@@ -1468,6 +1489,8 @@ function init() {
   teethLog = load(KEYS.teeth, null) || {};
   if (typeof teethLog !== 'object' || teethLog === null || Array.isArray(teethLog)) teethLog = {};
   // The in-memory default is never saved; the first real planner write persists it (V-CA-275-9).
+  try { profile = _profNormalize(load(KEYS.profile, null)); } catch (e) { profile = null; }
+  _profApply();
   try { mealPlan = _mpNormalize(load(KEYS.mealPlan, null), today()); }
   catch (e) { console.warn('[meal-plan] load failed, starting empty:', e); mealPlan = { v: 1, days: {} }; }
 
@@ -1507,8 +1530,6 @@ function init() {
     { const _vd = vaccDropSatisfiedPending(vaccData); if (_vd.length !== vaccData.length) { vaccData = _vd; save(KEYS.vacc, vaccData); } }
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
-    _migrateCaldikind20260924();
-    _migrateVitDSingle20261028();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -1674,7 +1695,7 @@ function init() {
   const av = load(KEYS.avatar, null);
   if (av) {
     const el = document.getElementById('avatarEl');
-    el.innerHTML = `<img src="${av}" alt="Ziva">`;
+    el.innerHTML = `<img src="${av}" alt="${childNameHtml()}">`;
   }
 
   // CareTickets: validate + prune before first render
@@ -2435,13 +2456,16 @@ function calcMedicalScore() {
 
   const daysSinceGrowth = growthData.length > 0 ? Math.floor((new Date() - new Date(growthData[growthData.length-1].date)) / 86400000) : null;
 
-  const baseScore = Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
+  // No dose logged yet: leave vaccines out of the score rather than read her as unvaccinated (V-M-280-4).
+  const vaccNone = !(vaccData || []).some(v => v && !v.upcoming);
+  const baseScore = vaccNone ? Math.round((suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15) / 0.60)
+    : Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
   const modRaw = computeMedicalModifier();
   const score = applyIntelligenceModifier(baseScore, modRaw);
   const modifier = _withDelta(modRaw, baseScore, score);
   return {
     score, baseScore, modifier, ...getScoreLabel(score),
-    components: { vaccination: vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
+    components: { vaccination: vaccNone ? null : vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
       // Routine doses inside their window and not yet given (not scored; shown as "due now").
@@ -2600,7 +2624,7 @@ function calcMilestoneScore() {
   };
 }
 
-// ── ZIVA SCORE (holistic) ──
+// ── SPROUT SCORE (holistic; identifiers keep the old calcZivaScore names) ──
 
 let _lastKnownScores = { sleep: null, diet: null, poop: null, medical: null, milestones: null };
 
@@ -3468,11 +3492,12 @@ function escAttr(s) {
 }
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-function ageAt(date) {
+function ageAt(date, dob) {   // dob: optional, for a birth date not yet saved (the profile gate's read-back)
   const d = date ? new Date(date) : new Date();
+  const b = dob || DOB;
   if (isNaN(d)) return { months: 0, days: 0 };
-  let months = d.getMonth() - DOB.getMonth() + (d.getFullYear() - DOB.getFullYear()) * 12;
-  let days = d.getDate() - DOB.getDate();
+  let months = d.getMonth() - b.getMonth() + (d.getFullYear() - b.getFullYear()) * 12;
+  let days = d.getDate() - b.getDate();
   if (days < 0) {
     months--;
     const prev = new Date(d.getFullYear(), d.getMonth(), 0);
@@ -3758,7 +3783,7 @@ function saveCrop() {
   } else {
     // Save as main avatar (Home tab)
     const el = document.getElementById('avatarEl');
-    el.innerHTML = `<img src="${croppedSrc}" alt="Ziva">`;
+    el.innerHTML = `<img src="${croppedSrc}" alt="${childNameHtml()}">`;
     save(KEYS.avatar, croppedSrc);
     try { localStorage.setItem('ziva_avatar_full', fullSrc); } catch {}
   }
@@ -3797,7 +3822,7 @@ function closeAvatarLightbox() {
   if (lb.classList.contains('open')) {
     lb.classList.remove('open');
     // Reset lightbox name back to default
-    lb.querySelector('.lb-name').innerHTML = 'Ziva ' + zi('sprout');
+    lb.querySelector('.lb-name').innerHTML = '' + childNameCapHtml() + ' ' + zi('sprout');
     if (history.state?.overlay === 'lightbox') history.back();
   }
 }
@@ -4127,7 +4152,7 @@ function renderTrackHero() { /* v2.5 Balance: DORMANT — Track score hero remov
     <div class="ziva-score-hero">
       <div class="zs-ring" style="${ringStyle}" data-open-score="1">
         <div class="zs-number">${zs.score}</div>
-        <div class="zs-label">Ziva Score</div>
+        <div class="zs-label">Sprout Score</div>
         <div class="zs-trend">${trendText}</div>
       </div>
       <div class="zs-domains">${domainPills}</div>
@@ -5098,6 +5123,8 @@ function closeSettingsSidebar() {
   sidebar.classList.remove('open');
   overlay.classList.remove('open');
   document.body.style.overflow = '';
+  // Sign in from Welcome opens Settings; if it did not bring a profile, ask again (V-M-280-7).
+  if (!profile && typeof initProfileGate === 'function') setTimeout(() => { if (!profile && !document.getElementById('prfGate')) _prfShow(_prfHasRecords() ? 'confirm' : 'welcome'); }, 400);
 }
 
 function toggleSettingsSidebar() {
@@ -5470,13 +5497,13 @@ function exportData() {
     data._exportDate = new Date().toISOString();
 
     const jsonStr = JSON.stringify(data, null, 2);
-    const fileName = 'ziva-backup-' + today() + '.json';
+    const fileName = 'sproutlab-backup-' + today() + '.json';
 
     // Strategy 1: Web Share API with file (best for mobile/PWA)
     if (navigator.share) {
       try {
         var file = new File([jsonStr], fileName, { type: 'application/json' });
-        navigator.share({ title: "Ziva's Dashboard Backup", files: [file] })
+        navigator.share({ title: "SproutLab backup", files: [file] })
           .catch(function(shareErr) {
             // Share cancelled or failed — try anchor download
             if (shareErr.name !== 'AbortError') _exportViaAnchor(jsonStr, fileName);
@@ -5819,9 +5846,161 @@ function wgRender() {
   if (sub) sub.textContent = `Step ${_wgStep + 1} of ${_wgTotalSteps}`;
 }
 
+// ── PROFILE GATE (privacy-v1 §3.3) ──
+// No profile on this device: a new person gets Welcome (sign in, or set up a child); a device that
+// already holds records gets "Confirm details" once, because the code no longer knows the child.
+// Only a non-empty record counts: init writes [] / {} on a fresh device's first boot, and those
+// must not turn its second boot into "Confirm details" (V-CA-280-11). Read live, so a device that
+// signed in and received records is asked to confirm, not welcomed (Cipher #10).
+function _prfHasRecords() {
+  const keys = ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds', 'ziva_sleep', 'ziva_poop',
+    'ziva_notes', 'ziva_visits', 'ziva_activity_log', 'ziva_milestones', 'ziva_doctors'];
+  try {
+    return keys.some(k => {
+      const raw = localStorage.getItem(k);
+      if (!raw) return false;
+      try { const v = JSON.parse(raw); return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v); }
+      catch (e) { return false; }
+    });
+  } catch (e) { return false; }
+}
+function initProfileGate() {
+  try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
+  if (profile) return;
+  // A device already attached to a household waits for the household's profile before asking: if
+  // the other phone has confirmed, this one should take that, not type its own (V-CA-280-16).
+  if (typeof _syncLedgerActive === 'function' && _syncLedgerActive() && !_prfWaited) {
+    _prfWaited = true;
+    setTimeout(() => { if (!profile) _prfShow(_prfHasRecords() ? 'confirm' : 'welcome'); }, 8000);
+    return;
+  }
+  _prfShow(_prfHasRecords() ? 'confirm' : 'welcome');
+}
+let _prfWaited = false;
+let _prfPending = null;   // the read-back step: values the parent is asked to confirm once
+function _prfShow(mode) {
+  _prfClose();
+  const ov = document.createElement('div');
+  ov.className = 'prf-gate';
+  ov.id = 'prfGate';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-modal', 'true');
+  ov.setAttribute('aria-labelledby', 'prfTitle');
+  const app = document.querySelector('.app'); if (app) app.inert = true;   // the app behind is out of reach
+  ov.innerHTML = `<div class="prf-card">${mode === 'welcome' ? _prfWelcomeHtml() : _prfFormHtml(mode)}</div>`;
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+  const first = ov.querySelector('input, button');
+  if (first) first.focus();
+}
+function _prfClose() {
+  const el = document.getElementById('prfGate');
+  if (el) { el.remove(); document.body.style.overflow = ''; const app = document.querySelector('.app'); if (app) app.inert = false; }
+}
+function _prfWelcomeHtml() {
+  return `<div class="prf-icon">${zi('sprout')}</div>`
+    + `<h1 class="prf-title" id="prfTitle">Welcome to SproutLab</h1>`
+    + `<p class="prf-lead">A calm place to track your child's day: meals, sleep, growth and health, kept for your family only.</p>`
+    + `<button class="btn btn-sage prf-btn" data-action="prfStart">${zi('baby')} Set up your child</button>`
+    + `<button class="btn btn-soft prf-btn" data-action="prfSignIn">${zi('heart')} I already use SproutLab: sign in</button>`
+    + `<p class="prf-note">Signing in joins your family's shared record on this phone.</p>`;
+}
+function _prfFormHtml(mode) {
+  const confirm = mode === 'confirm', editing = mode === 'edit';
+  const today_ = today();
+  const c = editing && profile ? profile.child : {};
+  const val = v => v ? ` value="${escHtml(v)}"` : '';
+  const dobDate = c.dob ? String(c.dob).slice(0, 10) : '', dobTime = c.dob && String(c.dob).length > 10 ? String(c.dob).slice(11, 16) : '';
+  const city = editing && profile && profile.place ? profile.place.city : '';
+  return `<div class="prf-icon">${zi(confirm ? 'heart' : 'baby')}</div>`
+    + `<h1 class="prf-title" id="prfTitle">${confirm ? 'Confirm your child\'s details' : editing ? 'Your child\'s details' : 'About your child'}</h1>`
+    + `<p class="prf-lead">${confirm ? 'SproutLab now keeps these details with your family\'s record instead of inside the app. Your logs stay exactly as they are.' : 'This sets your child\'s age for every chart, vaccine, milestone and food guide. You can change it later in Settings.'}</p>`
+    + `<form class="prf-form" data-prf-form="1" novalidate>`
+    + `<label class="prf-field"><span class="prf-label">Name</span><input class="form-input" id="prfName" type="text" maxlength="40" autocomplete="off" required${val(c.name)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Date of birth</span><input class="form-input" id="prfDob" type="date" max="${today_}" required${val(dobDate)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Time of birth <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfTime" type="time"${val(dobTime)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Started solids on <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfSolids" type="date" max="${today_}"${val(c.solidsStart)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Town or city <span class="prf-opt">(optional, for weather)</span></span><input class="form-input" id="prfCity" type="text" maxlength="40" autocomplete="off"${val(city)}></label>`
+    + `<p class="prf-check" id="prfCheck" role="status"></p>`
+    + `<p class="prf-err" id="prfErr" role="alert"></p>`
+    + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="${mode}">${zi('check')} ${confirm || editing ? 'Save details' : 'Start'}</button>`
+    + (confirm ? `<button class="btn btn-soft prf-btn" type="button" data-action="prfSignIn">${zi('heart')} Sign in instead</button>`
+      : editing ? `<button class="btn btn-ghost prf-btn" type="button" data-action="prfCancel">Cancel</button>`
+      : `<button class="btn btn-ghost prf-btn" type="button" data-action="prfBack">Back</button>`)
+    + `</form>`;
+}
+function prfDispatch(action, arg) {
+  if (action === 'prfStart') { _prfPending = null; _prfShow('setup'); }
+  else if (action === 'prfBack') { _prfPending = null; _prfShow('welcome'); }
+  else if (action === 'prfEdit') { _prfPending = null; if (typeof closeSettingsSidebar === 'function') closeSettingsSidebar(); _prfShow('edit'); }
+  else if (action === 'prfCancel') { _prfPending = null; _prfClose(); }
+  else if (action === 'prfSignIn') { _prfClose(); if (typeof openSettingsSidebar === 'function') openSettingsSidebar(); }
+  else if (action === 'prfSave') _prfSubmit(arg);
+}
+function _prfSubmit(mode) {
+  const v = id => { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; };
+  const err = (msg, fieldId) => {
+    const el = document.getElementById('prfErr'); if (el) el.textContent = msg;
+    document.querySelectorAll('#prfGate .form-input').forEach(i => i.removeAttribute('aria-invalid'));
+    const f = fieldId && document.getElementById(fieldId);
+    if (f) { f.setAttribute('aria-invalid', 'true'); f.focus(); }
+  };
+  const name = v('prfName'), dob = v('prfDob'), time = v('prfTime'), solids = v('prfSolids'), city = v('prfCity');
+  if (!name) return err('Please add your child\'s name.', 'prfName');
+  if (!dob || !_profParse(dob)) return err('Please add the date of birth.', 'prfDob');
+  if (dob > today()) return err('The date of birth can\'t be in the future.', 'prfDob');
+  if (solids && solids < dob) return err('Solids can\'t start before the date of birth.', 'prfSolids');
+  // A record dated before the birth date means the date is wrong (V-M-280-2).
+  const earliest = _prfEarliestRecord();
+  if (earliest && earliest < dob) return err(`Some of her records are dated before this birth date (the earliest is ${formatDate(earliest)}). Please check the year.`, 'prfDob');
+  // Read the age back once before saving: a year typo shifts every vaccine and food guide.
+  const key = [name, dob, time, solids, city].join('|');
+  if (_prfPending !== key) {
+    _prfPending = key;
+    const a = ageAt(new Date(), _profParse(time ? dob + 'T' + time : dob));
+    const chk = document.getElementById('prfCheck');
+    if (chk) chk.textContent = `That makes ${name} ${fmtAgeLong(a.months, a.days)} old today. Tap Save again if that's right.`;
+    return err('');
+  }
+  _prfPending = null;
+  const tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { return null; } })();
+  const prevPlace = profile && profile.place ? profile.place : null;
+  const place = city ? Object.assign({}, prevPlace && prevPlace.city === city ? prevPlace : {}, { city, tz }) : (tz ? { city: null, tz } : null);
+  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null }, place);
+  if (!saved) return err('Those details don\'t look right. Please check them.');
+  // Every screen was drawn with the old birth date; a fresh start redraws them all (V-M-280-1).
+  try { sessionStorage.setItem('prf_notice', mode === 'confirm' || mode === 'edit' ? 'Details saved' : 'Welcome, ' + saved.child.name); } catch (e) {}
+  _prfClose();
+  setTimeout(() => location.reload(), 150);
+}
+// The earliest dated record on this device (growth, feeding, vaccines, foods), or ''.
+function _prfEarliestRecord() {
+  let min = '';
+  const take = d => { if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d) && (!min || d.slice(0, 10) < min)) min = d.slice(0, 10); };
+  try {
+    (Array.isArray(growthData) ? growthData : []).forEach(g => take(g && g.date));
+    Object.keys(feedingData || {}).forEach(take);
+    (Array.isArray(vaccData) ? vaccData : []).forEach(v => { if (v && !v.upcoming) take(v.date); });
+    (Array.isArray(foods) ? foods : []).forEach(f => take(f && f.date));
+  } catch (e) {}
+  return min;
+}
+// A profile arriving by sync (another phone in the family set it) closes the gate. When it moves
+// the birth date, every screen drawn with the old one is redrawn by a fresh start (V-M-280-1).
+function _prfOnProfile(prevDob) {
+  if (!profile) return;
+  const gateOpen = !!document.getElementById('prfGate');
+  _prfClose();
+  if (gateOpen || (prevDob !== undefined && prevDob !== profile.child.dob)) {
+    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : 'Birth date updated from another phone'); } catch (e) {}
+    const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if (!busy) setTimeout(() => location.reload(), 150);
+  }
+}
+
 function initWelcomeGuide() {
   const seen = localStorage.getItem('ziva_guide_seen');
-  if (!seen) {
+  if (!seen && profile) {
     // First open — show guide after a short delay so the app renders first
     setTimeout(showWelcomeGuide, 500);
   }
@@ -6726,7 +6905,7 @@ function _bugCaptureState() {
         if (_lastKnownScores[k] !== null) domainScores[k] = _lastKnownScores[k];
       });
     }
-    // Grab the displayed Ziva Score from the DOM if available
+    // Grab the displayed Sprout Score from the DOM if available
     var scoreEl = document.getElementById('zsNumber');
     if (scoreEl && scoreEl.textContent) {
       var parsed = parseInt(scoreEl.textContent, 10);
@@ -6808,7 +6987,7 @@ function _bugFormatMessage(state, description, errorObj) {
   lines.push('Screen: ' + state.screen + ' \u00B7 DPR: ' + state.dpr);
 
   if (state.zivaScore !== null) {
-    lines.push('Ziva Score: ' + state.zivaScore + ' \u00B7 Data: ' + state.dataDays + ' days');
+    lines.push('Sprout Score: ' + state.zivaScore + ' \u00B7 Data: ' + state.dataDays + ' days');
   }
   if (state.modifierWeight > 0) {
     lines.push('Modifier: ' + Math.round(state.modifierWeight * 100) + '% active');
@@ -6857,7 +7036,7 @@ function _bugRenderContext(state) {
     ' &middot; Screen: ' + escHtml(state.screen) + '</div>';
 
   if (state.zivaScore !== null) {
-    html += '<div class="bug-context-row"><span class="bug-context-label">Ziva Score:</span> ' + state.zivaScore +
+    html += '<div class="bug-context-row"><span class="bug-context-label">Sprout Score:</span> ' + state.zivaScore +
       ' &middot; Data days: ' + state.dataDays + '</div>';
   }
 
@@ -7105,16 +7284,16 @@ function _bugInit() {
 //   for the single static DOB → ms-of-epoch baseline.
 // ─────────────────────────────────────────────────────────────────────────
 
-// Ziva's DOB anchor — single source of truth for age math.
-// Hardcoded per CLAUDE.md §Ziva Context: born 4 Sep 2025.
+// the child's DOB anchor — single source of truth for age math.
+// Set from the profile by _profApply (privacy-v1 §3.1).
 // HR-12: stored as YYYY-MM-DD; Date.parse with UTC suffix to avoid local-tz drift.
-const _ZIVA_DOB = '2025-09-04';
-const _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+let _ZIVA_DOB = '';                                             // set by _profApply in init()
+let _ZIVA_DOB_MS = 0;                                            // set by _profApply in init()
 
 // Age accessor — used by _evaluateRecommendation to map a date into the standard's age-range.
 // HR-12 safe: parses dateStr at UTC midnight; subtracts UTC-anchored DOB; integer day count.
 function _zivaAgeInDays(dateStr) {
-  if (typeof dateStr !== 'string') return 0;
+  if (typeof dateStr !== 'string' || !_ZIVA_DOB_MS) return 0;   // no anchor yet: unknown, not the epoch (V-K-280-7)
   const ms = Date.parse(dateStr + 'T00:00:00Z');
   if (isNaN(ms)) return 0;
   return Math.max(0, Math.round((ms - _ZIVA_DOB_MS) / (24 * 60 * 60 * 1000)));
@@ -7158,7 +7337,7 @@ function _msStandardFor(standards, key) {
 // _predictMilestoneWindow — Primitive 1.
 // Clinical-range predictor for a single milestone. PURE function. NEVER
 // personalised — returns the typical clinical band from the active reference
-// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a Ziva-specific prediction.
+// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a child-specific prediction.
 // Audit-no-personalised-prediction-v1.sh enforces the honesty floor at build.
 function _predictMilestoneWindow(milestoneId, opts) {
   opts = opts || {};

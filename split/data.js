@@ -1468,87 +1468,14 @@ const KEYWORD_TO_MILESTONE = {
 // PR-ε.0 §1 — id: slugify(text) baked at parse time. config.js defines
 // slugify (concat order config → data → core → ...), in scope here.
 // Slug uniqueness asserted in migrateMilestoneIds (core.js, runtime).
-const DEFAULT_MILESTONES = [
-  { id: slugify('Rolling'), text:'Rolling', status:'mastered', advanced:false, masteredAt:'2026-01-15', emergingAt:'2026-01-05', domain:'motor' },
-  { id: slugify('Sitting independently'), text:'Sitting independently', status:'mastered', advanced:false, masteredAt:'2026-02-20', emergingAt:'2026-02-10', domain:'motor' },
-  { id: slugify('Early teething signs'), text:'Early teething signs', status:'mastered', advanced:false, masteredAt:'2026-03-01', emergingAt:'2026-02-20', domain:'motor' },
-  { id: slugify('Sleeps independently'), text:'Sleeps independently', status:'mastered', advanced:false, masteredAt:'2026-02-10', emergingAt:'2026-01-25', domain:'social' },
-  { id: slugify('Babbling'), text:'Babbling', status:'mastered', advanced:false, masteredAt:'2026-03-05', emergingAt:'2026-02-15', domain:'language' },
-  { id: slugify('Responds to name'), text:'Responds to name', status:'mastered', advanced:false, masteredAt:'2026-03-10', emergingAt:'2026-03-01', domain:'language' },
-  { id: slugify('Pulls to stand using support (from sitting)'), text:'Pulls to stand using support (from sitting)', status:'mastered', advanced:true, masteredAt:'2026-03-18', emergingAt:'2026-03-10', practicingAt:'2026-03-12', consistentAt:'2026-03-16', domain:'motor' },
-  // V-K-103 + V-M-118 closure — sensory + cognitive seed rows so the 5-cat
-  // ACTIVITY_CATEGORIES registry consumed by milestones-tab-v1 has content in
-  // every category at first-install. Both ship source:'unverified' per V-M-114
-  // floor; mouths-objects carries safetyTier:true (gates choking-watch posture
-  // upgrade, Maren-signed 2026-05-27).
-  { id: slugify('Mouths and explores objects with hands'), text:'Mouths and explores objects with hands', status:'practicing', advanced:false, emergingAt:'2026-01-04', practicingAt:'2026-02-04', domain:'sensory', source:'unverified', safetyTier:true },
-  { id: slugify('Searches for hidden objects (object permanence emerging)'), text:'Searches for hidden objects (object permanence emerging)', status:'emerging', advanced:false, emergingAt:'2026-03-04', domain:'cognitive', source:'unverified' },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_MILESTONES = [];
 
-const DEFAULT_FOODS = [
-  // 6 Mar — first day of solids: khichdi (moong dal + rice) + vegetables
-  { name:'Moong dal', reaction:'ok', date:'2026-03-06' },
-  { name:'Rice', reaction:'ok', date:'2026-03-06' },
-  { name:'Carrot', reaction:'ok', date:'2026-03-06' },
-  { name:'Beans', reaction:'ok', date:'2026-03-06' },
-  { name:'Bottle gourd', reaction:'ok', date:'2026-03-06' },
-  { name:'Beetroot', reaction:'ok', date:'2026-03-06' },
-  // 7 Mar — banana introduced at breakfast
-  { name:'Banana', reaction:'ok', date:'2026-03-07' },
-  // 9 Mar — pear introduced at breakfast
-  { name:'Pear', reaction:'ok', date:'2026-03-09' },
-  // 11 Mar — boiled apple introduced at breakfast
-  { name:'Apple', reaction:'ok', date:'2026-03-11' },
-  // 16 Mar — avocado + blueberry introduced at dinner
-  { name:'Avocado', reaction:'ok', date:'2026-03-16' },
-  { name:'Blueberry', reaction:'ok', date:'2026-03-16' },
-  // 17 Mar — masoor dal + ghee introduced at lunch
-  { name:'Masoor dal', reaction:'ok', date:'2026-03-17' },
-  { name:'Ghee', reaction:'ok', date:'2026-03-17' },
-  // 18 Mar — ragi + almonds + walnut + date introduced at lunch
-  { name:'Ragi', reaction:'ok', date:'2026-03-18' },
-  { name:'Almonds', reaction:'ok', date:'2026-03-18' },
-  { name:'Walnut', reaction:'ok', date:'2026-03-18' },
-  { name:'Date (fruit)', reaction:'ok', date:'2026-03-18' },
-  // 20 Mar — mango discussed, introduced
-  { name:'Mango', reaction:'ok', date:'2026-03-20' },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_FOODS = [];
 
-const DEFAULT_VACC = [
-  // ── BIRTH (6 Sep 2025) ──
-  { name:'BCG', date:'2025-09-06', upcoming:false },
-  { name:'OPV-0', date:'2025-09-06', upcoming:false },
-  { name:'Hep B-1', date:'2025-09-06', upcoming:false },
-  // ── 6 WEEKS (16 Oct 2025) ──
-  { name:'DTwP/DTaP-1', date:'2025-10-16', upcoming:false },
-  { name:'Hep B-2', date:'2025-10-16', upcoming:false },
-  { name:'Hib-1', date:'2025-10-16', upcoming:false },
-  { name:'IPV-1', date:'2025-10-16', upcoming:false },
-  { name:'Rotavirus-1', date:'2025-10-16', upcoming:false },
-  { name:'PCV-1', date:'2025-10-16', upcoming:false },
-  // ── 10 WEEKS (16-18 Nov 2025) ──
-  { name:'DTwP/DTaP-2', date:'2025-11-16', upcoming:false },
-  { name:'Hep B-3', date:'2025-11-16', upcoming:false },
-  { name:'Hib-2', date:'2025-11-16', upcoming:false },
-  { name:'IPV-2', date:'2025-11-18', upcoming:false },
-  { name:'OPV-1', date:'2025-11-18', upcoming:false },
-  { name:'Rotavirus-2', date:'2025-11-16', upcoming:false },
-  { name:'PCV-2', date:'2025-11-16', upcoming:false },
-  // ── 14 WEEKS (18 Dec 2025) ──
-  { name:'DTwP/DTaP-3', date:'2025-12-18', upcoming:false },
-  { name:'Hep B-4', date:'2025-12-18', upcoming:false },
-  { name:'Hib-3', date:'2025-12-18', upcoming:false },
-  { name:'IPV-3', date:'2025-12-18', upcoming:false },
-  { name:'Rotavirus-3', date:'2025-12-18', upcoming:false },
-  { name:'PCV-3', date:'2025-12-18', upcoming:false },
-  // ── 6 MONTHS (5 Mar 2026) ──
-  { name:'TCV', date:'2026-03-05', upcoming:false },
-  { name:'Influenza-1', date:'2026-03-05', upcoming:false },
-  // ── UPCOMING ──
-  { name:'Influenza-2', date:'2026-04-05', upcoming:true },
-  { name:'MMR-1', date:'2026-06-04', upcoming:true },
-  { name:'MCV-1', date:'2026-06-04', upcoming:true },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_VACC = [];
 
 // ── MASTER VACCINATION SCHEDULE (IAP-ACVIP 2023, Indian Pediatr Jan 2024; the 2025 revision,
 //    Indian Pediatr May 2026, is identical for 9 m–6 y) + card schedule ──
@@ -1569,7 +1496,7 @@ const DEFAULT_VACC = [
 // Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
 // consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
 // carry private copies that lacked '13 months' and '18-19 months', so JE-2, Hep A-2 and
-// Varicella-2 defaulted to 99 and silently never came due (2026-09-24 12-month audit).
+// Varicella-2 defaulted to 99 and silently never came due (the 12-month audit).
 // Every VACC_SCHEDULE `age` label MUST appear here — build gate: split/audit-vacc-age-map-v1.sh.
 const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
   '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
@@ -1623,7 +1550,7 @@ const VACC_SCHEDULE = [
 
   // ── 12 MONTHS ──
   { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many states give JE free at government centres in districts where it circulates (9–12 and 16–24 months). Ask at the next visit or your local UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
   { name:'MCV-2', age:'12 months', windowEnd:23, after:'MCV-1', completesSeries:true, type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
   { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 
@@ -1663,29 +1590,8 @@ const VACC_SCHEDULE = [
   { name:'Td', age:'16-18 years', type:'iap', protects:'Tetanus, Diphtheria', notes:'Adolescent Td booster.' },
 ];
 
-const DEFAULT_MEDS = [
-  // 2026-09-24: prescribed in place of the D3 drops. Twice daily → logged as morning + evening
-  // dose slots (core.js medDoseSlots); recognised as her Vitamin D supplement by its contents.
-  {
-    name:    'Caldikind-P NF',
-    dose:    '2.5 ml',
-    brand:   'Mankind',
-    freq:    'Twice daily',
-    dosesPerDay: 2,
-    start:   '2026-09-24',
-    notes:   'Calcium, phosphorus, magnesium, zinc & Vitamin D3 suspension (replaces the D3 drops)',
-    active:  true,
-  },
-  {
-    name:    'Vitamin D3 Drops',
-    dose:    '0.5 ml · 800 IU',
-    brand:   'Ultra D3 by Meyer Vitabiotics',
-    freq:    'Once daily',
-    start:   '2025-09-04',
-    notes:   'Replaced by Caldikind-P NF on 2026-09-24',
-    active:  false,
-  },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_MEDS = [];
 
 const FOOD_SUGGESTIONS = {
   'Grains & Cereals': [
@@ -1886,7 +1792,7 @@ const FOOD_SUGGESTIONS = {
 // UPCOMING EVENTS — holidays, birthdays, custom
 // ─────────────────────────────────────────
 
-// ── Indian Holidays 2026–2027 (major national + Jharkhand-relevant) ──
+// ── Indian Holidays 2026–2027 (major national) ──
 const INDIAN_HOLIDAYS = [
   { date:'2026-01-14', title:'Makar Sankranti',       type:'holiday', icon:zi('star') },
   { date:'2026-01-26', title:'Republic Day',           type:'holiday', icon:zi('flag-in') },
@@ -1901,7 +1807,6 @@ const INDIAN_HOLIDAYS = [
   { date:'2026-07-17', title:'Muharram',               type:'holiday', icon:zi('moon') },
   { date:'2026-08-15', title:'Independence Day',       type:'holiday', icon:zi('flag-in') },
   { date:'2026-08-28', title:'Raksha Bandhan',         type:'holiday', icon:zi('baby') },
-  { date:'2026-09-04', title:'Ziva\'s 1st Birthday ', type:'birthday', icon:zi('party') },
   { date:'2026-09-04', title:'Krishna Janmashtami',    type:'holiday', icon:zi('star') },
   { date:'2026-09-14', title:'Ganesh Chaturthi',       type:'holiday', icon:zi('baby') },
   { date:'2026-09-16', title:'Milad un-Nabi',          type:'holiday', icon:zi('moon') },
@@ -1910,7 +1815,6 @@ const INDIAN_HOLIDAYS = [
   { date:'2026-11-08', title:'Diwali',                 type:'holiday', icon:zi('diya') },
   { date:'2026-11-11', title:'Bhai Dooj',              type:'holiday', icon:zi('baby') },
   { date:'2026-11-15', title:'Chhath Puja',            type:'holiday', icon:zi('sun') },
-  { date:'2026-11-15', title:'Jharkhand Foundation Day',type:'holiday', icon:zi('star') },
   { date:'2026-11-24', title:'Guru Nanak Jayanti',     type:'holiday', icon:zi('diya') },
   { date:'2026-12-25', title:'Christmas',              type:'holiday', icon:zi('star') },
   // 2027
@@ -1956,7 +1860,6 @@ const EVENT_ACTIVITIES = {
     'Navratri':          [{ icon:zi('star'), text:'Hold her and sway to garba music — vestibular stimulation and rhythm bonding' }, { icon:zi('bell'), text:'Give her a small bell or rattle to shake to the beat — cause-effect and motor skills' }],
     'Bhai Dooj':         [{ icon:zi('baby'), text:'Let siblings or cousins do tilak on each other — she can watch the ritual and faces up close' }, { icon:zi('spoon'), text:'Offer her a new fruit as her special "treat" — taste exploration on a sweet-themed day' }],
     'Guru Nanak Jayanti': [{ icon:zi('star'), text:'Play soft kirtan music — soothing new melodic patterns for auditory development' }, { icon:zi('baby'), text:'Practice "sharing" by handing toys back and forth — builds social reciprocity' }],
-    'Jharkhand Foundation Day': [{ icon:zi('sprout'), text:'Outdoor walk in a local park — connect with nature in your home state' }, { icon:zi('star'), text:'Play Jharkhandi tribal music — unique rhythms and instruments expand her sound world' }],
     _default:            [{ icon:zi('party'), text:'Dress her up and take photos — she\'ll love seeing these when she\'s older' }, { icon:zi('baby'), text:'Family time together — let her soak in the festive atmosphere, sounds, and faces' }],
   },
   vacation: [
@@ -2475,7 +2378,7 @@ const AGE_RULES = {
   'salt':     { limit:true, minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
   // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
   // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
-  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
+  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (12-month audit).
   // aliases (Ceres V-C-266-4 / Kael V-K-266-2): the everyday Indian names for added sugar, so
   // mishri (with saunf), chini, khand, batasha, mithai and date syrup gate at 24 m too.
   'sugar':    { minMonth:24, aliases:['mishri','misri','rock sugar','chini','cheeni','khand','shakkar','batasha','mithai','sweets','toffee','date syrup'],
@@ -2928,7 +2831,7 @@ const FOOD_EFFECTS = {
   // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
   // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
   // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
-  // abdominal-thrusts + call-112 (child 1y+ technique since Ziva turned one; NEVER adrenaline).
+  // abdominal-thrusts + call-112 (child 1y+ technique; NEVER adrenaline).
   // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
   // gate doesn't apply).
   // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
@@ -2978,7 +2881,7 @@ const FOOD_EFFECTS = {
     // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
     severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
-    // the hazard, milk-spec §9). Child 1y+ (Ziva turned one 2026-09-04): 5 back blows + 5 abdominal
+    // the hazard, milk-spec §9). Child 1y+: 5 back blows + 5 abdominal
     // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
     seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
@@ -3254,7 +3157,7 @@ const SUB_SUGGESTIONS = {
 // UIB SESSION 2: SEASONAL + ACCEPTANCE + OUTING + HYDRATION
 // ════════════════════════════════════════
 
-// ── Seasonal Availability Database (Jamshedpur, Jharkhand) ──
+// ── Seasonal Availability Database (eastern India) ──
 var SEASONAL_AVAILABILITY = {
   // availability: 'peak' (abundant/cheap), 'available' (findable), 'scarce' (hard/expensive), 'unavailable'
   // month indices: 0=Jan, 11=Dec
@@ -3628,7 +3531,7 @@ window.CURATED_COMBOS = [
     minAgeMonths: 8 },
 ];
 
-// Curated combo lookup — returns entries matching slot + Ziva's current age.
+// Curated combo lookup — returns entries matching slot + the child's current age.
 window._fdGetCuratedCombosForMeal = function(meal, ageMonths) {
   if (!meal || !Array.isArray(CURATED_COMBOS)) return [];
   return CURATED_COMBOS.filter(function(c) {
@@ -3918,30 +3821,30 @@ window.ACTIVITY_CATEGORIES = [
 // or emptyState.
 window._MILESTONE_NARRATION_TEMPLATES = {
   fullData: {
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. Last evidence: {lastEvidenceText} ({lastEvidenceRelative}).',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. Last evidence: {lastEvidenceText} ({lastEvidenceRelative}).',
   },
   midState: {
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. No new evidence this week — quiet stretch.',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. In-window: {inWindowList}. No new evidence this week — quiet stretch.',
   },
   betweenWindow: {
     // V-V-54 fold: in-window.length === 0 + recent-evidence === Y
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. {recentConfirmedMilestone} confirmed {lastEvidenceRelative}. No milestones currently in-window — between-window stretch.',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. {recentConfirmedMilestone} confirmed {lastEvidenceRelative}. No milestones currently in-window — between-window stretch.',
   },
   emptyState: {
-    passage: 'Ziva is {ageMonths}m {ageDaysRemainder}d. No milestones in-window yet — early days. Tap Library to explore what\'s next.',
+    passage: 'Your child is {ageMonths}m {ageDaysRemainder}d. No milestones in-window yet — early days. Tap Library to explore what\'s next.',
   },
 };
 
 // MS_ACTIVITY_LEVEL_NARRATIONS — warm contextual prose per activityLevel tier.
 // Architect feedback 2026-05-27: "what's happening with the info we select in
-// 'How was Ziva today?' right now I select peak and it just stays there, not
+// 'How was the child today?' right now I select peak and it just stays there, not
 // much state change happens. For a parent the effect of this option must be
 // apparent."
 //
 // Used by renderMsActivityLevelStrip to surface an inline status BELOW the
 // chips after the parent selects a tier — closes the missing-consequence
 // gap. Honesty floor (CV3-006): the prose is observational + supportive,
-// never predictive ("Ziva will do X because of today's Peak") which would
+// never predictive ("the child will do X because of today's Peak") which would
 // trip audit-no-personalised-prediction-v1.sh Scope B. Tier-keyed by 1-4
 // matching the chip tiers; engine-extensibility floor for future 5th tier
 // lands as a new key without surface refactor.
@@ -3949,7 +3852,7 @@ window.MS_ACTIVITY_LEVEL_NARRATIONS = {
   1: 'Quiet days are gentle. Good time for cuddles, read-aloud, and rest — often follows a stretch of higher-energy days.',
   2: 'Settled play days build steady comfort. The unspectacular days matter just as much.',
   3: 'Engaged, high-output days often surface new skills. Watch for milestones unfolding.',
-  4: 'Big-energy days mean Ziva\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
+  4: 'Big-energy days mean your child\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
 };
 
 // WHO Motor Development Study + WHO developmental milestones
@@ -4573,7 +4476,7 @@ const MILESTONE_TIDBITS = [
   },
   {
     match: ['responds to name', 'respond'],
-    unlocks: 'Can now play name games, simple call-and-response, and early "where\'s Ziva?" peek-a-boo variations.',
+    unlocks: 'Can now play name games, simple call-and-response, and early "where\'s the baby?" peek-a-boo variations.',
     doctor: 'Consistent name response is screened at 9 months. Achieving this early is a strong language comprehension signal.',
     funFact: 'Babies can recognise their own name from as early as 4.5 months, but consistent head-turning takes another 1–2 months of practice.',
   },
@@ -4603,7 +4506,7 @@ const MILESTONE_TIDBITS = [
   },
   {
     match: ['stranger', 'familiar faces'],
-    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let Ziva warm up at her own pace.',
+    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let your child warm up at her own pace.',
     doctor: 'Stranger awareness is actually a positive cognitive milestone — it means she can distinguish familiar from unfamiliar.',
     funFact: 'Babies can distinguish their mother\'s face from others within hours of birth, but active stranger wariness peaks around 8 months.',
   },
@@ -4777,7 +4680,7 @@ const VACC_GUIDANCE = {
     note: 'Protects against chickenpox. Not in the government programme, so usually given privately.',
   },
   'je': {
-    dos: ['Many Jharkhand districts, likely including East Singhbhum, give JE free at government centres — ask at her next visit', 'Private inactivated vaccine: two doses 28 days apart; government live vaccine: 9–12 and 16–24 months'],
+    dos: ['Many states give JE free at government centres in districts where it circulates — ask at the next visit', 'Private inactivated vaccine: two doses 28 days apart; government live vaccine: 9–12 and 16–24 months'],
     donts: ['Don\'t skip it if you live in an endemic district — JE can cause lasting brain damage'],
     note: 'Japanese encephalitis spreads through mosquito bites in rural, rice-growing areas.',
   },
@@ -4798,18 +4701,18 @@ const SYMPTOM_DB = [
     condition: function(q, mo) { return mo < 3 || q.match(/10[3-5]|above 102|very high|burning/i); },
     summary: 'Sponge with lukewarm water, light clothing, breastfeed often, call doctor for medication',
     whatToDo: [
-      'Sponge Ziva with lukewarm water (never cold). Keep her lightly dressed.',
+      'Sponge your child with lukewarm water (never cold). Keep her lightly dressed.',
       'Breastfeed frequently to prevent dehydration.',
       'Call your pediatrician for medication advice before giving anything.',
       'Monitor her temperature every 30 minutes.'
     ],
     precautions: [
       'Watch for stiff neck, rash, or difficulty breathing alongside the fever.',
-      'Note if Ziva becomes unusually limp, drowsy, or hard to wake.',
+      'Note if your child becomes unusually limp, drowsy, or hard to wake.',
       'Track when the fever started and the highest reading you have observed.'
     ],
     doNot: [
-      { text: 'Give aspirin to Ziva', critical: true },
+      { text: 'Give aspirin to your child', critical: true },
       { text: 'Give any fever medication without doctor advice', critical: true },
       { text: 'Use ice or cold water for sponging', critical: false },
       { text: 'Over-bundle her in blankets or clothing', critical: false }
@@ -4820,7 +4723,7 @@ const SYMPTOM_DB = [
       'Fever lasts more than 24 hours without improvement',
       'Fever with stiff neck or non-blanching rash',
       'Fever with difficulty breathing',
-      'Ziva is unusually limp, unresponsive, or hard to wake'
+      'Your child is unusually limp, unresponsive, or hard to wake'
     ],
     lifeThreat: false,
     callDoctor: true
@@ -4832,14 +4735,14 @@ const SYMPTOM_DB = [
     title: 'Mild Fever (99–101°F / 37.2–38.3°C)',
     summary: 'Monitor every 2 hours, light clothing, offer fluids, escalate above 102°F (38.9°C)',
     whatToDo: [
-      'Monitor Ziva’s temperature every 2 hours.',
+      'Monitor your child’s temperature every 2 hours.',
       'Keep her comfortable and lightly dressed.',
       'Offer breast milk or fluids frequently.',
       'A mild fever within 48 hours of vaccination is usually normal.'
     ],
     precautions: [
       'Watch for the temperature climbing above 102°F (38.9°C).',
-      'Note if Ziva becomes lethargic, refuses to feed, or develops a rash.',
+      'Note if your child becomes lethargic, refuses to feed, or develops a rash.',
       'Track whether the fever followed a recent vaccination.'
     ],
     doNot: [
@@ -4849,13 +4752,13 @@ const SYMPTOM_DB = [
     emergency: [
       'Fever rises above 102°F (38.9°C)',
       'Fever persists beyond 48 hours',
-      'Ziva becomes lethargic or refuses to feed',
+      'Your child becomes lethargic or refuses to feed',
       'Rash develops alongside the fever'
     ],
     lifeThreat: false,
     triage: true,
     triageQuestions: [
-      { q: 'Is Ziva under 3 months old?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is your child under 3 months old?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Has the fever lasted more than 48 hours?', yesSeverity: 'warning', noSeverity: null },
       { q: 'Is she unusually lethargic or refusing fluids?', yesSeverity: 'emergency', noSeverity: null }
     ],
@@ -4868,7 +4771,7 @@ const SYMPTOM_DB = [
     title: 'Vomiting',
     summary: 'Small frequent feeds, keep upright after feeds, watch for dehydration signs',
     whatToDo: [
-      'Keep Ziva upright for 20–30 minutes after feeding.',
+      'Keep your child upright for 20–30 minutes after feeding.',
       'Offer small, frequent feeds instead of large ones.',
       'If breastfeeding, continue normally — do not stop.',
       'Avoid introducing new foods until vomiting stops.'
@@ -4919,7 +4822,7 @@ const SYMPTOM_DB = [
       'Blood or mucus in the stool',
       'Fewer than 4 wet diapers in 24 hours',
       'Sunken eyes or fontanelle',
-      'Ziva is unusually lethargic',
+      'Your child is unusually lethargic',
       'Diarrhoea lasts more than 48 hours'
     ],
     lifeThreat: false,
@@ -4932,7 +4835,7 @@ const SYMPTOM_DB = [
     title: 'Skin Rash',
     summary: 'Note recent foods, keep area clean, glass-test for non-blanching, watch breathing',
     whatToDo: [
-      'Note what Ziva ate or was exposed to in the previous 24–48 hours.',
+      'Note what your child ate or was exposed to in the previous 24–48 hours.',
       'Keep the area clean and dry.',
       'Use mittens if needed to prevent scratching.',
       'Apply a mild, fragrance-free moisturizer for dry patches.'
@@ -4953,7 +4856,7 @@ const SYMPTOM_DB = [
       'Swelling of face, lips, or tongue',
       'Difficulty breathing or swallowing',
       'Hives plus breathing trouble (possible anaphylaxis)',
-      'Ziva seems very unwell, limp, or drowsy'
+      'Your child seems very unwell, limp, or drowsy'
     ],
     lifeThreat: false,
     callDoctor: true
@@ -4973,19 +4876,19 @@ const SYMPTOM_DB = [
     precautions: [
       'Watch for rapid or laboured breathing, chest retractions, or wheezing.',
       'Note any blue tint around lips or nails.',
-      'Track whether Ziva is still feeding willingly.'
+      'Track whether your child is still feeding willingly.'
     ],
     doNot: [
       { text: 'Give OTC cough or cold medicines to a baby', critical: true },
       { text: 'Use Vicks, menthol, or camphor products on a baby', critical: true },
-      { text: 'Expose Ziva to cigarette smoke', critical: false }
+      { text: 'Expose your child to cigarette smoke', critical: false }
     ],
     emergency: [
       'Breathing becomes rapid or laboured (chest retractions visible)',
       'Wheezing or gasping for breath',
       'Blue tint around lips or nails',
       'Cough persists more than 7 days',
-      'Ziva refuses to feed'
+      'Your child refuses to feed'
     ],
     lifeThreat: false,
     triage: true,
@@ -5003,7 +4906,7 @@ const SYMPTOM_DB = [
     title: 'Breathing Difficulty',
     summary: 'Keep upright, clear nose with saline, count breaths, call 108 if severe',
     whatToDo: [
-      'Keep Ziva upright.',
+      'Keep your child upright.',
       'Clear her nose with saline drops and a nasal aspirator.',
       'Stay calm so she stays calm.',
       'Count her breaths for a full minute while she is calm (normal at 1–2 years: under 40, usually about 24–39). 40 or more at rest is fast breathing — call the doctor.'
@@ -5023,7 +4926,7 @@ const SYMPTOM_DB = [
       'Blue tint around lips, fingernails, or mouth (cyanosis)',
       'More than 60 breaths per minute',
       'Grunting or stridor (high-pitched whistle on inhale)',
-      'Ziva is too breathless to feed or cry',
+      'Your child is too breathless to feed or cry',
       'Sudden onset after a possible choking episode'
     ],
     lifeThreat: true,
@@ -5055,7 +4958,7 @@ const SYMPTOM_DB = [
       'Refusal lasts more than 24 hours',
       'Refusal combined with fever or lethargy',
       'Fewer wet diapers than usual',
-      'Ziva seems in pain while swallowing'
+      'Your child seems in pain while swallowing'
     ],
     lifeThreat: false,
     triage: true,
@@ -5099,7 +5002,7 @@ const SYMPTOM_DB = [
       'Fever of 40°C (104°F) or more, or any fever with a stiff neck, a rash that doesn\'t fade when pressed, or drowsiness that is hard to wake from',
       'A fit (seizure), or fast or hard breathing',
       'Gums bleed heavily or look infected',
-      'Ziva is inconsolable for hours'
+      'Your child is inconsolable for hours'
     ],
     lifeThreat: false,
     callDoctor: false
@@ -5130,7 +5033,7 @@ const SYMPTOM_DB = [
       'No stool for 5+ days alongside visible discomfort',
       'Blood in the stool',
       'Abdomen is hard, swollen, or distended',
-      'Ziva is in obvious pain or refusing to feed'
+      'Your child is in obvious pain or refusing to feed'
     ],
     lifeThreat: false,
     callDoctor: false
@@ -5160,7 +5063,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Cry is high-pitched and unlike her normal crying',
       'Crying accompanied by fever or vomiting',
-      'Ziva draws her legs up to her abdomen repeatedly (possible intussusception)',
+      'Your child draws her legs up to her abdomen repeatedly (possible intussusception)',
       'Nothing calms her for more than 3 hours'
     ],
     lifeThreat: false,
@@ -5197,7 +5100,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Redness with thick yellow or green discharge',
       'Swelling around the eye or eyelid',
-      'Ziva rubs her eyes constantly or seems in pain',
+      'Your child rubs her eyes constantly or seems in pain',
       'Vision seems affected (not tracking or focusing)'
     ],
     lifeThreat: false,
@@ -5210,14 +5113,14 @@ const SYMPTOM_DB = [
     title: 'Ear Pain / Pulling',
     summary: 'Keep head elevated during sleep, watch for fever or fluid, never insert anything',
     whatToDo: [
-      'Keep Ziva’s head slightly elevated during sleep.',
+      'Keep your child’s head slightly elevated during sleep.',
       'Note whether ear-pulling started after a recent cold.',
       'Track whether the pulling is combined with fever or fussiness.'
     ],
     precautions: [
       'Ear-pulling alone is often just exploration at this age.',
       'Ear infections often follow upper respiratory infections.',
-      'Note any change in how Ziva responds to your voice (hearing concerns).',
+      'Note any change in how your child responds to your voice (hearing concerns).',
       'Ear-pulling with a fever of 38.3°C (101°F) or more: call her doctor the same day; it is often an ear infection.'
     ],
     doNot: [
@@ -5229,7 +5132,7 @@ const SYMPTOM_DB = [
       'Fluid or pus draining from the ear',
       'Fever of 40°C (104°F) or more, or a red, swollen, tender area behind the ear that pushes the ear outward',
       'A fit (seizure), or fast or hard breathing',
-      'Ziva is inconsolable, especially when lying down',
+      'Your child is inconsolable, especially when lying down',
       'Hearing seems noticeably affected'
     ],
     lifeThreat: false,
@@ -5243,7 +5146,7 @@ const SYMPTOM_DB = [
     summary: 'Stay calm, cold compress, observe 24h, wake every 2h while sleeping',
     whatToDo: [
       'Stay calm. Apply a cold compress wrapped in cloth to any bump for 10–15 minutes.',
-      'Observe Ziva closely for the next 24 hours.',
+      'Observe your child closely for the next 24 hours.',
       'Let her rest but check on her every 2 hours while sleeping.',
       'Note the height of the fall and what she landed on.'
     ],
@@ -5269,7 +5172,7 @@ const SYMPTOM_DB = [
     lifeThreat: true,
     triage: true,
     triageQuestions: [
-      { q: 'Did Ziva lose consciousness, even briefly?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Did your child lose consciousness, even briefly?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Has she vomited more than once since the fall?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Is she unusually sleepy or hard to wake?', yesSeverity: 'emergency', noSeverity: null }
     ],
@@ -5301,7 +5204,7 @@ const SYMPTOM_DB = [
       'Swelling of lips, tongue, or throat',
       'Difficulty breathing or swallowing',
       'Wheezing or noisy breathing',
-      'Ziva becomes limp, pale, or unresponsive',
+      'Your child becomes limp, pale, or unresponsive',
       'Sudden widespread hives plus breathing trouble (anaphylaxis)'
     ],
     lifeThreat: true,
@@ -5332,7 +5235,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Sunken fontanelle (soft spot)',
       'No wet diaper for 6 or more hours',
-      'Ziva is lethargic, limp, or unusually sleepy',
+      'Your child is lethargic, limp, or unusually sleepy',
       'Dry mouth with no tears when crying',
       'Skin does not spring back when gently pinched'
     ],
@@ -5376,7 +5279,7 @@ const SYMPTOM_DB = [
     title: 'Seizure / Convulsion',
     summary: 'Lay her on her side, clear the area, time the seizure, do not restrain',
     whatToDo: [
-      'Lay Ziva on her side on a flat surface (recovery position).',
+      'Lay your child on her side on a flat surface (recovery position).',
       'Clear the area around her of hard or sharp objects.',
       'Loosen any tight clothing around her neck.',
       'Time the seizure from start to finish.',
@@ -5384,7 +5287,7 @@ const SYMPTOM_DB = [
     ],
     precautions: [
       'Most seizures stop on their own within a few minutes.',
-      'After the seizure, Ziva will likely be sleepy and confused — this is normal.',
+      'After the seizure, your child will likely be sleepy and confused — this is normal.',
       'Note what happened just before the seizure (fever, head bump, missed feed).'
     ],
     doNot: [
@@ -5410,7 +5313,7 @@ const SYMPTOM_DB = [
     title: 'Choking',
     summary: 'If she can cough, let her. If silent and not breathing, back blows then abdominal thrusts',
     whatToDo: [
-      'If Ziva is coughing forcefully, let her keep coughing — do not interfere.',
+      'If your child is coughing forcefully, let her keep coughing — do not interfere.',
       'If she cannot cry, cough, or breathe, lay her face-down across your lap with her head low, or support her leaning forward.',
       'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
       'Still stuck? Kneel behind her, make a fist between her belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
@@ -5446,7 +5349,7 @@ const SYMPTOM_DB = [
     title: 'Head Injury',
     summary: 'Stabilize and observe, apply cold compress to bumps, wake every 2h for 24h',
     whatToDo: [
-      'Stay calm. Keep Ziva still while you assess her.',
+      'Stay calm. Keep your child still while you assess her.',
       'Apply a cold compress wrapped in cloth to any visible bump for 10–15 minutes.',
       'Observe her closely for the next 24 hours.',
       'Wake her every 2 hours while she sleeps to check responsiveness.',
@@ -5551,7 +5454,7 @@ const ESCALATING_TIPS = {
   'no-feed-today': [
     'Even partial meals matter — log what she\'s had so far to track her intake pattern.',
     'If appetite is low, try smaller, more frequent offerings. Teething or illness can suppress hunger temporarily.',
-    'Repeated low intake days this month. If Ziva is consistently refusing meals, discuss with your paediatrician at the next visit.',
+    'Repeated low intake days this month. If your child is consistently refusing meals, discuss with your paediatrician at the next visit.',
   ],
   'poop-gap': [
     'Tummy massage (clockwise circles), warm bath, high-fibre foods (pear, prune, papaya), and tummy time can help stimulate bowel movement.',
@@ -5582,7 +5485,7 @@ const ESCALATING_TIPS = {
   'food-variety-stale': [
     'Introduce one new food at a time with a 3-day gap. Try different textures and colours to build acceptance.',
     'Variety exposure in the first year shapes long-term food preferences. Even if she rejects a food, offer it again in a week — it can take 10-15 exposures.',
-    'Ziva has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
+    'Your child has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
   ],
   'food-correlation': [
     'This is a pattern SproutLab spotted in the log — this food has appeared close to a few unusual nappies. A pattern is not a diagnosis, and with a small number of days coincidence is very likely. Keep offering the food normally and note the stool each time so the picture gets clearer.',
@@ -5592,24 +5495,24 @@ const ESCALATING_TIPS = {
   'food-group-gap': [
     'Try adding one food from this group to a meal this week. Variety builds both nutrition and acceptance.',
     'This food group has been missing for a while. Each group provides different micronutrients that are hard to replace. Even small amounts count.',
-    'Extended gaps in this food group may lead to nutrient deficiencies. If Ziva consistently refuses foods from this group, discuss alternatives with your paediatrician.',
+    'Extended gaps in this food group may lead to nutrient deficiencies. If your child consistently refuses foods from this group, discuss alternatives with your paediatrician.',
   ],
   'vacc-reminder': [
     'Check with your paediatrician about any preparation needed. Some vaccines may cause mild fever — keep paracetamol drops handy.',
   ],
   'supp-streak-broken': [
-    'Vitamin D3 helps Ziva absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
+    'Vitamin D3 helps your child absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
     'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking each dose to a meal or her milk makes it hard to forget.',
-    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for Ziva.',
+    'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for your child.',
   ],
   'low-iron': [
     'Best iron sources for babies: ragi porridge, masoor dal khichdi, beetroot purée, spinach dal. Always pair with Vitamin C (lemon, amla, tomato) to boost absorption.',
     'Iron stores from birth deplete around 6 months. At this age, dietary iron becomes critical. Try adding iron-rich foods to at least one meal daily — ragi at breakfast is an easy win.',
-    'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If Ziva seems unusually tired or pale, discuss iron levels with your paediatrician.',
+    'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If your child seems unusually tired or pale, discuss iron levels with your paediatrician.',
   ],
   'low-calcium': [
-    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
-    'Calcium and Vitamin D work together for bone health. Since Ziva takes a Vitamin D supplement, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
+    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breast milk or formula still provides some, but solids should contribute too.',
+    'Calcium and Vitamin D work together for bone health. If your child takes a Vitamin D supplement, pairing it with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
     'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
   ],
   'low-protein': [
@@ -5624,7 +5527,7 @@ const ESCALATING_TIPS = {
   ],
   'meal-monotony': [
     'Try swapping one meal — if breakfast is always ragi, try oats or dalia. If lunch is always dal rice, try a vegetable khichdi. Small changes count.',
-    'Repeated meals can lead to nutrient gaps and reduce Ziva\'s willingness to try new tastes later. The first year is the best window for building food acceptance.',
+    'Repeated meals can lead to nutrient gaps and reduce your child\'s willingness to try new tastes later. The first year is the best window for building food acceptance.',
     'Same meals for an extended period. Variety in the first year builds the foundation for lifelong eating habits. Even rotating between 3-4 different breakfasts makes a difference.',
   ],
 };
@@ -5735,7 +5638,7 @@ const RECOMMENDATION_ROSTER = {
       ]},
     },
     severityMessages: {
-      gentle: { strength: 'short-by-1h',  text: 'Ziva\'s sleep ran a bit short today — try an earlier wind-down tomorrow.' },
+      gentle: { strength: 'short-by-1h',  text: 'Your child\'s sleep ran a bit short today — try an earlier wind-down tomorrow.' },
       firm:   { strength: 'short-by-2h+', text: 'Two-plus hours short on sleep. Consider an extra nap or earlier bedtime.' },
       urgent: { strength: 'critical',     text: 'Significant sleep deficit. A calm, dim evening + earlier bedtime tonight.' },
     },

@@ -347,7 +347,7 @@ function renderFeverEpisodeCard() {
   // Guidance
   html += '<div class="fe-section-title">Guidance</div>';
   html += '<div class="fe-guidance"><ul class="ep-list">';
-  html += '<li>Keep Ziva lightly dressed — do not over-bundle</li>';
+  html += '<li>Keep ' + childNameHtml() + ' lightly dressed — do not over-bundle</li>';
   html += '<li>Offer breast milk or fluids frequently</li>';
   html += '<li>Sponge with lukewarm water (never cold)</li>';
   if (sev.tier === 'high' || sev.tier === 'critical') {
@@ -686,7 +686,7 @@ function feResolvePrompt() {
   // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
   // this at midnight post-episode — 'Resolve' names the action verb
   // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
-  confirmAction('Has Ziva\'s temperature been normal (below 99°F) for at least 6 hours?', function() {
+  confirmAction('Has ' + childNameHtml() + '\'s temperature been normal (below 99°F) for at least 6 hours?', function() {
     resolveFeverEpisode('');
     showQLToast('' + zi('check') + ' Fever episode resolved');
   }, 'Resolve');
@@ -869,7 +869,7 @@ function renderDietFeverBanner() {
     '<div class="fe-diet-title">' + zi('flame') + ' Fever Active — Diet Guidance</div>' +
     '<div class="fe-diet-body">' +
     '<strong>Prioritize:</strong> Breast milk (most important), light foods (khichdi, dal water, curd rice, banana, rice porridge), hydrating foods (coconut water, ORS, soups).<br><br>' +
-    '<strong>Avoid:</strong> New food introductions, heavy proteins, fried foods. Do not force meals if Ziva refuses.<br><br>' +
+    '<strong>Avoid:</strong> New food introductions, heavy proteins, fried foods. Do not force meals if ' + childNameHtml() + ' refuses.<br><br>' +
     '<em>Appetite loss during fever is normal. Offer small amounts frequently.</em>' +
     '</div></div>';
 }
@@ -1406,7 +1406,7 @@ function deResolvePrompt() {
   // split/audit-resolve-shield.sh fails the build if dropped. Parent reads
   // this at midnight post-episode — 'Resolve' names the action verb
   // explicitly; 'Confirm' is action-ambiguous on a "Has X resolved?" prompt.
-  confirmAction('Has Ziva\'s stool consistency returned to normal? (No loose/watery stools for at least 12 hours)', function() {
+  confirmAction('Has ' + childNameHtml() + '\'s stool consistency returned to normal? (No loose/watery stools for at least 12 hours)', function() {
     resolveDiarrhoeaEpisode('');
     showQLToast('' + zi('check') + ' Diarrhoea episode resolved');
   }, 'Resolve');
@@ -1711,7 +1711,7 @@ function renderVomitingEpisodeCard() {
 
   // Guidance
   html += '<div class="fe-section-title">Guidance</div><div class="fe-guidance"><ul class="ep-list">';
-  html += '<li>Keep Ziva upright for 20–30 minutes after feeds</li>';
+  html += '<li>Keep ' + childNameHtml() + ' upright for 20–30 minutes after feeds</li>';
   html += '<li>Offer small, frequent feeds — not large volumes</li>';
   html += '<li>Continue breastfeeding normally</li>';
   html += '<li>Avoid new foods until vomiting stops</li>';

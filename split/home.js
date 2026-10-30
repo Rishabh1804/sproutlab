@@ -32,8 +32,8 @@ function updateHeader() {
     dtEl.innerHTML = `${zi('clock')} ${escHtml(dayName)}, ${escHtml(dateStr)} · ${escHtml(timeStr)}${moonSuffix}`;
   }
 
-  document.getElementById('headerSub').textContent =
-    `Born 4 Sep 2025 · ${fmtAgeShort(months, days)} · Jamshedpur`;
+  const _born = _profBornLine(false), _city = (profile && profile.place && profile.place.city) || '';
+  document.getElementById('headerSub').textContent = [_born, fmtAgeShort(months, days), _city].filter(Boolean).join(' · ');
 
   // home precise age
   const ageEl = document.getElementById('homePreciseAge');
@@ -206,10 +206,26 @@ setInterval(() => {
 function fetchWeather() {
   var weatherEl = document.getElementById('headerWeather');
   if (!weatherEl) return;
-  // Jamshedpur coordinates
-  var lat = 22.8;
-  var lon = 86.18;
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia/Kolkata')
+  // The family's town from the profile (privacy-v1 §3.1); no town, no weather line.
+  var place = (typeof profile !== 'undefined' && profile && profile.place) || null;
+  if (!place || !place.city) { weatherEl.textContent = ''; return; }
+  var c = _profCoords();
+  if (!c) {
+    // Geocode the town once; the coordinates are a device-local cache keyed by town, so they never
+    // outrank a real edit to the profile or race one (V-CA-280-13).
+    var city = place.city;
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&name=' + encodeURIComponent(city))
+      .then(function(r) { return r.json(); })
+      .then(function(g) {
+        var hit = g && g.results && g.results[0];
+        if (!hit) return;
+        _profGeoPut(city, { lat: Math.round(hit.latitude * 100) / 100, lon: Math.round(hit.longitude * 100) / 100, tz: hit.timezone || null });
+        if (profile && profile.place && profile.place.city === city) fetchWeather();
+      }).catch(function() {});
+    return;
+  }
+  var lat = c.lat, lon = c.lon, tz = c.tz;
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=' + tz)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.current) {
@@ -271,8 +287,10 @@ function fetchVaccWeatherAdvisory() {
   // Only show advisory 0–2 days before appointment (and on the day itself)
   if (daysTo < 0 || daysTo > 2) return;
 
-  const lat = 22.8, lon = 86.18;
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,uv_index_max&timezone=Asia/Kolkata&start_date=${apptDate}&end_date=${apptDate}`)
+  const _c = _profCoords();
+  if (!_c) return;
+  const lat = _c.lat, lon = _c.lon;
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,uv_index_max&timezone=${_c.tz}&start_date=${apptDate}&end_date=${apptDate}`)
     .then(r => r.json())
     .then(data => {
       if (!data.daily || !data.daily.time || data.daily.time.length === 0) return;
@@ -373,7 +391,7 @@ function renderVaccWeatherAdvisory(wx, daysTo, apptDate) {
 // ─────────────────────────────────────────
 // HOME TAB RENDER
 // ─────────────────────────────────────────
-// ── "Today for Ziva" — the Home lede (PR-K) ──
+// ── "Today for the child" — the Home lede (PR-K) ──
 // A warm, scannable card that answers the one question a tired parent opens
 // the app with: what matters today? Headline + age + date, then the single
 // highest-priority item (an action or watch alert) — or a calm all-clear.
@@ -658,7 +676,7 @@ function renderRemindersAndAlerts() {
   if (activeMeds.length) {
     const trackingSince = medChecks._trackingSince || todayStr;
     activeMeds.forEach(m => {
-      const startDate = m.start || '2025-09-04';
+      const startDate = m.start || toDateStr(DOB);
       const earliest = startDate > trackingSince ? startDate : trackingSince;
       for (let i = 1; i <= 14; i++) {
         const d = new Date(); d.setDate(d.getDate() - i);
@@ -906,7 +924,7 @@ function getActiveCareSignals() {
     // idx matches renderRemindersAndAlerts' supp-alert-${idx} (same activeMeds
     // filter, same order) so the due-today deep-link lands on that med's card.
     activeMeds.forEach(function(m, idx) {
-      var startDate = m.start || '2025-09-04';
+      var startDate = m.start || toDateStr(DOB);
       var earliest = startDate > trackingSince ? startDate : trackingSince;
       var missed = 0;
       var firstMissedDs = null;  // most-recent missed day (i=1 backwards)
@@ -2273,7 +2291,7 @@ function _msRelativeTime(ts) {
 
 // activityLevel:1-4 chip strip (Primitive 1) — single-tap chip; reads
 // _getActivityLevelToday and writes via _setActivityLevelToday. Honest no-
-// signal at activityLevel:null (empty-state prompt: "How was Ziva today?";
+// signal at activityLevel:null (empty-state prompt: "How was the child today?";
 // V-V-65 fold: prompt-as-label-above-strip; non-scrolling at 320px).
 function renderMsActivityLevelStrip() {
   const el = document.getElementById('msActivityLevelStrip');
@@ -2299,14 +2317,14 @@ function renderMsActivityLevelStrip() {
       + '<div class="ms-al-chip-desc">' + escHtml(t.desc) + '</div>'
       + '</button>';
   }).join('');
-  // Prompt swaps once a level is logged — "How was Ziva today?" → "Today's
+  // Prompt swaps once a level is logged — "How was the child today?" → "Today's
   // energy" — so the question/answer relationship reads as resolved.
   // Inline status surfaces the consequence: which tier was logged + a
   // warm contextual narration. CV3-006 Warmth axis closure on the
   // Architect's "the effect must be apparent" feedback. The status reads
   // BELOW the chip strip because the selected chip is the answer; the
   // status is the system's acknowledgement + context.
-  const prompt = (currentLevel == null) ? 'How was Ziva today?' : 'Today\'s energy';
+  const prompt = (currentLevel == null) ? 'How was ' + childNameHtml() + ' today?' : 'Today\'s energy';
   let statusHtml = '';
   if (currentLevel != null) {
     const tier = MS_ACTIVITY_LEVEL_TIERS.find(t => t.level === currentLevel);
@@ -2436,7 +2454,7 @@ function _renderMsInWindowCard(item, opts) {
   // window.windowStatus (V-V-57 rename). "early band"/"in band"/"late band"
   // is the parent-legible framing — never "soonest-to-age-out".
   const bandLabel = _msWindowBandLabel(win);
-  const ageText = 'Ziva is ' + ageM + 'm ' + ageRem + 'd' + (bandLabel ? ' — ' + bandLabel : '');
+  const ageText = '' + childNameCapHtml() + ' is ' + ageM + 'm ' + ageRem + 'd' + (bandLabel ? ' — ' + bandLabel : '');
   // Status pill: confirmed / practicing / not-yet (V-V-57). Tooltip MUST
   // include the word "Practicing" per Maren V-V-50 watch-list.
   const statusLabel = {
@@ -2959,7 +2977,7 @@ function _msAgeMonthsAt(isoDate) {
 // Trajectory ribbon (Patterns sub-tab; return-visit surface 2). MAJOR
 // OVERHAUL post-Architect feedback 2026-05-27 (V-V-49 collapse rebated):
 // - Temporal X-axis (age in months) replaces evenly-spaced markers; markers
-//   land at the age they were celebrated/started/expected, conveying Ziva's
+//   land at the age they were celebrated/started/expected, conveying the child's
 //   journey along time rather than as a flat dot sequence.
 // - 3 distinct visual states (over V-V-49 2-state collapse): "celebrated"
 //   (sage filled) / "practicing" (amber filled + sage ring halo) / "coming
@@ -2968,8 +2986,8 @@ function _msAgeMonthsAt(isoDate) {
 //   state cleanly. The labels also no longer share the "or" pattern that
 //   collapsed two distinct journey-states into one chip.
 // - Month-axis ticks every 3 months along the bottom with labels.
-// - Dashed vertical "now" indicator at Ziva's current age — gives the
-//   parent the answer to "where is Ziva today?" without reading prose.
+// - Dashed vertical "now" indicator at the child's current age — gives the
+//   parent the answer to "where is the child today?" without reading prose.
 // - All markers tappable when they have a milestone id (V-V-48 contract).
 // - SVG <title> for native hover/long-press tooltip showing milestone text.
 function renderMsTrajectoryRibbon() {
@@ -3045,7 +3063,7 @@ function renderMsTrajectoryRibbon() {
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
       + zi('chart') + '</div> Trajectory</div></div>'
-      + '<div class="t-sub-light text-center py-4">Ziva\'s journey is just beginning — milestones will appear here as she grows.</div>';
+      + '<div class="t-sub-light text-center py-4">' + childNameCapHtml() + '\'s journey is just beginning — milestones will appear here as she grows.</div>';
     return;
   }
 
@@ -3161,13 +3179,13 @@ function renderMsTrajectoryRibbon() {
     + '<span class="ms-traj-legend-item" data-state="comingup">' + swatchSVG('comingup') + ' ' + nCom + ' coming up</span>'
     + '</div>';
 
-  // Narrative caption — warmer than "X markers on Ziva's timeline".
+  // Narrative caption — warmer than "X markers on the child's timeline".
   // Phrases the picture as a journey, not as a count of dots. Half-awake-test
   // anchor: a tired parent should grok the present-state from the caption
   // alone, without parsing the markers.
   let caption;
   if (nCel > 0 && nCom > 0) {
-    caption = 'Ziva has celebrated ' + nCel + ', is working on ' + nPra
+    caption = '' + childNameCapHtml() + ' has celebrated ' + nCel + ', is working on ' + nPra
       + (nPra === 1 ? '' : '')
       + ', with ' + nCom + ' more on the horizon. Tap a marker for details.';
   } else if (nCel > 0) {
@@ -3175,7 +3193,7 @@ function renderMsTrajectoryRibbon() {
   } else if (nPra > 0) {
     caption = nPra + ' milestone' + (nPra === 1 ? '' : 's') + ' in progress. Tap a marker for details.';
   } else {
-    caption = nCom + ' coming up — Ziva\'s journey is just starting.';
+    caption = nCom + ' coming up — ' + childNameCapHtml() + '\'s journey is just starting.';
   }
 
   el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
@@ -4165,7 +4183,7 @@ function confirmRegressionCheck(idx) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
   overlay.innerHTML = `<div class="modal" style="max-width:360px;">
     <h3>Update: ${escHtml(m.text)}</h3>
-    <p style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:12px;">Currently ${stageMeta.icon} ${stageMeta.label}. Where is Ziva now?</p>
+    <p style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:12px;">Currently ${stageMeta.icon} ${stageMeta.label}. Where is ${childNameHtml()} now?</p>
     <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;">${options}</div>
     <div class="modal-btns" style="margin-top:12px;">
       <button class="btn btn-ghost" onclick="this.closest('.confirm-overlay').remove()">Cancel</button>
@@ -5500,7 +5518,7 @@ function renderDietIntelBanner() {
 
       if (best.length > 0) {
         html += '<div class="dib-card dib-synergy">';
-        html += '<div style="font-weight:600;margin-bottom:6px;">' + zi('bulb') + ' ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from Ziva\'s favorites</div>';
+        html += '<div style="font-weight:600;margin-bottom:6px;">' + zi('bulb') + ' ' + capitalize(MEAL_LABELS_FULL[nextMeal]) + ' ideas from ' + childNameHtml() + '\'s favorites</div>';
         best.forEach(function(t, idx) {
           var comboStr = t.foods.map(function(f){ return capitalize(f); }).join(', ');
           html += '<div class="dib-combo-row" data-action="fillDietMeal" data-arg="' + escAttr(nextMeal) + '" data-arg2="' + escHtml(comboStr) + '" style="cursor:pointer;display:flex;align-items:center;gap:var(--sp-8);padding:6px 0;' + (idx > 0 ? 'border-top:1px solid rgba(0,0,0,0.05);' : '') + '">';
@@ -6967,8 +6985,10 @@ function _outingFetchForecast() {
   // If we have cached data with uvIndex already, return it
   if (wx && wx.uvIndex !== undefined) return Promise.resolve(wx);
 
-  var lat = 22.8, lon = 86.18;
-  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code,uv_index_max,precipitation_probability_max&timezone=Asia/Kolkata&start_date=' + targetDate + '&end_date=' + targetDate)
+  var _c = _profCoords();
+  if (!_c) return Promise.resolve(wx || null);
+  var lat = _c.lat, lon = _c.lon;
+  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code,uv_index_max,precipitation_probability_max&timezone=' + _c.tz + '&start_date=' + targetDate + '&end_date=' + targetDate)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.daily && data.daily.time && data.daily.time.length > 0) {
@@ -7610,7 +7630,7 @@ function renderPoopLog() {
   // Full log
   const recent = poopData.slice(0, 30);
   if (recent.length === 0) {
-    el.innerHTML = `<div class="t-sub" style="text-align:center;padding:20px;">No entries yet. Log Ziva's first poop!</div>`;
+    el.innerHTML = `<div class="t-sub" style="text-align:center;padding:20px;">No entries yet. Log ${childNameHtml()}'s first poop!</div>`;
     return;
   }
 
@@ -7843,7 +7863,7 @@ function renderHomePoop() {
     el.innerHTML = `<div class="info-strip is-amber tappable" data-tab="poop">
       <span><svg class="zi"><use href="#zi-diaper"/></svg></span>
       <div><strong class="tc-amber">No poop logged yet</strong>
-      <div class="t-sub">Tap to start tracking Ziva's diapers</div></div>
+      <div class="t-sub">Tap to start tracking ${childNameHtml()}'s diapers</div></div>
     </div>`;
     return;
   }
@@ -8550,7 +8570,7 @@ function computeBaselines() {
       const ds = toDateStr(d);
       const trackStart = medChecks._trackingSince || todayStr;
       if (ds < trackStart) continue;
-      if (ds < (m.start || '2025-09-04')) continue;
+      if (ds < (m.start || toDateStr(DOB))) continue;
       total30++;
       if (medCheckIsDone(medDayVal(m, ds))) given30++;
     }
@@ -8688,8 +8708,8 @@ const D3_KNOWLEDGE = {
   ],
 };
 
-// A calcium + Vitamin D3 suspension given in divided doses (Caldikind-P NF 2.5 ml twice a
-// day replaced the D3 drops on 2026-09-24). Calcium lowers iron absorption, so iron drops and
+// A calcium + Vitamin D3 suspension given in divided doses (e.g. 2.5 ml twice a day, often in
+// place of D3 drops). Calcium lowers iron absorption, so iron drops and
 // her iron-rich meals are kept apart from it; the dose itself is always the doctor's.
 const CALCIUM_D3_KNOWLEDGE = {
   dos: [
@@ -8698,7 +8718,7 @@ const CALCIUM_D3_KNOWLEDGE = {
     'Space the doses through the day — for example after breakfast, and with her evening milk or a curd snack — at about the same times each day.',
     'Give it with or after a meal or a milk or curd snack — Vitamin D absorbs better with a little fat.',
     // Spacing: calcium lowers non-heme iron absorption at the same meal (Hallberg, AJCN 1991);
-    // ~2 h from iron products is standard label guidance. Ceres/Maren-audited 2026-09-24.
+    // ~2 h from iron products is standard label guidance. Ceres/Maren-audited.
     'If she is given iron drops, keep them about 2 hours apart from this dose.',
     'If she gets constipated, vomits, or goes off her feeds after starting it, tell her doctor.',
   ],
@@ -8743,7 +8763,7 @@ const SYNTHESIS_RULES = [
   {
     ids: ['sleep-score-drop', 'hard-stool-streak', 'food-reaction'],
     title: 'New food → digestive upset → poor sleep',
-    body: 'A new food was introduced, followed by hard stools and disrupted sleep. These are likely connected. Simplify Ziva\'s diet for a couple of days and monitor.',
+    body: 'A new food was introduced, followed by hard stools and disrupted sleep. These are likely connected. Simplify ' + childNameHtml() + '\'s diet for a couple of days and monitor.',
     tip: 'Go back to well-tolerated foods (dal-rice, ragi porridge) for 2-3 days. Keep up fluids. Sleep should recover as digestion settles.',
     icon: zi('link'), severity: 'watch',
   },
@@ -8757,7 +8777,7 @@ const SYNTHESIS_RULES = [
   {
     ids: ['food-reaction', 'hard-stool-streak'],
     title: 'New food + hard stools — likely dietary adjustment',
-    body: 'A recently introduced food coincides with hard stools. Ziva\'s gut may need time to adjust to the new food.',
+    body: 'A recently introduced food coincides with hard stools. ' + childNameCapHtml() + '\'s gut may need time to adjust to the new food.',
     tip: 'Pause the new food for a few days. If stools normalize, try reintroducing in smaller quantities. Mark the food as "Watch" in the diet tab.',
     icon: zi('link'), severity: 'watch',
   },
@@ -8864,7 +8884,7 @@ function computeAlerts() {
           id: 'no-feed-today', key,
           severity: 'watch', icon: zi('bowl'),
           title: 'No meals logged today',
-          body: 'It\'s past 11 AM and no meals have been logged for Ziva today.',
+          body: 'It\'s past 11 AM and no meals have been logged for ' + childNameHtml() + ' today.',
           tip: getEscalatedTip('no-feed-today'),
           action: { label: 'Log Feed', fn: 'openQuickModal("feed")' },
           tab: 'diet'        });
@@ -8877,7 +8897,7 @@ function computeAlerts() {
   if (sortedPoop.length > 0) {
     const lastPoopDate = sortedPoop[0].date;
     const daysSince = Math.floor((new Date(todayStr) - new Date(lastPoopDate)) / 86400000);
-    // Use baseline gap to set thresholds — if Ziva normally goes every 2 days, 4 is abnormal
+    // Use baseline gap to set thresholds — if the child normally goes every 2 days, 4 is abnormal
     // If normally every day, 3 is abnormal
     const baseGap = bl.poopAvgGapDays || 1;
     const infoThresh = Math.max(3, Math.floor(baseGap + 1.5));
@@ -9080,7 +9100,7 @@ function computeAlerts() {
     // V-K-66: schema-aware "yesterday missed" check — handles both string and object shapes.
     const ydDone = medCheckIsDone(ydStatus);
     const ydSkipped = medCheckSkipped(ydStatus);
-    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || '2025-09-04') && (!ydDone && (ydSkipped || !ydStatus || parseMedCheck(ydStatus).status === 'partial'));
+    const wasMissedYd = ydStr >= (medChecks._trackingSince || todayStr) && ydStr >= (m.start || toDateStr(DOB)) && (!ydDone && (ydSkipped || !ydStatus || parseMedCheck(ydStatus).status === 'partial'));
     // Count how long the prior streak was before it broke
     if (wasMissedYd && streak === 0) {
       let priorStreak = 0;
@@ -9161,7 +9181,7 @@ function computeAlerts() {
         id: 'iron-no-vitc', key,
         severity: 'info', icon: zi('target'),
         title: 'Iron meals missing Vitamin C pairing',
-        body: 'Ziva had iron-rich foods ' + bl.ironDays7d + ' times this week but never paired with Vitamin C, which can double iron absorption.',
+        body: '' + childNameCapHtml() + ' had iron-rich foods ' + bl.ironDays7d + ' times this week but never paired with Vitamin C, which can double iron absorption.',
         tip: getEscalatedTip('iron-no-vitc'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
         tab: 'diet'      });
@@ -9176,7 +9196,7 @@ function computeAlerts() {
         id: 'meal-monotony', key,
         severity: 'info', icon: zi('hourglass'),
         title: 'Same meals for ' + bl.sameMealStreak + ' days in a row',
-        body: 'Ziva has been eating the exact same meals for ' + bl.sameMealStreak + ' days. Variety ensures broader nutrient coverage and builds taste acceptance.',
+        body: '' + childNameCapHtml() + ' has been eating the exact same meals for ' + bl.sameMealStreak + ' days. Variety ensures broader nutrient coverage and builds taste acceptance.',
         tip: getEscalatedTip('meal-monotony'),
         action: { label: 'View Diet', fn: 'switchTab("diet")' },
         tab: 'diet'      });
@@ -9195,8 +9215,8 @@ function computeAlerts() {
         const firstMissing = missingMeals[0];
         const sev = loggedMeals.length === 0 ? 'watch' : 'info';
         const bodyMsg = loggedMeals.length === 0
-          ? 'No meals logged today. Log what Ziva ate or mark meals as skipped.'
-          : loggedMeals.length + '/3 meals logged. Log the rest or skip if Ziva didn\'t eat.';
+          ? 'No meals logged today. Log what ' + childNameHtml() + ' ate or mark meals as skipped.'
+          : loggedMeals.length + '/3 meals logged. Log the rest or skip if ' + childNameHtml() + ' didn\'t eat.';
         alerts.push({
           id: 'missing-meal', key,
           severity: sev, icon: zi('bowl'),
@@ -9274,7 +9294,7 @@ function computeAlerts() {
               id: 'dinner-bed-gap', key,
               severity: 'watch', icon: zi('clock'),
               title: 'Dinner→bed gap is only ' + gapMins + ' min',
-              body: 'Ziva had dinner at ' + formatTimeShort(dinnerTime) + ' and bedtime was ' + formatTimeShort(bedtime) + '. A gap under 60 minutes can cause discomfort, reflux, or restless sleep.',
+              body: '' + childNameCapHtml() + ' had dinner at ' + formatTimeShort(dinnerTime) + ' and bedtime was ' + formatTimeShort(bedtime) + '. A gap under 60 minutes can cause discomfort, reflux, or restless sleep.',
               tip: 'Aim for 60–90 minutes between the last meal and bedtime. Tomorrow, try shifting dinner 15–20 minutes earlier.',
               action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
               tab: 'sleep'            });
@@ -9326,7 +9346,7 @@ function computeAlerts() {
       id: 'first-sleepthrough', key,
       severity: 'positive', icon: zi('sparkle'),
       title: 'First full night\'s sleep!',
-      body: 'Ziva slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
+      body: '' + childNameCapHtml() + ' slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
       tip: 'This doesn\'t mean every night will be like this — but it shows she CAN do it. Keep the same bedtime routine that worked.',
       action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
       tab: 'sleep'    });
@@ -9352,7 +9372,7 @@ function computeAlerts() {
       id: 'consistent-digestion', key,
       severity: 'positive', icon: zi('check'),
       title: 'Digestion has been stable for ' + bl.poopConsistentStreak + '+ entries',
-      body: 'All recent poops have been normal or soft consistency. Ziva\'s tummy is happy!',
+      body: 'All recent poops have been normal or soft consistency. ' + childNameCapHtml() + '\'s tummy is happy!',
       tip: 'Stable digestion means her gut is adjusting well to her current diet. A great time to try a new food if you haven\'t recently.',
       action: null, tab: 'poop'    });
   }
@@ -9390,7 +9410,7 @@ function computeAlerts() {
       severity: 'positive', icon: zi('note'),
       title: bl.mealLoggingStreak + '-day meal logging streak!',
       body: 'All 3 meals logged for ' + bl.mealLoggingStreak + ' consecutive days. Consistent tracking gives the best insights.',
-      tip: 'Your data is building a clear picture of Ziva\'s eating patterns. The more consistent the logging, the better the insights.',
+      tip: 'Your data is building a clear picture of ' + childNameHtml() + '\'s eating patterns. The more consistent the logging, the better the insights.',
       action: null, tab: 'diet'    });
   }
 
@@ -9401,7 +9421,7 @@ function computeAlerts() {
       id: 'growth-on-track', key,
       severity: 'positive', icon: zi('chart'),
       title: 'Growth on track for ' + bl.growthConsistentWeeks + '+ weeks',
-      body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. Ziva is growing beautifully.',
+      body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. ' + childNameCapHtml() + ' is growing beautifully.',
       tip: 'Consistent, healthy weight gain is more important than hitting a specific number. Keep up the balanced nutrition.',
       action: null, tab: 'growth'    });
   }
@@ -9438,7 +9458,7 @@ function computeAlerts() {
       id: 'iron-rich-week', key,
       severity: 'positive', icon: zi('drop'),
       title: 'Iron-rich week — ' + bl.ironDays7d + '/7 days!',
-      body: 'Ziva had iron-rich foods on ' + bl.ironDays7d + ' of the last 7 days. This is excellent for preventing anaemia and supporting brain development.',
+      body: '' + childNameCapHtml() + ' had iron-rich foods on ' + bl.ironDays7d + ' of the last 7 days. This is excellent for preventing anaemia and supporting brain development.',
       tip: bl.ironVitCPairCount >= 2 ? 'And you paired iron with Vitamin C ' + bl.ironVitCPairCount + ' times — maximum absorption!' : 'Tip: pair iron meals with Vitamin C (lemon, amla, orange) to boost absorption even further.',
       action: null, tab: 'diet'    });
   }
@@ -10507,11 +10527,11 @@ function renderInsightsStats() { /* v2.4: DORMANT — insights cards replaced by
       <div class="hsp-label">Gain/wk</div>
     </div>
   `;
-  // Add Ziva Score and Milestone pills dynamically
+  // Add Sprout Score and Milestone pills dynamically
   const zsR = calcZivaScore();
   if (zsR.score !== null) {
     const zsColor = zsR.score >= 75 ? 'hsp-sage' : zsR.score >= 60 ? 'hsp-peach' : 'hsp-rose';
-    el.innerHTML += `<div class="home-stat-pill ${zsColor}"><div class="hsp-icon"><svg class="zi"><use href="#zi-sparkle"/></svg></div><div class="hsp-val">${zsR.score}</div><div class="hsp-label">Ziva Score</div></div>`;
+    el.innerHTML += `<div class="home-stat-pill ${zsColor}"><div class="hsp-icon"><svg class="zi"><use href="#zi-sparkle"/></svg></div><div class="hsp-val">${zsR.score}</div><div class="hsp-label">Sprout Score</div></div>`;
   }
   const msR = calcMilestoneScore();
   const msColor = msR.score >= 75 ? 'hsp-sage' : msR.score >= 45 ? 'hsp-peach' : 'hsp-rose';
@@ -10544,7 +10564,7 @@ function renderInsightsPulse() {
     const weekLabel = formatDate(toDateStr(weekStart)).split(',')[0] + ' – ' + formatDate(today()).split(',')[0];
 
     const rows = [];
-    if (zs.score !== null) rows.push({ icon:zi('sparkle'), label:'Ziva Score', val: (trend.avg7d || zs.score) + '/100', cls: zs.score >= 70 ? 'tc-good' : zs.score >= 40 ? 'tc-warn' : 'tc-bad' });
+    if (zs.score !== null) rows.push({ icon:zi('sparkle'), label:'Sprout Score', val: (trend.avg7d || zs.score) + '/100', cls: zs.score >= 70 ? 'tc-good' : zs.score >= 40 ? 'tc-warn' : 'tc-bad' });
     if (sleepT.score.current != null) rows.push({ icon:zi('moon'), label:'Sleep', val: sleepT.score.current + '/100', cls: sleepT.score.current >= 70 ? 'tc-good' : sleepT.score.current >= 40 ? 'tc-warn' : 'tc-bad' });
     rows.push({ icon:zi('bowl'), label:'Diet', val: dietS.score + ' · ' + vs.uniqueFoods + ' foods', cls: dietS.score >= 70 ? 'tc-good' : dietS.score >= 40 ? 'tc-warn' : 'tc-bad' });
     if (poopT.freq.current > 0) {
