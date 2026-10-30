@@ -64,6 +64,11 @@ const KEYS = {
   //   date:null is a tombstone (the parent removed a tooth), so a remote copy
   //   can't resurrect it. Merged per tooth, newest ts wins (_postReceiveTeeth).
   teeth:             'ziva_teeth',
+  // mealPlan: the meal planner's record (spec docs/specs/meal-planner-v1.md §3).
+  //   { v:1, days: { 'YYYY-MM-DD': { slots: { breakfast|lunch|dinner|snack: { items:[…], ts } },
+  //   travel:{ on, ts }, cleared:ts } } }. Per-field newest-ts merge (_mpMerge); own doc
+  //   /singles/plan. Never persisted as a default (V-CA-275-9), not in ALWAYS_POPULATED_KEYS.
+  mealPlan:          'ziva_meal_plan',
 };
 
 function load(key, def) {
@@ -571,6 +576,8 @@ let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, m
 let activityMeta, milestoneSuppress;
 // teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
 let teethLog;
+// mealPlan: the meal planner's record (see KEYS.mealPlan). Writes go through _mpSave.
+let mealPlan;
 
 // Per-key version tracking — only resets what actually changed
 // Bump individual key versions when their defaults change
@@ -832,6 +839,8 @@ function init() {
     else if (action === 'toggleRecipeRow' && typeof toggleRecipeRow === 'function') toggleRecipeRow(arg);
     else if (action === 'toggleRecipeProw' && typeof toggleRecipeProw === 'function') toggleRecipeProw(btn);
     else if (action === 'openRecipeInTab' && typeof openRecipeInTab === 'function') openRecipeInTab(arg);
+    // Meal planner (diet.js): every data-action="mp…" routes to its one dispatcher.
+    else if (/^mp[A-Z]/.test(action) && typeof mpDispatch === 'function') mpDispatch(action, arg, btn);
     // milestones-tab-v1 actions (data-action delegation per HR-3)
     else if (action === 'switchMsSub' && typeof switchMsSub === 'function') switchMsSub(btn);
     else if (action === 'teethTap' && typeof teethTap === 'function') teethTap(arg);
@@ -1458,6 +1467,9 @@ function init() {
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null || Array.isArray(milestoneSuppress)) milestoneSuppress = {};
   teethLog = load(KEYS.teeth, null) || {};
   if (typeof teethLog !== 'object' || teethLog === null || Array.isArray(teethLog)) teethLog = {};
+  // The in-memory default is never saved; the first real planner write persists it (V-CA-275-9).
+  try { mealPlan = _mpNormalize(load(KEYS.mealPlan, null), today()); }
+  catch (e) { console.warn('[meal-plan] load failed, starting empty:', e); mealPlan = { v: 1, days: {} }; }
 
   // Load tomorrow's planned meals
   _tomorrowPlanned = load(KEYS.tomorrowPlanned, null) || null;
@@ -4346,6 +4358,224 @@ function today() {
 function toDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
+// A bare 'YYYY-MM-DD' as a LOCAL date (noon, clear of DST edges), or null. new Date('YYYY-MM-DD')
+// is UTC midnight, which is the previous day west of Greenwich (V-CA-275-10). The round trip
+// rejects impossible dates ('2026-02-31').
+function _parseLocalDate(key) {
+  if (typeof key !== 'string') return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], 12);
+  return toDateStr(d) === key ? d : null;
+}
+
+// ─────────────────────────────────────────
+// MEAL PLAN RECORD (spec meal-planner-v1 §3, §10.4; Foundation)
+// ─────────────────────────────────────────
+// The planner's stored record and the only code that writes it. The UI (diet.js) calls
+// the _mp* write helpers; sync.js merges with _mpMerge. A plan is an intention, never a
+// record of what she ate: nothing here touches feedingData or foods.
+const MP_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
+const MP_WEEKS_BACK = 4;    // keep from the Monday 4 weeks back…
+const MP_WEEKS_AHEAD = 8;   // …to the Sunday of week +8 (§3.5, V-CA-275-8)
+const MP_NAME_MAX = 60;     // free-food names are user text: capped on write, escaped at render
+
+function _mpAddDays(key, n) {
+  const d = _parseLocalDate(key);
+  if (!d) return null;
+  d.setDate(d.getDate() + n);
+  return toDateStr(d);
+}
+// Monday of the week holding `key` (the week starts on Monday, local getDay()).
+function _mpWeekStart(key) {
+  const d = _parseLocalDate(key);
+  if (!d) return null;
+  return _mpAddDays(key, -((d.getDay() + 6) % 7));
+}
+// The retention and navigation window around today: [Monday of week −4, Sunday of week +8].
+function _mpWindow(todayKey) {
+  const mon = _mpWeekStart(todayKey);
+  return { lo: _mpAddDays(mon, -7 * MP_WEEKS_BACK), hi: _mpAddDays(mon, 7 * MP_WEEKS_AHEAD + 6) };
+}
+function _mpInWindow(key, todayKey) {
+  const w = _mpWindow(todayKey || today());
+  return !!_parseLocalDate(key) && key >= w.lo && key <= w.hi;
+}
+// Her age in months on a planned date (a Date, never a string, into ageAt).
+function _mpAgeMonthsOn(key) {
+  const d = _parseLocalDate(key);
+  return d ? ageAt(d).months : ageAt().months;
+}
+
+const _mpIsTs = v => typeof v === 'number' && isFinite(v);
+const _mpIsObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+// Validate and prune. Drops only what is structurally broken (a non-object, a date key that
+// fails the round trip, a slot or travel flag without a finite ts, a non-finite cleared) and
+// days outside the window. Unknown kinds and fields are kept, so a v1 phone never deletes a
+// v2 record (V-CA-275-7). Returns a fresh object; never throws on bad input.
+function _mpNormalize(plan, todayKey) {
+  const out = { v: 1, days: {} };
+  if (!_mpIsObj(plan)) return out;
+  if (_mpIsTs(plan.v) && plan.v > 1) out.v = plan.v;
+  const days = _mpIsObj(plan.days) ? plan.days : {};
+  const w = _mpWindow(todayKey || today());
+  Object.keys(days).forEach(key => {
+    const day = days[key];
+    if (!_parseLocalDate(key) || key < w.lo || key > w.hi || !_mpIsObj(day)) return;
+    const d = {};
+    Object.keys(day).forEach(f => {
+      if (f === 'slots') {
+        if (!_mpIsObj(day.slots)) return;
+        const slots = {};
+        Object.keys(day.slots).forEach(name => {
+          const s = day.slots[name];
+          if (_mpIsObj(s) && _mpIsTs(s.ts) && Array.isArray(s.items)) slots[name] = Object.assign({}, s, { items: s.items.filter(_mpIsObj) });
+        });
+        d.slots = slots;
+      } else if (f === 'travel') {
+        if (_mpIsObj(day.travel) && _mpIsTs(day.travel.ts)) d.travel = Object.assign({}, day.travel, { on: !!day.travel.on });
+      } else if (f === 'cleared') {
+        if (_mpIsTs(day.cleared)) d.cleared = day.cleared;
+      } else {
+        d[f] = day[f];
+      }
+    });
+    out.days[key] = d;
+  });
+  return out;
+}
+
+// A stable string for deterministic tie-breaks (key order independent).
+function _mpStable(v) {
+  if (Array.isArray(v)) return '[' + v.map(_mpStable).join(',') + ']';
+  if (_mpIsObj(v)) return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + _mpStable(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+// The newer of two { ts } fields; equal ts breaks on the stable string, so either order gives
+// the same winner.
+function _mpNewer(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  if (a.ts !== b.ts) return a.ts > b.ts ? a : b;
+  return _mpStable(a) >= _mpStable(b) ? a : b;
+}
+// Per-field newest-ts merge of two plans (V-CA-275-4): per day, each slot and the travel flag
+// keep the newer side; cleared is the larger; v is the larger; other day fields keep the larger
+// stable value. Order-independent and idempotent; slots older than cleared are kept and masked
+// at render (_mpLiveSlot), never deleted here. The result is pruned to the window.
+function _mpMerge(a, b, todayKey) {
+  const A = _mpNormalize(a, todayKey), B = _mpNormalize(b, todayKey);
+  const out = { v: Math.max(A.v, B.v), days: {} };
+  const keys = new Set(Object.keys(A.days).concat(Object.keys(B.days)));
+  keys.forEach(key => {
+    const x = A.days[key] || {}, y = B.days[key] || {};
+    const d = {};
+    const fields = new Set(Object.keys(x).concat(Object.keys(y)));
+    fields.forEach(f => {
+      if (f === 'slots') {
+        const xs = x.slots || {}, ys = y.slots || {}, slots = {};
+        new Set(Object.keys(xs).concat(Object.keys(ys))).forEach(n => { slots[n] = _mpNewer(xs[n], ys[n]); });
+        d.slots = slots;
+      } else if (f === 'travel') {
+        d.travel = _mpNewer(x.travel, y.travel);
+      } else if (f === 'cleared') {
+        d.cleared = Math.max(_mpIsTs(x.cleared) ? x.cleared : 0, _mpIsTs(y.cleared) ? y.cleared : 0);
+      } else if (!(f in y)) {
+        d[f] = x[f];
+      } else if (!(f in x)) {
+        d[f] = y[f];
+      } else {
+        d[f] = _mpStable(x[f]) >= _mpStable(y[f]) ? x[f] : y[f];
+      }
+    });
+    out.days[key] = d;
+  });
+  return _mpNormalize(out, todayKey);
+}
+
+// A slot as the planner shows it: null when absent, emptied, or older than a Clear day.
+function _mpLiveSlot(day, name) {
+  if (!_mpIsObj(day) || !_mpIsObj(day.slots)) return null;
+  const s = day.slots[name];
+  if (!s || !_mpIsTs(s.ts) || (_mpIsTs(day.cleared) && s.ts <= day.cleared) || !s.items.length) return null;
+  return s;
+}
+function _mpTravelOn(day) {
+  return _mpIsObj(day) && _mpIsObj(day.travel) && !!day.travel.on && !(_mpIsTs(day.cleared) && day.travel.ts <= day.cleared);
+}
+
+// A write's timestamp: never behind the field's own last ts or the day's Clear, so a phone with
+// a fast clock can't block the other parent, and an Undo beats its own tombstone (V-CA-275-5).
+function _mpStamp(plan, key, field) {
+  const day = (plan && plan.days && plan.days[key]) || {};
+  let floor = _mpIsTs(day.cleared) ? day.cleared + 1 : 0;
+  const cur = field === 'travel' ? day.travel : (day.slots && day.slots[field]);
+  if (cur && _mpIsTs(cur.ts)) floor = Math.max(floor, cur.ts + 1);
+  return Math.max(Date.now(), floor);
+}
+
+// The one load-modify-save path. The mutator edits a fresh copy of the stored plan and may
+// return false to write nothing. save() marks the key dirty for sync; the planner never calls
+// Firestore. Returns the saved plan, or null when nothing was written.
+function _mpSave(mutator) {
+  const t = today();
+  const plan = _mpNormalize(load(KEYS.mealPlan, null), t);
+  if (mutator(plan) === false) return null;
+  mealPlan = _mpNormalize(plan, t);
+  save(KEYS.mealPlan, mealPlan);
+  return mealPlan;
+}
+function _mpDay(plan, key) {
+  if (!plan.days[key]) plan.days[key] = {};
+  if (!_mpIsObj(plan.days[key].slots)) plan.days[key].slots = {};
+  return plan.days[key];
+}
+// An entry as stored: a recipe by id, or a free food by name (capped). Unknown kinds and any
+// extra fields came from the record, not the user, and pass through untouched, so a v1 phone
+// editing a slot never deletes what a v2 phone wrote there (V-CA-275-7, V-CA-279-4).
+function _mpCleanItem(it) {
+  if (!_mpIsObj(it) || typeof it.kind !== 'string') return null;
+  if (it.kind === 'recipe') return (typeof it.id === 'string' && it.id) ? Object.assign({}, it) : null;
+  if (it.kind === 'food') {
+    if (typeof it.name !== 'string' || !it.name.trim()) return null;
+    return Object.assign({}, it, { name: it.name.trim().slice(0, MP_NAME_MAX) });
+  }
+  return Object.assign({}, it);
+}
+// Set a slot's entries (an empty list writes a tombstone). Refused outside the window.
+function _mpSetSlot(key, slot, items) {
+  if (MP_SLOTS.indexOf(slot) < 0 || !_mpInWindow(key)) return null;
+  const clean = (items || []).map(_mpCleanItem).filter(Boolean).slice(0, 3);
+  return _mpSave(plan => { const ts = _mpStamp(plan, key, slot); _mpDay(plan, key).slots[slot] = { items: clean, ts }; });
+}
+function _mpSetTravel(key, on) {
+  if (!_mpInWindow(key)) return null;
+  return _mpSave(plan => { const ts = _mpStamp(plan, key, 'travel'); _mpDay(plan, key).travel = { on: !!on, ts }; });
+}
+// Clear day: a day-level tombstone; slots and travel older than it are masked on both phones.
+function _mpClearDay(key) {
+  if (!_mpInWindow(key)) return null;
+  return _mpSave(plan => {
+    const day = _mpDay(plan, key);
+    let ts = Date.now();
+    MP_SLOTS.forEach(n => { if (day.slots[n] && _mpIsTs(day.slots[n].ts)) ts = Math.max(ts, day.slots[n].ts + 1); });
+    if (day.travel && _mpIsTs(day.travel.ts)) ts = Math.max(ts, day.travel.ts + 1);
+    day.cleared = Math.max(ts, _mpIsTs(day.cleared) ? day.cleared + 1 : 0);
+  });
+}
+// Copy a day's slots onto another: every target slot is stamped, with empty tombstones for the
+// slots the source lacks; the target keeps its own travel flag (§1.7, V-CA-275-5).
+function _mpCopyDay(fromKey, toKey) {
+  if (!_mpInWindow(toKey) || fromKey === toKey) return null;
+  return _mpSave(plan => {
+    const src = plan.days[fromKey] || {};
+    const dst = _mpDay(plan, toKey);
+    MP_SLOTS.forEach(n => {
+      const live = _mpLiveSlot(src, n);
+      dst.slots[n] = { items: live ? live.items.map(_mpCleanItem).filter(Boolean) : [], ts: _mpStamp(plan, toKey, n) };
+    });
+  });
+}
 function formatDate(s) {
   const d = new Date(s);
   return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
@@ -4467,7 +4697,7 @@ window.addEventListener('popstate', e => {
   }
 });
 
-function confirmAction(msg, callback, btnText) {
+function confirmAction(msg, callback, btnText, opts) {
   // V-K-8 (PR-B) — defensive parsing: the prior `startsWith('delete')` heuristic
   // missed forms like "Are you sure you want to delete this entry?" where the
   // destructive token isn't the leading word. Word-boundary match catches the
@@ -4479,11 +4709,11 @@ function confirmAction(msg, callback, btnText) {
   // Word-boundary preserves the "cleared" mid-word safety (the two `cleared`
   // callers at core.js:690 + intelligence.js:8754 carry explicit btnText anyway).
   const label = btnText || (/\b(delete|remove|clear)\b/i.test(msg) ? 'Delete' : 'Confirm');
-  const btnCls = label === 'Delete' ? 'btn btn-rose' : label === 'Reset' ? 'btn btn-rose' : 'btn btn-sky';
+  const btnCls = (label === 'Delete' || label === 'Reset' || (opts && opts.danger)) ? 'btn btn-rose' : 'btn btn-sky';
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
   overlay.innerHTML = `
-    <div class="confirm-box">
+    <div class="confirm-box${opts && opts.cls ? ' ' + opts.cls : ''}">
       <p>${msg}</p>
       <div class="confirm-btns">
         <button class="btn btn-ghost" id="confirmNo">Cancel</button>
@@ -4491,9 +4721,11 @@ function confirmAction(msg, callback, btnText) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  overlay.querySelector('#confirmNo').onclick = () => overlay.remove();
+  // opts.cls adds a class to the box; opts.onCancel runs on Cancel or a backdrop tap.
+  const cancel = () => { overlay.remove(); if (opts && typeof opts.onCancel === 'function') opts.onCancel(); };
+  overlay.querySelector('#confirmNo').onclick = cancel;
   overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); callback(); };
-  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  overlay.onclick = e => { if (e.target === overlay) cancel(); };
 }
 
 // Shared name-normalised table lookup: exact → de-pluralised → whole-word match
@@ -4587,6 +4819,12 @@ function _lookupAllByFoodName(table, name) {
 // caught downstream — the suppression is the only floor. (The allergen-note surface intentionally
 // still fires its calm caution for "seer fish"; the suppression targets only the GREEN affirm.)
 const _FISH_HIGH_MERCURY = ['seer', 'surmai', 'shark', 'sura', 'swordfish', 'marlin', 'king mackerel', 'bigeye'];
+// The cited high-mercury line from the fish record (FOOD_EFFECTS.fish.safeForm.never), so the
+// planner's flag lead quotes the record rather than re-voicing it (canon-cc-013, V-CA-275-12).
+function _mpHighMercuryLine() {
+  const rec = (typeof FOOD_EFFECTS !== 'undefined' && FOOD_EFFECTS.fish && FOOD_EFFECTS.fish.safeForm) ? FOOD_EFFECTS.fish.safeForm.never : null;
+  return Array.isArray(rec) ? (rec.find(l => /^high-mercury/i.test(l)) || '') : '';
+}
 function _isHighMercuryFishHost(name) {
   const n = String(name || '').toLowerCase();
   return _FISH_HIGH_MERCURY.some(t =>
@@ -5493,6 +5731,7 @@ function resetAllData() {
     Object.keys(KEY_VERSIONS).forEach(k => localStorage.removeItem('ziva_kv_' + k));
     localStorage.removeItem('ziva_avatar_full');
     localStorage.removeItem('ziva_active_tab');
+    localStorage.removeItem('ziva_mp_seen');      // meal planner first-use legend (device-local)
     localStorage.removeItem('ziva_height_unit');
     localStorage.removeItem('ziva_swipe_tabs');
     localStorage.removeItem('ziva_theme');

@@ -931,7 +931,8 @@ function _recipeProw(variant, icon, title, teaser, bodyHtml, open) {
 // ingredient row + an always-visible safety summary lead, then progressive-
 // disclosure rows (How to make it · Dos & don'ts · Safety ingredient-by-ingredient
 // · Guidance) — teasers tell what's inside; content invited, not dumped.
-function _recipeDetailHtml(r, ageMonths) {
+function _recipeDetailHtml(r, ageMonths, opts) {
+  opts = opts || {};
   let h = '';
   // (a) Ingredients — the at-a-glance, fingerprint-coloured pills (always visible).
   h += '<div class="recipe-chips">';
@@ -946,8 +947,13 @@ function _recipeDetailHtml(r, ageMonths) {
   }
   h += '</div>';
   // (b) Safety summary — the 6-second lead, ALWAYS visible (§9.7), never collapsed.
-  const ss = _recipeSafetySummary(r, ageMonths);
+  const ss = (opts.lead && opts.lead[0] === 'flag') ? { level: 'flag', icon: 'warn', text: opts.lead[1] } : _recipeSafetySummary(r, ageMonths);
   h += `<div class="rcp-safe rcp-safe--${ss.level}">${zi(ss.icon)} <span>${escHtml(ss.text)}</span></div>`;
+  // Add to plan (meal planner §1.3): the recipe's one primary action.
+  // Shown only when some day in the plan window is old enough for it, and never as the filled
+  // primary under a flag (§5, V-V-279-5).
+  if (!opts.noPlan && typeof _mpWindow === 'function' && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(_mpWindow(today()).hi))
+    h += `<div class="rcp-plan"><button class="btn ${ss.level === 'flag' ? 'btn-ghost' : 'btn-sage'} btn-compact" data-action="mpAddRecipe" data-arg="${escAttr(r.id)}">${zi('calendar')} Add to plan</button></div>`;
   // (b2) Responsive-feeding serving GUIDANCE, age-adaptive (Maren CONTENT). The
   // amount to OFFER — a guide, never a target; appetite leads. An age-gated
   // recipe (effMin > Ziva's age) frames the portion at its own start age.
@@ -1044,16 +1050,23 @@ function _recipeRowHtml(r, uidPrefix, ageMonths, opts) {
   const prepMeta = r.prepMinutes ? `<span>${zi('clock')} ${r.prepMinutes} min</span>` : '';
   const relRaw = (opts.relevance != null) ? opts.relevance : _recipeRelevanceTag(r);
   const relMeta = relRaw ? `<span class="recipe-row-rel">${escHtml(relRaw)}</span>` : '';
-  return `<div class="recipe-row${genCls}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="0" aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}">
+  // The planner's picker reuses the row (meal-planner-v1 §10.6): opts.pickAction makes a row tap
+  // pick the recipe (a plus, not a chevron); opts.locked makes it inert; opts.noDetail drops the
+  // expand-in-place body.
+  const act = opts.locked ? 'aria-disabled="true"'
+    : opts.pickAction ? `data-action="${opts.pickAction}" data-arg="${escAttr(opts.pickArg || r.id)}"`
+    : `aria-expanded="false" data-action="toggleRecipeRow" data-arg="${escAttr(uid)}"`;
+  const chev = opts.locked ? '' : `<span class="recipe-row-chev">${zi(opts.pickAction ? 'plus' : 'chevron-down')}</span>`;
+  return `<div class="recipe-row${genCls}" id="rrow-${escAttr(uid)}" style="${fpStyle}--rc-rail:${rail}" role="button" tabindex="${opts.locked ? '-1' : '0'}" ${act}>
     <div class="recipe-row-top">
       <span class="recipe-row-icon">${glyph}</span>
       <span class="recipe-row-main">
         <span class="recipe-row-title">${escHtml(r.title)}</span>
         <span class="recipe-row-meta">${prepMeta}${ageMeta}${slotMeta}${relMeta}${ageBadge}</span>
       </span>
-      <span class="recipe-row-chev">${zi('chevron-down')}</span>
+      ${chev}
     </div>
-    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+    ${opts.noDetail ? '' : `<div class="recipe-detail" id="rdet-${escAttr(uid)}" hidden>${_recipeDetailHtml(r, ageMonths)}</div>`}
   </div>`;
 }
 
@@ -1097,7 +1110,7 @@ function _recipeHeroHtml(r, whyText, ageMonths) {
       <span class="recipe-hero-meta">${meta.join('')}</span>
       <span class="recipe-hero-cta">See recipe ${zi('arrow-right')}</span>
     </div>
-    <div class="recipe-detail" id="rdet-${escAttr(uid)}" style="display:none;">${_recipeDetailHtml(r, ageMonths)}</div>
+    <div class="recipe-detail" id="rdet-${escAttr(uid)}" hidden>${_recipeDetailHtml(r, ageMonths)}</div>
   </div>`;
 }
 
@@ -1160,6 +1173,8 @@ function renderDietRecipes() {
 
   // Panel header (LOCKED 05-meal-rows): "Recipes" + the sourced-from-logs subtitle.
   html += `<div class="col-full recipes-header"><h2 class="recipes-h1">Recipes</h2><p class="recipes-subtitle">Sourced for Ziva's stage · cooked from what you log.</p></div>`;
+  // The meal planner's Plan section (meal-planner-v1 §4.1), filled by renderMealPlanSection.
+  html += `<div class="col-full" id="dietPlanRoot"></div>`;
 
   // ── (a) Suggested for Ziva — featured generative hero + "More for Ziva" rows ──
   const suggested = _recipeSuggestForZiva(surfaced, ageMonths);
@@ -1182,7 +1197,9 @@ function renderDietRecipes() {
   const travel = surfaced.filter(r => r.travel && RECIPE_TRAVEL_META[r.travel.how]);
   if (travel.length) {
     html += `<div class="col-full"><div class="recipes-sec-label">For travel</div>`;
-    html += `<p class="recipes-sub-note">Food that packs well for a day out or a journey. Cooked food can sit out for 2 hours at most, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. For a longer trip, pack it hot in a flask or cold with an ice pack straight away, not after it has been sitting out. Each recipe says how to pack it. <span class="rcp-serving-src">WHO · USDA FSIS</span></p>`;
+    // On a planned travel day the planner already states how food keeps, so this note folds to a
+    // teaser (one 2 h statement per tab, V-V-275-9).
+    html += `<p class="recipes-sub-note recipes-sub-note--travel"><span class="rsn-full">Food that packs well for a day out or a journey. Cooked food can sit out for 2 hours at most, 1 hour on a hot day (above 32 °C), counted from when it finished cooking. For a longer trip, pack it hot in a flask or cold with an ice pack straight away, not after it has been sitting out. Each recipe says how to pack it.</span><span class="rsn-teaser">How long packed food keeps is in each recipe.</span> <span class="rcp-serving-src">WHO · USDA FSIS</span></p>`;
     for (const how of RECIPE_TRAVEL_ORDER) {
       const inHow = travel.filter(r => r.travel.how === how);
       if (!inHow.length) continue;
@@ -1210,6 +1227,7 @@ function renderDietRecipes() {
   html += '</div>';
 
   root.innerHTML = html;
+  renderMealPlanSection();
 }
 
 // Toggle a recipe row's expand-in-place detail (data-action target).
@@ -1217,8 +1235,8 @@ function toggleRecipeRow(uid) {
   const det = document.getElementById('rdet-' + uid);
   const row = document.getElementById('rrow-' + uid);
   if (!det || !row) return;
-  const open = det.style.display !== 'none';
-  det.style.display = open ? 'none' : 'block';
+  const open = !det.hidden;
+  det.hidden = open;
   row.setAttribute('aria-expanded', open ? 'false' : 'true');
 }
 
@@ -1237,7 +1255,7 @@ function expandRecipeRow(recipeId) {
   const det = document.getElementById('rdet-' + uid);
   const row = document.getElementById('rrow-' + uid);
   if (!det || !row) return false;
-  det.style.display = 'block';
+  det.hidden = false;
   row.setAttribute('aria-expanded', 'true');
   if (typeof row.scrollIntoView === 'function') row.scrollIntoView({ behavior: 'smooth', block: 'center' });
   return true;
@@ -5881,6 +5899,7 @@ function _fcRender(inst) {
   inst.container.setAttribute('data-fc-slot', inst.slot);
   if (inst.variant === 'sheet') {
     inst.container.innerHTML =
+      _fcRenderPlannedRail(inst) +
       _fcRenderRepeatRail(inst) +
       _fcRenderCombosRail(inst) +
       _fcRenderItemsList(inst) +
@@ -5896,7 +5915,8 @@ function _fcRender(inst) {
     html += '<div class="fc-skipped-note">Marked as skipped</div>';
   } else {
     var hasItems = inst.items.length > 0;
-    html += _fcRenderPrefill(inst);
+    var planned = _fcRenderPlannedRail(inst);
+    html += planned || _fcRenderPrefill(inst);   // the plan outranks the guess
     if (!hasItems && inst.expanded) {
       html += _fcRenderRepeatRail(inst);
       html += _fcRenderCombosRail(inst);
@@ -5963,6 +5983,56 @@ function _fcRenderPrefill(inst) {
            '<button class="fc-prefill-edit" data-action="fcEditPrefill" type="button">Edit first</button>' +
          '</div>' +
          '</div>';
+}
+
+// L0 — Planned rail (meal planner). When the plan holds this meal for this day, one tap fills the
+// items with it (a recipe's ingredients, plus free foods). In the Feed sheet the parent then saves;
+// a Diet log card saves on change, as its other rails do, with the usual Undo. The slot's safety
+// lead rides on the chip, and a food it flags (a reaction she had, high-mercury fish, too young on
+// that date) is never filled by the tap: the parent adds it by hand if she really had it (V-C-279-12).
+// Hidden once items are present. The action routes through the planner's mpDispatch.
+function _mpPlanFoodFlagged(name, dateStr) {
+  const lower = String(name).toLowerCase().trim();
+  const rule = _fdAgeRule(lower);
+  return !!(_mpReactionTo(name) || _isHighMercuryFishHost(lower) || (rule && rule.minMonth > _mpAgeMonthsOn(dateStr)));
+}
+function _fcPlannedItems(dateStr, slot) {
+  if (typeof _mpLiveItems !== 'function' || !_mpInWindow(dateStr) || MP_SLOTS.indexOf(slot) < 0) return null;
+  const items = _mpLiveItems(dateStr, slot);
+  if (!items.length) return null;
+  const foods = [], labels = [], left = [];
+  const add = (name, g) => {
+    if (_mpPlanFoodFlagged(name, dateStr)) { if (!left.some(x => _sameFood(x, name))) left.push(name); return; }
+    if (!foods.some(f => _sameFood(f.name, name))) foods.push({ name, g });
+  };
+  items.forEach(it => {
+    if (it.kind === 'recipe') {
+      const r = _mpRecipe(it.id);
+      if (!r) return;
+      labels.push(r.title);
+      (r.ingredients || []).forEach(i => { if (i && i.name) add(String(i.name), i.g); });
+    } else if (it.kind === 'food' && typeof it.name === 'string') { labels.push(_mpCap(it.name)); add(it.name); }
+  });
+  if (!labels.length) return null;
+  return { foods, labels, left, lead: _mpSlotLead(items, dateStr) };
+}
+function _fcRenderPlannedRail(inst) {
+  if (inst.items.length > 0 || inst.skipped) return '';
+  const dateStr = (inst.variant === 'sheet') ? (_qlBackfillDate || inst.dateOf()) : inst.dateOf();
+  const p = _fcPlannedItems(dateStr, inst.slot);
+  if (!p) return '';
+  const flagged = p.lead && p.lead[0] === 'flag';
+  const sub = p.foods.length ? 'Tap to add: ' + p.foods.map(f => f.name).join(', ') : 'Nothing to add with one tap';
+  const leftLine = p.left.length ? '<div class="fc-repeat-sub">Not added with the tap: ' + escHtml(p.left.join(', ')) + '. Add it yourself only if she had it.</div>' : '';
+  const chip = p.foods.length
+    ? '<div class="fc-repeat-chip' + (flagged ? '' : ' primary') + ' fc-planned-chip" role="button" tabindex="0" data-action="mpApplyPlan" data-arg="' + escAttr(dateStr + '|' + inst.slot) + '">'
+    : '<div class="fc-repeat-chip fc-planned-chip" aria-disabled="true">';
+  return '<div class="fc-rail-wrap"><label class="micro-label">Planned</label>' +
+         (p.lead ? _mpSafeRow(p.lead) : '') +
+         '<div class="fc-rail">' + chip +
+           '<div class="fc-repeat-head">' + zi('calendar') + ' ' + escHtml(p.labels.join(' + ')) + '</div>' +
+           '<div class="fc-repeat-sub">' + escHtml(sub) + '</div>' + leftLine +
+         '</div></div></div>';
 }
 
 // L1 — Repeat rail. Hidden once items present (A6). Lazy: only invoked when
@@ -7961,3 +8031,790 @@ function getMdiTextColor(score) {
 }
 
 // ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// MEAL PLANNER — the Plan section atop Diet → Recipes (spec docs/specs/meal-planner-v1.md
+// §4, P1b; the signed-off mock-ups are docs/SURFACE_CATALOG.html "Meal planner"). Reads and
+// writes only through the core.js record helpers (_mpSave and friends); never touches
+// feedingData or foods. Logging from the plan and new-food scheduling are P2.
+// ═══════════════════════════════════════════════════════
+let _mpSel = null;              // selected day key (defaults to today)
+let _mpWeek = null;             // Monday of the shown week
+let _mpOpenSlot = null;         // the slot opened on the selected day card
+let _mpHintsHidden = new Set(); // day keys whose iron hint was dismissed this session
+let _mpSheetState = null;       // { kind, ... } while a planner sheet is open
+let _mpOpenEntry = null;        // 'key|slot|i' of the planned recipe whose card is open
+let _mpRenderPending = false;   // a sync render arrived while a sheet was open
+
+const _MP_WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const _MP_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// How a travel recipe travels: [icon, label, source, glance check, the keeps sentence to act on,
+// its corpus anchor]. The glance check and the sentence are asserted against the corpus by the
+// Surface Catalog build (meal-planner-v1 §10.6, C-278-9/-10).
+const _MP_MODE = {
+  thermos: ['thermos', 'In a flask', 'WHO', 'still too hot to eat', 'If it is only warm, throw it away'],
+  cool:    ['timer', 'Ice-pack bag', 'WHO · USDA FSIS', 'still fridge-cold', 'If the ice pack has melted, don\'t give it'],
+  spot:    ['clock', 'Made on the spot', '', '', ''],
+};
+// Spot recipes that need a flask of boiling water (until the corpus carries travel.waterFlask, Ceres).
+const _MP_WATER_FLASK = new Set(['travel-flask-oats-banana']);
+
+function _mpDate(key) { return _parseLocalDate(key); }
+function _mpDayTitle(key) { const d = _mpDate(key); return d ? `${_MP_WD[d.getDay()]}, ${d.getDate()} ${_MP_MON[d.getMonth()]}` : key; }
+function _mpShortDay(key) { const d = _mpDate(key); return d ? `${_MP_WD[d.getDay()].slice(0, 3)} ${d.getDate()} ${_MP_MON[d.getMonth()]}` : key; }
+function _mpPlan() { return mealPlan || { v: 1, days: {} }; }
+function _mpLiveItems(key, slot) { const s = _mpLiveSlot(_mpPlan().days[key], slot); return s ? s.items : []; }
+function _mpRecipe(id) { return (typeof RECIPES_BY_ID !== 'undefined' && RECIPES_BY_ID[id]) || null; }
+const _mpCap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Logged (read-only from the diary): the slot's logged time, or null.
+function _mpLoggedAt(key, slot) {
+  const day = (typeof feedingData !== 'undefined' && feedingData) ? feedingData[key] : null;
+  if (!day || typeof window._fdReadDayMeal !== 'function') return null;
+  const rec = window._fdReadDayMeal(day, slot);
+  return (rec && !rec.skipped && rec.items && rec.items.length) ? (rec.time || '') : null;
+}
+
+function _mpSkipped(key, slot) {
+  const day = (typeof feedingData !== 'undefined' && feedingData) ? feedingData[key] : null;
+  if (!day || typeof window._fdReadDayMeal !== 'function') return false;
+  const rec = window._fdReadDayMeal(day, slot);
+  return !!(rec && rec.skipped);
+}
+// The next meal on today's card, by the §10.1 rule table (V-V-275-2): breakfast → lunch →
+// dinner, snack only if planned, logged slots skipped; before the breakfast window → breakfast;
+// after the dinner window (or everything logged) → no lead.
+function _mpNextSlot(key, now) {
+  if (key !== today()) return null;
+  const w = (typeof _qlComputeMealWindow === 'function') ? _qlComputeMealWindow() : null;
+  const win = w || { breakfast: { start: 420, end: 690 }, lunch: { start: 690, end: 1020 }, dinner: { start: 1020, end: 1380 } };
+  const t = now || new Date();
+  const mins = t.getHours() * 60 + t.getMinutes();
+  if (mins >= win.dinner.end) return null;
+  const order = ['breakfast', 'lunch'];
+  if (_mpLiveItems(key, 'snack').length) order.push('snack');
+  order.push('dinner');
+  for (const slot of order) {
+    if (_mpLoggedAt(key, slot) !== null || _mpSkipped(key, slot)) continue;   // a skip is a recorded decision too
+    if (slot === 'breakfast' && mins >= win.breakfast.end) continue;
+    if (slot === 'lunch' && mins >= win.lunch.end) continue;
+    if (slot === 'snack' && mins >= win.dinner.start) continue;
+    return slot;
+  }
+  return null;
+}
+
+// ── Safety on a planned date (V-C-275-5, -6, -9, -10; V-CA-275-12) ──
+function _mpItemNames(it) {
+  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? (r.ingredients || []).map(i => i.name) : []; }
+  return it.kind === 'food' ? [it.name] : [];
+}
+// Any reaction other than ok counts: the app writes ok / watch, imports may carry bad / mild (V-M-279-4).
+function _mpReactionTo(name) {
+  return (typeof foods !== 'undefined' && Array.isArray(foods)) ? foods.find(f => f && f.reaction && f.reaction !== 'ok' && _sameFood(f.name, name)) : null;
+}
+// A common allergen in the record's own sense: FOOD_EFFECTS class allergen-introduce-early (egg,
+// peanut, tree nut, wheat, soy, sesame, fish), plus milk and shellfish. A browse note alone (oats'
+// gluten note, kiwi, strawberry) is not an allergen claim (V-C-279-2, canon-cc-013).
+const _MP_ALLERGEN_EXTRA = /\b(milk|paneer|curd|dahi|yogurt|yoghurt|cheese|shellfish|prawns?|shrimps?|crabs?|lobsters?)\b/i;
+function _mpEffFor(name, age) { return foodEffectForAge(getFoodEffect(String(name).toLowerCase().trim()), age); }
+function _mpIsCommonAllergen(name, age) {
+  const eff = _mpEffFor(name, age);
+  return !!(eff && _effHasClass(eff, 'allergen-introduce-early')) || _MP_ALLERGEN_EXTRA.test(name);
+}
+// Has she had this food (or the same food under another name) before the planned date? Her foods
+// list, matched by name or by the FOOD_EFFECTS record it resolves to (wheat flour = atta = roti's
+// wheat), and anything in the diary on or before that day (V-C-279-1, V-C-275-1). Built once per render.
+let _mpSeenCache = null;
+function _mpSeenIndex() {
+  if (_mpSeenCache) return _mpSeenCache;
+  const names = new Set(), recs = new Set(), firstDay = new Map();
+  const note = (n, d) => {
+    const k = _foodIdentityKey(n);
+    if (!k) return;
+    names.add(k);
+    const eff = getFoodEffect(String(n).toLowerCase().trim());
+    if (eff) { recs.add(eff); if (d && (!firstDay.has(eff) || d < firstDay.get(eff))) firstDay.set(eff, d); }
+    if (d && (!firstDay.has(k) || d < firstDay.get(k))) firstDay.set(k, d);
+  };
+  (typeof foods !== 'undefined' && Array.isArray(foods) ? foods : []).forEach(f => f && f.name && note(f.name, ''));
+  const fd = (typeof feedingData !== 'undefined' && feedingData) ? feedingData : {};
+  Object.keys(fd).forEach(d => {
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
+      const rec = (typeof window._fdReadDayMeal === 'function') ? window._fdReadDayMeal(fd[d], m) : null;
+      if (rec && !rec.skipped && rec.items) rec.items.forEach(it => it && it.name && note(it.name, d));
+    });
+  });
+  _mpSeenCache = { names, recs, firstDay, foodsNames: new Set((typeof foods !== 'undefined' && Array.isArray(foods) ? foods : []).map(f => f && _foodIdentityKey(f.name))) };
+  return _mpSeenCache;
+}
+function _mpHadBefore(name, key) {
+  const idx = _mpSeenIndex();
+  const k = _foodIdentityKey(name);
+  const eff = getFoodEffect(String(name).toLowerCase().trim());
+  if (idx.foodsNames.has(k) || _fdIsFoodTried(name)) return true;
+  if (eff && (typeof foods !== 'undefined' && Array.isArray(foods)) && foods.some(f => f && getFoodEffect(String(f.name).toLowerCase().trim()) === eff)) return true;
+  const d = idx.firstDay.get(k) || (eff && idx.firstDay.get(eff));
+  return !!(d && d <= key);
+}
+// The form line for one food in a choking-by-form record: the safeForm.ok line that names it
+// ("grapes / cherry tomatoes — QUARTER lengthwise …" → "QUARTER lengthwise …"), else the record's
+// glance. Never the set-level note, which talks about the whole choking set (V-V-279-3).
+function _mpFormLine(eff, name) {
+  const sf = eff.safeForm || {};
+  const sing = name.replace(/(es|s)$/, '');
+  const hit = (sf.ok || []).find(l => {
+    const head = String(l).split(' — ')[0].toLowerCase();
+    return head.split(/\s*\/\s*/).some(w => w.replace(/(es|s)$/, '') === sing || w === name);
+  });
+  if (hit && hit.indexOf(' — ') > 0) { const t = hit.slice(hit.indexOf(' — ') + 3); return t.charAt(0).toUpperCase() + t.slice(1) + '.'; }
+  return sf.glance ? sf.glance + '.' : '';
+}
+// The high-mercury line, never silent: the record's own words, or a fixed flag if the record
+// were ever reworded (V-M-279-2).
+function _mpMercuryFlag(name) {
+  const line = _mpHighMercuryLine();
+  return line ? `Not for her: ${line}.` : `${_mpCap(name)} is a high-mercury fish — not for her.`;
+}
+// The slot's safety lead. Flags (a reaction she had, then high-mercury fish, then age on the planned
+// date) outrank cautions (a new common allergen, a form-sensitive free food); a form note is never
+// hidden behind a flag (V-C-279-7). Established, clean allergens stay quiet; past days carry flags
+// only (V-C-279-11).
+function _mpSlotLead(items, key) {
+  const age = _mpAgeMonthsOn(key);
+  const reactions = [], mercury = [], aged = [], newFood = [], newInRecipe = [], forms = [];
+  for (const it of items) {
+    if (it.kind === 'recipe') {
+      const r = _mpRecipe(it.id);
+      if (r && _recipeEffectiveMinAge(r) > age) aged.push(`${r.title} is for ${_recipeEffectiveMinAge(r)} months and up; she'll be ${age} months then.`);
+    }
+    for (const name of _mpItemNames(it)) {
+      const lower = String(name).toLowerCase().trim();
+      const rule = _fdAgeRule(lower);
+      if (it.kind === 'food' && rule && rule.minMonth > age) aged.push(`${_mpCap(name)}: not before ${rule.minMonth} months. ${rule.reason || ''}`.trim());
+      const react = _mpReactionTo(name);
+      if (react) reactions.push(`You marked ${react.name.toLowerCase()} to watch. Talk to her doctor before offering it again.`);
+      if (_isHighMercuryFishHost(lower)) mercury.push(_mpMercuryFlag(name));
+      if (!react && _mpIsCommonAllergen(lower, age) && !_mpHadBefore(lower, key)) (it.kind === 'food' ? newFood : newInRecipe).push(lower);
+      if (it.kind === 'food') {
+        const eff = _mpEffFor(lower, age);
+        const fl = eff && _effHasClass(eff, 'choking-by-form') ? _mpFormLine(eff, lower) : '';
+        if (fl) forms.push(`${_mpCap(name)}: ${fl}`);
+      }
+    }
+  }
+  const flags = [...new Set(reactions.concat(mercury, aged))];
+  if (flags.length) return ['flag', [flags[0]].concat(forms).join(' ')];
+  if (key < today()) return null;
+  const fresh = [...new Set(newFood.concat(newInRecipe))];
+  const caution = [];
+  if (fresh.length > 1) caution.push(`${fresh.map(_mpCap).join(' and ')} are common allergens new for her, in the same meal. If she reacts, it will be hard to tell which caused it. Give new foods one at a time, a few days apart.`);
+  else if (newFood.length) caution.push(`${_mpCap(newFood[0])} is a common allergen and new for her: give it on its own and watch her closely.`);
+  else if (newInRecipe.length) caution.push(`${_mpCap(newInRecipe[0])} is a common allergen and new for her. Plan this on a day with nothing else new, and watch her closely.`);
+  caution.push(...forms);
+  return caution.length ? ['caution', caution.join(' ')] : null;
+}
+
+// Iron on the day (V-C-275-16): NUTRITION's iron-rich tag, plus haem iron and chana (V-C-278-7).
+const _MP_IRON_EXTRA = /\b(egg|eggs|chicken|mutton|lamb|meat|liver|fish|rohu|catla|salmon|sardine|chana|chickpeas?|dal|dals|lentils?|arhar|rajma|urad|palak|spinach|poha|ragi)\b/i;
+function _mpIsIron(name) {
+  const base = _baseFoodName(String(name).toLowerCase().trim());
+  const n = (typeof NUTRITION !== 'undefined' && NUTRITION) ? NUTRITION[base] : null;
+  return !!(n && Array.isArray(n.tags) && n.tags.indexOf('iron-rich') >= 0) || _MP_IRON_EXTRA.test(name);
+}
+function _mpDayHasIron(key) {
+  return MP_SLOTS.some(s => _mpLiveItems(key, s).some(it => _mpItemNames(it).some(_mpIsIron)));
+}
+
+// ── Pieces ──
+function _mpZif(name) {
+  const ic = (typeof recipeFoodIcon === 'function') ? recipeFoodIcon(name) : null;
+  return ic ? `<svg class="zif" style="--zif-c:${ic.c}"><use href="#zif-${ic.icon}"/></svg>` : zi('bowl');
+}
+function _mpTravelMode(r) {
+  if (!r || !r.travel || !_MP_MODE[r.travel.how]) return null;
+  return (r.travel.how === 'spot' && _MP_WATER_FLASK.has(r.id)) ? ['clock', 'Mixed on the spot', '', ''] : _MP_MODE[r.travel.how];
+}
+// A planned recipe: the recipe-row standard at slot size (rail, fingerprint fade, food icon).
+function _mpRecipeEntry(r, travelCue, act) {
+  const fp = _recipeFingerprint(r);
+  const style = (fp ? `--rc-fl:${fp.fadeL};--rc-fd:${fp.fadeD};` : '') + `--rc-rail:${_recipeRailColor(_recipePrimaryGroup(r))}`;
+  const n = (r.choking || []).length;
+  const mode = travelCue ? _mpTravelMode(r) : null;
+  const meta = (mode ? `<span class="mp-cue">${zi(mode[0])} ${escHtml(mode[1])}${mode[3] ? ' · ' + escHtml(mode[3]) : ''}</span>` : '')
+    + (n ? `<span class="mp-chew">${zi('tooth')} Make it safe to chew: ${n} ${n === 1 ? 'step' : 'steps'}</span>` : '');
+  const inner = `${_mpZif(((r.ingredients || [])[0] || {}).name)}`
+    + `<span class="mp-entry-main"><span class="mp-entry-t">${escHtml(r.title)}</span>${meta ? `<span class="mp-entry-meta">${meta}</span>` : ''}</span>`;
+  if (!act) return `<span class="mp-entry${fp ? ' mp-entry--gen' : ''}" style="${style}">${inner}</span>`;
+  return `<button class="mp-entry mp-entry--btn${fp ? ' mp-entry--gen' : ''}" style="${style}" data-action="mpToggleEntry" data-arg="${escAttr(act.arg)}" aria-expanded="${act.open ? 'true' : 'false'}">`
+    + inner + `<span class="mp-entry-chev">${zi('chevron-down')}</span></button>`;
+}
+function _mpFoodChip(name) {
+  const d = _recipeChipDomain(name);
+  return `<span class="recipe-chip${d ? ' fdom-chip--' + d : ''}">${_mpZif(name)}${escHtml(name)}</span>`;
+}
+function _mpItemHtml(it, travelCue, act) {
+  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? _mpRecipeEntry(r, travelCue, act) : `<span class="recipe-chip">${zi('info')} Recipe no longer in the list</span>`; }
+  if (it.kind === 'food') return _mpFoodChip(it.name);
+  return `<span class="recipe-chip">${zi('info')} Not shown in this version</span>`;
+}
+function _mpItemLabel(it) {
+  if (it.kind === 'recipe') { const r = _mpRecipe(it.id); return r ? r.title : 'Recipe no longer in the list'; }
+  return it.kind === 'food' ? _mpCap(it.name) : 'Not shown in this version';
+}
+function _mpSafeRow(lead) {
+  return `<div class="rcp-safe rcp-safe--${lead[0]}">${zi(lead[0] === 'flag' ? 'alert-circle' : 'warn')} <span>${escHtml(lead[1])}</span></div>`;
+}
+function _mpOl(lines) { return `<ol class="recipe-steps">${lines.map(l => `<li>${escHtml(l)}</li>`).join('')}</ol>`; }
+function _mpKeepsLine(r) {
+  const m = _MP_MODE[r.travel.how];
+  return `<div class="rcp-serving">${zi(m[0])} <span><strong>How it keeps:</strong> ${escHtml(r.travel.keeps)}${m[2] ? ` <span class="rcp-serving-src">${m[2]}</span>` : ''}</span></div>`;
+}
+function _mpServeProw(r, open) {
+  const m = _MP_MODE[r.travel.how];
+  return _recipeProw('travel', m[0], 'Before you serve', m[4] ? m[4] + '.' : 'How it keeps', _mpKeepsLine(r), open);
+}
+
+// ── The slot row ──
+function _mpSlotHtml(key, slot, opts) {
+  opts = opts || {};
+  const meta = RECIPE_SLOT_META[slot];
+  const items = _mpLiveItems(key, slot);
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const logged = _mpLoggedAt(key, slot);
+  const open = _mpOpenSlot === slot && key === _mpSel;
+  const lead = items.length ? _mpSlotLead(items, key) : null;
+  const flagged = lead && lead[0] === 'flag';
+  // Logging from the plan lands in P2; until then a logged slot shows its diary time.
+  const act = logged !== null ? `<span class="mp-logged">${zi('check')} Logged${logged ? ' · ' + escHtml(logged) : ''}</span>`
+    : (!items.length ? `<button class="btn btn-soft btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add ${meta.label.toLowerCase()}</button>` : '');
+  // Each planned recipe is a button that opens its own recipe card (steps, chew, safety) in place;
+  // an open slot gives every item its own remove (Architect review, #279).
+  const age = _mpAgeMonthsOn(key);
+  const entries = items.length ? `<div class="mp-entries">${items.map((it, i) => {
+    const id = key + '|' + slot + '|' + i;
+    const isOpen = _mpOpenEntry === id;
+    const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
+    const rm = open ? `<button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpRemoveEntry" data-arg="${escAttr(id)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')}</button>` : '';
+    return `<div class="mp-item${r ? ' mp-item--recipe' : ''}">${_mpItemHtml(it, travel && logged === null, r ? { arg: id, open: isOpen } : null)}${rm}`
+      + (r && isOpen ? `<div class="mp-recipe-card recipe-detail">${_recipeDetailHtml(r, age, { noPlan: true, lead })}`
+        + `<div class="mp-recipe-card-foot"><button class="btn btn-soft btn-compact" data-action="mpToggleEntry" data-arg="${escAttr(id)}">${zi('chevron-down')} Close recipe</button></div></div>` : '') + `</div>`;
+  }).join('')}</div>` : '';
+  let body = '';
+  if (open && items.length) {
+    if (items.length < 3) body += `<div class="mp-chips"><button class="btn btn-soft btn-compact" data-action="mpOpenPicker" data-arg="${escAttr(key + '|' + slot)}">${zi('plus')} Add</button></div>`;
+    let rows = '';
+    items.forEach((it, i) => {
+      const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
+      if (!r || _mpOpenEntry === key + '|' + slot + '|' + i) return;   // an open recipe card already carries these
+      if ((r.choking || []).length) rows += _recipeProw('chew', 'tooth', `Make it safe to chew: ${r.title}`, `${r.choking.length} ${r.choking.length === 1 ? 'step' : 'steps'}`, _mpOl(r.choking), true);
+      if (travel && r.travel) rows += _recipeProw('travel', 'timer', 'Packing', `${r.travel.pack.length} things`, _mpOl(r.travel.pack), false) + _mpServeProw(r, true);
+    });
+    if (rows) body += `<div class="rcp-prows">${rows}</div>`;
+  }
+  if (travel) {
+    items.forEach(it => {
+      const r = it.kind === 'recipe' ? _mpRecipe(it.id) : null;
+      if (r && !r.travel) body += `<div class="mp-gap-note">${escHtml(r.title)}: not a packing recipe — serve it fresh where you are.</div>`;
+    });
+  }
+  if (!open && opts.serve) {
+    const rs = items.map(it => it.kind === 'recipe' && _mpRecipe(it.id)).filter(x => x && x.travel);
+    if (rs.length) body += `<div class="rcp-prows">${rs.map(r => _mpServeProw(r, false)).join('')}</div>`;
+  }
+  if (travel && !items.length && !logged && !(window.RECIPES || []).some(r => r.slot === slot && r.travel && _recipeAllowedForHousehold(r))) {
+    const alts = (window.RECIPES || []).filter(r => r.travel && r.travel.how === 'cool' && r.slot === 'lunch' && _recipeAllowedForHousehold(r) && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(key)).slice(0, 2);
+    body += alts.length
+      ? `<div class="mp-gap-note">No travel ${meta.label.toLowerCase()} yet. These pack well for ${meta.label.toLowerCase()} too:</div>`
+        + `<div class="mp-chips">${alts.map(r => `<button class="sg-chip" data-action="mpPlanSuggestion" data-arg="${escAttr(key + '|' + slot + '|' + r.id)}">${zi('plus')} ${escHtml(r.title)}</button>`).join('')}</div>`
+      : `<div class="mp-gap-note">No travel ${meta.label.toLowerCase()} yet. Pick from all ${meta.label.toLowerCase()} recipes with + Add.</div>`;
+  }
+  return `<div class="mp-slot${open ? ' mp-slot--open' : ''}">`
+    + `<span class="mp-slot-ic">${zi(meta.icon)}</span>`
+    + `<button class="mp-slot-main" data-action="mpToggleSlot" data-arg="${slot}" aria-expanded="${open ? 'true' : 'false'}">`
+    + `<span class="mp-slot-label">${meta.label} <span class="mp-slot-chev">${zi('chevron-down')}</span></span></button>`
+    + `<span class="mp-slot-act">${act}</span>`
+    + (flagged ? _mpSafeRow(lead) + entries : entries + (lead ? _mpSafeRow(lead) : '')) + body + `</div>`;
+}
+
+// ── Pack for today (travel day) ──
+function _mpPackHtml(key) {
+  const meals = [];
+  MP_SLOTS.forEach(s => {
+    const items = _mpLiveItems(key, s);
+    const rs = items.map(it => it.kind === 'recipe' && _mpRecipe(it.id)).filter(x => x && x.travel);
+    const free = items.filter(it => it.kind === 'food').map(it => _mpCap(it.name));
+    rs.forEach((r, i) => meals.push({ r, foods: i === 0 ? free : [] }));   // every travel recipe in the slot (V-C-279-5)
+  });
+  if (!meals.length) return '';
+  const lines = m => [...m.r.travel.pack, ...m.foods];
+  const rows = `<div class="rcp-prows">${meals.map(m => _recipeProw('travel', (_mpTravelMode(m.r) || _MP_MODE.spot)[0], m.r.title, `${lines(m).length} things`, _mpOl(lines(m)) + _mpKeepsLine(m.r), false)).join('')}</div>`;
+  const total = meals.reduce((n, m) => n + lines(m).length, 0);
+  if (MP_SLOTS.some(s => _mpLoggedAt(key, s) !== null)) {
+    return `<div class="mp-pack">${_recipeProw('travel', 'bag', 'Packed this morning', `${total} things`, rows, false)}</div>`;
+  }
+  const food = meals.filter(m => m.r.travel.how === 'thermos').length;
+  const water = meals.filter(m => _MP_WATER_FLASK.has(m.r.id)).length;
+  const chips = [food ? `<span class="recipe-chip mp-mode">${zi('thermos')}${food} food flask${food > 1 ? 's' : ''}</span>` : '',
+    water ? `<span class="recipe-chip mp-mode">${zi('thermos')}${water} hot-water flask${water > 1 ? 's' : ''}</span>` : '',
+    meals.some(m => m.r.travel.how === 'cool') ? `<span class="recipe-chip mp-mode">${zi('timer')}Ice-pack bag</span>` : ''].join('');
+  const label = key === today() ? 'today' : _MP_WD[_mpDate(key).getDay()].slice(0, 3);
+  return `<div class="mp-pack"><div class="mp-pack-title">${zi('bag')} Pack for ${label}</div><div class="mp-chips">${chips}</div>${rows}</div>`;
+}
+
+// ── The day card ──
+function _mpDayCardHtml(key) {
+  const day = _mpPlan().days[key];
+  const travel = _mpTravelOn(day);
+  const next = _mpNextSlot(key);
+  let lead = '', slots = '';
+  for (const s of MP_SLOTS) {
+    if (s === next) continue;
+    if (s === 'snack' && !_mpLiveItems(key, s).length && key !== _mpSel) continue;
+    slots += _mpSlotHtml(key, s);
+  }
+  if (next) lead = `<div class="mp-lead"><div class="mp-lead-eyebrow">Next</div>${_mpSlotHtml(key, next, { serve: travel })}</div>`;
+  let tomorrow = '';
+  if (key === today() && !next) {
+    const t = _mpAddDays(key, 1);
+    const b = _mpLiveItems(t, 'breakfast');
+    if (b.length) tomorrow = `<div class="mp-tomorrow">Tomorrow: Breakfast — ${escHtml(b.map(_mpItemLabel).join(' + '))}</div>`;
+  }
+  const planned = MP_SLOTS.filter(s => _mpLiveItems(key, s).length).length;
+  const hint = (planned >= 3 && !_mpDayHasIron(key) && !_mpHintsHidden.has(key))
+    ? `<div class="mp-hint">${zi('info')}<span>No iron-rich food planned ${key === today() ? 'today' : 'for ' + escHtml(_MP_WD[_mpDate(key).getDay()])}. Ragi, dal, poha or palak would add some.</span><button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpDismissHint" data-arg="${escAttr(key)}" aria-label="Dismiss">${zi('close')}</button></div>` : '';
+  return `<div class="mp-daycard${travel ? ' mp-daycard--travel' : ''}">`
+    + `<div class="mp-dayhead"><span class="mp-daytitle">${escHtml(_mpDayTitle(key))}</span>`
+    + `<button class="btn ${travel ? 'btn-peach' : 'btn-soft btn-soft--peach'} btn-compact" data-action="mpToggleTravel" data-arg="${escAttr(key)}" aria-pressed="${travel ? 'true' : 'false'}">${zi('bag')} Travel day: ${travel ? 'on' : 'off'}</button></div>`
+    + (travel ? _mpPackHtml(key) : '') + lead + slots + tomorrow + hint
+    + `<div class="mp-dayfoot"><button class="btn btn-soft btn-compact" data-action="mpCopyDay" data-arg="${escAttr(key)}">${zi('copy')} Copy day</button>`
+    + `<button class="btn btn-soft btn-soft--rose btn-compact" data-action="mpClearDay" data-arg="${escAttr(key)}">${zi('close')} Clear day</button></div></div>`;
+}
+
+// ── The section: header, strip, card ──
+let _mpSig = '', _mpSigDay = '';
+function _mpLiveSig() {
+  const t = today();
+  return t + '|' + _mpNextSlot(t) + '|' + MP_SLOTS.map(s => (_mpLoggedAt(t, s) !== null || _mpSkipped(t, s)) ? 1 : 0).join('');
+}
+function _mpRefreshIfStale() {
+  const root = document.getElementById('dietPlanRoot');
+  if (!root || !root.offsetParent || _mpSheetState) return;
+  if (_mpLiveSig() !== _mpSig) renderMealPlanSection();
+}
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') _mpRefreshIfStale(); });
+  setInterval(_mpRefreshIfStale, 60000);
+}
+// The Diet log cards draw once; an empty one re-draws when the plan changes, so a meal planned a
+// moment ago shows on its Planned rail without a reload (V-V-279-26).
+function _mpRefreshLogCards() {
+  if (typeof _fcInstances === 'undefined') return;
+  _fcInstances.forEach(i => {
+    if (i.variant !== 'card' || i.items.length || !i.container || !i.container.isConnected) return;
+    const ta = i.container.querySelector('.fc-ta-input');
+    if (ta && (ta === document.activeElement || ta.value)) return;   // never clobber typing (V-CI-279-A)
+    i.render();
+  });
+}
+function renderMealPlanSection() {
+  _mpRefreshLogCards();
+  const root = document.getElementById('dietPlanRoot');
+  if (!root) return;
+  _mpSeenCache = null;   // re-read foods and the diary on every render
+  if (_mpSheetState) { _mpRenderPending = true; return; }   // never re-render under an open sheet (V-CA-275-3)
+  const t = today();
+  const thisMon = _mpWeekStart(t);
+  if (_mpSigDay && _mpSigDay !== t && _mpSel === _mpSigDay) { _mpSel = t; _mpWeek = thisMon; }   // past midnight: follow today
+  _mpSigDay = t; _mpSig = _mpLiveSig();
+  if (!_mpSel || !_mpInWindow(_mpSel)) _mpSel = t;
+  if (!_mpWeek || !_mpInWindow(_mpWeek)) _mpWeek = _mpWeekStart(_mpSel);
+  const win = _mpWindow(t);
+  const plan = _mpPlan();
+  const firstUse = !Object.keys(plan.days).length && !load('ziva_mp_seen', false);
+  const prevOk = _mpAddDays(_mpWeek, -7) >= win.lo, nextOk = _mpAddDays(_mpWeek, 7) <= win.hi;
+  const isThisWeek = _mpWeek === thisMon;
+  let h = `<div class="mp-section"><div class="mp-head">${zi('calendar')}<span class="mp-head-title">${isThisWeek ? 'This week\'s plan' : 'Week of ' + escHtml(_mpShortDay(_mpWeek).slice(4))}</span><div class="mp-weeknav">`
+    + (isThisWeek ? '' : '<button class="btn btn-soft btn-compact" data-action="mpThisWeek">This week</button>')
+    + `<button class="btn btn-soft btn-compact mp-navbtn mp-navbtn--prev" data-action="mpWeek" data-arg="-1" aria-label="Previous week"${prevOk ? '' : ' disabled'}>${zi('arrow-right')}</button>`
+    + `<button class="btn btn-soft btn-compact mp-navbtn" data-action="mpWeek" data-arg="1" aria-label="Next week"${nextOk ? '' : ' disabled'}>${zi('arrow-right')}</button></div>`
+    + (!nextOk ? '<div class="mp-navnote">You can plan up to 8 weeks ahead.</div>' : !prevOk ? '<div class="mp-navnote">Plans older than 4 weeks are cleared.</div>' : '') + `</div>`;
+  if (firstUse) h += `<div class="mp-legend"><span><span class="mp-fill mp-fill--full"></span> All meals planned</span><span><span class="mp-fill mp-fill--part"></span> Some</span><span><span class="mp-fill mp-fill--none"></span> None</span></div>`;
+  h += `<div class="mp-strip" role="group" aria-label="Days of the week">`;
+  for (let i = 0; i < 7; i++) {
+    const key = _mpAddDays(_mpWeek, i);
+    const d = _mpDate(key);
+    const day = plan.days[key];
+    const main = ['breakfast', 'lunch', 'dinner'].filter(s => _mpLiveItems(key, s).length).length;
+    const any = MP_SLOTS.some(s => _mpLiveItems(key, s).length);
+    const fill = main === 3 ? 'full' : any ? 'part' : 'none';
+    const travel = _mpTravelOn(day);
+    const cls = ['mp-day', key === t && 'mp-day--today', key === _mpSel && 'mp-day--sel', key < t && 'mp-day--past', travel && 'mp-day--travel'].filter(Boolean).join(' ');
+    const label = `${_MP_WD[d.getDay()].slice(0, 3)} ${d.getDate()} ${_MP_MON[d.getMonth()]}${key === t ? ', today' : ''}${travel ? ', travel day' : ''}, ${fill === 'full' ? 'all meals planned' : fill === 'part' ? 'some meals planned' : 'nothing planned'}`;
+    h += `<button class="${cls}" data-action="mpSelectDay" data-arg="${escAttr(key)}" aria-pressed="${key === _mpSel ? 'true' : 'false'}" aria-label="${escAttr(label)}"${_mpInWindow(key) ? '' : ' disabled'}>`
+      + `<span class="mp-day-wd">${_MP_WD[d.getDay()].charAt(0)}</span><span class="mp-day-num">${d.getDate()}</span><span class="mp-fill mp-fill--${fill}"></span>`
+      + (travel ? `<span class="mp-mark mp-mark--travel">${zi('bag')}</span>` : '<span class="mp-mark"></span>') + `</button>`;
+  }
+  h += `</div>`;
+  h += (!Object.keys(plan.days).length && firstUse) ? `<p class="mp-empty">Plan Ziva's meals for the week: tap a day to start.</p>` + _mpDayCardHtml(_mpSel) : _mpDayCardHtml(_mpSel);
+  h += `</div>`;
+  root.innerHTML = h;
+  // "For travel" sub-note: one statement of the 2 h rule per tab (V-V-275-9).
+  const note = document.querySelector('#dietRecipesRoot .recipes-sub-note--travel');
+  if (note) note.classList.toggle('mp-teaser', _mpTravelOn(plan.days[_mpSel]));
+}
+
+// ── Sheets (a .ql-sheet in the swipe guard's overlay set, V-V-275-19) ──
+function _mpOpenSheet(state, html) {
+  _mpCloseSheet(true);
+  _mpSheetState = state;
+  const ov = document.createElement('div');
+  ov.className = 'ql-sheet-overlay open';
+  ov.id = 'mpSheetOverlay';
+  ov.setAttribute('data-action', 'mpCloseSheet');
+  const sh = document.createElement('div');
+  sh.className = 'ql-sheet mp-sheet';
+  sh.id = 'mpSheet';
+  sh.setAttribute('role', 'dialog');
+  sh.innerHTML = html;
+  document.body.appendChild(ov);
+  document.body.appendChild(sh);
+  document.body.style.overflow = 'hidden';   // the page behind holds still (same lock as the other sheets)
+  requestAnimationFrame(() => sh.classList.add('open'));
+  const input = sh.querySelector('.mp-search');
+  if (input) input.addEventListener('input', () => _mpPickerSearch(input.value));
+}
+function _mpCloseSheet(silent) {
+  ['mpSheet', 'mpSheetOverlay'].forEach(id => { const el = document.getElementById(id); if (el) el.remove(); });
+  const was = !!_mpSheetState;
+  if (was) document.body.style.overflow = '';
+  _mpSheetState = null;
+  if (was && !silent) { _mpRenderPending = false; renderMealPlanSection(); }
+}
+function _mpSheetHead(title) {
+  return `<div class="ql-sheet-handle"></div><div class="mp-sheet-head"><div class="mp-picker-title">${escHtml(title)}</div>`
+    + `<button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpCloseSheet" aria-label="Close">${zi('close')}</button></div>`;
+}
+
+// ── The slot picker (§4.4; CL-5) ──
+function _mpPickable(r, key) {
+  return _recipeAllowedForHousehold(r) && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(key);
+}
+function _mpSuggestions(key, slot) {
+  const age = _mpAgeMonthsOn(key);
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const taken = new Set(_mpLiveItems(key, slot).filter(it => it.kind === 'recipe').map(it => it.id));
+  const newAllergen = r => (r.ingredients || []).some(i => _mpIsCommonAllergen(i.name, age) && !_mpHadBefore(i.name, key));
+  const pool = (window.RECIPES || []).filter(r => r.slot === slot && _mpPickable(r, key) && !taken.has(r.id) && (!travel || (r.travel && !newAllergen(r))));
+  const ranked = (typeof _recipeSuggestForZiva === 'function') ? _recipeSuggestForZiva(pool, age) : pool.map(r => ({ r, why: '' }));
+  const seen = new Set(ranked.map(s => s.r.id));
+  const all = ranked.concat(pool.filter(r => !seen.has(r.id)).map(r => ({ r, why: '' })));
+  // Day-aware: when the day has no iron yet, iron recipes come first (V-C-275-16).
+  if (!_mpDayHasIron(key)) all.sort((a, b) => ((b.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0) - ((a.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0));
+  return all.slice(0, 5).map(s => {
+    const fresh = (s.r.ingredients || []).find(i => _mpIsCommonAllergen(i.name, age) && !_mpHadBefore(i.name, key));
+    const why = fresh ? `New for her: ${String(fresh.name).toLowerCase()}`
+      : (!_mpDayHasIron(key) && (s.r.ingredients || []).some(i => _mpIsIron(i.name))) ? 'Adds iron' : (s.why || _recipeRelevanceTag(s.r));
+    return { r: s.r, why };
+  });
+}
+function _mpPickRow(r, key, why) {
+  return _recipeRowHtml(r, 'mp', _mpAgeMonthsOn(key), { relevance: why || '', pickAction: 'mpPick', pickArg: r.id, noDetail: true });
+}
+function _mpPickerBody(key, slot) {
+  const st = _mpSheetState;
+  const meta = RECIPE_SLOT_META[slot];
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const current = _mpLiveItems(key, slot);
+  let h = '';
+  if (current.length) h += `<div class="mp-chips">${current.map((it, i) => `<button class="btn btn-soft btn-compact" data-action="mpRemoveEntry" data-arg="${escAttr(key + '|' + slot + '|' + i)}" aria-label="Remove ${escAttr(_mpItemLabel(it))}">${zi('close')} ${escHtml(_mpItemLabel(it))}</button>`).join('')}</div>`;
+  if (current.length >= 3) return h + `<p class="mp-empty">A slot holds up to 3 foods. Remove one to add another.</p>`;
+  h += `<input class="mp-search" type="search" placeholder="Search recipes and foods" aria-label="Search recipes and foods" value="${escAttr(st.q || '')}">`;
+  h += `<div id="mpPickerList">${_mpPickerList(key, slot)}</div>`;
+  return h;
+}
+function _mpPickerList(key, slot) {
+  const st = _mpSheetState;
+  const meta = RECIPE_SLOT_META[slot];
+  const q = (st.q || '').trim().toLowerCase();
+  const age = _mpAgeMonthsOn(key);
+  if (q) {
+    const recipes = (window.RECIPES || []).filter(r => _recipeAllowedForHousehold(r) && r.title.toLowerCase().indexOf(q) >= 0).slice(0, 5);
+    const foodsFound = (typeof window._fdSearchNutrition === 'function') ? window._fdSearchNutrition(q, { max: 5 }) : [];
+    let h = recipes.map(r => _mpPickable(r, key) ? _mpPickRow(r, key, '') : _mpLockedRow(r, key)).join('');
+    const foodsOk = foodsFound.filter(f => _dietAllowsFood(f.name));
+    h += foodsOk.map(f => {
+      const rule = _fdAgeRule(String(f.name).toLowerCase());
+      if (rule && rule.minMonth > age) return `<div class="mp-picker-row mp-picker-row--locked" aria-disabled="true">${_mpZif(f.name)}<span class="mp-picker-row-main">${escHtml(f.name)}<span class="mp-picker-lock">Not before ${rule.minMonth} months</span></span></div>`;
+      return `<button class="mp-picker-row" data-action="mpPickFood" data-arg="${escAttr(f.name)}">${_mpZif(f.name)}<span class="mp-picker-row-main">${escHtml(f.name)}<span class="mp-picker-why">A food</span></span>${zi('plus')}</button>`;
+    }).join('');
+    if (!recipes.length && !foodsOk.length) {
+      const raw = st.q.trim().slice(0, MP_NAME_MAX);
+      if (foodsFound.length || !_dietAllowsFood(raw)) return h + `<div class="mp-empty">${escHtml(_mpCap(raw))} is outside your household's diet setting.</div>`;
+      const rule = _fdAgeRule(raw.toLowerCase());
+      h += `<div class="mp-empty">No recipe or food called “${escHtml(raw)}”.</div>`
+        + (!_dietAllowsFood(raw) ? ''
+          : (rule && rule.minMonth > age) ? `<div class="mp-picker-row mp-picker-row--locked" aria-disabled="true">${zi('plus')}<span class="mp-picker-row-main">${escHtml(raw)}<span class="mp-picker-lock">Not before ${rule.minMonth} months</span></span></div>`
+          : `<button class="mp-picker-row" data-action="mpPickFood" data-arg="${escAttr(raw)}">${zi('plus')}<span class="mp-picker-row-main">Add “${escHtml(raw)}” as a food</span></button>`);
+    }
+    return h;
+  }
+  const travel = _mpTravelOn(_mpPlan().days[key]);
+  const sugg = _mpSuggestions(key, slot);
+  let h = `<div class="mp-picker-sec">Suggested for ${escHtml(_MP_WD[_mpDate(key).getDay()])}</div>`;
+  h += sugg.length ? sugg.map(s => _mpPickRow(s.r, key, s.why)).join('')
+    : (travel ? `<div class="mp-gap-note">No travel ${meta.label.toLowerCase()} recipes yet. The travel lunches work for ${meta.label.toLowerCase()} too, or pick from all ${meta.label.toLowerCase()} recipes below.</div>`
+      : `<div class="mp-empty">Keep logging meals and suggestions will get more personal.</div>`);
+  const all = (window.RECIPES || []).filter(r => r.slot === slot && _recipeAllowedForHousehold(r));
+  h += `<button class="mp-picker-row mp-picker-more" data-action="mpPickerAll" aria-expanded="${st.all ? 'true' : 'false'}">${zi(meta.icon)}<span class="mp-picker-row-main">All ${meta.label.toLowerCase()} recipes (${all.length})</span>${zi('chevron-down')}</button>`;
+  if (st.all) {
+    all.sort((a, b) => _recipeEffectiveMinAge(a) - _recipeEffectiveMinAge(b));
+    h += all.map(r => _mpPickable(r, key) ? _mpPickRow(r, key, '') : _mpLockedRow(r, key)).join('');
+  }
+  return h;
+}
+// Locked for her age on that date: the flat whisper, no action, the reason in the row (V-V-275-15).
+function _mpLockedRow(r, key) {
+  const min = _recipeEffectiveMinAge(r);
+  const opens = _mpAddMonths(min);
+  return `<div class="mp-locked">${_recipeRowHtml(r, 'mpl', _mpAgeMonthsOn(key), { relevance: `Can't be planned yet: from ${min} months${opens ? ' · opens ' + opens : ''}`, locked: true, noDetail: true })}</div>`;
+}
+function _mpAddMonths(months) {
+  if (typeof DOB === 'undefined') return '';
+  const d = new Date(DOB.getFullYear(), DOB.getMonth() + months, DOB.getDate(), 12);
+  return `${d.getDate()} ${_MP_MON[d.getMonth()]} ${d.getFullYear()}`;
+}
+function _mpPickerSearch(value) {
+  if (!_mpSheetState || _mpSheetState.kind !== 'picker') return;
+  _mpSheetState.q = value;
+  const list = document.getElementById('mpPickerList');
+  if (list) list.innerHTML = _mpPickerList(_mpSheetState.key, _mpSheetState.slot);
+}
+function _mpOpenPicker(key, slot) {
+  if (!_mpInWindow(key) || MP_SLOTS.indexOf(slot) < 0) return;
+  const state = { kind: 'picker', key, slot, q: '', all: false };
+  _mpSheetState = state;
+  const html = _mpSheetHead(`${RECIPE_SLOT_META[slot].label} · ${_mpDayTitle(key)}`) + `<div class="mp-picker" id="mpPickerBody">${_mpPickerBody(key, slot)}</div>`;
+  _mpSheetState = null;
+  _mpOpenSheet(state, html);
+}
+function _mpRefreshPicker() {
+  const st = _mpSheetState;
+  const body = document.getElementById('mpPickerBody');
+  if (!st || !body) return;
+  body.innerHTML = _mpPickerBody(st.key, st.slot);
+  _mpRefreshLogCards();
+  const input = body.querySelector('.mp-search');
+  if (input) input.addEventListener('input', () => _mpPickerSearch(input.value));
+}
+function _mpAddItem(key, slot, item) {
+  const items = _mpLiveItems(key, slot).slice();
+  if (items.length >= 3) { showQLToast('A slot holds up to 3 foods', 2500); return false; }
+  if (items.some(it => (item.kind === 'recipe' && it.kind === 'recipe' && it.id === item.id) || (item.kind === 'food' && it.kind === 'food' && _sameFood(it.name, item.name)))) return false;
+  items.push(item);
+  return !!_mpSetSlot(key, slot, items);
+}
+
+// ── Add to plan from a recipe (§1.3; CL-1 ≤ 3 taps; the next 7 days, V-V-275-16) ──
+function _mpOpenAddRecipe(id, from) {
+  const r = _mpRecipe(id);
+  if (!r) return;
+  const state = { kind: 'add', id, slot: r.slot, from: from || today() };
+  _mpSheetState = state;
+  const html = _mpSheetHead(`Add ${r.title} to the plan`) + `<div class="mp-picker" id="mpAddBody">${_mpAddBody()}</div>`;
+  _mpSheetState = null;
+  _mpOpenSheet(state, html);
+}
+// The composer's Planned rail: fill the meal with the plan (the parent checks and saves).
+function _mpApplyPlanToComposer(btn, arg) {
+  const inst = (typeof _fcInstanceForEl === 'function') ? _fcInstanceForEl(btn) : null;
+  if (!inst || inst.items.length) return;   // a stale chip never replaces items already there
+  const slot = String(arg || '').split('|')[1];
+  const dateStr = (inst.variant === 'sheet') ? (_qlBackfillDate || inst.dateOf()) : inst.dateOf();   // the date the composer writes to
+  const p = slot === inst.slot && _fcPlannedItems(dateStr, slot);
+  if (!p || !p.foods.length) return;
+  const cat = window._FOOD_QTY_CATEGORY_DEFAULTS || {};
+  // The diary's own shapes: capitalised names, and a recipe's pinch of spice or spoon of ghee sized as
+  // such rather than as a full serving (V-C-279-15, V-C-279-16).
+  inst.items = p.foods.map(f => {
+    const d = (/\b(oil|ghee|butter)\b/i.test(f.name) && cat['fat-cooking']) || (f.g != null && f.g <= 3 && cat.spice) || window._fdResolveQtyDefaults(f.name);
+    return { name: _fcCapFirst(f.name), qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(f.name), source: 'plan' };
+  });
+  if (p.left.length) showQLToast(`Left out ${escHtml(p.left.join(', '))}: add it yourself only if she had it`, 5000);
+  inst.sourceFlow = (inst.variant === 'card') ? 'diet-tab' : 'fob-plan';
+  _fcAfterItemChange(inst);
+}
+function _mpSheetTop() { const s = document.querySelector('.mp-sheet'); if (s) s.scrollTop = 0; }
+function _mpAddBody() {
+  const st = _mpSheetState;
+  const r = _mpRecipe(st.id);
+  const t = today();
+  let h = `<div class="mp-picker-sec">Meal</div><div class="mp-chips">`
+    + MP_SLOTS.map(s => `<button class="chip" data-chip="single" data-action="mpAddSlot" data-arg="${s}" aria-pressed="${st.slot === s ? 'true' : 'false'}">${zi(RECIPE_SLOT_META[s].icon)} ${RECIPE_SLOT_META[s].label}</button>`).join('') + `</div>`;
+  h += `<div class="mp-picker-sec">Day</div><div class="mp-daypick">`;
+  for (let i = 0; i < 7; i++) {
+    const key = _mpAddDays(st.from, i);
+    const ok = _mpInWindow(key) && _recipeEffectiveMinAge(r) <= _mpAgeMonthsOn(key);
+    const d = _mpDate(key);
+    h += `<button class="btn btn-soft btn-compact mp-daypick-btn" data-action="mpAddToDay" data-arg="${escAttr(key)}"${ok ? '' : ' disabled'} aria-label="${escAttr(_mpDayTitle(key) + (ok ? '' : ', not yet: from ' + _recipeEffectiveMinAge(r) + ' months'))}">`
+      + `<span class="mp-day-wd">${key === t ? 'Today' : _MP_WD[d.getDay()].slice(0, 3)}</span><span class="mp-day-num">${d.getDate()}</span></button>`;
+  }
+  h += `</div>`;
+  const minAge = _recipeEffectiveMinAge(r);
+  if (minAge > _mpAgeMonthsOn(_mpAddDays(st.from, 6)) || minAge > _mpAgeMonthsOn(st.from)) {
+    const opens = _mpAddMonths(minAge);
+    h = `<p class="mp-empty">${escHtml(r.title)} can be planned from ${opens ? escHtml(opens) : minAge + ' months'}.</p>` + h;
+  }
+  const later = _mpAddDays(st.from, 7);
+  if (_mpInWindow(later) && minAge <= _mpAgeMonthsOn(_mpWindow(t).hi)) h += `<button class="btn btn-soft btn-compact" data-action="mpAddLater">Later days ${zi('arrow-right')}</button>`;
+  return h;
+}
+
+// ── Copy day (§1.7; age re-checked on the target, V-C-275-18) ──
+function _mpOpenCopy(key) {
+  const state = { kind: 'copy', key };
+  _mpSheetState = state;
+  const mon = _mpWeekStart(key);
+  let days = '';
+  for (let i = 0; i < 7; i++) {
+    const t = _mpAddDays(mon, i);
+    if (t === key || !_mpInWindow(t)) continue;
+    days += `<button class="btn btn-soft btn-compact" data-action="mpCopyTo" data-arg="${escAttr(t)}">${escHtml(_mpShortDay(t))}</button>`;
+  }
+  const nextSame = _mpAddDays(key, 7);
+  if (_mpInWindow(nextSame)) days += `<button class="btn btn-soft btn-compact" data-action="mpCopyTo" data-arg="${escAttr(nextSame)}">Next week, ${escHtml(_mpShortDay(nextSame))}</button>`;
+  const html = _mpSheetHead(`Copy ${_mpDayTitle(key)} to…`) + `<div class="mp-picker"><p class="mp-empty">Copying replaces that day's meals. Its travel setting stays.</p><div class="mp-chips">${days}</div></div>`;
+  _mpSheetState = null;
+  _mpOpenSheet(state, html);
+}
+function _mpSnapshotDay(key) {
+  const day = _mpPlan().days[key];
+  return { slots: MP_SLOTS.reduce((o, s) => (o[s] = _mpLiveItems(key, s).slice(), o), {}), travel: _mpTravelOn(day) };
+}
+function _mpRestoreDay(key, snap) {
+  MP_SLOTS.forEach(s => _mpSetSlot(key, s, snap.slots[s]));
+  if (snap.travel !== _mpTravelOn(_mpPlan().days[key])) _mpSetTravel(key, snap.travel);
+  renderMealPlanSection();
+}
+function _mpDoCopy(from, to) {
+  _mpOpenEntry = null;
+  const snap = _mpSnapshotDay(to);
+  if (!_mpCopyDay(from, to)) return;
+  _mpCloseSheet(true);
+  _mpSel = to; _mpWeek = _mpWeekStart(to); _mpOpenSlot = null;
+  renderMealPlanSection();
+  showQLToast(`Copied to ${escHtml(_mpShortDay(to))}`, 8000, () => _mpRestoreDay(to, snap));
+}
+
+// ── Actions (one dispatcher, routed from core.js for every data-action="mp*", HR-6) ──
+function mpDispatch(action, arg, btn) {
+  const parts = String(arg || '').split('|');
+  switch (action) {
+    case 'mpSelectDay': if (_mpInWindow(arg)) { _mpSel = arg; _mpOpenSlot = null; _mpOpenEntry = null; save('ziva_mp_seen', true); renderMealPlanSection(); } break;
+    case 'mpWeek': {
+      const target = _mpAddDays(_mpWeek, 7 * (parseInt(arg, 10) || 0));
+      const win = _mpWindow(today());
+      if (target >= _mpWeekStart(win.lo) && target <= win.hi) { _mpWeek = target; _mpSel = (today() >= target && today() <= _mpAddDays(target, 6)) ? today() : target; _mpOpenSlot = null; renderMealPlanSection(); }
+      break;
+    }
+    case 'mpThisWeek': _mpSel = today(); _mpWeek = _mpWeekStart(_mpSel); _mpOpenSlot = null; renderMealPlanSection(); break;
+    case 'mpToggleSlot': _mpOpenSlot = (_mpOpenSlot === arg) ? null : arg; _mpOpenEntry = null; renderMealPlanSection(); break;
+    case 'mpToggleEntry': {
+      const closing = _mpOpenEntry === arg;
+      _mpOpenEntry = closing ? null : arg;
+      renderMealPlanSection();
+      if (closing) {   // closed from the card's foot: bring its entry back into view (V-V-279-27)
+        const e = [...document.querySelectorAll('#dietPlanRoot .mp-entry--btn')].find(b => b.getAttribute('data-arg') === arg);
+        if (e && e.scrollIntoView) e.scrollIntoView({ block: 'nearest' });
+      }
+      break;
+    }
+    case 'mpApplyPlan': _mpApplyPlanToComposer(btn, arg); break;
+    case 'mpToggleTravel': {
+      const on = !_mpTravelOn(_mpPlan().days[arg]);
+      if (_mpSetTravel(arg, on)) renderMealPlanSection();
+      break;
+    }
+    case 'mpDismissHint': _mpHintsHidden.add(arg); renderMealPlanSection(); break;
+    case 'mpOpenPicker': save('ziva_mp_seen', true); _mpOpenPicker(parts[0], parts[1]); break;
+    case 'mpPickerAll': if (_mpSheetState) { _mpSheetState.all = !_mpSheetState.all; _mpRefreshPicker(); } break;
+    case 'mpPick': {
+      _mpOpenEntry = null;
+      const st = _mpSheetState;
+      const r = st && _mpRecipe(arg);
+      if (!r || !_mpPickable(r, st.key)) return;
+      if (_mpAddItem(st.key, st.slot, { kind: 'recipe', id: r.id })) { _mpRefreshPicker(); _mpSheetTop(); }
+      break;
+    }
+    case 'mpPickFood': {
+      const st = _mpSheetState;
+      const name = String(arg || '').trim().slice(0, MP_NAME_MAX);
+      if (!st || !name || !_dietAllowsFood(name)) return;
+      const rule = _fdAgeRule(name.toLowerCase());
+      if (rule && rule.minMonth > _mpAgeMonthsOn(st.key)) { showQLToast(`${escHtml(_mpCap(name))} isn't for her age yet`, 2500); return; }
+      st.q = '';
+      if (_mpAddItem(st.key, st.slot, { kind: 'food', name: name.toLowerCase() })) { _mpRefreshPicker(); _mpSheetTop(); }
+      break;
+    }
+    case 'mpRemoveEntry': {
+      const [key, slot, i] = parts;
+      const items = _mpLiveItems(key, slot).slice();
+      const removed = items.splice(parseInt(i, 10), 1)[0];
+      if (!removed) return;
+      _mpOpenEntry = null;
+      const before = _mpLiveItems(key, slot).slice();
+      _mpSetSlot(key, slot, items);
+      if (_mpSheetState && _mpSheetState.kind === 'picker') _mpRefreshPicker(); else renderMealPlanSection();
+      showQLToast(`Removed ${escHtml(_mpItemLabel(removed))}`, 8000, () => { _mpSetSlot(key, slot, before); if (_mpSheetState && _mpSheetState.kind === 'picker') _mpRefreshPicker(); else renderMealPlanSection(); });
+      break;
+    }
+    case 'mpPlanSuggestion': {
+      const [key, slot, id] = parts;
+      const r = _mpRecipe(id);
+      if (r && _mpPickable(r, key) && _mpAddItem(key, slot, { kind: 'recipe', id })) renderMealPlanSection();
+      break;
+    }
+    case 'mpCloseSheet': _mpCloseSheet(); break;
+    case 'mpAddRecipe': _mpOpenAddRecipe(arg); break;
+    case 'mpAddSlot': if (_mpSheetState && _mpSheetState.kind === 'add' && MP_SLOTS.indexOf(arg) >= 0) { _mpSheetState.slot = arg; document.getElementById('mpAddBody').innerHTML = _mpAddBody(); } break;
+    case 'mpAddLater': if (_mpSheetState && _mpSheetState.kind === 'add') { _mpSheetState.from = _mpAddDays(_mpSheetState.from, 7); document.getElementById('mpAddBody').innerHTML = _mpAddBody(); } break;
+    case 'mpAddToDay': {
+      const st = _mpSheetState;
+      if (!st || st.kind !== 'add') return;
+      const r = _mpRecipe(st.id);
+      if (!r || !_mpPickable(r, arg)) return;
+      const before = _mpLiveItems(arg, st.slot).slice();
+      if (!_mpAddItem(arg, st.slot, { kind: 'recipe', id: r.id })) return;
+      const slot = st.slot;
+      _mpCloseSheet(true);
+      renderMealPlanSection();
+      showQLToast(`Added to ${escHtml(_mpShortDay(arg))}, ${RECIPE_SLOT_META[slot].label.toLowerCase()}`, 8000, () => { _mpSetSlot(arg, slot, before); renderMealPlanSection(); });
+      break;
+    }
+    case 'mpCopyDay': _mpOpenCopy(arg); break;
+    case 'mpCopyTo': {
+      const st = _mpSheetState;
+      if (!st || st.kind !== 'copy') return;
+      const age = _mpAgeMonthsOn(arg);
+      const gated = MP_SLOTS.flatMap(s => _mpLiveItems(st.key, s)).filter(it =>
+        (it.kind === 'recipe' && _mpRecipe(it.id) && _recipeEffectiveMinAge(_mpRecipe(it.id)) > age)
+        || (it.kind === 'food' && typeof it.name === 'string' && (_fdAgeRule(it.name.toLowerCase()) || { minMonth: 0 }).minMonth > age)).map(_mpItemLabel);
+      const from = st.key;
+      if (gated.length) { _mpCloseSheet(true); confirmAction(`${escHtml(gated.join(', '))} ${gated.length > 1 ? 'aren\'t' : 'isn\'t'} for her age on ${escHtml(_mpShortDay(arg))} yet. Copy anyway? ${gated.length > 1 ? 'They' : 'It'} will show a flag on that day.`, () => _mpDoCopy(from, arg), 'Copy anyway', { cls: 'mp-confirm', onCancel: renderMealPlanSection }); }
+      else _mpDoCopy(from, arg);
+      break;
+    }
+    case 'mpClearDay': {
+      const key = arg;
+      confirmAction(`<strong>Clear ${escHtml(_mpDayTitle(key))}'s plan?</strong><br>This removes the planned meals for the day. Meals you've logged stay in her diary.`, () => {
+        const snap = _mpSnapshotDay(key);
+        if (!_mpClearDay(key)) return;
+        _mpOpenEntry = null;
+        _mpOpenSlot = null;
+        renderMealPlanSection();
+        showQLToast('Plan cleared', 8000, () => _mpRestoreDay(key, snap));
+      }, 'Clear plan', { danger: true, cls: 'mp-confirm' });
+      break;
+    }
+  }
+}

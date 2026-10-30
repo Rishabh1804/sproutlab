@@ -263,9 +263,9 @@ function mpDay({ date, wd, num, aria, today, sel, past, travel, fill = 'none', m
 }
 function mpHead({ title = "This week's plan", thisWeek = false, nextDisabled = false, note = '' } = {}) {
   return `<div class="mp-head">${zi('calendar')}<span class="mp-head-title">${esc(title)}</span>`
-    + `<div class="mp-weeknav">${thisWeek ? '<button class="btn btn-ghost btn-compact" data-action="mpThisWeek">This week</button>' : ''}`
-    + `<button class="btn btn-ghost btn-compact mp-navbtn mp-navbtn--prev" data-action="mpWeek" data-arg="-1" aria-label="Previous week">${zi('arrow-right')}</button>`
-    + `<button class="btn btn-ghost btn-compact mp-navbtn" data-action="mpWeek" data-arg="1" aria-label="Next week"${nextDisabled ? ' disabled' : ''}>${zi('arrow-right')}</button></div>`
+    + `<div class="mp-weeknav">${thisWeek ? '<button class="btn btn-soft btn-compact" data-action="mpThisWeek">This week</button>' : ''}`
+    + `<button class="btn btn-soft btn-compact mp-navbtn mp-navbtn--prev" data-action="mpWeek" data-arg="-1" aria-label="Previous week">${zi('arrow-right')}</button>`
+    + `<button class="btn btn-soft btn-compact mp-navbtn" data-action="mpWeek" data-arg="1" aria-label="Next week"${nextDisabled ? ' disabled' : ''}>${zi('arrow-right')}</button></div>`
     + (note ? `<div class="mp-navnote">${esc(note)}</div>` : '') + `</div>`;
 }
 // The week of Mon 2 Nov 2026; today is Wed 4 Nov.
@@ -281,11 +281,11 @@ const WEEK = [
 const mpStrip = (days = WEEK) => `<div class="mp-strip" role="group" aria-label="Days of the week">${days.map(mpDay).join('')}</div>`;
 
 function mpAct(a, slot, primary = false) {
-  // House buttons: secondary actions are .btn-ghost; the one primary on screen is the next meal's
+  // House buttons: secondary actions on a card are .btn-soft; the one primary on screen is the next meal's
   // "She ate this" (.btn-sage) — never on an entry carrying a rose flag, where the flag must stay
   // the loudest thing in the block (V-M-278-13).
-  if (a === 'ate') return `<button class="btn ${primary ? 'btn-sage' : 'btn-ghost'} btn-compact" data-action="mpAte" data-arg="${slot}">${zi('check')} She ate this</button>`;
-  if (a === 'add') return `<button class="btn btn-ghost btn-compact" data-action="mpOpenPicker" data-arg="${slot}">${zi('plus')} Add ${SLOT[slot][0].toLowerCase()}</button>`;
+  if (a === 'ate') return `<button class="btn ${primary ? 'btn-sage' : 'btn-soft'} btn-compact" data-action="mpAte" data-arg="${slot}">${zi('check')} She ate this</button>`;
+  if (a === 'add') return `<button class="btn btn-soft btn-compact" data-action="mpOpenPicker" data-arg="${slot}">${zi('plus')} Add ${SLOT[slot][0].toLowerCase()}</button>`;
   if (a && a.logged) return `<span class="mp-logged">${zi('check')} ${esc(a.logged)}</span>`;
   return '';
 }
@@ -308,10 +308,10 @@ const mpNext = opts => mpLead(mpSlot({ ...opts, next: true }));
 function mpCard({ title, travel, pack = '', lead = '', slots = [], hint = '', tomorrow = '', foot = true }) {
   return `<div class="mp-daycard${travel ? ' mp-daycard--travel' : ''}">`
     + `<div class="mp-dayhead"><span class="mp-daytitle">${esc(title)}</span>`
-    + `<button class="btn ${travel ? 'btn-peach' : 'btn-ghost'} btn-compact" data-action="mpToggleTravel" aria-pressed="${travel ? 'true' : 'false'}">${zi('bag')} Travel day: ${travel ? 'on' : 'off'}</button></div>`
+    + `<button class="btn ${travel ? 'btn-peach' : 'btn-soft btn-soft--peach'} btn-compact" data-action="mpToggleTravel" aria-pressed="${travel ? 'true' : 'false'}">${zi('bag')} Travel day: ${travel ? 'on' : 'off'}</button></div>`
     + pack + lead + slots.join('') + (tomorrow ? `<div class="mp-tomorrow">${esc(tomorrow)}</div>` : '')
-    + (hint ? `<div class="mp-hint">${zi('info')}<span>${esc(hint)}</span><button class="btn btn-ghost btn-compact mp-iconbtn" data-action="mpDismissHint" aria-label="Dismiss">${zi('close')}</button></div>` : '')
-    + (foot ? `<div class="mp-dayfoot"><button class="btn btn-ghost btn-compact" data-action="mpCopyDay">${zi('copy')} Copy day</button><button class="btn btn-ghost btn-compact" data-action="mpClearDay">${zi('close')} Clear day</button></div>` : '')
+    + (hint ? `<div class="mp-hint">${zi('info')}<span>${esc(hint)}</span><button class="btn btn-soft btn-compact mp-iconbtn" data-action="mpDismissHint" aria-label="Dismiss">${zi('close')}</button></div>` : '')
+    + (foot ? `<div class="mp-dayfoot"><button class="btn btn-soft btn-compact" data-action="mpCopyDay">${zi('copy')} Copy day</button><button class="btn btn-soft btn-soft--rose btn-compact" data-action="mpClearDay">${zi('close')} Clear day</button></div>` : '')
     + `</div>`;
 }
 const prow = (variant, icon, title, teaser, body, open) =>
@@ -486,7 +486,7 @@ const PLANNER = [
         hint: 'No iron-rich food planned today. Ragi, dal, poha or palak would add some.' }) },
       { label: '2d — egg planned again after a noted reaction (today, Next: Lunch)', width: 360, html: mpCard({ title: 'Wednesday, 4 Nov',
         lead: mpNext({ slot: 'lunch', ...rx('soft-egg-curry-rice'),
-          lead: ['flag', 'You noted a reaction to egg on 12 Oct. Talk to her doctor before offering egg again.'] }),
+          lead: ['flag', 'You marked egg to watch. Talk to her doctor before offering it again.'] }),
         slots: [mpSlot({ slot: 'breakfast', ...rx('suji-veg-upma'), act: { logged: 'Logged · 8:20 am' } }), mpSlot({ slot: 'dinner', ...rx('dal-chawal-lauki-sabzi') }), mpSlot({ slot: 'snack', act: 'add' })] }) },
     ],
   },

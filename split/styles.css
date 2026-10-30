@@ -362,9 +362,18 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 .btn-indigo { background:#5a6498; color:white; }
 /* Hover feedback only on devices that truly hover: on touch screens :hover sticks after a tap, and a
    tapped ghost button would sit in the rose alert colour (V-V-278-25). */
+/* The ghost's look applies everywhere; only its hover is scoped (a touch screen has no hover, and
+   with the base rule inside the media query a phone showed ghost buttons as bare text). */
+.btn-ghost  { background:transparent; border:1.5px solid var(--light); color:var(--mid); }
+/* Soft: a tinted, raised secondary for actions on a card (Add, Copy day, week navigation). Sage by
+   default; --peach for travel, --rose for clearing (§5 Button System). */
+.btn-soft { background:var(--sage-light); color:var(--tc-sage); border:1px solid rgba(58,112,96,0.18); box-shadow:0 1px 3px var(--shadow); }
+.btn-soft--peach { background:var(--peach-light); color:var(--tc-peach); border-color:rgba(154,95,48,0.2); }
+.btn-soft--rose { background:var(--rose-light); color:var(--tc-rose); border-color:rgba(176,72,94,0.2); }
+.btn-soft:active { transform:scale(0.97); box-shadow:none; }
+.btn-soft:disabled { opacity:0.45; box-shadow:none; }
 @media (hover:hover) {
 .btn:hover  { filter:brightness(1.05); transform:translateY(-1px); }
-.btn-ghost  { background:transparent; border:1.5px solid var(--light); color:var(--mid); }
 .btn-ghost:hover { border-color:var(--rose); color:var(--rose); background:var(--rose-light); }
 }
 .btn-compact { font-size:var(--fs-sm); padding:var(--sp-6) var(--sp-12); min-height:32px; border-radius:var(--r-xl); }
@@ -12029,13 +12038,24 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    same cascade fix as .recipe-row (the shorthand reset background-image:none). */
 .recipe-chip { display:inline-flex; align-items:center; gap:var(--sp-4); background-color:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--r-full); padding:var(--sp-4) var(--sp-10); font-size:var(--fs-xs); font-weight:600; color:var(--text); }
 .recipe-chip .zif { width:15px; height:15px; }
+/* A food chip keeps its food-group colour (the .fdom-chip text colour, which .recipe-chip's base
+   colour would otherwise override) and sits slightly raised. */
+.recipe-chip { box-shadow:0 1px 2px var(--shadow); }
+.recipe-chip.fdom-chip--grains { color:var(--tc-sage); }
+.recipe-chip.fdom-chip--fruits, .recipe-chip.fdom-chip--nonveg { color:var(--tc-rose); }
+.recipe-chip.fdom-chip--vegs { color:var(--tc-peach); }
+.recipe-chip.fdom-chip--dairy { color:var(--tc-sky); }
+.recipe-chip.fdom-chip--nuts { color:var(--tc-lav); }
 
 /* Expand-in-place detail — the 6-second recipe template: an at-a-glance
    ingredient row + an always-visible safety summary, then progressive-disclosure
    rows (content invited, not dumped). */
 .recipe-detail { position:relative; z-index:1; margin-top:var(--sp-12); padding-top:var(--sp-12); border-top:1px solid var(--card-border); }
-.recipe-steps { margin:0; padding-left:var(--sp-16); }
-.recipe-steps li { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
+.recipe-steps { margin:0; padding:0; list-style:none; counter-reset:rstep; }
+.recipe-steps li { position:relative; counter-increment:rstep; padding:0 0 0 var(--sp-32); font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); margin-bottom:var(--sp-8); }
+.recipe-steps li::before { content:counter(rstep); position:absolute; left:0; top:0; width:22px; height:22px; border-radius:var(--r-full); background:var(--sage-light); color:var(--tc-sage); font-size:var(--fs-2xs); font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px var(--shadow); }
+.rcp-prow--chew .recipe-steps li::before { background:var(--amber-light); color:var(--tc-amber); }
+.rcp-prow--travel .recipe-steps li::before { background:var(--peach-light); color:var(--tc-peach); }
 .recipe-warn { font-family:'Nunito', sans-serif; font-weight:800; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--tc-rose); }
 
 /* Safety summary — the 6-second LEAD, always visible (never collapsed, §9.7). */
@@ -12165,6 +12185,18 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    food is a .recipe-chip with its .fdom-chip food-group wash. */
 .mp-entries { flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); }
 .mp-entry { flex:1 1 100%; min-width:0; display:flex; align-items:center; gap:var(--sp-8); padding:var(--sp-6) var(--sp-10); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); border-radius:var(--r-lg); background:var(--card-bg); }
+.mp-entry { box-shadow:0 1px 3px var(--shadow); }
+.mp-entry--btn { font:inherit; text-align:left; cursor:pointer; min-height:44px; }
+.mp-entry-chev { flex:0 0 auto; display:inline-flex; color:var(--mid); transition:transform var(--ease-fast); }
+.mp-entry-chev .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-entry--btn[aria-expanded="true"] .mp-entry-chev { transform:rotate(180deg); }
+.mp-item { flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); min-width:0; }
+.mp-item:not(.mp-item--recipe) { flex:0 1 auto; }
+.mp-item--recipe > .mp-entry { flex:1 1 0; }
+.mp-item .mp-iconbtn { flex:0 0 auto; }
+.mp-recipe-card-foot { display:flex; justify-content:center; margin-top:var(--sp-8); }
+.mp-recipe-card-foot .zi { transform:rotate(180deg); }
+.mp-recipe-card { flex-basis:100%; margin:0 0 var(--sp-4); padding:var(--sp-10) var(--sp-12); border:1px solid var(--card-border); border-radius:var(--r-lg); background:var(--card-bg); }
 .mp-entry--gen { background:var(--rc-fl, var(--card-bg)); }
 [data-theme="dark"] .mp-entry--gen { background:var(--rc-fd, var(--surface)); }
 .mp-entry > .zif, .mp-entry > .zi { width:var(--icon-md); height:var(--icon-md); flex:0 0 auto; }
@@ -12178,6 +12210,27 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 /* Inventory and suggestion chips (pack summary, dinner suggestions): never planned food. */
 .mp-chips { display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-6); margin:var(--sp-6) 0 var(--sp-4); }
 .mp-picker .recipe-row { margin-bottom:var(--sp-6); }
+/* Planner sheets (a .ql-sheet): scroll inside, never the page (CL-5, CL-8). */
+.mp-sheet { max-height:85vh; overflow-y:auto; overscroll-behavior:contain; padding:var(--sp-12) var(--sp-16) var(--sp-24); }
+#mpSheetOverlay { touch-action:none; overscroll-behavior:contain; }
+.mp-sheet .mp-picker { border:none; padding:0; background:none; }
+.mp-sheet-head { display:flex; align-items:center; gap:var(--sp-8); margin:0 0 var(--sp-8); }
+.mp-sheet-head .mp-picker-title { flex:1; min-width:0; }
+.mp-sheet .chip { min-height:44px; gap:var(--sp-6); }
+.mp-sheet .chip .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.mp-sheet .chip[aria-pressed="true"] { background:var(--sage-light); color:var(--tc-sage); border-color:var(--sage); }
+/* A fixed 4 + 3 week: seven across can't keep 44 px at 320, and a lone seventh day reads as
+   next week (V-V-279-4, V-V-279-14). */
+.mp-daypick { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:var(--sp-4); margin:0 0 var(--sp-8); }
+.mp-sheet .btn.mp-daypick-btn { min-width:44px; min-height:56px; flex-direction:column; gap:var(--sp-2); padding:var(--sp-4) 0; }
+.mp-sheet .btn { min-height:44px; gap:var(--sp-6); }
+.mp-sheet .btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.rcp-plan { margin:var(--sp-8) 0 var(--sp-4); }
+.rcp-plan .btn { min-height:44px; gap:var(--sp-6); }
+.rcp-plan .btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+.rsn-teaser { display:none; }
+.mp-teaser .rsn-full { display:none; }
+.mp-teaser .rsn-teaser { display:inline; }
 /* A recipe locked for her age: the flat whisper, no fade or stripe, reason in the row in amber words (V-V-278-23). */
 .mp-locked .recipe-row-gen, [data-theme="dark"] .mp-locked .recipe-row-gen { background:var(--surface-alt); cursor:default; }
 .mp-locked .recipe-row-gen::before { display:none; }
