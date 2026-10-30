@@ -2,7 +2,7 @@
   "name": "SproutLab",
   "short_name": "SproutLab",
   "description": "Baby tracker and nutrition dashboard",
-  "version": "2026.10.30-13",
+  "version": "2026.10.30-14",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fdf0f3",

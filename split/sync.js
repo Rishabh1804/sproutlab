@@ -472,8 +472,9 @@ function _syncSetGlobal(name, value) {
     case 'mealPlan':     mealPlan     = value; return true;
     case 'profile': {
       var _prevDob = profile && profile.child ? profile.child.dob : null;
+      var _prevSex = profile && profile.child ? (profile.child.sex || null) : null;
       profile = _profNormalize(value); _profApply();
-      if (typeof _prfOnProfile === 'function') _prfOnProfile(_prevDob);
+      if (typeof _prfOnProfile === 'function') _prfOnProfile(_prevDob, _prevSex);
       return true;
     }
     default: return false;
@@ -648,9 +649,14 @@ function _postReceiveProfile(remote, local) {
   const r = _profNormalize(remote), l = _profNormalize(local);
   if (!r) return l || local;
   if (!l) return r;
-  if (l.pre && !r.pre) return r;          // a profile typed before joining yields to the household's (V-CA-280-12)
-  if (r.pre && !l.pre) return l;
-  return (r.ts >= l.ts) ? r : l;
+  let w, o;
+  if (l.pre && !r.pre) { w = r; o = l; }          // a profile typed before joining yields to the household's (V-CA-280-12)
+  else if (r.pre && !l.pre) { w = l; o = r; }
+  else if (r.ts >= l.ts) { w = r; o = l; } else { w = l; o = r; }
+  // The sex is never cleared once given (setup requires it). A newer copy without it came from a
+  // phone still on the build before it was asked, so the answer carries over (child-sex-v1).
+  if (!w.child.sex && o.child.sex) w = Object.assign({}, w, { child: Object.assign({}, w.child, { sex: o.child.sex }) });
+  return w;
 }
 function _postReceiveMealPlan(remotePlan, localPlan) {
   try { return _mpMerge(remotePlan, localPlan, today()); }

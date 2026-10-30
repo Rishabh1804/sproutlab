@@ -12290,3 +12290,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .prf-field .form-input { min-height:48px; }
 .prf-label { font-size:var(--fs-base); }
 .form-input[aria-invalid="true"] { border-color:var(--tc-rose); }
+/* Girl / boy chips (child-sex-v1). The same sage for both: the choice picks a growth chart, not a colour. */
+.prf-sex { border:0; padding:0; margin:0; min-width:0; }
+.prf-sex-row { display:flex; gap:var(--sp-8); }
+.prf-sex-opt { flex:1; position:relative; }
+.prf-sex-opt input { position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; }
+.prf-sex-opt span { display:flex; align-items:center; justify-content:center; min-height:48px; border-radius:var(--r-lg); border:1.5px solid var(--card-border); background:var(--card-bg); font-weight:700; color:var(--mid); transition:all var(--ease-fast); }
+.prf-sex-opt input:checked + span { background:var(--sage-light); border-color:var(--tc-sage); color:var(--tc-sage); box-shadow:0 1px 3px var(--shadow); }
+.prf-sex-opt input:focus-visible + span { outline:2px solid var(--tc-sage); outline-offset:2px; }
+.prf-hint { font-size:var(--fs-sm); color:var(--light); }

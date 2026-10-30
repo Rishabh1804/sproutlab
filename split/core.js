@@ -475,7 +475,7 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
 // module-wide `let`s so every existing reader keeps working; _profApply refreshes them whenever the
 // profile loads or syncs. With no profile the Welcome / Confirm gate covers the app; underneath it,
 // a neutral stand-in (born today, no name) keeps every age computation finite (K-280-2, HR-13).
-const _PROFILE_FALLBACK = { name: 'your child', dob: null, solidsStart: null };
+const _PROFILE_FALLBACK = { name: 'your child', dob: null, solidsStart: null, sex: null };
 let DOB = new Date();
 let SOLIDS_START = new Date();
 let profile = null;
@@ -514,7 +514,7 @@ let activityMeta, milestoneSuppress;
 // teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
 let teethLog;
 // ── PROFILE (privacy-v1 §3.1) ──
-// { v:1, child:{ name, dob:'YYYY-MM-DDTHH:mm', solidsStart:'YYYY-MM-DD'|null }, place:{ city, tz }, ts }
+// { v:1, child:{ name, dob:'YYYY-MM-DDTHH:mm', solidsStart:'YYYY-MM-DD'|null, sex:'f'|'m'|null }, place:{ city, tz }, ts }
 const _PROF_DOB_RE = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/;
 function _profParse(str) {
   const m = _PROF_DOB_RE.exec(String(str || ''));
@@ -534,6 +534,7 @@ function _profNormalize(p) {
   const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: _profCleanName(c.name) }) });
   if (!out.child.name) return null;
   if (c.solidsStart != null && !_profParse(c.solidsStart)) out.child.solidsStart = null;
+  if (c.sex !== 'f' && c.sex !== 'm') out.child.sex = null;
   if (out.place && typeof out.place === 'object' && out.place.city != null) out.place = Object.assign({}, out.place, { city: _profCleanName(out.place.city) || null });
   if (typeof out.ts !== 'number') out.ts = 0;
   return out;
@@ -563,6 +564,27 @@ function _profCoords() {
 function _profGeoGet(city) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); return m[String(city).toLowerCase().trim()] || null; } catch (e) { return null; } }
 function _profGeoPut(city, g) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); m[String(city).toLowerCase().trim()] = g; localStorage.setItem('ziva_geo_cache', JSON.stringify(m)); } catch (e) {} }
 function childPlace() { return (profile && profile.place) || null; }
+// The child's sex, 'f' / 'm', or null until the family says (child-sex-v1). It picks the WHO growth
+// standard and the pronouns. A profile without it gets the one-question gate, so null is only ever
+// seen under that gate.
+function childSex() { const s = _profChild().sex; return s === 'f' || s === 'm' ? s : null; }
+// The WHO growth tables for this child's sex (data.js WHO_GROWTH). Under the gate (sex not yet
+// given) it returns the girls' set as a stand-in, so the hidden screens stay finite; nothing reads
+// it there.
+function whoT() { return WHO_GROWTH[childSex() || 'f']; }
+// "girls" / "boys" for growth copy ("heavier than 60% of girls her age"); "children" until known.
+function childKinWord() { const s = childSex(); return s === 'm' ? 'boys' : s === 'f' ? 'girls' : 'children'; }
+// Pronouns for copy: pron('subj') she/he, 'obj' her/him, 'poss' her/his, 'refl' herself/himself.
+// With the sex not yet given it reads they/them/their, which only the gate's own screens can see.
+const _PRON = {
+  f: { subj: 'she', obj: 'her', poss: 'her', refl: 'herself' },
+  m: { subj: 'he', obj: 'him', poss: 'his', refl: 'himself' },
+  u: { subj: 'they', obj: 'them', poss: 'their', refl: 'themselves' },
+};
+function pron(kind, cap) {
+  const w = (_PRON[childSex() || 'u'] || _PRON.u)[kind] || '';
+  return cap ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+}
 // Refresh the module-wide date anchors from the profile (or the P1 fallback).
 let _profAppliedOnce = false;
 function _profApply() {
@@ -5125,6 +5147,7 @@ function closeSettingsSidebar() {
   document.body.style.overflow = '';
   // Sign in from Welcome opens Settings; if it did not bring a profile, ask again (V-M-280-7).
   if (!profile && typeof initProfileGate === 'function') setTimeout(() => { if (!profile && !document.getElementById('prfGate')) _prfShow(_prfHasRecords() ? 'confirm' : 'welcome'); }, 400);
+  else if (profile && !childSex() && typeof initProfileGate === 'function') setTimeout(() => { if (!childSex() && !document.getElementById('prfGate')) _prfShow('sex'); }, 400);
 }
 
 function toggleSettingsSidebar() {
@@ -5866,7 +5889,14 @@ function _prfHasRecords() {
 }
 function initProfileGate() {
   try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
-  if (profile) return;
+  // A profile from before the child's sex was asked gets one question (child-sex-v1). An attached
+  // device waits a moment first: the other phone may already have answered it.
+  if (profile) {
+    if (childSex()) return;
+    const ask = () => { if (profile && !childSex() && !document.getElementById('prfGate')) _prfShow('sex'); };
+    if (typeof _syncLedgerActive === 'function' && _syncLedgerActive()) setTimeout(ask, 8000); else ask();
+    return;
+  }
   // A device already attached to a household waits for the household's profile before asking: if
   // the other phone has confirmed, this one should take that, not type its own (V-CA-280-16).
   if (typeof _syncLedgerActive === 'function' && _syncLedgerActive() && !_prfWaited) {
@@ -5887,7 +5917,7 @@ function _prfShow(mode) {
   ov.setAttribute('aria-modal', 'true');
   ov.setAttribute('aria-labelledby', 'prfTitle');
   const app = document.querySelector('.app'); if (app) app.inert = true;   // the app behind is out of reach
-  ov.innerHTML = `<div class="prf-card">${mode === 'welcome' ? _prfWelcomeHtml() : _prfFormHtml(mode)}</div>`;
+  ov.innerHTML = `<div class="prf-card">${mode === 'welcome' ? _prfWelcomeHtml() : mode === 'sex' ? _prfSexHtml() : _prfFormHtml(mode)}</div>`;
   document.body.appendChild(ov);
   document.body.style.overflow = 'hidden';
   const first = ov.querySelector('input, button');
@@ -5905,6 +5935,24 @@ function _prfWelcomeHtml() {
     + `<button class="btn btn-soft prf-btn" data-action="prfSignIn">${zi('heart')} I already use SproutLab: sign in</button>`
     + `<p class="prf-note">Signing in joins your family's shared record on this phone.</p>`;
 }
+// Girl / boy, as two radio chips. WHO publishes separate growth standards for each, so the choice
+// sets which chart her growth is read against; it also sets the pronouns in the app's copy.
+function _prfSexField(sex) {
+  const opt = (v, label) => `<label class="prf-sex-opt"><input type="radio" name="prfSex" value="${v}"${sex === v ? ' checked' : ''}><span>${label}</span></label>`;
+  return `<fieldset class="prf-field prf-sex" id="prfSexSet"><legend class="prf-label">Girl or boy</legend>`
+    + `<div class="prf-sex-row">${opt('f', 'Girl')}${opt('m', 'Boy')}</div>`
+    + `<span class="prf-hint">Growth is compared with the WHO chart for girls or for boys.</span></fieldset>`;
+}
+// The one-question gate for a profile saved before the sex was asked.
+function _prfSexHtml() {
+  return `<div class="prf-icon">${zi('chart')}</div>`
+    + `<h1 class="prf-title" id="prfTitle">One more detail</h1>`
+    + `<p class="prf-lead">Is ${childNameHtml()} a girl or a boy? WHO publishes separate growth charts for each, so SproutLab needs this to read ${childNameHtml()}\u2019s weight and height correctly.</p>`
+    + `<form class="prf-form" data-prf-form="1" novalidate>${_prfSexField(null)}`
+    + `<p class="prf-err" id="prfErr" role="alert"></p>`
+    + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="sex">${zi('check')} Save</button>`
+    + `</form>`;
+}
 function _prfFormHtml(mode) {
   const confirm = mode === 'confirm', editing = mode === 'edit';
   const today_ = today();
@@ -5918,6 +5966,7 @@ function _prfFormHtml(mode) {
     + `<form class="prf-form" data-prf-form="1" novalidate>`
     + `<label class="prf-field"><span class="prf-label">Name</span><input class="form-input" id="prfName" type="text" maxlength="40" autocomplete="off" required${val(c.name)}></label>`
     + `<label class="prf-field"><span class="prf-label">Date of birth</span><input class="form-input" id="prfDob" type="date" max="${today_}" required${val(dobDate)}></label>`
+    + _prfSexField(c.sex || null)
     + `<label class="prf-field"><span class="prf-label">Time of birth <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfTime" type="time"${val(dobTime)}></label>`
     + `<label class="prf-field"><span class="prf-label">Started solids on <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfSolids" type="date" max="${today_}"${val(c.solidsStart)}></label>`
     + `<label class="prf-field"><span class="prf-label">Town or city <span class="prf-opt">(optional, for weather)</span></span><input class="form-input" id="prfCity" type="text" maxlength="40" autocomplete="off"${val(city)}></label>`
@@ -5933,7 +5982,8 @@ function prfDispatch(action, arg) {
   if (action === 'prfStart') { _prfPending = null; _prfShow('setup'); }
   else if (action === 'prfBack') { _prfPending = null; _prfShow('welcome'); }
   else if (action === 'prfEdit') { _prfPending = null; if (typeof closeSettingsSidebar === 'function') closeSettingsSidebar(); _prfShow('edit'); }
-  else if (action === 'prfCancel') { _prfPending = null; _prfClose(); }
+  // Cancel can't leave a profile without its sex behind: that question comes straight back.
+  else if (action === 'prfCancel') { _prfPending = null; _prfClose(); if (profile && !childSex()) _prfShow('sex'); }
   else if (action === 'prfSignIn') { _prfClose(); if (typeof openSettingsSidebar === 'function') openSettingsSidebar(); }
   else if (action === 'prfSave') _prfSubmit(arg);
 }
@@ -5945,16 +5995,28 @@ function _prfSubmit(mode) {
     const f = fieldId && document.getElementById(fieldId);
     if (f) { f.setAttribute('aria-invalid', 'true'); f.focus(); }
   };
+  const sexEl = document.querySelector('#prfGate input[name="prfSex"]:checked');
+  const sex = sexEl ? sexEl.value : '';
+  const noSex = () => { const r = document.querySelector('#prfGate input[name="prfSex"]'); err('Please choose girl or boy.'); if (r) r.focus(); };
+  if (mode === 'sex') {
+    if (sex !== 'f' && sex !== 'm') return noSex();
+    if (!profile || !_profSave(Object.assign({}, profile.child, { sex }), profile.place || null)) return err('That didn\'t save. Please try again.');
+    try { sessionStorage.setItem('prf_notice', 'Details saved'); } catch (e) {}
+    _prfClose();
+    setTimeout(() => location.reload(), 150);
+    return;
+  }
   const name = v('prfName'), dob = v('prfDob'), time = v('prfTime'), solids = v('prfSolids'), city = v('prfCity');
   if (!name) return err('Please add your child\'s name.', 'prfName');
+  if (sex !== 'f' && sex !== 'm') return noSex();
   if (!dob || !_profParse(dob)) return err('Please add the date of birth.', 'prfDob');
   if (dob > today()) return err('The date of birth can\'t be in the future.', 'prfDob');
   if (solids && solids < dob) return err('Solids can\'t start before the date of birth.', 'prfSolids');
   // A record dated before the birth date means the date is wrong (V-M-280-2).
   const earliest = _prfEarliestRecord();
-  if (earliest && earliest < dob) return err(`Some of her records are dated before this birth date (the earliest is ${formatDate(earliest)}). Please check the year.`, 'prfDob');
+  if (earliest && earliest < dob) return err(`Some records on this phone are dated before this birth date (the earliest is ${formatDate(earliest)}). Please check the year.`, 'prfDob');
   // Read the age back once before saving: a year typo shifts every vaccine and food guide.
-  const key = [name, dob, time, solids, city].join('|');
+  const key = [name, dob, time, solids, city, sex].join('|');
   if (_prfPending !== key) {
     _prfPending = key;
     const a = ageAt(new Date(), _profParse(time ? dob + 'T' + time : dob));
@@ -5966,7 +6028,7 @@ function _prfSubmit(mode) {
   const tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { return null; } })();
   const prevPlace = profile && profile.place ? profile.place : null;
   const place = city ? Object.assign({}, prevPlace && prevPlace.city === city ? prevPlace : {}, { city, tz }) : (tz ? { city: null, tz } : null);
-  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null }, place);
+  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null, sex }, place);
   if (!saved) return err('Those details don\'t look right. Please check them.');
   // Every screen was drawn with the old birth date; a fresh start redraws them all (V-M-280-1).
   try { sessionStorage.setItem('prf_notice', mode === 'confirm' || mode === 'edit' ? 'Details saved' : 'Welcome, ' + saved.child.name); } catch (e) {}
@@ -5986,13 +6048,18 @@ function _prfEarliestRecord() {
   return min;
 }
 // A profile arriving by sync (another phone in the family set it) closes the gate. When it moves
-// the birth date, every screen drawn with the old one is redrawn by a fresh start (V-M-280-1).
-function _prfOnProfile(prevDob) {
+// the birth date or the sex, every screen drawn with the old one is redrawn by a fresh start
+// (V-M-280-1): the sex changes the growth chart and the pronouns.
+function _prfOnProfile(prevDob, prevSex) {
   if (!profile) return;
   const gateOpen = !!document.getElementById('prfGate');
   _prfClose();
-  if (gateOpen || (prevDob !== undefined && prevDob !== profile.child.dob)) {
-    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : 'Birth date updated from another phone'); } catch (e) {}
+  // Still no sex in the household's copy: keep asking.
+  if (!childSex()) { _prfShow('sex'); return; }
+  const dobMoved = prevDob !== undefined && prevDob !== profile.child.dob;
+  const sexMoved = prevSex !== undefined && prevSex !== childSex();
+  if (gateOpen || dobMoved || sexMoved) {
+    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : dobMoved ? 'Birth date updated from another phone' : 'Details updated from another phone'); } catch (e) {}
     const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if (!busy) setTimeout(() => location.reload(), 150);
   }
@@ -6272,8 +6339,9 @@ function getGrowthVelocity() {
 }
 
 // Growth velocity interpretation
-// ── Growth-velocity band, 12–24 months (girls) ──
-// From WHO Child Growth Standards velocity tables (cdn.who.int, fetched 2026-09-24):
+// ── Growth-velocity band, 12–24 months (girls and boys) ──
+// From WHO Child Growth Standards velocity tables (cdn.who.int, fetched 2026-09-24; boys checked
+// 2026-10-30: 12–24 m boys P15 ≈ 133→53 g, P50 ≈ 437→376 g, P85 ≈ 766→713 g, so one band fits both):
 //   weight, 2-month increments 12–24 m: P15 ≈ 140→39 g, P50 ≈ 428→367 g, P85 ≈ 736→723 g
 //     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
 //   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
@@ -6290,7 +6358,7 @@ function getGrowthNarrative(velocity) {
 
   if (velocity.wtGPerWeek != null) {
     const gw = velocity.wtGPerWeek;
-    // WHO-based expected ranges by age (girls, g/week)
+    // WHO-based expected ranges by age (g/week; from 12 m one band fits girls and boys)
     const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
     const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
     let interp;

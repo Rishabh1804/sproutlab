@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 
 // Privacy v1 P2a: the build ships no records, so a new family's first day is an empty household.
 // Every screen must render with nothing logged: only a profile (an invented child, HR-13).
-const PROFILE = { v: 1, child: { name: 'Asha', dob: '2025-12-01', solidsStart: null }, place: null, ts: 1 };
+// A boy, so every screen also renders against the boys' WHO tables and pronouns (child-sex-v1).
+const PROFILE = { v: 1, child: { name: 'Asha', dob: '2025-12-01', solidsStart: null, sex: 'm' }, place: null, ts: 1 };
 
 test.use({ storageState: { cookies: [], origins: [{ origin: 'http://127.0.0.1:5173', localStorage: [{ name: 'ziva_profile', value: JSON.stringify(PROFILE) }] }] } });
 

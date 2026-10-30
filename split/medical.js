@@ -902,7 +902,7 @@ function renderGrowthFacts() {
     const moExact = ageMonthsAt(lwFact.date);
     const whoInterp = getGrowthRef(moExact);
     const pctW = calcPercentile(lwFact.wt, whoInterp.w3, whoInterp.w50, whoInterp.w97, whoInterp.w15, whoInterp.w85);
-    facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of girls her age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
+    facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of ${childKinWord()} ${pron('poss')} age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
   }
   if (lh) {
     const htWho = getGrowthRef(ageMonthsAt(lh.date));
@@ -1191,22 +1191,16 @@ function calcPercentile(val, p3, p50, p97, p15, p85) {
 // WHO tables run 0–24 months (data.js). Clamp to the table's own last index — never a
 // hard-coded month — so extending the table can't be silently undone by a stale constant.
 function getInterpolatedWHO(moExact) {
-  const last = WHO_W50.length - 1;
+  const T = whoT();
+  const last = T.W50.length - 1;
   const lo = Math.max(0, Math.floor(moExact));
   const li = Math.min(lo, last);
   const hi2 = Math.min(li + 1, last);
   const frac = lo >= last ? 0 : moExact - lo;
+  const at = a => a[li] + (a[hi2] - a[li]) * frac;
   return {
-    w3:  WHO_W3[li]  + (WHO_W3[hi2]  - WHO_W3[li])  * frac,
-    w50: WHO_W50[li] + (WHO_W50[hi2] - WHO_W50[li]) * frac,
-    w97: WHO_W97[li] + (WHO_W97[hi2] - WHO_W97[li]) * frac,
-    w15: WHO_W15[li] + (WHO_W15[hi2] - WHO_W15[li]) * frac,
-    w85: WHO_W85[li] + (WHO_W85[hi2] - WHO_W85[li]) * frac,
-    h3:  WHO_H3[li]  + (WHO_H3[hi2]  - WHO_H3[li])  * frac,
-    h50: WHO_H50[li] + (WHO_H50[hi2] - WHO_H50[li]) * frac,
-    h97: WHO_H97[li] + (WHO_H97[hi2] - WHO_H97[li]) * frac,
-    h15: WHO_H15[li] + (WHO_H15[hi2] - WHO_H15[li]) * frac,
-    h85: WHO_H85[li] + (WHO_H85[hi2] - WHO_H85[li]) * frac,
+    w3: at(T.W3), w15: at(T.W15), w50: at(T.W50), w85: at(T.W85), w97: at(T.W97),
+    h3: at(T.H3), h15: at(T.H15), h50: at(T.H50), h85: at(T.H85), h97: at(T.H97),
   };
 }
 
@@ -1350,7 +1344,7 @@ function getGrowthRef(moExact) {
 // the first year and never past the WHO table (24 months). Replaces the fixed 0–12 axis, which
 // clipped every measurement taken after her first birthday off the chart.
 function _growthChartMaxMonth() {
-  const last = WHO_W50.length - 1;
+  const last = whoT().W50.length - 1;
   // ageAt() is the timezone-safe calendar age (HR-12; Maren V-M-266-15), not a UTC-parsed date string.
   return Math.min(last, Math.max(12, ageAt().months + 2));
 }
@@ -1512,10 +1506,10 @@ function drawChart(canvasId) {
   // Compute axis bounds
   let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 2;
   // Headroom for a reading above P97 so it is never drawn off-canvas (Maren V-M-266-13).
-  let yMax = Math.max(Math.ceil(WHO_W97[xMax] + 0.5), zivaPoints.length ? Math.ceil(Math.max(...zivaPoints.map(p => p.y)) + 0.5) : 0);
+  let yMax = Math.max(Math.ceil(whoT().W97[xMax] + 0.5), zivaPoints.length ? Math.ceil(Math.max(...zivaPoints.map(p => p.y)) + 0.5) : 0);
   if (zoom && zivaPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
-    xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
+    xMax = Math.min(whoT().W50.length - 1, Math.ceil(zoom.max));
     if (xMax - xMin < 1) xMax = xMin + 1;
     const vals = zivaPoints.map(p => p.y);
     const dataMin = Math.min(...vals);
@@ -1526,9 +1520,9 @@ function drawChart(canvasId) {
   }
   const datasets = [];
 
-  datasets.push({ label:'WHO 97th', data: WHO_W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-  datasets.push({ label:'WHO 3rd',  data: WHO_W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
-  datasets.push({ label:'WHO 50th', data: WHO_W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
+  datasets.push({ label:'WHO 97th', data: whoT().W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
+  datasets.push({ label:'WHO 3rd',  data: whoT().W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
+  datasets.push({ label:'WHO 50th', data: whoT().W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const wtPointR = zoom ? 7 : 5;
   const wtHoverR = zoom ? 10 : 7;
   datasets.push({ label:'' + childNameCapHtml() + '', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
@@ -1538,7 +1532,7 @@ function drawChart(canvasId) {
 
   const _chartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
-    data:{ labels: Array.from({length:WHO_W50.length}, (_,i) => i+'m'), datasets },
+    data:{ labels: Array.from({length:whoT().W50.length}, (_,i) => i+'m'), datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
@@ -1589,10 +1583,10 @@ function drawHeightChart(canvasId) {
 
   // Compute axis bounds
   let xMin = 0, xMax = _growthChartMaxMonth(), yMin = 44;
-  let yMax = Math.max(Math.ceil((WHO_H97[xMax] + 2) / 2) * 2, zivaHtPoints.length ? Math.ceil(Math.max(...zivaHtPoints.map(p => p.y)) + 2) : 0);
+  let yMax = Math.max(Math.ceil((whoT().H97[xMax] + 2) / 2) * 2, zivaHtPoints.length ? Math.ceil(Math.max(...zivaHtPoints.map(p => p.y)) + 2) : 0);
   if (zoom && zivaHtPoints.length > 0) {
     xMin = Math.max(0, Math.floor(zoom.min));
-    xMax = Math.min(WHO_W50.length - 1, Math.ceil(zoom.max));
+    xMax = Math.min(whoT().W50.length - 1, Math.ceil(zoom.max));
     if (xMax - xMin < 1) xMax = xMin + 1;
     const vals = zivaHtPoints.map(p => p.y);
     const dataMin = Math.min(...vals);
@@ -1604,9 +1598,9 @@ function drawHeightChart(canvasId) {
 
   const datasets = [];
 
-  datasets.push({ label:'WHO 97th', data: WHO_H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
-  datasets.push({ label:'WHO 3rd',  data: WHO_H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
-  datasets.push({ label:'WHO 50th', data: WHO_H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
+  datasets.push({ label:'WHO 97th', data: whoT().H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
+  datasets.push({ label:'WHO 3rd',  data: whoT().H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
+  datasets.push({ label:'WHO 50th', data: whoT().H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const htPointR = zoom ? 7 : 5;
   const htHoverR = zoom ? 10 : 7;
   datasets.push({ label:'' + childNameCapHtml() + '', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
@@ -1616,7 +1610,7 @@ function drawHeightChart(canvasId) {
 
   const _hChartInst = new Chart(ctx.getContext('2d'), {
     type:'line',
-    data:{ labels: Array.from({length:WHO_W50.length}, (_,i) => i+'m'), datasets },
+    data:{ labels: Array.from({length:whoT().W50.length}, (_,i) => i+'m'), datasets },
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
@@ -1879,7 +1873,7 @@ function renderSizeComparison() {
         <div class="size-icon">${zi('chart')}</div>
         <div class="size-body">
           <strong>${funFact}</strong>
-          <span>Compared to ${refLabel} growth standards for ${Math.round(moExact)}-month-old girls</span>
+          <span>Compared to ${refLabel} growth standards for ${Math.round(moExact)}-month-old ${childKinWord()}</span>
         </div>
       </div>`;
   }

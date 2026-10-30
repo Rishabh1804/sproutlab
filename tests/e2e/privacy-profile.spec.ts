@@ -76,6 +76,9 @@ test.describe('privacy P2a: profile gate', () => {
     await page.fill('#prfDob', '2025-02-10');
     await page.fill('#prfCity', 'Testville');
     await gate.locator('[data-action="prfSave"]').click();
+    await expect(page.locator('#prfErr')).toContainText('girl or boy');   // required: it picks the growth chart
+    await gate.locator('.prf-sex-opt', { hasText: 'Girl' }).click();
+    await gate.locator('[data-action="prfSave"]').click();
     await expect(page.locator('#prfCheck')).toContainText('That makes Asha');   // the read-back (V-M-280-2)
     await expect(gate).toHaveCount(1);
     await Promise.all([page.waitForEvent('load'), gate.locator('[data-action="prfSave"]').click()]);
@@ -84,6 +87,7 @@ test.describe('privacy P2a: profile gate', () => {
     const r = await page.evaluate(() => ({ name: (window as any).childName(), stored: JSON.parse(localStorage.getItem('ziva_profile')!), overflow: document.body.style.overflow }));
     expect(r.name).toBe('Asha');
     expect(r.stored.child.dob).toBe('2025-02-10');
+    expect(r.stored.child.sex).toBe('f');
     expect(r.stored.pre).toBe(true);   // typed before joining a household: provisional (V-CA-280-12)
     expect(r.overflow).toBe('');
   });
@@ -103,6 +107,7 @@ test.describe('privacy P2a: profile gate', () => {
     await expect(gate.locator('[data-action="prfBack"]')).toHaveCount(0);
     await expect(gate.locator('[data-action="prfSignIn"]')).toHaveCount(1);
     await page.fill('#prfName', 'Asha');
+    await gate.locator('.prf-sex-opt', { hasText: 'Girl' }).click();
     await page.fill('#prfDob', '2030-01-01');
     await gate.locator('[data-action="prfSave"]').click();
     await expect(page.locator('#prfErr')).toContainText('future');
@@ -140,5 +145,76 @@ test.describe('privacy P2: profile merge and edit', () => {
     await expect(page.locator('#prfName')).toHaveValue('Asha');
     await page.locator('#prfGate [data-action="prfCancel"]').click();
     await expect(page.locator('#prfGate')).toHaveCount(0);
+  });
+});
+
+// child-sex-v1: the child's sex picks the WHO growth standard and the pronouns.
+test.describe('child sex: growth standard and pronouns', () => {
+  test('a profile saved before the question gets one question; choosing Boy moves growth to the boys\' WHO tables', async ({ page }) => {
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('ziva_profile', JSON.stringify({ v: 1, child: { name: 'Asha', dob: '2025-09-01', solidsStart: null }, place: null, ts: 1 }));
+      sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/index.html?nosync');
+    const gate = page.locator('#prfGate');
+    await expect(gate).toContainText('One more detail');
+    await expect(gate.locator('[data-action="prfCancel"]')).toHaveCount(0);
+    await gate.locator('[data-action="prfSave"]').click();
+    await expect(page.locator('#prfErr')).toContainText('girl or boy');
+    await gate.locator('.prf-sex-opt', { hasText: 'Boy' }).click();
+    await Promise.all([page.waitForEvent('load'), gate.locator('[data-action="prfSave"]').click()]);
+    await page.waitForFunction(() => typeof (window as any).childSex === 'function');
+    await expect(page.locator('#prfGate')).toHaveCount(0);
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      return { sex: w.childSex(), stored: JSON.parse(localStorage.getItem('ziva_profile')!).child, w50at12: w.getInterpolatedWHO(12).w50, h50at12: w.getInterpolatedWHO(12).h50,
+        pron: [w.pron('subj'), w.pron('obj'), w.pron('poss'), w.pron('refl', true)], kin: w.childKinWord() };
+    });
+    expect(r.sex).toBe('m');
+    expect(r.stored.name).toBe('Asha');              // only the sex changed
+    expect(r.stored.dob).toBe('2025-09-01');
+    expect(r.w50at12).toBeCloseTo(9.6, 5);            // WHO boys' weight-for-age median at 12 m
+    expect(r.h50at12).toBeCloseTo(75.7, 5);           // WHO boys' length-for-age median at 12 m
+    expect(r.pron).toEqual(['he', 'him', 'his', 'Himself']);
+    expect(r.kin).toBe('boys');
+  });
+
+  test('the same weight reads against each sex\'s own chart', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any)._profSave === 'function');
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const pctAt = () => { const ref = w.getInterpolatedWHO(12); return w.calcPercentile(9.6, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85).pct; };
+      const girl = pctAt();
+      w._profSave(Object.assign({}, profile.child, { sex: 'm' }), profile.place);
+      const boy = pctAt();
+      return { girl, boy, pron: w.pron('subj') };
+    });
+    expect(r.boy).toBe(50);                 // 9.6 kg is the boys' median at 12 m
+    expect(r.girl).toBeGreaterThan(60);     // and well above the girls' (8.9 kg)
+    expect(r.pron).toBe('he');
+  });
+
+  test('a newer profile from a phone on the older build never clears the sex', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any)._postReceiveProfile === 'function');
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const withSex = { v: 1, child: { name: 'Asha', dob: '2025-02-10', sex: 'm' }, ts: 5 };
+      const olderBuild = { v: 1, child: { name: 'Asha R', dob: '2025-02-10' }, ts: 9 };
+      const recv = w._postReceiveProfile(olderBuild, withSex);
+      const push = w._syncMergeForPush(olderBuild, withSex, w.KEYS ? w.KEYS.profile : 'ziva_profile');
+      const bad = w._profNormalize({ v: 1, child: { name: 'Asha', dob: '2025-02-10', sex: 'x' }, ts: 1 });
+      return { recv: [recv.child.name, recv.child.sex], push: [push.child.name, push.child.sex], bad: bad.child.sex };
+    });
+    expect(r.recv).toEqual(['Asha R', 'm']);   // the newer name wins; the sex carries over
+    expect(r.push).toEqual(['Asha R', 'm']);
+    expect(r.bad).toBeNull();
+  });
+
+  test('Settings shows the sex prefilled', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any).prfDispatch === 'function');
+    await page.evaluate(() => (window as any).prfDispatch('prfEdit'));
+    await expect(page.locator('#prfGate input[name="prfSex"][value="f"]')).toBeChecked();
   });
 });
