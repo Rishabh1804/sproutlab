@@ -613,12 +613,18 @@ function _profSave(child, place) {
   const provisional = typeof _syncLedgerActive === 'function' ? !_syncLedgerActive() : true;
   const next = _profNormalize({ v: 1, child, place: place || (profile && profile.place) || null, ts: Math.max(Date.now(), ((profile && profile.ts) || 0) + 1), pre: provisional || undefined });
   if (!next) return null;
+  // Probe first, so a write the disk can't hold never reaches the household either (Cipher A1).
+  try { localStorage.setItem('ziva_profile_probe', JSON.stringify(next)); localStorage.removeItem('ziva_profile_probe'); } catch (e) { return null; }
+  const prev = profile;
   profile = next;
   save(KEYS.profile, profile);
-  _profApply();
   // save() swallows a storage failure; a full phone would otherwise reload into the same question
-  // forever. Read it back, and let the caller show its error (V-CA-281-3).
-  try { const back = JSON.parse(localStorage.getItem(KEYS.profile) || 'null'); if (!back || !back.child || back.ts !== profile.ts) return null; } catch (e) { return null; }
+  // forever. Read it back, and let the caller show its error (V-CA-281-3). On a failure, memory goes
+  // back to what the disk holds (Cipher A1).
+  let held = null;
+  try { held = JSON.parse(localStorage.getItem(KEYS.profile) || 'null'); } catch (e) { held = null; }
+  if (!held || !held.child || held.ts !== next.ts) { profile = prev; _profApply(); return null; }
+  _profApply();
   return profile;
 }
 
@@ -6042,7 +6048,7 @@ function _prfSubmit(mode) {
   const prevPlace = profile && profile.place ? profile.place : null;
   const place = city ? Object.assign({}, prevPlace && prevPlace.city === city ? prevPlace : {}, { city, tz }) : (tz ? { city: null, tz } : null);
   const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null, sex }, place);
-  if (!saved) return err('Those details don\'t look right. Please check them.');
+  if (!saved) return err(_profNormalize({ v: 1, child: { name, dob: time ? dob + 'T' + time : dob }, ts: 0 }) ? 'That didn\'t save. This phone may be out of storage space.' : 'Those details don\'t look right. Please check them.');
   // Every screen was drawn with the old birth date; a fresh start redraws them all (V-M-280-1).
   try { sessionStorage.setItem('prf_notice', mode === 'confirm' || mode === 'edit' ? 'Details saved' : 'Welcome, ' + saved.child.name); } catch (e) {}
   _prfClose();
@@ -6073,6 +6079,10 @@ function _prfOnProfile(prevDob, prevSex) {
   const dobMoved = prevDob !== undefined && prevDob !== profile.child.dob;
   const sexMoved = prevSex !== undefined && prevSex !== childSex();
   if (gateOpen || dobMoved || sexMoved) {
+    // Reload only if the disk holds what memory does: on a full phone the receive save fails
+    // silently, and a reload would bring back the same question, forever (Cipher A1).
+    const held = load(KEYS.profile, null);
+    if (!held || held.ts !== profile.ts) { if (typeof showQLToast === 'function') showQLToast('This phone is out of storage space. Free some space, then reopen SproutLab.', 5000); return; }
     try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : dobMoved ? 'Birth date updated from another phone' : `Growth now uses the WHO chart for ${childKinWord()} (changed on another phone)`); } catch (e) {}
     const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if (!busy) setTimeout(() => location.reload(), 150);

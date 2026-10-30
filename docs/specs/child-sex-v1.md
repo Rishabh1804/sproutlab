@@ -20,7 +20,9 @@
   - A mis-tap at 2 AM moves every percentile, so it must be visible (V-M-281-2, V-V-281-3).
 - **Sync.** Newest-ts-wins is unchanged, with one exception. The sex is never cleared: a newer copy without it came from a phone still on the older build, so the answer carries over (`_postReceiveProfile`, which also serves the push merge).
 - **Write-back:** when the merge refills a sex the cloud copy lacks, the phone writes it back, the meal planner's way, so the household's copy holds it (V-CA-281-1). A provisional copy fills it only for the same child, by birth date (V-CA-281-4).
-- **Save check:** `_profSave` reads the record back, so a full phone shows "That didn't save" instead of reloading into the same question (V-CA-281-3).
+- **Full storage:**
+  - `_profSave` probes the write first and reads the record back, so a full phone shows "That didn't save" instead of reloading into the same question, and memory never holds what the disk doesn't (V-CA-281-3).
+  - A synced profile reloads the app only when the disk holds it; otherwise a toast says the phone is out of space (Cipher A1).
 - **A sex change** arriving by sync reloads the app, like a birth-date change, because it redraws every chart and pronoun. The toast names the new chart (V-M-281-4).
 
 ### 2.2 Growth tables
@@ -55,6 +57,7 @@
   - **The Q&A match vocabulary is not render copy.** That means the intent triggers, the classifier regexes, `excludeWords`, `qaWords` and the lookback strippers. These stay canonical she/her and go on the audit's allowlist. Running them through `pron()` at load time would read "they" and switch the intents off (V-K-281-2).
   - **Q&A input:** `_qaNameAsShe` also folds he/him/his/himself to the canonical subject when `childSex()==='m'`. Add he/him/his and they/them/their to `excludeWords` / `qaWords` (V-K-281-1, V-C-281-3).
   - **Q&A titles and chips** ("Can she eat …?", "How's her sleep?") go through `pron()` at render time (V-K-281-3).
+  - **Sex-keyed nutrition copy:** data.js's fish note says "for a girl, NHS caps oily fish at about 2 portions a week". NHS gives 4 for boys, so key it on `childSex()`, with Ceres (Cipher #281 nit 3).
   - **Vela's order:** quicklog's nap verdict ("at her age" → "at this age"), home.js, Smart Q&A text, illness, then the load-time tables.
 
 ## 4. S3: sex-specific care content (needs Maren, with cited sources)
