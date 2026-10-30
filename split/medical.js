@@ -876,7 +876,7 @@ function renderGrowthFacts() {
     const daysDiff = Math.max(1, Math.round((new Date(wtLast.date) - new Date(wtPrev.date)) / 86400000));
     const gPerDay = Math.round(wtGain / daysDiff);
     // From 1 year the WHO band is ~3–12 g/day (GROWTH_VELOCITY_12_24); the 15–30 g/day line
-    // is the early-infancy rate and must not be quoted to a toddler (2026-09-24 audit).
+    // is the early-infancy rate and must not be quoted to a toddler (12-month audit).
     const vb = GROWTH_VELOCITY_12_24;
     if (mo >= 12) {
       if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
@@ -1330,7 +1330,7 @@ function renderGrowth() {
   renderGrowthInsightsPreview();
 }
 
-// Growth reference = WHO only (2026-09-24, 12-month audit, Architect decision). The former
+// Growth reference = WHO only (12-month audit, Architect decision). The former
 // "India (IAP)", Euro-Growth and China overlay tables were retired: the India table did not match
 // the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading the child high), the China
 // table matched neither Li 2009 nor WS/T 423-2022, and the Euro-Growth source could not be verified.
@@ -6309,8 +6309,8 @@ function renderSleepTips() {
     },
     {
       id: 'safety', icon: zi('shield'), label: 'Safe Sleep', color: 'rose',
-      // From 12 m the toddler tier (Maren V-M-269-15). The family bed-shares (no cot, parents'
-      // checklist 2026-10-28), so it covers the adult bed. src: AAP HealthyChildren (safe sleep,
+      // From 12 m the toddler tier (Maren V-M-269-15). It covers bed-sharing households
+      // (the adult bed). src: AAP HealthyChildren (safe sleep,
       // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
       // a bed: alcohol, sedating medicine, smoking, sofas).
       tips: ageM >= 12 ? [

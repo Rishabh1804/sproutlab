@@ -525,7 +525,7 @@ function _profParse(str) {
 // The name is shown inside HTML all over the app, and some of that copy is escaped again on the way
 // out. So the stored name carries no markup characters, and a straight apostrophe becomes ’: that
 // keeps it safe in any context and unchanged by a second escHtml (HR-4).
-function _profCleanName(n) { return String(n).replace(/[<>&"`]/g, '').replace(/'/g, '\u2019').replace(/\s+/g, ' ').trim().slice(0, 40); }
+function _profCleanName(n) { return String(n).replace(/[<>&"`\\]/g, '').replace(/'/g, '\u2019').replace(/\s+/g, ' ').trim().slice(0, 40); }
 // Keeps a well-formed profile (unknown fields pass through for later versions); anything else is null.
 function _profNormalize(p) {
   if (!p || typeof p !== 'object' || !p.child || typeof p.child !== 'object') return null;
@@ -5851,8 +5851,9 @@ function wgRender() {
 // already holds records gets "Confirm details" once, because the code no longer knows the child.
 // Read once, as the script loads: init() may save built-in defaults before the gate looks.
 // Only a non-empty record counts: init writes [] / {} on a fresh device's first boot, and those
-// must not turn its second boot into "Confirm details" (V-CA-280-11).
-const _PRF_HAD_RECORDS = (() => {
+// must not turn its second boot into "Confirm details" (V-CA-280-11). Read live, so a device that
+// signed in and received records is asked to confirm, not welcomed (Cipher #10).
+const _prfLiveHasRecords = () => {
   const keys = ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds', 'ziva_sleep', 'ziva_poop',
     'ziva_notes', 'ziva_visits', 'ziva_activity_log', 'ziva_milestones', 'ziva_doctors'];
   try {
@@ -5863,8 +5864,8 @@ const _PRF_HAD_RECORDS = (() => {
       catch (e) { return false; }
     });
   } catch (e) { return false; }
-})();
-function _prfHasRecords() { return _PRF_HAD_RECORDS; }
+};
+function _prfHasRecords() { return _prfLiveHasRecords(); }
 function initProfileGate() {
   try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
   if (profile) return;

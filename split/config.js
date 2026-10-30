@@ -131,8 +131,8 @@ if (typeof window !== 'undefined') {
 //     resuscitation authority) for that line, not NHS. Pediatrician
 //     sign-off remains desirable but is no longer a blocking uncertainty.
 //
-// AGE STEP — 1 year+ (2026-09-24, the 12-month audit): the child turned one on
-//   2026-09-04, so the INFANT techniques above are retired from this registry.
+// AGE STEP — 1 year+ (the 12-month audit): for a child of one and over the INFANT
+//   techniques above are retired from this registry.
 //   `unresponsive` and `choking` now carry the CHILD (1 year to puberty) protocol,
 //   verified against the live NHS pages: "How to resuscitate a child" (mod.
 //   2026-08-07: 5 rescue breaths, heel of 1 hand on the lower third of the
@@ -175,7 +175,7 @@ const GENERAL_EMERGENCIES = [
     severity: 'critical', callLead: true,
     immediate: [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
-      // Child (1 year+) technique since the child turned one (2026-09-24 12-month audit): mouth-to-mouth
+      // Child (1 year+) technique for a child of one and over (the 12-month audit): mouth-to-mouth
       // with the nose pinched, heel of ONE hand, 5 cm — NHS 'How to resuscitate a child' (mod. 2026-08-07).
       // Breathing check + two-hand note + plainer landmark (Maren V-M-266-12; RCUK 2025 paediatric
       // BLS: look, listen and feel for no more than 10 s; lower half of the sternum, two hands if needed).
@@ -222,7 +222,7 @@ const GENERAL_EMERGENCIES = [
     id: 'choking', icon: 'warn', name: 'Choking (object)',
     severity: 'urgent', callLead: true,
     immediate: [
-      // Child (1 year+) technique since the child turned one: back blows then ABDOMINAL thrusts —
+      // Child (1 year+) technique for a child of one and over: back blows then ABDOMINAL thrusts —
       // NHS 'How to stop a child from choking' (mod. 2025-09-24). Infant chest thrusts retired.
       // Action-first wording (Vela V-V-266-5); "shout for help" first and ONE round before calling
       // (Maren V-M-266-8 — NHS: call 999 if it doesn't come out after back blows + thrusts).

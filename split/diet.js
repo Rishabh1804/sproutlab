@@ -2852,7 +2852,7 @@ function renderDietChokingIntro() {
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
-  // thrusts (child 1y+ technique since the child turned one) + "NO adrenaline".
+  // thrusts (child 1y+ technique) + "NO adrenaline".
   pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
@@ -3015,7 +3015,7 @@ const ALL_TIPS = [
   },
   // ── AVOID (always show, or age-gated) ──
   // The under-1 rules (honey, cow's milk as a drink) are gated to < 12 months; from 1 year they
-  // retire and the salt/sugar tip turns into its toddler form (2026-09-24 12-month audit — they had
+  // retire and the salt/sugar tip turns into its toddler form (12-month audit — they had
   // shown "always", contradicting the unlocked Library gates).
   {
     type:'avoid', icon:zi('warn'),
@@ -3337,7 +3337,7 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 2026-09-24 audit
+    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 12-month audit
     chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-caution' : 'chip-avoid' }); // checker returns caution (ALLERGENS) at 12 m+
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });

@@ -92,3 +92,6 @@ At boot, branch on what the app finds:
 - **Pre-solids floor across Diet** (V-C-280-5), **day-zero alarm fatigue** (alerts on a family's first day, Vela pair-note), **empty-state polish** (V-V-280-10) and the **Sprout Score on zero data**.
 - **`ALWAYS_POPULATED_KEYS` membership** now that no key is seeded: a deleted doctor or food can be resurrected by the other phone. Review before release (V-CA-280-14).
 - **Household name vs profile name**: two sources; prefill household creation from the profile (Carina).
+- **Identifiers still carry the old name.** The bundle keeps `ziva_*` storage keys, `calcZivaScore`, `_ZIVA_DOB` and `.ziva-score-hero`. These are code names, not personal data, but a key migration in P3/P5 should retire them (Cipher #4). Until then, the claim is "no child's data in the bundle", not "no 'Ziva' in the bundle".
+- **Small polish:** a `body.prf-open` class instead of setting `style.overflow` (Cipher #6); cache a failed geocode so an unresolvable town isn't retried on every load (Cipher #13).
+- **P3 audit-gate seed patterns (Cipher):** `turned one`, the birth date in any format (excluding the Krishna Janmashtami holiday entry), `\d+\.\d mo`, `bed-shares`, `Caldikind-P`, phone numbers, `Jamshedpur` outside the regional emergency dataset.

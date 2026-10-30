@@ -1628,7 +1628,7 @@ function _syncMergeForPush(local, cloud, key) {
   // Meal planner: the push honours the same per-field newest-ts merge as the receive, so a
   // reconnect, Retry, import or autosave restore can't undo the other parent's newer edit (V-CA-275-2).
   // Profile: the push keeps the newer whole record, like the receive (V-CA-280-1).
-  if (key === KEYS.profile && typeof _postReceiveProfile === 'function') return _postReceiveProfile(cloud, local);
+  if (key === KEYS.profile && typeof _postReceiveProfile === 'function') { var _pp = _postReceiveProfile(cloud, local); if (_pp && _pp.pre) { _pp = Object.assign({}, _pp); delete _pp.pre; } return _pp; }
   if (key === KEYS.mealPlan && typeof _postReceiveMealPlan === 'function') { var mp = _postReceiveMealPlan(cloud, local); return mp === undefined ? cloud : mp; }
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.

@@ -1496,7 +1496,7 @@ const DEFAULT_VACC = [];
 // Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
 // consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
 // carry private copies that lacked '13 months' and '18-19 months', so JE-2, Hep A-2 and
-// Varicella-2 defaulted to 99 and silently never came due (2026-09-24 12-month audit).
+// Varicella-2 defaulted to 99 and silently never came due (the 12-month audit).
 // Every VACC_SCHEDULE `age` label MUST appear here — build gate: split/audit-vacc-age-map-v1.sh.
 const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
   '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
@@ -2378,7 +2378,7 @@ const AGE_RULES = {
   'salt':     { limit:true, minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
   // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
   // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
-  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
+  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (12-month audit).
   // aliases (Ceres V-C-266-4 / Kael V-K-266-2): the everyday Indian names for added sugar, so
   // mishri (with saunf), chini, khand, batasha, mithai and date syrup gate at 24 m too.
   'sugar':    { minMonth:24, aliases:['mishri','misri','rock sugar','chini','cheeni','khand','shakkar','batasha','mithai','sweets','toffee','date syrup'],
@@ -2831,7 +2831,7 @@ const FOOD_EFFECTS = {
   // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
   // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
   // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
-  // abdominal-thrusts + call-112 (child 1y+ technique since the child turned one; NEVER adrenaline).
+  // abdominal-thrusts + call-112 (child 1y+ technique; NEVER adrenaline).
   // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
   // gate doesn't apply).
   // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
@@ -2881,7 +2881,7 @@ const FOOD_EFFECTS = {
     // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
     severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
-    // the hazard, milk-spec §9). Child 1y+ (the child turned one 2026-09-04): 5 back blows + 5 abdominal
+    // the hazard, milk-spec §9). Child 1y+: 5 back blows + 5 abdominal
     // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
     seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',

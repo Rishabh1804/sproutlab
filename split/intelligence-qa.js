@@ -222,6 +222,8 @@ function _isLikelyFoodList(tokens) {
 function _qaNameAsShe(text) {
   var n = (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) ? String(profile.child.name) : '';
   if (!n || typeof text !== 'string') return text;
+  // A name that is itself a food (Honey, Olive) stays as typed: the food reading is the safer one (Cipher #5).
+  if (typeof getNutrition === 'function' && typeof _baseFoodName === 'function' && getNutrition(_baseFoodName(n.toLowerCase()))) return text;
   var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
   return text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
 }

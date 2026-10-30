@@ -8708,8 +8708,8 @@ const D3_KNOWLEDGE = {
   ],
 };
 
-// A calcium + Vitamin D3 suspension given in divided doses (e.g. 2.5 ml twice a
-// day replaced the D3 drops on 2026-09-24). Calcium lowers iron absorption, so iron drops and
+// A calcium + Vitamin D3 suspension given in divided doses (e.g. 2.5 ml twice a day, often in
+// place of D3 drops). Calcium lowers iron absorption, so iron drops and
 // her iron-rich meals are kept apart from it; the dose itself is always the doctor's.
 const CALCIUM_D3_KNOWLEDGE = {
   dos: [
@@ -8718,7 +8718,7 @@ const CALCIUM_D3_KNOWLEDGE = {
     'Space the doses through the day — for example after breakfast, and with her evening milk or a curd snack — at about the same times each day.',
     'Give it with or after a meal or a milk or curd snack — Vitamin D absorbs better with a little fat.',
     // Spacing: calcium lowers non-heme iron absorption at the same meal (Hallberg, AJCN 1991);
-    // ~2 h from iron products is standard label guidance. Ceres/Maren-audited 2026-09-24.
+    // ~2 h from iron products is standard label guidance. Ceres/Maren-audited.
     'If she is given iron drops, keep them about 2 hours apart from this dose.',
     'If she gets constipated, vomits, or goes off her feeds after starting it, tell her doctor.',
   ],
