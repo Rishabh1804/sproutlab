@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:5173",
+      "localStorage": [
+        {
+          "name": "ziva_profile",
+          "value": "{\"v\": 1, \"child\": {\"name\": \"Asha\", \"dob\": \"2025-09-01T09:00\", \"solidsStart\": \"2026-03-06\"}, \"place\": {\"city\": \"Testville\", \"tz\": \"Asia/Kolkata\"}, \"ts\": 1}"
+        }
+      ]
+    }
+  ]
+}

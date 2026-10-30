@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
 
 // SproutLab Phase 2 arming — hermetic local serve, chromium only, retries: 0 (R-6).
 // CT-10 lesson: bundled chromium does not trust sandbox MITM CAs, so we serve locally
@@ -14,6 +15,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],
   use: {
+    // Every test starts with an invented child's profile (HR-13: never a real one), so the
+    // privacy gate (docs/specs/privacy-v1.md §3.3) stays closed unless a test clears it.
+    storageState: path.join(__dirname, 'tests/e2e/fixtures/storage.json'),
     baseURL,
     trace: 'retain-on-failure',
     actionTimeout: 8_000,

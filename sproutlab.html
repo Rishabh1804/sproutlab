@@ -12283,6 +12283,23 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .qa-recipe-card-main { flex:1; min-width:0; }
 .qa-recipe-card-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); }
 .qa-recipe-card-cta { font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
+
+/* ── Profile gate (privacy-v1 §3.3): Welcome, set up, confirm details ── */
+.prf-gate { position:fixed; inset:0; z-index:10000; background:var(--cream); overflow-y:auto; overscroll-behavior:contain; display:flex; align-items:flex-start; justify-content:center; padding:var(--sp-32) var(--sp-16); }
+.prf-card { width:100%; max-width:420px; display:flex; flex-direction:column; gap:var(--sp-12); }
+.prf-icon { width:56px; height:56px; border-radius:var(--r-full); background:var(--sage-light); color:var(--tc-sage); display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px var(--shadow); }
+.prf-icon .zi { width:28px; height:28px; }
+.prf-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-2xl); color:var(--text); margin:0; line-height:var(--lh-tight); }
+.prf-lead { font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+.prf-note { font-size:var(--fs-sm); color:var(--light); margin:0; }
+.prf-form { display:flex; flex-direction:column; gap:var(--sp-12); }
+.prf-field { display:flex; flex-direction:column; gap:var(--sp-4); }
+.prf-label { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
+.prf-opt { font-weight:400; color:var(--light); }
+.prf-err { font-size:var(--fs-sm); color:var(--tc-rose); margin:0; min-height:1em; }
+.prf-btn { width:100%; min-height:48px; gap:var(--sp-8); }
+.prf-btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Motion One — app-wide animation foundation (UMD build exposes window.Motion
@@ -25164,6 +25181,8 @@ function init() {
     }
     // ── Device Sync actions ──
     else if (action === 'syncSignIn') syncSignIn();
+    // Profile gate (privacy-v1 §3.3): every data-action="prf…" routes to prfDispatch.
+    else if (/^prf[A-Z]/.test(action) && typeof prfDispatch === 'function') prfDispatch(action, arg);
     else if (action === 'syncSignOut') { confirmAction('Sign out? Synced data will be cleared from this device.', syncSignOut, 'Sign Out'); }
     else if (action === 'syncOpenHouseholdModal') syncOpenHouseholdModal(arg);
     else if (action === 'syncCloseHouseholdModal') _syncCloseHouseholdModal();
@@ -29704,9 +29723,89 @@ function wgRender() {
   if (sub) sub.textContent = `Step ${_wgStep + 1} of ${_wgTotalSteps}`;
 }
 
+// ── PROFILE GATE (privacy-v1 §3.3) ──
+// No profile on this device: a new person gets Welcome (sign in, or set up a child); a device that
+// already holds records gets "Confirm details" once, because the code no longer knows the child.
+// Read once, as the script loads: init() may save built-in defaults before the gate looks.
+const _PRF_HAD_RECORDS = (() => {
+  try { return ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds'].some(k => !!localStorage.getItem(k)); }
+  catch (e) { return false; }
+})();
+function _prfHasRecords() { return _PRF_HAD_RECORDS; }
+function initProfileGate() {
+  if (profile) return;
+  _prfShow(_prfHasRecords() ? 'confirm' : 'welcome');
+}
+function _prfShow(mode) {
+  _prfClose();
+  const ov = document.createElement('div');
+  ov.className = 'prf-gate';
+  ov.id = 'prfGate';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-modal', 'true');
+  ov.innerHTML = `<div class="prf-card">${mode === 'welcome' ? _prfWelcomeHtml() : _prfFormHtml(mode)}</div>`;
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+  const first = ov.querySelector('input, button');
+  if (first) first.focus();
+}
+function _prfClose() {
+  const el = document.getElementById('prfGate');
+  if (el) { el.remove(); document.body.style.overflow = ''; }
+}
+function _prfWelcomeHtml() {
+  return `<div class="prf-icon">${zi('sprout')}</div>`
+    + `<h1 class="prf-title">Welcome to SproutLab</h1>`
+    + `<p class="prf-lead">A calm place to track your child's day: meals, sleep, growth and health, kept for your family only.</p>`
+    + `<button class="btn btn-sage prf-btn" data-action="prfStart">${zi('baby')} Set up your child</button>`
+    + `<button class="btn btn-soft prf-btn" data-action="prfSignIn">${zi('heart')} I already use SproutLab: sign in</button>`
+    + `<p class="prf-note">Signing in joins your family's shared record on this phone.</p>`;
+}
+function _prfFormHtml(mode) {
+  const confirm = mode === 'confirm';
+  const today_ = today();
+  return `<div class="prf-icon">${zi(confirm ? 'heart' : 'baby')}</div>`
+    + `<h1 class="prf-title">${confirm ? 'Confirm your child\'s details' : 'About your child'}</h1>`
+    + `<p class="prf-lead">${confirm ? 'SproutLab now keeps these details with your family\'s record instead of inside the app. Your logs stay exactly as they are.' : 'This sets your child\'s age for every chart, milestone and food guide. You can change it later in Settings.'}</p>`
+    + `<form class="prf-form" data-prf-form="1" novalidate>`
+    + `<label class="prf-field"><span class="prf-label">Name</span><input class="form-input" id="prfName" type="text" maxlength="40" autocomplete="off" required></label>`
+    + `<label class="prf-field"><span class="prf-label">Date of birth</span><input class="form-input" id="prfDob" type="date" max="${today_}" required></label>`
+    + `<label class="prf-field"><span class="prf-label">Time of birth <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfTime" type="time"></label>`
+    + `<label class="prf-field"><span class="prf-label">Started solids on <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfSolids" type="date" max="${today_}"></label>`
+    + `<label class="prf-field"><span class="prf-label">Town or city <span class="prf-opt">(optional, for weather)</span></span><input class="form-input" id="prfCity" type="text" maxlength="40" autocomplete="off"></label>`
+    + `<p class="prf-err" id="prfErr" role="alert"></p>`
+    + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="${mode}">${zi('check')} ${confirm ? 'Save details' : 'Start'}</button>`
+    + (confirm ? '' : `<button class="btn btn-ghost prf-btn" type="button" data-action="prfBack">Back</button>`)
+    + `</form>`;
+}
+function prfDispatch(action, arg) {
+  if (action === 'prfStart') _prfShow('setup');
+  else if (action === 'prfBack') _prfShow('welcome');
+  else if (action === 'prfSignIn') { _prfClose(); if (typeof openSettingsSidebar === 'function') openSettingsSidebar(); }
+  else if (action === 'prfSave') _prfSubmit(arg);
+}
+function _prfSubmit(mode) {
+  const v = id => { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; };
+  const err = msg => { const el = document.getElementById('prfErr'); if (el) el.textContent = msg; };
+  const name = v('prfName'), dob = v('prfDob'), time = v('prfTime'), solids = v('prfSolids'), city = v('prfCity');
+  if (!name) return err('Please add your child\'s name.');
+  if (!dob || !_profParse(dob)) return err('Please add the date of birth.');
+  if (dob > today()) return err('The date of birth can\'t be in the future.');
+  if (solids && solids < dob) return err('Solids can\'t start before the date of birth.');
+  const tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { return null; } })();
+  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null }, city ? { city, tz } : (tz ? { city: null, tz } : null));
+  if (!saved) return err('Those details don\'t look right. Please check them.');
+  _prfClose();
+  if (typeof renderLanding === 'function') { try { renderLanding(); } catch (e) {} }
+  if (typeof renderHome === 'function') { try { renderHome(); } catch (e) {} }
+  if (typeof showQLToast === 'function') showQLToast(mode === 'confirm' ? 'Details saved' : `Welcome, ${escHtml(saved.child.name)}`, 3000);
+}
+// A profile arriving by sync (another phone in the family set it) closes the gate.
+function _prfOnProfile() { if (profile) _prfClose(); }
+
 function initWelcomeGuide() {
   const seen = localStorage.getItem('ziva_guide_seen');
-  if (!seen) {
+  if (!seen && profile) {
     // First open — show guide after a short delay so the app renders first
     setTimeout(showWelcomeGuide, 500);
   }
@@ -85467,7 +85566,7 @@ function _syncSetGlobal(name, value) {
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
     case 'mealPlan':     mealPlan     = value; return true;
-    case 'profile':      profile      = _profNormalize(value); _profApply(); return true;
+    case 'profile':      profile      = _profNormalize(value); _profApply(); if (typeof _prfOnProfile === 'function') _prfOnProfile(); return true;
     default: return false;
   }
 }
@@ -88009,6 +88108,7 @@ initDarkMode();
 initEssentialMode();
 initZoomLevel();
 init();
+initProfileGate();
 initWelcomeGuide();
 _bugInit();
 // Safe sync init — ?nosync bypasses Firebase entirely for recovery

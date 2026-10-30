@@ -467,7 +467,7 @@ function _syncSetGlobal(name, value) {
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
     case 'mealPlan':     mealPlan     = value; return true;
-    case 'profile':      profile      = _profNormalize(value); _profApply(); return true;
+    case 'profile':      profile      = _profNormalize(value); _profApply(); if (typeof _prfOnProfile === 'function') _prfOnProfile(); return true;
     default: return false;
   }
 }

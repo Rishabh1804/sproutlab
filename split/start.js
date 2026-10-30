@@ -5,6 +5,7 @@ initDarkMode();
 initEssentialMode();
 initZoomLevel();
 init();
+initProfileGate();
 initWelcomeGuide();
 _bugInit();
 // Safe sync init — ?nosync bypasses Firebase entirely for recovery

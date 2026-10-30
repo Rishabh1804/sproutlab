@@ -12268,3 +12268,20 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .qa-recipe-card-main { flex:1; min-width:0; }
 .qa-recipe-card-title { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); }
 .qa-recipe-card-cta { font-size:var(--fs-xs); font-weight:700; color:var(--tc-sage); }
+
+/* ── Profile gate (privacy-v1 §3.3): Welcome, set up, confirm details ── */
+.prf-gate { position:fixed; inset:0; z-index:10000; background:var(--cream); overflow-y:auto; overscroll-behavior:contain; display:flex; align-items:flex-start; justify-content:center; padding:var(--sp-32) var(--sp-16); }
+.prf-card { width:100%; max-width:420px; display:flex; flex-direction:column; gap:var(--sp-12); }
+.prf-icon { width:56px; height:56px; border-radius:var(--r-full); background:var(--sage-light); color:var(--tc-sage); display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px var(--shadow); }
+.prf-icon .zi { width:28px; height:28px; }
+.prf-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-2xl); color:var(--text); margin:0; line-height:var(--lh-tight); }
+.prf-lead { font-size:var(--fs-base); color:var(--mid); line-height:var(--lh-relaxed); margin:0; }
+.prf-note { font-size:var(--fs-sm); color:var(--light); margin:0; }
+.prf-form { display:flex; flex-direction:column; gap:var(--sp-12); }
+.prf-field { display:flex; flex-direction:column; gap:var(--sp-4); }
+.prf-label { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
+.prf-opt { font-weight:400; color:var(--light); }
+.prf-err { font-size:var(--fs-sm); color:var(--tc-rose); margin:0; min-height:1em; }
+.prf-btn { width:100%; min-height:48px; gap:var(--sp-8); }
+.prf-btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
+

@@ -60,3 +60,45 @@ test.describe('privacy P1: profile record', () => {
     expect(r).toBe('Asha R');
   });
 });
+
+// Privacy v1 P2a — the profile gate (§3.3). These start with no stored profile at all.
+test.describe('privacy P2a: profile gate', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('a new device with no records sees Welcome; setup saves the child and closes the gate', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    const gate = page.locator('#prfGate');
+    await expect(gate).toContainText('Welcome to SproutLab');
+    await gate.locator('[data-action="prfStart"]').click();
+    await gate.locator('[data-action="prfSave"]').click();
+    await expect(page.locator('#prfErr')).toContainText('name');
+    await page.fill('#prfName', 'Asha');
+    await page.fill('#prfDob', '2025-02-10');
+    await page.fill('#prfCity', 'Testville');
+    await gate.locator('[data-action="prfSave"]').click();
+    await expect(gate).toHaveCount(0);
+    const r = await page.evaluate(() => ({ name: (window as any).childName(), stored: JSON.parse(localStorage.getItem('ziva_profile')!).child, overflow: document.body.style.overflow }));
+    expect(r.name).toBe('Asha');
+    expect(r.stored.dob).toBe('2025-02-10');
+    expect(r.overflow).toBe('');
+  });
+
+  test('a device that already holds records is asked to confirm details, with no Back to Welcome', async ({ page }) => {
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('ziva_feeding', '{}'); sessionStorage.setItem('seeded', '1'); } });
+    await page.goto('/index.html?nosync');
+    const gate = page.locator('#prfGate');
+    await expect(gate).toContainText("Confirm your child's details");
+    await expect(gate.locator('[data-action="prfBack"]')).toHaveCount(0);
+    await page.fill('#prfName', 'Asha');
+    await page.fill('#prfDob', '2030-01-01');
+    await gate.locator('[data-action="prfSave"]').click();
+    await expect(page.locator('#prfErr')).toContainText('future');
+  });
+
+  test('Sign in closes the gate and opens Settings, where sign-in lives', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    await page.locator('#prfGate [data-action="prfSignIn"]').click();
+    await expect(page.locator('#prfGate')).toHaveCount(0);
+    await expect(page.locator('#settingsSidebar')).toHaveClass(/open/);
+  });
+});
