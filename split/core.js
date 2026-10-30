@@ -568,9 +568,9 @@ function childPlace() { return (profile && profile.place) || null; }
 // standard and the pronouns. A profile without it gets the one-question gate, so null is only ever
 // seen under that gate.
 function childSex() { const s = _profChild().sex; return s === 'f' || s === 'm' ? s : null; }
-// The WHO growth tables for this child's sex (data.js WHO_GROWTH). Under the gate (sex not yet
-// given) it returns the girls' set as a stand-in, so the hidden screens stay finite; nothing reads
-// it there.
+// The WHO growth tables for this child's sex (data.js WHO_GROWTH). With the sex not yet given, the
+// one-question gate is up from boot on every phone (no attached-device wait) and the app behind it
+// is inert, so the girls' set it returns then is only a stand-in that keeps hidden screens finite.
 function whoT() { return WHO_GROWTH[childSex() || 'f']; }
 // "girls" / "boys" for growth copy ("heavier than 60% of girls her age"); "children" until known.
 function childKinWord() { const s = childSex(); return s === 'm' ? 'boys' : s === 'f' ? 'girls' : 'children'; }
@@ -5889,12 +5889,11 @@ function _prfHasRecords() {
 }
 function initProfileGate() {
   try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
-  // A profile from before the child's sex was asked gets one question (child-sex-v1). An attached
-  // device waits a moment first: the other phone may already have answered it.
+  // A profile from before the child's sex was asked gets one question (child-sex-v1), straight away
+  // on every phone: waiting would leave growth showing on a stand-in chart (V-M-281-6). If the other
+  // phone answers first, its profile arrives by sync and closes this question (_prfOnProfile).
   if (profile) {
-    if (childSex()) return;
-    const ask = () => { if (profile && !childSex() && !document.getElementById('prfGate')) _prfShow('sex'); };
-    if (typeof _syncLedgerActive === 'function' && _syncLedgerActive()) setTimeout(ask, 8000); else ask();
+    if (!childSex()) _prfShow('sex');
     return;
   }
   // A device already attached to a household waits for the household's profile before asking: if
@@ -5938,10 +5937,10 @@ function _prfWelcomeHtml() {
 // Girl / boy, as two radio chips. WHO publishes separate growth standards for each, so the choice
 // sets which chart her growth is read against; it also sets the pronouns in the app's copy.
 function _prfSexField(sex) {
-  const opt = (v, label) => `<label class="prf-sex-opt"><input type="radio" name="prfSex" value="${v}"${sex === v ? ' checked' : ''}><span>${label}</span></label>`;
-  return `<fieldset class="prf-field prf-sex" id="prfSexSet"><legend class="prf-label">Girl or boy</legend>`
+  const opt = (v, label) => `<label class="prf-sex-opt"><input type="radio" name="prfSex" value="${v}"${sex === v ? ' checked' : ''}><span>${zi('check')}${label}</span></label>`;
+  return `<fieldset class="prf-field prf-sex" id="prfSexSet" aria-describedby="prfSexHint"><legend class="prf-label">Girl or boy</legend>`
     + `<div class="prf-sex-row">${opt('f', 'Girl')}${opt('m', 'Boy')}</div>`
-    + `<span class="prf-hint">Growth is compared with the WHO chart for girls or for boys.</span></fieldset>`;
+    + `<span class="prf-hint" id="prfSexHint">Growth is compared with the WHO chart for girls or for boys.</span></fieldset>`;
 }
 // The one-question gate for a profile saved before the sex was asked.
 function _prfSexHtml() {
@@ -5949,6 +5948,7 @@ function _prfSexHtml() {
     + `<h1 class="prf-title" id="prfTitle">One more detail</h1>`
     + `<p class="prf-lead">Is ${childNameHtml()} a girl or a boy? WHO publishes separate growth charts for each, so SproutLab needs this to read ${childNameHtml()}\u2019s weight and height correctly.</p>`
     + `<form class="prf-form" data-prf-form="1" novalidate>${_prfSexField(null)}`
+    + `<p class="prf-check" id="prfCheck" role="status"></p>`
     + `<p class="prf-err" id="prfErr" role="alert"></p>`
     + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="sex">${zi('check')} Save</button>`
     + `</form>`;
@@ -5998,19 +5998,28 @@ function _prfSubmit(mode) {
   const sexEl = document.querySelector('#prfGate input[name="prfSex"]:checked');
   const sex = sexEl ? sexEl.value : '';
   const noSex = () => { const r = document.querySelector('#prfGate input[name="prfSex"]'); err('Please choose girl or boy.'); if (r) r.focus(); };
+  const chartWord = sex === 'm' ? 'boys' : 'girls';
   if (mode === 'sex') {
     if (sex !== 'f' && sex !== 'm') return noSex();
+    // One tap is easy to miss at 2 AM, and it moves every percentile: say it back once (V-M-281-2).
+    if (_prfPending !== 'sex|' + sex) {
+      _prfPending = 'sex|' + sex;
+      const chk = document.getElementById('prfCheck');
+      if (chk) chk.textContent = `Growth will be read on the WHO chart for ${chartWord}. Tap Save again if that's right.`;
+      return err('');
+    }
+    _prfPending = null;
     if (!profile || !_profSave(Object.assign({}, profile.child, { sex }), profile.place || null)) return err('That didn\'t save. Please try again.');
-    try { sessionStorage.setItem('prf_notice', 'Details saved'); } catch (e) {}
+    try { sessionStorage.setItem('prf_notice', `Saved: growth uses the WHO chart for ${chartWord}`); } catch (e) {}
     _prfClose();
     setTimeout(() => location.reload(), 150);
     return;
   }
   const name = v('prfName'), dob = v('prfDob'), time = v('prfTime'), solids = v('prfSolids'), city = v('prfCity');
   if (!name) return err('Please add your child\'s name.', 'prfName');
-  if (sex !== 'f' && sex !== 'm') return noSex();
   if (!dob || !_profParse(dob)) return err('Please add the date of birth.', 'prfDob');
   if (dob > today()) return err('The date of birth can\'t be in the future.', 'prfDob');
+  if (sex !== 'f' && sex !== 'm') return noSex();   // in screen order: name, birth date, then girl or boy (V-V-281-7)
   if (solids && solids < dob) return err('Solids can\'t start before the date of birth.', 'prfSolids');
   // A record dated before the birth date means the date is wrong (V-M-280-2).
   const earliest = _prfEarliestRecord();
@@ -6021,7 +6030,7 @@ function _prfSubmit(mode) {
     _prfPending = key;
     const a = ageAt(new Date(), _profParse(time ? dob + 'T' + time : dob));
     const chk = document.getElementById('prfCheck');
-    if (chk) chk.textContent = `That makes ${name} ${fmtAgeLong(a.months, a.days)} old today. Tap Save again if that's right.`;
+    if (chk) chk.textContent = `That makes ${name} ${fmtAgeLong(a.months, a.days)} old today, with growth read on the WHO chart for ${chartWord}. Tap Save again if that's right.`;
     return err('');
   }
   _prfPending = null;
@@ -6059,7 +6068,7 @@ function _prfOnProfile(prevDob, prevSex) {
   const dobMoved = prevDob !== undefined && prevDob !== profile.child.dob;
   const sexMoved = prevSex !== undefined && prevSex !== childSex();
   if (gateOpen || dobMoved || sexMoved) {
-    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : dobMoved ? 'Birth date updated from another phone' : 'Details updated from another phone'); } catch (e) {}
+    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : dobMoved ? 'Birth date updated from another phone' : `Growth now uses the WHO chart for ${childKinWord()} (changed on another phone)`); } catch (e) {}
     const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if (!busy) setTimeout(() => location.reload(), 150);
   }
@@ -6346,6 +6355,9 @@ function getGrowthVelocity() {
 //     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
 //   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
 //     → band 0.6–1.6 cm/month, ≈ 0.15–0.35 cm/week.
+//   boys (ttt_length_boys_2mon_p / _3mon_p, fetched 2026-10-30): 2-month P5 1.0→0.4 cm, P50 2.3→1.7 cm,
+//     P85 3.1→2.6 cm (≈ 0.5→0.2 / 1.15→0.85 / 1.55→1.3 cm/mo), within ~0.05 cm/mo of the girls', so the
+//     length band fits both too (V-M-281-7).
 // Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
 // later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
 // the 0–12 m bands at each site are unchanged.

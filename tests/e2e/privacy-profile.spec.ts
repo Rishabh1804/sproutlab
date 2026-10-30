@@ -80,6 +80,7 @@ test.describe('privacy P2a: profile gate', () => {
     await gate.locator('.prf-sex-opt', { hasText: 'Girl' }).click();
     await gate.locator('[data-action="prfSave"]').click();
     await expect(page.locator('#prfCheck')).toContainText('That makes Asha');   // the read-back (V-M-280-2)
+    await expect(page.locator('#prfCheck')).toContainText('WHO chart for girls');
     await expect(gate).toHaveCount(1);
     await Promise.all([page.waitForEvent('load'), gate.locator('[data-action="prfSave"]').click()]);
     await page.waitForFunction(() => typeof (window as any).childName === 'function');
@@ -161,6 +162,8 @@ test.describe('child sex: growth standard and pronouns', () => {
     await gate.locator('[data-action="prfSave"]').click();
     await expect(page.locator('#prfErr')).toContainText('girl or boy');
     await gate.locator('.prf-sex-opt', { hasText: 'Boy' }).click();
+    await gate.locator('[data-action="prfSave"]').click();
+    await expect(page.locator('#prfCheck')).toContainText('WHO chart for boys');   // said back once (V-M-281-2)
     await Promise.all([page.waitForEvent('load'), gate.locator('[data-action="prfSave"]').click()]);
     await page.waitForFunction(() => typeof (window as any).childSex === 'function');
     await expect(page.locator('#prfGate')).toHaveCount(0);

@@ -12295,7 +12295,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .prf-sex-row { display:flex; gap:var(--sp-8); }
 .prf-sex-opt { flex:1; position:relative; }
 .prf-sex-opt input { position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; }
-.prf-sex-opt span { display:flex; align-items:center; justify-content:center; min-height:48px; border-radius:var(--r-lg); border:1.5px solid var(--card-border); background:var(--card-bg); font-weight:700; color:var(--mid); transition:all var(--ease-fast); }
-.prf-sex-opt input:checked + span { background:var(--sage-light); border-color:var(--tc-sage); color:var(--tc-sage); box-shadow:0 1px 3px var(--shadow); }
+/* Unselected chips match the fields above them, so they read as controls (V-V-281-4, -5). */
+.prf-sex-opt span { display:flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:48px; border-radius:var(--r-lg); border:1.5px solid var(--input-border, rgba(200,180,180,0.4)); background:var(--input-bg, var(--warm)); font-family:'Nunito',sans-serif; font-size:var(--fs-md); font-weight:600; color:var(--mid); transition:all var(--ease-fast); }
+.prf-sex-opt .zi { display:none; width:var(--icon-sm); height:var(--icon-sm); }
+/* Selected: fill, border, weight and a check, so the choice never rests on colour alone. */
+.prf-sex-opt input:checked + span { background:var(--sage-light); border-color:var(--tc-sage); color:var(--tc-sage); font-weight:700; box-shadow:0 1px 3px var(--shadow); }
+.prf-sex-opt input:checked + span .zi { display:inline-block; }
+.prf-sex legend { margin-bottom:var(--sp-4); padding:0; }
 .prf-sex-opt input:focus-visible + span { outline:2px solid var(--tc-sage); outline-offset:2px; }
 .prf-hint { font-size:var(--fs-sm); color:var(--light); }

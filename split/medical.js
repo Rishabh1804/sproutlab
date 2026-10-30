@@ -720,7 +720,7 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY ' + childNameHtml() + ' · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
+  lines.push('BABY ' + childNameHtml() + (childSex() ? ' · ' + (childSex() === 'm' ? 'boy' : 'girl') : '') + ' · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
   if (_profBornLine(true)) lines.push('BORN ' + _profBornLine(true).replace(/^Born /, ''));
   lines.push('');
 
@@ -731,12 +731,12 @@ function showFullDoctorSummary() {
   if (lwDoc) {
     const wtWho = getGrowthRef(ageMonthsAt(lwDoc.date));
     const wtP = calcPercentile(lwDoc.wt, wtWho.w3, wtWho.w50, wtWho.w97, wtWho.w15, wtWho.w85);
-    lines.push('  Weight: ' + lwDoc.wt + ' kg (' + wtP.text + ' percentile)');
+    lines.push('  Weight: ' + lwDoc.wt + ' kg (' + wtP.text + ' percentile, WHO ' + childKinWord() + ')');   // the chart named, for the doctor (V-M-281-1)
   }
   if (lhDoc) {
     const htWho = getGrowthRef(ageMonthsAt(lhDoc.date));
     const htP = calcPercentile(lhDoc.ht, htWho.h3, htWho.h50, htWho.h97, htWho.h15, htWho.h85);
-    lines.push('  Height: ' + lhDoc.ht + ' cm (' + htP.text + ' percentile)');
+    lines.push('  Height: ' + lhDoc.ht + ' cm (' + htP.text + ' percentile, WHO ' + childKinWord() + ')');
   }
   if (lwDoc || lhDoc) {
     lines.push('  Last measured: ' + formatDate((lwDoc || lhDoc).date));
@@ -885,7 +885,7 @@ function renderGrowthFacts() {
     } else if (gPerDay >= 15 && gPerDay <= 40) {
       facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. ${childNameCapHtml()} is growing beautifully.` });
     } else if (gPerDay > 40) {
-      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage as she is establishing her growth curve on solids.` });
+      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage, while the growth curve settles on solids.` });
     }
   }
 
@@ -914,23 +914,15 @@ function renderGrowthFacts() {
     const totalGain = (lwFact.wt - birth.wt).toFixed(2);
     // The multiple is computed, not asserted (Vela V-V-266-12): babies roughly triple birth weight by 1 year.
     const mult = birth.wt > 0 ? lwFact.wt / birth.wt : 0;
-    const multText = mult >= 2.9 ? 'about triple her birth weight — the classic first-year marker'
-      : mult >= 2 ? 'more than double her birth weight' : 'steady gain since birth';
+    const multText = mult >= 2.9 ? `about triple ${pron('poss')} birth weight — the classic first-year marker`
+      : mult >= 2 ? `more than double ${pron('poss')} birth weight` : 'steady gain since birth';
     facts.push({ type:'positive', icon:zi('sprout'), title:`Gained ${totalGain} kg since birth`, body:`From ${birth.wt} kg at birth to ${lwFact.wt} kg now — ${multText}.` });
   }
 
-  // One-time note on the growth-reference change (Maren V-M-266-5 / Vela V-V-266-3, 2026-09-24).
-  // The default "India" table read her ~20–30 percentile points high and every post-12 m reading was
-  // compared to the 12-month row — so her percentiles drop when this lands. Own the correction up
-  // front, so a tired parent doesn't read a changed ruler as faltering growth. Dismiss persists
-  // per device (localStorage; not synced — each parent sees it once).
-  let _whoNoteSeen = false;
-  try { _whoNoteSeen = localStorage.getItem('ziva_growth_who_note_seen') === '1'; } catch (e) { _whoNoteSeen = false; }
-  if (!_whoNoteSeen && lwFact) {
-    facts.unshift({ type:'info', icon:zi('info'), dismiss:'dismissGrowthWhoNote',
-      title:'Growth now uses the WHO charts for every reading',
-      body:'IAP, India’s paediatric academy, recommends the WHO charts for children under 5, and they now run to 2 years. Her percentile may read lower than before — her growth hasn’t changed, only the measuring stick has.' });
-  }
+  // The one-time "Growth now uses the WHO charts" note (V-M-266-5, 2026-09-24) is retired: it told
+  // this family their percentiles might read lower than before, which means nothing to a new
+  // household, and for a boy its pronoun was wrong too (V-M-281-3). dismissGrowthWhoNote stays for
+  // any card still on screen.
 
   // WHO context
   facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of ${childNameHtml()}\'s health — a single reading means less than the pattern across visits. Keep logging!` });
@@ -1379,7 +1371,7 @@ function updatePercentileBadges() {
   if (!lwBadge) return;
   const moExact = ageMonthsAt(lwBadge.date);
   const ref = getGrowthRef(moExact);
-  const stdLabel = 'WHO';
+  const stdLabel = 'WHO ' + childKinWord();   // which chart, on the most-read numbers (V-M-281-5)
 
   // Weight percentile
   const wtBadge = document.getElementById('pbadge-wtpct');
@@ -1522,12 +1514,12 @@ function drawChart(canvasId) {
 
   datasets.push({ label:'WHO 97th', data: whoT().W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
   datasets.push({ label:'WHO 3rd',  data: whoT().W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
-  datasets.push({ label:'WHO 50th', data: whoT().W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
+  datasets.push({ label:'WHO 50th (' + childKinWord() + ')', data: whoT().W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const wtPointR = zoom ? 7 : 5;
   const wtHoverR = zoom ? 10 : 7;
   datasets.push({ label:'' + childNameCapHtml() + '', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
+  const legendFilter = ['WHO 50th (' + childKinWord() + ')','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _chartInst = new Chart(ctx.getContext('2d'), {
@@ -1600,12 +1592,12 @@ function drawHeightChart(canvasId) {
 
   datasets.push({ label:'WHO 97th', data: whoT().H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
   datasets.push({ label:'WHO 3rd',  data: whoT().H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
-  datasets.push({ label:'WHO 50th', data: whoT().H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
+  datasets.push({ label:'WHO 50th (' + childKinWord() + ')', data: whoT().H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const htPointR = zoom ? 7 : 5;
   const htHoverR = zoom ? 10 : 7;
   datasets.push({ label:'' + childNameCapHtml() + '', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
+  const legendFilter = ['WHO 50th (' + childKinWord() + ')','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _hChartInst = new Chart(ctx.getContext('2d'), {
@@ -1745,7 +1737,7 @@ function renderSizeComparison() {
       { icon:zi('book'), text:'About the weight of a thick hardcover novel', sub:'A real page-turner, this one' },
     ]},
     { max:5.0, pool:[
-      { icon:zi('drop'), text:'About as heavy as a medium watermelon', sub:'Sweet and round — just like her' },
+      { icon:zi('drop'), text:'About as heavy as a medium watermelon', sub:'Sweet and round, just like ' + pron('obj') },
       { icon:zi('baby'), text:'About the weight of a newborn kitten… times two!', sub:'Twice the cuteness too' },
       { icon:zi('brain'), text:'Weighs as much as 10 cricket balls', sub:'Bowled over by this little one' },
       { icon:zi('star'), text:'About the weight of a large stuffed teddy', sub:'Even more huggable though' },
@@ -1786,7 +1778,7 @@ function renderSizeComparison() {
   // Height tidbits — multiple per range
   const htTidbits = [
     { max:52, pool:[
-      { icon:zi('run'), text:'About the length of a cricket bat handle', sub:'Ready for her first innings' },
+      { icon:zi('run'), text:'About the length of a cricket bat handle', sub:'Ready for ' + pron('poss') + ' first innings' },
       { icon:zi('spoon'), text:'About as long as a baguette', sub:'Freshly baked perfection' },
       { icon:zi('sprout'), text:'As tall as a medium sunflower', sub:'Growing towards the sun' },
     ]},
@@ -1801,7 +1793,7 @@ function renderSizeComparison() {
       { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior princess' },
     ]},
     { max:64, pool:[
-      { icon:zi('run'), text:'About the length of a full cricket stump', sub:'Stumped by her cuteness' },
+      { icon:zi('run'), text:'About the length of a full cricket stump', sub:'Stumped by that cuteness' },
       { icon:zi('run'), text:'About the length of toddler skis', sub:'Ready for adventure' },
       { icon:zi('star'), text:'As long as a banjo', sub:'Playing a tune with every kick' },
     ]},
@@ -1810,7 +1802,7 @@ function renderSizeComparison() {
       { icon:zi('run'), text:'Almost as long as a skateboard', sub:'Rolling through life' },
       { icon:zi('baby'), text:'About the same length as a golden retriever puppy', sub:'Same level of adorable' },
       { icon:zi('bowl'), text:'As tall as a mature wheat stalk', sub:'Growing strong in the fields of love' },
-      { icon:zi('ruler'), text:'She\'s grown ' + (ht ? (ht - growthData[0].ht).toFixed(0) : '—') + ' cm since birth!', sub:'That\'s like adding a whole ruler length' },
+      { icon:zi('ruler'), text:'Grown ' + (ht ? (ht - growthData[0].ht).toFixed(0) : '—') + ' cm since birth!', sub:'That\'s like adding a whole ruler length' },
     ]},
     { max:72, pool:[
       { icon:zi('run'), text:'About as long as a skateboard', sub:'Cruising through milestones' },
@@ -1862,9 +1854,9 @@ function renderSizeComparison() {
   const pctVal = pctResult.pct;
   let funFact = '';
   if (pctVal >= 40 && pctVal <= 60) funFact = 'Right in the middle of the pack — textbook healthy growth! ' + zi('book');
-  else if (pctVal > 60 && pctVal <= 85) funFact = 'On the sturdier side — she\'s got a strong frame building! ' + zi('run');
+  else if (pctVal > 60 && pctVal <= 85) funFact = 'On the sturdier side, with a strong frame building! ' + zi('run');
   else if (pctVal > 85) funFact = 'Big and thriving — some babies are just built bigger, and that\'s great! ' + zi('sparkle');
-  else if (pctVal >= 15 && pctVal < 40) funFact = 'Petite but perfectly on her own curve — consistency matters most! ' + zi('sprout');
+  else if (pctVal >= 15 && pctVal < 40) funFact = 'Petite but steady on the same curve, and consistency matters most! ' + zi('sprout');
   else if (pctVal < 15) funFact = 'On the smaller side — keep tracking the trend, your paediatrician will guide you! ' + zi('star');
 
   if (funFact) {
