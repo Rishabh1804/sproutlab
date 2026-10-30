@@ -64,7 +64,7 @@ At boot, branch on what the app finds:
 - Copy that reads warmly with a name ("Ziva's day") must still read warmly with any name. The half-awake test applies to all copy.
 - A history rewrite cannot un-publish anything already cloned or cached elsewhere. It shrinks the exposure; it doesn't erase it.
 
-## 6. Open questions
-1. Private home for the lore: Codex (already private?) or a new private repo?
-2. A custom domain for the Vercel production site?
-3. Native app: Capacitor (bundles the files, works offline, Play Store or sideload) or a Trusted Web Activity (a wrapper around the hosted site, which still needs a host)? The recommendation is Capacitor for the wider release.
+## 6. Decisions (Architect, 2026-10-30)
+1. **Private home for the lore:** the private repo **MyFin**. CLAUDE.md lore, `meridian/`, the health-detail docs and the handoffs move there in P3.
+2. **Domain:** production on Vercel, under the household's one domain **somaelectro.co.in**. The proposal is a subdomain, e.g. `sproutlab.somaelectro.co.in`: a CNAME at the DNS host pointing to Vercel, plus that domain in Firebase's authorised domains.
+3. **Native app:** **Capacitor** (P5). It bundles the files on the device and works offline, with Firebase sync.
