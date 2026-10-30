@@ -5849,11 +5849,10 @@ function wgRender() {
 // ── PROFILE GATE (privacy-v1 §3.3) ──
 // No profile on this device: a new person gets Welcome (sign in, or set up a child); a device that
 // already holds records gets "Confirm details" once, because the code no longer knows the child.
-// Read once, as the script loads: init() may save built-in defaults before the gate looks.
 // Only a non-empty record counts: init writes [] / {} on a fresh device's first boot, and those
 // must not turn its second boot into "Confirm details" (V-CA-280-11). Read live, so a device that
 // signed in and received records is asked to confirm, not welcomed (Cipher #10).
-const _prfLiveHasRecords = () => {
+function _prfHasRecords() {
   const keys = ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds', 'ziva_sleep', 'ziva_poop',
     'ziva_notes', 'ziva_visits', 'ziva_activity_log', 'ziva_milestones', 'ziva_doctors'];
   try {
@@ -5864,8 +5863,7 @@ const _prfLiveHasRecords = () => {
       catch (e) { return false; }
     });
   } catch (e) { return false; }
-};
-function _prfHasRecords() { return _prfLiveHasRecords(); }
+}
 function initProfileGate() {
   try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
   if (profile) return;
