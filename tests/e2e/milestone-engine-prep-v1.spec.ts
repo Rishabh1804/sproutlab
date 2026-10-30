@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+declare let milestones: any;
 
 // milestone-engine-prep-v1 PR-A regression guards.
 // Spec: docs/specs/milestone-engine-prep-v1.md §Test plan.
@@ -563,8 +564,9 @@ test('regression-guard-milestone-engine-prep-v1-seed-rows: 2 new sensory + cogni
   await page.waitForTimeout(500);
   const r = await page.evaluate(() => {
     // PR-B cat→domain rename: read via domain (canonical) with legacy fallback.
-    const sensory = DEFAULT_MILESTONES.find((m: any) => (m.domain || m.cat) === 'sensory');
-    const cognitive = DEFAULT_MILESTONES.find((m: any) => (m.domain || m.cat) === 'cognitive');
+    // privacy-v1: the bundle ships no milestone records; the rows arrive from the e2e fixture.
+    const sensory = (milestones as any[]).find((m: any) => (m.domain || m.cat) === 'sensory');
+    const cognitive = (milestones as any[]).find((m: any) => (m.domain || m.cat) === 'cognitive');
     return {
       sensoryText: sensory?.text,
       sensorySafety: sensory?.safetyTier === true,

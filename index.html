@@ -12299,7 +12299,12 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .prf-err { font-size:var(--fs-sm); color:var(--tc-rose); margin:0; min-height:1em; }
 .prf-btn { width:100%; min-height:48px; gap:var(--sp-8); }
 .prf-btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
-
+.prf-check { font-size:var(--fs-sm); font-weight:700; color:var(--tc-sage); margin:0; min-height:1em; }
+.vacc-empty-note { display:flex; align-items:flex-start; gap:var(--sp-6); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); padding:var(--sp-8) 0; }
+.vacc-empty-note .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:2px; }
+.prf-field .form-input { min-height:48px; }
+.prf-label { font-size:var(--fs-base); }
+.form-input[aria-invalid="true"] { border-color:var(--tc-rose); }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Motion One — app-wide animation foundation (UMD build exposes window.Motion
@@ -12715,7 +12720,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         </div>
       </div>
 
-      <!-- ─── TODAY FOR ZIVA — the Home lede (PR-K) ─── -->
+      <!-- ─── TODAY FOR <child> — the Home lede (PR-K) ─── -->
       <div class="card col-full today-hero" id="todayHeroCard" style="display:none;">
         <div class="th-head">
           <div class="th-title">Today for <span data-child-name>your child</span></div>
@@ -12758,7 +12763,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <!-- Expanded: full details -->
         <div id="homeVitalsExpanded" style="display:none;" data-noop="1">
           <div class="vitals-expanded-inner">
-            <!-- ZIVA SCORE HERO -->
+            <!-- SPROUT SCORE HERO -->
             <div class="ziva-score-hero" id="homeHeroScore" style="display:none;">
               <div class="zs-ring" id="zsRing" data-open-score="1">
                 <div class="zs-number" id="zsNumber">—</div>
@@ -15251,6 +15256,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
     <!-- GENERAL TAB -->
     <div class="settings-pane active-sp" id="sp-general">
       <div class="fx-col g12">
+        <button class="btn btn-soft prf-btn" data-action="prfEdit"><svg class="zi" aria-hidden="true"><use href="#zi-baby"/></svg> Your child's details</button>
         <div style="padding:var(--sp-12) 14px;border-radius:var(--r-lg);background:var(--peach-light);border:1.5px solid rgba(250,212,180,0.3);">
           <div class="settings-section-hdr settings-section-hdr-caution"><svg class="zi" aria-hidden="true"><use href="#zi-bars"/></svg> Preferences</div>
           <div class="fx-col g12">
@@ -17627,7 +17633,7 @@ const VACC_SCHEDULE = [
 
   // ── 12 MONTHS ──
   { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many states give JE free at government centres in districts where it circulates (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many states give JE free at government centres in districts where it circulates (9–12 and 16–24 months). Ask at the next visit or your local UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
   { name:'MCV-2', age:'12 months', windowEnd:23, after:'MCV-1', completesSeries:true, type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
   { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 
@@ -21588,8 +21594,8 @@ const ESCALATING_TIPS = {
     'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If your child seems unusually tired or pale, discuss iron levels with your paediatrician.',
   ],
   'low-calcium': [
-    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
-    'Calcium and Vitamin D work together for bone health. Since your child takes a Vitamin D supplement, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
+    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breast milk or formula still provides some, but solids should contribute too.',
+    'Calcium and Vitamin D work together for bone health. If your child takes a Vitamin D supplement, pairing it with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
     'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
   ],
   'low-protein': [
@@ -22598,7 +22604,7 @@ const RECIPES = [
       'Lift out her piece, flake it with your fingers and remove every bone.',
       'Mash the flaked fish and lauki into soft rice with a little gravy. Take her portion out before salt or chilli.',
     ],
-    dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'The local jhol, made mild'],
+    dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'A Bengali-style jhol, made mild, made mild'],
     donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new to her, watch her for about 2 hours after the first meal'],
     source: ['icmr', 'nhsbsl', 'who'],
   },
@@ -23750,7 +23756,7 @@ window._recipeComposeTagline = _recipeComposeTagline;
 window._recipeServing = _recipeServing;
 window._FOOD_LIB_1224_MERGE = _FOOD_LIB_1224_MERGE;
 // ─────────────────────────────────────────
-// SVG ICON HELPER — the child Sketch icon set
+// SVG ICON HELPER — SproutLab sketch icon set
 // ─────────────────────────────────────────
 function zi(name) { return `<svg class="zi" aria-hidden="true"><use href="#zi-${name}"/></svg>`; }
 
@@ -24285,6 +24291,7 @@ function _profNormalize(p) {
   const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: _profCleanName(c.name) }) });
   if (!out.child.name) return null;
   if (c.solidsStart != null && !_profParse(c.solidsStart)) out.child.solidsStart = null;
+  if (out.place && typeof out.place === 'object' && out.place.city != null) out.place = Object.assign({}, out.place, { city: _profCleanName(out.place.city) || null });
   if (typeof out.ts !== 'number') out.ts = 0;
   return out;
 }
@@ -24301,8 +24308,20 @@ function _profBornLine(withPlace) {
   const city = withPlace && profile.place && profile.place.city ? ' · ' + profile.place.city : '';
   return born + city;
 }
+// The family's coordinates for weather, once geocoded from their town (home.js fetchWeather), or
+// null: no town, no weather fetch.
+function _profCoords() {
+  const p = profile && profile.place;
+  if (!p || !p.city) return null;
+  const g = _profGeoGet(p.city);
+  return g ? { lat: g.lat, lon: g.lon, tz: encodeURIComponent(p.tz || g.tz || 'auto') } : null;
+}
+// Geocoded towns, device-local (not synced: derived data). { "<town lowercased>": { lat, lon, tz } }
+function _profGeoGet(city) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); return m[String(city).toLowerCase().trim()] || null; } catch (e) { return null; } }
+function _profGeoPut(city, g) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); m[String(city).toLowerCase().trim()] = g; localStorage.setItem('ziva_geo_cache', JSON.stringify(m)); } catch (e) {} }
 function childPlace() { return (profile && profile.place) || null; }
 // Refresh the module-wide date anchors from the profile (or the P1 fallback).
+let _profAppliedOnce = false;
 function _profApply() {
   const c = _profChild();
   const dob = _profParse(c.dob) || _profParse(today()) || new Date();
@@ -24310,6 +24329,9 @@ function _profApply() {
   SOLIDS_START = _profParse(c.solidsStart) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
   _ZIVA_DOB = toDateStr(dob);
   _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+  // JS-built name copy (the landing) follows too, once the app has rendered (V-V-280-8).
+  if (_profAppliedOnce && typeof renderLanding === 'function' && document.getElementById('tab-landing')) { try { renderLanding(); } catch (e) {} }
+  _profAppliedOnce = true;
   // The template's name slots follow the profile (privacy-v1 P2b).
   if (typeof document !== 'undefined') {
     document.querySelectorAll('[data-child-name]').forEach(el => { el.textContent = childNameHtml(); });
@@ -24321,7 +24343,10 @@ function _profApply() {
 }
 // Save the profile (setup / Confirm details, P2). Returns the saved record or null if invalid.
 function _profSave(child, place) {
-  const next = _profNormalize({ v: 1, child, place: place || (profile && profile.place) || null, ts: Math.max(Date.now(), ((profile && profile.ts) || 0) + 1) });
+  // Typed on a device not yet attached to a household: provisional, so the household's own profile
+  // wins when this device joins (V-CA-280-12).
+  const provisional = typeof _syncLedgerActive === 'function' ? !_syncLedgerActive() : true;
+  const next = _profNormalize({ v: 1, child, place: place || (profile && profile.place) || null, ts: Math.max(Date.now(), ((profile && profile.ts) || 0) + 1), pre: provisional || undefined });
   if (!next) return null;
   profile = next;
   save(KEYS.profile, profile);
@@ -25154,13 +25179,11 @@ function init() {
   document.querySelectorAll('.zi-check-placeholder').forEach(el => { el.innerHTML = zi('check'); });
   document.querySelectorAll('.zi-warn-placeholder').forEach(el => { el.innerHTML = zi('warn'); });
 
-  // Selective migration — only reset keys whose version changed
+  // Key versions are stamped, never acted on by deleting. They once reset a key to the bundle's
+  // seed data; the bundle now ships no records (privacy-v1 §3.2), so a reset would only erase a
+  // family's own records: a restored or copied record without its stamp, or any future bump.
   Object.entries(KEY_VERSIONS).forEach(([key, ver]) => {
-    const storedVer = localStorage.getItem('ziva_kv_' + key);
-    if (storedVer !== ver) {
-      localStorage.removeItem(KEYS[key]);
-      localStorage.setItem('ziva_kv_' + key, ver);
-    }
+    if (localStorage.getItem('ziva_kv_' + key) !== ver) localStorage.setItem('ziva_kv_' + key, ver);
   });
 
   growthData  = load(KEYS.growth, null)     || DEFAULT_GROWTH;
@@ -26190,13 +26213,16 @@ function calcMedicalScore() {
 
   const daysSinceGrowth = growthData.length > 0 ? Math.floor((new Date() - new Date(growthData[growthData.length-1].date)) / 86400000) : null;
 
-  const baseScore = Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
+  // No dose logged yet: leave vaccines out of the score rather than read her as unvaccinated (V-M-280-4).
+  const vaccNone = !(vaccData || []).some(v => v && !v.upcoming);
+  const baseScore = vaccNone ? Math.round((suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15) / 0.60)
+    : Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
   const modRaw = computeMedicalModifier();
   const score = applyIntelligenceModifier(baseScore, modRaw);
   const modifier = _withDelta(modRaw, baseScore, score);
   return {
     score, baseScore, modifier, ...getScoreLabel(score),
-    components: { vaccination: vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
+    components: { vaccination: vaccNone ? null : vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
       // Routine doses inside their window and not yet given (not scored; shown as "due now").
@@ -26355,7 +26381,7 @@ function calcMilestoneScore() {
   };
 }
 
-// ── ZIVA SCORE (holistic) ──
+// ── SPROUT SCORE (holistic; identifiers keep the old calcZivaScore names) ──
 
 let _lastKnownScores = { sleep: null, diet: null, poop: null, medical: null, milestones: null };
 
@@ -27223,11 +27249,12 @@ function escAttr(s) {
 }
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-function ageAt(date) {
+function ageAt(date, dob) {   // dob: optional, for a birth date not yet saved (the profile gate's read-back)
   const d = date ? new Date(date) : new Date();
+  const b = dob || DOB;
   if (isNaN(d)) return { months: 0, days: 0 };
-  let months = d.getMonth() - DOB.getMonth() + (d.getFullYear() - DOB.getFullYear()) * 12;
-  let days = d.getDate() - DOB.getDate();
+  let months = d.getMonth() - b.getMonth() + (d.getFullYear() - b.getFullYear()) * 12;
+  let days = d.getDate() - b.getDate();
   if (days < 0) {
     months--;
     const prev = new Date(d.getFullYear(), d.getMonth(), 0);
@@ -28853,6 +28880,8 @@ function closeSettingsSidebar() {
   sidebar.classList.remove('open');
   overlay.classList.remove('open');
   document.body.style.overflow = '';
+  // Sign in from Welcome opens Settings; if it did not bring a profile, ask again (V-M-280-7).
+  if (!profile && typeof initProfileGate === 'function') setTimeout(() => { if (!profile && !document.getElementById('prfGate')) _prfShow(_prfHasRecords() ? 'confirm' : 'welcome'); }, 400);
 }
 
 function toggleSettingsSidebar() {
@@ -29225,7 +29254,7 @@ function exportData() {
     data._exportDate = new Date().toISOString();
 
     const jsonStr = JSON.stringify(data, null, 2);
-    const fileName = 'ziva-backup-' + today() + '.json';
+    const fileName = 'sproutlab-backup-' + today() + '.json';
 
     // Strategy 1: Web Share API with file (best for mobile/PWA)
     if (navigator.share) {
@@ -29578,15 +29607,35 @@ function wgRender() {
 // No profile on this device: a new person gets Welcome (sign in, or set up a child); a device that
 // already holds records gets "Confirm details" once, because the code no longer knows the child.
 // Read once, as the script loads: init() may save built-in defaults before the gate looks.
+// Only a non-empty record counts: init writes [] / {} on a fresh device's first boot, and those
+// must not turn its second boot into "Confirm details" (V-CA-280-11).
 const _PRF_HAD_RECORDS = (() => {
-  try { return ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds'].some(k => !!localStorage.getItem(k)); }
-  catch (e) { return false; }
+  const keys = ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds', 'ziva_sleep', 'ziva_poop',
+    'ziva_notes', 'ziva_visits', 'ziva_activity_log', 'ziva_milestones', 'ziva_doctors'];
+  try {
+    return keys.some(k => {
+      const raw = localStorage.getItem(k);
+      if (!raw) return false;
+      try { const v = JSON.parse(raw); return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v); }
+      catch (e) { return false; }
+    });
+  } catch (e) { return false; }
 })();
 function _prfHasRecords() { return _PRF_HAD_RECORDS; }
 function initProfileGate() {
+  try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
   if (profile) return;
+  // A device already attached to a household waits for the household's profile before asking: if
+  // the other phone has confirmed, this one should take that, not type its own (V-CA-280-16).
+  if (typeof _syncLedgerActive === 'function' && _syncLedgerActive() && !_prfWaited) {
+    _prfWaited = true;
+    setTimeout(() => { if (!profile) _prfShow(_prfHasRecords() ? 'confirm' : 'welcome'); }, 8000);
+    return;
+  }
   _prfShow(_prfHasRecords() ? 'confirm' : 'welcome');
 }
+let _prfWaited = false;
+let _prfPending = null;   // the read-back step: values the parent is asked to confirm once
 function _prfShow(mode) {
   _prfClose();
   const ov = document.createElement('div');
@@ -29594,6 +29643,8 @@ function _prfShow(mode) {
   ov.id = 'prfGate';
   ov.setAttribute('role', 'dialog');
   ov.setAttribute('aria-modal', 'true');
+  ov.setAttribute('aria-labelledby', 'prfTitle');
+  const app = document.querySelector('.app'); if (app) app.inert = true;   // the app behind is out of reach
   ov.innerHTML = `<div class="prf-card">${mode === 'welcome' ? _prfWelcomeHtml() : _prfFormHtml(mode)}</div>`;
   document.body.appendChild(ov);
   document.body.style.overflow = 'hidden';
@@ -29602,57 +29653,108 @@ function _prfShow(mode) {
 }
 function _prfClose() {
   const el = document.getElementById('prfGate');
-  if (el) { el.remove(); document.body.style.overflow = ''; }
+  if (el) { el.remove(); document.body.style.overflow = ''; const app = document.querySelector('.app'); if (app) app.inert = false; }
 }
 function _prfWelcomeHtml() {
   return `<div class="prf-icon">${zi('sprout')}</div>`
-    + `<h1 class="prf-title">Welcome to SproutLab</h1>`
+    + `<h1 class="prf-title" id="prfTitle">Welcome to SproutLab</h1>`
     + `<p class="prf-lead">A calm place to track your child's day: meals, sleep, growth and health, kept for your family only.</p>`
     + `<button class="btn btn-sage prf-btn" data-action="prfStart">${zi('baby')} Set up your child</button>`
     + `<button class="btn btn-soft prf-btn" data-action="prfSignIn">${zi('heart')} I already use SproutLab: sign in</button>`
     + `<p class="prf-note">Signing in joins your family's shared record on this phone.</p>`;
 }
 function _prfFormHtml(mode) {
-  const confirm = mode === 'confirm';
+  const confirm = mode === 'confirm', editing = mode === 'edit';
   const today_ = today();
+  const c = editing && profile ? profile.child : {};
+  const val = v => v ? ` value="${escHtml(v)}"` : '';
+  const dobDate = c.dob ? String(c.dob).slice(0, 10) : '', dobTime = c.dob && String(c.dob).length > 10 ? String(c.dob).slice(11, 16) : '';
+  const city = editing && profile && profile.place ? profile.place.city : '';
   return `<div class="prf-icon">${zi(confirm ? 'heart' : 'baby')}</div>`
-    + `<h1 class="prf-title">${confirm ? 'Confirm your child\'s details' : 'About your child'}</h1>`
-    + `<p class="prf-lead">${confirm ? 'SproutLab now keeps these details with your family\'s record instead of inside the app. Your logs stay exactly as they are.' : 'This sets your child\'s age for every chart, milestone and food guide. You can change it later in Settings.'}</p>`
+    + `<h1 class="prf-title" id="prfTitle">${confirm ? 'Confirm your child\'s details' : editing ? 'Your child\'s details' : 'About your child'}</h1>`
+    + `<p class="prf-lead">${confirm ? 'SproutLab now keeps these details with your family\'s record instead of inside the app. Your logs stay exactly as they are.' : 'This sets your child\'s age for every chart, vaccine, milestone and food guide. You can change it later in Settings.'}</p>`
     + `<form class="prf-form" data-prf-form="1" novalidate>`
-    + `<label class="prf-field"><span class="prf-label">Name</span><input class="form-input" id="prfName" type="text" maxlength="40" autocomplete="off" required></label>`
-    + `<label class="prf-field"><span class="prf-label">Date of birth</span><input class="form-input" id="prfDob" type="date" max="${today_}" required></label>`
-    + `<label class="prf-field"><span class="prf-label">Time of birth <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfTime" type="time"></label>`
-    + `<label class="prf-field"><span class="prf-label">Started solids on <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfSolids" type="date" max="${today_}"></label>`
-    + `<label class="prf-field"><span class="prf-label">Town or city <span class="prf-opt">(optional, for weather)</span></span><input class="form-input" id="prfCity" type="text" maxlength="40" autocomplete="off"></label>`
+    + `<label class="prf-field"><span class="prf-label">Name</span><input class="form-input" id="prfName" type="text" maxlength="40" autocomplete="off" required${val(c.name)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Date of birth</span><input class="form-input" id="prfDob" type="date" max="${today_}" required${val(dobDate)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Time of birth <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfTime" type="time"${val(dobTime)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Started solids on <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfSolids" type="date" max="${today_}"${val(c.solidsStart)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Town or city <span class="prf-opt">(optional, for weather)</span></span><input class="form-input" id="prfCity" type="text" maxlength="40" autocomplete="off"${val(city)}></label>`
+    + `<p class="prf-check" id="prfCheck" role="status"></p>`
     + `<p class="prf-err" id="prfErr" role="alert"></p>`
-    + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="${mode}">${zi('check')} ${confirm ? 'Save details' : 'Start'}</button>`
-    + (confirm ? '' : `<button class="btn btn-ghost prf-btn" type="button" data-action="prfBack">Back</button>`)
+    + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="${mode}">${zi('check')} ${confirm || editing ? 'Save details' : 'Start'}</button>`
+    + (confirm ? `<button class="btn btn-soft prf-btn" type="button" data-action="prfSignIn">${zi('heart')} Sign in instead</button>`
+      : editing ? `<button class="btn btn-ghost prf-btn" type="button" data-action="prfCancel">Cancel</button>`
+      : `<button class="btn btn-ghost prf-btn" type="button" data-action="prfBack">Back</button>`)
     + `</form>`;
 }
 function prfDispatch(action, arg) {
-  if (action === 'prfStart') _prfShow('setup');
-  else if (action === 'prfBack') _prfShow('welcome');
+  if (action === 'prfStart') { _prfPending = null; _prfShow('setup'); }
+  else if (action === 'prfBack') { _prfPending = null; _prfShow('welcome'); }
+  else if (action === 'prfEdit') { _prfPending = null; if (typeof closeSettingsSidebar === 'function') closeSettingsSidebar(); _prfShow('edit'); }
+  else if (action === 'prfCancel') { _prfPending = null; _prfClose(); }
   else if (action === 'prfSignIn') { _prfClose(); if (typeof openSettingsSidebar === 'function') openSettingsSidebar(); }
   else if (action === 'prfSave') _prfSubmit(arg);
 }
 function _prfSubmit(mode) {
   const v = id => { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; };
-  const err = msg => { const el = document.getElementById('prfErr'); if (el) el.textContent = msg; };
+  const err = (msg, fieldId) => {
+    const el = document.getElementById('prfErr'); if (el) el.textContent = msg;
+    document.querySelectorAll('#prfGate .form-input').forEach(i => i.removeAttribute('aria-invalid'));
+    const f = fieldId && document.getElementById(fieldId);
+    if (f) { f.setAttribute('aria-invalid', 'true'); f.focus(); }
+  };
   const name = v('prfName'), dob = v('prfDob'), time = v('prfTime'), solids = v('prfSolids'), city = v('prfCity');
-  if (!name) return err('Please add your child\'s name.');
-  if (!dob || !_profParse(dob)) return err('Please add the date of birth.');
-  if (dob > today()) return err('The date of birth can\'t be in the future.');
-  if (solids && solids < dob) return err('Solids can\'t start before the date of birth.');
+  if (!name) return err('Please add your child\'s name.', 'prfName');
+  if (!dob || !_profParse(dob)) return err('Please add the date of birth.', 'prfDob');
+  if (dob > today()) return err('The date of birth can\'t be in the future.', 'prfDob');
+  if (solids && solids < dob) return err('Solids can\'t start before the date of birth.', 'prfSolids');
+  // A record dated before the birth date means the date is wrong (V-M-280-2).
+  const earliest = _prfEarliestRecord();
+  if (earliest && earliest < dob) return err(`Some of her records are dated before this birth date (the earliest is ${formatDate(earliest)}). Please check the year.`, 'prfDob');
+  // Read the age back once before saving: a year typo shifts every vaccine and food guide.
+  const key = [name, dob, time, solids, city].join('|');
+  if (_prfPending !== key) {
+    _prfPending = key;
+    const a = ageAt(new Date(), _profParse(time ? dob + 'T' + time : dob));
+    const chk = document.getElementById('prfCheck');
+    if (chk) chk.textContent = `That makes ${name} ${fmtAgeLong(a.months, a.days)} old today. Tap Save again if that's right.`;
+    return err('');
+  }
+  _prfPending = null;
   const tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { return null; } })();
-  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null }, city ? { city, tz } : (tz ? { city: null, tz } : null));
+  const prevPlace = profile && profile.place ? profile.place : null;
+  const place = city ? Object.assign({}, prevPlace && prevPlace.city === city ? prevPlace : {}, { city, tz }) : (tz ? { city: null, tz } : null);
+  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null }, place);
   if (!saved) return err('Those details don\'t look right. Please check them.');
+  // Every screen was drawn with the old birth date; a fresh start redraws them all (V-M-280-1).
+  try { sessionStorage.setItem('prf_notice', mode === 'confirm' || mode === 'edit' ? 'Details saved' : 'Welcome, ' + saved.child.name); } catch (e) {}
   _prfClose();
-  if (typeof renderLanding === 'function') { try { renderLanding(); } catch (e) {} }
-  if (typeof renderHome === 'function') { try { renderHome(); } catch (e) {} }
-  if (typeof showQLToast === 'function') showQLToast(mode === 'confirm' ? 'Details saved' : `Welcome, ${escHtml(saved.child.name)}`, 3000);
+  setTimeout(() => location.reload(), 150);
 }
-// A profile arriving by sync (another phone in the family set it) closes the gate.
-function _prfOnProfile() { if (profile) _prfClose(); }
+// The earliest dated record on this device (growth, feeding, vaccines, foods), or ''.
+function _prfEarliestRecord() {
+  let min = '';
+  const take = d => { if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d) && (!min || d.slice(0, 10) < min)) min = d.slice(0, 10); };
+  try {
+    (Array.isArray(growthData) ? growthData : []).forEach(g => take(g && g.date));
+    Object.keys(feedingData || {}).forEach(take);
+    (Array.isArray(vaccData) ? vaccData : []).forEach(v => { if (v && !v.upcoming) take(v.date); });
+    (Array.isArray(foods) ? foods : []).forEach(f => take(f && f.date));
+  } catch (e) {}
+  return min;
+}
+// A profile arriving by sync (another phone in the family set it) closes the gate. When it moves
+// the birth date, every screen drawn with the old one is redrawn by a fresh start (V-M-280-1).
+function _prfOnProfile(prevDob) {
+  if (!profile) return;
+  const gateOpen = !!document.getElementById('prfGate');
+  _prfClose();
+  if (gateOpen || (prevDob !== undefined && prevDob !== profile.child.dob)) {
+    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : 'Birth date updated from another phone'); } catch (e) {}
+    const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if (!busy) setTimeout(() => location.reload(), 150);
+  }
+}
 
 function initWelcomeGuide() {
   const seen = localStorage.getItem('ziva_guide_seen');
@@ -30949,7 +31051,7 @@ let _ZIVA_DOB_MS = 0;                                            // set by _prof
 // Age accessor — used by _evaluateRecommendation to map a date into the standard's age-range.
 // HR-12 safe: parses dateStr at UTC midnight; subtracts UTC-anchored DOB; integer day count.
 function _zivaAgeInDays(dateStr) {
-  if (typeof dateStr !== 'string') return 0;
+  if (typeof dateStr !== 'string' || !_ZIVA_DOB_MS) return 0;   // no anchor yet: unknown, not the epoch (V-K-280-7)
   const ms = Date.parse(dateStr + 'T00:00:00Z');
   if (isNaN(ms)) return 0;
   return Math.max(0, Math.round((ms - _ZIVA_DOB_MS) / (24 * 60 * 60 * 1000)));
@@ -30993,7 +31095,7 @@ function _msStandardFor(standards, key) {
 // _predictMilestoneWindow — Primitive 1.
 // Clinical-range predictor for a single milestone. PURE function. NEVER
 // personalised — returns the typical clinical band from the active reference
-// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a the child-specific prediction.
+// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a child-specific prediction.
 // Audit-no-personalised-prediction-v1.sh enforces the honesty floor at build.
 function _predictMilestoneWindow(milestoneId, opts) {
   opts = opts || {};
@@ -32111,19 +32213,23 @@ function fetchWeather() {
   if (!weatherEl) return;
   // The family's town from the profile (privacy-v1 §3.1); no town, no weather line.
   var place = (typeof profile !== 'undefined' && profile && profile.place) || null;
-  if (!place || (!place.city && place.lat == null)) { weatherEl.textContent = ''; return; }
-  if (place.lat == null || place.lon == null) {
-    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&name=' + encodeURIComponent(place.city))
+  if (!place || !place.city) { weatherEl.textContent = ''; return; }
+  var c = _profCoords();
+  if (!c) {
+    // Geocode the town once; the coordinates are a device-local cache keyed by town, so they never
+    // outrank a real edit to the profile or race one (V-CA-280-13).
+    var city = place.city;
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&name=' + encodeURIComponent(city))
       .then(function(r) { return r.json(); })
       .then(function(g) {
         var hit = g && g.results && g.results[0];
         if (!hit) return;
-        _profSave(profile.child, Object.assign({}, place, { lat: Math.round(hit.latitude * 100) / 100, lon: Math.round(hit.longitude * 100) / 100, tz: place.tz || hit.timezone || null }));
-        fetchWeather();
+        _profGeoPut(city, { lat: Math.round(hit.latitude * 100) / 100, lon: Math.round(hit.longitude * 100) / 100, tz: hit.timezone || null });
+        if (profile && profile.place && profile.place.city === city) fetchWeather();
       }).catch(function() {});
     return;
   }
-  var lat = place.lat, lon = place.lon, tz = encodeURIComponent(place.tz || 'auto');
+  var lat = c.lat, lon = c.lon, tz = c.tz;
   fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=' + tz)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -32186,8 +32292,10 @@ function fetchVaccWeatherAdvisory() {
   // Only show advisory 0–2 days before appointment (and on the day itself)
   if (daysTo < 0 || daysTo > 2) return;
 
-  const lat = 22.8, lon = 86.18;
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,uv_index_max&timezone=Asia/Kolkata&start_date=${apptDate}&end_date=${apptDate}`)
+  const _c = _profCoords();
+  if (!_c) return;
+  const lat = _c.lat, lon = _c.lon;
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,uv_index_max&timezone=${_c.tz}&start_date=${apptDate}&end_date=${apptDate}`)
     .then(r => r.json())
     .then(data => {
       if (!data.daily || !data.daily.time || data.daily.time.length === 0) return;
@@ -38882,8 +38990,10 @@ function _outingFetchForecast() {
   // If we have cached data with uvIndex already, return it
   if (wx && wx.uvIndex !== undefined) return Promise.resolve(wx);
 
-  var lat = 22.8, lon = 86.18;
-  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code,uv_index_max,precipitation_probability_max&timezone=Asia/Kolkata&start_date=' + targetDate + '&end_date=' + targetDate)
+  var _c = _profCoords();
+  if (!_c) return Promise.resolve(wx || null);
+  var lat = _c.lat, lon = _c.lon;
+  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code,uv_index_max,precipitation_probability_max&timezone=' + _c.tz + '&start_date=' + targetDate + '&end_date=' + targetDate)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.daily && data.daily.time && data.daily.time.length > 0) {
@@ -45187,9 +45297,15 @@ function _libBookHtml(key, eff, pol) {
 function _libSuggestions() {
   var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
   if (!FE) return [];
+  // Never before solids: under 6 months, or before her solids start (V-C-280-1). And never a food
+  // AGE_RULES gates above her age (egg at 7 months), the same check getUntriedSuggestions makes.
+  var mo = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
+  if (mo < 6 || (typeof SOLIDS_START !== 'undefined' && toDateStr(SOLIDS_START) > today())) return [];
   var out = [];
   Object.keys(FE).forEach(function(k) {
     if (out.length >= 3) return;
+    var rule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(k) : null;
+    if (rule && rule.minMonth > mo) return;
     if (_effPolarity(FE[k]) === 'encourage' && !_fdIsFoodTried(k)) out.push(k);
   });
   return out;
@@ -45856,15 +45972,13 @@ function _libCloseDeck() {
 // tap-to-stamp + N/A (one-tap Quick acts, HR-9). Shared with the General room. ────
 // Doc-prep identity helpers. The doctor card leads with the PATIENT (name as the card
 // title, vitals beneath) — a clinical handoff, not app branding (Architect, PR#235).
-// Name is sourced from the household profile so the card stays flexible — no new hardcode.
-// TODO(legacy-name-debt): 'the child' is the last-resort fallback only; the app still hardcodes
-// the name in several places (core.js avatar alt, medical.js chart labels) — a flexible-name
-// migration is known debt, tracked for a later session (Architect, PR#235).
+// The child's name comes from the profile (privacy-v1 §3.1), the one source the rest of the app
+// reads, so a clinical handoff never names a different child (V-C-280-3). The household name is a
+// legacy fallback; "Your child" the last resort, so the title slot is never empty (Maren V-M-237).
 function _emDocName() {
-  // Trim-guard (Maren V-M-237): reject a blank/whitespace household name so the doctor
-  // card's title slot can never render empty — a nameless medical handoff.
+  if (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) return profile.child.name;
   try { if (typeof _syncHousehold !== 'undefined' && _syncHousehold && typeof _syncHousehold.name === 'string' && _syncHousehold.name.trim()) return _syncHousehold.name.trim(); } catch (e) {}
-  return '' + childNameCapHtml() + '';
+  return childNameCapHtml();
 }
 function _emDocVitals() {
   var bits = [];
@@ -46511,7 +46625,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'' + childNameCapHtml() + '\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    body:'Your child\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
     condition: () => getAgeInMonths() < 12,
   },
   {
@@ -47118,7 +47232,7 @@ function checkFoodCombo() {
 
   const result = {
     verdict, verdict_emoji: verdictEmoji, headline,
-    explanation: [...warnings, ...benefits].join('\n') || (verdict === 'safe' ? `All ingredients are age-appropriate for ${Math.floor(mo)} months and have been introduced safely.` : ''),
+    explanation: [...warnings, ...benefits].join('\n') || (verdict === 'safe' ? (newFoods.length ? `All ingredients are age-appropriate for ${Math.floor(mo)} months.` : `All ingredients are age-appropriate for ${Math.floor(mo)} months and have been introduced safely.`) : ''),
     nutrition_highlights: nutritionHighlights,
     new_foods: newFoods,
     allergen_notes: allergenNotes,
@@ -48732,7 +48846,7 @@ function generateTomorrowPrep() {
   var seasonalTip = null;
   if (seasonalPeaks.length > 0) {
     var displayPeaks = seasonalPeaks.slice(0, 3).map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); });
-    seasonalTip = displayPeaks.join(', ') + ' in season';
+    seasonalTip = displayPeaks.join(', ') + ' in season (eastern India)';
   }
 
   return {
@@ -50479,7 +50593,7 @@ function _spGetDomainDefs(zs) {
         const d = r.detail || {};
         const items = [
           { name: 'Vaccines', weight: '40%', score: r.components.vaccination,
-            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
+            detail: r.components.vaccination === null ? 'No doses logged yet' : Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
           { name: 'Supplements', weight: '25%', score: r.components.supplements,
             detail: d.suppDays !== null ? d.suppDays + '/7 days given this week' : 'No active supplements', tab: 'medical' },
           { name: 'Growth', weight: '20%', score: r.components.growth,
@@ -53268,11 +53382,11 @@ function dismissGrowthWhoNote() {
 // ── the child's monthly milestones (auto-generated from DOB) ──
 function getZivaMonthDays() {
   const events = [];
-  for (let m = 7; m <= 24; m++) {
+  for (let m = 1; m <= 24; m++) {
     const d = new Date(DOB);
     d.setMonth(d.getMonth() + m);
     const dateStr = toDateStr(d);
-    if (m === 12) continue; // skip — covered by "1st Birthday" in INDIAN_HOLIDAYS
+    if (m === 12) { events.push({ date:dateStr, title:`${childNameCapHtml()}'s 1st Birthday`, type:'birthday', icon:zi('party'), auto:true }); continue; }
     if (m === 24) { events.push({ date:dateStr, title:"" + childNameCapHtml() + "'s 2nd Birthday", type:'birthday', icon:zi('party'), auto:true }); continue; }
     events.push({ date:dateStr, title:`${childNameCapHtml()} turns ${fmtAgeMonths(m)}`, type:'birthday', icon:zi('sprout'), auto:true });
   }
@@ -56569,6 +56683,14 @@ function renderVaccCoverage() {
   // Schedule pill: given out of the routine doses whose window has opened.
   const totalDue = givenCount + missingCount + optionalMissing + dueList.length;
   const pastCount = vaccData.filter(v => !v.upcoming).length;
+  // A family that has logged no doses yet has not told us her history: no red "Missing" list,
+  // just an invitation to add the doses on her card (V-M-280-4).
+  if (pastCount === 0) {
+    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on her vaccination card to see what is due.</span></div>`;
+    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once her past doses are logged, this card checks them against the full IAP schedule.</span></div>`
+      + `<button class="btn btn-soft btn-compact" data-action="openVaccModal">${zi('plus')} Add a dose</button>`;
+    return;
+  }
   const pct = totalDue > 0 ? Math.round((givenCount / totalDue) * 100) : 100;
 
   // Preview pills
@@ -62195,7 +62317,9 @@ function _renderHydrationContent() {
   // Summary
   const daysWithWeather = data.days.filter(d => d.temp !== null).length;
   if (daysWithWeather === 0) {
-    summaryEl.innerHTML = '<div class="t-sm t-light">Weather data unavailable — check connection</div>';
+    summaryEl.innerHTML = (typeof _profCoords === 'function' && !_profCoords() && !(profile && profile.place && profile.place.city))
+      ? '<div class="t-sm t-light">Add your town in Settings, under Your child\'s details, to see weather here.</div>'
+      : '<div class="t-sm t-light">Weather data unavailable — check connection</div>';
     gridEl.innerHTML = '';
     alertsEl.innerHTML = '';
     corrEl.innerHTML = '';
@@ -64789,7 +64913,7 @@ var QA_INTENTS = [
   // ═══ OVERALL ═══
   {
     id: 'overall',
-    triggers: ['overall', 'how is she', 'how is ziva', 'summary', 'doing', 'okay', 'score', 'report'],
+    triggers: ['overall', 'how is she', 'summary', 'doing', 'okay', 'score', 'report'],
     handler: 'answerOverall'
   },
   {
@@ -64872,7 +64996,16 @@ function _isLikelyFoodList(tokens) {
 
 // ── MULTI-MODE INPUT CLASSIFIER ──
 
+// The child's name is the family's own word, so it must never trip a keyword ("Sita" → sit,
+// "Rashi" → rash, "Agastya" → age). Before classifying, the profile name reads as "she" (V-K-280-5).
+function _qaNameAsShe(text) {
+  var n = (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) ? String(profile.child.name) : '';
+  if (!n || typeof text !== 'string') return text;
+  var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
+  return text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
+}
 function qaClassifyInput(text) {
+  text = _qaNameAsShe(text);
   if (!text || typeof text !== 'string') return { mode: 'qa', raw: text || '' };
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
   var tokens = lower.split(/[\s,+&]+/).filter(function(t) { return t.length > 0; });
@@ -65869,7 +66002,7 @@ function qaHandleFoodSafety(classified) {
   // the child's history
   if (historyItems.length > 0) {
     sections.push({
-      label: 'ZIVA\'S HISTORY',
+      label: 'HISTORY WITH THIS FOOD',
       icon: zi('baby'),
       items: historyItems
     });
@@ -66014,6 +66147,7 @@ function qaHandleSymptom(classified) {
 // ── INTENT MATCHING ──
 
 function qaMatchIntent(input) {
+  input = _qaNameAsShe(input);
   var text = input.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   var tokens = text.split(/\s+/);
 
@@ -67685,7 +67819,7 @@ function _qaShareToday() {
 function formatSummaryAsText(summary) {
   var age = ageAt();
   var lines = [];
-  lines.push('*' + childNameHtml() + ' (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
+  lines.push('*' + childNameCapHtml() + ' (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
   if (summary.scores && summary.scores.overall !== null) lines.push('Score: ' + summary.scores.overall + '/100');
   lines.push('');
 
@@ -67722,19 +67856,20 @@ function formatSummaryAsText(summary) {
 
 function qaAnswerAge() {
   var age = ageAt();
-  var totalDays = Math.floor((new Date() - DOB) / 86400000);
+  var totalDays = _zivaAgeInDays(today());                     // one way to count age (K-280-3)
   var weeksOld = Math.floor(totalDays / 7);
+  var dobStr = toDateStr(DOB);
+  var birthRec = (Array.isArray(growthData) ? growthData : []).find(function(g) { return g && g.date === dobStr; });
+  var details = [{ text: totalDays + ' days old (' + weeksOld + ' weeks)', signal: 'neutral' },
+    { text: 'Born: ' + DOB.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), signal: 'neutral' }];
+  if (birthRec && (birthRec.wt || birthRec.ht)) details.push({ text: 'Birth weight: ' + [birthRec.wt ? birthRec.wt + ' kg' : '', birthRec.ht ? birthRec.ht + ' cm' : ''].filter(Boolean).join(', '), signal: 'neutral' });
 
   return {
     title: '' + childNameCapHtml() + '\'s Age',
     headline: fmtAgeLong(age.months, age.days) + ' old',
     icon: 'baby',
     domain: 'rose',
-    sections: [{ label: 'Details', icon: zi('clock'), items: [
-      { text: totalDays + ' days old (' + weeksOld + ' weeks)', signal: 'neutral' },
-      { text: 'Born: 4 September 2025', signal: 'neutral' },
-      { text: 'Birth weight: 3.45 kg, 50 cm', signal: 'neutral' }
-    ]}]
+    sections: [{ label: 'Details', icon: zi('clock'), items: details }]
   };
 }
 
@@ -77953,7 +78088,7 @@ function renderInfoSleepEfficiency() {
     if (data.avgEff < 80) {
       html += '<div class="si-insight si-insight-warn">Frequent wake-ups are reducing sleep quality. Check for teething, hunger, or room temperature.</div>';
     } else if (data.avgEff >= 90) {
-      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — ' + childNameCapHtml() + ' is sleeping through most of the night.</div>';
+      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — ' + childNameHtml() + ' is sleeping through most of the night.</div>';
     } else {
       html += '<div class="si-insight si-insight-info">Sleep efficiency is in the normal range. Fewer wake-ups would push it higher.</div>';
     }
@@ -78127,7 +78262,7 @@ function renderInfoSleepWakeWindows() {
       html += '<div class="si-insight si-insight-good">Wake windows are well-timed for ' + childNameHtml() + '\'s age. Nice work.</div>';
     }
     if (data.undertiredCount >= 3) {
-      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — ' + childNameCapHtml() + ' may not be tired enough, which can cause nap refusal.</div>';
+      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — ' + childNameHtml() + ' may not be tired enough, which can cause nap refusal.</div>';
     }
     insightEl.innerHTML = html;
   }
@@ -80484,7 +80619,7 @@ function renderInfoMilestoneSleepCorrelation() {
       var rate = Math.round((coOccurrences / bursts.length) * 100);
       iHtml += '<div class="si-insight si-insight-warn">' + coOccurrences + ' of ' + bursts.length + ' milestone bursts coincided with sleep disruption (' + rate + '%) — consistent with developmental leap patterns</div>';
     } else if (bursts.length > 0 && coOccurrences === 0) {
-      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — ' + childNameCapHtml() + ' handles developmental leaps well</div>';
+      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — ' + childNameHtml() + ' handles developmental leaps well</div>';
     }
     if (bursts.length === 0 && weeksWithBothData.length >= 4) {
       iHtml += '<div class="si-insight si-insight-info">No milestone bursts detected in the last ' + numWeeks + ' weeks — steady development pace</div>';
@@ -82665,9 +82800,11 @@ function saveWeatherCache() {
 let _weatherFetchInFlight = false;
 function fetchHistoricalWeather(startDate, endDate) {
   if (_weatherFetchInFlight) return Promise.resolve();
+  const _c = (typeof _profCoords === 'function') ? _profCoords() : null;
+  if (!_c) return Promise.resolve();
   _weatherFetchInFlight = true;
-  const lat = 22.8, lon = 86.18;
-  return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=Asia/Kolkata&start_date=${startDate}&end_date=${endDate}`)
+  const lat = _c.lat, lon = _c.lon;
+  return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=${_c.tz}&start_date=${startDate}&end_date=${endDate}`)
     .then(r => r.json())
     .then(data => {
       _weatherFetchInFlight = false;
@@ -85137,6 +85274,9 @@ const SYNC_KEYS = {
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
 // Keys where an empty state is never a valid user intent — only a bug signal.
+// privacy-v1 (V-CA-280-14): the bundle no longer seeds any of these, so a new family starts empty
+// and the original reasons (seeded doctor, persist-defaults) no longer hold. Membership is under
+// review: an emptied key on one phone is rejected here and can be pushed back by the other.
 // For these keys, a listener snapshot delivering [] or {} with local non-empty
 // is skipped with a warning. For any key NOT in this set, legitimate user
 // deletions (clear-all) propagate normally via listener overwrite.
@@ -85430,7 +85570,12 @@ function _syncSetGlobal(name, value) {
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
     case 'mealPlan':     mealPlan     = value; return true;
-    case 'profile':      profile      = _profNormalize(value); _profApply(); if (typeof _prfOnProfile === 'function') _prfOnProfile(); return true;
+    case 'profile': {
+      var _prevDob = profile && profile.child ? profile.child.dob : null;
+      profile = _profNormalize(value); _profApply();
+      if (typeof _prfOnProfile === 'function') _prfOnProfile(_prevDob);
+      return true;
+    }
     default: return false;
   }
 }
@@ -85603,6 +85748,8 @@ function _postReceiveProfile(remote, local) {
   const r = _profNormalize(remote), l = _profNormalize(local);
   if (!r) return l || local;
   if (!l) return r;
+  if (l.pre && !r.pre) return r;          // a profile typed before joining yields to the household's (V-CA-280-12)
+  if (r.pre && !l.pre) return l;
   return (r.ts >= l.ts) ? r : l;
 }
 function _postReceiveMealPlan(remotePlan, localPlan) {
@@ -87384,6 +87531,7 @@ function _syncSeedFirestore(hId) {
   allKeys.forEach(function(key) {
     var config = SYNC_KEYS[key];
     if (config.model !== 'single-doc') return;
+    if (key === KEYS.profile) return;   // written only if the household has none (below, V-CA-280-12)
     var val = load(key, null);
     if (val === null || val === undefined) return; // skip empty
     if (Array.isArray(val) && val.length === 0) return; // skip empty arrays
@@ -87400,6 +87548,18 @@ function _syncSeedFirestore(hId) {
     });
     promises.push(hRef.collection('singles').doc(col).set(payload, { merge: true }));
   });
+  // The profile: seeded only when the household has none, and never as provisional.
+  var _prof = load(KEYS.profile, null);
+  if (_prof && typeof _prof === 'object') {
+    var _profRef = hRef.collection('singles').doc(SYNC_KEYS[KEYS.profile].collection);
+    promises.push(_profRef.get().then(function(d) {
+      if (d.exists && d.data() && d.data()[KEYS.profile]) return;
+      var p = {}; p[KEYS.profile] = Object.assign({}, _prof); delete p[KEYS.profile].pre;
+      p.__sync_updatedBy = { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' };
+      p.__sync_syncedAt = firebase.firestore.FieldValue.serverTimestamp();
+      return _profRef.set(p, { merge: true });
+    }));
+  }
 
   return Promise.all(promises).then(function() {
     _syncIsMigrating = false;
@@ -87972,7 +88132,7 @@ initDarkMode();
 initEssentialMode();
 initZoomLevel();
 init();
-initProfileGate();
+try { initProfileGate(); } catch (e) { console.error('[profile-gate] init crashed:', e); }
 initWelcomeGuide();
 _bugInit();
 // Safe sync init — ?nosync bypasses Firebase entirely for recovery

@@ -34,7 +34,7 @@
         },
         {
           "name": "ziva_meds",
-          "value": "[{\"name\": \"Calcium + D3 syrup\", \"dose\": \"2.5 ml\", \"brand\": \"Generic\", \"freq\": \"Twice daily\", \"dosesPerDay\": 2, \"start\": \"2026-09-21\", \"notes\": \"Twice daily\", \"active\": true}, {\"name\": \"Vitamin D3 Drops\", \"dose\": \"0.5 ml \\u00b7 800 IU\", \"brand\": \"Ultra D3 by Meyer Vitabiotics\", \"freq\": \"Once daily\", \"start\": \"2025-09-01\", \"notes\": \"Replaced by the calcium + D3 syrup on 2026-09-24\", \"active\": false}]"
+          "value": "[{\"name\": \"Vitamin D3 Drops\", \"dose\": \"0.5 ml \\u00b7 800 IU\", \"brand\": \"Ultra D3 by Meyer Vitabiotics\", \"freq\": \"Once daily\", \"start\": \"2025-09-01\", \"notes\": \"Replaced by the calcium + vitamin D syrup on 2026-09-24\", \"active\": false}, {\"name\": \"Calcium + Vitamin D syrup\", \"dose\": \"2.5 ml\", \"brand\": \"Generic\", \"freq\": \"Twice daily\", \"dosesPerDay\": 2, \"start\": \"2026-09-21\", \"notes\": \"Twice daily\", \"active\": true}]"
         }
       ]
     }

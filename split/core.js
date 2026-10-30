@@ -1422,13 +1422,11 @@ function init() {
   document.querySelectorAll('.zi-check-placeholder').forEach(el => { el.innerHTML = zi('check'); });
   document.querySelectorAll('.zi-warn-placeholder').forEach(el => { el.innerHTML = zi('warn'); });
 
-  // Selective migration — only reset keys whose version changed
+  // Key versions are stamped, never acted on by deleting. They once reset a key to the bundle's
+  // seed data; the bundle now ships no records (privacy-v1 §3.2), so a reset would only erase a
+  // family's own records: a restored or copied record without its stamp, or any future bump.
   Object.entries(KEY_VERSIONS).forEach(([key, ver]) => {
-    const storedVer = localStorage.getItem('ziva_kv_' + key);
-    if (storedVer !== ver) {
-      localStorage.removeItem(KEYS[key]);
-      localStorage.setItem('ziva_kv_' + key, ver);
-    }
+    if (localStorage.getItem('ziva_kv_' + key) !== ver) localStorage.setItem('ziva_kv_' + key, ver);
   });
 
   growthData  = load(KEYS.growth, null)     || DEFAULT_GROWTH;
