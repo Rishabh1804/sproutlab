@@ -49,4 +49,14 @@ test.describe('privacy P1: profile record', () => {
     });
     expect(r).toEqual({ newer: 'Asha R', older: 'Asha R', junk: 'Asha' });
   });
+
+  test('push: an older local profile never overwrites a newer cloud one (V-CA-280-1)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const local = { v: 1, child: { name: 'Asha', dob: '2024-01-15' }, ts: 10 };
+      const cloud = { v: 1, child: { name: 'Asha R', dob: '2024-01-16' }, ts: 20 };
+      return w._syncMergeForPush(local, cloud, KEYS.profile).child.name;
+    });
+    expect(r).toBe('Asha R');
+  });
 });

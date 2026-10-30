@@ -615,6 +615,9 @@ function _profApply() {
   SOLIDS_START = _profParse(c.solidsStart) || (c === _PROFILE_FALLBACK ? _profParse(_PROFILE_FALLBACK.solidsStart) : null) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
   _ZIVA_DOB = toDateStr(dob);
   _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+  // A changed birth date must not leave an age-keyed result behind (K-280-1).
+  if (typeof _clearModifierCache === 'function') _clearModifierCache();
+  if (typeof _islClearAll === 'function') _islClearAll();
 }
 // Save the profile (setup / Confirm details, P2). Returns the saved record or null if invalid.
 function _profSave(child, place) {
