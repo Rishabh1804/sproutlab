@@ -1468,87 +1468,14 @@ const KEYWORD_TO_MILESTONE = {
 // PR-ε.0 §1 — id: slugify(text) baked at parse time. config.js defines
 // slugify (concat order config → data → core → ...), in scope here.
 // Slug uniqueness asserted in migrateMilestoneIds (core.js, runtime).
-const DEFAULT_MILESTONES = [
-  { id: slugify('Rolling'), text:'Rolling', status:'mastered', advanced:false, masteredAt:'2026-01-15', emergingAt:'2026-01-05', domain:'motor' },
-  { id: slugify('Sitting independently'), text:'Sitting independently', status:'mastered', advanced:false, masteredAt:'2026-02-20', emergingAt:'2026-02-10', domain:'motor' },
-  { id: slugify('Early teething signs'), text:'Early teething signs', status:'mastered', advanced:false, masteredAt:'2026-03-01', emergingAt:'2026-02-20', domain:'motor' },
-  { id: slugify('Sleeps independently'), text:'Sleeps independently', status:'mastered', advanced:false, masteredAt:'2026-02-10', emergingAt:'2026-01-25', domain:'social' },
-  { id: slugify('Babbling'), text:'Babbling', status:'mastered', advanced:false, masteredAt:'2026-03-05', emergingAt:'2026-02-15', domain:'language' },
-  { id: slugify('Responds to name'), text:'Responds to name', status:'mastered', advanced:false, masteredAt:'2026-03-10', emergingAt:'2026-03-01', domain:'language' },
-  { id: slugify('Pulls to stand using support (from sitting)'), text:'Pulls to stand using support (from sitting)', status:'mastered', advanced:true, masteredAt:'2026-03-18', emergingAt:'2026-03-10', practicingAt:'2026-03-12', consistentAt:'2026-03-16', domain:'motor' },
-  // V-K-103 + V-M-118 closure — sensory + cognitive seed rows so the 5-cat
-  // ACTIVITY_CATEGORIES registry consumed by milestones-tab-v1 has content in
-  // every category at first-install. Both ship source:'unverified' per V-M-114
-  // floor; mouths-objects carries safetyTier:true (gates choking-watch posture
-  // upgrade, Maren-signed 2026-05-27).
-  { id: slugify('Mouths and explores objects with hands'), text:'Mouths and explores objects with hands', status:'practicing', advanced:false, emergingAt:'2026-01-04', practicingAt:'2026-02-04', domain:'sensory', source:'unverified', safetyTier:true },
-  { id: slugify('Searches for hidden objects (object permanence emerging)'), text:'Searches for hidden objects (object permanence emerging)', status:'emerging', advanced:false, emergingAt:'2026-03-04', domain:'cognitive', source:'unverified' },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_MILESTONES = [];
 
-const DEFAULT_FOODS = [
-  // 6 Mar — first day of solids: khichdi (moong dal + rice) + vegetables
-  { name:'Moong dal', reaction:'ok', date:'2026-03-06' },
-  { name:'Rice', reaction:'ok', date:'2026-03-06' },
-  { name:'Carrot', reaction:'ok', date:'2026-03-06' },
-  { name:'Beans', reaction:'ok', date:'2026-03-06' },
-  { name:'Bottle gourd', reaction:'ok', date:'2026-03-06' },
-  { name:'Beetroot', reaction:'ok', date:'2026-03-06' },
-  // 7 Mar — banana introduced at breakfast
-  { name:'Banana', reaction:'ok', date:'2026-03-07' },
-  // 9 Mar — pear introduced at breakfast
-  { name:'Pear', reaction:'ok', date:'2026-03-09' },
-  // 11 Mar — boiled apple introduced at breakfast
-  { name:'Apple', reaction:'ok', date:'2026-03-11' },
-  // 16 Mar — avocado + blueberry introduced at dinner
-  { name:'Avocado', reaction:'ok', date:'2026-03-16' },
-  { name:'Blueberry', reaction:'ok', date:'2026-03-16' },
-  // 17 Mar — masoor dal + ghee introduced at lunch
-  { name:'Masoor dal', reaction:'ok', date:'2026-03-17' },
-  { name:'Ghee', reaction:'ok', date:'2026-03-17' },
-  // 18 Mar — ragi + almonds + walnut + date introduced at lunch
-  { name:'Ragi', reaction:'ok', date:'2026-03-18' },
-  { name:'Almonds', reaction:'ok', date:'2026-03-18' },
-  { name:'Walnut', reaction:'ok', date:'2026-03-18' },
-  { name:'Date (fruit)', reaction:'ok', date:'2026-03-18' },
-  // 20 Mar — mango discussed, introduced
-  { name:'Mango', reaction:'ok', date:'2026-03-20' },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_FOODS = [];
 
-const DEFAULT_VACC = [
-  // ── BIRTH (6 Sep 2025) ──
-  { name:'BCG', date:'2025-09-06', upcoming:false },
-  { name:'OPV-0', date:'2025-09-06', upcoming:false },
-  { name:'Hep B-1', date:'2025-09-06', upcoming:false },
-  // ── 6 WEEKS (16 Oct 2025) ──
-  { name:'DTwP/DTaP-1', date:'2025-10-16', upcoming:false },
-  { name:'Hep B-2', date:'2025-10-16', upcoming:false },
-  { name:'Hib-1', date:'2025-10-16', upcoming:false },
-  { name:'IPV-1', date:'2025-10-16', upcoming:false },
-  { name:'Rotavirus-1', date:'2025-10-16', upcoming:false },
-  { name:'PCV-1', date:'2025-10-16', upcoming:false },
-  // ── 10 WEEKS (16-18 Nov 2025) ──
-  { name:'DTwP/DTaP-2', date:'2025-11-16', upcoming:false },
-  { name:'Hep B-3', date:'2025-11-16', upcoming:false },
-  { name:'Hib-2', date:'2025-11-16', upcoming:false },
-  { name:'IPV-2', date:'2025-11-18', upcoming:false },
-  { name:'OPV-1', date:'2025-11-18', upcoming:false },
-  { name:'Rotavirus-2', date:'2025-11-16', upcoming:false },
-  { name:'PCV-2', date:'2025-11-16', upcoming:false },
-  // ── 14 WEEKS (18 Dec 2025) ──
-  { name:'DTwP/DTaP-3', date:'2025-12-18', upcoming:false },
-  { name:'Hep B-4', date:'2025-12-18', upcoming:false },
-  { name:'Hib-3', date:'2025-12-18', upcoming:false },
-  { name:'IPV-3', date:'2025-12-18', upcoming:false },
-  { name:'Rotavirus-3', date:'2025-12-18', upcoming:false },
-  { name:'PCV-3', date:'2025-12-18', upcoming:false },
-  // ── 6 MONTHS (5 Mar 2026) ──
-  { name:'TCV', date:'2026-03-05', upcoming:false },
-  { name:'Influenza-1', date:'2026-03-05', upcoming:false },
-  // ── UPCOMING ──
-  { name:'Influenza-2', date:'2026-04-05', upcoming:true },
-  { name:'MMR-1', date:'2026-06-04', upcoming:true },
-  { name:'MCV-1', date:'2026-06-04', upcoming:true },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_VACC = [];
 
 // ── MASTER VACCINATION SCHEDULE (IAP-ACVIP 2023, Indian Pediatr Jan 2024; the 2025 revision,
 //    Indian Pediatr May 2026, is identical for 9 m–6 y) + card schedule ──
@@ -1663,29 +1590,8 @@ const VACC_SCHEDULE = [
   { name:'Td', age:'16-18 years', type:'iap', protects:'Tetanus, Diphtheria', notes:'Adolescent Td booster.' },
 ];
 
-const DEFAULT_MEDS = [
-  // 2026-09-24: prescribed in place of the D3 drops. Twice daily → logged as morning + evening
-  // dose slots (core.js medDoseSlots); recognised as her Vitamin D supplement by its contents.
-  {
-    name:    'Caldikind-P NF',
-    dose:    '2.5 ml',
-    brand:   'Mankind',
-    freq:    'Twice daily',
-    dosesPerDay: 2,
-    start:   '2026-09-24',
-    notes:   'Calcium, phosphorus, magnesium, zinc & Vitamin D3 suspension (replaces the D3 drops)',
-    active:  true,
-  },
-  {
-    name:    'Vitamin D3 Drops',
-    dose:    '0.5 ml · 800 IU',
-    brand:   'Ultra D3 by Meyer Vitabiotics',
-    freq:    'Once daily',
-    start:   '2025-09-04',
-    notes:   'Replaced by Caldikind-P NF on 2026-09-24',
-    active:  false,
-  },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_MEDS = [];
 
 const FOOD_SUGGESTIONS = {
   'Grains & Cereals': [

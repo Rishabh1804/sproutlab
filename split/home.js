@@ -8688,7 +8688,7 @@ const D3_KNOWLEDGE = {
   ],
 };
 
-// A calcium + Vitamin D3 suspension given in divided doses (Caldikind-P NF 2.5 ml twice a
+// A calcium + Vitamin D3 suspension given in divided doses (e.g. 2.5 ml twice a
 // day replaced the D3 drops on 2026-09-24). Calcium lowers iron absorption, so iron drops and
 // her iron-rich meals are kept apart from it; the dose itself is always the doctor's.
 const CALCIUM_D3_KNOWLEDGE = {

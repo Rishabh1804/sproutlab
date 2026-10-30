@@ -161,7 +161,7 @@ function medCheckGivenAt(val) {
   return p ? p.givenAt : null;
 }
 
-// ── Dose slots + the Vitamin D supplement (2026-09-24, Caldikind-P NF 2.5 ml twice daily) ──
+// ── Dose slots + the Vitamin D supplement (a supplement given more than once a day) ──
 // A med taken N times a day is logged as N independent slots — medChecks[date][slotKey] —
 // so the existing Done / Done at / Skip / Adjust flow works per dose unchanged. Once-daily
 // meds keep their bare name as the key (full back-compat with the Vit D3 drops history).
@@ -188,7 +188,7 @@ function medDoseSlots(m) {
   return labels.map(function(l) { return { key: m.name + ' · ' + l, label: l }; });
 }
 // Active meds expanded to one entry per dose slot: `name` is the medChecks key (and reads
-// as "Caldikind-P NF · evening"), `baseName` the med itself.
+// as "<supplement> · evening"), `baseName` the med itself.
 function activeMedDoses() {
   var out = [];
   (typeof meds !== 'undefined' && Array.isArray(meds) ? meds : []).forEach(function(m) {
@@ -276,51 +276,7 @@ function medDayVal(m, ds) {
   if (!done.length) return ps.some(function(p) { return p && p.status === 'skipped'; }) ? { status: 'skipped' } : undefined;
   return { status: 'partial', givenAt: done[0].givenAt };
 }
-// One-shot, additive, per-device (Kael V-K-270-19): on a device still tracking the D3 drops,
-// stop them and add Caldikind-P NF (DEFAULT_MEDS[0], prescribed 2026-09-24). The fixed start
-// date keeps the sync identity (name + start) the same on both phones, so they merge.
-function _migrateCaldikind20260924() {
-  try {
-    if (localStorage.getItem('ziva_mig_caldikind') === '1') return;
-    localStorage.setItem('ziva_mig_caldikind', '1');
-    if (!Array.isArray(meds) || meds.some(function(m) { return /caldikind/i.test(m.name || ''); })) return;
-    var drops = meds.filter(function(m) { return m.active && /\bd3\b|vitamin\s*d\b/i.test(m.name || ''); });
-    if (!drops.length) return;
-    drops.forEach(function(m) { m.active = false; });
-    meds.push(Object.assign({}, DEFAULT_MEDS[0]));
-    save(KEYS.meds, meds);
-  } catch (e) { console.warn('[migrate] caldikind:', e); }
-}
-// Second pass (2026-10-28, parent report: the old drops still showed as due). The first pass
-// returned early when Caldikind was already listed (added by hand on 24 Sep, "keep both" on the
-// stop prompt) and its name test missed entries like "Vit D drops", so on such a phone the
-// drops stayed active. Her doctor confirmed Caldikind alone. One-shot per device under a new
-// flag: with an active calcium + Vitamin D supplement, stop every other active Vitamin D
-// supplement that started before it. One started later was added on purpose and is left alone.
-function _migrateVitDSingle20261028() {
-  try {
-    if (localStorage.getItem('ziva_mig_vitd_single') === '1') return;
-    localStorage.setItem('ziva_mig_vitd_single', '1');
-    if (!Array.isArray(meds)) return;
-    var cal = meds.filter(function(m) { return m.active && isCalciumSupplement(m) && isVitDSupplement(m); })
-      .sort(function(a, b) { return String(a.start || '').localeCompare(String(b.start || '')); })[0];
-    if (!cal) return;
-    if (!cal.start) return;   // no start date to compare against (Maren/Kael on #273)
-    var calStart = String(cal.start);
-    var old = meds.filter(function(m) {
-      return m !== cal && m.active && isVitDSupplement(m) && !isCalciumSupplement(m) && String(m.start || '') < calStart;
-    });
-    if (!old.length) return;
-    old.forEach(function(m) { m.active = false; });
-    save(KEYS.meds, meds);
-    // Say what changed and how to undo it (Maren N-3); after load, once the toast host exists.
-    setTimeout(function() {
-      // showQLToast sets innerHTML — escape the parent-typed names (HR-4).
-      if (typeof showQLToast === 'function') showQLToast('Stopped ' + escHtml(old.map(function(m) { return m.name; }).join(', ')) + ': ' + escHtml(cal.name) + ' already has Vitamin D. You can restart it in Medicines.', 6000);
-    }, 2500);
-  } catch (e) { console.warn('[migrate] vitd-single:', e); }
-}
-// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from Caldikind" on an
+// Her Vitamin D supplement — by name/brand (never notes: "2 h apart from the supplement" on an
 // iron drop must not match — Maren S-4). With two active, the most recently started wins.
 function isVitDSupplement(m) {
   var t = m ? ((m.name || '') + ' ' + (m.brand || '')) : '';
@@ -517,50 +473,22 @@ function _detectFatContextNearTime(timeStr, dateStr, windowMinutes) {
 // ─────────────────────────────────────────
 // The child's birth date and solids start come from the profile record (privacy-v1 §3.1). They are
 // module-wide `let`s so every existing reader keeps working; _profApply refreshes them whenever the
-// profile loads or syncs. _PROFILE_FALLBACK is TEMPORARY (P1 only): P2 empties it, and with no
-// profile the app shows Welcome instead of a child.
-const _PROFILE_FALLBACK = { name: 'Ziva', dob: '2025-09-04T17:09', solidsStart: '2026-03-06' };
-let DOB = new Date(2025, 8, 4, 17, 9);
-let SOLIDS_START = new Date(2026, 2, 6);
+// profile loads or syncs. With no profile the Welcome / Confirm gate covers the app; underneath it,
+// a neutral stand-in (born today, no name) keeps every age computation finite (K-280-2, HR-13).
+const _PROFILE_FALLBACK = { name: 'your child', dob: null, solidsStart: null };
+let DOB = new Date();
+let SOLIDS_START = new Date();
 let profile = null;
 
 // Default pediatrician (seeded on first load)
-const DEFAULT_DOCTORS = [
-  {
-    name: 'Dr. RK Agarwal',
-    phone: '+919835167975',
-    phoneDisplay: '+91 98351 67975',
-    location: 'https://maps.app.goo.gl/gG64c9BBAf7pGo7MA',
-    address: 'Bistupur, Jamshedpur',
-    title: 'Pediatrician',
-    primary: true,
-  }
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_DOCTORS = [];
 
-const DEFAULT_GROWTH = [
-  { date:'2025-09-04', wt:3.45, ht:50 },
-  { date:'2026-03-05', wt:7.12, ht:64 },
-  { date:'2026-03-18', wt:7.45, ht:65 },
-  { date:'2026-03-20', wt:7.55, ht:66 },
-];
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_GROWTH = [];
 
-const DEFAULT_FEEDING = {
-  '2026-03-06': { breakfast:'', lunch:'Khichdi (solids start)', dinner:'Khichdi + veg puree' },
-  '2026-03-07': { breakfast:'¼ Banana puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-08': { breakfast:'¼ Banana puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-09': { breakfast:'Pear puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-10': { breakfast:'Pear puree', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-11': { breakfast:'Boiled apple', lunch:'Khichdi + veg puree', dinner:'Khichdi + veg puree' },
-  '2026-03-16': { breakfast:'Boiled apple', lunch:'Khichdi + veg puree', dinner:'Avocado + banana + blueberry' },
-  '2026-03-17': { breakfast:'Banana puree', lunch:'Rice + masoor dal khichdi, carrot, beetroot, beans + ghee', dinner:'Avocado + banana + blueberry' },
-  '2026-03-18': { breakfast:'Apple puree (½)', lunch:'Ragi porridge + apple + almonds + walnut + date + ghee', dinner:'' },
-  '2026-03-19': { breakfast:'Banana puree', lunch:'Ragi porridge + apple (no nuts)', dinner:'Avocado + apple + blueberry' },
-  '2026-03-20': { breakfast:'Pear puree', lunch:'Ragi porridge + pear + almonds + walnut + ghee', dinner:'Avocado + pear + blueberry' },
-  '2026-03-22': { breakfast:'', lunch:'', dinner:'Avocado, Blueberry, apple' },
-  '2026-03-23': { breakfast:'', lunch:'Rice, Masoor dal, Beetroot, Carrot, Ghee', dinner:'Avocado, Blueberry, Banana' },
-  '2026-03-24': { breakfast:'Apple puree', lunch:'Ragi porridge, Almonds, Walnut, Banana', dinner:'Avocado, Blueberry, Apple puree' },
-  '2026-03-25': { breakfast:'Pear', lunch:'Masoor dal khichdi, Beetroot, Carrot, Moringa, Ghee', dinner:'' },
-};
+// Empty by design (privacy-v1 §3.2, HR-13): a family's records come from its own device or household, never the build.
+const DEFAULT_FEEDING = {};
 
 const MS_STAGES = ['not_started','emerging','practicing','consistent','mastered'];
 const MS_STAGE_META = {
@@ -610,9 +538,9 @@ function childPlace() { return (profile && profile.place) || null; }
 // Refresh the module-wide date anchors from the profile (or the P1 fallback).
 function _profApply() {
   const c = _profChild();
-  const dob = _profParse(c.dob) || _profParse(_PROFILE_FALLBACK.dob);
+  const dob = _profParse(c.dob) || _profParse(today()) || new Date();
   DOB = dob;
-  SOLIDS_START = _profParse(c.solidsStart) || (c === _PROFILE_FALLBACK ? _profParse(_PROFILE_FALLBACK.solidsStart) : null) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
+  SOLIDS_START = _profParse(c.solidsStart) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
   _ZIVA_DOB = toDateStr(dob);
   _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
   // A changed birth date must not leave an age-keyed result behind (K-280-1).
@@ -1564,8 +1492,6 @@ function init() {
     { const _vd = vaccDropSatisfiedPending(vaccData); if (_vd.length !== vaccData.length) { vaccData = _vd; save(KEYS.vacc, vaccData); } }
     if (!Array.isArray(notes)) notes = [];
     if (!Array.isArray(meds)) meds = DEFAULT_MEDS.slice();
-    _migrateCaldikind20260924();
-    _migrateVitDSingle20261028();
     if (!Array.isArray(visits)) visits = [];
     if (!Array.isArray(scrapbook)) scrapbook = [];
     if (typeof feedingData !== 'object' || feedingData === null) feedingData = {};
@@ -7245,8 +7171,8 @@ function _bugInit() {
 // Ziva's DOB anchor — single source of truth for age math.
 // Hardcoded per CLAUDE.md §Ziva Context: born 4 Sep 2025.
 // HR-12: stored as YYYY-MM-DD; Date.parse with UTC suffix to avoid local-tz drift.
-let _ZIVA_DOB = '2025-09-04';                                   // refreshed by _profApply
-let _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+let _ZIVA_DOB = '';                                             // set by _profApply in init()
+let _ZIVA_DOB_MS = 0;                                            // set by _profApply in init()
 
 // Age accessor — used by _evaluateRecommendation to map a date into the standard's age-range.
 // HR-12 safe: parses dateStr at UTC midnight; subtracts UTC-anchored DOB; integer day count.
