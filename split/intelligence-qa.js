@@ -134,7 +134,7 @@ var QA_INTENTS = [
   // ═══ OVERALL ═══
   {
     id: 'overall',
-    triggers: ['overall', 'how is she', 'how is ziva', 'summary', 'doing', 'okay', 'score', 'report'],
+    triggers: ['overall', 'how is she', 'summary', 'doing', 'okay', 'score', 'report'],
     handler: 'answerOverall'
   },
   {
@@ -217,7 +217,16 @@ function _isLikelyFoodList(tokens) {
 
 // ── MULTI-MODE INPUT CLASSIFIER ──
 
+// The child's name is the family's own word, so it must never trip a keyword ("Sita" → sit,
+// "Rashi" → rash, "Agastya" → age). Before classifying, the profile name reads as "she" (V-K-280-5).
+function _qaNameAsShe(text) {
+  var n = (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) ? String(profile.child.name) : '';
+  if (!n || typeof text !== 'string') return text;
+  var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
+  return text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
+}
 function qaClassifyInput(text) {
+  text = _qaNameAsShe(text);
   if (!text || typeof text !== 'string') return { mode: 'qa', raw: text || '' };
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
   var tokens = lower.split(/[\s,+&]+/).filter(function(t) { return t.length > 0; });
@@ -1214,7 +1223,7 @@ function qaHandleFoodSafety(classified) {
   // the child's history
   if (historyItems.length > 0) {
     sections.push({
-      label: 'ZIVA\'S HISTORY',
+      label: 'HISTORY WITH THIS FOOD',
       icon: zi('baby'),
       items: historyItems
     });
@@ -1359,6 +1368,7 @@ function qaHandleSymptom(classified) {
 // ── INTENT MATCHING ──
 
 function qaMatchIntent(input) {
+  input = _qaNameAsShe(input);
   var text = input.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   var tokens = text.split(/\s+/);
 

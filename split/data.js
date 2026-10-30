@@ -1550,7 +1550,7 @@ const VACC_SCHEDULE = [
 
   // ── 12 MONTHS ──
   { name:'Hep A-1', age:'12 months', type:'iap-rec', protects:'Hepatitis A', notes:'First dose. The live vaccine is a single dose; the inactivated vaccine needs a second dose at 18–19 months, at least 6 months later.' },
-  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many states give JE free at government centres in districts where it circulates (9–12 and 16–24 months). Ask at her next visit or the Jamshedpur UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
+  { name:'JE-1', age:'12 months', type:'iap-rec', conditional:'Many states give JE free at government centres in districts where it circulates (9–12 and 16–24 months). Ask at the next visit or your local UIP centre; it matters most before and during the monsoon.', protects:'Japanese Encephalitis', notes:'Endemic areas only. Private inactivated vaccine: 2 doses 28 days apart from 12 months. The government live vaccine is given at 9–12 and 16–24 months instead.' },
   { name:'MCV-2', age:'12 months', windowEnd:23, after:'MCV-1', completesSeries:true, type:'private', conditional:'Only if the first MenACWY dose was given.', protects:'Meningococcal meningitis', notes:'Second MenACWY dose, at least 3 months after the first.' },
   { name:'PCV Booster', age:'12 months', windowEnd:15, type:'iap', protects:'Pneumococcal disease', notes:'The one PCV booster after the primary 3-dose series, between 12 and 15 months.' },
 

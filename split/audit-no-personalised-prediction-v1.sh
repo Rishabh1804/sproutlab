@@ -40,7 +40,7 @@ import re, sys, os, glob
 SCOPE_B = re.compile(
     # privacy-v1 P2b: the name now comes from the profile, so the subject is any of the old literal,
     # "your child", or an interpolated childName*Html() (quoted or template form).
-    r"(?:Ziva|your child|childName(?:Cap)?Html\(\)(?:\}|\s*\+\s*['\"])?) (will|should|might|is going to|is expected to|is on track to)"
+    r"(?:Ziva|your child|childName(?:Cap)?(?:Html)?\(\)(?:\}|\s*\+\s*['\"])?)\s+(will|should|might|is going to|is expected to|is on track to)"
     r"\s+(be\s+)?[\w\s\-]{1,40}?\s+(by|at|around)\s+(month|week|day|\d)",
     re.IGNORECASE,
 )

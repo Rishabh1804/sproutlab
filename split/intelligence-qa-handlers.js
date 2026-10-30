@@ -697,7 +697,7 @@ function _qaShareToday() {
 function formatSummaryAsText(summary) {
   var age = ageAt();
   var lines = [];
-  lines.push('*' + childNameHtml() + ' (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
+  lines.push('*' + childNameCapHtml() + ' (' + fmtAgeShort(age.months, age.days) + ') \u2014 ' + (summary.label || formatDate(summary.date || today())) + '*');
   if (summary.scores && summary.scores.overall !== null) lines.push('Score: ' + summary.scores.overall + '/100');
   lines.push('');
 
@@ -734,19 +734,20 @@ function formatSummaryAsText(summary) {
 
 function qaAnswerAge() {
   var age = ageAt();
-  var totalDays = Math.floor((new Date() - DOB) / 86400000);
+  var totalDays = _zivaAgeInDays(today());                     // one way to count age (K-280-3)
   var weeksOld = Math.floor(totalDays / 7);
+  var dobStr = toDateStr(DOB);
+  var birthRec = (Array.isArray(growthData) ? growthData : []).find(function(g) { return g && g.date === dobStr; });
+  var details = [{ text: totalDays + ' days old (' + weeksOld + ' weeks)', signal: 'neutral' },
+    { text: 'Born: ' + DOB.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), signal: 'neutral' }];
+  if (birthRec && (birthRec.wt || birthRec.ht)) details.push({ text: 'Birth weight: ' + [birthRec.wt ? birthRec.wt + ' kg' : '', birthRec.ht ? birthRec.ht + ' cm' : ''].filter(Boolean).join(', '), signal: 'neutral' });
 
   return {
     title: '' + childNameCapHtml() + '\'s Age',
     headline: fmtAgeLong(age.months, age.days) + ' old',
     icon: 'baby',
     domain: 'rose',
-    sections: [{ label: 'Details', icon: zi('clock'), items: [
-      { text: totalDays + ' days old (' + weeksOld + ' weeks)', signal: 'neutral' },
-      { text: 'Born: 4 September 2025', signal: 'neutral' },
-      { text: 'Birth weight: 3.45 kg, 50 cm', signal: 'neutral' }
-    ]}]
+    sections: [{ label: 'Details', icon: zi('clock'), items: details }]
   };
 }
 

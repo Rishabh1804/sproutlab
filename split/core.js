@@ -2604,7 +2604,7 @@ function calcMilestoneScore() {
   };
 }
 
-// ── ZIVA SCORE (holistic) ──
+// ── SPROUT SCORE (holistic; identifiers keep the old calcZivaScore names) ──
 
 let _lastKnownScores = { sleep: null, diet: null, poop: null, medical: null, milestones: null };
 
@@ -5474,7 +5474,7 @@ function exportData() {
     data._exportDate = new Date().toISOString();
 
     const jsonStr = JSON.stringify(data, null, 2);
-    const fileName = 'ziva-backup-' + today() + '.json';
+    const fileName = 'sproutlab-backup-' + today() + '.json';
 
     // Strategy 1: Web Share API with file (best for mobile/PWA)
     if (navigator.share) {
@@ -7198,7 +7198,7 @@ let _ZIVA_DOB_MS = 0;                                            // set by _prof
 // Age accessor — used by _evaluateRecommendation to map a date into the standard's age-range.
 // HR-12 safe: parses dateStr at UTC midnight; subtracts UTC-anchored DOB; integer day count.
 function _zivaAgeInDays(dateStr) {
-  if (typeof dateStr !== 'string') return 0;
+  if (typeof dateStr !== 'string' || !_ZIVA_DOB_MS) return 0;   // no anchor yet: unknown, not the epoch (V-K-280-7)
   const ms = Date.parse(dateStr + 'T00:00:00Z');
   if (isNaN(ms)) return 0;
   return Math.max(0, Math.round((ms - _ZIVA_DOB_MS) / (24 * 60 * 60 * 1000)));
