@@ -12310,8 +12310,13 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .prf-sex-row { display:flex; gap:var(--sp-8); }
 .prf-sex-opt { flex:1; position:relative; }
 .prf-sex-opt input { position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; }
-.prf-sex-opt span { display:flex; align-items:center; justify-content:center; min-height:48px; border-radius:var(--r-lg); border:1.5px solid var(--card-border); background:var(--card-bg); font-weight:700; color:var(--mid); transition:all var(--ease-fast); }
-.prf-sex-opt input:checked + span { background:var(--sage-light); border-color:var(--tc-sage); color:var(--tc-sage); box-shadow:0 1px 3px var(--shadow); }
+/* Unselected chips match the fields above them, so they read as controls (V-V-281-4, -5). */
+.prf-sex-opt span { display:flex; align-items:center; justify-content:center; gap:var(--sp-6); min-height:48px; border-radius:var(--r-lg); border:1.5px solid var(--input-border, rgba(200,180,180,0.4)); background:var(--input-bg, var(--warm)); font-family:'Nunito',sans-serif; font-size:var(--fs-md); font-weight:600; color:var(--mid); transition:all var(--ease-fast); }
+.prf-sex-opt .zi { display:none; width:var(--icon-sm); height:var(--icon-sm); }
+/* Selected: fill, border, weight and a check, so the choice never rests on colour alone. */
+.prf-sex-opt input:checked + span { background:var(--sage-light); border-color:var(--tc-sage); color:var(--tc-sage); font-weight:700; box-shadow:0 1px 3px var(--shadow); }
+.prf-sex-opt input:checked + span .zi { display:inline-block; }
+.prf-sex legend { margin-bottom:var(--sp-4); padding:0; }
 .prf-sex-opt input:focus-visible + span { outline:2px solid var(--tc-sage); outline-offset:2px; }
 .prf-hint { font-size:var(--fs-sm); color:var(--light); }
   </style>
@@ -12975,7 +12980,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
           <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-chart"/></svg></div> Growth Overview <button class="help-btn" aria-label="Help" data-help="help-growth"><span class="t-sm">ⓘ</span></button></div>
           <button class="btn-primary bp-rose" data-action="openGrowthModal">+ Measure</button>
         </div>
-        <div class="help-tip" id="help-growth">Percentiles compare <span data-child-name>your child</span> to other babies of the same age and sex. The 54th percentile means heavier than 54% of them. Anything between 3rd and 97th is normal — what matters most is staying on the same curve over time, not the exact number.</div>
+        <div class="help-tip" id="help-growth">Percentiles compare <span data-child-name>your child</span> to other children of the same age and sex. The 54th percentile means heavier than 54 out of 100 of them. Anything between 3rd and 97th is normal — what matters most is staying on the same curve over time, not the exact number.</div>
         <div class="percentile-badges">
           <div class="pbadge" id="pbadge-wtpct"><div class="pbadge-icon t-rose"><svg class="zi" aria-hidden="true"><use href="#zi-chart"/></svg></div><div class="pbadge-val" id="wtPct">—</div><div class="pbadge-label">Weight %ile</div></div>
           <div class="pbadge" id="pbadge-htpct"><div class="pbadge-icon t-sky"><svg class="zi" aria-hidden="true"><use href="#zi-ruler"/></svg></div><div class="pbadge-val" id="htPct">—</div><div class="pbadge-label">Height %ile</div></div>
@@ -24350,9 +24355,9 @@ function childPlace() { return (profile && profile.place) || null; }
 // standard and the pronouns. A profile without it gets the one-question gate, so null is only ever
 // seen under that gate.
 function childSex() { const s = _profChild().sex; return s === 'f' || s === 'm' ? s : null; }
-// The WHO growth tables for this child's sex (data.js WHO_GROWTH). Under the gate (sex not yet
-// given) it returns the girls' set as a stand-in, so the hidden screens stay finite; nothing reads
-// it there.
+// The WHO growth tables for this child's sex (data.js WHO_GROWTH). With the sex not yet given, the
+// one-question gate is up from boot on every phone (no attached-device wait) and the app behind it
+// is inert, so the girls' set it returns then is only a stand-in that keeps hidden screens finite.
 function whoT() { return WHO_GROWTH[childSex() || 'f']; }
 // "girls" / "boys" for growth copy ("heavier than 60% of girls her age"); "children" until known.
 function childKinWord() { const s = childSex(); return s === 'm' ? 'boys' : s === 'f' ? 'girls' : 'children'; }
@@ -29671,12 +29676,11 @@ function _prfHasRecords() {
 }
 function initProfileGate() {
   try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
-  // A profile from before the child's sex was asked gets one question (child-sex-v1). An attached
-  // device waits a moment first: the other phone may already have answered it.
+  // A profile from before the child's sex was asked gets one question (child-sex-v1), straight away
+  // on every phone: waiting would leave growth showing on a stand-in chart (V-M-281-6). If the other
+  // phone answers first, its profile arrives by sync and closes this question (_prfOnProfile).
   if (profile) {
-    if (childSex()) return;
-    const ask = () => { if (profile && !childSex() && !document.getElementById('prfGate')) _prfShow('sex'); };
-    if (typeof _syncLedgerActive === 'function' && _syncLedgerActive()) setTimeout(ask, 8000); else ask();
+    if (!childSex()) _prfShow('sex');
     return;
   }
   // A device already attached to a household waits for the household's profile before asking: if
@@ -29720,10 +29724,10 @@ function _prfWelcomeHtml() {
 // Girl / boy, as two radio chips. WHO publishes separate growth standards for each, so the choice
 // sets which chart her growth is read against; it also sets the pronouns in the app's copy.
 function _prfSexField(sex) {
-  const opt = (v, label) => `<label class="prf-sex-opt"><input type="radio" name="prfSex" value="${v}"${sex === v ? ' checked' : ''}><span>${label}</span></label>`;
-  return `<fieldset class="prf-field prf-sex" id="prfSexSet"><legend class="prf-label">Girl or boy</legend>`
+  const opt = (v, label) => `<label class="prf-sex-opt"><input type="radio" name="prfSex" value="${v}"${sex === v ? ' checked' : ''}><span>${zi('check')}${label}</span></label>`;
+  return `<fieldset class="prf-field prf-sex" id="prfSexSet" aria-describedby="prfSexHint"><legend class="prf-label">Girl or boy</legend>`
     + `<div class="prf-sex-row">${opt('f', 'Girl')}${opt('m', 'Boy')}</div>`
-    + `<span class="prf-hint">Growth is compared with the WHO chart for girls or for boys.</span></fieldset>`;
+    + `<span class="prf-hint" id="prfSexHint">Growth is compared with the WHO chart for girls or for boys.</span></fieldset>`;
 }
 // The one-question gate for a profile saved before the sex was asked.
 function _prfSexHtml() {
@@ -29731,6 +29735,7 @@ function _prfSexHtml() {
     + `<h1 class="prf-title" id="prfTitle">One more detail</h1>`
     + `<p class="prf-lead">Is ${childNameHtml()} a girl or a boy? WHO publishes separate growth charts for each, so SproutLab needs this to read ${childNameHtml()}\u2019s weight and height correctly.</p>`
     + `<form class="prf-form" data-prf-form="1" novalidate>${_prfSexField(null)}`
+    + `<p class="prf-check" id="prfCheck" role="status"></p>`
     + `<p class="prf-err" id="prfErr" role="alert"></p>`
     + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="sex">${zi('check')} Save</button>`
     + `</form>`;
@@ -29780,19 +29785,28 @@ function _prfSubmit(mode) {
   const sexEl = document.querySelector('#prfGate input[name="prfSex"]:checked');
   const sex = sexEl ? sexEl.value : '';
   const noSex = () => { const r = document.querySelector('#prfGate input[name="prfSex"]'); err('Please choose girl or boy.'); if (r) r.focus(); };
+  const chartWord = sex === 'm' ? 'boys' : 'girls';
   if (mode === 'sex') {
     if (sex !== 'f' && sex !== 'm') return noSex();
+    // One tap is easy to miss at 2 AM, and it moves every percentile: say it back once (V-M-281-2).
+    if (_prfPending !== 'sex|' + sex) {
+      _prfPending = 'sex|' + sex;
+      const chk = document.getElementById('prfCheck');
+      if (chk) chk.textContent = `Growth will be read on the WHO chart for ${chartWord}. Tap Save again if that's right.`;
+      return err('');
+    }
+    _prfPending = null;
     if (!profile || !_profSave(Object.assign({}, profile.child, { sex }), profile.place || null)) return err('That didn\'t save. Please try again.');
-    try { sessionStorage.setItem('prf_notice', 'Details saved'); } catch (e) {}
+    try { sessionStorage.setItem('prf_notice', `Saved: growth uses the WHO chart for ${chartWord}`); } catch (e) {}
     _prfClose();
     setTimeout(() => location.reload(), 150);
     return;
   }
   const name = v('prfName'), dob = v('prfDob'), time = v('prfTime'), solids = v('prfSolids'), city = v('prfCity');
   if (!name) return err('Please add your child\'s name.', 'prfName');
-  if (sex !== 'f' && sex !== 'm') return noSex();
   if (!dob || !_profParse(dob)) return err('Please add the date of birth.', 'prfDob');
   if (dob > today()) return err('The date of birth can\'t be in the future.', 'prfDob');
+  if (sex !== 'f' && sex !== 'm') return noSex();   // in screen order: name, birth date, then girl or boy (V-V-281-7)
   if (solids && solids < dob) return err('Solids can\'t start before the date of birth.', 'prfSolids');
   // A record dated before the birth date means the date is wrong (V-M-280-2).
   const earliest = _prfEarliestRecord();
@@ -29803,7 +29817,7 @@ function _prfSubmit(mode) {
     _prfPending = key;
     const a = ageAt(new Date(), _profParse(time ? dob + 'T' + time : dob));
     const chk = document.getElementById('prfCheck');
-    if (chk) chk.textContent = `That makes ${name} ${fmtAgeLong(a.months, a.days)} old today. Tap Save again if that's right.`;
+    if (chk) chk.textContent = `That makes ${name} ${fmtAgeLong(a.months, a.days)} old today, with growth read on the WHO chart for ${chartWord}. Tap Save again if that's right.`;
     return err('');
   }
   _prfPending = null;
@@ -29841,7 +29855,7 @@ function _prfOnProfile(prevDob, prevSex) {
   const dobMoved = prevDob !== undefined && prevDob !== profile.child.dob;
   const sexMoved = prevSex !== undefined && prevSex !== childSex();
   if (gateOpen || dobMoved || sexMoved) {
-    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : dobMoved ? 'Birth date updated from another phone' : 'Details updated from another phone'); } catch (e) {}
+    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : dobMoved ? 'Birth date updated from another phone' : `Growth now uses the WHO chart for ${childKinWord()} (changed on another phone)`); } catch (e) {}
     const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if (!busy) setTimeout(() => location.reload(), 150);
   }
@@ -30128,6 +30142,9 @@ function getGrowthVelocity() {
 //     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
 //   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
 //     → band 0.6–1.6 cm/month, ≈ 0.15–0.35 cm/week.
+//   boys (ttt_length_boys_2mon_p / _3mon_p, fetched 2026-10-30): 2-month P5 1.0→0.4 cm, P50 2.3→1.7 cm,
+//     P85 3.1→2.6 cm (≈ 0.5→0.2 / 1.15→0.85 / 1.55→1.3 cm/mo), within ~0.05 cm/mo of the girls', so the
+//     length band fits both too (V-M-281-7).
 // Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
 // later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
 // the 0–12 m bands at each site are unchanged.
@@ -53241,7 +53258,7 @@ function showFullDoctorSummary() {
   lines.push('PAEDIATRICIAN VISIT SUMMARY');
   lines.push('═══════════════════════════════');
   lines.push('');
-  lines.push('BABY ' + childNameHtml() + ' · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
+  lines.push('BABY ' + childNameHtml() + (childSex() ? ' · ' + (childSex() === 'm' ? 'boy' : 'girl') : '') + ' · ' + fmtAgeLong(months, days) + ' old' + (months >= 12 ? ' (' + months + ' months)' : ''));
   if (_profBornLine(true)) lines.push('BORN ' + _profBornLine(true).replace(/^Born /, ''));
   lines.push('');
 
@@ -53252,12 +53269,12 @@ function showFullDoctorSummary() {
   if (lwDoc) {
     const wtWho = getGrowthRef(ageMonthsAt(lwDoc.date));
     const wtP = calcPercentile(lwDoc.wt, wtWho.w3, wtWho.w50, wtWho.w97, wtWho.w15, wtWho.w85);
-    lines.push('  Weight: ' + lwDoc.wt + ' kg (' + wtP.text + ' percentile)');
+    lines.push('  Weight: ' + lwDoc.wt + ' kg (' + wtP.text + ' percentile, WHO ' + childKinWord() + ')');   // the chart named, for the doctor (V-M-281-1)
   }
   if (lhDoc) {
     const htWho = getGrowthRef(ageMonthsAt(lhDoc.date));
     const htP = calcPercentile(lhDoc.ht, htWho.h3, htWho.h50, htWho.h97, htWho.h15, htWho.h85);
-    lines.push('  Height: ' + lhDoc.ht + ' cm (' + htP.text + ' percentile)');
+    lines.push('  Height: ' + lhDoc.ht + ' cm (' + htP.text + ' percentile, WHO ' + childKinWord() + ')');
   }
   if (lwDoc || lhDoc) {
     lines.push('  Last measured: ' + formatDate((lwDoc || lhDoc).date));
@@ -53406,7 +53423,7 @@ function renderGrowthFacts() {
     } else if (gPerDay >= 15 && gPerDay <= 40) {
       facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. ${childNameCapHtml()} is growing beautifully.` });
     } else if (gPerDay > 40) {
-      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage as she is establishing her growth curve on solids.` });
+      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage, while the growth curve settles on solids.` });
     }
   }
 
@@ -53435,23 +53452,15 @@ function renderGrowthFacts() {
     const totalGain = (lwFact.wt - birth.wt).toFixed(2);
     // The multiple is computed, not asserted (Vela V-V-266-12): babies roughly triple birth weight by 1 year.
     const mult = birth.wt > 0 ? lwFact.wt / birth.wt : 0;
-    const multText = mult >= 2.9 ? 'about triple her birth weight — the classic first-year marker'
-      : mult >= 2 ? 'more than double her birth weight' : 'steady gain since birth';
+    const multText = mult >= 2.9 ? `about triple ${pron('poss')} birth weight — the classic first-year marker`
+      : mult >= 2 ? `more than double ${pron('poss')} birth weight` : 'steady gain since birth';
     facts.push({ type:'positive', icon:zi('sprout'), title:`Gained ${totalGain} kg since birth`, body:`From ${birth.wt} kg at birth to ${lwFact.wt} kg now — ${multText}.` });
   }
 
-  // One-time note on the growth-reference change (Maren V-M-266-5 / Vela V-V-266-3, 2026-09-24).
-  // The default "India" table read her ~20–30 percentile points high and every post-12 m reading was
-  // compared to the 12-month row — so her percentiles drop when this lands. Own the correction up
-  // front, so a tired parent doesn't read a changed ruler as faltering growth. Dismiss persists
-  // per device (localStorage; not synced — each parent sees it once).
-  let _whoNoteSeen = false;
-  try { _whoNoteSeen = localStorage.getItem('ziva_growth_who_note_seen') === '1'; } catch (e) { _whoNoteSeen = false; }
-  if (!_whoNoteSeen && lwFact) {
-    facts.unshift({ type:'info', icon:zi('info'), dismiss:'dismissGrowthWhoNote',
-      title:'Growth now uses the WHO charts for every reading',
-      body:'IAP, India’s paediatric academy, recommends the WHO charts for children under 5, and they now run to 2 years. Her percentile may read lower than before — her growth hasn’t changed, only the measuring stick has.' });
-  }
+  // The one-time "Growth now uses the WHO charts" note (V-M-266-5, 2026-09-24) is retired: it told
+  // this family their percentiles might read lower than before, which means nothing to a new
+  // household, and for a boy its pronoun was wrong too (V-M-281-3). dismissGrowthWhoNote stays for
+  // any card still on screen.
 
   // WHO context
   facts.push({ type:'info', icon:zi('bulb'), title:'Why consistent tracking matters', body:`Weight and height trends over time give your paediatrician the clearest picture of ${childNameHtml()}\'s health — a single reading means less than the pattern across visits. Keep logging!` });
@@ -53900,7 +53909,7 @@ function updatePercentileBadges() {
   if (!lwBadge) return;
   const moExact = ageMonthsAt(lwBadge.date);
   const ref = getGrowthRef(moExact);
-  const stdLabel = 'WHO';
+  const stdLabel = 'WHO ' + childKinWord();   // which chart, on the most-read numbers (V-M-281-5)
 
   // Weight percentile
   const wtBadge = document.getElementById('pbadge-wtpct');
@@ -54043,12 +54052,12 @@ function drawChart(canvasId) {
 
   datasets.push({ label:'WHO 97th', data: whoT().W97.map((y,x)=>({x,y})), borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
   datasets.push({ label:'WHO 3rd',  data: whoT().W3.map((y,x)=>({x,y})),  borderColor:'rgba(200,170,200,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(200,170,200,0.08)', fill:'-1', tension:0.4 });
-  datasets.push({ label:'WHO 50th', data: whoT().W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
+  datasets.push({ label:'WHO 50th (' + childKinWord() + ')', data: whoT().W50.map((y,x)=>({x,y})), borderColor:'rgba(180,130,160,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const wtPointR = zoom ? 7 : 5;
   const wtHoverR = zoom ? 10 : 7;
   datasets.push({ label:'' + childNameCapHtml() + '', data: zivaPoints, borderColor:'#f2a8b8', backgroundColor:'#f2a8b8', borderWidth:zoom ? 3 : 2.5, pointRadius:wtPointR, pointHoverRadius:wtHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
+  const legendFilter = ['WHO 50th (' + childKinWord() + ')','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _chartInst = new Chart(ctx.getContext('2d'), {
@@ -54121,12 +54130,12 @@ function drawHeightChart(canvasId) {
 
   datasets.push({ label:'WHO 97th', data: whoT().H97.map((y,x)=>({x,y})), borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, fill:false, tension:0.4 });
   datasets.push({ label:'WHO 3rd',  data: whoT().H3.map((y,x)=>({x,y})),  borderColor:'rgba(168,207,224,0.3)', borderWidth:1, pointRadius:0, backgroundColor:'rgba(168,207,224,0.08)', fill:'-1', tension:0.4 });
-  datasets.push({ label:'WHO 50th', data: whoT().H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
+  datasets.push({ label:'WHO 50th (' + childKinWord() + ')', data: whoT().H50.map((y,x)=>({x,y})), borderColor:'rgba(100,160,190,0.6)', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3], tension:0.4 });
   const htPointR = zoom ? 7 : 5;
   const htHoverR = zoom ? 10 : 7;
   datasets.push({ label:'' + childNameCapHtml() + '', data: zivaHtPoints, borderColor:'#a8cfe0', backgroundColor:'#a8cfe0', borderWidth:zoom ? 3 : 2.5, pointRadius:htPointR, pointHoverRadius:htHoverR, pointBorderColor:'white', pointBorderWidth:2, fill:false, tension:0.3 });
 
-  const legendFilter = ['WHO 50th','' + childNameCapHtml() + ''];
+  const legendFilter = ['WHO 50th (' + childKinWord() + ')','' + childNameCapHtml() + ''];
   const _ct = getChartTheme();
 
   const _hChartInst = new Chart(ctx.getContext('2d'), {
@@ -54266,7 +54275,7 @@ function renderSizeComparison() {
       { icon:zi('book'), text:'About the weight of a thick hardcover novel', sub:'A real page-turner, this one' },
     ]},
     { max:5.0, pool:[
-      { icon:zi('drop'), text:'About as heavy as a medium watermelon', sub:'Sweet and round — just like her' },
+      { icon:zi('drop'), text:'About as heavy as a medium watermelon', sub:'Sweet and round, just like ' + pron('obj') },
       { icon:zi('baby'), text:'About the weight of a newborn kitten… times two!', sub:'Twice the cuteness too' },
       { icon:zi('brain'), text:'Weighs as much as 10 cricket balls', sub:'Bowled over by this little one' },
       { icon:zi('star'), text:'About the weight of a large stuffed teddy', sub:'Even more huggable though' },
@@ -54307,7 +54316,7 @@ function renderSizeComparison() {
   // Height tidbits — multiple per range
   const htTidbits = [
     { max:52, pool:[
-      { icon:zi('run'), text:'About the length of a cricket bat handle', sub:'Ready for her first innings' },
+      { icon:zi('run'), text:'About the length of a cricket bat handle', sub:'Ready for ' + pron('poss') + ' first innings' },
       { icon:zi('spoon'), text:'About as long as a baguette', sub:'Freshly baked perfection' },
       { icon:zi('sprout'), text:'As tall as a medium sunflower', sub:'Growing towards the sun' },
     ]},
@@ -54322,7 +54331,7 @@ function renderSizeComparison() {
       { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior princess' },
     ]},
     { max:64, pool:[
-      { icon:zi('run'), text:'About the length of a full cricket stump', sub:'Stumped by her cuteness' },
+      { icon:zi('run'), text:'About the length of a full cricket stump', sub:'Stumped by that cuteness' },
       { icon:zi('run'), text:'About the length of toddler skis', sub:'Ready for adventure' },
       { icon:zi('star'), text:'As long as a banjo', sub:'Playing a tune with every kick' },
     ]},
@@ -54331,7 +54340,7 @@ function renderSizeComparison() {
       { icon:zi('run'), text:'Almost as long as a skateboard', sub:'Rolling through life' },
       { icon:zi('baby'), text:'About the same length as a golden retriever puppy', sub:'Same level of adorable' },
       { icon:zi('bowl'), text:'As tall as a mature wheat stalk', sub:'Growing strong in the fields of love' },
-      { icon:zi('ruler'), text:'She\'s grown ' + (ht ? (ht - growthData[0].ht).toFixed(0) : '—') + ' cm since birth!', sub:'That\'s like adding a whole ruler length' },
+      { icon:zi('ruler'), text:'Grown ' + (ht ? (ht - growthData[0].ht).toFixed(0) : '—') + ' cm since birth!', sub:'That\'s like adding a whole ruler length' },
     ]},
     { max:72, pool:[
       { icon:zi('run'), text:'About as long as a skateboard', sub:'Cruising through milestones' },
@@ -54383,9 +54392,9 @@ function renderSizeComparison() {
   const pctVal = pctResult.pct;
   let funFact = '';
   if (pctVal >= 40 && pctVal <= 60) funFact = 'Right in the middle of the pack — textbook healthy growth! ' + zi('book');
-  else if (pctVal > 60 && pctVal <= 85) funFact = 'On the sturdier side — she\'s got a strong frame building! ' + zi('run');
+  else if (pctVal > 60 && pctVal <= 85) funFact = 'On the sturdier side, with a strong frame building! ' + zi('run');
   else if (pctVal > 85) funFact = 'Big and thriving — some babies are just built bigger, and that\'s great! ' + zi('sparkle');
-  else if (pctVal >= 15 && pctVal < 40) funFact = 'Petite but perfectly on her own curve — consistency matters most! ' + zi('sprout');
+  else if (pctVal >= 15 && pctVal < 40) funFact = 'Petite but steady on the same curve, and consistency matters most! ' + zi('sprout');
   else if (pctVal < 15) funFact = 'On the smaller side — keep tracking the trend, your paediatrician will guide you! ' + zi('star');
 
   if (funFact) {
