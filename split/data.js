@@ -5511,8 +5511,8 @@ const ESCALATING_TIPS = {
     'Persistently low iron intake can lead to anaemia, which affects energy and brain development. If your child seems unusually tired or pale, discuss iron levels with your paediatrician.',
   ],
   'low-calcium': [
-    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breastmilk still provides some, but solids should contribute too.',
-    'Calcium and Vitamin D work together for bone health. Since your child takes a Vitamin D supplement, pairing with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
+    'Top calcium sources: ragi (best plant source), paneer, curd/yoghurt, sesame seeds (til), almond paste. Breast milk or formula still provides some, but solids should contribute too.',
+    'Calcium and Vitamin D work together for bone health. If your child takes a Vitamin D supplement, pairing it with calcium-rich foods maximises the benefit. Try ragi porridge or paneer in one meal daily.',
     'Calcium gaps keep recurring. Growing bones need consistent calcium. If dairy is limited, ragi and sesame are excellent alternatives. Discuss calcium intake at the next paediatrician visit.',
   ],
   'low-protein': [

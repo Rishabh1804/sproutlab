@@ -208,19 +208,23 @@ function fetchWeather() {
   if (!weatherEl) return;
   // The family's town from the profile (privacy-v1 §3.1); no town, no weather line.
   var place = (typeof profile !== 'undefined' && profile && profile.place) || null;
-  if (!place || (!place.city && place.lat == null)) { weatherEl.textContent = ''; return; }
-  if (place.lat == null || place.lon == null) {
-    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&name=' + encodeURIComponent(place.city))
+  if (!place || !place.city) { weatherEl.textContent = ''; return; }
+  var c = _profCoords();
+  if (!c) {
+    // Geocode the town once; the coordinates are a device-local cache keyed by town, so they never
+    // outrank a real edit to the profile or race one (V-CA-280-13).
+    var city = place.city;
+    fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&name=' + encodeURIComponent(city))
       .then(function(r) { return r.json(); })
       .then(function(g) {
         var hit = g && g.results && g.results[0];
         if (!hit) return;
-        _profSave(profile.child, Object.assign({}, place, { lat: Math.round(hit.latitude * 100) / 100, lon: Math.round(hit.longitude * 100) / 100, tz: place.tz || hit.timezone || null }));
-        fetchWeather();
+        _profGeoPut(city, { lat: Math.round(hit.latitude * 100) / 100, lon: Math.round(hit.longitude * 100) / 100, tz: hit.timezone || null });
+        if (profile && profile.place && profile.place.city === city) fetchWeather();
       }).catch(function() {});
     return;
   }
-  var lat = place.lat, lon = place.lon, tz = encodeURIComponent(place.tz || 'auto');
+  var lat = c.lat, lon = c.lon, tz = c.tz;
   fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,relative_humidity_2m,weather_code&timezone=' + tz)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -283,8 +287,10 @@ function fetchVaccWeatherAdvisory() {
   // Only show advisory 0–2 days before appointment (and on the day itself)
   if (daysTo < 0 || daysTo > 2) return;
 
-  const lat = 22.8, lon = 86.18;
-  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,uv_index_max&timezone=Asia/Kolkata&start_date=${apptDate}&end_date=${apptDate}`)
+  const _c = _profCoords();
+  if (!_c) return;
+  const lat = _c.lat, lon = _c.lon;
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,uv_index_max&timezone=${_c.tz}&start_date=${apptDate}&end_date=${apptDate}`)
     .then(r => r.json())
     .then(data => {
       if (!data.daily || !data.daily.time || data.daily.time.length === 0) return;
@@ -6979,8 +6985,10 @@ function _outingFetchForecast() {
   // If we have cached data with uvIndex already, return it
   if (wx && wx.uvIndex !== undefined) return Promise.resolve(wx);
 
-  var lat = 22.8, lon = 86.18;
-  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code,uv_index_max,precipitation_probability_max&timezone=Asia/Kolkata&start_date=' + targetDate + '&end_date=' + targetDate)
+  var _c = _profCoords();
+  if (!_c) return Promise.resolve(wx || null);
+  var lat = _c.lat, lon = _c.lon;
+  return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&daily=temperature_2m_max,relative_humidity_2m_max,weather_code,uv_index_max,precipitation_probability_max&timezone=' + _c.tz + '&start_date=' + targetDate + '&end_date=' + targetDate)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.daily && data.daily.time && data.daily.time.length > 0) {

@@ -953,11 +953,11 @@ function dismissGrowthWhoNote() {
 // ── the child's monthly milestones (auto-generated from DOB) ──
 function getZivaMonthDays() {
   const events = [];
-  for (let m = 7; m <= 24; m++) {
+  for (let m = 1; m <= 24; m++) {
     const d = new Date(DOB);
     d.setMonth(d.getMonth() + m);
     const dateStr = toDateStr(d);
-    if (m === 12) continue; // skip — covered by "1st Birthday" in INDIAN_HOLIDAYS
+    if (m === 12) { events.push({ date:dateStr, title:`${childNameCapHtml()}'s 1st Birthday`, type:'birthday', icon:zi('party'), auto:true }); continue; }
     if (m === 24) { events.push({ date:dateStr, title:"" + childNameCapHtml() + "'s 2nd Birthday", type:'birthday', icon:zi('party'), auto:true }); continue; }
     events.push({ date:dateStr, title:`${childNameCapHtml()} turns ${fmtAgeMonths(m)}`, type:'birthday', icon:zi('sprout'), auto:true });
   }
@@ -4254,6 +4254,14 @@ function renderVaccCoverage() {
   // Schedule pill: given out of the routine doses whose window has opened.
   const totalDue = givenCount + missingCount + optionalMissing + dueList.length;
   const pastCount = vaccData.filter(v => !v.upcoming).length;
+  // A family that has logged no doses yet has not told us her history: no red "Missing" list,
+  // just an invitation to add the doses on her card (V-M-280-4).
+  if (pastCount === 0) {
+    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on her vaccination card to see what is due.</span></div>`;
+    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once her past doses are logged, this card checks them against the full IAP schedule.</span></div>`
+      + `<button class="btn btn-soft btn-compact" data-action="openVaccModal">${zi('plus')} Add a dose</button>`;
+    return;
+  }
   const pct = totalDue > 0 ? Math.round((givenCount / totalDue) * 100) : 100;
 
   // Preview pills
@@ -9880,7 +9888,9 @@ function _renderHydrationContent() {
   // Summary
   const daysWithWeather = data.days.filter(d => d.temp !== null).length;
   if (daysWithWeather === 0) {
-    summaryEl.innerHTML = '<div class="t-sm t-light">Weather data unavailable — check connection</div>';
+    summaryEl.innerHTML = (typeof _profCoords === 'function' && !_profCoords() && !(profile && profile.place && profile.place.city))
+      ? '<div class="t-sm t-light">Add your town in Settings, under Your child\'s details, to see weather here.</div>'
+      : '<div class="t-sm t-light">Weather data unavailable — check connection</div>';
     gridEl.innerHTML = '';
     alertsEl.innerHTML = '';
     corrEl.innerHTML = '';

@@ -1692,9 +1692,15 @@ function _libBookHtml(key, eff, pol) {
 function _libSuggestions() {
   var FE = (typeof FOOD_EFFECTS !== 'undefined') ? FOOD_EFFECTS : null;
   if (!FE) return [];
+  // Never before solids: under 6 months, or before her solids start (V-C-280-1). And never a food
+  // AGE_RULES gates above her age (egg at 7 months), the same check getUntriedSuggestions makes.
+  var mo = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
+  if (mo < 6 || (typeof SOLIDS_START !== 'undefined' && toDateStr(SOLIDS_START) > today())) return [];
   var out = [];
   Object.keys(FE).forEach(function(k) {
     if (out.length >= 3) return;
+    var rule = (typeof _fdAgeRule === 'function') ? _fdAgeRule(k) : null;
+    if (rule && rule.minMonth > mo) return;
     if (_effPolarity(FE[k]) === 'encourage' && !_fdIsFoodTried(k)) out.push(k);
   });
   return out;
@@ -2361,15 +2367,13 @@ function _libCloseDeck() {
 // tap-to-stamp + N/A (one-tap Quick acts, HR-9). Shared with the General room. ────
 // Doc-prep identity helpers. The doctor card leads with the PATIENT (name as the card
 // title, vitals beneath) — a clinical handoff, not app branding (Architect, PR#235).
-// Name is sourced from the household profile so the card stays flexible — no new hardcode.
-// TODO(legacy-name-debt): 'the child' is the last-resort fallback only; the app still hardcodes
-// the name in several places (core.js avatar alt, medical.js chart labels) — a flexible-name
-// migration is known debt, tracked for a later session (Architect, PR#235).
+// The child's name comes from the profile (privacy-v1 §3.1), the one source the rest of the app
+// reads, so a clinical handoff never names a different child (V-C-280-3). The household name is a
+// legacy fallback; "Your child" the last resort, so the title slot is never empty (Maren V-M-237).
 function _emDocName() {
-  // Trim-guard (Maren V-M-237): reject a blank/whitespace household name so the doctor
-  // card's title slot can never render empty — a nameless medical handoff.
+  if (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) return profile.child.name;
   try { if (typeof _syncHousehold !== 'undefined' && _syncHousehold && typeof _syncHousehold.name === 'string' && _syncHousehold.name.trim()) return _syncHousehold.name.trim(); } catch (e) {}
-  return '' + childNameCapHtml() + '';
+  return childNameCapHtml();
 }
 function _emDocVitals() {
   var bits = [];
@@ -3016,7 +3020,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('warn'),
     title:'No salt, sugar or jaggery yet',
-    body:'' + childNameCapHtml() + '\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
+    body:'Your child\'s kidneys are not mature enough for added salt. Avoid sugar and jaggery until at least 2 years. Natural sweetness from fruit is fine.',
     condition: () => getAgeInMonths() < 12,
   },
   {
@@ -3623,7 +3627,7 @@ function checkFoodCombo() {
 
   const result = {
     verdict, verdict_emoji: verdictEmoji, headline,
-    explanation: [...warnings, ...benefits].join('\n') || (verdict === 'safe' ? `All ingredients are age-appropriate for ${Math.floor(mo)} months and have been introduced safely.` : ''),
+    explanation: [...warnings, ...benefits].join('\n') || (verdict === 'safe' ? (newFoods.length ? `All ingredients are age-appropriate for ${Math.floor(mo)} months.` : `All ingredients are age-appropriate for ${Math.floor(mo)} months and have been introduced safely.`) : ''),
     nutrition_highlights: nutritionHighlights,
     new_foods: newFoods,
     allergen_notes: allergenNotes,
@@ -5237,7 +5241,7 @@ function generateTomorrowPrep() {
   var seasonalTip = null;
   if (seasonalPeaks.length > 0) {
     var displayPeaks = seasonalPeaks.slice(0, 3).map(function(f) { return f.charAt(0).toUpperCase() + f.slice(1); });
-    seasonalTip = displayPeaks.join(', ') + ' in season';
+    seasonalTip = displayPeaks.join(', ') + ' in season (eastern India)';
   }
 
   return {
@@ -6984,7 +6988,7 @@ function _spGetDomainDefs(zs) {
         const d = r.detail || {};
         const items = [
           { name: 'Vaccines', weight: '40%', score: r.components.vaccination,
-            detail: Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
+            detail: r.components.vaccination === null ? 'No doses logged yet' : Math.floor(d.vaccGiven || 0) + '/' + (d.vaccDue || 0) + ' scheduled vaccines given' + (d.vaccDueNow ? ' · ' + d.vaccDueNow + ' due now' : ''), tab: 'medical' },
           { name: 'Supplements', weight: '25%', score: r.components.supplements,
             detail: d.suppDays !== null ? d.suppDays + '/7 days given this week' : 'No active supplements', tab: 'medical' },
           { name: 'Growth', weight: '20%', score: r.components.growth,

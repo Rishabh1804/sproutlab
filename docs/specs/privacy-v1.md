@@ -23,9 +23,9 @@ No child's or family's data in this repository or its build. Real records come o
 - **One child per household for v1.** Each family is its own household, which is what the sync model already does. Several children in one household is v2: it means `children/{id}` subcollections and a per-child key prefix, which is a large refactor and is out of scope.
 
 ### 3.2 Empty bundle
-- `DEFAULT_DOCTORS`, `DEFAULT_GROWTH`, `DEFAULT_FEEDING`, `DEFAULT_MEDS` and `DEFAULT_VACC` (the record part, not the schedule) become `[]` / `{}`.
+- `DEFAULT_DOCTORS`, `DEFAULT_GROWTH`, `DEFAULT_FEEDING`, `DEFAULT_MEDS`, `DEFAULT_VACC` (the record part, not the schedule), `DEFAULT_MILESTONES` and `DEFAULT_FOODS` become `[]` / `{}`; all of them held the child's dated records (V-CA-280-18).
 - The vaccine **schedule** (IAP), food database, milestones and recipes stay. They are reference data, not records.
-- `EMERGENCY_CONTACTS` keeps national numbers only. City entries are chosen in setup from a list.
+- `EMERGENCY_CONTACTS` keeps its regional hospital lists as public reference data. `currentRegion()` shows one only when the family's own town matches it; every family sees the national numbers (108 / 112) (V-CA-280-18).
 
 ### 3.3 Gate
 At boot, branch on what the app finds:
@@ -68,3 +68,27 @@ At boot, branch on what the app finds:
 1. **Private home for the lore:** the private repo **MyFin**. CLAUDE.md lore, `meridian/`, the health-detail docs and the handoffs move there in P3.
 2. **Domain:** production on Vercel, under the household's one domain **somaelectro.co.in**. The proposal is a subdomain, e.g. `sproutlab.somaelectro.co.in`: a CNAME at the DNS host pointing to Vercel, plus that domain in Firebase's authorised domains.
 3. **Native app:** **Capacitor** (P5). It bundles the files on the device and works offline, with Firebase sync.
+
+## 7. As built (P1 + P2, PR #280)
+- **P1.** The profile record: `KEYS.profile` at `singles/profile`, newest-ts merge on receive and push, and getters. `DOB`, `SOLIDS_START` and `_ZIVA_DOB` are now refreshed lets.
+- **P2a, the gate.**
+  - Welcome / set up / Confirm details, plus Settings → Your child's details.
+  - A record counts only when non-empty. An attached device waits 8 s for the household's profile before it asks.
+  - Setup reads the age back once, and refuses a birth date later than the child's own records. A save, or a synced birth-date change, reloads the app so every screen is redrawn.
+  - A profile typed before joining is provisional (`pre`) and yields to the household's. The household seed writes the profile only when none exists.
+- **P2a, the empty bundle.** The seven seeds are empty, and the two one-family migrations are retired. The e2e fixture is synthetic: an invented child, shifted dates, changed values and generic medicines.
+- **P2b, the profile drives the app.**
+  - Name: `childNameHtml()` / `childNameCapHtml()`, neutral copy in load-time tables, and template slots. The name is stored clean (`_profCleanName`).
+  - The born line and visit summary come from the profile. "Sprout Score" replaces "Ziva Score", and the app is titled SproutLab.
+  - The town drives weather (geocoded once into a device-local cache, `ziva_geo_cache`, never synced) and the emergency region. With no town there is no weather line.
+- **Safety from the audit.**
+  - No Library allergen suggestions before solids, or before an age gate.
+  - "No doses logged yet" replaces a red Missing list, and vaccines are left out of the score until the first dose.
+  - The Q&A reads the child's name as "she", so a name never trips a keyword.
+
+## 8. Deferred (decisions or follow-ups)
+- **Boys' growth references and the child's sex.** Growth is rated against the girls' WHO tables, and setup does not ask sex. The app stays fine for this family, but a release blocker for other families: ask sex in setup, and withhold percentile verdicts until the boys' tables exist (V-M-280-3; Architect decision).
+- **Pronouns.** Copy says she/her in hundreds of places. This becomes a pronoun pass keyed on the profile (V-M-280-8, V-C-280-9).
+- **Pre-solids floor across Diet** (V-C-280-5), **day-zero alarm fatigue** (alerts on a family's first day, Vela pair-note), **empty-state polish** (V-V-280-10) and the **Sprout Score on zero data**.
+- **`ALWAYS_POPULATED_KEYS` membership** now that no key is seeded: a deleted doctor or food can be resurrected by the other phone. Review before release (V-CA-280-14).
+- **Household name vs profile name**: two sources; prefill household creation from the profile (Carina).

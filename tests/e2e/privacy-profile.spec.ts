@@ -65,7 +65,7 @@ test.describe('privacy P1: profile record', () => {
 test.describe('privacy P2a: profile gate', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('a new device with no records sees Welcome; setup saves the child and closes the gate', async ({ page }) => {
+  test('a new device with no records sees Welcome; setup reads the age back, saves the child, and starts fresh', async ({ page }) => {
     await page.goto('/index.html?nosync');
     const gate = page.locator('#prfGate');
     await expect(gate).toContainText('Welcome to SproutLab');
@@ -76,23 +76,39 @@ test.describe('privacy P2a: profile gate', () => {
     await page.fill('#prfDob', '2025-02-10');
     await page.fill('#prfCity', 'Testville');
     await gate.locator('[data-action="prfSave"]').click();
-    await expect(gate).toHaveCount(0);
-    const r = await page.evaluate(() => ({ name: (window as any).childName(), stored: JSON.parse(localStorage.getItem('ziva_profile')!).child, overflow: document.body.style.overflow }));
+    await expect(page.locator('#prfCheck')).toContainText('That makes Asha');   // the read-back (V-M-280-2)
+    await expect(gate).toHaveCount(1);
+    await Promise.all([page.waitForEvent('load'), gate.locator('[data-action="prfSave"]').click()]);
+    await page.waitForFunction(() => typeof (window as any).childName === 'function');
+    await expect(page.locator('#prfGate')).toHaveCount(0);
+    const r = await page.evaluate(() => ({ name: (window as any).childName(), stored: JSON.parse(localStorage.getItem('ziva_profile')!), overflow: document.body.style.overflow }));
     expect(r.name).toBe('Asha');
-    expect(r.stored.dob).toBe('2025-02-10');
+    expect(r.stored.child.dob).toBe('2025-02-10');
+    expect(r.stored.pre).toBe(true);   // typed before joining a household: provisional (V-CA-280-12)
     expect(r.overflow).toBe('');
   });
 
-  test('a device that already holds records is asked to confirm details, with no Back to Welcome', async ({ page }) => {
-    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('ziva_feeding', '{}'); sessionStorage.setItem('seeded', '1'); } });
+  test('a fresh device stays on Welcome after a reload: empty defaults are not records (V-CA-280-11)', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    await expect(page.locator('#prfGate')).toContainText('Welcome to SproutLab');
+    await page.reload();
+    await expect(page.locator('#prfGate')).toContainText('Welcome to SproutLab');
+  });
+
+  test('a device that already holds records is asked to confirm, can sign in instead, and a date newer than her records is refused', async ({ page }) => {
+    await page.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('ziva_feeding', JSON.stringify({ '2026-01-05': { breakfast: 'Ragi' } })); sessionStorage.setItem('seeded', '1'); } });
     await page.goto('/index.html?nosync');
     const gate = page.locator('#prfGate');
     await expect(gate).toContainText("Confirm your child's details");
     await expect(gate.locator('[data-action="prfBack"]')).toHaveCount(0);
+    await expect(gate.locator('[data-action="prfSignIn"]')).toHaveCount(1);
     await page.fill('#prfName', 'Asha');
     await page.fill('#prfDob', '2030-01-01');
     await gate.locator('[data-action="prfSave"]').click();
     await expect(page.locator('#prfErr')).toContainText('future');
+    await page.fill('#prfDob', '2026-02-01');
+    await gate.locator('[data-action="prfSave"]').click();
+    await expect(page.locator('#prfErr')).toContainText('before this birth date');
   });
 
   test('Sign in closes the gate and opens Settings, where sign-in lives', async ({ page }) => {
@@ -100,5 +116,29 @@ test.describe('privacy P2a: profile gate', () => {
     await page.locator('#prfGate [data-action="prfSignIn"]').click();
     await expect(page.locator('#prfGate')).toHaveCount(0);
     await expect(page.locator('#settingsSidebar')).toHaveClass(/open/);
+  });
+});
+
+test.describe('privacy P2: profile merge and edit', () => {
+  test('a provisional local profile yields to the household\'s (V-CA-280-12)', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any)._postReceiveProfile === 'function');
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const remote = { v: 1, child: { name: 'Asha', dob: '2025-02-10' }, ts: 5 };
+      const typed = { v: 1, child: { name: 'Asha', dob: '2025-02-11' }, ts: 99, pre: true };
+      return { recv: w._postReceiveProfile(remote, typed).child.dob, push: w._syncMergeForPush(typed, remote, w.KEYS ? w.KEYS.profile : 'ziva_profile').child.dob };
+    });
+    expect(r).toEqual({ recv: '2025-02-10', push: '2025-02-10' });
+  });
+
+  test('Settings opens the child\'s details prefilled', async ({ page }) => {
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() => typeof (window as any).prfDispatch === 'function');
+    await page.evaluate(() => (window as any).prfDispatch('prfEdit'));
+    await expect(page.locator('#prfGate')).toContainText("Your child's details");
+    await expect(page.locator('#prfName')).toHaveValue('Asha');
+    await page.locator('#prfGate [data-action="prfCancel"]').click();
+    await expect(page.locator('#prfGate')).toHaveCount(0);
   });
 });

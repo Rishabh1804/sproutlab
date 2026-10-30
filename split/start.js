@@ -5,7 +5,7 @@ initDarkMode();
 initEssentialMode();
 initZoomLevel();
 init();
-initProfileGate();
+try { initProfileGate(); } catch (e) { console.error('[profile-gate] init crashed:', e); }
 initWelcomeGuide();
 _bugInit();
 // Safe sync init — ?nosync bypasses Firebase entirely for recovery

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────
-// SVG ICON HELPER — the child Sketch icon set
+// SVG ICON HELPER — SproutLab sketch icon set
 // ─────────────────────────────────────────
 function zi(name) { return `<svg class="zi" aria-hidden="true"><use href="#zi-${name}"/></svg>`; }
 
@@ -534,6 +534,7 @@ function _profNormalize(p) {
   const out = Object.assign({}, p, { v: p.v || 1, child: Object.assign({}, c, { name: _profCleanName(c.name) }) });
   if (!out.child.name) return null;
   if (c.solidsStart != null && !_profParse(c.solidsStart)) out.child.solidsStart = null;
+  if (out.place && typeof out.place === 'object' && out.place.city != null) out.place = Object.assign({}, out.place, { city: _profCleanName(out.place.city) || null });
   if (typeof out.ts !== 'number') out.ts = 0;
   return out;
 }
@@ -550,8 +551,20 @@ function _profBornLine(withPlace) {
   const city = withPlace && profile.place && profile.place.city ? ' · ' + profile.place.city : '';
   return born + city;
 }
+// The family's coordinates for weather, once geocoded from their town (home.js fetchWeather), or
+// null: no town, no weather fetch.
+function _profCoords() {
+  const p = profile && profile.place;
+  if (!p || !p.city) return null;
+  const g = _profGeoGet(p.city);
+  return g ? { lat: g.lat, lon: g.lon, tz: encodeURIComponent(p.tz || g.tz || 'auto') } : null;
+}
+// Geocoded towns, device-local (not synced: derived data). { "<town lowercased>": { lat, lon, tz } }
+function _profGeoGet(city) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); return m[String(city).toLowerCase().trim()] || null; } catch (e) { return null; } }
+function _profGeoPut(city, g) { try { const m = JSON.parse(localStorage.getItem('ziva_geo_cache') || '{}'); m[String(city).toLowerCase().trim()] = g; localStorage.setItem('ziva_geo_cache', JSON.stringify(m)); } catch (e) {} }
 function childPlace() { return (profile && profile.place) || null; }
 // Refresh the module-wide date anchors from the profile (or the P1 fallback).
+let _profAppliedOnce = false;
 function _profApply() {
   const c = _profChild();
   const dob = _profParse(c.dob) || _profParse(today()) || new Date();
@@ -559,6 +572,9 @@ function _profApply() {
   SOLIDS_START = _profParse(c.solidsStart) || new Date(dob.getFullYear(), dob.getMonth() + 6, dob.getDate(), 12);
   _ZIVA_DOB = toDateStr(dob);
   _ZIVA_DOB_MS = Date.parse(_ZIVA_DOB + 'T00:00:00Z');
+  // JS-built name copy (the landing) follows too, once the app has rendered (V-V-280-8).
+  if (_profAppliedOnce && typeof renderLanding === 'function' && document.getElementById('tab-landing')) { try { renderLanding(); } catch (e) {} }
+  _profAppliedOnce = true;
   // The template's name slots follow the profile (privacy-v1 P2b).
   if (typeof document !== 'undefined') {
     document.querySelectorAll('[data-child-name]').forEach(el => { el.textContent = childNameHtml(); });
@@ -570,7 +586,10 @@ function _profApply() {
 }
 // Save the profile (setup / Confirm details, P2). Returns the saved record or null if invalid.
 function _profSave(child, place) {
-  const next = _profNormalize({ v: 1, child, place: place || (profile && profile.place) || null, ts: Math.max(Date.now(), ((profile && profile.ts) || 0) + 1) });
+  // Typed on a device not yet attached to a household: provisional, so the household's own profile
+  // wins when this device joins (V-CA-280-12).
+  const provisional = typeof _syncLedgerActive === 'function' ? !_syncLedgerActive() : true;
+  const next = _profNormalize({ v: 1, child, place: place || (profile && profile.place) || null, ts: Math.max(Date.now(), ((profile && profile.ts) || 0) + 1), pre: provisional || undefined });
   if (!next) return null;
   profile = next;
   save(KEYS.profile, profile);
@@ -2439,13 +2458,16 @@ function calcMedicalScore() {
 
   const daysSinceGrowth = growthData.length > 0 ? Math.floor((new Date() - new Date(growthData[growthData.length-1].date)) / 86400000) : null;
 
-  const baseScore = Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
+  // No dose logged yet: leave vaccines out of the score rather than read her as unvaccinated (V-M-280-4).
+  const vaccNone = !(vaccData || []).some(v => v && !v.upcoming);
+  const baseScore = vaccNone ? Math.round((suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15) / 0.60)
+    : Math.round(vaccScore * 0.40 + suppScore * 0.25 + growthScore * 0.20 + visitScore * 0.15);
   const modRaw = computeMedicalModifier();
   const score = applyIntelligenceModifier(baseScore, modRaw);
   const modifier = _withDelta(modRaw, baseScore, score);
   return {
     score, baseScore, modifier, ...getScoreLabel(score),
-    components: { vaccination: vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
+    components: { vaccination: vaccNone ? null : vaccScore, supplements: suppScore, growth: growthScore, visits: visitScore },
     detail: {
       vaccGiven: vaccGiven, vaccDue: dueNow.length,
       // Routine doses inside their window and not yet given (not scored; shown as "due now").
@@ -3472,11 +3494,12 @@ function escAttr(s) {
 }
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-function ageAt(date) {
+function ageAt(date, dob) {   // dob: optional, for a birth date not yet saved (the profile gate's read-back)
   const d = date ? new Date(date) : new Date();
+  const b = dob || DOB;
   if (isNaN(d)) return { months: 0, days: 0 };
-  let months = d.getMonth() - DOB.getMonth() + (d.getFullYear() - DOB.getFullYear()) * 12;
-  let days = d.getDate() - DOB.getDate();
+  let months = d.getMonth() - b.getMonth() + (d.getFullYear() - b.getFullYear()) * 12;
+  let days = d.getDate() - b.getDate();
   if (days < 0) {
     months--;
     const prev = new Date(d.getFullYear(), d.getMonth(), 0);
@@ -5102,6 +5125,8 @@ function closeSettingsSidebar() {
   sidebar.classList.remove('open');
   overlay.classList.remove('open');
   document.body.style.overflow = '';
+  // Sign in from Welcome opens Settings; if it did not bring a profile, ask again (V-M-280-7).
+  if (!profile && typeof initProfileGate === 'function') setTimeout(() => { if (!profile && !document.getElementById('prfGate')) _prfShow(_prfHasRecords() ? 'confirm' : 'welcome'); }, 400);
 }
 
 function toggleSettingsSidebar() {
@@ -5827,15 +5852,35 @@ function wgRender() {
 // No profile on this device: a new person gets Welcome (sign in, or set up a child); a device that
 // already holds records gets "Confirm details" once, because the code no longer knows the child.
 // Read once, as the script loads: init() may save built-in defaults before the gate looks.
+// Only a non-empty record counts: init writes [] / {} on a fresh device's first boot, and those
+// must not turn its second boot into "Confirm details" (V-CA-280-11).
 const _PRF_HAD_RECORDS = (() => {
-  try { return ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds'].some(k => !!localStorage.getItem(k)); }
-  catch (e) { return false; }
+  const keys = ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds', 'ziva_sleep', 'ziva_poop',
+    'ziva_notes', 'ziva_visits', 'ziva_activity_log', 'ziva_milestones', 'ziva_doctors'];
+  try {
+    return keys.some(k => {
+      const raw = localStorage.getItem(k);
+      if (!raw) return false;
+      try { const v = JSON.parse(raw); return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v); }
+      catch (e) { return false; }
+    });
+  } catch (e) { return false; }
 })();
 function _prfHasRecords() { return _PRF_HAD_RECORDS; }
 function initProfileGate() {
+  try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
   if (profile) return;
+  // A device already attached to a household waits for the household's profile before asking: if
+  // the other phone has confirmed, this one should take that, not type its own (V-CA-280-16).
+  if (typeof _syncLedgerActive === 'function' && _syncLedgerActive() && !_prfWaited) {
+    _prfWaited = true;
+    setTimeout(() => { if (!profile) _prfShow(_prfHasRecords() ? 'confirm' : 'welcome'); }, 8000);
+    return;
+  }
   _prfShow(_prfHasRecords() ? 'confirm' : 'welcome');
 }
+let _prfWaited = false;
+let _prfPending = null;   // the read-back step: values the parent is asked to confirm once
 function _prfShow(mode) {
   _prfClose();
   const ov = document.createElement('div');
@@ -5843,6 +5888,8 @@ function _prfShow(mode) {
   ov.id = 'prfGate';
   ov.setAttribute('role', 'dialog');
   ov.setAttribute('aria-modal', 'true');
+  ov.setAttribute('aria-labelledby', 'prfTitle');
+  const app = document.querySelector('.app'); if (app) app.inert = true;   // the app behind is out of reach
   ov.innerHTML = `<div class="prf-card">${mode === 'welcome' ? _prfWelcomeHtml() : _prfFormHtml(mode)}</div>`;
   document.body.appendChild(ov);
   document.body.style.overflow = 'hidden';
@@ -5851,57 +5898,108 @@ function _prfShow(mode) {
 }
 function _prfClose() {
   const el = document.getElementById('prfGate');
-  if (el) { el.remove(); document.body.style.overflow = ''; }
+  if (el) { el.remove(); document.body.style.overflow = ''; const app = document.querySelector('.app'); if (app) app.inert = false; }
 }
 function _prfWelcomeHtml() {
   return `<div class="prf-icon">${zi('sprout')}</div>`
-    + `<h1 class="prf-title">Welcome to SproutLab</h1>`
+    + `<h1 class="prf-title" id="prfTitle">Welcome to SproutLab</h1>`
     + `<p class="prf-lead">A calm place to track your child's day: meals, sleep, growth and health, kept for your family only.</p>`
     + `<button class="btn btn-sage prf-btn" data-action="prfStart">${zi('baby')} Set up your child</button>`
     + `<button class="btn btn-soft prf-btn" data-action="prfSignIn">${zi('heart')} I already use SproutLab: sign in</button>`
     + `<p class="prf-note">Signing in joins your family's shared record on this phone.</p>`;
 }
 function _prfFormHtml(mode) {
-  const confirm = mode === 'confirm';
+  const confirm = mode === 'confirm', editing = mode === 'edit';
   const today_ = today();
+  const c = editing && profile ? profile.child : {};
+  const val = v => v ? ` value="${escHtml(v)}"` : '';
+  const dobDate = c.dob ? String(c.dob).slice(0, 10) : '', dobTime = c.dob && String(c.dob).length > 10 ? String(c.dob).slice(11, 16) : '';
+  const city = editing && profile && profile.place ? profile.place.city : '';
   return `<div class="prf-icon">${zi(confirm ? 'heart' : 'baby')}</div>`
-    + `<h1 class="prf-title">${confirm ? 'Confirm your child\'s details' : 'About your child'}</h1>`
-    + `<p class="prf-lead">${confirm ? 'SproutLab now keeps these details with your family\'s record instead of inside the app. Your logs stay exactly as they are.' : 'This sets your child\'s age for every chart, milestone and food guide. You can change it later in Settings.'}</p>`
+    + `<h1 class="prf-title" id="prfTitle">${confirm ? 'Confirm your child\'s details' : editing ? 'Your child\'s details' : 'About your child'}</h1>`
+    + `<p class="prf-lead">${confirm ? 'SproutLab now keeps these details with your family\'s record instead of inside the app. Your logs stay exactly as they are.' : 'This sets your child\'s age for every chart, vaccine, milestone and food guide. You can change it later in Settings.'}</p>`
     + `<form class="prf-form" data-prf-form="1" novalidate>`
-    + `<label class="prf-field"><span class="prf-label">Name</span><input class="form-input" id="prfName" type="text" maxlength="40" autocomplete="off" required></label>`
-    + `<label class="prf-field"><span class="prf-label">Date of birth</span><input class="form-input" id="prfDob" type="date" max="${today_}" required></label>`
-    + `<label class="prf-field"><span class="prf-label">Time of birth <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfTime" type="time"></label>`
-    + `<label class="prf-field"><span class="prf-label">Started solids on <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfSolids" type="date" max="${today_}"></label>`
-    + `<label class="prf-field"><span class="prf-label">Town or city <span class="prf-opt">(optional, for weather)</span></span><input class="form-input" id="prfCity" type="text" maxlength="40" autocomplete="off"></label>`
+    + `<label class="prf-field"><span class="prf-label">Name</span><input class="form-input" id="prfName" type="text" maxlength="40" autocomplete="off" required${val(c.name)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Date of birth</span><input class="form-input" id="prfDob" type="date" max="${today_}" required${val(dobDate)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Time of birth <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfTime" type="time"${val(dobTime)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Started solids on <span class="prf-opt">(optional)</span></span><input class="form-input" id="prfSolids" type="date" max="${today_}"${val(c.solidsStart)}></label>`
+    + `<label class="prf-field"><span class="prf-label">Town or city <span class="prf-opt">(optional, for weather)</span></span><input class="form-input" id="prfCity" type="text" maxlength="40" autocomplete="off"${val(city)}></label>`
+    + `<p class="prf-check" id="prfCheck" role="status"></p>`
     + `<p class="prf-err" id="prfErr" role="alert"></p>`
-    + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="${mode}">${zi('check')} ${confirm ? 'Save details' : 'Start'}</button>`
-    + (confirm ? '' : `<button class="btn btn-ghost prf-btn" type="button" data-action="prfBack">Back</button>`)
+    + `<button class="btn btn-sage prf-btn" type="button" data-action="prfSave" data-arg="${mode}">${zi('check')} ${confirm || editing ? 'Save details' : 'Start'}</button>`
+    + (confirm ? `<button class="btn btn-soft prf-btn" type="button" data-action="prfSignIn">${zi('heart')} Sign in instead</button>`
+      : editing ? `<button class="btn btn-ghost prf-btn" type="button" data-action="prfCancel">Cancel</button>`
+      : `<button class="btn btn-ghost prf-btn" type="button" data-action="prfBack">Back</button>`)
     + `</form>`;
 }
 function prfDispatch(action, arg) {
-  if (action === 'prfStart') _prfShow('setup');
-  else if (action === 'prfBack') _prfShow('welcome');
+  if (action === 'prfStart') { _prfPending = null; _prfShow('setup'); }
+  else if (action === 'prfBack') { _prfPending = null; _prfShow('welcome'); }
+  else if (action === 'prfEdit') { _prfPending = null; if (typeof closeSettingsSidebar === 'function') closeSettingsSidebar(); _prfShow('edit'); }
+  else if (action === 'prfCancel') { _prfPending = null; _prfClose(); }
   else if (action === 'prfSignIn') { _prfClose(); if (typeof openSettingsSidebar === 'function') openSettingsSidebar(); }
   else if (action === 'prfSave') _prfSubmit(arg);
 }
 function _prfSubmit(mode) {
   const v = id => { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; };
-  const err = msg => { const el = document.getElementById('prfErr'); if (el) el.textContent = msg; };
+  const err = (msg, fieldId) => {
+    const el = document.getElementById('prfErr'); if (el) el.textContent = msg;
+    document.querySelectorAll('#prfGate .form-input').forEach(i => i.removeAttribute('aria-invalid'));
+    const f = fieldId && document.getElementById(fieldId);
+    if (f) { f.setAttribute('aria-invalid', 'true'); f.focus(); }
+  };
   const name = v('prfName'), dob = v('prfDob'), time = v('prfTime'), solids = v('prfSolids'), city = v('prfCity');
-  if (!name) return err('Please add your child\'s name.');
-  if (!dob || !_profParse(dob)) return err('Please add the date of birth.');
-  if (dob > today()) return err('The date of birth can\'t be in the future.');
-  if (solids && solids < dob) return err('Solids can\'t start before the date of birth.');
+  if (!name) return err('Please add your child\'s name.', 'prfName');
+  if (!dob || !_profParse(dob)) return err('Please add the date of birth.', 'prfDob');
+  if (dob > today()) return err('The date of birth can\'t be in the future.', 'prfDob');
+  if (solids && solids < dob) return err('Solids can\'t start before the date of birth.', 'prfSolids');
+  // A record dated before the birth date means the date is wrong (V-M-280-2).
+  const earliest = _prfEarliestRecord();
+  if (earliest && earliest < dob) return err(`Some of her records are dated before this birth date (the earliest is ${formatDate(earliest)}). Please check the year.`, 'prfDob');
+  // Read the age back once before saving: a year typo shifts every vaccine and food guide.
+  const key = [name, dob, time, solids, city].join('|');
+  if (_prfPending !== key) {
+    _prfPending = key;
+    const a = ageAt(new Date(), _profParse(time ? dob + 'T' + time : dob));
+    const chk = document.getElementById('prfCheck');
+    if (chk) chk.textContent = `That makes ${name} ${fmtAgeLong(a.months, a.days)} old today. Tap Save again if that's right.`;
+    return err('');
+  }
+  _prfPending = null;
   const tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { return null; } })();
-  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null }, city ? { city, tz } : (tz ? { city: null, tz } : null));
+  const prevPlace = profile && profile.place ? profile.place : null;
+  const place = city ? Object.assign({}, prevPlace && prevPlace.city === city ? prevPlace : {}, { city, tz }) : (tz ? { city: null, tz } : null);
+  const saved = _profSave({ name, dob: time ? dob + 'T' + time : dob, solidsStart: solids || null }, place);
   if (!saved) return err('Those details don\'t look right. Please check them.');
+  // Every screen was drawn with the old birth date; a fresh start redraws them all (V-M-280-1).
+  try { sessionStorage.setItem('prf_notice', mode === 'confirm' || mode === 'edit' ? 'Details saved' : 'Welcome, ' + saved.child.name); } catch (e) {}
   _prfClose();
-  if (typeof renderLanding === 'function') { try { renderLanding(); } catch (e) {} }
-  if (typeof renderHome === 'function') { try { renderHome(); } catch (e) {} }
-  if (typeof showQLToast === 'function') showQLToast(mode === 'confirm' ? 'Details saved' : `Welcome, ${escHtml(saved.child.name)}`, 3000);
+  setTimeout(() => location.reload(), 150);
 }
-// A profile arriving by sync (another phone in the family set it) closes the gate.
-function _prfOnProfile() { if (profile) _prfClose(); }
+// The earliest dated record on this device (growth, feeding, vaccines, foods), or ''.
+function _prfEarliestRecord() {
+  let min = '';
+  const take = d => { if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d) && (!min || d.slice(0, 10) < min)) min = d.slice(0, 10); };
+  try {
+    (Array.isArray(growthData) ? growthData : []).forEach(g => take(g && g.date));
+    Object.keys(feedingData || {}).forEach(take);
+    (Array.isArray(vaccData) ? vaccData : []).forEach(v => { if (v && !v.upcoming) take(v.date); });
+    (Array.isArray(foods) ? foods : []).forEach(f => take(f && f.date));
+  } catch (e) {}
+  return min;
+}
+// A profile arriving by sync (another phone in the family set it) closes the gate. When it moves
+// the birth date, every screen drawn with the old one is redrawn by a fresh start (V-M-280-1).
+function _prfOnProfile(prevDob) {
+  if (!profile) return;
+  const gateOpen = !!document.getElementById('prfGate');
+  _prfClose();
+  if (gateOpen || (prevDob !== undefined && prevDob !== profile.child.dob)) {
+    try { sessionStorage.setItem('prf_notice', gateOpen ? 'Details received from your family' : 'Birth date updated from another phone'); } catch (e) {}
+    const busy = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if (!busy) setTimeout(() => location.reload(), 150);
+  }
+}
 
 function initWelcomeGuide() {
   const seen = localStorage.getItem('ziva_guide_seen');
@@ -7242,7 +7340,7 @@ function _msStandardFor(standards, key) {
 // _predictMilestoneWindow — Primitive 1.
 // Clinical-range predictor for a single milestone. PURE function. NEVER
 // personalised — returns the typical clinical band from the active reference
-// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a the child-specific prediction.
+// standard (WHO / CDC / AAP / IAP / EU / CN), NOT a child-specific prediction.
 // Audit-no-personalised-prediction-v1.sh enforces the honesty floor at build.
 function _predictMilestoneWindow(milestoneId, opts) {
   opts = opts || {};

@@ -4164,7 +4164,7 @@ function renderInfoSleepEfficiency() {
     if (data.avgEff < 80) {
       html += '<div class="si-insight si-insight-warn">Frequent wake-ups are reducing sleep quality. Check for teething, hunger, or room temperature.</div>';
     } else if (data.avgEff >= 90) {
-      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — ' + childNameCapHtml() + ' is sleeping through most of the night.</div>';
+      html += '<div class="si-insight si-insight-good">Excellent sleep efficiency — ' + childNameHtml() + ' is sleeping through most of the night.</div>';
     } else {
       html += '<div class="si-insight si-insight-info">Sleep efficiency is in the normal range. Fewer wake-ups would push it higher.</div>';
     }
@@ -4338,7 +4338,7 @@ function renderInfoSleepWakeWindows() {
       html += '<div class="si-insight si-insight-good">Wake windows are well-timed for ' + childNameHtml() + '\'s age. Nice work.</div>';
     }
     if (data.undertiredCount >= 3) {
-      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — ' + childNameCapHtml() + ' may not be tired enough, which can cause nap refusal.</div>';
+      html += '<div class="si-insight si-insight-info">' + data.undertiredCount + ' short wake windows — ' + childNameHtml() + ' may not be tired enough, which can cause nap refusal.</div>';
     }
     insightEl.innerHTML = html;
   }

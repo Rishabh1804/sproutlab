@@ -174,6 +174,9 @@ const SYNC_KEYS = {
 
 // ─── ALWAYS_POPULATED_KEYS (C0 Fix 1 — Maren's allowlist) ───
 // Keys where an empty state is never a valid user intent — only a bug signal.
+// privacy-v1 (V-CA-280-14): the bundle no longer seeds any of these, so a new family starts empty
+// and the original reasons (seeded doctor, persist-defaults) no longer hold. Membership is under
+// review: an emptied key on one phone is rejected here and can be pushed back by the other.
 // For these keys, a listener snapshot delivering [] or {} with local non-empty
 // is skipped with a warning. For any key NOT in this set, legitimate user
 // deletions (clear-all) propagate normally via listener overwrite.
@@ -467,7 +470,12 @@ function _syncSetGlobal(name, value) {
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
     case 'mealPlan':     mealPlan     = value; return true;
-    case 'profile':      profile      = _profNormalize(value); _profApply(); if (typeof _prfOnProfile === 'function') _prfOnProfile(); return true;
+    case 'profile': {
+      var _prevDob = profile && profile.child ? profile.child.dob : null;
+      profile = _profNormalize(value); _profApply();
+      if (typeof _prfOnProfile === 'function') _prfOnProfile(_prevDob);
+      return true;
+    }
     default: return false;
   }
 }
@@ -640,6 +648,8 @@ function _postReceiveProfile(remote, local) {
   const r = _profNormalize(remote), l = _profNormalize(local);
   if (!r) return l || local;
   if (!l) return r;
+  if (l.pre && !r.pre) return r;          // a profile typed before joining yields to the household's (V-CA-280-12)
+  if (r.pre && !l.pre) return l;
   return (r.ts >= l.ts) ? r : l;
 }
 function _postReceiveMealPlan(remotePlan, localPlan) {
@@ -2421,6 +2431,7 @@ function _syncSeedFirestore(hId) {
   allKeys.forEach(function(key) {
     var config = SYNC_KEYS[key];
     if (config.model !== 'single-doc') return;
+    if (key === KEYS.profile) return;   // written only if the household has none (below, V-CA-280-12)
     var val = load(key, null);
     if (val === null || val === undefined) return; // skip empty
     if (Array.isArray(val) && val.length === 0) return; // skip empty arrays
@@ -2437,6 +2448,18 @@ function _syncSeedFirestore(hId) {
     });
     promises.push(hRef.collection('singles').doc(col).set(payload, { merge: true }));
   });
+  // The profile: seeded only when the household has none, and never as provisional.
+  var _prof = load(KEYS.profile, null);
+  if (_prof && typeof _prof === 'object') {
+    var _profRef = hRef.collection('singles').doc(SYNC_KEYS[KEYS.profile].collection);
+    promises.push(_profRef.get().then(function(d) {
+      if (d.exists && d.data() && d.data()[KEYS.profile]) return;
+      var p = {}; p[KEYS.profile] = Object.assign({}, _prof); delete p[KEYS.profile].pre;
+      p.__sync_updatedBy = { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' };
+      p.__sync_syncedAt = firebase.firestore.FieldValue.serverTimestamp();
+      return _profRef.set(p, { merge: true });
+    }));
+  }
 
   return Promise.all(promises).then(function() {
     _syncIsMigrating = false;

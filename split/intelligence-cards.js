@@ -1450,7 +1450,7 @@ function renderInfoMilestoneSleepCorrelation() {
       var rate = Math.round((coOccurrences / bursts.length) * 100);
       iHtml += '<div class="si-insight si-insight-warn">' + coOccurrences + ' of ' + bursts.length + ' milestone bursts coincided with sleep disruption (' + rate + '%) — consistent with developmental leap patterns</div>';
     } else if (bursts.length > 0 && coOccurrences === 0) {
-      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — ' + childNameCapHtml() + ' handles developmental leaps well</div>';
+      iHtml += '<div class="si-insight si-insight-good">Milestone bursts detected without sleep disruption — ' + childNameHtml() + ' handles developmental leaps well</div>';
     }
     if (bursts.length === 0 && weeksWithBothData.length >= 4) {
       iHtml += '<div class="si-insight si-insight-info">No milestone bursts detected in the last ' + numWeeks + ' weeks — steady development pace</div>';
@@ -3631,9 +3631,11 @@ function saveWeatherCache() {
 let _weatherFetchInFlight = false;
 function fetchHistoricalWeather(startDate, endDate) {
   if (_weatherFetchInFlight) return Promise.resolve();
+  const _c = (typeof _profCoords === 'function') ? _profCoords() : null;
+  if (!_c) return Promise.resolve();
   _weatherFetchInFlight = true;
-  const lat = 22.8, lon = 86.18;
-  return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=Asia/Kolkata&start_date=${startDate}&end_date=${endDate}`)
+  const lat = _c.lat, lon = _c.lon;
+  return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,relative_humidity_2m_max,weather_code&timezone=${_c.tz}&start_date=${startDate}&end_date=${endDate}`)
     .then(r => r.json())
     .then(data => {
       _weatherFetchInFlight = false;
