@@ -19,6 +19,8 @@
   - The one-question gate also says it back once before saving, and the toast after the reload names the chart.
   - A mis-tap at 2 AM moves every percentile, so it must be visible (V-M-281-2, V-V-281-3).
 - **Sync.** Newest-ts-wins is unchanged, with one exception. The sex is never cleared: a newer copy without it came from a phone still on the older build, so the answer carries over (`_postReceiveProfile`, which also serves the push merge).
+- **Write-back:** when the merge refills a sex the cloud copy lacks, the phone writes it back, the meal planner's way, so the household's copy holds it (V-CA-281-1). A provisional copy fills it only for the same child, by birth date (V-CA-281-4).
+- **Save check:** `_profSave` reads the record back, so a full phone shows "That didn't save" instead of reloading into the same question (V-CA-281-3).
 - **A sex change** arriving by sync reloads the app, like a birth-date change, because it redraws every chart and pronoun. The toast names the new chart (V-M-281-4).
 
 ### 2.2 Growth tables

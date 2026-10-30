@@ -616,6 +616,9 @@ function _profSave(child, place) {
   profile = next;
   save(KEYS.profile, profile);
   _profApply();
+  // save() swallows a storage failure; a full phone would otherwise reload into the same question
+  // forever. Read it back, and let the caller show its error (V-CA-281-3).
+  try { const back = JSON.parse(localStorage.getItem(KEYS.profile) || 'null'); if (!back || !back.child || back.ts !== profile.ts) return null; } catch (e) { return null; }
   return profile;
 }
 
@@ -5908,6 +5911,7 @@ function initProfileGate() {
 let _prfWaited = false;
 let _prfPending = null;   // the read-back step: values the parent is asked to confirm once
 function _prfShow(mode) {
+  _prfPending = null;   // a rebuilt form starts its read-back afresh (V-CA-281-5)
   _prfClose();
   const ov = document.createElement('div');
   ov.className = 'prf-gate';
@@ -6062,9 +6066,10 @@ function _prfEarliestRecord() {
 function _prfOnProfile(prevDob, prevSex) {
   if (!profile) return;
   const gateOpen = !!document.getElementById('prfGate');
+  // Still no sex in the household's copy: keep asking, without clearing a question already open
+  // (a tapped-but-unsaved choice survives; V-CA-281-5).
+  if (!childSex()) { if (!document.querySelector('#prfGate [data-arg="sex"]')) _prfShow('sex'); return; }
   _prfClose();
-  // Still no sex in the household's copy: keep asking.
-  if (!childSex()) { _prfShow('sex'); return; }
   const dobMoved = prevDob !== undefined && prevDob !== profile.child.dob;
   const sexMoved = prevSex !== undefined && prevSex !== childSex();
   if (gateOpen || dobMoved || sexMoved) {

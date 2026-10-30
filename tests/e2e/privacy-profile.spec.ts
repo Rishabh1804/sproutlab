@@ -207,11 +207,17 @@ test.describe('child sex: growth standard and pronouns', () => {
       const recv = w._postReceiveProfile(olderBuild, withSex);
       const push = w._syncMergeForPush(olderBuild, withSex, w.KEYS ? w.KEYS.profile : 'ziva_profile');
       const bad = w._profNormalize({ v: 1, child: { name: 'Asha', dob: '2025-02-10', sex: 'x' }, ts: 1 });
-      return { recv: [recv.child.name, recv.child.sex], push: [push.child.name, push.child.sex], bad: bad.child.sex };
+      // A provisional copy fills the household's missing sex only for the same child (V-CA-281-4).
+      const household = { v: 1, child: { name: 'Asha', dob: '2025-02-10' }, ts: 3 };
+      const sameChild = w._postReceiveProfile(household, { v: 1, child: { name: 'Asha', dob: '2025-02-10', sex: 'f' }, ts: 9, pre: true });
+      const otherChild = w._postReceiveProfile(household, { v: 1, child: { name: 'Test', dob: '2024-06-01', sex: 'm' }, ts: 9, pre: true });
+      return { recv: [recv.child.name, recv.child.sex], push: [push.child.name, push.child.sex], bad: bad.child.sex, same: sameChild.child.sex, other: otherChild.child.sex };
     });
     expect(r.recv).toEqual(['Asha R', 'm']);   // the newer name wins; the sex carries over
     expect(r.push).toEqual(['Asha R', 'm']);
     expect(r.bad).toBeNull();
+    expect(r.same).toBe('f');
+    expect(r.other).toBeNull();
   });
 
   test('Settings shows the sex prefilled', async ({ page }) => {

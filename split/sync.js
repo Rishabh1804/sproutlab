@@ -654,8 +654,10 @@ function _postReceiveProfile(remote, local) {
   else if (r.pre && !l.pre) { w = l; o = r; }
   else if (r.ts >= l.ts) { w = r; o = l; } else { w = l; o = r; }
   // The sex is never cleared once given (setup requires it). A newer copy without it came from a
-  // phone still on the build before it was asked, so the answer carries over (child-sex-v1).
-  if (!w.child.sex && o.child.sex) w = Object.assign({}, w, { child: Object.assign({}, w.child, { sex: o.child.sex }) });
+  // phone still on the build before it was asked, so the answer carries over (child-sex-v1). From a
+  // provisional copy only when it is the same child, by birth date (V-CA-281-4); otherwise the
+  // gate asks.
+  if (!w.child.sex && o.child.sex && (!o.pre || o.child.dob === w.child.dob)) w = Object.assign({}, w, { child: Object.assign({}, w.child, { sex: o.child.sex }) });
   return w;
 }
 function _postReceiveMealPlan(remotePlan, localPlan) {
@@ -2243,6 +2245,20 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
           else if (_cfg && _cfg.collection) { _syncCountWrites(1); _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal); }
         }
       } catch (e) { console.warn('[sync] meal-plan push-back skipped:', e); }
+      // Profile: the merge refills a sex the cloud copy lacks (an older-build phone saved without
+      // it). Write it back, the meal planner's way, so the household's copy holds it and a new phone
+      // isn't asked again (V-CA-281-1).
+      try {
+        if (key === KEYS.profile && _saveVal && _saveVal.child && _saveVal.child.sex) {
+          var _rp = _profNormalize(remoteVal);
+          if (_rp && !_rp.child.sex) {
+            _syncShadow[key] = _syncCloneDeep(_rp);
+            _syncMarkDirty(key);
+            if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) _syncMarkNeedsFull(key);
+            else if (_cfg && _cfg.collection) { _syncCountWrites(1); _syncDebounceSingleDoc(null, _cfg.collection, key, _rp, _saveVal); }
+          }
+        }
+      } catch (e) { console.warn('[sync] profile push-back skipped:', e); }
 
       // Phase 3 PR-9: dispatch active-tab re-render + module-global rehydrate
       // (Findings B, E). Crash-isolated; failure falls through to the
