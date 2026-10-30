@@ -2411,7 +2411,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
   .stat-pills-grid { grid-template-columns:repeat(3, 1fr); gap:var(--sp-8); }
 }
 
-/* ─── "Today for Ziva" — the Home lede (PR-K) ─── */
+/* ─── "Today for <child>" — the Home lede (PR-K) ─── */
 .today-hero {
   background:linear-gradient(135deg, var(--peach-light), var(--warm));
   border:1px solid rgba(250,212,180,0.5);
@@ -4881,7 +4881,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
 
 /* Footer text */
 /* Footer credit — special treatment now that it sits front-and-centre on the
-   lean landing. "Ziva" wears the hero's wavelength gradient (a bookend to the
+   lean landing. The name wears the hero's wavelength gradient (a bookend to the
    warm-wave stripe); the heart beats softly (reduced-motion floor); Fraunces
    italic = the warm "voice" (§9.6). Replaces the old inline opacity:0.4 dim. */
 .app-footer { text-align:center; padding:var(--sp-24) 0 var(--sp-8); }
@@ -4906,7 +4906,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   animation:ld-wave 4.4s ease-in-out infinite;
 }
 /* Dark parity (Vela V-V-3): the light wavelength pastels wash toward the dark
-   footer surface — "Ziva" is the one word the footer exists to say. Lift the
+   footer surface — the child's name is the one word the footer exists to say. Lift the
    stops to the dark-tuned --tc-* hues (the §9.2 hue-swap the doors use), same
    wavelength order (rose→peach→amber→sage→sky→indigo→lavender). */
 [data-theme="dark"] .footer-name {
@@ -6074,7 +6074,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
   background:linear-gradient(135deg, rgba(60,45,35,0.4), rgba(50,35,60,0.3));
 }
 
-/* ── Ziva Score Hero ── */
+/* ── Sprout Score Hero ── */
 .ziva-score-hero {
   display:flex; align-items:center; gap:var(--sp-16);
   padding:var(--sp-8) 0 var(--sp-12); margin-bottom:var(--sp-8);
@@ -6471,7 +6471,7 @@ body.essential-mode[data-theme] .hero-avatar-bg { opacity:0.06; }
    no truncation, it wraps). The domain-hero pills drop to one column at
    medium and large zoom, as they already do at <=400px (the base 2-column
    rule above carries minmax(0,1fr) so longer details never push the grid
-   wider). The Home Ziva-Score pills use a 4-column grid at zoom: two per row,
+   wider). The Home Sprout-Score pills use a 4-column grid at zoom: two per row,
    and the fifth (Milestones) takes the whole last row instead of sitting alone. */
 .dsh-domain-name, .dsh-domain-sublabel, .dcp-name, .dcp-detail, .zsd-label, .zsd-score { overflow-wrap:break-word; }
 :root[data-zoom="med"]  .dsh-components,
@@ -8240,7 +8240,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .food-fav-star:active { transform:scale(0.9); }
 [data-theme="dark"] .food-fav-star { color:var(--light); }
 [data-theme="dark"] .food-fav-star.active { color:var(--tc-amber); }
-/* ── Dark mode: Ziva Score + Cards ── */
+/* ── Dark mode: Sprout Score + Cards ── */
 [data-theme="dark"] .zs-score-excellent .zs-ring { background:linear-gradient(135deg, rgba(111,207,151,0.15), rgba(45,134,89,0.15)); border-color:rgba(111,207,151,0.4); }
 [data-theme="dark"] .zs-score-excellent .zs-number { color:#6fcf97; }
 [data-theme="dark"] .zs-score-excellent .zs-label,
@@ -11641,7 +11641,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* expand-in-place detail (content reuses .enc-form / .cons-severe / .enc-emergency) */
 .lib-why { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-normal); margin:0; }
-/* Suggested-for-Ziva lead card — the entry point the eye lands on */
+/* Suggested-for-the-child lead card — the entry point the eye lands on */
 .lib-lead { background:var(--sage-light); border-radius:var(--r-lg); padding:var(--sp-12) var(--sp-16); margin-bottom:var(--sp-16); border-left:3px solid var(--sage); }
 .lib-lead-h { display:flex; align-items:center; gap:var(--sp-6); font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-md); color:var(--tc-sage); }
 .lib-lead-h .zi { width:var(--icon-base); height:var(--icon-base); }
@@ -11921,7 +11921,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
    05-meal-rows). Two-channel colour (DESIGN_PRINCIPLES §Tint System):
    a DOMAIN LEFT-RAIL (border-left in the primary ingredient's FOOD_TAX
    domain) + a FOOD-DOMAIN WHISPER FADE (.dt-*, transparent→accent, never a
-   flat fill). Featured "Suggested for Ziva" hero on top; browsable catalog
+   flat fill). Featured "Suggested for <child>" hero on top; browsable catalog
    grouped by meal slot as full-width .recipe-row rows; expand-in-place detail
    reuses .combo-*/.fd-flag*. Light + dark first-class (dark hue-swaps).
    ═══════════════════════════════════════════════════════════════════════ */
@@ -11951,7 +11951,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipes-sec-label { font-family:'Fraunces', serif; font-size:var(--fs-lg); font-weight:600; color:var(--text); margin:var(--sp-4) 0 var(--sp-8); }
 .recipes-sub-note { font-size:var(--fs-sm); color:var(--mid); margin:0 0 var(--sp-12); line-height:var(--lh-relaxed); }
 
-/* Featured "Suggested for Ziva" hero card */
+/* Featured "Suggested for <child>" hero card */
 .recipe-hero { position:relative; overflow:hidden; border-radius:var(--r-2xl); padding:var(--sp-20) var(--sp-20) var(--sp-16); box-shadow:0 8px 32px var(--shadow); margin-bottom:var(--sp-10); background:var(--card-bg); border:1px solid var(--card-border); border-left:4px solid var(--rc-rail, var(--tc-sage)); cursor:pointer; }
 .recipe-hero-eyebrow { display:inline-flex; align-items:center; gap:var(--sp-6); font-size:var(--fs-2xs); font-weight:800; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--tc-sage); margin-bottom:var(--sp-6); }
 .recipe-hero-eyebrow .zi { width:15px; height:15px; }
@@ -11963,7 +11963,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .recipes-h1 { font-family:'Fraunces', serif; font-weight:600; font-size:var(--fs-2xl); color:var(--text); margin:0 0 2px; }
 .recipes-subtitle { font-size:var(--fs-sm); color:var(--mid); margin:0; line-height:var(--lh-relaxed); }
 
-/* ── Generative "Suggested for Ziva" hero (§9.3/§9.4) ──
+/* ── Generative "Suggested for <child>" hero (§9.3/§9.4) ──
    grams-weighted wavelength FADE body (--rc-fl light / --rc-fd dark) + a 4px
    warm-wave STRIPE (--rc-stripe) with a sheen sweep (reuses @keyframes ld-wave)
    + a corner zif watermark. Two-channel colour: the domain left-rail leads,
@@ -12294,14 +12294,14 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .prf-note { font-size:var(--fs-sm); color:var(--light); margin:0; }
 .prf-form { display:flex; flex-direction:column; gap:var(--sp-12); }
 .prf-field { display:flex; flex-direction:column; gap:var(--sp-4); }
-.prf-label { font-size:var(--fs-sm); font-weight:700; color:var(--text); }
+.prf-label { font-weight:700; color:var(--text); }
 .prf-opt { font-weight:400; color:var(--light); }
 .prf-err { font-size:var(--fs-sm); color:var(--tc-rose); margin:0; min-height:1em; }
 .prf-btn { width:100%; min-height:48px; gap:var(--sp-8); }
 .prf-btn .zi { width:var(--icon-sm); height:var(--icon-sm); }
 .prf-check { font-size:var(--fs-sm); font-weight:700; color:var(--tc-sage); margin:0; min-height:1em; }
 .vacc-empty-note { display:flex; align-items:flex-start; gap:var(--sp-6); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); padding:var(--sp-8) 0; }
-.vacc-empty-note .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:2px; }
+.vacc-empty-note .zi { width:var(--icon-sm); height:var(--icon-sm); flex:0 0 auto; margin-top:var(--sp-2); }
 .prf-field .form-input { min-height:48px; }
 .prf-label { font-size:var(--fs-base); }
 .form-input[aria-invalid="true"] { border-color:var(--tc-rose); }
@@ -12319,7 +12319,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js" defer></script>
 </head>
 <body>
-<!-- ═══ the child Sketch Icon Set ═══ -->
+<!-- ═══ SproutLab Sketch Icon Set ═══ -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
 <defs>
 <symbol id="zi-lotus" viewBox="0 0 24 24"><path d="M12 21c0 0-4-3.5-4-8c0-3 1.5-5 4-7c2.5 2 4 4 4 7c0 4.5-4 8-4 8z" fill="currentColor" opacity="0.15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21c0 0-7-2-8-7c-.5-2.5.5-5 3-6c1 2 2.5 4 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 21c0 0 7-2 8-7c.5-2.5-.5-5-3-6c-1 2-2.5 4-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
@@ -12437,7 +12437,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 <symbol id="zi-ios-share" viewBox="0 0 24 24"><path d="M7 10v9a1.5 1.5 0 001.5 1.5h7A1.5 1.5 0 0017 19v-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 14V3M8.5 6.5L12 3l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-undo" viewBox="0 0 24 24"><path d="M9 14l-5-5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 9h10a6 6 0 016 6v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-tooth" viewBox="0 0 24 24"><path d="M7.5 3.5c-2.5 0-4 2-4 4.5 0 2.2.9 3.6 1.6 5.2.6 1.4.8 3 1.1 4.6.3 1.9.8 3.2 1.8 3.2 1.3 0 1.6-1.8 2-3.6.3-1.4.8-2.4 2-2.4s1.7 1 2 2.4c.4 1.8.7 3.6 2 3.6 1 0 1.5-1.3 1.8-3.2.3-1.6.5-3.2 1.1-4.6.7-1.6 1.6-3 1.6-5.2 0-2.5-1.5-4.5-4-4.5-1.8 0-2.8 1-4.5 1s-2.7-1-4.5-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="currentColor" fill-opacity="0.12"/></symbol>
-<!-- Meal planner (spec meal-planner-v1 §4, 2026-10-29): travel bag, plan calendar, food flask (thermos), new-to-the child food badge (zi-new-food means a food new to the child, nothing else). Reserved until P1b wires diet.js: only the Surface Catalog uses them today. -->
+<!-- Meal planner (spec meal-planner-v1 §4, 2026-10-29): travel bag, plan calendar, food flask (thermos), new-to-child food badge (zi-new-food means a food new to the child, nothing else). Reserved until P1b wires diet.js: only the Surface Catalog uses them today. -->
 <symbol id="zi-bag" viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="17" height="12.5" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M9 7.5v-2A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5v2M3.5 12.5h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10.5 12.5v2h3v-2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/></symbol>
 <symbol id="zi-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><circle cx="8.5" cy="14" r="1" fill="currentColor"/><circle cx="12" cy="14" r="1" fill="currentColor"/><circle cx="15.5" cy="14" r="1" fill="currentColor"/><circle cx="8.5" cy="17.3" r="1" fill="currentColor"/></symbol>
 <symbol id="zi-thermos" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.1"/><path d="M8.5 7V4.5A1.5 1.5 0 0110 3h4a1.5 1.5 0 011.5 1.5V7M7 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10.5 14c.6.8.6 1.7 0 2.5M13.5 14c.6.8.6 1.7 0 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></symbol>
@@ -13341,7 +13341,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         </button>
 
         <div id="dietLibBrowse" class="col-full">
-        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-the child
+        <!-- S3b: polarity shelves (living books) render here; the Suggested-for-the-child
              lead card is prepended by renderLibShelves. The foods log is collapsed by
              default (S3c density fix) — the shelves are the browse, the log is a drawer. -->
         <div id="dietShelvesRoot"></div>
@@ -15609,7 +15609,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   <div class="modal">
     <h3><svg class="zi" aria-hidden="true"><use href="#zi-pill"/></svg> Add Medication / Supplement</h3>
     <div class="fx-col g8">
-      <input type="text" id="medName" class="modal-input" placeholder="Name (e.g. Caldikind-P NF)" aria-label="Name">
+      <input type="text" id="medName" class="modal-input" placeholder="Name (e.g. Vitamin D drops)" aria-label="Name">
       <input type="text" id="medDose" class="modal-input" placeholder="Dose (e.g. 2.5 ml)" aria-label="Dose">
       <input type="text" id="medBrand" class="modal-input" placeholder="Brand" aria-label="Brand">
       <input type="text" id="medFreq" class="modal-input" placeholder="How often (e.g. Twice daily)" aria-label="How often">
@@ -15855,8 +15855,8 @@ if (typeof window !== 'undefined') {
 //     resuscitation authority) for that line, not NHS. Pediatrician
 //     sign-off remains desirable but is no longer a blocking uncertainty.
 //
-// AGE STEP — 1 year+ (2026-09-24, the 12-month audit): the child turned one on
-//   2026-09-04, so the INFANT techniques above are retired from this registry.
+// AGE STEP — 1 year+ (the 12-month audit): for a child of one and over the INFANT
+//   techniques above are retired from this registry.
 //   `unresponsive` and `choking` now carry the CHILD (1 year to puberty) protocol,
 //   verified against the live NHS pages: "How to resuscitate a child" (mod.
 //   2026-08-07: 5 rescue breaths, heel of 1 hand on the lower third of the
@@ -15899,7 +15899,7 @@ const GENERAL_EMERGENCIES = [
     severity: 'critical', callLead: true,
     immediate: [
       'Shout for help. Someone with you? Have them call 112 now while you start. On your own? Give 1 minute of CPR (steps below) first, then call.',
-      // Child (1 year+) technique since the child turned one (2026-09-24 12-month audit): mouth-to-mouth
+      // Child (1 year+) technique for a child of one and over (the 12-month audit): mouth-to-mouth
       // with the nose pinched, heel of ONE hand, 5 cm — NHS 'How to resuscitate a child' (mod. 2026-08-07).
       // Breathing check + two-hand note + plainer landmark (Maren V-M-266-12; RCUK 2025 paediatric
       // BLS: look, listen and feel for no more than 10 s; lower half of the sternum, two hands if needed).
@@ -15946,7 +15946,7 @@ const GENERAL_EMERGENCIES = [
     id: 'choking', icon: 'warn', name: 'Choking (object)',
     severity: 'urgent', callLead: true,
     immediate: [
-      // Child (1 year+) technique since the child turned one: back blows then ABDOMINAL thrusts —
+      // Child (1 year+) technique for a child of one and over: back blows then ABDOMINAL thrusts —
       // NHS 'How to stop a child from choking' (mod. 2025-09-24). Infant chest thrusts retired.
       // Action-first wording (Vela V-V-266-5); "shout for help" first and ONE round before calling
       // (Maren V-M-266-8 — NHS: call 999 if it doesn't come out after back blows + thrusts).
@@ -17579,7 +17579,7 @@ const DEFAULT_VACC = [];
 // Schedule-age label → months, for due / overdue / upcoming math. ONE source for both
 // consumers (core.js calcMedicalScore + medical.js vaccination status). The two used to
 // carry private copies that lacked '13 months' and '18-19 months', so JE-2, Hep A-2 and
-// Varicella-2 defaulted to 99 and silently never came due (2026-09-24 12-month audit).
+// Varicella-2 defaulted to 99 and silently never came due (the 12-month audit).
 // Every VACC_SCHEDULE `age` label MUST appear here — build gate: split/audit-vacc-age-map-v1.sh.
 const VACC_AGE_MONTHS = { 'Birth':0, '6 weeks':1.5, '10 weeks':2.5, '14 weeks':3.5, '6 months':6, '7 months':7,
   '9 months':9, '12 months':12, '13 months':13, '15 months':15, '16-18 months':16, '18 months':18,
@@ -18461,7 +18461,7 @@ const AGE_RULES = {
   'salt':     { limit:true, minMonth:12, reason:'Baby\'s kidneys cannot process added salt. Natural sodium in foods is enough.', after:'From 1 year keep it light: no more than 2 g of salt a day up to age 3 (NHS). Skip pickles, papad and namkeen.' },
   // Added-sugar gates run to 24 months, not 12: WHO 2023 complementary-feeding guideline (6–23
   // months) — foods high in added sugar should not be consumed; AAP / US DGA 2020–25 — no added
-  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (2026-09-24 audit).
+  // sugar under 2. At 12 they had turned into a green "Fine from 12 months" verdict (12-month audit).
   // aliases (Ceres V-C-266-4 / Kael V-K-266-2): the everyday Indian names for added sugar, so
   // mishri (with saunf), chini, khand, batasha, mithai and date syrup gate at 24 m too.
   'sugar':    { minMonth:24, aliases:['mishri','misri','rock sugar','chini','cheeni','khand','shakkar','batasha','mithai','sweets','toffee','date syrup'],
@@ -18914,7 +18914,7 @@ const FOOD_EFFECTS = {
   // POLARITY: _effPolarity → 'conditional' (amber, milk-spec §3-bis §9) — NOT 'warn'/'avoid':
   // almost every hazard food is healthy once reshaped. THE FLOOR IS CHOKING FIRST AID, NOT
   // ANAPHYLAXIS — severeSigns are the QUIET-choking signs and seekCare is back-blows +
-  // abdominal-thrusts + call-112 (child 1y+ technique since the child turned one; NEVER adrenaline).
+  // abdominal-thrusts + call-112 (child 1y+ technique; NEVER adrenaline).
   // reactionType:['choking']; allergen:false (so NO ALLERGENS entry — the §6 ALLERGENS↔manifest
   // gate doesn't apply).
   // RESOLVER SCOPE (Kael, alias precision — the carry-forward lesson): aliases ONLY the hazard
@@ -18964,7 +18964,7 @@ const FOOD_EFFECTS = {
     // present-only via severeSigns.length (M-1), header scoped to choking (not "allergic reaction").
     severeSigns:['a silent or weak cough; can\'t breathe, cry, or make noise', 'turning blue (check the gums, inside the lips, or nailbeds on darker skin)', 'clutching the throat, distress, or going limp'],
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
-    // the hazard, milk-spec §9). Child 1y+ (the child turned one 2026-09-04): 5 back blows + 5 abdominal
+    // the hazard, milk-spec §9). Child 1y+: 5 back blows + 5 abdominal
     // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
     seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
@@ -21944,7 +21944,7 @@ const RECOMMENDATION_ROSTER = {
 //
 // SAFETY INVARIANTS baked in (RECIPE_RESEARCH.md, cross-verified ≥2 sources):
 //   • No honey / added salt < 12 m; no added sugar — honey included — < 24 m (fruit sweetens;
-//     WHO free sugars + DGA 2020–25 count honey as added sugar; 2026-09-24 12-month audit).
+//     WHO free sugars + DGA 2020–25 count honey as added sugar; the 12-month audit).
 //   • Allergens (egg, fish, nuts, dairy, sesame) introduced early ~6 m, one
 //     at a time — never laundered as a prevention claim.
 //   • Nuts NEVER whole — ground fine / smooth paste (choking).
@@ -22604,7 +22604,7 @@ const RECIPES = [
       'Lift out her piece, flake it with your fingers and remove every bone.',
       'Mash the flaked fish and lauki into soft rice with a little gravy. Take her portion out before salt or chilli.',
     ],
-    dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'A Bengali-style jhol, made mild, made mild'],
+    dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'A Bengali-style jhol, made mild'],
     donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new to her, watch her for about 2 hours after the first meal'],
     source: ['icmr', 'nhsbsl', 'who'],
   },
@@ -23389,7 +23389,7 @@ const TODDLER_FEEDING = {
 // change live in data.js itself (the source-reading safety gates read them there).
 //  Food Library expansion for 12–24 months (Ceres jurisdiction), merged into the
 //  data.js tables at parse time by _mergeFoodLib1224() below.
-//  Drafted 2026-09-24 for the child (12.7 mo, 4 teeth).
+//  Drafted for a 12–24 m toddler.
 // 
 //  ── SOURCES (all fetched 2026-09-24) ─────────────────────────────────────
 //  [WHO23]  https://iris.who.int/server/api/core/bitstreams/5abca011-4db2-4cf1-b959-45b756f7b600/content
@@ -24282,7 +24282,7 @@ function _profParse(str) {
 // The name is shown inside HTML all over the app, and some of that copy is escaped again on the way
 // out. So the stored name carries no markup characters, and a straight apostrophe becomes ’: that
 // keeps it safe in any context and unchanged by a second escHtml (HR-4).
-function _profCleanName(n) { return String(n).replace(/[<>&"`]/g, '').replace(/'/g, '\u2019').replace(/\s+/g, ' ').trim().slice(0, 40); }
+function _profCleanName(n) { return String(n).replace(/[<>&"`\\]/g, '').replace(/'/g, '\u2019').replace(/\s+/g, ' ').trim().slice(0, 40); }
 // Keeps a well-formed profile (unknown fields pass through for later versions); anything else is null.
 function _profNormalize(p) {
   if (!p || typeof p !== 'object' || !p.child || typeof p.child !== 'object') return null;
@@ -29606,10 +29606,10 @@ function wgRender() {
 // ── PROFILE GATE (privacy-v1 §3.3) ──
 // No profile on this device: a new person gets Welcome (sign in, or set up a child); a device that
 // already holds records gets "Confirm details" once, because the code no longer knows the child.
-// Read once, as the script loads: init() may save built-in defaults before the gate looks.
 // Only a non-empty record counts: init writes [] / {} on a fresh device's first boot, and those
-// must not turn its second boot into "Confirm details" (V-CA-280-11).
-const _PRF_HAD_RECORDS = (() => {
+// must not turn its second boot into "Confirm details" (V-CA-280-11). Read live, so a device that
+// signed in and received records is asked to confirm, not welcomed (Cipher #10).
+function _prfHasRecords() {
   const keys = ['ziva_feeding', 'ziva_growth', 'ziva_vacc', 'ziva_foods', 'ziva_meds', 'ziva_sleep', 'ziva_poop',
     'ziva_notes', 'ziva_visits', 'ziva_activity_log', 'ziva_milestones', 'ziva_doctors'];
   try {
@@ -29620,8 +29620,7 @@ const _PRF_HAD_RECORDS = (() => {
       catch (e) { return false; }
     });
   } catch (e) { return false; }
-})();
-function _prfHasRecords() { return _PRF_HAD_RECORDS; }
+}
 function initProfileGate() {
   try { const m = sessionStorage.getItem('prf_notice'); if (m) { sessionStorage.removeItem('prf_notice'); setTimeout(() => showQLToast(escHtml(m), 4000), 600); } } catch (e) {}
   if (profile) return;
@@ -40713,8 +40712,8 @@ const D3_KNOWLEDGE = {
   ],
 };
 
-// A calcium + Vitamin D3 suspension given in divided doses (e.g. 2.5 ml twice a
-// day replaced the D3 drops on 2026-09-24). Calcium lowers iron absorption, so iron drops and
+// A calcium + Vitamin D3 suspension given in divided doses (e.g. 2.5 ml twice a day, often in
+// place of D3 drops). Calcium lowers iron absorption, so iron drops and
 // her iron-rich meals are kept apart from it; the dose itself is always the doctor's.
 const CALCIUM_D3_KNOWLEDGE = {
   dos: [
@@ -40723,7 +40722,7 @@ const CALCIUM_D3_KNOWLEDGE = {
     'Space the doses through the day — for example after breakfast, and with her evening milk or a curd snack — at about the same times each day.',
     'Give it with or after a meal or a milk or curd snack — Vitamin D absorbs better with a little fat.',
     // Spacing: calcium lowers non-heme iron absorption at the same meal (Hallberg, AJCN 1991);
-    // ~2 h from iron products is standard label guidance. Ceres/Maren-audited 2026-09-24.
+    // ~2 h from iron products is standard label guidance. Ceres/Maren-audited.
     'If she is given iron drops, keep them about 2 hours apart from this dose.',
     'If she gets constipated, vomits, or goes off her feeds after starting it, tell her doctor.',
   ],
@@ -46457,7 +46456,7 @@ function renderDietChokingIntro() {
   // ── Emergency floor — CHOKING FIRST AID, present-only via severeSigns (M-1) → PINNED ──
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
-  // thrusts (child 1y+ technique since the child turned one) + "NO adrenaline".
+  // thrusts (child 1y+ technique) + "NO adrenaline".
   pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
@@ -46620,7 +46619,7 @@ const ALL_TIPS = [
   },
   // ── AVOID (always show, or age-gated) ──
   // The under-1 rules (honey, cow's milk as a drink) are gated to < 12 months; from 1 year they
-  // retire and the salt/sugar tip turns into its toddler form (2026-09-24 12-month audit — they had
+  // retire and the salt/sugar tip turns into its toddler form (12-month audit — they had
   // shown "always", contradicting the unlocked Library gates).
   {
     type:'avoid', icon:zi('warn'),
@@ -46942,7 +46941,7 @@ function renderComboQuickChips() {
     chips.push({ text:'sweet potato + ghee', cls:'chip-safe' });
   } else {
     chips.push({ text:'whole egg', cls:'chip-caution' });
-    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 2026-09-24 audit
+    // cow milk flips from avoid to caution at 12 months (drink-timing; the checker returns caution) — 12-month audit
     chips.push({ text:'cow milk', cls: mo >= 12 ? 'chip-caution' : 'chip-avoid' }); // checker returns caution (ALLERGENS) at 12 m+
     chips.push({ text:'cheese + paratha', cls:'chip-safe' });
     chips.push({ text:'rajma', cls:'chip-caution' });
@@ -53305,7 +53304,7 @@ function renderGrowthFacts() {
     const daysDiff = Math.max(1, Math.round((new Date(wtLast.date) - new Date(wtPrev.date)) / 86400000));
     const gPerDay = Math.round(wtGain / daysDiff);
     // From 1 year the WHO band is ~3–12 g/day (GROWTH_VELOCITY_12_24); the 15–30 g/day line
-    // is the early-infancy rate and must not be quoted to a toddler (2026-09-24 audit).
+    // is the early-infancy rate and must not be quoted to a toddler (12-month audit).
     const vb = GROWTH_VELOCITY_12_24;
     if (mo >= 12) {
       if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
@@ -53759,7 +53758,7 @@ function renderGrowth() {
   renderGrowthInsightsPreview();
 }
 
-// Growth reference = WHO only (2026-09-24, 12-month audit, Architect decision). The former
+// Growth reference = WHO only (12-month audit, Architect decision). The former
 // "India (IAP)", Euro-Growth and China overlay tables were retired: the India table did not match
 // the Khadilkar 2019 source it cited (its median ran ~WHO 25th–30th, reading the child high), the China
 // table matched neither Li 2009 nor WS/T 423-2022, and the Euro-Growth source could not be verified.
@@ -58738,8 +58737,8 @@ function renderSleepTips() {
     },
     {
       id: 'safety', icon: zi('shield'), label: 'Safe Sleep', color: 'rose',
-      // From 12 m the toddler tier (Maren V-M-269-15). The family bed-shares (no cot, parents'
-      // checklist 2026-10-28), so it covers the adult bed. src: AAP HealthyChildren (safe sleep,
+      // From 12 m the toddler tier (Maren V-M-269-15). It covers bed-sharing households
+      // (the adult bed). src: AAP HealthyChildren (safe sleep,
       // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
       // a bed: alcohol, sedating medicine, smoking, sofas).
       tips: ageM >= 12 ? [
@@ -65001,6 +65000,8 @@ function _isLikelyFoodList(tokens) {
 function _qaNameAsShe(text) {
   var n = (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) ? String(profile.child.name) : '';
   if (!n || typeof text !== 'string') return text;
+  // A name that is itself a food (Honey, Olive) stays as typed: the food reading is the safer one (Cipher #5).
+  if (typeof getNutrition === 'function' && typeof _baseFoodName === 'function' && getNutrition(_baseFoodName(n.toLowerCase()))) return text;
   var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
   return text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
 }
@@ -86728,7 +86729,7 @@ function _syncMergeForPush(local, cloud, key) {
   // Meal planner: the push honours the same per-field newest-ts merge as the receive, so a
   // reconnect, Retry, import or autosave restore can't undo the other parent's newer edit (V-CA-275-2).
   // Profile: the push keeps the newer whole record, like the receive (V-CA-280-1).
-  if (key === KEYS.profile && typeof _postReceiveProfile === 'function') return _postReceiveProfile(cloud, local);
+  if (key === KEYS.profile && typeof _postReceiveProfile === 'function') { var _pp = _postReceiveProfile(cloud, local); if (_pp && _pp.pre) { _pp = Object.assign({}, _pp); delete _pp.pre; } return _pp; }
   if (key === KEYS.mealPlan && typeof _postReceiveMealPlan === 'function') { var mp = _postReceiveMealPlan(cloud, local); return mp === undefined ? cloud : mp; }
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
