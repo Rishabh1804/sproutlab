@@ -11,7 +11,39 @@
 
 Session record of every bug found while building and testing S2 (pronouns), S3 (sex-specific care guidance) and S4 (infant weight-gain bands) per [`specs/child-sex-v1.md`](./specs/child-sex-v1.md). Entry form: symptom, cause, fix, where (file:symbol), how caught, status. Fixed entries stay here as the session record and move to Fixed Bugs at merge.
 
-No bugs logged yet.
+Entries 1–4 were found by the S2 render-time pronoun builder while working and caught in code review, not by a test.
+
+#### P1 — Child's name could trip a Q&A keyword in two answers (1)
+- **Symptom:** a name like "Sita" could match the milestone word `sit` in `qaAnswerMilestoneSpecific` / `qaAnswerNutrientGap`.
+- **Cause:** `qaExecuteQuery` stored `_qaCache._queryText` from the raw text, not through `_qaNameAsShe`. The V-K-280-5 fix (#280) missed this path.
+- **Fix:** `_queryText = _qaNameAsShe(text)`.
+- **Where:** intelligence-qa.js `qaExecuteQuery`.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Status:** **Fixed** (S2 render patch).
+
+#### P0 — Nutrient section header hard-coded for a girl (2)
+- **Symptom:** the nutrient-rich foods header read "HER <nutrient>-RICH FOODS" for every child.
+- **Cause:** the label `'HER ' + nutrient + '-RICH FOODS'` is uppercase, so a lowercase grep for the girl-specific pronouns missed it.
+- **Fix:** `pron('poss').toUpperCase()` in place of the literal `'HER '`.
+- **Where:** intelligence-qa-handlers.js ~:2010.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Status:** **Fixed**.
+
+#### P0 — Growth fun-fact is girl-specific (3)
+- **Symptom:** the growth fun-fact said "A little warrior princess" for every child.
+- **Cause:** hard-coded girl wording.
+- **Fix:** "prince" when `childSex()==='m'`.
+- **Where:** medical.js ~:1793.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Status:** **Fixed**.
+
+#### P2 — `_qaNameAsShe` turns a possessive name into "she" (4)
+- **Symptom:** "Arjun's nap" becomes "she nap" rather than "her nap".
+- **Cause:** `_qaNameAsShe` has no possessive handling. Pre-existing.
+- **Fix:** none. The result still matches intents, so it was left as is.
+- **Where:** intelligence-qa.js `_qaNameAsShe`.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Status:** **Open** (accepted, low).
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
