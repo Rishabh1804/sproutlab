@@ -8213,15 +8213,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* ── Body care (bc-*) — child-sex S3, Medical → Body care card (medical.js renderBodyCare).
    Rose = the Medical tab's domain (design floor §Domain → Element Assignments). Each entry is a
-   native <details>; the summary row is the ≥44px tap target (HR-8). Emergency block reuses the
-   status-triad action pair (--surface-danger / --tc-danger), which both have dark variants. */
+   native <details>; the summary row is the ≥44px tap target. The emergency block is the heaviest
+   thing in an entry in both themes (rose fill, thick danger rail); the see-the-doctor block sits on
+   the card with only a rose rail (V-V-282-1). */
 .bc-intro { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:var(--sp-4) 0 var(--sp-8); }
 .bc-entries { display:flex; flex-direction:column; }
 .bc-entry { border-top:1px solid var(--card-border); }
 .bc-entry:last-child { border-bottom:1px solid var(--card-border); }
 .bc-summary {
   list-style:none;
-  display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8);
+  display:flex; align-items:center; gap:var(--sp-8);
   min-height:44px; padding:var(--sp-8) 0;
   cursor:pointer;
 }
@@ -8233,14 +8234,15 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   background:var(--surface-danger); color:var(--tc-danger);
   font-size:var(--fs-xs); font-weight:700;
 }
-.bc-toggle { flex:0 0 auto; color:var(--light); transition:transform 200ms ease; }
+.bc-toggle { flex:0 0 auto; margin-left:auto; color:var(--light); transition:transform 200ms ease; }   /* stays top-right on every row (V-V-282-3) */
 .bc-entry[open] .bc-toggle { transform:rotate(180deg); }
 .bc-body { padding:0 0 var(--sp-12); }
 .bc-list { margin:var(--sp-4) 0; padding-left:var(--sp-16); }
 .bc-list li { margin-bottom:var(--sp-4); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .bc-sec { margin-top:var(--sp-10); padding:var(--sp-8) var(--sp-10); border-radius:var(--r-md); }
-.bc-sec-doc { background:var(--rose-light); }
-.bc-sec-em { background:var(--surface-danger); border-left:2px solid var(--tc-danger); }
+.bc-sec-doc { background:none; border-left:3px solid var(--rose); }
+.bc-sec-em { background:var(--rose-light); border-left:4px solid var(--tc-danger); }
+.bc-em-open { margin-top:var(--sp-8); min-height:44px; gap:var(--sp-6); }
 .bc-sec-h {
   display:flex; align-items:center; gap:var(--sp-6);
   font-size:var(--fs-xs); font-weight:800; text-transform:uppercase; letter-spacing:var(--ls-wide);
@@ -8251,8 +8253,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .bc-src { margin-top:var(--sp-10); }
 .bc-src-h { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); }
 .bc-src-list { list-style:none; margin:var(--sp-4) 0 0; padding:0; }
-.bc-src-list li { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); margin-bottom:var(--sp-2); }
-.bc-src-link { color:var(--tc-rose); text-decoration:underline; }
+.bc-src-list li { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
+.bc-src-link { display:inline-block; min-height:32px; padding:var(--sp-6) 0; color:var(--tc-rose); text-decoration:underline; }   /* a mis-tap leaves the app (V-V-282-9) */
 @media (prefers-reduced-motion: reduce) {
   .bc-toggle { transition:none; }
 }
@@ -13926,7 +13928,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
           <!-- NIGHT FORM -->
           <div id="sleepNightCard">
-            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and make sure there's enough rest.</div>
+            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. How much sleep is typical changes with age; the sleep cards show the range for <span data-child-name>your child</span>'s age. Logging sleep helps spot patterns and make sure there's enough rest.</div>
             <div class="fx-col g12">
               <div>
                 <label class="micro-label">Date</label>
@@ -16161,10 +16163,10 @@ const GENERAL_EMERGENCIES = [
     // "Torsion within 4 to 6 hours: 80 to 100 percent viability"; rarely neonates, may be
     // painless in neonates; vomiting common; red/blue, dark in neonate); AAP HealthyChildren
     // 'Undescended Testicles' (an undescended testis can twist).
-    id: 'testicular-torsion', icon: 'alert-circle', name: 'Sudden pain or swelling in the scrotum',
-    severity: 'urgent', callLead: true, sex: 'm',
+    id: 'testicular-torsion', icon: 'emergency', name: 'Sudden pain or swelling in the scrotum',
+    severity: 'urgent', callLead: false, sex: 'm',   // drive, don't wait for an ambulance; the call line says when to call (V-M-282-4)
     immediate: [
-      'Go to the hospital emergency department now. A twisted testis (torsion) is time-critical: surgery within about 4 to 6 hours usually saves it.',
+      'Go to the hospital emergency department now. A twisted testis (torsion) is time-critical: every hour counts, and the sooner surgery happens, the better the chance of saving it.',
       'Do not wait to see if it settles. If you cannot get there safely and fast, call 112 or 108 for an ambulance.',
       'It can happen in babies and in a testis that has not come down. A young baby may not seem to be in pain, so a swollen, red, blue or dark scrotum counts too.'
     ],
@@ -16243,6 +16245,8 @@ const BODY_CARE_SOURCES = {
   aapHernia: { org: 'AAP', title: 'Inguinal hernia in infants and children', url: 'https://www.healthychildren.org/English/health-issues/conditions/abdominal/Pages/Inguinal-Hernia.aspx' },
   aapLabial: { org: 'AAP', title: 'Labial adhesions in babies and children', url: 'https://healthychildren.org/English/health-issues/conditions/genitourinary-tract/Pages/Labial-Adhesions.aspx' },
   aapUti:    { org: 'AAP', title: 'Detecting urinary tract infections', url: 'https://www.healthychildren.org/English/health-issues/conditions/genitourinary-tract/Pages/Detecting-Urinary-Tract-Infections.aspx' },
+  nhsFever:  { org: 'NHS', title: 'High temperature (fever) in children', url: 'https://www.nhs.uk/conditions/fever-in-children/' },
+  aap2011:   { org: 'AAP', title: 'UTI clinical practice guideline, febrile infants and children 2–24 months (Pediatrics 2011)', url: 'https://pubmed.ncbi.nlm.nih.gov/21873693/' },
   aua:       { org: 'AUA', title: 'Evaluation and treatment of cryptorchidism (2014, reviewed 2025)', url: 'https://www.auanet.org/guidelines-and-quality/guidelines/cryptorchidism-guideline' },
   rchHernia: { org: 'RCH Melbourne', title: 'Inguinal hernia', url: 'https://www.rch.org.au/kidsinfo/fact_sheets/Inguinal_hernia/' },
   rchUdt:    { org: 'RCH Melbourne', title: 'Undescended testes', url: 'https://www.rch.org.au/kidsinfo/fact_sheets/Undescended_testes/' },
@@ -16302,7 +16306,7 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
   },
   { // §B3 — AUA (statements 3, 4, 11), AAP-UDT, NHS-UDT, RCH-UDT
     id: 'undescended-testes', sex: 'm', ageMinMo: 0, ageMaxMo: 24,
-    title: 'Both testes in the scrotum',
+    title: 'A testis that has not come down (undescended)',
     points: [
       'Both testes should be in the scrotum. When one is not at birth, it often comes down by itself in the first 3 months.',
       'The doctor checks the testes at routine visits.',
@@ -16310,8 +16314,9 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
       'When a testis has not come down by 6 months, specialists advise surgery within the next year, ideally before 18 months.'
     ],
     seeDoctorIf: [
+      'Neither testis can be felt, especially in a newborn: tell the doctor straight away',   // AUA Statement 5 (V-M-282-1)
+      'You think a testis is not in the scrotum: tell the doctor, so it can be checked and followed',
       'A testis still cannot be seen or felt in the scrotum at 6 months (corrected for early birth)',
-      'Neither testis is in the scrotum: see the doctor sooner, from about 8 weeks',
       'A testis that used to be in the scrotum can no longer be found'
     ],
     emergencyIf: [
@@ -16323,13 +16328,14 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     id: 'hydrocele', sex: 'm', ageMinMo: 0, ageMaxMo: 24,
     title: 'Fluid swelling in the scrotum (hydrocele)',
     points: [
+      'A hydrocele can look like a hernia, so have the doctor check any new swelling of the scrotum first.',
       'A hydrocele is fluid around a testis that makes the scrotum swell. Many newborn boys have one, and it is usually not painful.',
-      'It may look bigger after crying and smaller after lying down, and can change size over weeks.',
-      'Most go away on their own, often by about the first birthday.',
-      'A hydrocele can look like a hernia, so have the doctor check any swelling of the scrotum.'
+      'It can change size over weeks. A swelling that comes and goes with crying may be a hernia instead: see the doctor soon.',
+      'Once the doctor has said it is a hydrocele, most go away on their own, often by about the first birthday.'
     ],
     seeDoctorIf: [
       'A new swelling of the scrotum, for a first check',
+      'A swelling that gets bigger with crying and smaller when relaxed (it may be a hernia)',
       'It is still there after the first birthday'
     ],
     emergencyIf: [
@@ -16341,8 +16347,8 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     id: 'testicular-torsion', sex: 'm', ageMinMo: 0, ageMaxMo: 24,
     title: 'Sudden pain in the scrotum (torsion)',
     points: [
-      'A twisted testis (torsion) cuts off its blood supply. It is an emergency: surgery within about 4 to 6 hours usually saves it.',
-      'It is rare in babies but can happen, and is more likely in a testis that has not come down. A young baby may not seem to be in pain.',
+      'A twisted testis (torsion) cuts off its blood supply. It is an emergency: every hour counts, and the sooner surgery happens, the better the chance of saving the testis.',
+      'It is rare in babies but can happen, including in a testis that has not come down. A young baby may not seem to be in pain.',
       'Vomiting is common with it.'
     ],
     seeDoctorIf: [],
@@ -16394,13 +16400,13 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     seeDoctorIf: [
       'The opening looks closed or partly blocked',
       'Passing urine seems hard, or urine dribbles out afterwards',
-      'Urinary tract infections'
+      'There have been urine infections'
     ],
     emergencyIf: [],
     sources: [S.aapLabial, S.ouhLabial, S.khLabial]
   },
   { // §G3 — NHS-NAPPY, MEDLINE-HORM (newborn only)
-    id: 'newborn-discharge', sex: 'f', ageMinMo: 0, ageMaxMo: 1,
+    id: 'newborn-discharge', sex: 'f', ageMinMo: 0, ageMaxMo: 0,   // first weeks only (V-M-282-3)
     title: 'Newborn discharge',
     points: [
       'In the first days, a white discharge, and sometimes slight bleeding like a mini period, can show in the nappy. It comes from the mother’s hormones and is nothing to worry about.',
@@ -16430,7 +16436,7 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     sources: [S.aapHernia, S.rchHernia]
   },
   { // §X2 — MEDLINE-HORM (newborn only)
-    id: 'newborn-breasts', sex: 'both', ageMinMo: 0, ageMaxMo: 1,
+    id: 'newborn-breasts', sex: 'both', ageMinMo: 0, ageMaxMo: 0,   // first weeks only (V-M-282-3)
     title: 'Newborn breast swelling',
     points: [
       'Breast swelling is common in newborn boys and girls. It comes from the mother’s hormones and goes by about the second week.',
@@ -16441,8 +16447,23 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     emergencyIf: [],
     sources: [S.mlHorm]
   },
-  { // §X3 — ISPN-2011, ISPN-2023, AAP-UTI, RCH-UTI, SG-2005, NHS-UTI. Kael + Maren co-own.
-    id: 'fever-uti', sex: 'both', ageMinMo: 0, ageMaxMo: 24,
+  { // §X4 — NHS-FEVER. Under 3 months any fever needs a doctor the same day; the urine-test
+    // advice below starts at 3 months so its "more than 2 days" never reaches a young baby (V-M-282-2).
+    id: 'fever-young-baby', sex: 'both', ageMinMo: 0, ageMaxMo: 2,
+    title: 'Fever in a baby under 3 months',
+    points: [
+      'Under 3 months, any temperature of 38°C (100.4°F) or more needs a doctor the same day, even if the baby seems well.',
+      'A urine infection is one of the causes the doctor will check for.'
+    ],
+    seeDoctorIf: [
+      'Under 3 months: any temperature of 38°C (100.4°F) or more — call the doctor now, the same day',
+      'Does not want to feed, or is not their usual self'
+    ],
+    emergencyIf: [],
+    sources: [S.nhsFever]
+  },
+  { // §X3 — ISPN-2011, ISPN-2023, AAP-UTI-2011, AAP-UTI, RCH-UTI, SG-2005, NHS-UTI. Kael + Maren co-own.
+    id: 'fever-uti', sex: 'both', ageMinMo: 3, ageMaxMo: 24,
     title: 'Fever with no clear cause (urine infection)',
     points: [
       'Under age 2, a urinary tract infection (UTI) is an important cause of fever with no other obvious source, and the fever may be the only sign.',
@@ -16457,7 +16478,7 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     emergencyIf: [
       'Very drowsy, confused, or hard to wake'
     ],
-    sources: [S.ispn2023, S.ispn2011, S.aapUti, S.rchUti, S.nhsUti, S.sg2005]
+    sources: [S.ispn2023, S.ispn2011, S.aap2011, S.aapUti, S.rchUti, S.nhsUti, S.sg2005]
   }
 ]; })(BODY_CARE_SOURCES);
 // SproutLab v2.38 — Pure Data Constants
@@ -19209,7 +19230,7 @@ const FOOD_EFFECTS = {
       // shellfish" — "You can give boys up to 4 portions of oily fish a week, but it is best to give girls
       // no more than 2 portions a week." https://www.nhs.uk/live-well/eat-well/food-types/fish-and-shellfish-nutrition/
       // (checked 2026-10-31; child-sex S2, Cipher #281 nit 3).
-      note:     'Choose low-mercury fish, cook it through, and debone meticulously. Finfish is a separate allergen from shellfish. Oily fish is great — NHS suggests up to 2 portions of oily fish a week for girls and up to 4 for boys (pollutants).',
+      note:     'Choose low-mercury fish, cook it through, and debone meticulously. Finfish is a separate allergen from shellfish. Oily fish is great — NHS advises no more than 2 portions of oily fish a week for girls, and up to 4 for boys (because of pollutants).',
     },
     howToIntroduce: {
       amount:   'a small amount of well-cooked, deboned, flaked low-mercury fish',
@@ -19414,7 +19435,7 @@ const EMERGENCY_PROTOCOL = {
       'going blue around the lips, or going floppy',
     ],
     steps: [
-      '**Coughing or crying?** Encourage coughing — don’t intervene.',
+      '**Can your child cough or cry?** Encourage coughing — don’t intervene.',
       '**Silent / can’t breathe → 5 back blows** — face-down across your lap, head low (or leaning forward), between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
       '**Then 5 abdominal thrusts** — from behind, fist between the belly button and the ribs, pull **inwards and upwards**. Keep off the lower ribs.',
       '**Alternate** back blows + abdominal thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
@@ -20337,6 +20358,14 @@ window.MS_ACTIVITY_LEVEL_NARRATIONS = {
   4: 'Big-energy days mean your child\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
 };
 
+// Row schema — `text` vs `label` (Carina, BUGS.md S2–S4 #5):
+//   • `text` is the RECORD KEY. A milestone's id is slugify(row.text), and the raw
+//     text is stored and matched in synced records (milestones[].text, activityLog
+//     milestone-tap entries, milestoneSuppress keys, logMilestoneEvent). It is
+//     FROZEN — never reword an existing row's text without a migration.
+//   • `label` (optional) is DISPLAY-ONLY: a pronoun-free title shown in place of
+//     `text` wherever the milestone is rendered (core.js msLabel()). Never slugify,
+//     store or match on a label.
 // WHO Motor Development Study + WHO developmental milestones
 const MILESTONE_STANDARDS = {
   who: {
@@ -20445,7 +20474,7 @@ const MILESTONE_STANDARDS = {
   //   that starts at N.
   13: [
     { text:'Carries a book to you to read', icon:zi('book'), desc:'Brings a favourite board book and hands it over — a lovely early sign of shared attention and a love of stories.', advanced:false, domain:'social', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
-    { text:'Understands far more words than she can say', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
+    { text:'Understands far more words than she can say', label:'Understands far more words than can be said', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
     { text:'Squats to pick up a toy and stands back up', icon:zi('run'), desc:'Bends down mid-play, grabs the toy, rises without holding on — balance and leg strength working together.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Climbs stairs on hands and knees', icon:zi('run'), desc:'Crawls up a few steps with you right behind. A gate at the top and bottom keeps practice safe.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Enjoys simple songs with actions', icon:zi('sparkle'), desc:'Joins in with a clap or a wave during action songs — rhythm, listening and imitation all at once.', advanced:false, domain:'sensory', source:'unverified' },
@@ -20462,7 +20491,7 @@ const MILESTONE_STANDARDS = {
   15: [
     // CDC "Milestones by 15 Months" — Social/Emotional
     { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
-    { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you an object she likes', label:'Shows you a favourite object', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Claps when excited', icon:zi('party'), desc:'Claps in self-applause, or along with you, at something delightful.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses unprompted — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
@@ -20475,8 +20504,8 @@ const MILESTONE_STANDARDS = {
     { text:'Uses everyday things the right way, like a phone or a book', icon:zi('phone'), desc:'Holds a phone to an ear, lifts a cup to drink, opens a book — knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     // CDC 15 m — Movement/Physical
-    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
-    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and self-feeds. Offer soft, bite-sized food and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
+    { text:'Takes a few steps on her own', label:'Takes a few steps alone', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
+    { text:'Uses fingers to feed herself some food', label:'Uses fingers to self-feed some food', icon:zi('bowl'), desc:'Picks up soft pieces and self-feeds. Offer soft, bite-sized food and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
     // AAP — explicit 15–18 m timing
     { text:'Says several single words', icon:zi('chat'), desc:'A small handful of real words used on purpose. The pace varies a lot from child to child.', advanced:false, domain:'language', source:'AAP', endMonth:18 }, // AAP-2Y "by fifteen to eighteen months"
     { text:'Uses a few simple signs or gestures (more, all done)', icon:zi('handshake'), desc:'Taps fingers for "more" or waves hands for "all done" — gestures bridge the gap before words.', advanced:true, domain:'language', source:'unverified' },
@@ -20494,8 +20523,8 @@ const MILESTONE_STANDARDS = {
     { text:'Pretends to feed a doll or teddy', icon:zi('spoon'), desc:'Offers a spoon to a teddy — the first seeds of pretend play.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins make-believe"
     { text:'Takes toys apart and puts them back together', icon:zi('bulb'), desc:'Pulls apart stacking cups or pop-beads and tries to fit them again — little problem-solving at work.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1
     { text:'Uses a word to ask for help or "more"', icon:zi('chat'), desc:'Says "more" at snack time or "help" with a stuck lid — words starting to do real work.', advanced:false, domain:'language', source:'unverified' },
-    { text:'Wants to do things herself', icon:zi('sprout'), desc:'Says "no" and reaches to do it alone — healthy independence, even when it tests your patience.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
-    { text:'Tries to take off her shoes or socks', icon:zi('baby'), desc:'Tugs socks off at every chance — early self-care and body awareness.', advanced:true, domain:'motor', source:'unverified' },
+    { text:'Wants to do things herself', label:'Wants to do things alone', icon:zi('sprout'), desc:'Says "no" and reaches to do it alone — healthy independence, even when it tests your patience.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
+    { text:'Tries to take off her shoes or socks', label:'Tries to take off shoes or socks', icon:zi('baby'), desc:'Tugs socks off at every chance — early self-care and body awareness.', advanced:true, domain:'motor', source:'unverified' },
   ],
   18: [
     // CDC "Milestones by 18 Months" — Social/Emotional
@@ -20514,7 +20543,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks alone around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 }, // desc context: WHO-MGRS 99th pct 17.6 m
     { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
-    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds through meals. Keep offering soft, bite-sized pieces and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Feeds herself with her fingers', label:'Self-feeds with fingers', icon:zi('bowl'), desc:'Finger-feeds through meals. Keep offering soft, bite-sized pieces and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
     { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for the mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
     { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down unaided. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     // AAP — explicit timing
@@ -20526,7 +20555,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks up steps with a hand held', icon:zi('handshake'), desc:'Steps up the stairs holding your hand or a rail. Gates stay up for unsupervised moments.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y stairs holding support
     { text:'Fits simple shapes into a shape sorter', icon:zi('star'), desc:'Matches a few shapes to their holes — trial and error turning into planning.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins to sort by shapes"
     { text:'Picks up new words almost every week', icon:zi('chat'), desc:'New words keep arriving — names of foods, animals and people seen every day.', advanced:false, domain:'language', source:'unverified' },
-    { text:'Shows pride when she does something new', icon:zi('trophy'), desc:'Claps in self-applause or looks to you beaming after a new feat — confidence growing.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Shows pride when she does something new', label:'Shows pride in doing something new', icon:zi('trophy'), desc:'Claps in self-applause or looks to you beaming after a new feat — confidence growing.', advanced:false, domain:'social', source:'unverified' },
     { text:'Points out everyday sounds (dog, plane, bell)', icon:zi('bell'), desc:'Stops and points at the sound of a dog or a plane — listening closely to the world around.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Turns a knob or unscrews a loose lid', icon:zi('bulb'), desc:'Twists a knob or a loose lid with a turn of the wrist — fine motor control getting precise.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-HAND1 turning knobs
   ],
@@ -20547,7 +20576,7 @@ const MILESTONE_STANDARDS = {
   ],
   22: [
     { text:'Begins sorting by shape or colour', icon:zi('palette'), desc:'Groups the red blocks or the round ones — early sorting and matching.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
-    { text:'Repeats words she overhears', icon:zi('chat'), desc:'Echoes words from your conversations — sometimes at surprising moments.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
+    { text:'Repeats words she overhears', label:'Repeats overheard words', icon:zi('chat'), desc:'Echoes words from your conversations — sometimes at surprising moments.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
     { text:'Uses a spoon with less spilling', icon:zi('spoon'), desc:'More food reaches the mouth than the floor. Keep meals seated and supervised.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
     { text:'Shows a wider range of feelings', icon:zi('heart'), desc:'Joy, frustration, pride and shyness all show clearly now. Short tantrums are a normal part of this age.', advanced:false, domain:'social', source:'unverified' },
     { text:'Enjoys dancing and moving to music', icon:zi('sparkle'), desc:'Bounces, sways and spins when music plays — rhythm and body awareness.', advanced:false, domain:'sensory', source:'unverified' },
@@ -20889,7 +20918,7 @@ const MILESTONE_ACTIVITIES = {
   // ── Cognitive ──
   object_permanence: [
     { text: 'Peek-a-boo variations', duration: 5, icon: 'handshake', tip: 'Hide behind a cloth, pop out. Try hiding toys under cups.' },
-    { text: 'Find the hidden toy', duration: 10, icon: 'brain', tip: 'Hide a toy under a blanket in full view — then see if it gets found' },
+    { text: 'Find the hidden toy', duration: 10, icon: 'brain', tip: 'Hide a toy under a blanket while your child watches — then let them find it' },
   ],
   cause_effect: [
     { text: 'Push-button toy play', duration: 10, icon: 'brain', tip: 'Toys that light up or make sounds when pressed — cause and effect' },
@@ -21147,7 +21176,7 @@ const VACC_GUIDANCE = {
     note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
   },
   'mcv': {
-    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask your doctor', 'If the doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
+    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask the doctor', 'If the doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
     donts: ['Don\'t confuse it with the measles vaccine (in India "MCV" often means measles-containing vaccine)'],
     note: 'MenACWY protects against meningococcal meningitis and septicaemia. IAP lists it for special situations, not routine use.',
   },
@@ -21545,7 +21574,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Cry is high-pitched and unlike the usual crying',
       'Crying accompanied by fever or vomiting',
-      'Your child draws both legs up to the abdomen repeatedly (possible intussusception)',
+      'Your child draws the legs up to the tummy repeatedly (possible intussusception)',
       'Nothing calms your child for more than 3 hours'
     ],
     lifeThreat: false,
@@ -21826,7 +21855,7 @@ const SYMPTOM_DB = [
   },
   {
     id: 'head-injury',
-    keywords: ['head injury','head-injury','skull','head trauma','head hit','bumped head','head bleed','head bump'],
+    keywords: ['head injury','head-injury','skull','head trauma','head hit','bumped head','head bleed','head bump','hit her head','banged her head','bumped her head'],
     severity: 'emergency',
     title: 'Head Injury',
     summary: 'Stabilize and observe, apply cold compress to bumps, wake every 2h for 24h',
@@ -21871,7 +21900,7 @@ const SYMPTOM_DB = [
       'Tap the arm and call your child’s name loudly to check for a response.',
       'Check for breathing — look at the chest, listen, feel for air on your cheek, for up to 10 seconds. Gasping is not breathing.',
       'If your child is breathing, place them on their side (recovery position) and call 112 on speakerphone.',
-      'If your child is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? They call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
+      'If your child is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? Have that person call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
       'Stay with your child until help arrives.'
     ],
     precautions: [
@@ -22872,7 +22901,7 @@ const RECIPES = [
       'Serve with soft roti strips. Take the child’s share out before any salt or chilli goes into the family pan.',
     ],
     dos: ['Egg is an animal-source food, which WHO advises daily (meat, fish or egg)', 'Cook until both white and yolk are set', 'Keep offering egg regularly once it is tolerated'],
-    donts: ['Never runny or undercooked egg', 'No salt or green chilli in the child’s portion', 'If egg is new, offer it on its own first and watch for 3 days'],
+    donts: ['Never runny or undercooked egg', 'No salt or green chilli in the child’s portion', 'If egg is new to the child, offer it on its own first and watch for 3 days'],
     source: ['who', 'nhs', 'icmr'],
   },
   {
@@ -23004,7 +23033,7 @@ const RECIPES = [
       'Mash the flaked fish and lauki into soft rice with a little gravy. Take the child’s portion out before salt or chilli.',
     ],
     dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'A Bengali-style jhol, made mild'],
-    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new, watch closely for about 2 hours after the first meal'],
+    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new to the child, watch the child closely for about 2 hours after the first meal'],
     source: ['icmr', 'nhsbsl', 'who'],
   },
   {
@@ -23086,7 +23115,7 @@ const RECIPES = [
       'Serve over soft rice.',
     ],
     dos: ['Matches the ICMR-NIN 1–3 y chart ("egg ½")', 'Both white and yolk cooked firm', 'Egg gives iron and vitamin B12, which vegetarian diets can run short of'],
-    donts: ['No runny yolk', 'No salt or garam masala in the child’s portion', 'If egg is new, offer it on its own first and watch for 3 days'],
+    donts: ['No runny yolk', 'No salt or garam masala in the child’s portion', 'If egg is new to the child, offer it on its own first and watch for 3 days'],
     source: ['icmr', 'who', 'nhs'],
   },
   {
@@ -24067,7 +24096,7 @@ const COMBO_RECIPES_ADD_12_24 = {
   'mustard greens':{ recipe:'1. Wash sarson (with a little palak or bathua) 3–4 times.\n2. Pressure cook until very soft; blend.\n3. Temper with ½ tsp ghee, a pinch of garlic; thicken with 1 tsp makki atta.\n4. Serve with soft roti torn small.', dos:['Calcium and vitamin A from greens','Ghee helps absorb vitamin A','Cook thoroughly and blend smooth'], donts:['No salt in the child’s portion — take it out before salting','Skip the heavy butter topping for the child','No green chilli'] },
   'methi':         { recipe:'1. Wash and finely chop 2 tbsp methi leaves.\n2. Knead into atta dough with a little ghee and curd.\n3. Roll thin, cook soft on the tawa.\n4. Tear into small pieces.', dos:['Iron + calcium from methi (IFCT)','Pair with curd — pleasant with the slight bitterness','Chop leaves very fine'], donts:['Don\'t cook the thepla crisp','No salt in the child’s portion — take it out before salting','Introduce in small amounts — bitter taste'] },
   'guava':         { recipe:'1. Pick a ripe, soft guava.\n2. Peel if the skin is tough; cut in half and scoop out ALL the seeds.\n3. Serve very ripe, soft pieces, or steam 3–4 min and mash.', dos:['Very high vitamin C — boosts iron from dal or ragi in the same meal (ICMR-NIN)','Ripe fruit is softer','Pair with a millet or dal meal'], donts:['Never give the hard seeds','Avoid hard, unripe guava chunks — a choking risk','No chaat masala or salt'] },
-  'litchi':        { recipe:'1. Peel a ripe litchi.\n2. Remove the seed completely.\n3. Cut the flesh into small pieces, lengthwise.\n4. Serve only after a meal has been eaten.', dos:['Ripe fruit only','A few pieces at a time','Seasonal treat (May–June)'], donts:['Never whole — round and slippery, it can block the airway','Never on an empty stomach, and never many — litchi-linked illness in Bihar affected children who skipped meals','Never unripe litchi or the seed'] },
+  'litchi':        { recipe:'1. Peel a ripe litchi.\n2. Remove the seed completely.\n3. Cut the flesh into small pieces, lengthwise.\n4. Serve only after the child has eaten a meal.', dos:['Ripe fruit only','A few pieces at a time','Seasonal treat (May–June)'], donts:['Never whole — round and slippery, it can block the airway','Never on an empty stomach, and never many — litchi-linked illness in Bihar affected children who skipped meals','Never unripe litchi or the seed'] },
   'uttapam':       { recipe:'1. Use home idli/dosa batter.\n2. Spread thick on the tawa; top with finely grated carrot and tomato.\n3. Cook covered on low until soft on both sides.\n4. Cut into strips.', dos:['Fermented and soft — good with 4 teeth','Add vegetables for colour and vitamins','Serve with plain curd or mild sambar'], donts:['Don\'t make it crisp','Keep sambar low in salt and spice','No store-bought ready batter with added salt'] },
 };
 
@@ -27249,7 +27278,7 @@ function renderScrapMilestoneChips() {
     // Maren v5 audit MINOR — empty-text legacy guard. addMilestone trims+rejects
     // empty text for new entries, but legacy data could contain whitespace-only
     // text. Fall back so the chip and aria-label stay readable.
-    const labelText = (m.text || '').trim() || '(unnamed milestone)';
+    const labelText = msLabel((m.text || '').trim()) || '(unnamed milestone)';
     return `<span class="chip chip-milestone" role="listitem">
       <span class="chip-label">${escHtml(labelText)}</span>
       <button type="button" class="chip-x"
@@ -27299,7 +27328,7 @@ function renderScrapMilestonePickerList() {
               aria-hidden="true">
           <svg class="zi"><use href="#zi-check"/></svg>
         </span>
-        <span class="picker-row-label">${escHtml(m.text || '')}</span>
+        <span class="picker-row-label">${escHtml(msLabel(m.text || ''))}</span>
       </button>`;
     }).join('');
     return `<div class="picker-cat-group">
@@ -30535,6 +30564,8 @@ function getGrowthVelocity() {
 //     length band fits both too (V-M-281-7).
 // Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
 // later ages — above the WHO median, so normal toddler gain read "slow".
+// Since S4 the toddler year is two rows by the same WHO rule as the infant rows (below); this
+// object stays for older readers and is no longer used to judge gain (V-M-282-8, V-CA-282-2).
 const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
   hCmMoMin: 0.45, hCmMoMax: 1.6, hCmWk: '0.1–0.35', label: '12–24 months' };
 
@@ -30547,7 +30578,8 @@ const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12,
 // A bracket [fromMo, toMo) takes the 2-month intervals that END inside it (the window a recent gain
 // at that age spans: 9–12 m = 8–10, 9–11, 10–12 mo). Band = lowest P15 to highest P85 of those
 // intervals (grams per 61 days → g/week = g / (61/7), g/day = g / 61; cm per 2 months / 2 → cm/mo),
-// rounded outward (g/week to 5, g/day to 1, cm/mo to 0.1) so a child at P15–P85 never reads off.
+// rounded outward (g/week to 5, g/day to 0.1, cm/mo to 0.05) so a child at P15–P85 never reads off;
+// g/day keeps a decimal so it never sits below the g/week floor (V-M-282-11).
 // Median = mean P50, to 5 g/week. cm/week text = the cm/mo band / 4.348, to 0.05.
 //   girls g/2mo P15–P85: 0–2 1455–2386 · 2–4 978–2163 · 4–6 600–1413 · 6–9 306–1048 · 9–12 179–814
 //   boys  g/2mo P15–P85: 0–2 1720–2737 · 2–4 1081–2463 · 4–6 634–1496 · 6–9 323–1096 · 9–12 187–848
@@ -30556,29 +30588,38 @@ const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12,
 // Replaces the 0–12 m bands copied into ~9 sites (150–250 / 100–180 / 70–130 / 55–100 g/week),
 // which were narrower than WHO P15–P85: a normal 9–12 m infant read "slow", a 0–2 m boy at the
 // median read "above".
-// From 12 m one band fits both sexes (above), so both lists end in the same row.
+//   girls g/2mo P15–P85: 12–18 106–750 · 18–24 39–751   boys: 12–18 84–782 · 18–24 53–737
+//   girls cm/2mo P15–P85: 12–18 1.3–3.2 · 18–24 0.9–2.9  boys: 12–18 1.1–3.2 · 18–24 0.9–2.8
+// The toddler year follows the same rule (V-M-282-8, V-CA-282-2). Its P15 floor falls to 0–10 g/week,
+// so after 12 m a "slow" verdict means truly little gain; centile crossing (computeGrowthVelocity)
+// carries the rest. The old one-row 12–24 band (20–85 g/week) read a normal P15–P25 toddler "slow".
 const GROWTH_VELOCITY_BANDS = {
   f: [
-    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23, wGDayMax: 40, hCmMoMin: 3.3, hCmMoMax: 4.6, hCmWk: '0.75–1.05' },
-    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 110, wGWkMax: 250, wGWkMedian: 175, wGDayMin: 16, wGDayMax: 36, hCmMoMin: 2.1, hCmMoMax: 3.7, hCmWk: '0.5–0.85' },
-    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 65, wGWkMax: 165, wGWkMedian: 110, wGDayMin: 9, wGDayMax: 24, hCmMoMin: 1.3, hCmMoMax: 2.6, hCmWk: '0.3–0.6' },
-    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 125, wGWkMedian: 75, wGDayMin: 5, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.25–0.45' },
-    { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 95, wGWkMedian: 55, wGDayMin: 2, wGDayMax: 14, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
-    GROWTH_VELOCITY_12_24 ],
+    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23.8, wGDayMax: 39.2, hCmMoMin: 3.3, hCmMoMax: 4.6, hCmWk: '0.75–1.05' },
+    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 110, wGWkMax: 250, wGWkMedian: 175, wGDayMin: 16, wGDayMax: 35.5, hCmMoMin: 2.1, hCmMoMax: 3.7, hCmWk: '0.5–0.85' },
+    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 65, wGWkMax: 165, wGWkMedian: 110, wGDayMin: 9.8, wGDayMax: 23.2, hCmMoMin: 1.3, hCmMoMax: 2.6, hCmWk: '0.3–0.6' },
+    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 125, wGWkMedian: 75, wGDayMin: 5, wGDayMax: 17.2, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.25–0.45' },
+    { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 95, wGWkMedian: 55, wGDayMin: 2.9, wGDayMax: 13.4, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
+    { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 10, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.7, wGDayMax: 12.3, hCmMoMin: 0.65, hCmMoMax: 1.6, hCmWk: '0.15–0.35' },
+    { fromMo: 18, toMo: 24, label: '18–24 months', wGWkMin: 0, wGWkMax: 90, wGWkMedian: 45, wGDayMin: 0.6, wGDayMax: 12.4, hCmMoMin: 0.45, hCmMoMax: 1.45, hCmWk: '0.1–0.35' } ],
   m: [
-    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28, wGDayMax: 45, hCmMoMin: 3.6, hCmMoMax: 4.9, hCmWk: '0.85–1.15' },
-    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 120, wGWkMax: 285, wGWkMedian: 195, wGDayMin: 17, wGDayMax: 41, hCmMoMin: 2.3, hCmMoMax: 4.0, hCmWk: '0.55–0.9' },
-    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 70, wGWkMax: 175, wGWkMedian: 120, wGDayMin: 10, wGDayMax: 25, hCmMoMin: 1.4, hCmMoMax: 2.8, hCmWk: '0.3–0.65' },
-    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 130, wGWkMedian: 80, wGDayMin: 5, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.1, hCmWk: '0.25–0.5' },
+    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28.1, wGDayMax: 44.9, hCmMoMin: 3.6, hCmMoMax: 4.9, hCmWk: '0.85–1.15' },
+    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 120, wGWkMax: 285, wGWkMedian: 195, wGDayMin: 17.7, wGDayMax: 40.4, hCmMoMin: 2.3, hCmMoMax: 4.0, hCmWk: '0.55–0.9' },
+    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 70, wGWkMax: 175, wGWkMedian: 120, wGDayMin: 10.3, wGDayMax: 24.6, hCmMoMin: 1.4, hCmMoMax: 2.8, hCmWk: '0.3–0.65' },
+    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 130, wGWkMedian: 80, wGDayMin: 5.2, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.1, hCmWk: '0.25–0.5' },
     { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 100, wGWkMedian: 60, wGDayMin: 3, wGDayMax: 14, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
-    GROWTH_VELOCITY_12_24 ]
+    { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 5, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.3, wGDayMax: 12.9, hCmMoMin: 0.55, hCmMoMax: 1.6, hCmWk: '0.1–0.35' },
+    { fromMo: 18, toMo: 24, label: '18–24 months', wGWkMin: 5, wGWkMax: 85, wGWkMedian: 45, wGDayMin: 0.8, wGDayMax: 12.1, hCmMoMin: 0.45, hCmMoMax: 1.4, hCmWk: '0.1–0.35' } ]
 };
-// The band for an age in months (callers pass the age they already bracket by). 12 m and over →
-// the 12–24 row (also past 24 m, as before). Sex unknown → the girls' set as a stand-in, like
+// The band for an age in months. A fractional age is bracketed by completed months, except in the
+// half month before the first birthday, which takes the toddler row (the V-M-266-4 rounding, kept
+// at 12 m only) — so a 1.6-month baby is judged on the 0–2 row, never the gentler 2–4 one
+// (V-M-282-9, V-K-282-3). Past 24 m: the last row. Sex unknown → the girls' set as a stand-in, like
 // whoT(): only reachable behind the profile gate, where nothing renders it.
 function growthVelocityBand(ageMonths) {
   const rows = GROWTH_VELOCITY_BANDS[childSex() || 'f'];
-  const m = Number(ageMonths) || 0;
+  const raw = Number(ageMonths) || 0;
+  const m = (raw >= 11.5 && raw < 12) ? 12 : Math.floor(raw);
   for (let i = 0; i < rows.length - 1; i++) if (m < rows[i].toMo) return rows[i];
   return rows[rows.length - 1];
 }
@@ -31625,6 +31666,59 @@ function _msStandardFor(standards, key) {
     Object.keys(f).forEach(function(k) { if (!(k in merged)) merged[k] = f[k]; });
   });
   return merged;
+}
+
+// msLabel — display title for a milestone (Carina, BUGS.md S2–S4 #5).
+// A MILESTONE_STANDARDS row's `text` is its record key (id = slugify(text)),
+// frozen because synced records store and match it; an optional `label` is
+// the pronoun-free title to SHOW. Pass the raw milestone text, get back
+// row.label || row.text. Exact lookup first, then lowercased/trimmed; unknown
+// text (custom milestones, legacy rows) falls back to the text itself.
+// DISPLAY ONLY — never slugify, store, compare or key on the result.
+// Safe before data loads: returns the text and retries the build next call.
+var _msLabelMap = null;
+function _msLabelBuild() {
+  if (_msLabelMap) return _msLabelMap;
+  if (typeof MILESTONE_STANDARDS !== 'object' || !MILESTONE_STANDARDS) return null;
+  const exact = {}, loose = {}, byId = {};
+  Object.keys(MILESTONE_STANDARDS).forEach(function(std) {
+    const spec = MILESTONE_STANDARDS[std];
+    if (!spec || typeof spec !== 'object') return;
+    Object.keys(spec).forEach(function(k) {
+      const rows = spec[k];
+      if (!Array.isArray(rows)) return;
+      rows.forEach(function(row) {
+        if (!row || typeof row.text !== 'string' || !row.text) return;
+        const shown = (typeof row.label === 'string' && row.label) ? row.label : row.text;
+        if (!(row.text in exact) || shown !== row.text) exact[row.text] = shown;
+        const lk = row.text.trim().toLowerCase();
+        if (!(lk in loose) || shown !== row.text) loose[lk] = shown;
+        const id = slugify(row.text);
+        if (!(id in byId) || shown !== row.text) byId[id] = shown;
+      });
+    });
+  });
+  _msLabelMap = { exact: exact, loose: loose, byId: byId };
+  return _msLabelMap;
+}
+function msLabel(text) {
+  if (typeof text !== 'string' || !text) return text;
+  const map = _msLabelBuild();
+  if (!map) return text;
+  if (Object.prototype.hasOwnProperty.call(map.exact, text)) return map.exact[text];
+  const lk = text.trim().toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(map.loose, lk)) return map.loose[lk];
+  return text;
+}
+// msLabelById — the same display title looked up by milestone id
+// (slugify(row.text)), for surfaces that only hold the id (e.g. tap-evidence
+// keyed by the slug fallback). Returns null when the id is not a
+// MILESTONE_STANDARDS row, so callers keep their own fallback. Display only.
+function msLabelById(id) {
+  if (typeof id !== 'string' || !id) return null;
+  const map = _msLabelBuild();
+  if (!map) return null;
+  return Object.prototype.hasOwnProperty.call(map.byId, id) ? map.byId[id] : null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -34777,12 +34871,12 @@ function renderMsTodayHeader() {
   // Variable substitution — escHtml at all interpolation boundaries (HR-4).
   // Single-regex callback replaces ALL occurrences of each placeholder; a
   // template author who reuses a placeholder twice no longer leaks the literal.
-  const inWindowList = inWindow.map(it => escHtml(it.text || '')).join(', ');
+  const inWindowList = inWindow.map(it => escHtml(msLabel(it.text || ''))).join(', ');
   const recentConfirmedText = mostRecentConfirmedMs
-    ? escHtml(mostRecentConfirmedMs.text || 'a milestone')
+    ? escHtml(msLabel(mostRecentConfirmedMs.text || '') || 'a milestone')
     : 'A recent milestone';
   const lastEvidenceText = mostRecentConfirmedMs
-    ? escHtml(mostRecentConfirmedMs.text || '')
+    ? escHtml(msLabel(mostRecentConfirmedMs.text || ''))
     : '';
   // Use mostRecentConfirmedTime for the betweenWindow template — that's the
   // template's contract ({recentConfirmedMilestone} confirmed {lastEvidenceRelative}).
@@ -34977,7 +35071,7 @@ function renderMsInWindowProposals() {
 function _renderMsInWindowCard(item, opts) {
   const deprioritized = !!(opts && opts.deprioritized);
   const win = item.window || {};
-  const text = escHtml(item.text || '');
+  const text = escHtml(msLabel(item.text || ''));
   const icon = item.icon || '';
   const safetyTier = item.safetyTier === true;
   const evidenceStatus = item.evidenceStatus || 'not-yet';
@@ -35396,7 +35490,7 @@ function renderMsBulkGrid() {
     const group = byDomain[c.key] || [];
     if (group.length === 0) return '';
     const chips = group.map(it => {
-      const text = escHtml(it.text || '');
+      const text = escHtml(msLabel(it.text || ''));
       const idEsc = escHtml(it.milestoneId || '');
       const domainEsc = escHtml(it.domain || c.key);
       const textEsc = escHtml(it.text || '');
@@ -35693,7 +35787,7 @@ function renderMsTrajectoryRibbon() {
     const msId = m.ms && m.ms.id ? m.ms.id : '';
     const msText = m.ms && m.ms.text ? m.ms.text : '';
     const tappable = msId ? ' data-action="gotoMsRow" data-ms-id="' + escHtml(msId) + '"' : '';
-    const titleEl = msText ? '<title>' + escHtml(msText) + '</title>' : '';
+    const titleEl = msText ? '<title>' + escHtml(msLabel(msText)) + '</title>' : '';
     if (m.state === 'celebrated') {
       return '<circle class="ms-trajectory-marker" data-state="celebrated"'
         + tappable + ' cx="' + cx + '" cy="' + cy + '" r="' + G.markerR + '">'
@@ -36031,7 +36125,7 @@ function renderMsPediatricPrep() {
     parts.push('<div class="ms-pediatric-prep-section-label">Confirmed recently</div>');
     parts.push('<ul>');
     confirmedItems.forEach(it => {
-      parts.push('<li>' + escHtml(it.text || '') + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
+      parts.push('<li>' + escHtml(msLabel(it.text || '')) + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
     });
     parts.push('</ul></div>');
   }
@@ -36040,7 +36134,7 @@ function renderMsPediatricPrep() {
     parts.push('<div class="ms-pediatric-prep-section-label">Practicing</div>');
     parts.push('<ul>');
     practicingItems.forEach(it => {
-      parts.push('<li>' + escHtml(it.text || '') + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
+      parts.push('<li>' + escHtml(msLabel(it.text || '')) + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
     });
     parts.push('</ul></div>');
   }
@@ -36051,7 +36145,7 @@ function renderMsPediatricPrep() {
     regressions.forEach(m => {
       const t = m.consistentAt || m.masteredAt;
       const daysSince = Math.floor((now - new Date(t).getTime()) / 86400000);
-      parts.push('<li>' + escHtml(m.text || '') + ' — no evidence in ' + daysSince + ' days</li>');
+      parts.push('<li>' + escHtml(msLabel(m.text || '')) + ' — no evidence in ' + daysSince + ' days</li>');
     });
     parts.push('</ul></div>');
   }
@@ -36231,7 +36325,7 @@ function renderMilestoneList() {
           const evList = getMilestoneEvidence(bestKw).slice(0, 5);
           let evItems = evList.map(ev => {
             const confDot = zi('dot-red');
-            return `<div class="al-evid-item">${ev.date} — "${escHtml((ev.text||'').substring(0, 40))}" ${confDot} ${ev.confidence}</div>`;
+            return `<div class="al-evid-item">${ev.date} — "${escHtml(msLabel(ev.text || '').substring(0, 40))}" ${confDot} ${ev.confidence}</div>`;
           }).join('');
           if (m.evidenceCount > 5) evItems += `<div class="al-evid-more">+${m.evidenceCount - 5} more</div>`;
           evidHtml = `<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="${evidId}" data-stop="1">${zi('chart')} View evidence ${zi('chevron-down')}</button>
@@ -36249,7 +36343,7 @@ function renderMilestoneList() {
             <div class="ms-top-row">
               <div class="milestone-check">${stageMeta.icon}</div>
               <div class="milestone-text">
-                <strong>${escHtml(m.text)}</strong>
+                <strong>${escHtml(msLabel(m.text))}</strong>
                 ${metaHtml}
                 ${evidHtml}
                 ${tidbitData ? `<button class="ms-tidbit-toggle" data-action="toggleDisplayFlex" data-arg="${tidbitId}" data-stop="1"><svg class="zi"><use href="#zi-bulb"/></svg> Learn more ${zi('chevron-down')}</button>` : ''}
@@ -36383,13 +36477,17 @@ function expandUpcomingItem(text) {
   document.querySelectorAll('.upcoming-cat-card').forEach(el => el.classList.remove('expanded'));
   document.querySelectorAll('.upc-subcat').forEach(el => el.classList.remove('expanded'));
 
-  // Find the matching item by text
+  // Find the matching item by text. The row shows msLabel(text) (display
+  // title), so match the label as well as the raw record-key text.
   const allItems = container.querySelectorAll('.upcoming-item');
+  const needleText = String(text || '').toLowerCase().substring(0, 20);
+  const needleLabel = String(msLabel(text) || '').toLowerCase().substring(0, 20);
   let matched = false;
   allItems.forEach(item => {
     const strong = item.querySelector('strong');
     if (!strong || matched) return;
-    if (strong.textContent.trim().toLowerCase().includes(text.toLowerCase().substring(0, 20))) {
+    const shown = strong.textContent.trim().toLowerCase();
+    if (shown.includes(needleLabel) || shown.includes(needleText)) {
       matched = true;
       item.classList.add('ms-pill-highlight');
 
@@ -36708,7 +36806,7 @@ function renderRegressionAlerts() {
     html += '<div class="ms-regression-alert" data-action="confirmRegressionCheck" data-arg="' + r.idx + '">' +
       '<span class="ms-regr-icon">' + zi('hourglass') + '</span>' +
       '<div class="ms-regr-body">' +
-        '<div class="ms-regr-title">Still ' + stageMeta.label.toLowerCase() + '? "' + escHtml(r.text) + '"</div>' +
+        '<div class="ms-regr-title">Still ' + stageMeta.label.toLowerCase() + '? "' + escHtml(msLabel(r.text)) + '"</div>' +
         '<div class="ms-regr-meta">' + sourceLabel + ' · Tap to confirm or adjust</div>' +
       '</div>' +
       '<span class="collapse-chevron">›</span>' +
@@ -36730,7 +36828,7 @@ function confirmRegressionCheck(idx) {
   overlay.className = 'confirm-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
   overlay.innerHTML = `<div class="modal" style="max-width:360px;">
-    <h3>Update: ${escHtml(m.text)}</h3>
+    <h3>Update: ${escHtml(msLabel(m.text))}</h3>
     <p style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:12px;">Currently ${stageMeta.icon} ${stageMeta.label}. Where is ${childNameHtml()} now?</p>
     <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;">${options}</div>
     <div class="modal-btns" style="margin-top:12px;">
@@ -36776,7 +36874,7 @@ function renderMilestoneTimeline() {
     html += `<div class="ms-tl-item">
       <div class="ms-tl-dot" style="background:${sm.color};color:white;">${sm.icon}</div>
       <div class="ms-tl-body">
-        <div class="ms-tl-text">${escHtml(ev.text)} → ${sm.label}</div>
+        <div class="ms-tl-text">${escHtml(msLabel(ev.text))} → ${sm.label}</div>
         <div class="ms-tl-meta">${dateStr} · ${ageStr}</div>
       </div>
     </div>`;
@@ -36889,7 +36987,10 @@ function renderRecentEvidence() {
   if (rollups.length > 0) {
     html += '<div class="al-feed-rollups-label">Frequent observations · last ' + ROLLUP_WINDOW_DAYS + ' days</div>';
     rollups.forEach((r, ri) => {
-      const label = (typeof createMilestoneLabel === 'function') ? createMilestoneLabel(r.milestone) : r.milestone.replace(/_/g, ' ');
+      // Tap evidence falls back to the slug id (_msRecordEvidence); show that
+      // row's display label (msLabelById), never the raw slug.
+      const label = msLabelById(r.milestone)
+        || ((typeof createMilestoneLabel === 'function') ? createMilestoneLabel(r.milestone) : r.milestone.replace(/_/g, ' '));
       const latestEntry = r.latest.entry;
       const latestDate = r.latest.dateStr;
       const latestLabel = latestDate === todayStr ? 'today' : latestDate === yesterdayStr ? 'yesterday' : formatDate(latestDate);
@@ -36916,7 +37017,7 @@ function renderRecentEvidence() {
           '</div>' : '';
         html += '<div class="al-feed-rollup-entry">' +
           '<div class="al-feed-rollup-when">' + dLabel + (tStr ? ' · ' + tStr : '') + '</div>' +
-          '<div class="al-feed-rollup-text">' + escHtml(e.text) + '</div>' +
+          '<div class="al-feed-rollup-text">' + escHtml(msLabel(e.text)) + '</div>' +
           _renderAttribution(e) +
           actBtns +
           '</div>';
@@ -36974,7 +37075,7 @@ function renderRecentEvidence() {
       html += '<div class="al-feed-entry">' +
         '<div class="al-feed-time">' + timeStr + '</div>' +
         '<div class="al-feed-body">' +
-          '<div class="al-feed-text">' + escHtml(e.text) + '</div>' +
+          '<div class="al-feed-text">' + escHtml(msLabel(e.text)) + '</div>' +
           '<div class="al-feed-chips">' + domainChips + '</div>' +
           _renderAttribution(e) +
           actBtns +
@@ -37883,7 +37984,7 @@ function renderMilestoneHighlights() {
         <span class="info-strip-icon">${ci}</span>
         <div class="flex-1-min">
           <div class="micro-label">Latest achieved</div>
-          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-sage);">${escHtml(latestMs.text)}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
+          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-sage);">${escHtml(msLabel(latestMs.text))}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
           ${dateInfo ? `<div class="t-sub mt-2">${dateInfo}</div>` : ''}
         </div>
       </div>`;
@@ -37895,7 +37996,7 @@ function renderMilestoneHighlights() {
         <span class="info-strip-icon">${nextMilestone.icon}</span>
         <div class="flex-1-min">
           <div class="micro-label">Coming up next</div>
-          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-lav);">${escHtml(nextMilestone.text)}</div>
+          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-lav);">${escHtml(msLabel(nextMilestone.text))}</div>
           <div class="t-sub mt-2">Expected around ${nextMonth} months</div>
         </div>
       </div>`;
@@ -39816,7 +39917,7 @@ function renderMilestoneHistory() {
         <div style="font-size:var(--icon-lg);">${cm.icon}</div>
         <div class="flex-1">
           <div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:2px;">Latest milestone</div>
-          <div class="t-title" style="font-size:var(--fs-md);">${escHtml(latestMs.text)}</div>
+          <div class="t-title" style="font-size:var(--fs-md);">${escHtml(msLabel(latestMs.text))}</div>
           <div style="font-size:var(--fs-sm);color:${cm.textColor};margin-top:2px;">
             ${latestMs.doneAt ? zi('check') + ' Achieved ' + formatDate(latestMs.doneAt.split('T')[0]) + ' · ' + ageAtDate(latestMs.doneAt) : zi('check') + ' Achieved'}
             ${latestMs.advanced ? ' · <svg class="zi"><use href="#zi-star"/></svg> Advanced' : ''}
@@ -39857,7 +39958,7 @@ function renderMilestoneHistory() {
         <span class="t-sm">${statusIcon}</span>
         <span class="t-sm">${cm.icon}</span>
         <div class="flex-1-min">
-          <div class="t-title fw-600">${escHtml(m.text)}${m.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
+          <div class="t-title fw-600">${escHtml(msLabel(m.text))}${m.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
           <div style="font-size:var(--fs-sm);color:${cm.textColor};">${statusText}</div>
           ${_renderAttribution(m)}
         </div>
@@ -40631,7 +40732,7 @@ function renderHistoryPreviews() {
       const catIcon = catMeta[latestMs.domain || latestMs.cat] || zi('star');
       msPrev.innerHTML = `<div class="info-strip is-sage">
         <span>${catIcon}</span>
-        <div><strong class="tc-sage">Latest: ${escHtml(latestMs.text)}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</strong>
+        <div><strong class="tc-sage">Latest: ${escHtml(msLabel(latestMs.text))}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</strong>
         <div class="t-sub">${latestMs.doneAt ? formatDate(latestMs.doneAt.split('T')[0]) + ' · ' + ageAtDate(latestMs.doneAt) : 'Achieved'} · ${done.length} total</div></div>
       </div>`;
     } else {
@@ -42770,7 +42871,7 @@ function renderTodayPlan() {
     const oldest = inProgressMs.sort((a, b) => (a.inProgressAt || '').localeCompare(b.inProgressAt || ''))[0];
     const daysIP = oldest.inProgressAt ? Math.floor((new Date() - new Date(oldest.inProgressAt)) / 86400000) : null;
     if (daysIP && daysIP >= 7) {
-      lookouts.push({ icon: zi('trophy'), text: '"' + oldest.text + '" has been in-progress for ' + daysIP + ' days. Try focused practice today.', tag: 'milestone' });
+      lookouts.push({ icon: zi('trophy'), text: '"' + msLabel(oldest.text) + '" has been in-progress for ' + daysIP + ' days. Try focused practice today.', tag: 'milestone' });
     }
   }
   // Next expected milestones not yet started
@@ -42785,7 +42886,7 @@ function renderTodayPlan() {
   });
   if (notStarted.length > 0) {
     const next = notStarted[0];
-    lookouts.push({ icon: zi('target'), text: 'Around ' + currentBracket + ' months: "' + next.text + '" — ' + next.desc, tag: 'milestone' });
+    lookouts.push({ icon: zi('target'), text: 'Around ' + currentBracket + ' months: "' + msLabel(next.text) + '" — ' + next.desc, tag: 'milestone' });
   }
 
   // ═══ RENDER ═══
@@ -47227,7 +47328,7 @@ const ALL_TIPS = [
   {
     type:'info', icon:zi('spoon'),
     title:'Family food, adapted',
-    body:'From 1 year a toddler can eat what the family eats, in small soft pieces a toddler can squash between finger and thumb — the grinding molars are not in yet. Take the toddler portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
+    body:'From 1 year a toddler can eat what the family eats, in small soft pieces that squash between finger and thumb, until the grinding molars come in. Take the toddler portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
     condition: () => getAgeInMonths() >= 12,
   },
   {
@@ -53520,7 +53621,7 @@ function renderActiveMilestones() {
       const evList = getMilestoneEvidence(bestKw).slice(0, 5);
       let evItems = evList.map(ev => {
         const confDot = zi('dot-red');
-        return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
+        return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml(msLabel(ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
       }).join('');
       if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
       evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ' + zi('chevron-down') + '</button>' +
@@ -53534,7 +53635,7 @@ function renderActiveMilestones() {
       '<div class="ms-active-top">' +
         '<div class="ms-active-icon">' + icon + '</div>' +
         '<div class="ms-active-body">' +
-          '<div class="ms-active-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ms-active-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ms-active-stage" style="color:' + stageMeta.color + ';">' + stageMeta.icon + ' ' + stageMeta.label + ' · ' + m.evidenceCount + ' observations' + (confPct > 0 ? ' · ' + confPct + '% high-conf' : '') + '</div>' +
           (dateRange ? '<div class="ms-active-dates">' + dateRange + '</div>' : '') +
           _renderAttribution(m) +
@@ -53732,13 +53833,13 @@ function showFullDoctorSummary() {
   lines.push('');
   lines.push('SECTION_MS MILESTONES ACHIEVED');
   milestones.filter(m => isMsDone(m)).forEach(m => {
-    lines.push('  OK ' + m.text + (m.doneAt ? ' (at ' + ageAtDate(m.doneAt) + ')' : '') + (m.advanced ? ' [Advanced]' : ''));
+    lines.push('  OK ' + msLabel(m.text) + (m.doneAt ? ' (at ' + ageAtDate(m.doneAt) + ')' : '') + (m.advanced ? ' [Advanced]' : ''));
   });
   const ip = milestones.filter(m => isMsActive(m));
   if (ip.length) {
     lines.push('');
     lines.push('SECTION_IP IN PROGRESS');
-    ip.forEach(m => { lines.push('  IP ' + m.text + (m.inProgressAt ? ' (since ' + ageAtDate(m.inProgressAt) + ')' : '')); });
+    ip.forEach(m => { lines.push('  IP ' + msLabel(m.text) + (m.inProgressAt ? ' (since ' + ageAtDate(m.inProgressAt) + ')' : '')); });
   }
 
   // Medications
@@ -55251,8 +55352,13 @@ function _bcSources(sources) {
   return '<div class="bc-src"><div class="bc-src-h">Sources</div><ul class="bc-src-list">' + rows + '</ul></div>';
 }
 
+// Body-care topics that have their own Emergency Room card (GENERAL_EMERGENCIES): the summary
+// carries the emergency tag and the emergency block links to the steps (V-V-282-2, -10). Other
+// topics list their emergency signs inside, untagged, so the tag keeps its meaning.
+const _BC_EM_CARD = { 'testicular-torsion': 'testicular-torsion', 'inguinal-hernia': 'stuck-hernia' };
 function _bcEntryHtml(e) {
   const hasEm = e.emergencyIf && e.emergencyIf.length > 0;
+  const emCard = _BC_EM_CARD[e.id] || null;
   let body = _bcList(e.points, 'bc-points');
   if (e.seeDoctorIf && e.seeDoctorIf.length) {
     body += '<div class="bc-sec bc-sec-doc"><div class="bc-sec-h">' + zi('steth') + '<span>See the doctor if</span></div>'
@@ -55260,12 +55366,14 @@ function _bcEntryHtml(e) {
   }
   if (hasEm) {
     body += '<div class="bc-sec bc-sec-em"><div class="bc-sec-h">' + zi('siren') + '<span>Go to the emergency department now if</span></div>'
-      + _bcList(e.emergencyIf, 'bc-em') + '</div>';
+      + _bcList(e.emergencyIf, 'bc-em')
+      + (emCard ? '<button class="btn btn-soft bc-em-open" data-action="geOpenCard" data-arg="' + escAttr(emCard) + '">' + zi('siren') + '<span>Open the emergency steps</span></button>' : '')
+      + '</div>';
   }
   body += _bcSources(e.sources);
   return '<details class="bc-entry" data-bc-id="' + escAttr(e.id) + '">'
     + '<summary class="bc-summary"><span class="bc-title">' + escHtml(e.title) + '</span>'
-    + (hasEm ? '<span class="bc-em-tag">' + zi('siren') + '<span>Emergency signs</span></span>' : '')
+    + (emCard && e.id === 'testicular-torsion' ? '<span class="bc-em-tag">' + zi('siren') + '<span>Emergency</span></span>' : '')
     + '<span class="bc-toggle" aria-hidden="true">' + zi('chevron-down') + '</span></summary>'
     + '<div class="bc-body">' + body + '</div></details>';
 }
@@ -58252,7 +58360,7 @@ function renderUpcomingItem(item) {
     <div class="upcoming-item ${itemClass}">
       <div class="upcoming-icon">${item.icon}</div>
       <div class="upcoming-body">
-        <strong>${escHtml(item.text)}</strong>
+        <strong>${escHtml(msLabel(item.text))}</strong>
         <span>${escHtml(item.desc)}</span>
         <div style="display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:5px;align-items:center;">
           <span class="upcoming-badge age-badge">${item.month}+ months</span>
@@ -59341,7 +59449,7 @@ function renderSleepTips() {
       // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
       // a bed: alcohol, sedating medicine, smoking, sofas).
       tips: ageM >= 12 ? [
-        { icon:zi('baby'), title:'' + pron('poss', true) + ' own sleep position', text:'Now that ' + pron('subj') + ' rolls and moves freely, ' + pron('subj') + ' can settle in whatever position ' + pron('subj') + ' likes. There is no need to turn ' + pron('obj') + ' back.' },
+        { icon:zi('baby'), title:'' + pron('poss', true) + ' own sleep position', text:'Now that ' + pron('subj') + ' rolls and moves freely, ' + pron('subj') + ' can settle in whatever position ' + pron('subj') + ' likes. There is no need to turn ' + pron('obj') + ' onto ' + pron('poss') + ' back.' },
         { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap ' + pron('subj') + ' can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
         { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from ' + pron('poss') + ' face. A light blanket of ' + pron('poss') + ' own is fine from about 1 year.' },
         // No bed rails under 2 y: a toddler can be trapped between rail and mattress (CPSC 16 CFR
@@ -61172,7 +61280,7 @@ function renderInfoMilestoneVelocity() {
           projStr = ' · → ' + m.nextStage + ' in ~' + m.projectedDays + 'd';
         }
         html += '<div class="ai-velocity-item">' +
-          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ai-velocity-rate">' + rateStr + projStr + '</div>' +
         '</div>';
       });
@@ -61181,7 +61289,7 @@ function renderInfoMilestoneVelocity() {
       html += '<div class="si-sub-label fe-section-gap" >Stalled</div>';
       stalled.forEach(m => {
         html += '<div class="ai-velocity-item">' +
-          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ai-velocity-rate ai-velocity-stale">No evidence for ' + m.daysSinceLast + 'd</div>' +
         '</div>';
       });
@@ -61193,10 +61301,10 @@ function renderInfoMilestoneVelocity() {
     let iHtml = '';
     if (progressing.length > 0) {
       const fastest = progressing[0];
-      iHtml += '<div class="si-insight si-insight-good">Fastest progress: "' + escHtml(fastest.text) + '" at ' + (fastest.rate >= 1 ? fastest.rate.toFixed(1) + ' ev/day' : (fastest.rate * 7).toFixed(1) + ' ev/week') + '</div>';
+      iHtml += '<div class="si-insight si-insight-good">Fastest progress: "' + escHtml(msLabel(fastest.text)) + '" at ' + (fastest.rate >= 1 ? fastest.rate.toFixed(1) + ' ev/day' : (fastest.rate * 7).toFixed(1) + ' ev/week') + '</div>';
     }
     if (stalled.length > 0) {
-      iHtml += '<div class="si-insight si-insight-warn">' + stalled.length + ' milestone' + (stalled.length > 1 ? 's' : '') + ' stalled — consider targeted activities for ' + escHtml(stalled[0].text) + '</div>';
+      iHtml += '<div class="si-insight si-insight-warn">' + stalled.length + ' milestone' + (stalled.length > 1 ? 's' : '') + ' stalled — consider targeted activities for ' + escHtml(msLabel(stalled[0].text)) + '</div>';
     }
     insightsEl.innerHTML = iHtml;
   }
@@ -63576,7 +63684,7 @@ function computeGrowthVelocity() {
     // Band age = the measurement's age, rounded — so a weigh-in on (or just before) her birthday
     // takes the same 12–24 m band the Growth gauge uses (Maren V-M-266-4).
     var ageMo = ageMonthsAt(wLatest.date);
-    var bandMo = Math.round(ageMo);
+    var bandMo = ageMo;   // growthVelocityBand brackets it (completed months; 12 m from 11.5) — V-M-282-9
     // From 12 m, judge velocity over >= 28 days (Maren V-M-266-3 / Kael V-K-266-7): a toddler's
     // two-week gain (~90 g at the median) is the size of home-scale noise, and WHO publishes
     // 12–24 m velocity only in 2-month steps. Use the latest weigh-in at least 28 days back.
@@ -63638,7 +63746,7 @@ function computeGrowthVelocity() {
   var heightResult = null;
   if (heightEntries.length >= 2) {
     var hLatest = heightEntries[heightEntries.length - 1];
-    var hBandMo = Math.round(ageMonthsAt(hLatest.date));
+    var hBandMo = ageMonthsAt(hLatest.date);
     var hPrev = heightEntries[heightEntries.length - 2];
     if (hBandMo >= 12) { // same >= 28-day lookback as weight
       for (var hi = heightEntries.length - 2; hi >= 0; hi--) {
@@ -63902,7 +64010,7 @@ function computeVisitPrep() {
     hasData: newMilestones.length > 0 || inProgressMs.length > 0
   };
   if (newMilestones.length > 0) {
-    var topMs = newMilestones.slice(-3).map(function(m) { return m.text; });
+    var topMs = newMilestones.slice(-3).map(function(m) { return msLabel(m.text); });
     sections.milestones.items.push(newMilestones.length + ' new: ' + topMs.join(', '));
     changes += newMilestones.length;
   }
@@ -64620,12 +64728,16 @@ function _anchorFindVaccineRecord(query) {
   return matches[0];
 }
 
-// Milestone lookup by keyword (case-insensitive substring on .text).
+// Milestone lookup by keyword (case-insensitive substring on .text, or on its
+// msLabel display title, so a word from the label still finds the row).
 function _anchorFindMilestoneByKeyword(kw) {
   if (typeof milestones !== 'object' || !Array.isArray(milestones)) return null;
   var q = kw.toLowerCase();
   return milestones.find(function(m) {
-    return m && typeof m.text === 'string' && m.text.toLowerCase().indexOf(q) !== -1;
+    if (!m || typeof m.text !== 'string') return false;
+    if (m.text.toLowerCase().indexOf(q) !== -1) return true;
+    var lbl = msLabel(m.text);
+    return typeof lbl === 'string' && lbl.toLowerCase().indexOf(q) !== -1;
   }) || null;
 }
 
@@ -65103,7 +65215,7 @@ function _islBuildDaySummary(dateStr) {
   // Activity summary string
   var activitySummary = 'No activities';
   if (ac.totalCount > 0) {
-    var actTexts = ac.entries.slice(0, 3).map(function(e) { return e.text; });
+    var actTexts = ac.entries.slice(0, 3).map(function(e) { return msLabel(e.text); });
     activitySummary = actTexts.join(', ');
     if (ac.totalCount > 3) activitySummary += ' +' + (ac.totalCount - 3) + ' more';
   }
@@ -65204,7 +65316,7 @@ function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
   // Milestone highlights
   if (ms.progressed.length > 0) {
     ms.progressed.forEach(function(p) {
-      highlights.push({ domain: 'milestones', text: p.text + ' — ' + p.status, signal: 'good' });
+      highlights.push({ domain: 'milestones', text: msLabel(p.text) + ' — ' + p.status, signal: 'good' });
     });
   }
 
@@ -65690,7 +65802,9 @@ function qaClassifyInput(text) {
   if (/when.*last.*(?:eat|ate|had|gave)\b/.test(lower) ||
       /last\s+time.*(?:eat|ate|had)\b/.test(lower) ||
       /\blast\s+(?:eat|ate|had)\b/.test(lower)) {
-    var stripped = lower.replace(/when|did|she|last|eat|ate|had|gave|time|the|some|any/g, '').trim();
+    // Word-bounded, so food names keep their letters ("dates", "thepla", "sheera") and a folded
+    // possessive "her" is dropped (V-K-282-5).
+    var stripped = lower.replace(/\b(when|did|she|her|last|eat|ate|had|gave|time|the|some|any)\b/g, '').replace(/\s+/g, ' ').trim();
     var foodTokens = stripped.split(/\s+/).filter(function(t) { return t.length > 1; });
     return { mode: 'lookback', subtype: 'food', foodQuery: foodTokens.join(' '), raw: text };
   }
@@ -66414,7 +66528,9 @@ function qaHandleFoodSafety(classified) {
   var raw = classified.raw;
   // Extract food names from query
   var cleaned = raw.toLowerCase().replace(/^can (i|we) give\s*|^is\s+|^safe to give\s*|^can she (eat|have)\s*|^can baby (eat|have)\s*/i, '').replace(/\s*safe\s*$|\?/g, '').trim();
-  var rawFoods = cleaned.split(/[+,&]|with|and/).map(function(f) { return f.trim(); }).filter(function(f) { return f.length > 1; });
+  // A leading determiner is not part of the food: a boy's "his egg" folds to "her egg" and must
+  // not echo as "Can he eat her egg?" (V-K-282-1).
+  var rawFoods = cleaned.split(/[+,&]|with|and/).map(function(f) { return f.trim().replace(/^(her|their|my|our|the|some)\s+/, '').trim(); }).filter(function(f) { return f.length > 1; });
   if (rawFoods.length === 0) return null;
 
   var mo = getAgeInMonths();
@@ -67601,7 +67717,7 @@ function _qaRenderDomainTemporal(domain, tr) {
     }
     if (data.progressed.length > 0) {
       data.progressed.forEach(function(p) {
-        items.push({ text: p.text + ' — ' + p.status, signal: 'good' });
+        items.push({ text: msLabel(p.text) + ' — ' + p.status, signal: 'good' });
       });
     }
     if (data.active.length > 0) {
@@ -67620,7 +67736,7 @@ function _qaRenderDomainTemporal(domain, tr) {
     // Show recent activities
     var recent = data.entries.slice(0, 4);
     recent.forEach(function(e) {
-      items.push({ text: e.text + (e.duration ? ' (' + e.duration + ' min)' : ''), signal: 'neutral' });
+      items.push({ text: msLabel(e.text) + (e.duration ? ' (' + e.duration + ' min)' : ''), signal: 'neutral' });
     });
     if (data.totalCount > 4) items.push({ text: '+' + (data.totalCount - 4) + ' more activities', signal: 'neutral' });
   }
@@ -68161,7 +68277,7 @@ function _qaTrends(mode) {
   if (mode === 'improving') {
     var ms = getDomainData('milestones', curStart, curEnd);
     ms.progressed.forEach(function(p) {
-      items.push({ text: p.text + ' \u2192 ' + p.status, signal: 'good' });
+      items.push({ text: msLabel(p.text) + ' \u2192 ' + p.status, signal: 'good' });
     });
   }
 
@@ -68313,7 +68429,7 @@ function _qaDoctorPrep() {
   var ms = getDomainData('milestones', _offsetDateStr(today(), -30), today());
   if (ms.progressed.length > 0) {
     ms.progressed.slice(0, 3).forEach(function(p) {
-      items.push({ text: 'Milestone: ' + p.text + ' \u2192 ' + p.status, signal: 'good' });
+      items.push({ text: 'Milestone: ' + msLabel(p.text) + ' \u2192 ' + p.status, signal: 'good' });
     });
   }
 
@@ -70416,7 +70532,7 @@ function qaAnswerMilestoneGeneral(intentId) {
     });
     if (stalled.length > 0) {
       stalled.forEach(function(m) {
-        actionItems.push({ text: m.text + ' appears stalled — try targeted activities', signal: 'warn' });
+        actionItems.push({ text: msLabel(m.text) + ' appears stalled — try targeted activities', signal: 'warn' });
       });
     }
 
@@ -70541,7 +70657,7 @@ function qaAnswerMilestoneSpecific(intentId) {
   if (matched.length > 0) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var m = matched[0];
     var statusLabels = { mastered: 'Mastered', consistent: 'Consistent', practicing: 'Practicing', emerging: 'Emerging', 'not-started': 'Not started' };
-    var headline = m.text + ' — ' + (statusLabels[m.status] || m.status);
+    var headline = msLabel(m.text) + ' — ' + (statusLabels[m.status] || m.status);
 
     var signal = m.status === 'mastered' ? 'good' : m.status === 'consistent' || m.status === 'practicing' ? 'info' : 'warn';
     dataItems.push({ text: 'Status: ' + (statusLabels[m.status] || m.status), signal: signal });
@@ -70556,7 +70672,7 @@ function qaAnswerMilestoneSpecific(intentId) {
       var daysSince = Math.round((new Date() - new Date(m.lastSeen)) / 86400000);
       if (daysSince > 7) {
         dataItems.push({ text: 'Last seen ' + daysSince + ' days ago — may need more practice', signal: 'warn' });
-        actionItems.push({ text: 'Create opportunities for ' + m.text.toLowerCase() + ' in daily play', signal: 'action' });
+        actionItems.push({ text: 'Create opportunities for ' + msLabel(m.text).toLowerCase() + ' in daily play', signal: 'action' });
       } else {
         dataItems.push({ text: 'Last observed ' + daysSince + ' day(s) ago', signal: 'good' });
       }
@@ -70586,7 +70702,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 3) });
 
     return {
-      icon: 'target', domain: 'lav', title: m.text, headline: headline,
+      icon: 'target', domain: 'lav', title: msLabel(m.text), headline: headline,
       sections: sections,
       confidence: m.evidenceCount > 0 ? 'Based on ' + m.evidenceCount + ' observations' : null,
       dataGap: null
@@ -71827,8 +71943,15 @@ function renderFeverEpisodeCard() {
   html += '<li>Keep ' + childNameHtml() + ' lightly dressed — do not over-bundle</li>';
   html += '<li>Offer breast milk or fluids frequently</li>';
   html += '<li>Sponge with lukewarm water (never cold)</li>';
-  if (sev.tier === 'high' || sev.tier === 'critical') {
+  // Under 3 months any temperature of 38°C (100.4°F) or more needs a doctor the same day (NHS
+  // 'High temperature (fever) in children': "Call 111 if your child is under 3 months old and has
+  // a temperature of 38C or higher"; V-M-282-2). The 102°F / 48 h line is for older babies.
+  if (ageAt().months < 3 && lastReading.temp >= 100.4) {
+    html += '<li class="status-action">'+zi('siren')+' Under 3 months: call the doctor now, the same day — temperature is ' + lastReading.temp.toFixed(1) + '°F</li>';
+  } else if (sev.tier === 'high' || sev.tier === 'critical') {
     html += '<li class="status-action">'+zi('siren')+' Call doctor — temperature is ' + lastReading.temp.toFixed(1) + '°F</li>';
+  } else if (ageAt().months < 3) {
+    html += '<li>Under 3 months: call the doctor the same day for any temperature of 100.4°F (38°C) or more</li>';
   } else {
     html += '<li>Call doctor if fever exceeds 102°F or lasts > 48 hours</li>';
   }
@@ -74961,7 +75084,7 @@ function _alRenderSuggestions() {
     var domain = pat ? pat.domain : 'motor';
     html += '<div class="al-suggest-group" data-domain="' + domain + '">';
     html += '<div class="al-suggest-group-label">' + zi('target') + ' For: ' +
-      escHtml(g.milestone.text) + ' <span class="al-suggest-stage">(' + escHtml(statusLabel) + ')</span></div>';
+      escHtml(msLabel(g.milestone.text)) + ' <span class="al-suggest-stage">(' + escHtml(statusLabel) + ')</span></div>';
     html += '<div class="al-suggest-cards">';
     g.activities.forEach(function(act) {
       var payload = JSON.stringify({ keyword: g.keyword, text: act.text, duration: act.duration, tip: act.tip || '', icon: act.icon || 'run' });
@@ -75102,7 +75225,7 @@ function _alRenderYesterday() {
     var payload = JSON.stringify({ text: item.text, duration: item.duration || null });
     html += '<button class="al-yesterday-item" data-domain="' + (dom || 'motor') + '" data-action="alTapYesterday" data-arg="' + escHtml(payload) + '">' +
       '<span class="al-yesterday-icon">' + meta.icon + '</span>' +
-      '<span class="al-yesterday-text">' + escHtml(item.text) + durStr + '</span></button>';
+      '<span class="al-yesterday-text">' + escHtml(msLabel(item.text)) + durStr + '</span></button>';
   });
   html += '</div>';
   html += '<button class="al-yesterday-repeat" data-action="alRepeatAll">' + zi('hourglass') + ' Repeat all</button>';
@@ -75358,7 +75481,7 @@ function _alShowUpgradeToast(candidate) {
   var newLabel = candidate.newStatus.charAt(0).toUpperCase() + candidate.newStatus.slice(1);
   var curLabel = candidate.currentStatus.charAt(0).toUpperCase() + candidate.currentStatus.slice(1);
 
-  toast.innerHTML = '<div class="al-upgrade-text">' + zi('target') + ' "' + escHtml(candidate.milestone.text) +
+  toast.innerHTML = '<div class="al-upgrade-text">' + zi('target') + ' "' + escHtml(msLabel(candidate.milestone.text)) +
     '" has ' + candidate.evidenceCount + ' observations</div>' +
     '<div class="al-upgrade-sub">Move from ' + escHtml(curLabel) + ' → ' + escHtml(newLabel) + '?</div>' +
     '<div class="al-upgrade-actions">' +
@@ -77121,7 +77244,9 @@ function _tsfCollectEvents() {
       } catch(e) {}
     }
     // Truncate label at last whole word before 30 chars
-    let label = act.text || 'Activity';
+    // msLabel: a milestone-tap entry stores the milestone's record-key text;
+    // show its display label (free notes fall back to themselves).
+    let label = msLabel(act.text || '') || 'Activity';
     if (label.length > 30) {
       label = label.substring(0, 30).replace(/\s+\S*$/, '');
     }
@@ -77136,7 +77261,7 @@ function _tsfCollectEvents() {
       color: 'sage',
       inferred: false,
       displayTime: displayTime,
-      fullText: act.text || '',
+      fullText: msLabel(act.text || '') || '',
       domains: act.domains || [],
       duration: act.duration
     };
@@ -79671,14 +79796,14 @@ function computeSleepRegression() {
   const causes = [];
   const motorMs = recentMilestones.filter(m => m.domain === 'motor');
   if (motorMs.length > 0 && severity !== 'none') {
-    causes.push({ icon: zi('run'), text: 'Motor milestone burst: ' + motorMs.map(m => m.text).slice(0, 2).join(', ') });
+    causes.push({ icon: zi('run'), text: 'Motor milestone burst: ' + motorMs.map(m => msLabel(m.text)).slice(0, 2).join(', ') });
   }
   if (recentVaccs.length > 0 && severity !== 'none') {
     causes.push({ icon: zi('syringe'), text: 'Recent vaccination: ' + recentVaccs.map(v => v.name).slice(0, 2).join(', ') + ' (' + formatDate(recentVaccs[0].date) + ')' });
   }
   const cogMs = recentMilestones.filter(m => m.domain === 'cognitive' || m.domain === 'language');
   if (cogMs.length > 0 && severity !== 'none') {
-    causes.push({ icon: zi('brain'), text: 'Cognitive/language leap: ' + cogMs.map(m => m.text).slice(0, 2).join(', ') });
+    causes.push({ icon: zi('brain'), text: 'Cognitive/language leap: ' + cogMs.map(m => msLabel(m.text)).slice(0, 2).join(', ') });
   }
   if (recentMilestones.length >= 3 && severity !== 'none') {
     causes.push({ icon: zi('sparkle'), text: 'Developmental leap — ' + recentMilestones.length + ' milestones progressing simultaneously' });
@@ -81592,7 +81717,9 @@ function _geReady() {
 // the profile gate is up and the app inert; the entry then shows (an emergency fails toward
 // being visible). No `sex` = every child.
 function _geSexMatch(e) {
-  if (!e || !e.sex) return true;
+  // Only 'f' / 'm' filter; any other value (a typo) shows the entry to everyone, so a bad field
+  // can never hide an emergency (V-CA-282-4).
+  if (!e || (e.sex !== 'f' && e.sex !== 'm')) return true;
   var s = (typeof childSex === 'function') ? childSex() : null;
   return s === null || s === e.sex;
 }
@@ -81655,7 +81782,8 @@ function _geDocFace(e) {
       + '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
   });
   if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
-  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  // The "first reaction" bracket belongs to an allergic reaction only (V-V-282-5).
+  if (e.id === 'allergic-reaction') rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
   var _docName = (typeof _emDocName === 'function' ? _emDocName() : '' + childNameCapHtml() + '');
   var _docVitals = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
   return '<div class="docface"><div class="doc"><div class="doc-body">'
@@ -81796,7 +81924,7 @@ function _geDocText(e, container) {
   L.push('', 'Suspected: ' + d.suspected);
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
   if (d.action) L.push(d.action.label + ': ' + d.action.value);
-  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  if (e.id === 'allergic-reaction') L.push('Known allergies: none recorded yet (this may be a first reaction)');
   L.push(''); L.push('For the team: ' + d.forTeam);
   return L.join('\n');
 }
@@ -83630,7 +83758,13 @@ var CT_TEMPLATES = {
       // a fixed 80 g/week sat far below the 0–4 m median and above the 9–12 m one.
       value: function() {
         if (typeof ageAt !== 'function') return 80;
-        if (typeof growthVelocityBand === 'function') { const b = growthVelocityBand(ageAt().months); if (b && b.wGWkMedian) return b.wGWkMedian; }
+        // Judged at the age of the latest weigh-in, so crossing an age band with no new
+        // measurement can't flip the goal to met (V-K-282-2).
+        if (typeof growthVelocityBand === 'function') {
+          var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
+          var mo = (gv && gv.wtLatest && gv.wtLatest.date && typeof ageMonthsAt === 'function') ? ageMonthsAt(gv.wtLatest.date) : ageAt().months;
+          const b = growthVelocityBand(mo); if (b && b.wGWkMedian) return b.wGWkMedian;
+        }
         return (ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined') ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
       }
     },
@@ -85112,7 +85246,8 @@ function ctForceResolve(ticketId) {
   html += '<div class="ct-overlay-title">Why are you resolving this?</div>';
   html += '<div class="ct-divider"></div>';
   html += '<div class="ct-chips-row" id="ctForceReasons">';
-  var reasons = ['Doctor confirmed ' + pron('subj') + '\'s okay', 'I\'m confident ' + pron('subj') + '\'s fine', 'Other'];
+  // Stored in resolvedNotes, so worded without a pronoun (V-K-282-7).
+  var reasons = ['Doctor confirmed all is well', 'I\'m confident all is fine', 'Other'];
   reasons.forEach(function(r) {
     html += '<span class="chip ct-reason-chip" data-action="ctForceResolveReason" data-id="' + escAttr(ticketId) + '" data-arg="' + escAttr(r) + '">' + escHtml(r) + '</span>';
   });
@@ -85637,7 +85772,7 @@ function ctGetTSFEvents() {
 function ctShouldTriggerCreate(text) {
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   var strongSignals = ['track', 'tracking', 'monitor', 'monitor this', 'start watching', 'raise concern'];
-  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'hit his head', 'ate something'];
+  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'ate something'];
   var negativeSignals = ['asleep', 'sleep', 'behind', 'apart', 'fall asleep', 'fell asleep', 'sleep track'];
 
   // Check negative signals
@@ -86018,10 +86153,22 @@ function _syncLedgerActive() {
 function _syncAttachedOnce() {
   try { return localStorage.getItem(SYNC_ATTACHED_KEY) === '1'; } catch(e) { return false; }
 }
+// Ledger stamps and push starts come from one strictly increasing clock. With plain Date.now()
+// a write and a push start in the same millisecond tie: a write landing mid-push looked "not
+// late" (l > startedAt false), was cleared and never re-pushed, or a re-pass started in the
+// same millisecond as that write and looped once more (F17 race, seen as an intermittent e2e
+// failure; 2026-10-31). Strict order makes "before the push" and "during it" unambiguous.
+var _syncLastStamp = 0;
+function _syncNow() {
+  var t = Date.now();
+  if (t <= _syncLastStamp) t = _syncLastStamp + 1;
+  _syncLastStamp = t;
+  return t;
+}
 function _syncMarkDirty(key) {
   if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;
   var m = _syncLoadDirty();
-  var now = Date.now();
+  var now = _syncNow();
   var e = _syncLedgerEntry(m[key]) || { f: now, l: now, nf: false };
   if (!e.f) e.f = now;
   e.l = now;                      // first write time is kept — a later write never launders earlier dirt (Kael F1)
@@ -87076,7 +87223,7 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
     __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  var startedAt = Date.now();
+  var startedAt = _syncNow();
   var ops = [];   // raw promises (before .catch) so Promise.all sees real failures
 
   // Added entries
@@ -87213,7 +87360,7 @@ function _syncFlushSingleDoc(hRef, collection) {
   // Gather all localStorage KEYS that map to this collection
   var keysForCol = _syncCollectionToKeys[collection];
   if (!keysForCol || keysForCol.length === 0) return;
-  var startedAt = Date.now();
+  var startedAt = _syncNow();
 
   // C0 Fix 2: gate on listener-ready — don't push with a blind shadow.
   // If the listener hasn't first-fired for this collection, _syncShadow
@@ -87391,7 +87538,7 @@ function _syncFlushDirty(hRef, _pass) {
   var dirtyKeys = Object.keys(m).filter(function(k) { return !!SYNC_KEYS[k]; });
   if (dirtyKeys.length === 0) return Promise.resolve(0);
   if (!_syncUser || !hRef) return Promise.reject(new Error('not signed in'));
-  var startedAt = Date.now();
+  var startedAt = _syncNow();
   var db = hRef.firestore || ((typeof firebase !== 'undefined') ? firebase.firestore() : null);
   var writer = { uid: _syncUser.uid || null, name: _syncUser.displayName || 'Parent' };
   var settled = [];        // per-entry keys with an empty local array — nothing to push
@@ -87522,7 +87669,7 @@ function _syncAttachListeners(hId) {
   // tracks the broader straggler limitation; this reset only protects
   // reconcile re-fire, not snapshot-apply.
   _reconcileDone = new Set();
-  _syncSessionAttachedAt = Date.now();   // ledger: partial flushes may clear writes from here on
+  _syncSessionAttachedAt = _syncNow();   // ledger: partial flushes may clear writes from here on
   try { localStorage.setItem(SYNC_ATTACHED_KEY, '1'); } catch(e) {}
   // Issue #53 — capture the generation these listeners belong to. _syncDetachListeners()
   // (called just above, and on any future re-attach) bumps _syncListenerGen; each
