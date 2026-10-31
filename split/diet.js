@@ -3079,7 +3079,7 @@ const ALL_TIPS = [
   {
     type:'info', icon:zi('spoon'),
     title:'Family food, adapted',
-    body:'From 1 year a toddler can eat what the family eats, in small soft pieces a toddler can squash between finger and thumb — the grinding molars are not in yet. Take the toddler portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
+    body:'From 1 year a toddler can eat what the family eats, in small soft pieces that squash between finger and thumb, until the grinding molars come in. Take the toddler portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
     condition: () => getAgeInMonths() >= 12,
   },
   {

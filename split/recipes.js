@@ -546,7 +546,7 @@ const RECIPES = [
       'Serve with soft roti strips. Take the child’s share out before any salt or chilli goes into the family pan.',
     ],
     dos: ['Egg is an animal-source food, which WHO advises daily (meat, fish or egg)', 'Cook until both white and yolk are set', 'Keep offering egg regularly once it is tolerated'],
-    donts: ['Never runny or undercooked egg', 'No salt or green chilli in the child’s portion', 'If egg is new, offer it on its own first and watch for 3 days'],
+    donts: ['Never runny or undercooked egg', 'No salt or green chilli in the child’s portion', 'If egg is new to the child, offer it on its own first and watch for 3 days'],
     source: ['who', 'nhs', 'icmr'],
   },
   {
@@ -678,7 +678,7 @@ const RECIPES = [
       'Mash the flaked fish and lauki into soft rice with a little gravy. Take the child’s portion out before salt or chilli.',
     ],
     dos: ['Low-mercury freshwater fish — fish gives long-chain omega-3 (ICMR-NIN: fatty fish is the richest source)', 'Matches the ICMR-NIN 1–3 y chart (25 g fish instead of pulse)', 'A Bengali-style jhol, made mild'],
-    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new, watch closely for about 2 hours after the first meal'],
+    donts: ['Never high-mercury fish (seer/surmai, shark, king mackerel)', 'No bones — check by hand, twice', 'If fish is new to the child, watch the child closely for about 2 hours after the first meal'],
     source: ['icmr', 'nhsbsl', 'who'],
   },
   {
@@ -760,7 +760,7 @@ const RECIPES = [
       'Serve over soft rice.',
     ],
     dos: ['Matches the ICMR-NIN 1–3 y chart ("egg ½")', 'Both white and yolk cooked firm', 'Egg gives iron and vitamin B12, which vegetarian diets can run short of'],
-    donts: ['No runny yolk', 'No salt or garam masala in the child’s portion', 'If egg is new, offer it on its own first and watch for 3 days'],
+    donts: ['No runny yolk', 'No salt or garam masala in the child’s portion', 'If egg is new to the child, offer it on its own first and watch for 3 days'],
     source: ['icmr', 'who', 'nhs'],
   },
   {
@@ -1741,7 +1741,7 @@ const COMBO_RECIPES_ADD_12_24 = {
   'mustard greens':{ recipe:'1. Wash sarson (with a little palak or bathua) 3–4 times.\n2. Pressure cook until very soft; blend.\n3. Temper with ½ tsp ghee, a pinch of garlic; thicken with 1 tsp makki atta.\n4. Serve with soft roti torn small.', dos:['Calcium and vitamin A from greens','Ghee helps absorb vitamin A','Cook thoroughly and blend smooth'], donts:['No salt in the child’s portion — take it out before salting','Skip the heavy butter topping for the child','No green chilli'] },
   'methi':         { recipe:'1. Wash and finely chop 2 tbsp methi leaves.\n2. Knead into atta dough with a little ghee and curd.\n3. Roll thin, cook soft on the tawa.\n4. Tear into small pieces.', dos:['Iron + calcium from methi (IFCT)','Pair with curd — pleasant with the slight bitterness','Chop leaves very fine'], donts:['Don\'t cook the thepla crisp','No salt in the child’s portion — take it out before salting','Introduce in small amounts — bitter taste'] },
   'guava':         { recipe:'1. Pick a ripe, soft guava.\n2. Peel if the skin is tough; cut in half and scoop out ALL the seeds.\n3. Serve very ripe, soft pieces, or steam 3–4 min and mash.', dos:['Very high vitamin C — boosts iron from dal or ragi in the same meal (ICMR-NIN)','Ripe fruit is softer','Pair with a millet or dal meal'], donts:['Never give the hard seeds','Avoid hard, unripe guava chunks — a choking risk','No chaat masala or salt'] },
-  'litchi':        { recipe:'1. Peel a ripe litchi.\n2. Remove the seed completely.\n3. Cut the flesh into small pieces, lengthwise.\n4. Serve only after a meal has been eaten.', dos:['Ripe fruit only','A few pieces at a time','Seasonal treat (May–June)'], donts:['Never whole — round and slippery, it can block the airway','Never on an empty stomach, and never many — litchi-linked illness in Bihar affected children who skipped meals','Never unripe litchi or the seed'] },
+  'litchi':        { recipe:'1. Peel a ripe litchi.\n2. Remove the seed completely.\n3. Cut the flesh into small pieces, lengthwise.\n4. Serve only after the child has eaten a meal.', dos:['Ripe fruit only','A few pieces at a time','Seasonal treat (May–June)'], donts:['Never whole — round and slippery, it can block the airway','Never on an empty stomach, and never many — litchi-linked illness in Bihar affected children who skipped meals','Never unripe litchi or the seed'] },
   'uttapam':       { recipe:'1. Use home idli/dosa batter.\n2. Spread thick on the tawa; top with finely grated carrot and tomato.\n3. Cook covered on low until soft on both sides.\n4. Cut into strips.', dos:['Fermented and soft — good with 4 teeth','Add vegetables for colour and vitamins','Serve with plain curd or mild sambar'], donts:['Don\'t make it crisp','Keep sambar low in salt and spice','No store-bought ready batter with added salt'] },
 };
 

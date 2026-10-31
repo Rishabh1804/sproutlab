@@ -2747,7 +2747,7 @@ const FOOD_EFFECTS = {
       // shellfish" — "You can give boys up to 4 portions of oily fish a week, but it is best to give girls
       // no more than 2 portions a week." https://www.nhs.uk/live-well/eat-well/food-types/fish-and-shellfish-nutrition/
       // (checked 2026-10-31; child-sex S2, Cipher #281 nit 3).
-      note:     'Choose low-mercury fish, cook it through, and debone meticulously. Finfish is a separate allergen from shellfish. Oily fish is great — NHS suggests up to 2 portions of oily fish a week for girls and up to 4 for boys (pollutants).',
+      note:     'Choose low-mercury fish, cook it through, and debone meticulously. Finfish is a separate allergen from shellfish. Oily fish is great — NHS advises no more than 2 portions of oily fish a week for girls, and up to 4 for boys (because of pollutants).',
     },
     howToIntroduce: {
       amount:   'a small amount of well-cooked, deboned, flaked low-mercury fish',
