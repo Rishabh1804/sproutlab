@@ -223,7 +223,9 @@ function _isLikelyFoodList(tokens) {
 // she/her vocabulary below (triggers, classifier regexes, lookback strippers) matches "Can he
 // eat egg?" / "How's his sleep?" / "when did he last eat ragi". A girl's text is left as typed.
 var _QA_HE_AS_SHE = { he: 'she', him: 'her', his: 'her', himself: 'herself' };
-function _qaNameAsShe(text) {
+// nameOnly: fold the name but leave the parent's pronouns as typed (the step-4 question-word test
+// in qaClassifyInput reads that text so a boy's Hinglish "he" = "hai" is not a question; V-K-282b-1).
+function _qaNameAsShe(text, nameOnly) {
   if (typeof text !== 'string') return text;
   var n = (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) ? String(profile.child.name) : '';
   // A name that is itself a food (Honey, Olive) stays as typed: the food reading is the safer one (Cipher #5).
@@ -231,10 +233,13 @@ function _qaNameAsShe(text) {
     var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
     // A possessive name reads as "her" first ("Arjun's nap" → "her nap", not "she nap"; BUGS #4),
     // straight or curly apostrophe; then the bare name reads as "she". Same Unicode word guards.
-    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + "['\u2019]s(?![\\p{L}])", 'giu'), '$1her');
+    // A name ending in s also takes the bare-apostrophe possessive ("Shreyas' nap"; V-K-282b-2);
+    // only then, so a closing quote after any other name is not read as "her".
+    var poss = /s$/.test(n.toLowerCase()) ? "['\u2019]s?" : "['\u2019]s";
+    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + poss + '(?![\\p{L}])', 'giu'), '$1her');
     text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + '(?![\\p{L}])', 'giu'), '$1she');
   }
-  if (typeof childSex === 'function' && childSex() === 'm') {
+  if (!nameOnly && typeof childSex === 'function' && childSex() === 'm') {
     text = text.replace(/(^|[^\p{L}])(he|him|his|himself)(?![\p{L}])/giu, function(m, pre, w) {
       var c = _QA_HE_AS_SHE[w.toLowerCase()];
       return pre + (w.charAt(0) === w.charAt(0).toUpperCase() ? c.charAt(0).toUpperCase() + c.slice(1) : c);
@@ -243,6 +248,7 @@ function _qaNameAsShe(text) {
   return text;
 }
 function qaClassifyInput(text) {
+  var typed = _qaNameAsShe(text, true);
   text = _qaNameAsShe(text);
   if (!text || typeof text !== 'string') return { mode: 'qa', raw: text || '' };
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
@@ -280,10 +286,12 @@ function qaClassifyInput(text) {
   // 4. Single food name without safety prefix → ingredient mode
   //    But not if remaining tokens look like a question (e.g. "how is ragi")
   if (foodMatches.length === 1 && tokens.length <= 3) {
-    // No 'he' here: in Hinglish "ragi thik he" it is "hai", and a boy's "he" is already
-    // folded to "she" by _qaNameAsShe before this list sees it (BUGS #33).
+    // No 'he' here: in Hinglish "ragi thik he" it is "hai" (BUGS #33). The list reads the text
+    // before a boy's pronouns fold, or his "he" would arrive as "she" and count (V-K-282b-1).
     var qaWords = ['how','is','what','why','when','does','should','can','will','do','are','was','her','she','him','his','they','them','their','about','much','many'];
-    var hasQAWord = tokens.some(function(t) { return qaWords.indexOf(t) !== -1; });
+    var typedTokens = (typeof typed === 'string' ? typed : '').toLowerCase().replace(/[?!.,]/g, '').trim()
+      .split(/[\s,+&]+/).filter(function(t) { return t.length > 0; });
+    var hasQAWord = typedTokens.some(function(t) { return qaWords.indexOf(t) !== -1; });
     if (!hasQAWord) {
       return { mode: 'ingredient', foods: foodMatches, raw: text };
     }

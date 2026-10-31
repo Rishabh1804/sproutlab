@@ -141,7 +141,10 @@ var CT_TEMPLATES = {
         // measurement can't flip the goal to met (V-K-282-2).
         if (typeof growthVelocityBand === 'function') {
           var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
-          var mo = (gv && gv.wtLatest && gv.wtLatest.date && typeof ageMonthsAt === 'function') ? ageMonthsAt(gv.wtLatest.date) : ageAt().months;
+          // gvAgeAt guards a malformed stored date (non-finite → today's age), so a bad date can't
+          // give NaN → the 0–1 m row → an unresolvable goal (V-K-282b-6).
+          var mo = (gv && gv.wtLatest && typeof gvAgeAt === 'function') ? gvAgeAt(gv.wtLatest)
+            : (gv && gv.wtLatest && gv.wtLatest.date && typeof ageMonthsAt === 'function') ? ageMonthsAt(gv.wtLatest.date) : ageAt().months;
           const b = growthVelocityBand(mo); if (b && b.wGWkMedian) return b.wGWkMedian;
         }
         return (ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined') ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;

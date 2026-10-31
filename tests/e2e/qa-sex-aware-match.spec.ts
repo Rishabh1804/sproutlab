@@ -34,13 +34,32 @@ test.describe('Sex-aware match vocabulary', () => {
     expect(r.boy).toEqual(want);
   });
 
-  test('Hinglish "ragi thik he" stays in ingredient mode for a girl (#33)', async ({ page }) => {
+  test('a name ending in s takes the bare-apostrophe possessive; other names do not (V-K-282b-2)', async ({ page }) => {
     const r = await page.evaluate(() => {
-      const c = (window as any).qaClassifyInput('ragi thik he');
-      return { mode: c.mode, foods: c.foods };
+      const w = window as any;
+      w._profSave(Object.assign({}, profile.child, { name: 'Shreyas' }), profile.place);
+      const s = [w._qaNameAsShe("Shreyas' nap"), w._qaNameAsShe('Shreyas’ nap'), w._qaNameAsShe("Shreyas's nap")];
+      w._profSave(Object.assign({}, profile.child, { name: 'Arjun' }), profile.place);
+      const quoted = w._qaNameAsShe("call him 'Arjun' today");
+      return { s, quoted };
     });
-    expect(r.mode).toBe('ingredient');
-    expect(r.foods).toEqual(['ragi']);
+    expect(r.s).toEqual(['her nap', 'her nap', 'her nap']);
+    expect(r.quoted).toBe("call him 'she' today");   // a closing quote is not a possessive
+  });
+
+  test('Hinglish "ragi thik he" stays in ingredient mode for a girl and a boy (#33, V-K-282b-1)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const run = () => { const c = w.qaClassifyInput('ragi thik he'); return { mode: c.mode, foods: c.foods }; };
+      const girl = run();
+      w._profSave(Object.assign({}, profile.child, { sex: 'm' }), profile.place);
+      const boy = run();
+      const boyQ = w.qaClassifyInput('how is ragi').mode;   // a real question still is one
+      return { girl, boy, boyQ };
+    });
+    expect(r.girl).toEqual({ mode: 'ingredient', foods: ['ragi'] });
+    expect(r.boy).toEqual({ mode: 'ingredient', foods: ['ragi'] });
+    expect(r.boyQ).not.toBe('ingredient');
   });
 
   test('a note\'s "when he does" is the child only for a boy (#38)', async ({ page }) => {
