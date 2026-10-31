@@ -7,7 +7,13 @@
 - **Governors:** cite the class in a finding (for example "V-M-…, PC-1").
 - **Bug log:** tag each new entry with its class, so the classes that keep growing show where the next gate should go.
 
-**Status legend:** **Guarded** means a build gate or test catches it now. **Rule** means a written check only, for Builders and Governors to apply.
+**Status legend:**
+- **Guarded:** a build gate fails the build.
+- **Tests:** an e2e spec catches it.
+- **Design:** one shared source makes the mistake hard to make.
+- **Rule:** a written check only, for Builders and Governors to apply.
+
+The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims a gate it doesn't have.
 
 **Open items from #282:** all 12, plus one found while fixing (#57), are patched in #282: PC-1 #25, #27, #55, #56; PC-2 #4, #33, #38; PC-3 #30, #57; PC-4 #48; PC-5 #51, #54; PC-6 #12, #56.
 
@@ -25,7 +31,7 @@
 | # | Item | Patch |
 |---|---|---|
 | 25 | Band picked by today's age in some callers, measurement age in others | Every velocity is judged at the age of its own latest measurement |
-| 27 | Infant bracket floors near P3–P5 at the start of a bracket; no newborn weight-loss window | One-month rows under 6 m; first-14-days carve-out (AAP + NHS cited). Maren to decide 14 vs 21 days, and whether to flag more than 10% loss |
+| 27 | Infant bracket floors near P3–P5 at the start of a bracket; no newborn weight-loss window | One-month weight rows from WHO's 1-month tables, looked up at the window midpoint; newborn model with three cited checks: the 14-day window is kept (AAP, Maren); more than 10% loss is flagged (NICE NG75); "back to birth weight?" is judged instead of a rate up to day 21 |
 | 55 | `ageMonthsAt('YYYY-MM-DD')` parsed as UTC (HR-12) | Local calendar parse |
 | 56 | CareTicket weight goal at weigh-in age untested | e2e pins it |
 
@@ -39,9 +45,13 @@
 - a threshold copied into more than one file.
 
 **Guards:**
-- **Guarded:** `growthVelocityBand()` is the single band source; `audit-hr12-v3-3`; `_syncNow()` for all sync-ledger ordering.
-- **Tests:** growth-velocity-bands.spec (bracket edges, age rule), sync-unsynced-ledger F17 (run repeated).
+- **Guarded:**
+  - `audit-growth-age-v1`: no `growthVelocityBand()` call takes today's age, directly or through a variable. Self-tested; it flags 17 sites in the pre-#25 code.
+  - `audit-hr12-dateonly-v1`: a per-file ratchet on `new Date(<date-ish>)` parses, which may only fall; a benign site carries `// HR-12`.
+- **Design:** `growthVelocityBand()`, `gvAgeAt()` and `ageMonthsAt()` (core.js) are the single band, age and month sources; `_syncNow()` orders all sync-ledger events.
+- **Tests:** growth-velocity-bands.spec (bracket edges, age rule, newborn cases), sync-unsynced-ledger F17 (run repeated).
 - **Rule:** "one helper, one clock". A new time-derived value goes through the existing helper, never a local copy.
+- **Note:** `audit-hr12-v3-3` covers only the v3-3 surface (intelligence-correlate.js and one ISL block). It would not have caught #55; the ratchet above is what covers the rest of split/.
 
 ## PC-2 · Match vocabulary versus copy (sex-aware matching)
 **Pattern:** words the app *matches* (intent triggers, keyword tables, strippers, word lists) get treated like words it *shows*, or are matched without knowing the child's sex. Typical results: a girl's note about her father counts as her own evidence; a boy's wording finds nothing; a phrase meant for one path is folded wrongly.
@@ -63,8 +73,8 @@
 - a word list changed "for every sex".
 
 **Guards:**
-- **Guarded:** `audit-pronouns-v1` allowlists match vocabulary explicitly, by exact string.
-- **Tests:** qa-boy.spec, and the classifyActivity sex tests.
+- **Tests:** qa-boy.spec and qa-sex-aware-match.spec (possessive fold, Hinglish for both sexes, classifyActivity per sex).
+- **Note:** `audit-pronouns-v1` checks copy, not matching. It lists match vocabulary in its allowlist but would not catch #33 or #38.
 - **Rule:** match vocabulary stays canonical (she/her) plus a fold, or lists both forms *and* filters by `childSex()`.
 
 ## PC-3 · Dead or unreachable paths
@@ -121,7 +131,7 @@
 **Look for:** literal ports or origins in tests; a test that asserts a *mode* without checking that the input reaches it; a fix with no test that fails without it.
 
 **Guards:**
-- **Guarded:** playwright.config rewrites the fixture origin.
+- **Design:** playwright.config rewrites the fixture origin to the served port. This is a fix, not a gate: nothing blocks a new hard-coded origin, so the Rule below applies.
 - **Rule:** a fix lands with a test that fails on the old code. "Flaky" is a root cause to find, not a label (F17 was a real race).
 
 ## PC-7 · Rewording weakens a safety meaning
@@ -152,3 +162,33 @@
 **Guards:**
 - **Guarded:** `audit-pronouns-v1` requires a label on any pronoun-bearing milestone key; milestone-labels.spec freezes the slugs.
 - **Rule:** never reword a field before proving it isn't a key; give it a display field instead.
+
+## PC-9 · Cited registries drift from their source
+**Pattern:** a table of cited values (WHO bands, food effects, vaccine schedule) is typed or derived by hand. It drifts from its source, or the derivation itself is wrong even though every number matches. Proposed by Carina (V-CA-282b-7).
+
+**Items:**
+- #7, #8 and #9: hand-typed bands copied into about 10 places, narrower than WHO.
+- #24: the one-row toddler band.
+- #26: g/day rounding.
+- #27: the one-month rows' method.
+- V-CA-282b-1: 2-month intervals used for a 4-week window.
+- V-CA-282b-5: hCmWk rounded inward.
+- V-CA-282-3: food-effects manifest drift.
+
+**Look for:**
+- a number with no citation comment;
+- a derivation whose window or interval doesn't match how the app measures (2-month increments against a 4-week window);
+- rounding that goes inward on a band edge;
+- a registry and its manifest or doc edited in only one place.
+
+**Guards:**
+- **Guarded:** `audit-food-effects-sync-v1` (precedent: keys only).
+- **Rule:** every cited registry row states its source file, fetch date, method and rounding, and the PR body shows the recompute.
+- **Candidate (Carina owns):** `audit-growth-bands-provenance-v1`. It would commit the WHO tables as CSVs with a manifest of URLs and fetch dates under docs/research/, recompute the bands by the documented method, and fail on drift.
+
+## Guard backlog (candidates, by owner)
+1. `audit-growth-bands-provenance-v1` (PC-9). Owner: Carina.
+2. HR-4 render-boundary gate (PC-4). Owners: Carina (`escHtml` root) and Cipher.
+3. A record-shape freeze test for `KEYS`-stored records, generalising milestone-labels.spec (PC-8). Owner: Carina.
+4. A schema test that every property readers take from `getGrowthVelocity()` is set (PC-3). Owners: Carina and Kael.
+5. A test-origin rule: one exported baseURL helper; no spec builds its own origin (PC-6).

@@ -72,10 +72,11 @@ function htmlTexts(src) {
   const noScript = noComments.replace(/<(script|style)[\s\S]*?<\/\1>/gi, m => m.replace(/[^\n]/g, ' '));
   noScript.split('\n').forEach((l, k) => {
     const t = l.replace(/<[^>]*>/g, ' '); if (RX.test(t)) out.push({ line: k + 1, s: t.trim() });
-    // Copy that lives in attributes is read by parents (placeholders) and screen readers (BUGS #51).
-    const attr = /\b(placeholder|aria-label|title|alt)\s*=\s*(["'])(.*?)\2/gi; let m;
-    while ((m = attr.exec(l))) if (RX.test(m[3])) out.push({ line: k + 1, s: m[3] });
   });
+  // Copy that lives in attributes is read by parents (placeholders) and screen readers (BUGS #51).
+  // Scanned over the whole file, so a value that spans lines is caught too (V-CA-282b-6).
+  const attr = /\b(placeholder|aria-label|title|alt)\s*=\s*(["'])([\s\S]*?)\2/gi; let m;
+  while ((m = attr.exec(noScript))) if (RX.test(m[3])) out.push({ line: noScript.slice(0, m.index).split('\n').length, s: m[3].replace(/\s+/g, ' ').trim() });
   return out;
 }
 // MILESTONE_STANDARDS line range in data.js: an allowlisted pronoun string there is a frozen
@@ -132,6 +133,12 @@ function audit(dir, allowLines, log) {
     { name: 'html text', files: { 'template.html': '<div>She naps</div>' }, bad: 1 },
     { name: 'html placeholder attribute (#51)', files: { 'template.html': '<input placeholder="What did she eat">' }, bad: 1 },
     { name: 'html aria-label attribute (#51)', files: { 'template.html': '<button aria-label="Log her nap"></button>' }, bad: 1 },
+    { name: 'html title attribute', files: { 'template.html': '<span title="Her last feed">x</span>' }, bad: 1 },
+    { name: 'html alt attribute', files: { 'template.html': '<img alt="her drawing" src="a.png">' }, bad: 1 },
+    { name: 'single-quoted attribute', files: { 'template.html': "<input placeholder='What did she eat'>" }, bad: 1 },
+    { name: 'attribute value across lines', files: { 'template.html': '<input placeholder="What did\n she eat">' }, bad: 2 },   // the continuation line also reads as text: fails closed
+    { name: 'uppercase pronoun', files: { 'a.js': "var s = 'HER NAP';" }, bad: 1 },
+    { name: '.test.js files are not scanned', files: { 'a.test.js': "var s = 'her';" }, bad: 0 },
     { name: 'html comment is not copy', files: { 'template.html': '<!-- her --><div>Nap</div>' }, bad: 0 },
     { name: 'exact allow entry', files: { 'a.js': "var w = ['she'];" }, allow: ['a.js|=she'], bad: 0 },
     { name: 'exact allow entry does not cover a longer string', files: { 'a.js': "var w = ['can she eat this? she can'];" }, allow: ['a.js|=can she eat'], bad: 1, stale: 1 },
