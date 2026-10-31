@@ -229,7 +229,10 @@ function _qaNameAsShe(text) {
   // A name that is itself a food (Honey, Olive) stays as typed: the food reading is the safer one (Cipher #5).
   if (n && !(typeof getNutrition === 'function' && typeof _baseFoodName === 'function' && getNutrition(_baseFoodName(n.toLowerCase())))) {
     var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
-    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
+    // A possessive name reads as "her" first ("Arjun's nap" → "her nap", not "she nap"; BUGS #4),
+    // straight or curly apostrophe; then the bare name reads as "she". Same Unicode word guards.
+    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + "['\u2019]s(?![\\p{L}])", 'giu'), '$1her');
+    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + '(?![\\p{L}])', 'giu'), '$1she');
   }
   if (typeof childSex === 'function' && childSex() === 'm') {
     text = text.replace(/(^|[^\p{L}])(he|him|his|himself)(?![\p{L}])/giu, function(m, pre, w) {
@@ -277,7 +280,9 @@ function qaClassifyInput(text) {
   // 4. Single food name without safety prefix → ingredient mode
   //    But not if remaining tokens look like a question (e.g. "how is ragi")
   if (foodMatches.length === 1 && tokens.length <= 3) {
-    var qaWords = ['how','is','what','why','when','does','should','can','will','do','are','was','her','she','he','him','his','they','them','their','about','much','many'];
+    // No 'he' here: in Hinglish "ragi thik he" it is "hai", and a boy's "he" is already
+    // folded to "she" by _qaNameAsShe before this list sees it (BUGS #33).
+    var qaWords = ['how','is','what','why','when','does','should','can','will','do','are','was','her','she','him','his','they','them','their','about','much','many'];
     var hasQAWord = tokens.some(function(t) { return qaWords.indexOf(t) !== -1; });
     if (!hasQAWord) {
       return { mode: 'ingredient', foods: foodMatches, raw: text };

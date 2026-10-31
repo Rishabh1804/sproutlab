@@ -11,8 +11,6 @@ intelligence-qa.js|=how is she
 intelligence-qa.js|=she
 intelligence-qa.js|=her
 intelligence-qa.js|=herself
-# CareTicket weak-signal match words (both forms listed).
-intelligence-caretickets.js|=hit her head
 # Emergency-guide keyword match vocabulary (head-injury keywords). Both forms are listed: Q&A folds
 # a boy's wording onto the she/her form, and the home/Medical symptom searches (which don't fold)
 # match the his form. Not copy.

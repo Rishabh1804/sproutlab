@@ -5220,7 +5220,7 @@ function renderInfoSleepRegression() {
     if (data.causes.length > 0) {
       html += '<div class="si-sub-label fe-section-gap" >Possible causes</div>';
       data.causes.forEach(c => {
-        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + c.icon + '</div><div class="si-reg-cause-text">' + c.text + '</div></div>';
+        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + c.icon + '</div><div class="si-reg-cause-text">' + escHtml(c.text) + '</div></div>';
       });
     }
 

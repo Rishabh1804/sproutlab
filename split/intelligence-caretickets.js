@@ -2147,26 +2147,9 @@ function ctGetTSFEvents() {
 }
 
 // ── 10. QA Intent — CareTickets ──
-
-function ctShouldTriggerCreate(text) {
-  var lower = text.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
-  var strongSignals = ['track', 'tracking', 'monitor', 'monitor this', 'start watching', 'raise concern'];
-  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'ate something'];
-  var negativeSignals = ['asleep', 'sleep', 'behind', 'apart', 'fall asleep', 'fell asleep', 'sleep track'];
-
-  // Check negative signals
-  var hasNegative = negativeSignals.some(function(neg) { return lower.indexOf(neg) !== -1; });
-
-  // Strong signals trigger immediately
-  var hasStrong = strongSignals.some(function(sig) { return lower.indexOf(sig) !== -1; });
-  if (hasStrong && !hasNegative) return true;
-
-  // Weak signals only if no negative and no other classifier matched
-  var hasWeak = weakSignals.some(function(sig) { return lower.indexOf(sig) !== -1; });
-  if (hasWeak && !hasNegative) return 'weak';
-
-  return false;
-}
+// The create intent is the `ct_create` row in QA_INTENTS (intelligence-qa.js), with its
+// triggers and exclude list inline. The old ctShouldTriggerCreate(text) duplicate had no
+// callers and its lists had drifted from the live ones; removed (BUGS #30).
 
 // ── 11. Share Notify (creation message) ──
 

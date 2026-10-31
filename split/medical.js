@@ -35,13 +35,30 @@ function milestoneKeywordScore(milestoneText, keyword) {
 }
 
 // ─── Classification Engine ───
+// EVIDENCE_PATTERNS keywords list both she- and he-forms ("when she does" / "when he does",
+// "put herself / himself to sleep"), and notes are matched as typed. On a girl's note "when he
+// does" is most likely her father, so a keyword in the other sex's pronouns is skipped; with
+// no sex set, every form matches (BUGS #38, V-CA-282-5). Keywords only: `require` context
+// ("when he saw" = a parent came into view) and `exclude` guards stay sex-blind on purpose.
+const _KW_OTHER_PRONOUNS = {
+  f: /(^|[^\p{L}])(he|him|his|himself)(?![\p{L}])/u,
+  m: /(^|[^\p{L}])(she|her|hers|herself)(?![\p{L}])/u
+};
+function kwFitsChildSex(kw, sex) {
+  const s = sex !== undefined ? sex : (typeof childSex === 'function' ? childSex() : null);
+  const re = s ? _KW_OTHER_PRONOUNS[s] : null;
+  return !re || !re.test(kw);
+}
+
 function classifyActivity(inputText) {
   const text = inputText.toLowerCase().trim();
   const tokens = text.split(/[\s,;.!?]+/).filter(Boolean);
   const matches = [];
+  const sex = typeof childSex === 'function' ? childSex() : null;
 
   for (const pattern of EVIDENCE_PATTERNS) {
     const hasKeyword = pattern.keywords.some(kw => {
+      if (!kwFitsChildSex(kw, sex)) return false;
       if (kw.includes(' ')) return text.includes(kw);
       return tokens.includes(kw) || tokens.some(t => t.startsWith(kw));
     });
