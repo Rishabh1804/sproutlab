@@ -87,8 +87,9 @@ At boot, branch on what the app finds:
   - The Q&A reads the child's name as "she", so a name never trips a keyword.
 
 ## 8. Deferred (decisions or follow-ups)
-- **Boys' growth references and the child's sex.** Growth is rated against the girls' WHO tables, and setup does not ask sex. The app stays fine for this family, but a release blocker for other families: ask sex in setup, and withhold percentile verdicts until the boys' tables exist (V-M-280-3; Architect decision).
-- **Pronouns.** Copy says she/her in hundreds of places. This becomes a pronoun pass keyed on the profile (V-M-280-8, V-C-280-9).
+- **Boys' growth references and the child's sex.** Done in child-sex-v1 S1 (`docs/specs/child-sex-v1.md`): setup asks girl or boy, and growth reads the boys' or girls' WHO tables (V-M-280-3).
+- **Pronouns.** Copy says she/her in hundreds of places. This becomes a pronoun pass keyed on the profile (V-M-280-8, V-C-280-9); planned as child-sex-v1 S2, on the `pron()` helper.
+- **Infant weight-velocity bands** (child-sex-v1 S4): narrower than WHO's P15–P85, so a normal infant reads "slow". A wider-release blocker for any household with a child under 12 months (V-M-281-8).
 - **Pre-solids floor across Diet** (V-C-280-5), **day-zero alarm fatigue** (alerts on a family's first day, Vela pair-note), **empty-state polish** (V-V-280-10) and the **Sprout Score on zero data**.
 - **`ALWAYS_POPULATED_KEYS` membership** now that no key is seeded: a deleted doctor or food can be resurrected by the other phone. Review before release (V-CA-280-14).
 - **Household name vs profile name**: two sources; prefill household creation from the profile (Carina).

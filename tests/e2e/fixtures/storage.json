@@ -6,7 +6,7 @@
       "localStorage": [
         {
           "name": "ziva_profile",
-          "value": "{\"v\": 1, \"child\": {\"name\": \"Asha\", \"dob\": \"2025-09-01T09:00\", \"solidsStart\": \"2026-03-06\"}, \"place\": {\"city\": \"Testville\", \"tz\": \"Asia/Kolkata\"}, \"ts\": 1}"
+          "value": "{\"v\": 1, \"child\": {\"name\": \"Asha\", \"dob\": \"2025-09-01T09:00\", \"solidsStart\": \"2026-03-06\", \"sex\": \"f\"}, \"place\": {\"city\": \"Testville\", \"tz\": \"Asia/Kolkata\"}, \"ts\": 1}"
         },
         {
           "name": "ziva_doctors",
