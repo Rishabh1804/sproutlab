@@ -1,11 +1,17 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-10-28 (repo sweep — stale entries moved to Fixed, sweep findings logged at the top of Open Bugs)
+**Last updated:** 2026-10-31 (child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
+
+### Child-sex S2–S4 build — 2026-10-31 (pronouns, care guidance, infant weight gain)
+
+Session record of every bug found while building and testing S2 (pronouns), S3 (sex-specific care guidance) and S4 (infant weight-gain bands) per [`specs/child-sex-v1.md`](./specs/child-sex-v1.md). Entry form: symptom, cause, fix, where (file:symbol), how caught, status. Fixed entries stay here as the session record and move to Fixed Bugs at merge.
+
+No bugs logged yet.
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
