@@ -6369,16 +6369,63 @@ function getGrowthVelocity() {
 // 2026-10-30: 12–24 m boys P15 ≈ 133→53 g, P50 ≈ 437→376 g, P85 ≈ 766→713 g, so one band fits both):
 //   weight, 2-month increments 12–24 m: P15 ≈ 140→39 g, P50 ≈ 428→367 g, P85 ≈ 736→723 g
 //     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
-//   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
-//     → band 0.6–1.6 cm/month, ≈ 0.15–0.35 cm/week.
+//   length, 2-month increments 12–24 m (ttt_length_{girls,boys}_2mon_p, fetched 2026-10-31):
+//     P15 1.6→0.9 cm (girls) / 1.5→0.9 cm (boys), P50 ≈ 1.2→0.9 cm/mo, P85 3.2→2.6 cm
+//     → band 0.45–1.6 cm/month (P15 at 22–24 m to P85 at 12–14 m), ≈ 0.1–0.35 cm/week.
+//     S4 (child-sex-v1 §5): the floor was 0.6 cm/mo (≈ P5 early in year 2), above P15 late in it,
+//     so a normal 22-month-old read "slower than typical"; it is now WHO's P15 floor.
 //   boys (ttt_length_boys_2mon_p / _3mon_p, fetched 2026-10-30): 2-month P5 1.0→0.4 cm, P50 2.3→1.7 cm,
 //     P85 3.1→2.6 cm (≈ 0.5→0.2 / 1.15→0.85 / 1.55→1.3 cm/mo), within ~0.05 cm/mo of the girls', so the
 //     length band fits both too (V-M-281-7).
 // Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
-// later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
-// the 0–12 m bands at each site are unchanged.
-const GROWTH_VELOCITY_12_24 = { wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
-  hCmMoMin: 0.6, hCmMoMax: 1.6, hCmWk: '0.15–0.35', label: '12–24 months' };
+// later ages — above the WHO median, so normal toddler gain read "slow".
+const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
+  hCmMoMin: 0.45, hCmMoMax: 1.6, hCmWk: '0.1–0.35', label: '12–24 months' };
+
+// ── Growth-velocity bands, 0–24 months, by sex (S4, child-sex-v1 §5) — the ONE source ──
+// WHO Child Growth Standards, weight and length velocity, 2-month increments, percentiles:
+//   ttt-weight-girls-2mon-p.xlsx, ttt-weight-boys-2mon-p.xlsx
+//     (cdn.who.int/…/child-growth-standards/indicators/weight-velocity/)
+//   ttt_length_girls_2mon_p.xlsx, ttt_length_boys_2mon_p.xlsx
+//     (cdn.who.int/…/child-growth-standards/indicators/length-velocity/), all fetched 2026-10-31.
+// A bracket [fromMo, toMo) takes the 2-month intervals that END inside it (the window a recent gain
+// at that age spans: 9–12 m = 8–10, 9–11, 10–12 mo). Band = lowest P15 to highest P85 of those
+// intervals (grams per 61 days → g/week = g / (61/7), g/day = g / 61; cm per 2 months / 2 → cm/mo),
+// rounded outward (g/week to 5, g/day to 1, cm/mo to 0.1) so a child at P15–P85 never reads off.
+// Median = mean P50, to 5 g/week. cm/week text = the cm/mo band / 4.348, to 0.05.
+//   girls g/2mo P15–P85: 0–2 1455–2386 · 2–4 978–2163 · 4–6 600–1413 · 6–9 306–1048 · 9–12 179–814
+//   boys  g/2mo P15–P85: 0–2 1720–2737 · 2–4 1081–2463 · 4–6 634–1496 · 6–9 323–1096 · 9–12 187–848
+//   girls cm/2mo P15–P85: 0–2 6.7–9.1 · 2–4 4.2–7.4 · 4–6 2.7–5.2 · 6–9 2.0–4.0 · 9–12 1.7–3.6
+//   boys  cm/2mo P15–P85: 0–2 7.3–9.7 · 2–4 4.6–8.0 · 4–6 2.8–5.5 · 6–9 2.0–4.1 · 9–12 1.7–3.5
+// Replaces the 0–12 m bands copied into ~9 sites (150–250 / 100–180 / 70–130 / 55–100 g/week),
+// which were narrower than WHO P15–P85: a normal 9–12 m infant read "slow", a 0–2 m boy at the
+// median read "above".
+// From 12 m one band fits both sexes (above), so both lists end in the same row.
+const GROWTH_VELOCITY_BANDS = {
+  f: [
+    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23, wGDayMax: 40, hCmMoMin: 3.3, hCmMoMax: 4.6, hCmWk: '0.75–1.05' },
+    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 110, wGWkMax: 250, wGWkMedian: 175, wGDayMin: 16, wGDayMax: 36, hCmMoMin: 2.1, hCmMoMax: 3.7, hCmWk: '0.5–0.85' },
+    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 65, wGWkMax: 165, wGWkMedian: 110, wGDayMin: 9, wGDayMax: 24, hCmMoMin: 1.3, hCmMoMax: 2.6, hCmWk: '0.3–0.6' },
+    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 125, wGWkMedian: 75, wGDayMin: 5, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.25–0.45' },
+    { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 95, wGWkMedian: 55, wGDayMin: 2, wGDayMax: 14, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
+    GROWTH_VELOCITY_12_24 ],
+  m: [
+    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28, wGDayMax: 45, hCmMoMin: 3.6, hCmMoMax: 4.9, hCmWk: '0.85–1.15' },
+    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 120, wGWkMax: 285, wGWkMedian: 195, wGDayMin: 17, wGDayMax: 41, hCmMoMin: 2.3, hCmMoMax: 4.0, hCmWk: '0.55–0.9' },
+    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 70, wGWkMax: 175, wGWkMedian: 120, wGDayMin: 10, wGDayMax: 25, hCmMoMin: 1.4, hCmMoMax: 2.8, hCmWk: '0.3–0.65' },
+    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 130, wGWkMedian: 80, wGDayMin: 5, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.1, hCmWk: '0.25–0.5' },
+    { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 100, wGWkMedian: 60, wGDayMin: 3, wGDayMax: 14, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
+    GROWTH_VELOCITY_12_24 ]
+};
+// The band for an age in months (callers pass the age they already bracket by). 12 m and over →
+// the 12–24 row (also past 24 m, as before). Sex unknown → the girls' set as a stand-in, like
+// whoT(): only reachable behind the profile gate, where nothing renders it.
+function growthVelocityBand(ageMonths) {
+  const rows = GROWTH_VELOCITY_BANDS[childSex() || 'f'];
+  const m = Number(ageMonths) || 0;
+  for (let i = 0; i < rows.length - 1; i++) if (m < rows[i].toMo) return rows[i];
+  return rows[rows.length - 1];
+}
 
 function getGrowthNarrative(velocity) {
   const lines = [];
@@ -6386,9 +6433,10 @@ function getGrowthNarrative(velocity) {
 
   if (velocity.wtGPerWeek != null) {
     const gw = velocity.wtGPerWeek;
-    // WHO-based expected ranges by age (g/week; from 12 m one band fits girls and boys)
-    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    // WHO P15–P85 by age and sex (g/week; GROWTH_VELOCITY_BANDS)
+    const band = growthVelocityBand(ageM);
+    const expectedMin = band.wGWkMin;
+    const expectedMax = band.wGWkMax;
     let interp;
     if (gw >= expectedMin && gw <= expectedMax) {
       interp = `gaining ${gw}g/week — healthy pace for ${ageM} months`;
@@ -6403,8 +6451,9 @@ function getGrowthNarrative(velocity) {
 
   if (velocity.htCmPerMonth != null) {
     const cm = velocity.htCmPerMonth;
-    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMin : ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
-    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMax : ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
+    const band = growthVelocityBand(ageM);
+    const expectedMin = band.hCmMoMin;
+    const expectedMax = band.hCmMoMax;
     let interp;
     if (cm >= expectedMin && cm <= expectedMax) {
       interp = `growing ${cm} cm/month — on track`;

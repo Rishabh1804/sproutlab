@@ -8673,8 +8673,8 @@ function computeBaselines() {
   b.wtInHealthyRange = false;
   if (velocity.wtGPerWeek != null) {
     const ageM = ageAt().months;
-    const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expMin = growthVelocityBand(ageM).wGWkMin;
+    const expMax = growthVelocityBand(ageM).wGWkMax;
     b.wtInHealthyRange = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
     // Check if healthy for 4+ weeks
     b.growthConsistentWeeks = velocity.wtEntryCount >= 3 ? Math.min(Math.floor(velocity.wtSpanDays / 7), 8) : 0;
@@ -10352,8 +10352,8 @@ function renderTrendChips() {
 
   // Growth
   if (velocity.wtGPerWeek != null) {
-    const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expMin = growthVelocityBand(ageM).wGWkMin;
+    const expMax = growthVelocityBand(ageM).wGWkMax;
     const ok = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
     chips.push({ icon:zi('chart'), label:'Growth', value: velocity.wtGPerWeek + 'g/wk', delta: ok ? zi('check') + ' healthy' : zi('warn') + ' check', cls: ok ? 'tc-good' : 'tc-warn', tab:'growth' });
   } else {
@@ -10495,8 +10495,8 @@ function renderInsightsStats() { /* v2.4: DORMANT — insights cards replaced by
   // Growth velocity pill
   const velVal = velocity.wtGPerWeek != null ? velocity.wtGPerWeek + 'g' : '—';
   const ageM = ageAt().months;
-  const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-  const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+  const expMin = growthVelocityBand(ageM).wGWkMin;
+  const expMax = growthVelocityBand(ageM).wGWkMax;
   const velInRange = velocity.wtGPerWeek != null && velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
   const velColor = velocity.wtGPerWeek != null ? (velInRange ? 'hsp-sage' : 'hsp-peach') : 'hsp-rose';
 
@@ -10606,8 +10606,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
     const ageM = ageAt().months;
     let pills = '';
     if (velocity.wtGPerWeek != null) {
-      const expMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-      const expMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+      const expMin = growthVelocityBand(ageM).wGWkMin;
+      const expMax = growthVelocityBand(ageM).wGWkMax;
       const ok = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
       pills += `<span class="ins-preview-pill ${ok ? 'ipp-good' : 'ipp-warn'}">${zi('scale')} ${velocity.wtGPerWeek}g/wk</span>`;
     }
@@ -10625,8 +10625,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
 
   // Velocity rows
   if (velocity.wtGPerWeek != null) {
-    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
+    const expectedMin = growthVelocityBand(ageM).wGWkMin;
+    const expectedMax = growthVelocityBand(ageM).wGWkMax;
     const inRange = velocity.wtGPerWeek >= expectedMin && velocity.wtGPerWeek <= expectedMax;
     const cls = inRange ? 'trend-up' : velocity.wtGPerWeek < expectedMin ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">
@@ -10639,8 +10639,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
   }
 
   if (velocity.htCmPerMonth != null) {
-    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMin : ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
-    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMax : ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
+    const expectedMin = growthVelocityBand(ageM).hCmMoMin;
+    const expectedMax = growthVelocityBand(ageM).hCmMoMax;
     const inRange = velocity.htCmPerMonth >= expectedMin && velocity.htCmPerMonth <= expectedMax;
     const cls = inRange ? 'trend-up' : velocity.htCmPerMonth < expectedMin ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">

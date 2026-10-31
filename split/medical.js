@@ -876,16 +876,17 @@ function renderGrowthFacts() {
     const daysDiff = Math.max(1, Math.round((new Date(wtLast.date) - new Date(wtPrev.date)) / 86400000));
     const gPerDay = Math.round(wtGain / daysDiff);
     // From 1 year the WHO band is ~3–12 g/day (GROWTH_VELOCITY_12_24); the 15–30 g/day line
-    // is the early-infancy rate and must not be quoted to a toddler (12-month audit).
-    const vb = GROWTH_VELOCITY_12_24;
+    // is the early-infancy rate and must not be quoted to a toddler (12-month audit). Under 12 m
+    // the band is WHO P15–P85 for the age and sex too (S4) — 15–30 g/day was wrong after ~4 m.
+    const vb = growthVelocityBand(mo);
     if (mo >= 12) {
       if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
         facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. ${childNameCapHtml()} is growing steadily.` });
       }
-    } else if (gPerDay >= 15 && gPerDay <= 40) {
-      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. ${childNameCapHtml()} is growing beautifully.` });
-    } else if (gPerDay > 40) {
-      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage, while the growth curve settles on solids.` });
+    } else if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
+      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is ${vb.wGDayMin}–${vb.wGDayMax}g/day. ${childNameCapHtml()} is growing beautifully.` });
+    } else if (gPerDay > vb.wGDayMax) {
+      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain, which is usually fine while a baby finds their own growth curve. Watch the trend across visits.` });
     }
   }
 
@@ -1651,8 +1652,8 @@ function renderVelocity() {
   // Weight velocity
   const wtGainG = Math.round((lastWt.wt - prevWt.wt) * 1000);
   const gPerDay = Math.round(wtGainG / days);
-  const expectedMin = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMin : mo <= 3 ? 25 : mo <= 6 ? 15 : mo <= 9 ? 10 : 8;
-  const expectedMax = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMax : mo <= 3 ? 35 : mo <= 6 ? 25 : mo <= 9 ? 18 : 14;
+  const expectedMin = growthVelocityBand(mo).wGDayMin; // WHO P15–P85, by age and sex
+  const expectedMax = growthVelocityBand(mo).wGDayMax;
   const wtPctFill = Math.min(100, Math.max(5, ((gPerDay - 0) / (expectedMax * 1.5)) * 100));
   const wtColor = (gPerDay >= expectedMin && gPerDay <= expectedMax * 1.3) ? 'var(--tc-sage)' : gPerDay < expectedMin ? 'var(--tc-caution)' : 'var(--tc-sky)';
 
@@ -1689,7 +1690,7 @@ function renderVelocity() {
     const htDays = Math.max(1, Math.round((new Date(htLast.date) - new Date(htPrev.date)) / 86400000));
     const htGainCm = (htLast.ht - htPrev.ht).toFixed(1);
     const cmPerWeek = ((htLast.ht - htPrev.ht) / (htDays / 7)).toFixed(1);
-    const expCmWk = mo >= 12 ? GROWTH_VELOCITY_12_24.hCmWk : mo <= 6 ? '0.4–0.6' : '0.2–0.4';
+    const expCmWk = growthVelocityBand(mo).hCmWk;
     const htColor = parseFloat(cmPerWeek) > 0 ? 'var(--tc-sky)' : 'var(--tc-caution)';
     html += `
       <div class="velocity-gauge vg-sky">
@@ -10617,13 +10618,9 @@ function computeGrowthVelocity() {
     var wGainG = Math.round((wLatest.wt - wPrev.wt) * 1000);
     var gPerDay = Math.round(wGainG / wDaysBetween * 10) / 10;
 
-    // Expected velocity by age
-    var expectedRange;
-    if (bandMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
-    else if (bandMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
-    else if (bandMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
-    else if (bandMo < 12) expectedRange = { min: 8, max: 13, label: '9–12 months' };
-    else expectedRange = { min: GROWTH_VELOCITY_12_24.wGDayMin, max: GROWTH_VELOCITY_12_24.wGDayMax, label: GROWTH_VELOCITY_12_24.label };
+    // Expected velocity by age and sex (WHO P15–P85, g/day; GROWTH_VELOCITY_BANDS)
+    var wBand = growthVelocityBand(bandMo);
+    var expectedRange = { min: wBand.wGDayMin, max: wBand.wGDayMax, label: wBand.label };
 
     var wStatus;
     if (gPerDay < expectedRange.min * 0.5) wStatus = 'plateau';
@@ -10680,9 +10677,9 @@ function computeGrowthVelocity() {
     var cmGain = Math.round((hLatest.ht - hPrev.ht) * 10) / 10;
     var cmPerMonth = Math.round(cmGain / hDaysBetween * 30.44 * 10) / 10;
 
-    // 12–24 m band from the shared WHO constant (Maren V-M-266-2 — this site was missed).
-    var hExpected = hBandMo >= 12 ? { min: GROWTH_VELOCITY_12_24.hCmMoMin, max: GROWTH_VELOCITY_12_24.hCmMoMax }
-      : (hBandMo < 6) ? { min: 2.0, max: 3.5 } : { min: 1.0, max: 2.5 };
+    // Band from the shared WHO source, by age and sex (Maren V-M-266-2; S4 for 0–12 m).
+    var hBand = growthVelocityBand(hBandMo);
+    var hExpected = { min: hBand.hCmMoMin, max: hBand.hCmMoMax };
     var hStatus = cmPerMonth < hExpected.min ? 'slow' : (cmPerMonth > hExpected.max ? 'fast' : 'on-track');
     if (hBandMo >= 12 && hDaysBetween < 28) hStatus = 'on-track';
 

@@ -133,9 +133,12 @@ var CT_TEMPLATES = {
       // not on the bottom edge of normal.
       type: 'threshold_met', metric: 'wtGPerWeek',
       operator: '>=', confirmAfterDays: 14,
+      // Under 12 m it resolves at the WHO median for the child's age and sex too (child-sex S4):
+      // a fixed 80 g/week sat far below the 0–4 m median and above the 9–12 m one.
       value: function() {
-        return (typeof ageAt === 'function' && ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined')
-          ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
+        if (typeof ageAt !== 'function') return 80;
+        if (typeof growthVelocityBand === 'function') { const b = growthVelocityBand(ageAt().months); if (b && b.wGWkMedian) return b.wGWkMedian; }
+        return (ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined') ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
       }
     },
     escalationTriggers: [],
