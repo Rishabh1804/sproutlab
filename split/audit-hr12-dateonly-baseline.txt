@@ -8,4 +8,4 @@ intelligence-illness.js 2
 intelligence-qa-handlers.js 30
 intelligence-qa.js 5
 intelligence-quicklog.js 9
-medical.js 87
+medical.js 81

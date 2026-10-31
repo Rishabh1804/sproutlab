@@ -23,21 +23,23 @@ test.describe('child-sex S4: growth-velocity bands', () => {
     // 0–12 m weight: one-month rows from WHO's 1-month increment tables (row m–(m+1) = interval
     // m–(m+1); row 0–1 = "0–4 wks", 28 d; row 1–2 = "4 wks–2 mo") — V-CA-282b-1. Length stays on the
     // 2-month tables.
+    // g/day is DERIVED: floor(g/week ÷ 7, to 0.1) — gvDayFromWeek (V-V-282d-1, V-CA-282d-1).
     const G = {
-      r0: ['0–1 months', 150, 295, 21.5, 41.9, 3.35, 4.55], r1: ['1–2 months', 155, 280, 22.3, 39.6, 3.35, 4.55],
-      r2: ['2–3 months', 110, 220, 16.2, 31.3, 2.7, 3.7], r3: ['3–4 months', 85, 185, 12.3, 26.5, 2.1, 3.05],
-      r4: ['4–5 months', 65, 165, 9.3, 23.1, 1.7, 2.6], r5: ['5–6 months', 45, 145, 6.6, 20.1, 1.35, 2.25],
-      r6: ['6–7 months', 30, 130, 4.7, 18.3, 1.0, 2.0], r8: ['8–9 months', 15, 115, 2.2, 16.1, 1.0, 2.0],
-      r9: ['9–10 months', 5, 110, 1.3, 15.3, 0.85, 1.8], r11: ['11–12 months', 0, 110, 0.4, 15.4, 0.85, 1.8],
-      t1: ['12–18 months', 10, 90, 1.7, 12.3, 0.65, 1.6], t2: ['18–24 months', 0, 90, 0.6, 12.4, 0.45, 1.45],
+      r0: ['0–1 months', 150, 295, 21.4, 42.1, 3.35, 4.55], r1: ['1–2 months', 155, 280, 22.1, 40, 3.35, 4.55],
+      r2: ['2–3 months', 110, 220, 15.7, 31.4, 2.7, 3.7], r3: ['3–4 months', 85, 185, 12.1, 26.4, 2.1, 3.05],
+      r4: ['4–5 months', 65, 165, 9.2, 23.5, 1.7, 2.6], r5: ['5–6 months', 45, 145, 6.4, 20.7, 1.35, 2.25],
+      r6: ['6–7 months', 30, 130, 4.2, 18.5, 1.0, 2.0], r8: ['8–9 months', 15, 115, 2.1, 16.4, 1.0, 2.0],
+      r9: ['9–10 months', 5, 110, 0.7, 15.7, 0.85, 1.8], r11: ['11–12 months', 0, 110, 0, 15.7, 0.85, 1.8],
+      t1: ['12–18 months', 10, 90, 1.4, 12.8, 0.65, 1.6], t2: ['18–24 months', 0, 90, 0, 12.8, 0.45, 1.45],
     };
     const B = {
-      r0: ['0–1 months', 170, 335, 24.3, 47.8, 3.65, 4.85], r1: ['1–2 months', 185, 325, 26.9, 46.4, 3.65, 4.85],
-      r2: ['2–3 months', 130, 250, 18.9, 35.2, 3.0, 4.0], r3: ['3–4 months', 90, 195, 13.2, 27.8, 2.3, 3.3],
-      r4: ['4–5 months', 70, 175, 10.2, 24.6, 1.75, 2.75], r5: ['5–6 months', 45, 150, 7.1, 21.1, 1.4, 2.35],
-      r6: ['6–7 months', 35, 135, 5, 18.9, 1.0, 2.05], r8: ['8–9 months', 15, 120, 2.5, 16.7, 1.0, 2.05],
-      r9: ['9–10 months', 10, 115, 1.5, 16, 0.85, 1.75], r11: ['11–12 months', 0, 115, 0.4, 16, 0.85, 1.75],
-      t1: ['12–18 months', 5, 90, 1.3, 12.9, 0.55, 1.6], t2: ['18–24 months', 5, 85, 0.8, 12.1, 0.45, 1.4],
+      r0: ['0–1 months', 170, 335, 24.2, 47.8, 3.65, 4.85], r1: ['1–2 months', 185, 325, 26.4, 46.4, 3.65, 4.85],
+      r2: ['2–3 months', 130, 250, 18.5, 35.7, 3.0, 4.0], r3: ['3–4 months', 90, 195, 12.8, 27.8, 2.3, 3.3],
+      r4: ['4–5 months', 70, 175, 10, 25, 1.75, 2.75], r5: ['5–6 months', 45, 150, 6.4, 21.4, 1.4, 2.35],
+      r6: ['6–7 months', 35, 135, 5, 19.2, 1.0, 2.05], r8: ['8–9 months', 15, 120, 2.1, 17.1, 1.0, 2.05],
+      r9: ['9–10 months', 10, 115, 1.4, 16.4, 0.85, 1.75], r11: ['11–12 months', 0, 115, 0, 16.4, 0.85, 1.75],
+      // boys 12–18 m length floor 0.6 cm/month (Carina V-CA-282d-4; was 0.55).
+      t1: ['12–18 months', 5, 90, 0.7, 12.8, 0.6, 1.6], t2: ['18–24 months', 5, 85, 0.7, 12.1, 0.45, 1.4],
     };
     // Completed months bracket the age (1.6 → 1–2, never the gentler 2–3), except 11.5+ → the toddler row (V-M-282-9).
     const expectFor = (S: any) => [S.r0, S.r1, S.r1, S.r2, S.r3, S.r4, S.r5, S.r6, S.r8, S.r9, S.r11, S.t1, S.t1, S.t1, S.t2, S.t2];
@@ -60,8 +62,9 @@ test.describe('child-sex S4: growth-velocity bands', () => {
       const girl9 = w.growthVelocityBand(10);
       w._profSave(Object.assign({}, profile.child, { sex: 'm' }), profile.place);
       const boy0 = w.growthVelocityBand(1);
+      // The rows carry no g/day columns: g/day is derived (gvDayFromWeek) — one source (V-CA-282d-1).
       const ordered = ['f', 'm'].every(s => GROWTH_VELOCITY_BANDS[s].every((b: any) =>
-        b.wGWkMin <= b.wGWkMedian && b.wGWkMedian < b.wGWkMax && b.wGDayMin < b.wGDayMax && b.hCmMoMin < b.hCmMoMax));
+        b.wGWkMin <= b.wGWkMedian && b.wGWkMedian < b.wGWkMax && b.wGDayMin === undefined && b.hCmMoMin < b.hCmMoMax));
       return { girl9Min: girl9.wGWkMin, boy0Max: boy0.wGWkMax, boy0Median: boy0.wGWkMedian, ordered };
     });
     expect(r.boy0Max).toBeGreaterThanOrEqual(300);   // WHO boys 0–2 m P85 ≈ 314 g/week (old max 250)
@@ -298,6 +301,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     w.renderGrowthFacts(); w.renderGrowthInsightsPreview(); w.renderVelocity();
     const html = (id) => { const el = document.getElementById(id); return el ? el.innerHTML : ''; };
     const actions = (a) => { const s = a.sections.find(x => x.label === 'WHAT TO TRY'); return s ? s.items.map(i => i.text) : []; };
+    const data = (a) => { const s = a.sections.find(x => x.label === 'WHAT THE DATA SHOWS'); return s ? s.items.map(i => ({ text: i.text, signal: i.signal })) : []; };
     return {
       verdict: w.gvVelocityVerdict(gv), status: cgv.status, factor, totalGainG: cgv.totalGainG,
       nb: cgv.nb ? { status: cgv.nb.status, tone: cgv.nb.tone, referral: cgv.nb.referral, recheck: cgv.nb.recheck, text: cgv.nb.text, short: cgv.nb.short } : null,
@@ -310,6 +314,13 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
       facts: html('growthFacts'), preview: html('growthInsightsPreview'), gauges: html('velocityContent'),
       bar: html('infoGrowthVelocityBar'), pct: html('infoGrowthVelocityPercentile'),
       crossings: w.computeGrowthVelocity().crossings.length, slide: w.computeGrowthVelocity().centileSlide,
+      // Round 4: the data lines with their signals, the headline, and the shared results' fields.
+      qaHeadline: qa.headline, qaData: data(qa), qcData: data(qc),
+      wtTooShort: gv.wtTooShort, wtVerdict: gv.wtVerdict, gPerWeek: cgv.gPerWeek, gPerDay: cgv.gPerDay,
+      range: cgv.expectedRange ? [cgv.expectedRange.min, cgv.expectedRange.max] : null, bandVerdict: cgv.bandVerdict,
+      tooShort: cgv.tooShort,
+      // The Growth chip alone (the container holds every chip, so a tc-warn elsewhere would match).
+      growthChip: chips ? ((chips.querySelector('[data-arg="growth"]') || {}).outerHTML || '') : '',
     };
   }`;
 
@@ -338,6 +349,23 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.ok.qcHeadline).toBe('3.07 kg — early days');
   });
 
+  test('a day 14–20 "not back yet" reading still standing past day 21 escalates to today (Lyra, round-4 gap)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return { fresh: setup(17, 3.20, [[16, 3.15]]), stale: setup(25, 3.20, [[16, 3.15]]) };
+    }, NB_SETUP);
+    // Read on day 17: the bounded "next day or two" line.
+    expect(r.fresh.status).toBe('not-regained');
+    expect(r.fresh.qaActions[0]).toBe('Tell your doctor or midwife in the next day or two — before 3 weeks');
+    expect(r.fresh.factor).toBe(50);
+    // The same day-16 reading on day 25, no newer weigh-in: past NICE 1.1.4's 3-week line.
+    expect(r.stale.status).toBe('not-regained');
+    expect(r.stale.narrative).toContain('3 weeks have now passed — contact your doctor or midwife today');
+    expect(r.stale.narrative).not.toContain('next day or two');
+    expect(r.stale.qaActions[0]).toBe('Contact your doctor or midwife today');
+    expect(r.stale.factor).toBe(25);
+  });
+
   test('until day 28 a window from birth is judged against birth weight, not as a rate (V-M-282b-2, V-CA-282b-2)', async ({ page }) => {
     const r = await page.evaluate((src) => {
       const setup = eval(src);
@@ -356,7 +384,9 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     }
     expect(r.d16.verdict).toBe('not-regained');
     expect(r.d16.status).toBe('not-regained');
-    expect(r.d16.narrative).toContain('Not back to birth weight yet at 16 days. Most babies are by about 2 weeks, almost all by 3 — tell your doctor or midwife.');
+    // Action first, bounded: before 3 weeks; and "Most babies are back" — the verb restored (V-M-282d-4).
+    expect(r.d16.narrative).toContain('Not back to birth weight yet at 16 days. Tell your doctor or midwife in the next day or two — before 3 weeks. Most babies are back by about 2 weeks, almost all by 3.');
+    expect(r.d16.qaActions[0]).toBe('Tell your doctor or midwife in the next day or two — before 3 weeks');
     expect(r.d16.chip).toContain('tc-warn');
     expect(r.d16.insight).toContain('si-insight-warn');
     expect(r.d16.qcHeadline).toBe('3.15 kg — not back to birth weight yet');
@@ -370,10 +400,12 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
   test('a newborn weigh-in older than day 14 asks for a recheck (V-M-282b-4)', async ({ page }) => {
     const r = await page.evaluate((src) => eval(src)(25, 3.40, [[10, 3.30]]), NB_SETUP);
     expect(r.status).toBe('newborn');
-    expect(r.insight).toContain('Last weighed at 10 days, during the after-birth dip — weigh again to check Asha is back to birth weight');
+    // Today is day 25 and the last weight (day 10) was below birth weight: weigh today (V-M-282d-5).
+    expect(r.insight).toContain('Weigh Asha today — if not back to birth weight, contact your doctor or midwife.');
     expect(r.insight).toContain('si-insight-warn');
     expect(r.insight).not.toContain('Early days —');
-    expect(r.visit).toContain('Back to birth weight not yet confirmed (last weighed day 10)');
+    expect(r.factor).toBe(50);
+    expect(r.qaActions[0]).toBe('Weigh Asha today — if not back to birth weight, contact your doctor or midwife');
   });
 
   test('no birth-weight row: no loss flag and no rate verdict from a pre-day-5 window (V-M-282b-1)', async ({ page }) => {
@@ -445,7 +477,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     }, NB_SETUP);
     expect(r.lower.status).toBe('not-regained');
     expect(r.lower.nb.referral).toBe(false);
-    expect(r.lower.narrative).toContain('Lower than at day 3 — not back to birth weight yet. Most babies are by about 2 weeks, almost all by 3 — tell your doctor or midwife.');
+    expect(r.lower.narrative).toContain('Lower than at day 3 — not back to birth weight yet. Tell your doctor or midwife in the next day or two — before 3 weeks.');
     expect(r.lower.chip).toContain('Not back yet');
     expect(r.lowerRef.nb.referral).toBe(true);
     expect(r.lowerRef.narrative).toContain('Lower than at day 3 — not back to birth weight yet at 23 days.');
@@ -507,7 +539,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.d23.nb.short).toBe('Not back to birth weight at 3 weeks — contact your doctor or midwife today');
     expect(r.d23.factor).toBe(25);
     expect(r.d16.factor).toBe(50);
-    expect(r.d16.nb.short).toBe('Not back to birth weight yet — tell your doctor or midwife');
+    expect(r.d16.nb.short).toBe('Not back to birth weight yet — tell your doctor or midwife in the next day or two');
     expect(r.d100.nb).toBeNull();                         // past ~3 months the rate verdict stands
     expect(r.loss.chip).toContain('Down &gt;10%');
     expect(r.d16.chip).toContain('Not back yet');
@@ -526,9 +558,10 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.loss.qc).not.toContain('within normal range');
     expect(r.loss.qg).not.toContain('Growth is on track');
     expect(r.loss.concerns).toContain('Lost 10.6% of birth weight by day 5');
-    expect(r.recheck.qaActions[0]).toMatch(/^Weigh .+ again to confirm the return to birth weight/);
-    expect(r.recheck.qcActions[0]).toMatch(/^Weigh .+ again/);
-    expect(r.recheck.qgActions[0]).toMatch(/^Weigh .+ again/);
+    // Day 25, last weighed below birth weight on day 10: "weigh today" (V-M-282d-5).
+    expect(r.recheck.qaActions[0]).toMatch(/^Weigh .+ today — if not back to birth weight, contact your doctor or midwife$/);
+    expect(r.recheck.qcActions[0]).toMatch(/^Weigh .+ today/);
+    expect(r.recheck.qgActions[0]).toMatch(/^Weigh .+ today/);
     expect(r.recheck.qgActions.join(' | ')).not.toMatch(/on track/i);
     // The plain dip: no percentile or active-play lines either, and no "on track".
     expect(r.dip.qcActions.join(' | ')).not.toMatch(/active play|higher percentile/i);
@@ -696,6 +729,361 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.wkA).toBe(25);
     expect(r.at.verdict).toBe('in');
     expect(r.at.status).toBe('on-track');
+  });
+
+  // ── Round 4 (Vela V-V-282d-*, Carina V-CA-282d-*, Maren V-M-282d-*, Ceres V-C-282d-*, Kael V-K-282d-*) ──
+
+  test('girls 12–18 m, 42 g over 28 days: the shown rate is never below the shown range while the verdict is on track (V-V-282d-1, V-CA-282d-1)', async ({ page }) => {
+    const r = await page.evaluate((src) => eval(src)(456, 3.30, [[428, 9.000], [456, 9.042]]), NB_SETUP);
+    // 42 g / 28 d = 10.5 → 10 g/week: the floor of girls 12–18 m (10–90), so 'in'.
+    expect(r.gPerWeek).toBe(10);
+    expect(r.bandVerdict).toBe('in');
+    expect(r.status).toBe('on-track');
+    expect(r.gPerDay).toBe(1.4);                  // gvDayFromWeek(10): floor(1.43, to 0.1)
+    expect(r.range).toEqual([1.4, 12.8]);          // derived from 10–90 g/week, never the typed 1.7–12.3
+    const title = /Gaining ([\d.]+)g\/day — right on track!/.exec(r.facts);
+    const range = /about ([\d.]+)–([\d.]+)g\/day is typical/.exec(r.facts);
+    expect(title && range).toBeTruthy();
+    expect(Number(title![1])).toBeGreaterThanOrEqual(Number(range![1]));
+    expect(Number(title![1])).toBeLessThanOrEqual(Number(range![2]));
+    expect(r.insight).toContain('Weight gain of 1.4g/day is right in the expected range');
+    expect(r.bar).toContain('1.4–12.8 g/day');
+    expect(r.gauges).toContain('Expected: 1.4–12.8 g/day');
+    expect(r.qa).toContain('1.4 g/day');
+    for (const t of [r.facts, r.insight, r.bar, r.gauges, r.qa]) expect(t).not.toMatch(/1\.5 ?g\/day|1\.7–12\.3/);
+  });
+
+  test('every band row, both sexes: floor0.1(min/7) ≤ shown rate ≤ floor0.1(max/7) exactly when the verdict is in (V-V-282d-1, V-CA-282d-1)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      const f01 = (x: number) => Math.floor(x * 10) / 10;
+      const bad: string[] = [];
+      let engineChecks = 0, helperChecks = 0;
+      for (const sex of ['f', 'm']) {
+        GROWTH_VELOCITY_BANDS[sex].forEach((row: any) => {
+          // The window's midpoint inside the row (a quarter in for one-month rows — 11.5 m+ takes the
+          // toddler row; the 0–1 m row uses days 15 → 43, past the newborn window with no birth row).
+          const mid = row.toMo - row.fromMo > 1 ? (row.fromMo + row.toMo) / 2 : row.fromMo + 0.25;
+          const latestDay = row.fromMo === 0 ? 43 : Math.round(mid * 30.44 + 14);
+          const ageDays = latestDay + 2;
+          w._profSave(Object.assign({}, profile.child, { dob: day(-ageDays), sex, solidsStart: null }), profile.place);
+          const midAge = row.fromMo === 0 ? 29 / 30.44 : mid;
+          const band = w.growthVelocityBand(midAge);
+          if (band.label !== row.label) bad.push(sex + ' ' + row.label + ': lookup gave ' + band.label);
+          if (band.wGDayMin !== f01(row.wGWkMin / 7) || band.wGDayMax !== f01(row.wGWkMax / 7)) bad.push(sex + ' ' + row.label + ': g/day not derived');
+          // Helper sweep: every whole g/week from below the floor to past 1.3× the top.
+          for (let k = row.wGWkMin - 10; k <= Math.ceil(row.wGWkMax * 1.3) + 5; k++) {
+            const shown = w.gvDayFromWeek(k);
+            const inShown = band.wGDayMin <= shown && shown <= band.wGDayMax;
+            if (inShown !== (w.gvBandVerdict(k, midAge) === 'in')) bad.push(sex + ' ' + row.label + ' k=' + k);
+            helperChecks++;
+          }
+          // Engine: a real 28-day window giving exactly k g/week, at the edges and the median.
+          for (const k of [row.wGWkMin - 1, row.wGWkMin, row.wGWkMedian, row.wGWkMax, row.wGWkMax + 1]) {
+            growthData = [{ date: day(latestDay - 28 - ageDays), wt: 5 }, { date: day(latestDay - ageDays), wt: (5000 + 4 * k) / 1000 }];
+            const cw = w.computeGrowthVelocity().weight;
+            const gv = w.getGrowthVelocity();
+            const inShown = cw.expectedRange.min <= cw.gPerDay && cw.gPerDay <= cw.expectedRange.max;
+            if (cw.gPerWeek !== k || gv.wtGPerWeek !== k || cw.nb || cw.tooShort) bad.push(sex + ' ' + row.label + ' engine k=' + k + ' setup');
+            else if (inShown !== (cw.bandVerdict === 'in') || cw.expectedRange.label !== row.label) bad.push(sex + ' ' + row.label + ' engine k=' + k);
+            engineChecks++;
+          }
+        });
+      }
+      return { bad, engineChecks, helperChecks };
+    });
+    expect(r.bad).toEqual([]);
+    expect(r.engineChecks).toBe(140);
+    expect(r.helperChecks).toBeGreaterThan(3000);
+  });
+
+  test('from 12 m the Gain-rate gauge takes the Growth tab pair; too short is neutral "Too soon to judge" on the gauge, the Info bar and the Home chip (V-V-282d-2, -3, -7)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return {
+        pair: setup(400, 3.30, [[340, 9.50], [393, 9.45], [400, 9.50]]),
+        short: setup(400, 3.30, [[380, 9.50], [392, 9.45]], { noBirth: true }),
+      };
+    }, NB_SETUP);
+    // The 60-day window (340 → 400), not the 7-day pair (+50 g, "7 g/day").
+    expect(r.pair.gauges).toContain('In 60 days');
+    expect(r.pair.gauges).toContain('Expected: 1.4–12.8 g/day');
+    expect(r.pair.gauges).toContain('var(--tc-caution)');
+    expect(r.pair.gauges).not.toContain('In 7 days');
+    // Too short: no verdict anywhere — neutral, scored neutral, no bar, a "Too soon" chip.
+    expect(r.short.status).toBe('too-short');
+    expect(r.short.tooShort).toBe(true);
+    expect(r.short.factor).toBe(70);
+    expect(r.short.gauges).toContain('Too soon to judge');
+    expect(r.short.gauges).toContain('color:var(--mid)');
+    expect(r.short.bar).toContain('Weight change · too soon to judge');
+    expect(r.short.bar).not.toContain('mi-velocity-range');
+    expect(r.short.wtTooShort).toBe(true);
+    expect(r.short.wtVerdict).toBe('too-short');
+    expect(r.short.growthChip).toContain('Too soon');
+    expect(r.short.growthChip).toContain('tc-neutral');
+    expect(r.short.growthChip).not.toContain('healthy');
+    expect(r.short.narrative).toContain('too soon to judge');
+  });
+
+  test('Home uses the Growth tab rule above the top: up to 1.3× is "healthy", beyond is a neutral "above range", never a warning (V-V-282d-4)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      // Girls 6–7 m (30–130 g/week; 1.3× = 169), a 28-day window ending at day 214.
+      return { near: setup(214, 3.30, [[186, 7.000], [214, 7.600]]), far: setup(214, 3.30, [[186, 7.000], [214, 7.800]]) };
+    }, NB_SETUP);
+    expect(r.near.gPerWeek).toBe(150);
+    expect(r.near.status).toBe('on-track');
+    expect(r.near.verdict).toBe('in');
+    expect(r.near.growthChip).toContain('tc-good');
+    expect(r.near.growthChip).toContain('healthy');
+    // On track but above the shown range: never "right in the expected range" or "right on track".
+    expect(r.near.insight).toContain('a little above the usual 4.2–18.5g/day');
+    expect(r.near.facts).not.toContain('right on track');
+    expect(r.far.gPerWeek).toBe(200);
+    expect(r.far.status).toBe('fast');
+    expect(r.far.verdict).toBe('above');
+    expect(r.far.growthChip).toContain('tc-neutral');
+    expect(r.far.growthChip).toContain('above range');
+    expect(r.far.growthChip).not.toContain('tc-warn');
+    expect(r.far.facts).toContain('healthy appetite');
+    expect(r.far.preview).not.toContain('ds-amber');
+  });
+
+  test('the birth-ratio gauge shows the floored % below birth weight; the Home chip uses the newborn chip word, "Back to birth wt" included (V-V-282d-5, -6)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return { below: setup(40, 3.40, [[20, 3.30], [40, 3.35]]), back: setup(14, 3.40, [[14, 3.40]]) };
+    }, NB_SETUP);
+    expect(r.below.gauges).toContain('98%');               // 3350 / 3400 = 98.5% → 98
+    expect(r.below.gauges).toContain('of birth wt');
+    expect(r.below.gauges).not.toContain('1.0×');
+    expect(r.back.growthChip).toContain('Back to birth wt');
+    expect(r.back.growthChip).toContain('tc-good');
+    expect(r.back.growthChip).not.toContain('g/wk');
+  });
+
+  test('"is she losing weight": a 21-day-old with no birth row who is losing weight gets warn and a doctor action first, never "within normal range" (V-M-282d-1)', async ({ page }) => {
+    const r = await page.evaluate((src) => eval(src)(21, 3.40, [[5, 3.20], [21, 3.10]], { noBirth: true }), NB_SETUP);
+    expect(r.status).toBe('not-regained');
+    expect(r.qcData.some((d: any) => d.signal === 'warn')).toBe(true);
+    expect(r.qcActions[0]).toMatch(/doctor/i);
+    expect(r.qc).not.toContain('within normal range');
+    expect(r.qcActions.join(' | ')).not.toMatch(/higher percentile|active play/i);
+  });
+
+  test('"is she losing weight": a 10-month-old sliding from the 52nd to the 5th centile is warned, with the slide and a doctor action (V-M-282d-1)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      const ageDays = Math.round(10 * 30.44) + 2;
+      w._profSave(Object.assign({}, profile.child, { dob: day(-ageDays), sex: 'f', solidsStart: null }), profile.place);
+      const wtAt = (dayOfLife: number, target: number) => {
+        const ref = w.getGrowthRef(w.ageMonthsAt(day(dayOfLife - ageDays)));
+        let lo = ref.w3 * 0.8, hi = ref.w97;
+        for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (w.calcPercentile(mid, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85).pct < target) lo = mid; else hi = mid; }
+        return Math.round(hi * 1000) / 1000;
+      };
+      const targets = [52, 42, 32, 22, 13, 5];
+      growthData = targets.map((t, i) => { const d = Math.round((4 + i) * 30.44); return { date: day(d - ageDays), wt: wtAt(d, t) }; });
+      const g = w.computeGrowthVelocity();
+      const qc = w.qaAnswerWeightConcern('weight_concern');
+      const sec = (label: string) => (qc.sections.find((x: any) => x.label === label) || { items: [] }).items;
+      return { slide: g.centileSlide, crossings: g.crossings.length, pct: g.latestPercentile,
+        data: sec('WHAT THE DATA SHOWS'), actions: sec('WHAT TO TRY').map((i: any) => i.text), all: JSON.stringify(qc.sections) };
+    });
+    expect(r.slide).not.toBeNull();
+    expect(r.crossings).toBe(0);
+    expect(r.data.some((d: any) => d.signal === 'warn')).toBe(true);
+    expect(r.data.map((d: any) => d.text).join(' | ')).toContain('Weight has moved down');
+    expect(r.actions[0]).toMatch(/doctor/i);
+    expect(r.all).not.toContain('within normal range');
+    expect(r.actions.join(' | ')).not.toMatch(/higher percentile|active play/i);
+  });
+
+  test('no birth row: a first weigh-in before day 14 stands in for birth weight (V-M-282d-2), and the answer does not flip with its day (V-K-282d-1)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return {
+        loss: setup(21, 3.40, [[7, 3.20], [21, 3.15]], { noBirth: true }),
+        d3: setup(20, 3.40, [[3, 3.00], [20, 3.30]], { noBirth: true }),
+        d6: setup(20, 3.40, [[6, 3.00], [20, 3.30]], { noBirth: true }),
+      };
+    }, NB_SETUP);
+    expect(r.loss.status).toBe('not-regained');
+    expect(r.loss.nb.referral).toBe(true);
+    expect(r.loss.qaActions[0]).toBe('Contact your doctor or midwife today');
+    for (const k of ['status', 'verdict', 'factor'] as const) expect(r.d6[k]).toEqual(r.d3[k]);
+    expect(r.d6.nb && r.d6.nb.tone).toBe(r.d3.nb && r.d3.nb.tone);
+    expect(r.d6.nb.tone).toBe('caution');
+    expect(r.d6.qa).not.toMatch(/gaining well/);
+  });
+
+  test('a drop after the regain counts from 20 g: 10 g is scale noise (V-K-282d-2)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return { noise: setup(20, 3.30, [[10, 3.40], [20, 3.39]]), drop: setup(20, 3.30, [[10, 3.40], [20, 3.37]]) };
+    }, NB_SETUP);
+    expect(r.noise.nb.status).toBe('regained');
+    expect(r.noise.verdict).toBe('in');
+    expect(r.drop.nb.status).toBe('newborn');
+    expect(r.drop.nb.tone).toBe('caution');
+    expect(r.drop.narrative).toContain('down 30 g since day 10');
+  });
+
+  test('still losing after day 5 below birth weight is a caution with "today", scored 50; the newborn fallback defers to the doctor or midwife (V-M-282d-3)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return { probe: setup(10, 3.40, [[4, 3.20], [7, 3.15], [10, 3.10]]), dip: setup(5, 3.40, [[5, 3.20]]) };
+    }, NB_SETUP);
+    expect(r.probe.status).toBe('newborn');
+    expect(r.probe.nb.tone).toBe('caution');
+    expect(r.probe.factor).toBe(50);
+    expect(r.probe.nb.text).toContain('Still losing after the first days');
+    expect(r.probe.nb.text).toContain('Tell your doctor or midwife today');
+    expect(r.probe.qaActions[0]).toBe('Tell your doctor or midwife today');
+    expect(r.probe.growthChip).toContain('tc-warn');
+    expect(r.probe.qa).not.toContain('every 1-2 weeks');
+    expect(r.dip.nb.tone).toBe('neutral');
+    expect(r.dip.qaActions).toContain('Keep to the weigh-ins your doctor or midwife suggests');
+    expect(r.dip.qa).not.toContain('every 1-2 weeks');
+  });
+
+  test('qaAnswerWeightGain: a slide sits right after the weight line, changes the headline, has one action, and below the 3rd centile asks for a weight check (V-M-282d-6, -7)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      const run = (ageDays: number, pts: [number, number][]) => {
+        w._profSave(Object.assign({}, profile.child, { dob: day(-ageDays), sex: 'f', solidsStart: null }), profile.place);
+        const wtAt = (dayOfLife: number, target: number) => {
+          const ref = w.getGrowthRef(w.ageMonthsAt(day(dayOfLife - ageDays)));
+          let lo = ref.w3 * 0.8, hi = ref.w97;
+          for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (w.calcPercentile(mid, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85).pct < target) lo = mid; else hi = mid; }
+          return Math.round(hi * 1000) / 1000;
+        };
+        growthData = pts.map(([d, t]) => ({ date: day(d - ageDays), wt: wtAt(d, t) }));
+        const g = w.computeGrowthVelocity();
+        const qa = w.qaAnswerWeightGain('weight_gain');
+        const sec = (label: string) => (qa.sections.find((x: any) => x.label === label) || { items: [] }).items.map((i: any) => i.text);
+        return { slide: g.centileSlide, headline: qa.headline, data: sec('WHAT THE DATA SHOWS'), actions: sec('WHAT TO TRY') };
+      };
+      const ageDays = Math.round(11 * 30.44) + 2;
+      const m = (i: number) => Math.round((6 + i) * 30.44);
+      return {
+        two: run(ageDays, [[m(0), 55], [m(1), 45], [m(2), 35], [m(3), 25], [m(4), 18], [m(5), 12]]),
+        low: run(ageDays, [[m(0), 40], [m(1), 30], [m(2), 20], [m(3), 12], [m(4), 6], [m(5), 2]]),
+        // From the birth row (day 0, 55th) within 6 months; the points after day 28 alone cross one line.
+        birth: run(150, [[0, 55], [60, 30], [90, 22], [120, 16], [150, 12]]),
+      };
+    });
+    expect(r.two.slide).not.toBeNull();
+    expect(r.two.headline).not.toMatch(/gaining well/);
+    expect(r.two.data[1]).toMatch(/^Weight has moved down two centile lines/);
+    expect(r.two.actions.filter((a: string) => /centile|percentile/i.test(a)).length).toBe(1);
+    expect(r.two.actions[0]).toBe('Mention the centile change to your doctor');
+    expect(r.low.slide).not.toBeNull();
+    expect(r.low.slide.to).toBeLessThan(3);
+    expect(r.low.actions[0]).toBe('Book a weight check with your doctor');
+    expect(r.birth.slide).not.toBeNull();
+    expect(r.birth.slide.from).toBeGreaterThan(50);
+  });
+
+  test('food gate by TODAY\'s age: 6.5 m before solids gets the start-solids note; a 5.8 m weigh-in read at 6.5 m with solids gets food advice (V-C-282d-1, V-K-282d-6)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const w = window as any;
+      const setup = eval(src);
+      const noSolids = setup(198, 3.30, [[170, 7.00], [198, 7.02]], { solidsStartDay: 230 });
+      const now = new Date();
+      for (let i = 0; i < 28; i++) feedingData[w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 28 + i))] = { breakfast: 'rice cereal' };
+      w.renderInfoGrowthDiet();
+      const card = (document.getElementById('infoGrowthDietInsights') || {} as any).innerHTML || '';
+      const nut = (document.getElementById('infoGrowthDietNutrients') || {} as any).innerHTML || '';
+      const pivNo = w.ctPivotStrategies({ category: 'weight_gain' });
+      const late = setup(198, 3.30, [[148, 6.50], [176, 6.55]], { solidsStartDay: 185 });
+      const pivLate = w.ctPivotStrategies({ category: 'weight_gain' });
+      return { noSolids, card, nut, pivNo, late, pivLate, ok: w.gvFoodAdviceOk() };
+    }, NB_SETUP);
+    const START = 'From 6 months babies need solid foods alongside milk — talk to your doctor about starting solids and her weight.';
+    const MILK = 'Under 6 months, milk is the whole diet';
+    expect(['slow', 'plateau']).toContain(r.noSolids.status);
+    expect(r.noSolids.qa).toContain(START);
+    expect(r.noSolids.qa).not.toContain(MILK);
+    expect(r.noSolids.qa).not.toMatch(/ghee|calorie|extra meal|Food tab/i);
+    expect(r.noSolids.insight).toContain(START);
+    expect(r.card).toContain(START);
+    expect(r.card).not.toContain(MILK);
+    expect(r.nut).toBe('');                                 // the diet grid is hidden while the gate is closed (V-C-282d-4a)
+    expect(r.pivNo).toContain(START);
+    expect(r.pivNo.join(' | ')).not.toMatch(/Increase meal frequency|calorie-dense/);
+    // Weighed at 5.8 m, read at 6.5 m with solids under way: food advice, not the milk note.
+    expect(r.ok).toBe(true);
+    expect(r.late.qa).toMatch(/extra meal|calorie-dense/);
+    expect(r.late.qa).not.toContain(MILK);
+    expect(r.pivLate).toContain('Increase meal frequency');
+  });
+
+  test('ctPivotStrategies under 6 months: the milk note, and no "Increase meal frequency" (V-C-282d-3)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      w._profSave(Object.assign({}, profile.child, { dob: day(-120), sex: 'f', solidsStart: null }), profile.place);
+      growthData = [{ date: day(-120), wt: 3.3 }, { date: day(-30), wt: 5.6 }, { date: day(-2), wt: 5.7 }];
+      return w.ctPivotStrategies({ category: 'weight_gain' });
+    });
+    expect(r).toContain('Under 6 months, milk is the whole diet — talk to your doctor about feeding.');
+    expect(r.join(' | ')).not.toMatch(/Increase meal frequency|calorie-dense/);
+    expect(r).toContain('Schedule weight check with pediatrician');
+  });
+
+  test('a loss on the food-OK path ends with the doctor, never "could be normal"; visit prep and the closed-gate card say "Weight down" (V-C-282d-2, -4b, -4c)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const w = window as any;
+      const setup = eval(src);
+      const loss = setup(300, 3.30, [[272, 8.50], [300, 8.40]]);
+      setup(150, 3.30, [[122, 6.00], [150, 5.95]]);
+      const now = new Date();
+      for (let i = 0; i < 28; i++) feedingData[w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 28 + i))] = { breakfast: 'rice cereal' };
+      w.renderInfoGrowthDiet();
+      const card = (document.getElementById('infoGrowthDietInsights') || {} as any).innerHTML || '';
+      return { loss, card };
+    }, NB_SETUP);
+    expect(r.loss.status).toBe('plateau');
+    expect(r.loss.insight).toContain('Mention it to your doctor.');
+    expect(r.loss.insight).not.toContain('could be normal');
+    expect(r.loss.concerns).toContain('Weight down 3.6g/day');
+    expect(r.loss.concerns).not.toMatch(/Weight gain is plateau \(-/);
+    expect(r.card).toContain('Weight down');
+    expect(r.card).not.toMatch(/velocity is below typical range \(-/);
+  });
+
+  test('the calorie-dense food line names nuts only once they have been introduced (V-C-282d-4e)', async ({ page }) => {
+    // Girls 6–7 m (30–130 g/week): 80 g in 28 days = 20 g/week, slow; 7 months old, solids started.
+    const r = await page.evaluate((src) => eval(src)(214, 3.30, [[186, 7.00], [214, 7.08]]), NB_SETUP);
+    expect(r.status).toBe('slow');
+    expect(r.qa).toContain('smooth nut butter thinned with milk or water (once nuts have been introduced)');
+  });
+
+  test('both engines ignore a stored wt:0 row and an undated row (V-K-282d-5)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      w._profSave(Object.assign({}, profile.child, { dob: day(-300), sex: 'f', solidsStart: null }), profile.place);
+      const clean = [{ date: day(-300), wt: 3.3 }, { date: day(-40), wt: 8.40 }, { date: day(-5), wt: 8.60 }];
+      const pick = () => { const gv = w.getGrowthVelocity(); const cw = w.computeGrowthVelocity().weight;
+        return { gvLatest: gv.wtLatest.date, gvPrev: gv.wtPrevious.date, gvG: gv.wtGPerWeek, cwLatest: cw.latest.date, cwPrev: cw.prev.date, birth: w.gvBirthRow() && w.gvBirthRow().date }; };
+      growthData = clean.slice();
+      const a = pick();
+      growthData = clean.concat([{ date: day(-1), wt: 0 }, { wt: 9.1 } as any, { date: '', wt: 9.2 } as any, { date: day(-2), wt: null } as any]);
+      const b = pick();
+      return { a, b };
+    });
+    expect(r.b).toEqual(r.a);
   });
 
   test('"since birth" uses the birth-date row for each measure; no height at birth → no height line (V-M-282c-7, V-CA-282c-6)', async ({ page }) => {

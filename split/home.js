@@ -10369,12 +10369,19 @@ function renderTrendChips() {
     const tone = gvVerdictTone(verdict, velocity.wtNewborn);
     const ok = verdict === 'in';
     const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained' || (verdict === 'newborn' && tone === 'caution');
-    const delta = ok ? zi('check') + ' healthy' : nbFlag ? zi('warn') + ' check weight' : verdict === 'newborn' ? 'early days' : zi('warn') + ' check';
-    // The newborn line's own chip word — "Down >10%", "Not back yet", "Weigh again" — never "Early
-    // days" on a flag (Maren V-M-282c-6).
+    // 'in' covers up to 1.3× the band top (the Growth tab's on track); beyond that 'above' is a
+    // neutral "above range", never a warning (Vela V-V-282d-4). Too short a window: "Too soon",
+    // neutral (V-V-282d-7). Colour from the shared tone alone (PC-10).
+    const delta = ok ? zi('check') + ' healthy' : nbFlag ? zi('warn') + ' check weight'
+      : verdict === 'newborn' ? 'early days' : verdict === 'too-short' ? 'too soon to judge'
+      : verdict === 'above' ? 'above range' : zi('warn') + ' check';
+    // The newborn line's own chip word whenever there is a newborn line — "Down >10%", "Not back
+    // yet", "Weigh again", "Back to birth wt" — never "Early days" on a flag (Maren V-M-282c-6,
+    // Vela V-V-282d-6). Escaped: it goes into innerHTML ("Down >10%" — HR-4).
     const nbChip = velocity.wtNewborn && velocity.wtNewborn.chip;
-    const value = (verdict === 'newborn' || nbFlag) ? (nbChip || 'Early days') : velocity.wtGPerWeek + 'g/wk';
-    chips.push({ icon:zi('chart'), label:'Growth', value, delta, cls: tone === 'good' ? 'tc-good' : tone === 'neutral' && verdict === 'newborn' ? 'tc-neutral' : 'tc-warn', tab:'growth' });
+    const value = velocity.wtNewborn ? escHtml(nbChip || 'Early days')
+      : verdict === 'too-short' ? 'Too soon' : velocity.wtGPerWeek + 'g/wk';
+    chips.push({ icon:zi('chart'), label:'Growth', value, delta, cls: tone === 'good' ? 'tc-good' : tone === 'neutral' ? 'tc-neutral' : 'tc-warn', tab:'growth' });
   } else {
     chips.push({ icon:zi('chart'), label:'Growth', value:'Need 2+ measurements', delta:'—', cls:'tc-neutral', tab:'growth' });
   }
@@ -10518,7 +10525,8 @@ function renderInsightsStats() { /* v2.4: DORMANT — insights cards replaced by
   const velVerdict = gvVelocityVerdict(velocity);
   const velTone = velVerdict == null ? null : gvVerdictTone(velVerdict, velocity.wtNewborn);
   const velInRange = velVerdict === 'in';
-  const velColor = velVerdict == null ? 'hsp-rose' : velInRange ? 'hsp-sage' : (velVerdict === 'newborn' && velTone === 'neutral') ? '' : 'hsp-peach';
+  // Neutral (the plain dip, past 1.3× the top, too soon to judge) takes no modifier — V-V-282d-4, -7.
+  const velColor = velVerdict == null ? 'hsp-rose' : velInRange ? 'hsp-sage' : velTone === 'neutral' ? '' : 'hsp-peach';
 
   el.innerHTML = `
     <div class="home-stat-pill ${wtColor}" data-scroll-to="insightsGrowthCard" data-scroll-block="start">
@@ -10627,7 +10635,7 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
     if (velocity.wtGPerWeek != null) {
       const verdict = gvVelocityVerdict(velocity);
       const tone = gvVerdictTone(verdict, velocity.wtNewborn);
-      const pillCls = tone === 'good' ? 'ipp-good' : (verdict === 'newborn' && tone === 'neutral') ? 'ipp-neutral' : 'ipp-warn';
+      const pillCls = tone === 'good' ? 'ipp-good' : tone === 'neutral' ? 'ipp-neutral' : 'ipp-warn';   // V-V-282d-4, -7
       pills += `<span class="ins-preview-pill ${pillCls}">${zi('scale')} ${velocity.wtGPerWeek}g/wk</span>`;
     }
     const latestWt = getLatestWeight();
@@ -10649,7 +10657,7 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
     // A recheck / "down since the last weigh-in" newborn line is a flag too (its tone is caution).
     const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained' || (verdict === 'newborn' && gvVerdictTone(verdict, velocity.wtNewborn) === 'caution');
     const cls = inRange ? 'trend-up' : (verdict === 'below' || nbFlag) ? 'trend-down' : 'trend-flat';
-    const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : nbFlag ? 'check weight' : verdict === 'newborn' ? 'early days' : '↑ above range';
+    const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : nbFlag ? 'check weight' : verdict === 'newborn' ? 'early days' : verdict === 'too-short' ? 'too soon to judge' : '↑ above range';
     html += `<div class="insight-row">
       <div class="ir-icon">${zi('scale')}</div>
       <div class="ir-body">

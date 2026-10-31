@@ -5,7 +5,7 @@
 # today's age: two cards judging the same gain at different ages disagreed at a bracket edge
 # (#25). This gate checks the age argument of every band / verdict helper —
 #   growthVelocityBand(age), gvBandVerdict(gain, age), gvWeightVerdict(gain, age, latestAge),
-#   _gvNewbornWindow(age)
+#   gvRateStatus(gPerWeek, age), _gvNewbornWindow(age)
 # — and fails when it is today's age: ageAt( / getAgeInMonths( / today() / new Date() anywhere
 # in the argument, a no-argument gvAgeAt() (which falls back to today), or any identifier in the
 # argument whose assignment in the 40 lines above (joined across lines up to `;`) uses one of
@@ -18,7 +18,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 node - <<'NODE'
 const fs = require('fs');
-const WATCH = { growthVelocityBand: [0], gvBandVerdict: [1], gvWeightVerdict: [1, 2], _gvNewbornWindow: [0] };
+const WATCH = { growthVelocityBand: [0], gvBandVerdict: [1], gvWeightVerdict: [1, 2], gvRateStatus: [1], _gvNewbornWindow: [0] };
 const TODAY = /\bageAt\s*\(|\bageAt\w*\s*\(\s*\)|\bpreciseAge\s*\(|\bgetAgeInMonths\s*\(|\btoday\s*\(\s*\)|new\s+Date\s*\(\s*\)|\bDate\.now\s*\(|\bgvAgeAt\s*\(\s*(?:null|undefined)?\s*\)|\bgvBandAge\s*\(\s*(?:null|undefined)?\s*[,)]/;
 function args(src, open) {            // top-level args of the call whose '(' is at `open`
   let depth = 0, cur = '', out = [], q = null;
@@ -140,6 +140,8 @@ const T = [
   { src: 'var mo = e ? gvAgeAt(e) : ageAt().months; var b = growthVelocityBand(mo);', bad: 1 },
   { src: 'function f(mo = ageAt().months) {\n  return growthVelocityBand(mo);\n}', bad: 1 },
   { src: 'const mo = gvAgeAt(e); growthVelocityBand(mo); const later = ageAt().months;', bad: 0 },
+  { src: 'gvRateStatus(gw, ageAt().months);', bad: 1 },
+  { src: 'gvRateStatus(gw, gvBandAge(v.a, v.b));', bad: 0 },
 ];
 let fails = 0;
 T.forEach((t, i) => { const n = scan('fixture' + i, t.src, () => {}); if (n !== t.bad) { fails++; console.error(`audit-growth-age: SELF-TEST FAIL fixture ${i}: ${n} (want ${t.bad})`); } });

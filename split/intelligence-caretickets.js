@@ -155,7 +155,7 @@ var CT_TEMPLATES = {
     escalationTriggers: [],
     autoDataSources: ['growth'],
     pivotStrategies: [
-      'Add calorie-dense foods (ghee, avocado, smooth nut butter thinned with milk or water)',
+      'Add calorie-dense foods (ghee, avocado, smooth nut butter thinned with milk or water, once nuts have been introduced)',
       'Increase meal frequency',
       'Check for underlying illness suppressing appetite',
       'Schedule weight check with pediatrician'
@@ -215,13 +215,13 @@ function ctEscalationTriggers(ticket) {
 function ctPivotStrategies(ticket) {
   var tpl = CT_TEMPLATES[ticket.category];
   var list = (tpl && tpl.pivotStrategies) ? tpl.pivotStrategies : [];
-  // Food pivots only where food is part of the diet: under 6 months, or before solids, milk is the
-  // whole diet (gvFoodAdviceOk, core.js — Ceres V-C-282c-4).
-  if (ticket.category === 'weight_gain' && typeof gvFoodAdviceOk === 'function') {
-    var gvP = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
-    if (!gvFoodAdviceOk(gvP && gvP.wtLatest ? gvP.wtLatest : null)) {
-      return list.map(function(s) { return /^Add calorie-dense foods/.test(s) ? GV_MILK_ONLY_NOTE : s; });
-    }
+  // Food pivots only where food is part of the diet (gvFoodAdviceOk, core.js: 6 months of age today
+  // AND solids started — Ceres V-C-282c-4, Kael V-K-282d-6). Closed: the calorie-dense line becomes
+  // the gate note chosen by today's age (gvGateNote — Ceres V-C-282d-1), and "Increase meal
+  // frequency" goes too — it is food advice as well (Ceres V-C-282d-3).
+  if (ticket.category === 'weight_gain' && typeof gvFoodAdviceOk === 'function' && !gvFoodAdviceOk()) {
+    return list.filter(function(s) { return !/^Increase meal frequency/.test(s); })
+      .map(function(s) { return /^Add calorie-dense foods/.test(s) ? gvGateNote() : s; });
   }
   return list;
 }

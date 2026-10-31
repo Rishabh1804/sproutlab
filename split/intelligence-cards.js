@@ -1044,8 +1044,15 @@ function renderInfoGrowthDiet() {
     perEl.innerHTML = pHtml;
   }
 
+  // Food lines only where food is part of the diet (gvFoodAdviceOk: 6 months of age today AND solids
+  // started — V-K-282d-6, Ceres V-C-282c-3). Closed, the "Diet During This Period" grid is hidden
+  // too: nutrient bars beside "milk is the whole diet" contradict it (Ceres V-C-282d-4a).
+  var foodOkCard = gvFoodAdviceOk();
+
   // Nutrient coverage
-  if (nutEl) {
+  if (nutEl && !foodOkCard) {
+    nutEl.innerHTML = '';
+  } else if (nutEl) {
     var nHtml = '<div class="cd-section-label">Diet During This Period</div>';
     nHtml += '<div class="si-stat-grid">';
     nHtml += '<div class="si-stat"><div class="si-stat-val">' + avgMeals + '</div><div class="si-stat-label">Avg meals/day</div></div>';
@@ -1064,12 +1071,13 @@ function renderInfoGrowthDiet() {
   // Insights
   if (insEl) {
     var iHtml = '';
-    // Food lines only where food is part of the diet (gvFoodAdviceOk: 6 months at the weigh-in AND
-    // solids started). Otherwise slow gain gets the below-range line and the milk note, and no
-    // "nutrient gaps" — milk is the whole diet (Ceres V-C-282c-3).
-    var foodOkCard = gvFoodAdviceOk(last);
+    // Food closed: slow gain gets the below-range line and the gate note chosen by today's age
+    // (gvGateNote — milk-only under 6 months, start-solids from 6 months; Ceres V-C-282d-1), and no
+    // "nutrient gaps" (Ceres V-C-282c-3). A loss reads "Weight down", never "velocity … (-3.6 g/day)"
+    // (Ceres V-C-282d-4b).
     if (velLabel === 'slow' && !foodOkCard) {
-      iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day). ' + GV_MILK_ONLY_NOTE + '</div>';
+      var slowCardLead = velocity < 0 ? 'Weight down ' + Math.abs(velocity) + ' g/day — below the typical range.' : 'Growth velocity is below typical range (' + velocity + ' g/day).';
+      iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml(gvGateNote()) + '</div>';
     } else if (velLabel === 'slow') {
       var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
         return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;
