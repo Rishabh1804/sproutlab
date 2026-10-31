@@ -260,7 +260,7 @@ function _syncLedgerEntry(v) {
 function _syncMarkNeedsFull(key) {
   if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;   // same activation boundary as _syncMarkDirty
   var m = _syncLoadDirty();
-  var now = Date.now();
+  var now = _syncNow();   // the one ledger clock (Cipher A1, #282)
   var e = _syncLedgerEntry(m[key]) || { f: now, l: now, nf: false };   // positive knowledge of a failed push (Kael F19)
   e.nf = true;
   m[key] = e;
@@ -312,7 +312,7 @@ function _syncMarkDirty(key) {
 function syncMarkUnsynced(keys) {
   if (!_syncLedgerActive()) return;
   var m = _syncLoadDirty();
-  var now = Date.now();
+  var now = _syncNow();   // the one ledger clock (Cipher A1, #282)
   var any = false;
   (keys || []).forEach(function(k) {
     if (!SYNC_KEYS[k]) return;

@@ -88,6 +88,8 @@ let bad = 0;
 for (const f of files) {
   const src = fs.readFileSync(f, 'utf8');
   const msr = f === 'data.js' ? msBlockRange(src) : null;
+  // Without the anchor the milestone label rule would silently switch off (Cipher N3).
+  if (f === 'data.js' && !msr) { bad++; console.error('audit-pronouns: data.js has no "const MILESTONE_STANDARDS = {" block; the milestone label rule cannot run'); }
   const hits = (f.endsWith('.html') ? htmlTexts(src) : jsStrings(src)).filter(h => RX.test(h.s));
   for (const h of hits) {
     const a = allow.find(a => a.file === f && (a.frag.startsWith('=') ? h.s === a.frag.slice(1) : h.s.includes(a.frag)));

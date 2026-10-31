@@ -6,15 +6,16 @@ core.js|=she
 core.js|=her
 core.js|=herself
 # Q&A match vocabulary: canonical she/her; _qaNameAsShe folds a boy's he/him/his onto it (V-K-281-1/2).
-intelligence-qa.js|can she eat
-intelligence-qa.js|how is she
+intelligence-qa.js|=can she eat
+intelligence-qa.js|=how is she
 intelligence-qa.js|=she
 intelligence-qa.js|=her
 intelligence-qa.js|=herself
 # CareTicket weak-signal match words (both forms listed).
-intelligence-caretickets.js|hit her head
-# Emergency-guide keyword match vocabulary (head-injury keywords): canonical she/her match words,
-# which _qaNameAsShe folds a boy's he/him/his onto. Not copy.
+intelligence-caretickets.js|=hit her head
+# Emergency-guide keyword match vocabulary (head-injury keywords). Both forms are listed: Q&A folds
+# a boy's wording onto the she/her form, and the home/Medical symptom searches (which don't fold)
+# match the his form. Not copy.
 data.js|=hit her head
 data.js|=banged her head
 data.js|=bumped her head
