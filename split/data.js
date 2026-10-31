@@ -2952,7 +2952,7 @@ const EMERGENCY_PROTOCOL = {
       'going blue around the lips, or going floppy',
     ],
     steps: [
-      '**Coughing or crying?** Encourage coughing — don’t intervene.',
+      '**Can your child cough or cry?** Encourage coughing — don’t intervene.',
       '**Silent / can’t breathe → 5 back blows** — face-down across your lap, head low (or leaning forward), between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
       '**Then 5 abdominal thrusts** — from behind, fist between the belly button and the ribs, pull **inwards and upwards**. Keep off the lower ribs.',
       '**Alternate** back blows + abdominal thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
@@ -4685,7 +4685,7 @@ const VACC_GUIDANCE = {
     note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
   },
   'mcv': {
-    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask your doctor', 'If the doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
+    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask the doctor', 'If the doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
     donts: ['Don\'t confuse it with the measles vaccine (in India "MCV" often means measles-containing vaccine)'],
     note: 'MenACWY protects against meningococcal meningitis and septicaemia. IAP lists it for special situations, not routine use.',
   },
@@ -5083,7 +5083,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Cry is high-pitched and unlike the usual crying',
       'Crying accompanied by fever or vomiting',
-      'Your child draws both legs up to the abdomen repeatedly (possible intussusception)',
+      'Your child draws the legs up to the tummy repeatedly (possible intussusception)',
       'Nothing calms your child for more than 3 hours'
     ],
     lifeThreat: false,

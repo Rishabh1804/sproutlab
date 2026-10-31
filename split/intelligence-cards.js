@@ -1801,7 +1801,9 @@ function _geReady() {
 // the profile gate is up and the app inert; the entry then shows (an emergency fails toward
 // being visible). No `sex` = every child.
 function _geSexMatch(e) {
-  if (!e || !e.sex) return true;
+  // Only 'f' / 'm' filter; any other value (a typo) shows the entry to everyone, so a bad field
+  // can never hide an emergency (V-CA-282-4).
+  if (!e || (e.sex !== 'f' && e.sex !== 'm')) return true;
   var s = (typeof childSex === 'function') ? childSex() : null;
   return s === null || s === e.sex;
 }

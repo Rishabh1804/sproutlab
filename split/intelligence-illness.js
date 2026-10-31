@@ -350,8 +350,15 @@ function renderFeverEpisodeCard() {
   html += '<li>Keep ' + childNameHtml() + ' lightly dressed — do not over-bundle</li>';
   html += '<li>Offer breast milk or fluids frequently</li>';
   html += '<li>Sponge with lukewarm water (never cold)</li>';
-  if (sev.tier === 'high' || sev.tier === 'critical') {
+  // Under 3 months any temperature of 38°C (100.4°F) or more needs a doctor the same day (NHS
+  // 'High temperature (fever) in children': "Call 111 if your child is under 3 months old and has
+  // a temperature of 38C or higher"; V-M-282-2). The 102°F / 48 h line is for older babies.
+  if (ageAt().months < 3 && lastReading.temp >= 100.4) {
+    html += '<li class="status-action">'+zi('siren')+' Under 3 months: call the doctor now, the same day — temperature is ' + lastReading.temp.toFixed(1) + '°F</li>';
+  } else if (sev.tier === 'high' || sev.tier === 'critical') {
     html += '<li class="status-action">'+zi('siren')+' Call doctor — temperature is ' + lastReading.temp.toFixed(1) + '°F</li>';
+  } else if (ageAt().months < 3) {
+    html += '<li>Under 3 months: call the doctor the same day for any temperature of 100.4°F (38°C) or more</li>';
   } else {
     html += '<li>Call doctor if fever exceeds 102°F or lasts > 48 hours</li>';
   }

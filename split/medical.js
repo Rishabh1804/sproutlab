@@ -6376,7 +6376,7 @@ function renderSleepTips() {
       // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
       // a bed: alcohol, sedating medicine, smoking, sofas).
       tips: ageM >= 12 ? [
-        { icon:zi('baby'), title:'' + pron('poss', true) + ' own sleep position', text:'Now that ' + pron('subj') + ' rolls and moves freely, ' + pron('subj') + ' can settle in whatever position ' + pron('subj') + ' likes. There is no need to turn ' + pron('obj') + ' back.' },
+        { icon:zi('baby'), title:'' + pron('poss', true) + ' own sleep position', text:'Now that ' + pron('subj') + ' rolls and moves freely, ' + pron('subj') + ' can settle in whatever position ' + pron('subj') + ' likes. There is no need to turn ' + pron('obj') + ' onto ' + pron('poss') + ' back.' },
         { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap ' + pron('subj') + ' can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
         { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from ' + pron('poss') + ' face. A light blanket of ' + pron('poss') + ' own is fine from about 1 year.' },
         // No bed rails under 2 y: a toddler can be trapped between rail and mattress (CPSC 16 CFR

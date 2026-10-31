@@ -368,9 +368,9 @@ const GENERAL_EMERGENCIES = [
     // painless in neonates; vomiting common; red/blue, dark in neonate); AAP HealthyChildren
     // 'Undescended Testicles' (an undescended testis can twist).
     id: 'testicular-torsion', icon: 'emergency', name: 'Sudden pain or swelling in the scrotum',
-    severity: 'urgent', callLead: true, sex: 'm',
+    severity: 'urgent', callLead: false, sex: 'm',   // drive, don't wait for an ambulance; the call line says when to call (V-M-282-4)
     immediate: [
-      'Go to the hospital emergency department now. A twisted testis (torsion) is time-critical: surgery within about 4 to 6 hours usually saves it.',
+      'Go to the hospital emergency department now. A twisted testis (torsion) is time-critical: every hour counts, and the sooner surgery happens, the better the chance of saving it.',
       'Do not wait to see if it settles. If you cannot get there safely and fast, call 112 or 108 for an ambulance.',
       'It can happen in babies and in a testis that has not come down. A young baby may not seem to be in pain, so a swollen, red, blue or dark scrotum counts too.'
     ],
@@ -449,6 +449,8 @@ const BODY_CARE_SOURCES = {
   aapHernia: { org: 'AAP', title: 'Inguinal hernia in infants and children', url: 'https://www.healthychildren.org/English/health-issues/conditions/abdominal/Pages/Inguinal-Hernia.aspx' },
   aapLabial: { org: 'AAP', title: 'Labial adhesions in babies and children', url: 'https://healthychildren.org/English/health-issues/conditions/genitourinary-tract/Pages/Labial-Adhesions.aspx' },
   aapUti:    { org: 'AAP', title: 'Detecting urinary tract infections', url: 'https://www.healthychildren.org/English/health-issues/conditions/genitourinary-tract/Pages/Detecting-Urinary-Tract-Infections.aspx' },
+  nhsFever:  { org: 'NHS', title: 'High temperature (fever) in children', url: 'https://www.nhs.uk/conditions/fever-in-children/' },
+  aap2011:   { org: 'AAP', title: 'UTI clinical practice guideline, febrile infants and children 2–24 months (Pediatrics 2011)', url: 'https://pubmed.ncbi.nlm.nih.gov/21873693/' },
   aua:       { org: 'AUA', title: 'Evaluation and treatment of cryptorchidism (2014, reviewed 2025)', url: 'https://www.auanet.org/guidelines-and-quality/guidelines/cryptorchidism-guideline' },
   rchHernia: { org: 'RCH Melbourne', title: 'Inguinal hernia', url: 'https://www.rch.org.au/kidsinfo/fact_sheets/Inguinal_hernia/' },
   rchUdt:    { org: 'RCH Melbourne', title: 'Undescended testes', url: 'https://www.rch.org.au/kidsinfo/fact_sheets/Undescended_testes/' },
@@ -508,7 +510,7 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
   },
   { // §B3 — AUA (statements 3, 4, 11), AAP-UDT, NHS-UDT, RCH-UDT
     id: 'undescended-testes', sex: 'm', ageMinMo: 0, ageMaxMo: 24,
-    title: 'Both testes in the scrotum',
+    title: 'A testis that has not come down (undescended)',
     points: [
       'Both testes should be in the scrotum. When one is not at birth, it often comes down by itself in the first 3 months.',
       'The doctor checks the testes at routine visits.',
@@ -516,8 +518,9 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
       'When a testis has not come down by 6 months, specialists advise surgery within the next year, ideally before 18 months.'
     ],
     seeDoctorIf: [
+      'Neither testis can be felt, especially in a newborn: tell the doctor straight away',   // AUA Statement 5 (V-M-282-1)
+      'You think a testis is not in the scrotum: tell the doctor, so it can be checked and followed',
       'A testis still cannot be seen or felt in the scrotum at 6 months (corrected for early birth)',
-      'Neither testis is in the scrotum: see the doctor sooner, from about 8 weeks',
       'A testis that used to be in the scrotum can no longer be found'
     ],
     emergencyIf: [
@@ -529,13 +532,14 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     id: 'hydrocele', sex: 'm', ageMinMo: 0, ageMaxMo: 24,
     title: 'Fluid swelling in the scrotum (hydrocele)',
     points: [
+      'A hydrocele can look like a hernia, so have the doctor check any new swelling of the scrotum first.',
       'A hydrocele is fluid around a testis that makes the scrotum swell. Many newborn boys have one, and it is usually not painful.',
-      'It may look bigger after crying and smaller after lying down, and can change size over weeks.',
-      'Most go away on their own, often by about the first birthday.',
-      'A hydrocele can look like a hernia, so have the doctor check any swelling of the scrotum.'
+      'It can change size over weeks. A swelling that comes and goes with crying may be a hernia instead: see the doctor soon.',
+      'Once the doctor has said it is a hydrocele, most go away on their own, often by about the first birthday.'
     ],
     seeDoctorIf: [
       'A new swelling of the scrotum, for a first check',
+      'A swelling that gets bigger with crying and smaller when relaxed (it may be a hernia)',
       'It is still there after the first birthday'
     ],
     emergencyIf: [
@@ -547,8 +551,8 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     id: 'testicular-torsion', sex: 'm', ageMinMo: 0, ageMaxMo: 24,
     title: 'Sudden pain in the scrotum (torsion)',
     points: [
-      'A twisted testis (torsion) cuts off its blood supply. It is an emergency: surgery within about 4 to 6 hours usually saves it.',
-      'It is rare in babies but can happen, and is more likely in a testis that has not come down. A young baby may not seem to be in pain.',
+      'A twisted testis (torsion) cuts off its blood supply. It is an emergency: every hour counts, and the sooner surgery happens, the better the chance of saving the testis.',
+      'It is rare in babies but can happen, including in a testis that has not come down. A young baby may not seem to be in pain.',
       'Vomiting is common with it.'
     ],
     seeDoctorIf: [],
@@ -600,13 +604,13 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     seeDoctorIf: [
       'The opening looks closed or partly blocked',
       'Passing urine seems hard, or urine dribbles out afterwards',
-      'Urinary tract infections'
+      'There have been urine infections'
     ],
     emergencyIf: [],
     sources: [S.aapLabial, S.ouhLabial, S.khLabial]
   },
   { // §G3 — NHS-NAPPY, MEDLINE-HORM (newborn only)
-    id: 'newborn-discharge', sex: 'f', ageMinMo: 0, ageMaxMo: 1,
+    id: 'newborn-discharge', sex: 'f', ageMinMo: 0, ageMaxMo: 0,   // first weeks only (V-M-282-3)
     title: 'Newborn discharge',
     points: [
       'In the first days, a white discharge, and sometimes slight bleeding like a mini period, can show in the nappy. It comes from the mother’s hormones and is nothing to worry about.',
@@ -636,7 +640,7 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     sources: [S.aapHernia, S.rchHernia]
   },
   { // §X2 — MEDLINE-HORM (newborn only)
-    id: 'newborn-breasts', sex: 'both', ageMinMo: 0, ageMaxMo: 1,
+    id: 'newborn-breasts', sex: 'both', ageMinMo: 0, ageMaxMo: 0,   // first weeks only (V-M-282-3)
     title: 'Newborn breast swelling',
     points: [
       'Breast swelling is common in newborn boys and girls. It comes from the mother’s hormones and goes by about the second week.',
@@ -647,8 +651,23 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     emergencyIf: [],
     sources: [S.mlHorm]
   },
-  { // §X3 — ISPN-2011, ISPN-2023, AAP-UTI, RCH-UTI, SG-2005, NHS-UTI. Kael + Maren co-own.
-    id: 'fever-uti', sex: 'both', ageMinMo: 0, ageMaxMo: 24,
+  { // §X4 — NHS-FEVER. Under 3 months any fever needs a doctor the same day; the urine-test
+    // advice below starts at 3 months so its "more than 2 days" never reaches a young baby (V-M-282-2).
+    id: 'fever-young-baby', sex: 'both', ageMinMo: 0, ageMaxMo: 2,
+    title: 'Fever in a baby under 3 months',
+    points: [
+      'Under 3 months, any temperature of 38°C (100.4°F) or more needs a doctor the same day, even if the baby seems well.',
+      'A urine infection is one of the causes the doctor will check for.'
+    ],
+    seeDoctorIf: [
+      'Under 3 months: any temperature of 38°C (100.4°F) or more — call the doctor now, the same day',
+      'Does not want to feed, or is not their usual self'
+    ],
+    emergencyIf: [],
+    sources: [S.nhsFever]
+  },
+  { // §X3 — ISPN-2011, ISPN-2023, AAP-UTI-2011, AAP-UTI, RCH-UTI, SG-2005, NHS-UTI. Kael + Maren co-own.
+    id: 'fever-uti', sex: 'both', ageMinMo: 3, ageMaxMo: 24,
     title: 'Fever with no clear cause (urine infection)',
     points: [
       'Under age 2, a urinary tract infection (UTI) is an important cause of fever with no other obvious source, and the fever may be the only sign.',
@@ -663,6 +682,6 @@ const BODY_CARE_GUIDANCE = (function(S) { return [
     emergencyIf: [
       'Very drowsy, confused, or hard to wake'
     ],
-    sources: [S.ispn2023, S.ispn2011, S.aapUti, S.rchUti, S.nhsUti, S.sg2005]
+    sources: [S.ispn2023, S.ispn2011, S.aap2011, S.aapUti, S.rchUti, S.nhsUti, S.sg2005]
   }
 ]; })(BODY_CARE_SOURCES);
