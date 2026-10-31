@@ -19,7 +19,7 @@ cd "$(dirname "$0")"
 node - <<'NODE'
 const fs = require('fs');
 const WATCH = { growthVelocityBand: [0], gvBandVerdict: [1], gvWeightVerdict: [1, 2], _gvNewbornWindow: [0] };
-const TODAY = /\bageAt\s*\(|\bageAt\w*\s*\(\s*\)|\bpreciseAge\s*\(|\bgetAgeInMonths\s*\(|\btoday\s*\(\s*\)|new\s+Date\s*\(\s*\)|\bDate\.now\s*\(|\bgvAgeAt\s*\(\s*\)/;
+const TODAY = /\bageAt\s*\(|\bageAt\w*\s*\(\s*\)|\bpreciseAge\s*\(|\bgetAgeInMonths\s*\(|\btoday\s*\(\s*\)|new\s+Date\s*\(\s*\)|\bDate\.now\s*\(|\bgvAgeAt\s*\(\s*(?:null|undefined)?\s*\)|\bgvBandAge\s*\(\s*(?:null|undefined)?\s*[,)]/;
 function args(src, open) {            // top-level args of the call whose '(' is at `open`
   let depth = 0, cur = '', out = [], q = null;
   for (let i = open; i < src.length; i++) {
@@ -47,29 +47,33 @@ function namesIn(expr) {
 }
 // The right-hand side assigned to `name` in the 40 lines above line index `ln` (joined up to ';'),
 // covering `const x =`, `x =`, `obj.p =` and destructuring `const { p } =` / `const { p: x } =`.
-function rhsOf(lines, name, ln) {
-  const n = esc(name), leaf = name.split('.').pop();
+function rhsOf(lines, name, ln, upto) {
+  const n = esc(name);
   const plain = new RegExp('(?:\\b(?:const|let|var)\\s+|^\\s*|[;,{(]\\s*)' + n + '\\s*=(?![=>])\\s*(.*)');
   const destr = name.includes('.') ? null : new RegExp('\\b(?:const|let|var)\\s*\\{[^}]*?(?:\\b' + n + '\\s*(?=[,}=])|:\\s*' + n + '\\b)[^}]*\\}\\s*=\\s*(.*)');
-  for (let j = ln - 1; j >= Math.max(0, ln - 41); j--) {
-    const am = plain.exec(lines[j]) || (destr && destr.exec(lines[j]));
+  const out = [];
+  // Every assignment in the window counts, not only the nearest (a clean reassignment can sit in
+  // front of a today default: V-K-282d-3). The call's own line counts too, up to the call (V-K-282d-4).
+  for (let j = ln; j >= Math.max(0, ln - 40); j--) {
+    const text = (j === ln && upto != null) ? lines[j].slice(0, upto) : lines[j];
+    const am = plain.exec(text) || (destr && destr.exec(text));
     if (!am) continue;
     let rhs = am[1];
     for (let k = j + 1; k < Math.min(lines.length, j + 30) && !/;\s*(\/\/.*)?$/.test(rhs); k++) rhs += ' ' + lines[k].trim();
-    return { rhs, line: j };
+    out.push({ rhs, line: j });
   }
-  return null;
+  return out;
 }
 // Does `expr` (read at line index ln) carry today's age, directly or through up to 3 assignments?
-function tainted(lines, expr, ln, depth, seen) {
+function tainted(lines, expr, ln, depth, seen, upto) {
   if (TODAY.test(expr)) return expr;
   if (depth > 3) return null;
   for (const name of namesIn(expr)) {
     if (seen.has(name)) continue; seen.add(name);
-    const a = rhsOf(lines, name, ln);
-    if (!a) continue;
-    const hit = tainted(lines, a.rhs, a.line, depth + 1, seen);
-    if (hit) return `${name} (line ${a.line + 1}: ${a.rhs.trim().slice(0, 60)})`;
+    for (const a of rhsOf(lines, name, ln, upto)) {
+      const hit = tainted(lines, a.rhs, a.line, depth + 1, seen, null);
+      if (hit) return `${name} (line ${a.line + 1}: ${a.rhs.trim().slice(0, 60)})`;
+    }
   }
   return null;
 }
@@ -86,7 +90,8 @@ function scan(name, src, log) {
     const a = args(src, m.index + m[0].length - 1);
     for (const k of WATCH[m[1]]) {
       const arg = a[k]; if (!arg) continue;
-      const hit = tainted(lines, arg, ln - 1, 0, new Set());
+      const col = m.index - (src.lastIndexOf('\n', m.index) + 1);   // the call's column on its line
+      const hit = tainted(lines, arg, ln - 1, 0, new Set(), col);
       if (hit) { bad++; log(`audit-growth-age: ${name}:${ln} ${m[1]}(${arg.replace(/\s+/g, ' ').slice(0, 40)}) is today's age via ${hit.replace(/\s+/g, ' ').slice(0, 100)}`); }
     }
   }
@@ -127,6 +132,14 @@ const T = [
   { src: 'growthVelocityBand(lbl(")"), ageAt().months);', bad: 0 },
   { src: 'gvWeightVerdict(g, f(")"), ageAt().months);', bad: 1 },
   { src: 'const { months: m } = getGrowthVelocity();\ngrowthVelocityBand(m);', bad: 0 },
+  // Kael's round-3 bypasses (V-K-282d-3, -4):
+  { src: 'let mo = ageAt().months;\nif (e) { mo = gvAgeAt(e); }\ngrowthVelocityBand(mo);', bad: 1 },
+  { src: 'growthVelocityBand(gvAgeAt(null)); growthVelocityBand(gvAgeAt(undefined));', bad: 2 },
+  { src: 'growthVelocityBand(gvBandAge()); gvBandVerdict(g, gvBandAge(null, p));', bad: 2 },
+  { src: 'const mo = ageAt().months; growthVelocityBand(mo);', bad: 1 },
+  { src: 'var mo = e ? gvAgeAt(e) : ageAt().months; var b = growthVelocityBand(mo);', bad: 1 },
+  { src: 'function f(mo = ageAt().months) {\n  return growthVelocityBand(mo);\n}', bad: 1 },
+  { src: 'const mo = gvAgeAt(e); growthVelocityBand(mo); const later = ageAt().months;', bad: 0 },
 ];
 let fails = 0;
 T.forEach((t, i) => { const n = scan('fixture' + i, t.src, () => {}); if (n !== t.bad) { fails++; console.error(`audit-growth-age: SELF-TEST FAIL fixture ${i}: ${n} (want ${t.bad})`); } });
