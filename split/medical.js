@@ -2247,6 +2247,72 @@ function renderMedicalStats() {
 // ─────────────────────────────────────────
 // MEDICAL TAB — DYNAMIC CARD ORDERING & COLOUR
 // ─────────────────────────────────────────
+// ── Body care (child-sex S3, docs/specs/child-sex-v1.md §4) ─────────────────────────
+// Renders config.js BODY_CARE_GUIDANCE for childSex() and the current age. Content is
+// Maren's and every line is cited (docs/specs/care-guidance-s3-sources.md); this is only
+// the render. An entry without sources never renders (canon-cc-013). Each entry is a
+// <details> disclosure (native, keyboard-accessible, no handler needed): title + an
+// "emergency signs inside" tag on the summary; points / see-the-doctor / emergency /
+// sources in the body. Source links open the cited page in the browser.
+function bodyCareEntriesFor(sex, months) {
+  const reg = (typeof BODY_CARE_GUIDANCE !== 'undefined') ? BODY_CARE_GUIDANCE : [];
+  return reg.filter(e => e
+    && (e.sex === 'both' || (sex && e.sex === sex))
+    && months >= e.ageMinMo && months <= e.ageMaxMo
+    && Array.isArray(e.sources) && e.sources.some(s => s && s.org && s.url));
+}
+
+function _bcList(items, cls) {
+  if (!items || !items.length) return '';
+  return '<ul class="bc-list ' + cls + '">' + items.map(t => '<li>' + escHtml(t) + '</li>').join('') + '</ul>';
+}
+
+function _bcSources(sources) {
+  const rows = sources.filter(s => s && s.org && s.url).map(s => {
+    const safe = /^https:\/\//.test(s.url);   // registry is static, but never emit a non-https href
+    const label = escHtml(s.org) + (s.title ? ' — ' + escHtml(s.title) : '');
+    return '<li>' + (safe
+      ? '<a class="bc-src-link" href="' + escAttr(s.url) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>'
+      : label) + '</li>';
+  }).join('');
+  return '<div class="bc-src"><div class="bc-src-h">Sources</div><ul class="bc-src-list">' + rows + '</ul></div>';
+}
+
+function _bcEntryHtml(e) {
+  const hasEm = e.emergencyIf && e.emergencyIf.length > 0;
+  let body = _bcList(e.points, 'bc-points');
+  if (e.seeDoctorIf && e.seeDoctorIf.length) {
+    body += '<div class="bc-sec bc-sec-doc"><div class="bc-sec-h">' + zi('steth') + '<span>See the doctor if</span></div>'
+      + _bcList(e.seeDoctorIf, 'bc-doc') + '</div>';
+  }
+  if (hasEm) {
+    body += '<div class="bc-sec bc-sec-em"><div class="bc-sec-h">' + zi('siren') + '<span>Go to the emergency department now if</span></div>'
+      + _bcList(e.emergencyIf, 'bc-em') + '</div>';
+  }
+  body += _bcSources(e.sources);
+  return '<details class="bc-entry" data-bc-id="' + escAttr(e.id) + '">'
+    + '<summary class="bc-summary"><span class="bc-title">' + escHtml(e.title) + '</span>'
+    + (hasEm ? '<span class="bc-em-tag">' + zi('siren') + '<span>Emergency signs</span></span>' : '')
+    + '<span class="bc-toggle" aria-hidden="true">' + zi('chevron-down') + '</span></summary>'
+    + '<div class="bc-body">' + body + '</div></details>';
+}
+
+function renderBodyCare() {
+  const card = document.getElementById('medBodyCareCard');
+  const el = document.getElementById('medBodyCareBody');
+  if (!card || !el) return;
+  const sex = (typeof childSex === 'function') ? childSex() : null;
+  const months = ageAt().months;
+  const entries = bodyCareEntriesFor(sex, months);
+  card.classList.toggle('fc-hidden', entries.length === 0);
+  if (!entries.length) { el.innerHTML = ''; return; }
+  // Render-time copy may follow the sex (load-time registry copy stays neutral).
+  const who = sex ? childKinWord() : 'children';
+  el.innerHTML = '<p class="bc-intro">' + escHtml('Everyday care for ' + who + ' in the first two years, and the signs that need a doctor. Tap a topic to read more.') + '</p>'
+    + '<div class="bc-entries">' + entries.map(_bcEntryHtml).join('') + '</div>'
+    + '<div class="source-attribution">Guidance only — not medical advice. When in doubt, call your paediatrician.</div>';
+}
+
 function orderMedicalCards() {
   const grid = document.getElementById('medicalGrid');
   if (!grid) return;
@@ -2298,6 +2364,8 @@ function orderMedicalCards() {
   cards.push({ el: medsCard, score: medsScore, id: 'meds' });
   cards.push({ el: coverageCard, score: 15, id: 'coverage' });
   cards.push({ el: visitsCard, score: visitsScore, id: 'visits' });
+  // child-sex S3: Body care is reference guidance — always last under Records.
+  cards.push({ el: document.getElementById('medBodyCareCard'), score: 20, id: 'bodycare' });
 
   // Sort by score (lowest first = highest priority)
   cards.sort((a, b) => a.score - b.score);

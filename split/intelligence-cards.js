@@ -1796,6 +1796,16 @@ function _geReady() {
 // safety-first, never behind a tap); every other emergency is a teaser ROW
 // that opens its card on tap (§11 6-second rule — lead, then disclose).
 
+// child-sex S3: an entry may carry `sex: 'f' | 'm'` (testicular torsion is 'm'). It shows only
+// when childSex() matches, so a girl's family never sees torsion. While the sex is still unknown
+// the profile gate is up and the app inert; the entry then shows (an emergency fails toward
+// being visible). No `sex` = every child.
+function _geSexMatch(e) {
+  if (!e || !e.sex) return true;
+  var s = (typeof childSex === 'function') ? childSex() : null;
+  return s === null || s === e.sex;
+}
+
 function _geNums() {
   var r = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
   return {
@@ -1890,7 +1900,7 @@ function openGeneralEmergencyRoom() {
 
   var nums = _geNums();
   var all = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : [])
-    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; });
+    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER' && _geSexMatch(e); });
   // Hybrid (§9.7 safety-first): the critical card is pinned-open inline — its
   // steps are never behind a tap; every other emergency is a teaser row.
   var pinnedHtml = all.filter(function(e) { return e.severity === 'critical'; })
@@ -1938,7 +1948,7 @@ function openGeneralEmergencyRoom() {
 function geOpenCard(btn) { var id = btn && btn.getAttribute('data-arg'); if (id) _geShowCard(id); }
 function _geShowCard(id) {
   var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
-  if (!e) return;
+  if (!e || !_geSexMatch(e)) return;
   var ov = document.getElementById('geCardOv');
   if (!ov) { ov = document.createElement('div'); ov.id = 'geCardOv'; ov.className = 'ge-card-ov'; document.body.appendChild(ov); }
   ov.innerHTML = '<div class="food-pop ge-pop">' + _geFlipCard(e, true) + '</div>';

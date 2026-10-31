@@ -355,6 +355,14 @@ function renderFeverEpisodeCard() {
   } else {
     html += '<li>Call doctor if fever exceeds 102°F or lasts > 48 hours</li>';
   }
+  // child-sex S3 fever-triage hint (Kael + Maren co-own). Under 2, a UTI is "an important cause
+  // for fever without a focus" (ISPN, Indian Pediatr 2011;48:709) and may be the only sign
+  // (AAP HealthyChildren 'Detecting UTIs'); only a urine test tells (RCH Melbourne UTI CPG);
+  // ISPN 2023 starts its urine pathway at fever > 48 h without focus under 24 months.
+  // Sources + quotes: docs/specs/care-guidance-s3-sources.md §X3.
+  if (ageAt().months < 24) {
+    html += '<li>No clear cause, like a cold or tummy bug? Ask the doctor whether a urine test is needed — under 2, a urine infection can show only as fever.</li>';
+  }
   html += '</ul></div>';
 
   // Escalation warnings

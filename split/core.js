@@ -1742,6 +1742,7 @@ function init() {
   renderFoods();
   renderVacc();
   renderVaccCoverage();
+  renderBodyCare();   // child-sex S3 Body care card (medical.js)
   renderDoctorContact();
   renderNotes();
   // PR-ε.0 §1 — assign stable ids before first scrapbook render
@@ -4088,7 +4089,7 @@ function switchTrackSub(sub) {
   // renderTrackHero(); // removed in v2.5 Balance — Track score hero removed
 
   // Trigger sub-tab renders
-  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard(); /* T1-2: pattern card lacked a tab-switch render path */ }
+  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard(); /* T1-2: pattern card lacked a tab-switch render path */ if (typeof renderBodyCare === 'function') renderBodyCare(); /* child-sex S3 */ }
   if (sub === 'diet') renderDietStats();
   if (sub === 'milestones') { renderMilestoneStats(); renderMilestoneHighlights(); }
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }

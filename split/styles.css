@@ -8195,6 +8195,52 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 @media (prefers-reduced-motion: reduce) {
   .sc-disclosure-toggle { transition:none; }
 }
+
+/* ── Body care (bc-*) — child-sex S3, Medical → Body care card (medical.js renderBodyCare).
+   Rose = the Medical tab's domain (design floor §Domain → Element Assignments). Each entry is a
+   native <details>; the summary row is the ≥44px tap target (HR-8). Emergency block reuses the
+   status-triad action pair (--surface-danger / --tc-danger), which both have dark variants. */
+.bc-intro { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:var(--sp-4) 0 var(--sp-8); }
+.bc-entries { display:flex; flex-direction:column; }
+.bc-entry { border-top:1px solid var(--card-border); }
+.bc-entry:last-child { border-bottom:1px solid var(--card-border); }
+.bc-summary {
+  list-style:none;
+  display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8);
+  min-height:44px; padding:var(--sp-8) 0;
+  cursor:pointer;
+}
+.bc-summary::-webkit-details-marker { display:none; }
+.bc-title { flex:1 1 60%; font-size:var(--fs-base); font-weight:700; color:var(--text); line-height:var(--lh-relaxed); }
+.bc-em-tag {
+  display:inline-flex; align-items:center; gap:var(--sp-4);
+  padding:var(--sp-2) var(--sp-8); border-radius:var(--r-full);
+  background:var(--surface-danger); color:var(--tc-danger);
+  font-size:var(--fs-xs); font-weight:700;
+}
+.bc-toggle { flex:0 0 auto; color:var(--light); transition:transform 200ms ease; }
+.bc-entry[open] .bc-toggle { transform:rotate(180deg); }
+.bc-body { padding:0 0 var(--sp-12); }
+.bc-list { margin:var(--sp-4) 0; padding-left:var(--sp-16); }
+.bc-list li { margin-bottom:var(--sp-4); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
+.bc-sec { margin-top:var(--sp-10); padding:var(--sp-8) var(--sp-10); border-radius:var(--r-md); }
+.bc-sec-doc { background:var(--rose-light); }
+.bc-sec-em { background:var(--surface-danger); border-left:2px solid var(--tc-danger); }
+.bc-sec-h {
+  display:flex; align-items:center; gap:var(--sp-6);
+  font-size:var(--fs-xs); font-weight:800; text-transform:uppercase; letter-spacing:var(--ls-wide);
+  color:var(--tc-rose);
+}
+.bc-sec-em .bc-sec-h, .bc-sec-em .bc-list li { color:var(--tc-danger); }
+.bc-sec-em .bc-list li { font-weight:600; }
+.bc-src { margin-top:var(--sp-10); }
+.bc-src-h { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); }
+.bc-src-list { list-style:none; margin:var(--sp-4) 0 0; padding:0; }
+.bc-src-list li { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); margin-bottom:var(--sp-2); }
+.bc-src-link { color:var(--tc-rose); text-decoration:underline; }
+@media (prefers-reduced-motion: reduce) {
+  .bc-toggle { transition:none; }
+}
 [data-theme="dark"] .ql-bf-pill { background:rgba(201,184,232,0.1); border-color:rgba(201,184,232,0.15); }
 [data-theme="dark"] .ql-bf-pill.active { background:rgba(184,168,224,0.2); color:var(--tc-lav); border-color:rgba(184,168,224,0.35); }
 [data-theme="dark"] .meal-prog-slot { background:var(--card-bg); border-color:var(--card-border); }
