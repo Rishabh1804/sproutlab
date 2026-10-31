@@ -8198,15 +8198,16 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
 /* ── Body care (bc-*) — child-sex S3, Medical → Body care card (medical.js renderBodyCare).
    Rose = the Medical tab's domain (design floor §Domain → Element Assignments). Each entry is a
-   native <details>; the summary row is the ≥44px tap target (HR-8). Emergency block reuses the
-   status-triad action pair (--surface-danger / --tc-danger), which both have dark variants. */
+   native <details>; the summary row is the ≥44px tap target. The emergency block is the heaviest
+   thing in an entry in both themes (rose fill, thick danger rail); the see-the-doctor block sits on
+   the card with only a rose rail (V-V-282-1). */
 .bc-intro { font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); margin:var(--sp-4) 0 var(--sp-8); }
 .bc-entries { display:flex; flex-direction:column; }
 .bc-entry { border-top:1px solid var(--card-border); }
 .bc-entry:last-child { border-bottom:1px solid var(--card-border); }
 .bc-summary {
   list-style:none;
-  display:flex; align-items:center; flex-wrap:wrap; gap:var(--sp-8);
+  display:flex; align-items:center; gap:var(--sp-8);
   min-height:44px; padding:var(--sp-8) 0;
   cursor:pointer;
 }
@@ -8218,14 +8219,15 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
   background:var(--surface-danger); color:var(--tc-danger);
   font-size:var(--fs-xs); font-weight:700;
 }
-.bc-toggle { flex:0 0 auto; color:var(--light); transition:transform 200ms ease; }
+.bc-toggle { flex:0 0 auto; margin-left:auto; color:var(--light); transition:transform 200ms ease; }   /* stays top-right on every row (V-V-282-3) */
 .bc-entry[open] .bc-toggle { transform:rotate(180deg); }
 .bc-body { padding:0 0 var(--sp-12); }
 .bc-list { margin:var(--sp-4) 0; padding-left:var(--sp-16); }
 .bc-list li { margin-bottom:var(--sp-4); font-size:var(--fs-sm); color:var(--mid); line-height:var(--lh-relaxed); }
 .bc-sec { margin-top:var(--sp-10); padding:var(--sp-8) var(--sp-10); border-radius:var(--r-md); }
-.bc-sec-doc { background:var(--rose-light); }
-.bc-sec-em { background:var(--surface-danger); border-left:2px solid var(--tc-danger); }
+.bc-sec-doc { background:none; border-left:3px solid var(--rose); }
+.bc-sec-em { background:var(--rose-light); border-left:4px solid var(--tc-danger); }
+.bc-em-open { margin-top:var(--sp-8); min-height:44px; gap:var(--sp-6); }
 .bc-sec-h {
   display:flex; align-items:center; gap:var(--sp-6);
   font-size:var(--fs-xs); font-weight:800; text-transform:uppercase; letter-spacing:var(--ls-wide);
@@ -8236,8 +8238,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 .bc-src { margin-top:var(--sp-10); }
 .bc-src-h { font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:var(--ls-wide); color:var(--light); }
 .bc-src-list { list-style:none; margin:var(--sp-4) 0 0; padding:0; }
-.bc-src-list li { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); margin-bottom:var(--sp-2); }
-.bc-src-link { color:var(--tc-rose); text-decoration:underline; }
+.bc-src-list li { font-size:var(--fs-xs); color:var(--light); line-height:var(--lh-relaxed); margin-bottom:var(--sp-4); }
+.bc-src-link { display:inline-block; min-height:32px; padding:var(--sp-6) 0; color:var(--tc-rose); text-decoration:underline; }   /* a mis-tap leaves the app (V-V-282-9) */
 @media (prefers-reduced-motion: reduce) {
   .bc-toggle { transition:none; }
 }

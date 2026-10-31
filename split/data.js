@@ -4427,7 +4427,7 @@ const MILESTONE_ACTIVITIES = {
   // ── Cognitive ──
   object_permanence: [
     { text: 'Peek-a-boo variations', duration: 5, icon: 'handshake', tip: 'Hide behind a cloth, pop out. Try hiding toys under cups.' },
-    { text: 'Find the hidden toy', duration: 10, icon: 'brain', tip: 'Hide a toy under a blanket in full view — then see if it gets found' },
+    { text: 'Find the hidden toy', duration: 10, icon: 'brain', tip: 'Hide a toy under a blanket while your child watches — then let them find it' },
   ],
   cause_effect: [
     { text: 'Push-button toy play', duration: 10, icon: 'brain', tip: 'Toys that light up or make sounds when pressed — cause and effect' },
@@ -5409,7 +5409,7 @@ const SYMPTOM_DB = [
       'Tap the arm and call your child’s name loudly to check for a response.',
       'Check for breathing — look at the chest, listen, feel for air on your cheek, for up to 10 seconds. Gasping is not breathing.',
       'If your child is breathing, place them on their side (recovery position) and call 112 on speakerphone.',
-      'If your child is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? They call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
+      'If your child is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? Have that person call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
       'Stay with your child until help arrives.'
     ],
     precautions: [

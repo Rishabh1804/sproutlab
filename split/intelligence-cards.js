@@ -1864,7 +1864,8 @@ function _geDocFace(e) {
       + '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
   });
   if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
-  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  // The "first reaction" bracket belongs to an allergic reaction only (V-V-282-5).
+  if (e.id === 'allergic-reaction') rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
   var _docName = (typeof _emDocName === 'function' ? _emDocName() : '' + childNameCapHtml() + '');
   var _docVitals = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
   return '<div class="docface"><div class="doc"><div class="doc-body">'
@@ -2005,7 +2006,7 @@ function _geDocText(e, container) {
   L.push('', 'Suspected: ' + d.suspected);
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
   if (d.action) L.push(d.action.label + ': ' + d.action.value);
-  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  if (e.id === 'allergic-reaction') L.push('Known allergies: none recorded yet (this may be a first reaction)');
   L.push(''); L.push('For the team: ' + d.forTeam);
   return L.join('\n');
 }

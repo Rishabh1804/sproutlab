@@ -2279,8 +2279,13 @@ function _bcSources(sources) {
   return '<div class="bc-src"><div class="bc-src-h">Sources</div><ul class="bc-src-list">' + rows + '</ul></div>';
 }
 
+// Body-care topics that have their own Emergency Room card (GENERAL_EMERGENCIES): the summary
+// carries the emergency tag and the emergency block links to the steps (V-V-282-2, -10). Other
+// topics list their emergency signs inside, untagged, so the tag keeps its meaning.
+const _BC_EM_CARD = { 'testicular-torsion': 'testicular-torsion', 'inguinal-hernia': 'stuck-hernia' };
 function _bcEntryHtml(e) {
   const hasEm = e.emergencyIf && e.emergencyIf.length > 0;
+  const emCard = _BC_EM_CARD[e.id] || null;
   let body = _bcList(e.points, 'bc-points');
   if (e.seeDoctorIf && e.seeDoctorIf.length) {
     body += '<div class="bc-sec bc-sec-doc"><div class="bc-sec-h">' + zi('steth') + '<span>See the doctor if</span></div>'
@@ -2288,12 +2293,14 @@ function _bcEntryHtml(e) {
   }
   if (hasEm) {
     body += '<div class="bc-sec bc-sec-em"><div class="bc-sec-h">' + zi('siren') + '<span>Go to the emergency department now if</span></div>'
-      + _bcList(e.emergencyIf, 'bc-em') + '</div>';
+      + _bcList(e.emergencyIf, 'bc-em')
+      + (emCard ? '<button class="btn btn-soft bc-em-open" data-action="geOpenCard" data-arg="' + escAttr(emCard) + '">' + zi('siren') + '<span>Open the emergency steps</span></button>' : '')
+      + '</div>';
   }
   body += _bcSources(e.sources);
   return '<details class="bc-entry" data-bc-id="' + escAttr(e.id) + '">'
     + '<summary class="bc-summary"><span class="bc-title">' + escHtml(e.title) + '</span>'
-    + (hasEm ? '<span class="bc-em-tag">' + zi('siren') + '<span>Emergency signs</span></span>' : '')
+    + (emCard && e.id === 'testicular-torsion' ? '<span class="bc-em-tag">' + zi('siren') + '<span>Emergency</span></span>' : '')
     + '<span class="bc-toggle" aria-hidden="true">' + zi('chevron-down') + '</span></summary>'
     + '<div class="bc-body">' + body + '</div></details>';
 }

@@ -367,7 +367,7 @@ const GENERAL_EMERGENCIES = [
     // "Torsion within 4 to 6 hours: 80 to 100 percent viability"; rarely neonates, may be
     // painless in neonates; vomiting common; red/blue, dark in neonate); AAP HealthyChildren
     // 'Undescended Testicles' (an undescended testis can twist).
-    id: 'testicular-torsion', icon: 'alert-circle', name: 'Sudden pain or swelling in the scrotum',
+    id: 'testicular-torsion', icon: 'emergency', name: 'Sudden pain or swelling in the scrotum',
     severity: 'urgent', callLead: true, sex: 'm',
     immediate: [
       'Go to the hospital emergency department now. A twisted testis (torsion) is time-critical: surgery within about 4 to 6 hours usually saves it.',
