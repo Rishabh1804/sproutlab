@@ -13870,7 +13870,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 
           <!-- NIGHT FORM -->
           <div id="sleepNightCard">
-            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
+            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and make sure there's enough rest.</div>
             <div class="fx-col g12">
               <div>
                 <label class="micro-label">Date</label>
@@ -33586,7 +33586,7 @@ function renderHomeVacc() {
     statusLine = `<div style="font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;margin-top:4px;cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">${zi('check')} Booked — tap to add date & time</div>`;
   } else if (daysTo < 0) {
     // Overdue reads as overdue, with the two ways out (Maren S-2 on #273).
-    statusLine = '<div class="t-sub tc-danger mt-4">' + zi('warn') + ' ' + (-daysTo) + ' day' + (daysTo === -1 ? '' : 's') + ' overdue. Tap Mark given if she has had it, or book it.</div>';
+    statusLine = '<div class="t-sub tc-danger mt-4">' + zi('warn') + ' ' + (-daysTo) + ' day' + (daysTo === -1 ? '' : 's') + ' overdue. Tap Mark given if ' + pron('subj') + ' has had it, or book it.</div>';
   } else {
     statusLine = safe <= 3 ? '<div style="font-size:var(--fs-sm);color:var(--tc-danger);font-weight:700;margin-top:4px;">' + zi('warn') + ' Due very soon — book your appointment!</div>' : '<div style="font-size:var(--fs-sm);color:var(--tc-caution);font-weight:600;margin-top:4px;">' + zi('clock') + ' Coming up this week</div>';
   }
@@ -33758,16 +33758,16 @@ function renderRecoFood() {
       tips:'{{OK}} Gluten-free — safe for sensitive babies.\n{{OK}} Higher protein than rice.\n{{NO}} Stir continuously to prevent lumps.\n{{NO}} Don\'t make too thick — should be pourable.' },
     { icon:zi('bowl'), name:'Bajra porridge', reason:'Iron + zinc rich millet — great for growth', newFood:'bajra',
       recipe:'1. Dry roast 1 tbsp bajra flour 2 min.\n2. Add ½ cup water, stir well.\n3. Cook 5–6 min on low.\n4. Add ghee + jaggery-free date paste for sweetness.',
-      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Pair with amla, lemon or tomato — vitamin C helps her absorb the iron.\n{{NO}} Cook it well — raw or lumpy millet is hard to digest.\n{{NO}} Introduce after 7 months.' },
+      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Pair with amla, lemon or tomato — vitamin C helps ' + pron('obj') + ' absorb the iron.\n{{NO}} Cook it well — raw or lumpy millet is hard to digest.\n{{NO}} Introduce after 7 months.' },
     { icon:zi('spoon'), name:'Chiku puree', reason:'Natural sweetness + iron + calcium', newFood:'chiku',
       recipe:'1. Choose a ripe, soft chiku.\n2. Peel, remove seeds, scoop out 2–3 tbsp flesh.\n3. Mash smooth with fork.\n4. Serve immediately.',
       tips:'{{OK}} Naturally one of the sweetest fruits.\n{{OK}} Contains iron — unusual for a fruit.\n{{NO}} Always remove ALL seeds — choking hazard.\n{{NO}} Only use very ripe ones — unripe causes irritation.' },
     { icon:zi('drop'), name:'Watermelon juice (sips)', reason:'Hydrating + Vit C — refreshing on warm days', newFood:'watermelon',
       recipe:'1. Cut 3–4 small cubes of seedless watermelon.\n2. Mash through a strainer to extract juice.\n3. Offer 2–3 tsp in a cup — not a bottle.',
       tips:'{{OK}} Best hydration food in hot weather.\n{{OK}} Natural electrolytes.\n{{NO}} Don\'t give in large quantities — mostly water.\n{{NO}} Remove every seed — choking risk.' },
-    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Vitamin C — helps her absorb iron from the meal', newFood:'pomegranate',
+    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Vitamin C — helps ' + pron('obj') + ' absorb iron from the meal', newFood:'pomegranate',
       recipe:'1. Extract seeds from ¼ pomegranate.\n2. Blend lightly and strain for juice.\n3. Offer 2–3 tsp diluted with equal water.',
-      tips:'{{OK}} Vitamin C helps her absorb iron from the same meal.\n{{OK}} Offer it in an open cup with a meal, never a bottle.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Whole fruit is better — keep juice to a few spoonfuls.' },
+      tips:'{{OK}} Vitamin C helps ' + pron('obj') + ' absorb iron from the same meal.\n{{OK}} Offer it in an open cup with a meal, never a bottle.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Whole fruit is better — keep juice to a few spoonfuls.' },
     { icon:zi('spoon'), name:'Kiwi mash', reason:'Vitamin C powerhouse — great iron-absorption booster', newFood:'kiwi',
       recipe:'1. Peel 1 ripe kiwi, scoop flesh.\n2. Mash with fork — seeds are fine to eat.\n3. Serve 1–2 tbsp.',
       tips:'{{OK}} Highest Vit C per gram of any common fruit.\n{{OK}} Serve after ragi/dal meals for iron boost.\n{{NO}} May cause mouth tingling — start small.\n{{NO}} Avoid if family has allergy history.' },
@@ -35192,7 +35192,7 @@ function renderMsTrajectoryRibbon() {
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
       + zi('chart') + '</div> Trajectory</div></div>'
-      + '<div class="t-sub-light text-center py-4">' + childNameCapHtml() + '\'s journey is just beginning — milestones will appear here as she grows.</div>';
+      + '<div class="t-sub-light text-center py-4">' + childNameCapHtml() + '\'s journey is just beginning — milestones will appear here as ' + pron('subj') + ' grows.</div>';
     return;
   }
 
@@ -35398,7 +35398,7 @@ function _tcToothName(t, plural) {
   const arch = t.arch === 'upper' ? 'Upper' : 'Lower';
   // Singular names say whose side ("her left"): the diagram faces her, so
   // her left is on the viewer's right.
-  return plural ? arch + ' ' + n + 's' : arch + ' ' + n + ', her ' + t.side;
+  return plural ? arch + ' ' + n + 's' : arch + ' ' + n + ', ' + pron('poss') + ' ' + t.side;
 }
 function _tcErupted(id) {
   const e = teethLog && teethLog[id];
@@ -35485,7 +35485,7 @@ function renderMsTeeth() {
   let html = '<div class="tth-diagram">' + svg +
     '<div class="tth-center" aria-hidden="true"><div class="tth-count">' + (count || '—') + '</div><div class="tth-count-sub">' + (count ? 'of 20 teeth' : 'none recorded yet') + '</div></div>' +
     '</div>' +
-    '<div class="tth-sides"><span>Her right</span><span>Her left</span></div>' +
+    '<div class="tth-sides"><span>' + pron('poss', true) + ' right</span><span>' + pron('poss', true) + ' left</span></div>' +
     '<div class="tth-legend">' +
       '<span class="tth-key"><span class="tth-swatch is-in"></span>Came through</span>' +
       '<span class="tth-key"><span class="tth-swatch is-due"></span>Any time now</span>' +
@@ -35506,7 +35506,7 @@ function renderMsTeeth() {
   if (count === 0 && ageMo >= 18) {
     // src: AAP/HealthyChildren "Baby's First Tooth: 7 Facts Parents Should Know"
     // (no teeth by 18 months → see a dentist); ADA eruption chart for windows.
-    note = 'No teeth recorded yet. If none have come through by 18 months, mention it to her paediatrician or a dentist.';
+    note = 'No teeth recorded yet. If none have come through by 18 months, mention it to ' + pron('poss') + ' paediatrician or a dentist.';
   } else if (count === 0) {
     note = 'Tap a tooth to record when it came through. An approximate date is fine.';
   } else {
@@ -35530,7 +35530,7 @@ function teethTap(id) {
       const d = String(v.date || '');
       if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return 'Pick a date.';
       if (d > todayStr) return 'That date is in the future.';
-      if (d < toDateStr(DOB)) return 'That date is before she was born.';
+      if (d < toDateStr(DOB)) return 'That date is before ' + pron('subj') + ' was born.';
       teethLog[id] = { date: d, ts: Date.now() };
       save(KEYS.teeth, teethLog);
       renderMsTeeth();
@@ -38715,7 +38715,7 @@ function _obRenderMeal(outing) {
   // Starred pick
   var top = portableMeals[0];
   var acceptRate = getFoodAcceptanceRate(top.base);
-  var acceptLabel = acceptRate > 0 ? ', she eats ' + Math.round(acceptRate) + '%' : '';
+  var acceptLabel = acceptRate > 0 ? ', ' + pron('subj') + ' eats ' + Math.round(acceptRate) + '%' : '';
 
   html += '<div class="ob-meal-pick">';
   html += '<div class="ob-meal-star"><span class="icon">' + zi('star') + '</span> ' + escHtml(top.name) + '</div>';
@@ -38847,7 +38847,7 @@ function _obRenderMedical() {
   var vitD3 = _obCheckVitD3Needed('outing-give');
   if (vitD3) {
     var _vdg = vitDSupplement();
-    items.push({ icon: 'pill', color: 'sky', text: 'Give her ' + (_vdg ? _vdg.name : 'Vitamin D') + ' dose before leaving (if not already given)' });
+    items.push({ icon: 'pill', color: 'sky', text: 'Give ' + pron('obj') + ' ' + (_vdg ? _vdg.name : 'Vitamin D') + ' dose before leaving (if not already given)' });
   }
 
   // Next vaccination
@@ -39894,7 +39894,7 @@ function renderPoopGuide() {
         { pcolor:'green',  title:'Green',           text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
         { pcolor:'orange', title:'Orange',          text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
         { pcolor:'dark',   title:'Dark Brown',      text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
-        { pcolor:'red',    title:'Red',          warn:true, text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
+        { pcolor:'red',    title:'Red',          warn:true, text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and ' + pron('subj') + ' hasn\'t eaten red foods.' },
         { pcolor:'white',  title:'White / Pale',  warn:true, text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
         { pcolor:'black',  title:'Black',        warn:true, text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
       ]
@@ -39913,7 +39913,7 @@ function renderPoopGuide() {
       id: 'frequency', icon: zi('chart'), label: 'Frequency by Age', color: 'sage',
       tips: ageM <= 8 ? [
         { icon:zi('baby'), title:'6–8 months: 1–4 times/day', text:'Wide range is normal. Some babies go after every meal, others once a day. Breastfed babies can even skip days. As solids increase, frequency often decreases and consistency firms up.' },
-        { icon:zi('timer'), title:'When to worry: no poop for 3+ days', text:'If she hasn\'t pooped in 3+ days AND seems uncomfortable (straining, crying, hard belly), consult your paediatrician. Some breastfed babies normally go less often.' },
+        { icon:zi('timer'), title:'When to worry: no poop for 3+ days', text:'If ' + pron('subj') + ' hasn\'t pooped in 3+ days AND seems uncomfortable (straining, crying, hard belly), consult your paediatrician. Some breastfed babies normally go less often.' },
         { icon:zi('chart'), title:'Solids change everything', text:'When starting solids, poop colour, smell, and frequency all change. This is normal. New foods = new poop. Give the gut 2–3 days to adjust to each new food.' },
         { icon:zi('spoon'), title:'Food-poop connection', text:'Track which foods cause changes. Common culprits: bananas (can constipate), prunes (loosen), iron-fortified cereal (darker, firmer). Use the Diet tab alongside this tracker.' },
       ] : [
@@ -40831,7 +40831,7 @@ const D3_KNOWLEDGE = {
   donts: [
     'Don\'t exceed 1000 IU/day without paediatrician guidance — excess Vitamin D can cause calcium buildup.',
     'Don\'t mix into a full bottle or cup — baby may not finish, leading to underdosing.',
-    'Don\'t skip because "she gets sunlight" — infants under 12 months should avoid direct sun exposure (AAP recommendation).',
+    'Don\'t skip because "there\'s plenty of sunlight" — infants under 12 months should avoid direct sun exposure (AAP recommendation).',
     'Don\'t double up if a dose is missed — just continue with the regular dose the next day.',
     'Don\'t stop at 12 months — most paediatricians recommend continuing through the second year, especially for breastfed babies.',
   ],
@@ -40844,18 +40844,18 @@ const CALCIUM_D3_KNOWLEDGE = {
   dos: [
     'Shake the bottle well before every dose — the minerals settle at the bottom of a suspension.',
     'Measure with the dosing cup or an oral syringe, not a kitchen spoon.',
-    'Space the doses through the day — for example after breakfast, and with her evening milk or a curd snack — at about the same times each day.',
+    'Space the doses through the day — for example after breakfast, and with the evening milk or a curd snack — at about the same times each day.',
     'Give it with or after a meal or a milk or curd snack — Vitamin D absorbs better with a little fat.',
     // Spacing: calcium lowers non-heme iron absorption at the same meal (Hallberg, AJCN 1991);
     // ~2 h from iron products is standard label guidance. Ceres/Maren-audited.
-    'If she is given iron drops, keep them about 2 hours apart from this dose.',
-    'If she gets constipated, vomits, or goes off her feeds after starting it, tell her doctor.',
+    'If iron drops are also given, keep them about 2 hours apart from this dose.',
+    'If your child gets constipated, vomits, or goes off feeds after starting it, tell the doctor.',
   ],
   donts: [
-    'Try not to give it with her main iron meal (masoor dal, rajma or chana) — calcium lowers how much iron she absorbs from it.',
+    'Try not to give it with the main iron meal (masoor dal, rajma or chana) — calcium lowers how much iron is absorbed from it.',
     'Don\'t add separate Vitamin D drops unless the doctor asks — this already contains Vitamin D3.',
     'Don\'t double up if a dose is missed — just give the next one at its usual time.',
-    'Don\'t change the dose or stop it without checking with her doctor.',
+    'Don\'t change the dose or stop it without checking with the doctor.',
   ],
 };
 
@@ -40927,7 +40927,7 @@ const SYNTHESIS_RULES = [
   {
     ids: ['poop-gap', 'hard-stool-streak'],
     title: 'Constipation — no poop + hard stools pattern',
-    body: 'Extended poop gap combined with hard stools when she does go. This is a clear constipation pattern.',
+    body: 'Extended poop gap combined with hard stools when a poop does come. This is a clear constipation pattern.',
     tip: 'Increase water intake, add prune/pear/papaya to meals, reduce rice and banana. Tummy massage before feeds. If no improvement in 2-3 days, consult your paediatrician.',
     icon: zi('link'), severity: 'action',
   },
@@ -41036,7 +41036,7 @@ function computeAlerts() {
       const sev = daysSince >= actionThresh ? 'action' : daysSince >= watchThresh ? 'watch' : 'info';
       const key = 'poop-gap-' + lastPoopDate;
       if (!isDismissed(key)) {
-        const aboveBaseline = bl.poopAvgGapDays ? ' (her usual is every ' + bl.poopAvgGapDays + ' days)' : '';
+        const aboveBaseline = bl.poopAvgGapDays ? ' (' + pron('poss') + ' usual is every ' + bl.poopAvgGapDays + ' days)' : '';
         const bodyText = daysSince >= actionThresh
           ? 'This is getting long' + aboveBaseline + ' — watch for straining, hard belly, or discomfort. Consider calling your paediatrician.'
           : daysSince >= watchThresh
@@ -41476,7 +41476,7 @@ function computeAlerts() {
       severity: 'positive', icon: zi('sparkle'),
       title: 'First full night\'s sleep!',
       body: '' + childNameCapHtml() + ' slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
-      tip: 'This doesn\'t mean every night will be like this — but it shows she CAN do it. Keep the same bedtime routine that worked.',
+      tip: 'This doesn\'t mean every night will be like this — but it shows ' + pron('subj') + ' CAN do it. Keep the same bedtime routine that worked.',
       action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
       tab: 'sleep'    });
   }
@@ -41502,7 +41502,7 @@ function computeAlerts() {
       severity: 'positive', icon: zi('check'),
       title: 'Digestion has been stable for ' + bl.poopConsistentStreak + '+ entries',
       body: 'All recent poops have been normal or soft consistency. ' + childNameCapHtml() + '\'s tummy is happy!',
-      tip: 'Stable digestion means her gut is adjusting well to her current diet. A great time to try a new food if you haven\'t recently.',
+      tip: 'Stable digestion means ' + pron('poss') + ' gut is adjusting well to ' + pron('poss') + ' current diet. A great time to try a new food if you haven\'t recently.',
       action: null, tab: 'poop'    });
   }
 
@@ -41565,7 +41565,7 @@ function computeAlerts() {
       const vd = isVitDSupplement(m);
       const milestoneMsg = !vd ? 'Every dose given as prescribed.'
         : streak >= 30
-        ? 'Steady Vitamin D supports her bones and how she uses calcium.'
+        ? 'Steady Vitamin D supports ' + pron('poss') + ' bones and how ' + pron('subj') + ' uses calcium.'
         : streak >= 14
         ? 'Two weeks of every dose, just as prescribed.'
         : 'Building strong bones, one dose at a time.';
@@ -42060,7 +42060,7 @@ function renderTodayPlan() {
       } else {
         // A calcium + D3 evening dose goes with milk or curd, not her dal/rajma meal (Ceres V-C-270-15).
         doneDetail = (d3Med.dose ? d3Med.dose + ' — ' : '')
-          + (isCalciumSupplement(d3Med) && sl.label === 'evening' ? 'with her evening milk or a curd snack, not with a dal or rajma meal'
+          + (isCalciumSupplement(d3Med) && sl.label === 'evening' ? 'with ' + pron('poss') + ' evening milk or a curd snack, not with a dal or rajma meal'
              : 'give with or after a meal for best absorption');
       }
       items.push({
@@ -42078,7 +42078,7 @@ function renderTodayPlan() {
   const _calcSupp = d3Med && isCalciumSupplement(d3Med);
   let bfSuggestion = '';
   if (!bfDone) {
-    if (bfNutrientGap.includes('iron') && _calcSupp) bfSuggestion = 'Milk or curd with fruit here — save her iron meal (masoor dal, rajma) for lunch, away from her calcium dose';
+    if (bfNutrientGap.includes('iron') && _calcSupp) bfSuggestion = 'Milk or curd with fruit here — save ' + pron('poss') + ' iron meal (masoor dal, rajma) for lunch, away from ' + pron('poss') + ' calcium dose';
     else if (bfNutrientGap.includes('iron')) bfSuggestion = 'Try ragi porridge — excellent iron source for this age';
     else if (bfNutrientGap.includes('calcium')) bfSuggestion = 'Ragi or almond porridge for calcium boost';
     else if (bfNutrientGap.includes('protein')) bfSuggestion = 'Add almond paste or dal water to porridge for protein';
@@ -42106,9 +42106,9 @@ function renderTodayPlan() {
   const todayMainNapOnly = _todayNapList.length === 1 && parseInt(_todayNapList[0].bedtime) >= 11;
   if (!oneNapAge) {
     items.push({
-      time: '9:30', icon: zi('zzz'), title: toddlerNaps ? 'Morning nap (if she still takes one)' : 'Morning nap',
+      time: '9:30', icon: zi('zzz'), title: toddlerNaps ? 'Morning nap (if ' + pron('subj') + ' still takes one)' : 'Morning nap',
       detail: hasMorningNap ? zi('check') + ' Logged'
-        : (toddlerNaps ? 'Many toddlers drop this nap between 12 and 18 months. If she takes it, about ' + napDuration + '.'
+        : (toddlerNaps ? 'Many toddlers drop this nap between 12 and 18 months. If ' + pron('subj') + ' takes it, about ' + napDuration + '.'
           : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.'),
       tag: 'sleep', done: hasMorningNap && !(toddlerNaps && todayMainNapOnly), htmlDetail: hasMorningNap && !(toddlerNaps && todayMainNapOnly)
     });
@@ -42281,7 +42281,7 @@ function renderTodayPlan() {
 
   items.push({
     time: bedtimeStr.replace(/^(\d):/, '0$1:').substring(0, 5), icon: zi('moon'), title: 'Wind down → bedtime',
-    detail: 'Bath → dim lights → feed → bed. ' + (avgBedtime ? 'Her usual bedtime is around ' + bedtimeStr.substring(0, 5) + '.' : 'Aim for consistent bedtime.'),
+    detail: 'Bath → dim lights → feed → bed. ' + (avgBedtime ? pron('poss', true) + ' usual bedtime is around ' + bedtimeStr.substring(0, 5) + '.' : 'Aim for consistent bedtime.'),
     tag: 'sleep'
   });
 
@@ -42311,8 +42311,8 @@ function renderTodayPlan() {
     const teethingMentioned = recentNotes.some(n => /\b(teeth|teething|tooth|molars?|drool\w*|gums?)\b/i.test(n.text));
     if (teethingMentioned) {
       const teethTxt = ageM >= 13
-        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps. Teething does not cause fever: if she has a temperature, look for another cause.'
-        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. A chilled (not frozen) teething ring helps. Teething does not cause fever: if she has a temperature, look for another cause.';
+        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps. Teething does not cause fever: if ' + pron('subj') + ' has a temperature, look for another cause.'
+        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. A chilled (not frozen) teething ring helps. Teething does not cause fever: if ' + pron('subj') + ' has a temperature, look for another cause.';
       lookouts.push({ icon: zi('baby'), text: teethTxt, tag: 'lookout' });
     }
   }
@@ -44700,7 +44700,7 @@ function _recipeDetailHtml(r, ageMonths, opts) {
     const label = gated ? `Serving from ${effMin} months` : `Serving for ${childNameHtml()} (${ageNow} mo)`;
     // M-1 (Maren): anchor the amount's OWN source on the line, independent of r.source.
     const src = own ? 'ICMR-NIN · WHO/PAHO · IAP' : 'WHO/PAHO · IAP';
-    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let ${pron('poss')} appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
   }
   // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
   let rows = '';
@@ -45401,7 +45401,7 @@ function _libBookHtml(key, eff, pol) {
     } else if (j.reaction === 'watch') {
       journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
     } else {
-      journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+      journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with ' + pron('obj') + '</span>';
     }
   }
   var body = '<span class="lib-book-body"><span class="lib-book-title">' + titleHtml + '</span>' +
@@ -45503,7 +45503,7 @@ function _libJourneyChip(pol, j) {
   if (!j.tried) return '<span class="fp-journey fp-journey--untried"><span class="fp-dot"></span>Not tried yet</span>';
   if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
-  return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+  return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with ' + pron('obj') + '</span>';
 }
 
 // ── 6-second card primitives (S11, Architect-ratified). A verdict band LEADS (the 6-sec
@@ -45633,7 +45633,7 @@ function _libPopHtml(key, eff, pol, j) {
   // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
   var floorCaution = isChoke || !acute;
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
-  var floorTitle = isChoke ? 'If she is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTitle = isChoke ? 'If ' + pron('subj') + ' is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
   var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
@@ -45672,17 +45672,17 @@ function _libPopBackHtml(key, eff, pol, j) {
       '<p>This one waits until the age limit — there&rsquo;s no history to show yet, and that&rsquo;s as it should be.</p></div>';
   } else if (!j.tried) {
     inner = '<div class="fp-empty">' + zi('eye') +
-      '<p>Not tried yet. Once you log ' + escHtml(name) + ', her servings and any patterns will appear here.</p></div>';
+      '<p>Not tried yet. Once you log ' + escHtml(name) + ', ' + pron('poss') + ' servings and any patterns will appear here.</p></div>';
   } else {
     var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
     var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
     var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + (j.established ? ' · well established' : '') + '.';
     var insight = j.established
-      ? 'Well established — no patterns of concern across her logs so far.'
+      ? 'Well established — no patterns of concern across ' + pron('poss') + ' logs so far.'
       : (j.reaction === 'watch'
         ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
         : 'Settling in — not enough logged yet to show a clear pattern.');
-    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+    inner = '<div><div class="fp-sec-h">' + pron('poss', true) + ' log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
       '<div><div class="fp-sec-h">What the patterns say</div>' +
       '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
   }
@@ -45823,7 +45823,7 @@ function _libLookupRow(name) {
   if (!j.tried) journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
   else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   else if (j.reaction === 'watch') journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
-  else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+  else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with ' + pron('obj') + '</span>';
   return '<button class="lib-book lib-book--lookup' + dt + '" data-action="' + action + '" data-arg="' + escHtml(arg) + '">' +
     '<span class="lib-book-body"><span class="lib-book-title">' + escHtml(disp) + '</span>' + journeyHtml + '</span>' +
     '<span class="lib-book-go">' + zi('arrow-right') + '</span></button>';
@@ -45919,15 +45919,15 @@ function _libCorpusBackHtml(name, dt, j) {
   var inner;
   if (!j.tried) {
     inner = '<div class="fp-empty">' + zi('eye') +
-      '<p>Not tried yet. Once you log ' + escHtml(disp) + ', her servings and any patterns will appear here.</p></div>';
+      '<p>Not tried yet. Once you log ' + escHtml(disp) + ', ' + pron('poss') + ' servings and any patterns will appear here.</p></div>';
   } else {
     var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
     var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
     var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + '.';
     var insight = (j.reaction === 'watch')
       ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
-      : 'Settling into her diet — no patterns of concern logged so far.';
-    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+      : 'Settling into ' + pron('poss') + ' diet — no patterns of concern logged so far.';
+    inner = '<div><div class="fp-sec-h">' + pron('poss', true) + ' log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
       '<div><div class="fp-sec-h">What the patterns say</div>' +
       '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
   }
@@ -46582,7 +46582,7 @@ function renderDietChokingIntro() {
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
   // thrusts (child 1y+ technique) + "NO adrenaline".
-  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If ' + pron('subj') + ' is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).
@@ -46755,7 +46755,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('warn'),
     title:'Keep salt light — still no added sugar',
-    body:'Family food is fine now, but cook hers lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery, honey or sweets until 2 years; fruit is her sweetener.',
+    body:'Family food is fine now, but cook the toddler portion lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery, honey or sweets until 2 years; fruit is the sweetener.',
     condition: () => getAgeInMonths() >= 12,
   },
   {
@@ -46776,7 +46776,7 @@ const ALL_TIPS = [
     // infant-safety.md Axis 3 — AAP ~2 cups, ESPGHAN <500 ml) — Ceres V-C-266-6.
     type:'info', icon:zi('drop'),
     title:'Whole milk — from a cup, not too much',
-    body:'From 1 year, full-cream cow\'s milk can be a main drink — in an open cup, with or after meals, not a bottle. About 500 ml (2 cups) a day at most: more fills her up and is linked to iron deficiency. Use full-cream, not toned, double-toned or skimmed.',
+    body:'From 1 year, full-cream cow\'s milk can be a main drink — in an open cup, with or after meals, not a bottle. About 500 ml (2 cups) a day at most: more fills a toddler up and is linked to iron deficiency. Use full-cream, not toned, double-toned or skimmed.',
     condition: () => getAgeInMonths() >= 12,
   },
   {
@@ -46808,13 +46808,13 @@ const ALL_TIPS = [
   {
     type:'info', icon:zi('spoon'),
     title:'Family food, adapted',
-    body:'From 1 year she can eat what the family eats, in small soft pieces she can squash between finger and thumb — she has no grinding molars yet. Take her portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
+    body:'From 1 year a toddler can eat what the family eats, in small soft pieces a toddler can squash between finger and thumb — the grinding molars are not in yet. Take the toddler portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
     condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'info', icon:zi('bowl'),
     title:'3–4 meals and 1–2 snacks',
-    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 cup (a big katori, 190–250 ml) a meal. Offer, then let her appetite decide — no forcing (WHO, IAP).',
+    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 cup (a big katori, 190–250 ml) a meal. Offer, then let appetite decide — no forcing (WHO, IAP).',
     condition: () => getAgeInMonths() >= 12,
   },
   {
@@ -47219,7 +47219,7 @@ function checkFoodCombo() {
   const hasIron = tags.includes('iron-rich');
   const _calcFoods = rawFoods.filter(f => ['paneer','cheese','curd','yogurt','dahi','milk'].includes(f));
   if (_ironFoods.some(f => _calcFoods.indexOf(f) === -1) && _calcFoods.some(f => _ironFoods.indexOf(f) === -1)) {
-    warnings.push('For her main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
+    warnings.push('For ' + pron('poss') + ' main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
   }
   // Brain health combo
   if (tags.includes('brain-health') || tags.includes('omega-3')) {
@@ -47573,7 +47573,7 @@ function generateDonts(foodList, tags, mo) {
   if (foodStr.includes('beetroot')) donts.push('Red/pink stool after beetroot is normal — not blood');
   if (foodStr.includes('potato')) donts.push('Don\'t fry for babies — steam, boil, or bake only');
 
-  donts.push('Don\'t force feed — let baby set the pace and stop when she turns away');
+  donts.push('Don\'t force feed — let baby set the pace and stop when ' + pron('subj') + ' turns away');
   return donts.slice(0, 5);
 }
 
@@ -48327,7 +48327,7 @@ function _tpScoreFood(foodName, ctx) {
   var acceptance = getFoodAcceptanceRate(base);
   if (acceptance !== null && freq >= 2) {
     var pct = Math.round(acceptance * 100);
-    if (acceptance >= 0.8) { score += 10; reasons.push('She finishes ' + pct + '% \u2014 ' + getAcceptanceLabel(acceptance)); }
+    if (acceptance >= 0.8) { score += 10; reasons.push(pron('subj', true) + ' finishes ' + pct + '% \u2014 ' + getAcceptanceLabel(acceptance)); }
     else if (acceptance >= 0.5) { score += 5; }
     else { score -= 5; reasons.push('Avg intake only ' + pct + '% \u2014 ' + getAcceptanceLabel(acceptance)); }
   }
@@ -48419,7 +48419,7 @@ function _tpBuildCombos(meal, ctx) {
       // Acceptance bonus
       if (hc.count >= 3 && hc.avgIntake >= 0.7) {
         totalScore += 15;
-        allReasons.push('She eats ' + Math.round(hc.avgIntake * 100) + '% of this combo (' + hc.count + ' times)');
+        allReasons.push(pron('subj', true) + ' eats ' + Math.round(hc.avgIntake * 100) + '% of this combo (' + hc.count + ' times)');
       }
 
       // Synergy bonus within combo (max +8)
@@ -49338,8 +49338,8 @@ function _miShowPostSavePrompt(dateStr) {
   promptDiv.className = 'mi-prompt';
 
   var label = mealsToPrompt.length === 1
-    ? 'How much ' + mealsToPrompt[0] + ' did she eat?'
-    : 'How much did she eat?';
+    ? 'How much ' + mealsToPrompt[0] + ' did ' + pron('subj') + ' eat?'
+    : 'How much did ' + pron('subj') + ' eat?';
   var html = '<div class="mi-prompt-label">' + escHtml(label) + '</div>';
   html += '<div class="mi-buttons">';
   MI_LEVELS.forEach(function(lv) {
@@ -49756,7 +49756,7 @@ function _fcRenderPlannedRail(inst) {
   if (!p) return '';
   const flagged = p.lead && p.lead[0] === 'flag';
   const sub = p.foods.length ? 'Tap to add: ' + p.foods.map(f => f.name).join(', ') : 'Nothing to add with one tap';
-  const leftLine = p.left.length ? '<div class="fc-repeat-sub">Not added with the tap: ' + escHtml(p.left.join(', ')) + '. Add it yourself only if she had it.</div>' : '';
+  const leftLine = p.left.length ? '<div class="fc-repeat-sub">Not added with the tap: ' + escHtml(p.left.join(', ')) + '. Add it yourself only if ' + pron('subj') + ' had it.</div>' : '';
   const chip = p.foods.length
     ? '<div class="fc-repeat-chip' + (flagged ? '' : ' primary') + ' fc-planned-chip" role="button" tabindex="0" data-action="mpApplyPlan" data-arg="' + escAttr(dateStr + '|' + inst.slot) + '">'
     : '<div class="fc-repeat-chip fc-planned-chip" aria-disabled="true">';
@@ -50710,7 +50710,7 @@ function _spGetDomainDefs(zs) {
     },
     {
       key: 'medical', icon: zi('medical'), name: 'Medical', tab: 'medical',
-      tip: 'Keep vaccinations on schedule and log her Vitamin D supplement doses for best scores.',
+      tip: 'Keep vaccinations on schedule and log ' + pron('poss') + ' Vitamin D supplement doses for best scores.',
       components: () => {
         const r = zs.domains.medical.result;
         if (!r) return [];
@@ -51907,7 +51907,7 @@ function _mpFormLine(eff, name) {
 // were ever reworded (V-M-279-2).
 function _mpMercuryFlag(name) {
   const line = _mpHighMercuryLine();
-  return line ? `Not for her: ${line}.` : `${_mpCap(name)} is a high-mercury fish — not for her.`;
+  return line ? `Not for ${pron('obj')}: ${line}.` : `${_mpCap(name)} is a high-mercury fish — not for ${pron('obj')}.`;
 }
 // The slot's safety lead. Flags (a reaction she had, then high-mercury fish, then age on the planned
 // date) outrank cautions (a new common allergen, a form-sensitive free food); a form note is never
@@ -51919,14 +51919,14 @@ function _mpSlotLead(items, key) {
   for (const it of items) {
     if (it.kind === 'recipe') {
       const r = _mpRecipe(it.id);
-      if (r && _recipeEffectiveMinAge(r) > age) aged.push(`${r.title} is for ${_recipeEffectiveMinAge(r)} months and up; she'll be ${age} months then.`);
+      if (r && _recipeEffectiveMinAge(r) > age) aged.push(`${r.title} is for ${_recipeEffectiveMinAge(r)} months and up; ${pron('subj')}'ll be ${age} months then.`);
     }
     for (const name of _mpItemNames(it)) {
       const lower = String(name).toLowerCase().trim();
       const rule = _fdAgeRule(lower);
       if (it.kind === 'food' && rule && rule.minMonth > age) aged.push(`${_mpCap(name)}: not before ${rule.minMonth} months. ${rule.reason || ''}`.trim());
       const react = _mpReactionTo(name);
-      if (react) reactions.push(`You marked ${react.name.toLowerCase()} to watch. Talk to her doctor before offering it again.`);
+      if (react) reactions.push(`You marked ${react.name.toLowerCase()} to watch. Talk to ${pron('poss')} doctor before offering it again.`);
       if (_isHighMercuryFishHost(lower)) mercury.push(_mpMercuryFlag(name));
       if (!react && _mpIsCommonAllergen(lower, age) && !_mpHadBefore(lower, key)) (it.kind === 'food' ? newFood : newInRecipe).push(lower);
       if (it.kind === 'food') {
@@ -51941,9 +51941,9 @@ function _mpSlotLead(items, key) {
   if (key < today()) return null;
   const fresh = [...new Set(newFood.concat(newInRecipe))];
   const caution = [];
-  if (fresh.length > 1) caution.push(`${fresh.map(_mpCap).join(' and ')} are common allergens new for her, in the same meal. If she reacts, it will be hard to tell which caused it. Give new foods one at a time, a few days apart.`);
-  else if (newFood.length) caution.push(`${_mpCap(newFood[0])} is a common allergen and new for her: give it on its own and watch her closely.`);
-  else if (newInRecipe.length) caution.push(`${_mpCap(newInRecipe[0])} is a common allergen and new for her. Plan this on a day with nothing else new, and watch her closely.`);
+  if (fresh.length > 1) caution.push(`${fresh.map(_mpCap).join(' and ')} are common allergens new for ${pron('obj')}, in the same meal. If ${pron('subj')} reacts, it will be hard to tell which caused it. Give new foods one at a time, a few days apart.`);
+  else if (newFood.length) caution.push(`${_mpCap(newFood[0])} is a common allergen and new for ${pron('obj')}: give it on its own and watch ${pron('obj')} closely.`);
+  else if (newInRecipe.length) caution.push(`${_mpCap(newInRecipe[0])} is a common allergen and new for ${pron('obj')}. Plan this on a day with nothing else new, and watch ${pron('obj')} closely.`);
   caution.push(...forms);
   return caution.length ? ['caution', caution.join(' ')] : null;
 }
@@ -52246,7 +52246,7 @@ function _mpSuggestions(key, slot) {
   if (!_mpDayHasIron(key)) all.sort((a, b) => ((b.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0) - ((a.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0));
   return all.slice(0, 5).map(s => {
     const fresh = (s.r.ingredients || []).find(i => _mpIsCommonAllergen(i.name, age) && !_mpHadBefore(i.name, key));
-    const why = fresh ? `New for her: ${String(fresh.name).toLowerCase()}`
+    const why = fresh ? `New for ${pron('obj')}: ${String(fresh.name).toLowerCase()}`
       : (!_mpDayHasIron(key) && (s.r.ingredients || []).some(i => _mpIsIron(i.name))) ? 'Adds iron' : (s.why || _recipeRelevanceTag(s.r));
     return { r: s.r, why };
   });
@@ -52373,7 +52373,7 @@ function _mpApplyPlanToComposer(btn, arg) {
     const d = (/\b(oil|ghee|butter)\b/i.test(f.name) && cat['fat-cooking']) || (f.g != null && f.g <= 3 && cat.spice) || window._fdResolveQtyDefaults(f.name);
     return { name: _fcCapFirst(f.name), qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(f.name), source: 'plan' };
   });
-  if (p.left.length) showQLToast(`Left out ${escHtml(p.left.join(', '))}: add it yourself only if she had it`, 5000);
+  if (p.left.length) showQLToast(`Left out ${escHtml(p.left.join(', '))}: add it yourself only if ${pron('subj')} had it`, 5000);
   inst.sourceFlow = (inst.variant === 'card') ? 'diet-tab' : 'fob-plan';
   _fcAfterItemChange(inst);
 }
@@ -52484,7 +52484,7 @@ function mpDispatch(action, arg, btn) {
       const name = String(arg || '').trim().slice(0, MP_NAME_MAX);
       if (!st || !name || !_dietAllowsFood(name)) return;
       const rule = _fdAgeRule(name.toLowerCase());
-      if (rule && rule.minMonth > _mpAgeMonthsOn(st.key)) { showQLToast(`${escHtml(_mpCap(name))} isn't for her age yet`, 2500); return; }
+      if (rule && rule.minMonth > _mpAgeMonthsOn(st.key)) { showQLToast(`${escHtml(_mpCap(name))} isn't for ${pron('poss')} age yet`, 2500); return; }
       st.q = '';
       if (_mpAddItem(st.key, st.slot, { kind: 'food', name: name.toLowerCase() })) { _mpRefreshPicker(); _mpSheetTop(); }
       break;
@@ -52533,13 +52533,13 @@ function mpDispatch(action, arg, btn) {
         (it.kind === 'recipe' && _mpRecipe(it.id) && _recipeEffectiveMinAge(_mpRecipe(it.id)) > age)
         || (it.kind === 'food' && typeof it.name === 'string' && (_fdAgeRule(it.name.toLowerCase()) || { minMonth: 0 }).minMonth > age)).map(_mpItemLabel);
       const from = st.key;
-      if (gated.length) { _mpCloseSheet(true); confirmAction(`${escHtml(gated.join(', '))} ${gated.length > 1 ? 'aren\'t' : 'isn\'t'} for her age on ${escHtml(_mpShortDay(arg))} yet. Copy anyway? ${gated.length > 1 ? 'They' : 'It'} will show a flag on that day.`, () => _mpDoCopy(from, arg), 'Copy anyway', { cls: 'mp-confirm', onCancel: renderMealPlanSection }); }
+      if (gated.length) { _mpCloseSheet(true); confirmAction(`${escHtml(gated.join(', '))} ${gated.length > 1 ? 'aren\'t' : 'isn\'t'} for ${pron('poss')} age on ${escHtml(_mpShortDay(arg))} yet. Copy anyway? ${gated.length > 1 ? 'They' : 'It'} will show a flag on that day.`, () => _mpDoCopy(from, arg), 'Copy anyway', { cls: 'mp-confirm', onCancel: renderMealPlanSection }); }
       else _mpDoCopy(from, arg);
       break;
     }
     case 'mpClearDay': {
       const key = arg;
-      confirmAction(`<strong>Clear ${escHtml(_mpDayTitle(key))}'s plan?</strong><br>This removes the planned meals for the day. Meals you've logged stay in her diary.`, () => {
+      confirmAction(`<strong>Clear ${escHtml(_mpDayTitle(key))}'s plan?</strong><br>This removes the planned meals for the day. Meals you've logged stay in ${pron('poss')} diary.`, () => {
         const snap = _mpSnapshotDay(key);
         if (!_mpClearDay(key)) return;
         _mpOpenEntry = null;
@@ -54343,7 +54343,7 @@ function renderSizeComparison() {
     { max:60, pool:[
       { icon:zi('star'), text:'About as tall as a large teddy bear', sub:'The most huggable height' },
       { icon:zi('target'), text:'As long as an archery arrow', sub:'Always hitting the target' },
-      { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior princess' },
+      { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior ' + (childSex() === 'm' ? 'prince' : 'princess') },
     ]},
     { max:64, pool:[
       { icon:zi('run'), text:'About the length of a full cricket stump', sub:'Stumped by that cuteness' },
@@ -56194,7 +56194,7 @@ function renderVaccInfoPanel(vaccName) {
   } else if (VACC_RETIRED.some(n => normVacc(n) === normVacc(vaccName))) {
     // Only doses this schedule actually retired — a parent's own wording ("Flu
     // vaccine", "Hep A") must never read as "may not be needed" (Cipher E-V 1).
-    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask her doctor whether it is still needed.</div></div></div>`;
+    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask ${pron('poss')} doctor whether it is still needed.</div></div></div>`;
   }
 
   // Note
@@ -56796,8 +56796,8 @@ function renderVaccCoverage() {
   // A family that has logged no doses yet has not told us her history: no red "Missing" list,
   // just an invitation to add the doses on her card (V-M-280-4).
   if (pastCount === 0) {
-    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on her vaccination card to see what is due.</span></div>`;
-    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once her past doses are logged, this card checks them against the full IAP schedule.</span></div>`
+    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on ${pron('poss')} vaccination card to see what is due.</span></div>`;
+    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once ${pron('poss')} past doses are logged, this card checks them against the full IAP schedule.</span></div>`
       + `<button class="btn btn-soft btn-compact" data-action="openVaccModal">${zi('plus')} Add a dose</button>`;
     return;
   }
@@ -56874,7 +56874,7 @@ function renderVaccCoverage() {
 
   // Conditional doses — not for every child; never counted as missing.
   if (checkList.length > 0) {
-    html += `<div class="section-label-check">${zi('steth')} Check with her doctor</div>`;
+    html += `<div class="section-label-check">${zi('steth')} Check with ${pron('poss')} doctor</div>`;
     checkList.forEach(v => { html += renderVaccItem(v, 'check'); });
   }
 
@@ -56894,7 +56894,7 @@ function renderVaccCoverage() {
   const otherGiven = givenList.filter(e => e && e.name && !_schedNorm.has(normVacc(e.name))
     && !(/influenza|flu/i.test(e.name) && given.some(g => g.seasonal)));
   if (otherGiven.length > 0) {
-    html += `<div class="section-label-light vacc-other-label">Other doses on her record (${otherGiven.length})</div><div class="vacc-chip-row">`;
+    html += `<div class="section-label-light vacc-other-label">Other doses on ${pron('poss')} record (${otherGiven.length})</div><div class="vacc-chip-row">`;
     otherGiven.forEach(e => { html += `<span class="vacc-chip-other">${escHtml(e.name)}</span>`; });
     html += `</div>`;
   }
@@ -57195,7 +57195,7 @@ function saveMed() {
   renderMeds();
   if (oldVd.length) {
     // confirmAction renders msg as HTML — escape the parent-typed names (HR-4).
-    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if her doctor asked for both.', () => {
+    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if ' + pron('poss') + ' doctor asked for both.', () => {
       oldVd.forEach(m => { m.active = false; });
       renderMeds();
     }, 'Stop');
@@ -57241,7 +57241,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo <= 8 && msStatus('crawl') !== 'done' },
 
   { type:'motor', icon:zi('baby'), title:'Supported sitting practice',
-    desc:'Sit her with pillows around for safety and let her balance. Reaching for toys while sitting builds core stability.',
+    desc:'Sit your baby up with pillows around for safety and practise balancing. Reaching for toys while sitting builds core stability.',
     condition: (mo) => msStatus('sit') !== 'done' && mo >= 5 && mo <= 9 },
 
   { type:'motor', icon:zi('baby'), title:'Object transfer hand to hand',
@@ -57253,7 +57253,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo < 12 && (msStatus('crawl') === 'in_progress' || (msStatus('crawl') !== 'done' && mo >= 6)) },
 
   { type:'motor', icon:zi('run'), title:'Supported standing',
-    desc:'She\'s already pulling to stand — encourage brief standing at a stable surface. Builds leg strength and balance for cruising.',
+    desc:'Already pulling to stand — encourage brief standing at a stable surface. Builds leg strength and balance for cruising.',
     condition: (mo) => msStatus('pull') === 'done' && msStatus('cruis') !== 'done' && mo < 15 },
 
   { type:'motor', icon:zi('run'), title:'Cruising practice',
@@ -57261,15 +57261,15 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo < 15 && (msStatus('cruis') === 'in_progress' || (msStatus('pull') === 'done' && msStatus('walks independently') !== 'done' && mo >= 7)) },
 
   { type:'motor', icon:zi('run'), title:'Supported walking',
-    desc:'Hold both hands and let her step forward. Gradually shift to one hand as confidence builds.',
+    desc:'Hold both hands and let your baby step forward. Gradually shift to one hand as confidence builds.',
     condition: (mo) => msStatus('cruis') === 'done' && msStatus('walks independently') !== 'done' && mo < 18 },
 
   { type:'motor', icon:zi('baby'), title:'Stack & knock blocks',
-    desc:'Stack 2–3 soft blocks and let her knock them down. Builds spatial understanding and cause-effect learning.',
+    desc:'Stack 2–3 soft blocks and let your baby knock them down. Builds spatial understanding and cause-effect learning.',
     condition: (mo) => msStatus('stack') !== 'done' && mo >= 7 && mo < 12 },
 
   { type:'motor', icon:zi('note'), title:'Banging & dropping toys',
-    desc:'Let her bang safe objects together or drop them from the highchair. She is learning cause-and-effect.',
+    desc:'Let your baby bang safe objects together or drop them from the highchair. This is how cause-and-effect is learned.',
     condition: (mo) => mo >= 6 && mo <= 10 && msStatus('bang') !== 'done' },
 
   // ── MOTOR: Fine motor ──
@@ -57278,11 +57278,11 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => msStatus('pincer') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'motor', icon:zi('spoon'), title:'Self-feeding with spoon',
-    desc:'Let her hold a pre-loaded spoon during meals. It will be messy but builds oral motor skills and independence.',
+    desc:'Let your baby hold a pre-loaded spoon during meals. It will be messy but builds oral motor skills and independence.',
     condition: (mo) => mo >= 7 && mo < 12 && msStatus('finger feed') !== 'done' },
 
   { type:'motor', icon:zi('spoon'), title:'Finger food practice',
-    desc:'Offer soft finger foods she can grasp. Builds pincer grasp, hand-to-mouth coordination, and chewing skills.',
+    desc:'Offer soft finger foods that are easy to grasp. Builds pincer grasp, hand-to-mouth coordination, and chewing skills.',
     condition: (mo) => mo < 12 && (msStatus('finger feed') === 'in_progress' || (msStatus('finger feed') !== 'done' && mo >= 6)) },
 
   // ── LANGUAGE ──
@@ -57295,19 +57295,19 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 12 },
 
   { type:'language', icon:zi('chat'), title:'Name body parts',
-    desc:'Touch her nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
+    desc:'Touch your baby\'s nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
     condition: (mo) => mo >= 6 && mo < 18 && msStatus('body part') !== 'done' },
 
-  { type:'language', icon:zi('chat'), title:'Imitation games — copy her sounds',
-    desc:'Repeat her babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
+  { type:'language', icon:zi('chat'), title:'Imitation games — copy baby sounds',
+    desc:'Repeat the babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
     condition: (mo) => mo < 15 && (msStatus('babbl') === 'done' || msStatus('babbl') === 'in_progress') },
 
   { type:'language', icon:zi('target'), title:'Respond to name — reinforce it',
-    desc:'Call her name from different positions and reward with a smile when she turns. Strengthens name recognition.',
+    desc:'Call your baby\'s name from different positions and reward each head-turn with a smile. Strengthens name recognition.',
     condition: (mo) => msStatus('respond') === 'in_progress' },
 
   { type:'language', icon:zi('list'), title:'Simple instructions practice',
-    desc:'"Give me the ball", "clap your hands" — one-step commands with gestures help her link words to actions.',
+    desc:'"Give me the ball", "clap your hands" — one-step commands with gestures help link words to actions.',
     condition: (mo) => mo >= 8 && msStatus('follow') !== 'done' },
 
   // ── SENSORY ──
@@ -57316,7 +57316,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo <= 24 },
 
   { type:'sensory', icon:zi('sprout'), title:'Texture exploration',
-    desc:'Let her touch different safe textures — soft cloth, smooth spoon, cool bowl, bumpy ball. Sensory variety accelerates brain development.',
+    desc:'Offer different safe textures to touch — soft cloth, smooth spoon, cool bowl, bumpy ball. Sensory variety accelerates brain development.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'sensory', icon:zi('drop'), title:'Water play',
@@ -57324,16 +57324,16 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 15 },
 
   { type:'sensory', icon:zi('star'), title:'Instrument exploration',
-    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let her make noise — it builds cause-and-effect understanding and auditory processing.',
+    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let your baby make noise — it builds cause-and-effect understanding and auditory processing.',
     condition: (mo) => mo >= 6 },
 
   { type:'sensory', icon:zi('palette'), title:'Food-safe finger painting',
-    desc:'Smear a little puree on a tray and let her explore with fingers. Rich tactile experience — great for sensory-averse babies too.',
+    desc:'Smear a little puree on a tray and let little fingers explore. Rich tactile experience — great for sensory-averse babies too.',
     condition: (mo) => mo >= 7 },
 
   // ── SOCIAL ──
   { type:'social', icon:zi('mirror'), title:'Mirror play',
-    desc:'Hold her in front of a mirror. She\'ll study her face and expressions — builds self-awareness and social cognition.',
+    desc:'Hold your baby up to a mirror. Babies love to study faces and expressions — builds self-awareness and social cognition.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'social', icon:zi('baby'), title:'Peek-a-boo',
@@ -57341,19 +57341,19 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 12 && msStatus('object perm') !== 'done' },
 
   { type:'social', icon:zi('baby'), title:'Practise waving bye-bye',
-    desc:'Model waving every time someone leaves. She\'ll start imitating — a key social communication milestone.',
+    desc:'Model waving every time someone leaves. Imitation follows — a key social communication milestone.',
     condition: (mo) => msStatus('wave') !== 'done' && mo >= 6 && mo < 15 },
 
   { type:'social', icon:zi('baby'), title:'Clapping games',
-    desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
+    desc:'Clap your hands and encourage your baby to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
     condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'social', icon:zi('shy'), title:'Manage stranger anxiety gently',
-    desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
+    desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — give your baby time to warm up.',
     condition: (mo) => msStatus('separation') === 'in_progress' || (mo >= 8 && mo <= 11) },
 
   { type:'social', icon:zi('baby'), title:'Pointing practice',
-    desc:'Point at objects and name them. Encourage her to point too — "Where\'s the dog?" Pointing is a major communication milestone.',
+    desc:'Point at objects and name them. Encourage your baby to point too — "Where\'s the dog?" Pointing is a major communication milestone.',
     condition: (mo) => msStatus('point') !== 'done' && mo >= 8 && mo < 18 },
   // ═══ TODDLER, 12–24 months (2026-09-24) ═══
   // Sources (fetched 2026-09-24): CDC "What You Can Do" tips at
@@ -57363,12 +57363,12 @@ const DYNAMIC_ACTIVITIES = [
   // pages; WHO 2019 physical-activity guideline (1–2 y). Keys in // src: lines.
   // ── MOTOR: Toddler gross motor ──
   { type:'motor', icon:zi('run'), title:'Push and pull toys',
-    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
+    desc:'Offer a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'"); cord guard: ASTM F963 (cords under 30 cm on toys for under-18-month-olds)
 
   { type:'motor', icon:zi('leaf'), title:'Child-led walks outside',
-    desc:'Let her lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
+    desc:'Let your toddler lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: AAP-ACT ("Child-led walks ... let your toddler lead the way ... stay close"); WHO-PA (1–2 y: at least 180 min of varied physical activity; not restrained for more than 1 hour at a time)
 
@@ -57378,96 +57378,96 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-18M ("rolling balls back and forth"); ZTT-SP ("roll the ball back-and-forth ... a game that builds social skills like turn-taking")
 
   { type:'motor', icon:zi('goal'), title:'Kick and throw',
-    desc:'Give her a soft ball to kick, throw and chase. Show her how to swing a leg to kick while you hold her hand for balance at first.',
+    desc:'Give your toddler a soft ball to kick, throw and chase. Show how to swing a leg to kick while you hold hands for balance at first.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-2Y ("Give your child balls to kick, roll, and throw"); AAP-ACT 19–24 m (throwing and kicking a ball); ZTT-SP (balls of different sizes to roll, throw, and chase)
 
   { type:'motor', icon:zi('run'), title:'Cushion obstacle course',
-    desc:'Make a soft course: crawl through a big box, climb over a cushion, bounce on folded blankets, then come to you for a hug. Stay beside her the whole time.',
+    desc:'Make a soft course: crawl through a big box, climb over a cushion, bounce on folded blankets, then come to you for a hug. Stay beside your toddler the whole time.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: ZTT-SP ("Create a toddler obstacle course where your child has a chance to crawl (through a moving box), climb (over a cushion), bounce (on a pile of blankets)"; stool climbing "with supervision"); ZTT-LP ("On a rainy day, try creating an obstacle course indoors")
 
   { type:'motor', icon:zi('run'), title:'Stairs with a hand to hold',
-    desc:'Put a toy a few steps up. Hold her hand going up and down, singing "up, up, up" and "down, down, down". Keep stair gates closed at all other times.',
+    desc:'Put a toy a few steps up. Hold your toddler\'s hand going up and down, singing "up, up, up" and "down, down, down". Keep stair gates closed at all other times.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: AAP-ACT 19–24 m ("Climbing stairs. Place a toy up a few steps ... hold their hand as they walk up and down ... sing 'up, up, up'"); AAP-MOV ("keep the stairs gated at all times")
 
   // ── MOTOR: Fine motor & self-help ──
   { type:'motor', icon:zi('target'), title:'Block towers',
-    desc:'Stack blocks together and let her knock them down, then take turns building. Towers of 3–4 blocks are a typical early-toddler goal.',
+    desc:'Stack blocks together and let your toddler knock them down, then take turns building. Towers of 3–4 blocks are a typical early-toddler goal.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("You can stack the blocks and she can knock them down"); CDC-2Y ("Take turns building towers and knocking them down"); AAP-ACT 12–18 m ("may be able to make a tower of 3 or 4 blocks")
 
   { type:'motor', icon:zi('palette'), title:'First scribbles',
-    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside her, as crayons get bitten. Talk about the colours, then put her art on the wall.',
+    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside your toddler, as crayons get bitten. Talk about the colours, then put the artwork on the wall.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-2Y ("Give your child crayons or put some finger paint on paper ... Hang it on the wall or refrigerator"); AAP-ACT 12–18 m ("scribble on paper"); NHS-BSIL ("Draw simple pictures and encourage your child to add marks and colours")
 
   { type:'motor', icon:zi('star'), title:'Fill and dump',
-    desc:'Give her a basket of soft balls or blocks too big to fit in her mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
+    desc:'Give your toddler a basket of soft balls or blocks too big to fit in a toddler\'s mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so each trip is a little walk.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: ZTT-PA ("Fill and Dump ... If the child is walking, place the baskets a few steps apart"); CDC-18M ("putting blocks or other items in and out of containers")
 
   { type:'motor', icon:zi('bulb'), title:'Shape sorters and chunky puzzles',
-    desc:'Try a shape sorter or a chunky wooden puzzle together. Name each piece — shape, colour or animal — as she fits it in.',
+    desc:'Try a shape sorter or a chunky wooden puzzle together. Name each piece — shape, colour or animal — as each one goes in.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-2Y ("Help your child do simple puzzles with shapes, colors, or animals. Name each piece"); ZTT-SP (nesting cups, shape-sorters, chunky wooden puzzles)
 
   { type:'motor', icon:zi('spoon'), title:'Open cup and spoon practice',
-    desc:'Let her drink from a small open cup (no lid) and scoop with her own spoon at every meal. Sit with her and expect spills — messy is how she learns.',
+    desc:'Let your toddler drink from a small open cup (no lid) and scoop with a spoon at every meal. Sit together and expect spills — messy is how toddlers learn.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M + CDC-18M ("Let your child use a cup without a lid for drinking and practice eating with a spoon. Learning to eat and drink is messy but fun!"); CDC-18M ("sit at the table with your child when she's eating")
 
   { type:'motor', icon:zi('sparkle'), title:'Toothbrushing together',
-    desc:'Twice a day, brush her teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Let her have a turn holding the brush while she sits or stands still, never walking about with it in her mouth. Brushing in front of a mirror makes it a game.',
+    desc:'Twice a day, brush your toddler\'s teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Give a turn holding the brush while sitting or standing still, never walking about with it in the mouth. Brushing in front of a mirror makes it a game.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("Create a calm, quiet bedtime ... brush his teeth, and read 1 or 2 books"); ZTT-TS ("Encourage your child to take on some self-care activities — combing hair, brushing teeth"); NHS-TEETH ("Start brushing your baby's teeth with fluoride toothpaste as soon as their first milk tooth breaks through")
     // src (amount + frequency, Maren/Ceres fold): NHS "Children's teeth" (under 3: a smear, >=1,000 ppm, twice daily); AAP clinical report "Fluoride Use in Caries Prevention in the Primary Care Setting", Pediatrics 2014;134:626 (smear / rice-grain under 3, twice daily); ADA Council on Scientific Affairs, JADA 2014;145:190.
 
   // ── LANGUAGE ──
-  { type:'language', icon:zi('chat'), title:'Build on her words',
-    desc:'When she says part of a word, say the whole thing back and add a little: "Ba" — "Ball! Yes, a big red ball." Early words are not complete, and that is fine.',
+  { type:'language', icon:zi('chat'), title:'Build on first words',
+    desc:'When your toddler says part of a word, say the whole thing back and add a little: "Ba" — "Ball! Yes, a big red ball." Early words are not complete, and that is fine.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-1Y ("Build on what your baby tries to say ... 'Yes, that's a big, blue truck'"); CDC-15M ("A child's early words are not complete. Repeat and add to what he says"); CDC-18M ("Teach your child more words by adding to the words she says")
 
   { type:'language', icon:zi('target'), title:'Name it, then pause',
-    desc:'When she points at something, name it and wait a few seconds before handing it over. If she makes a sound, cheer and say the word again: "Yes! Cup."',
+    desc:'When your toddler points at something, name it and wait a few seconds before handing it over. If a sound comes, cheer and say the word again: "Yes! Cup."',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Tell your child the names of objects when he points to them and wait a few seconds to see if he makes any sounds ... 'Yes! Cup.'"); CDC-1Y ("Respond with words when your baby points")
 
   { type:'language', icon:zi('book'), title:'Toddler book time',
-    desc:'Let her pick the book and turn the pages. Point to pictures and ask "What\'s that?", giving her time to point or answer. Try a new book right after her favourite.',
+    desc:'Let your toddler pick the book and turn the pages. Point to pictures and ask "What\'s that?", giving time to point or answer. Try a new book right after a favourite.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-1Y ("books with things they can feel or flaps they can lift"); CDC-15M ("Read a new book after a favorite one"); CDC-18M ("Ask ... 'What is that?'"; "Read books and talk about the pictures using simple words"); NHS-BSIL ("give your child time to point things out"); WHO-PA ("When sedentary, engaging in reading and storytelling with a caregiver is encouraged")
 
   { type:'language', icon:zi('camera'), title:'Family photo book',
-    desc:'Make a little book of photos of family, pets and her. Look through it together and name each person — she will start to point and say names.',
+    desc:'Make a little book of photos of family, pets and your child too. Look through it together and name each person — pointing and names will follow.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Make a 'book' with pictures of people and pets in your child's life. Name them ... Include a picture of your child")
 
   { type:'language', icon:zi('baby'), title:'Body-part song',
-    desc:'Sing "Head, Shoulders, Knees and Toes" and touch each part. Point to her nose and yours: "Here\'s your nose, here\'s my nose." After a few rounds, pause and see if she sings a word.',
+    desc:'Sing "Head, Shoulders, Knees and Toes" and touch each part. Point to your toddler\'s nose and yours: "Here\'s your nose, here\'s my nose." After a few rounds, pause and listen for a sung word.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-18M ("teach your child the names for body parts ... 'Here's your nose, here's my nose'"); CDC-2Y ("Sing songs, such as 'Head, Shoulders, Knees, and Toes' ... see if your child sings some of the words")
 
   { type:'language', icon:zi('list'), title:'Offer simple choices',
-    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so she can point or say which. Choices grow words and independence.',
+    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so your toddler can point or say which. Choices grow words and independence.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-18M ("Give simple choices ... red or blue shirt"); NHS-BSIL ("Name objects and offer your child choices, for example, 'Do you want an apple or an orange?'")
 
   { type:'language', icon:zi('sun'), title:'Sound walk',
-    desc:'Out and about, stop and listen: the car goes "vroom", the bird goes "cheep", the shop till goes "beep". Make the sound and see if she joins in.',
+    desc:'Out and about, stop and listen: the car goes "vroom", the bird goes "cheep", the shop till goes "beep". Make the sound and see if your toddler joins in.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL ("Out and about ... a car go 'vroom vroom' ... the till go 'beep beep' ... birds singing 'cheep cheep'. Make the sounds and see if your child joins in")
 
   { type:'language', icon:zi('chat'), title:'Mealtime and dressing chat',
-    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help her match words to things and actions.',
+    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help match words to things and actions.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL (senses at mealtimes — "This yoghurt is sweet"; getting dressed — "1 arm in, 2 arms in"; "hear the same words every day ... matching words ... to things and actions")
 
   // ── SENSORY ──
   { type:'sensory', icon:zi('drop'), title:'Sand, scoop and pour',
-    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water, and tip the tub out afterwards.',
+    desc:'Offer cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave your toddler alone near water, and tip the tub out afterwards.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-2Y ("Let your child play with sand toys or plastic containers, spoons, or a funnel in the tub or in a sandbox"); ZTT-PA ("Squishy Sponges ... it is critical to supervise children carefully as they play" with water)
 
@@ -57479,42 +57479,42 @@ const DYNAMIC_ACTIVITIES = [
 
   // ── SOCIAL ──
   { type:'social', icon:zi('bubble'), title:'Bubble pop',
-    desc:'Blow bubbles and let her point, chase and pop them. Say "pop, pop!" each time — a simple game where you both have a part.',
+    desc:'Blow bubbles and let your toddler point, chase and pop them. Say "pop, pop!" each time — a simple game where you both have a part.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M + CDC-18M ("Blow bubbles and let your child pop them. Say things as she pops them, such as 'Pop, pop'"); AAP-ACT ("Bubble play ... practice pointing at the bubbles ... chase the bubbles to pop them")
 
   { type:'social', icon:zi('mirror'), title:'Copy me',
-    desc:'Show her a hat: "What do you do with a hat? It goes on your head!" Put it on, then hand it to her. Try it with a cup, a comb, a book.',
+    desc:'Show your toddler a hat: "What do you do with a hat? It goes on your head!" Put it on, then hand it over. Try it with a cup, a comb, a book.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Show your child different things, such as a hat ... Put it on your head and then give it to him to see if he copies you. Do this with other objects, such as a book or a cup")
 
   { type:'social', icon:zi('baby'), title:'Hide-and-find',
-    desc:'Let her watch you hide behind a chair, then wait for her to find you. Or hide a toy under a cup while she watches — then try two cups.',
+    desc:'Let your toddler watch you hide behind a chair, then wait to be found. Or hide a toy under a cup in plain view — then try two cups.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Play simple games, such as hide and seek. Let your child watch you hide behind a chair"); ZTT-PA ("Try the Classic Shell Game ... try it with two cups"); AAP-ACT 12–18 m ("Scavenger hunt. Hide a toy with one part sticking out")
 
   { type:'social', icon:zi('heart'), title:'Teddy talks',
-    desc:'Make a soft toy "talk" to her, and see if she copies you or makes her own toy talk back. Early pretend play starts here.',
+    desc:'Make a soft toy "talk" to your toddler, and see if you get copied or another toy talks back. Early pretend play starts here.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("'Pretend talk' to your child with a stuffed animal. See if your child tries to copy you or if he uses another stuffed animal to 'talk' with the one you are holding")
 
   { type:'social', icon:zi('heart'), title:'Pretend play: feed the teddy',
-    desc:'Give her a spoon, cup and blanket and take turns feeding teddy, giving dolly a bath, or tucking teddy in to sleep. Talk about each step.',
+    desc:'Offer a spoon, cup and blanket and take turns feeding teddy, giving dolly a bath, or tucking teddy in to sleep. Talk about each step.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-18M ("Encourage 'pretend' play. Give your child a spoon so she can pretend to feed her stuffed animal. Take turns pretending"; "a doll and a baby blanket"); ZTT-PA ("Starting at about 18 months, children are just beginning to play pretend ... 'give Teddy a drink' or 'put Teddy to sleep'"); NHS-BSIL ("giving dolly a bath")
 
   { type:'social', icon:zi('handshake'), title:'Little helper jobs',
-    desc:'Give her small real jobs: fetch her shoes, put socks in the basket, carry a cup to the table, tidy toys to a clean-up song. Thank her every time.',
+    desc:'Give your toddler small real jobs: fetch the shoes, put socks in the basket, carry a cup to the table, tidy toys to a clean-up song. Say thank you every time.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-15M ("Let her get her shoes ... put the socks in the basket"; "Make up a simple 'cleanup song'"); CDC-2Y ("letting him carry things to the table, such as plastic cups or napkins. Thank your child for helping"; "putting toys or laundry in a basket"); ZTT-TS ("Give your child the chance to help around the house")
 
   { type:'social', icon:zi('heart'), title:'Name the feeling',
-    desc:'Say what you think she feels: "You\'re frustrated — the tower fell." Point out feelings in others too: "He looks sad." Tantrums are normal at this age.',
+    desc:'Say what you think your toddler feels: "You\'re frustrated — the tower fell." Point out feelings in others too: "He looks sad." Tantrums are normal at this age.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-15M ("Say what you think your child is feeling (for example, sad, mad, frustrated, happy)"; "Expect tantrums. They are normal at this age"); CDC-18M ("when he sees a child who is sad, say 'He looks sad'")
 
   { type:'social', icon:zi('phone'), title:'Video calls with family',
-    desc:'Video calls with grandparents and family are the one screen use advised under 2. Let her wave, show toys and hear familiar voices.',
+    desc:'Video calls with grandparents and family are the one screen use advised under 2. Let your toddler wave, show toys and hear familiar voices.',
     condition: (mo) => mo >= 12 && mo < 24 },
     // src: CDC-1Y / CDC-15M / CDC-18M ("Limit screen time (TV, tablets, phones, etc.) to video calling with loved ones. Screen time is not recommended for children younger than 2 years of age"); WHO-PA ("For 1-year-olds, sedentary screen time ... is not recommended")
     // NOTE: at 24 m CDC-2Y shifts to "no more than 1 hour a day of a children's program with an adult present" — hence `mo < 24`.
@@ -58751,7 +58751,7 @@ function drawSleepChart() {
       const target = getSleepTargets(ageAt().months).totalTarget; // age-aware (was a fixed 14 h)
       const pct = Math.round((avg / target) * 100);
       const tH = Math.floor(target / 60), tM = target % 60;
-      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for her age)`;
+      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for ${pron('poss')} age)`;
     }
   }
 }
@@ -58773,12 +58773,12 @@ function renderSleepTips() {
         { icon:zi('star'), title:'Consistent sleep cue', text:'A specific lullaby, white noise pattern, or phrase ("time to sleep") used every night builds a strong association over time.' },
       ] : ageM < 12 ? [
         { icon:zi('moon'), title:'Keep the routine consistent', text:'At 9–12 months, separation anxiety peaks. A strong, predictable routine provides security — same time ±15 minutes, same sequence.' },
-        { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if she gets past her sleep window, cortisol spikes make falling asleep harder.' },
+        { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if ' + pron('subj') + ' gets past ' + pron('poss') + ' sleep window, cortisol spikes make falling asleep harder.' },
         { icon:zi('book'), title:'Add a short book', text:'Board books before bed build both sleep associations and early literacy. 1–2 short books is perfect.' },
         { icon:zi('baby'), title:'Goodbye ritual', text:'A brief, warm goodbye ritual ("goodnight, I love you, see you in the morning") helps with separation anxiety at this age.' },
       ] : [
         { icon:zi('moon'), title:'Same wind-down, same time', text:'Toddlers thrive on a predictable routine: bath, teeth, one or two books, lights out. Regular sleep and wake times matter more than the exact hour (WHO 2019).' },
-        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If she fights sleep, a slightly earlier bedtime often helps more than a later one.' },
+        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If ' + pron('subj') + ' fights sleep, a slightly earlier bedtime often helps more than a later one.' },
         { icon:zi('no-entry'), title:'Screens off', text:'No screen time under 2 years (WHO; IAP 2022), and none in the hour before bed. Video calls with family are fine, says the AAP.' },
         { icon:zi('baby'), title:'Short, warm goodnight', text:'A brief goodnight ritual helps with separation worries, which often flare again around 18 months.' },
       ]
@@ -58786,7 +58786,7 @@ function renderSleepTips() {
     {
       id: 'environment', icon: zi('flame'), label: 'Sleep Environment', color: 'sky',
       tips: [
-        { icon:zi('flame'), title:'Room temp: 20–22°C', text:'Overheating is a bigger risk than being cold. Dress in one more layer than you\'d wear. Feel the back of her neck — it should be warm, not sweaty.' },
+        { icon:zi('flame'), title:'Room temp: 20–22°C', text:'Overheating is a bigger risk than being cold. Dress in one more layer than you\'d wear. Feel the back of ' + pron('poss') + ' neck — it should be warm, not sweaty.' },
         { icon:zi('moon'), title:'Darkness matters', text:'Use blackout curtains. Even small light leaks can disrupt melatonin. A dim red/orange night light is OK if needed for feeds — avoid white/blue light.' },
         { icon:zi('bell'), title:'White noise', text:'Consistent white noise (not music) at 50–65 dB helps mask household sounds. Place the machine across the room, not right next to the crib.' },
         { icon:zi('moon'), title:'Safe sleep surface', text:'Firm, flat mattress. No pillows, loose blankets, bumpers, or soft toys in the crib. Back sleeping position.' },
@@ -58796,43 +58796,43 @@ function renderSleepTips() {
     {
       id: 'naps', icon: zi('zzz'), label: 'Nap Guide', color: 'sage',
       tips: ageM <= 8 ? [
-        { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, she can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
+        { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, ' + pron('subj') + ' can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
-        { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
+        { icon:zi('warn'), title:'Don\'t force naps', text:'If ' + pron('subj') + '\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
       ] : ageM < 12 ? [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
-        { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
+        { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, ' + pron('subj') + ' may be ready for the 2-to-1 transition (usually around 12–15 months).' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ] : [
         { icon:zi('list'), title:'One or two naps are both normal', text:'Between 12 and 18 months most toddlers move from two naps to one, and by about 18 months most take one midday nap. Some keep two until nearer 2 years.' },
-        { icon:zi('eye'), title:'Signs she is ready for one nap', text:'Refusing one of her naps most days for a week or two, or the second nap pushing bedtime late.' },
-        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while she adjusts.' },
+        { icon:zi('eye'), title:'Signs ' + pron('subj') + ' is ready for one nap', text:'Refusing one of ' + pron('poss') + ' naps most days for a week or two, or the second nap pushing bedtime late.' },
+        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while ' + pron('subj') + ' adjusts.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
     {
       id: 'night', icon: zi('moon'), label: 'Night Sleep', color: 'indigo',
       tips: ageM <= 8 ? [
-        { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — she feeds and goes back to sleep easily.' },
+        { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — ' + pron('subj') + ' feeds and goes back to sleep easily.' },
         { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
-        { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
-        { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
+        { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If ' + pron('subj') + '\'s consistently getting less than 10h, the schedule may need adjusting.' },
+        { icon:zi('hourglass'), title:'Split nights', text:'If ' + pron('subj') + ' wakes for 1+ hour in the middle of the night, ' + pron('subj') + ' may be getting too much daytime sleep or have too early a bedtime.' },
       ] : ageM < 12 ? [
-        { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If she still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
+        { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If ' + pron('subj') + ' still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep of 11–12 hours. Early morning waking (before 6 AM) often means bedtime is too late or too early — experiment in 15-min increments.' },
         { icon:zi('hourglass'), title:'Sleep regressions', text:'The 8–10 month regression is real — linked to crawling, pulling up, separation anxiety. It\'s temporary (2–4 weeks). Stay consistent with the routine.' },
-        { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If she needs rocking/feeding to sleep, she\'ll need it at every wake-up.' },
+        { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If ' + pron('subj') + ' needs rocking/feeding to sleep, ' + pron('subj') + '\'ll need it at every wake-up.' },
       ] : [
         { icon:zi('bars'), title:'About 11–14 hours a day', text:'Across 24 hours, including naps, 1–2 year olds need about 11–14 hours (AASM, WHO). Night sleep is usually 10–12 hours.' },
         // src: AAPD policy on early childhood caries (no bottle in bed; milk before brushing);
         // Diet tab milk guide (diet.js: open cup, ~500 ml/day cap from 12 m; breastfeeding to 2 y).
-        { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on her teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
+        { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on ' + pron('poss') + ' teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
         { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
         { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
         // src: AAP 2012 OSA clinical practice guideline (symptoms incl. cyanosis); Sheffield Children's NHS (film her sleeping).
-        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with her neck stretched back. If you see gasps or pauses in her breathing, call her doctor this week and take a short phone video of her sleeping.' },
+        { icon:zi('steth'), title:'When to mention it to ' + pron('poss') + ' doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with ' + pron('poss') + ' neck stretched back. If you see gasps or pauses in ' + pron('poss') + ' breathing, call ' + pron('poss') + ' doctor this week and take a short phone video of ' + pron('obj') + ' sleeping.' },
         { icon:zi('siren'), title:'Get help now', text:'Blue or grey lips or face, or struggling to breathe: seek medical care straight away.' },
       ]
     },
@@ -58842,8 +58842,8 @@ function renderSleepTips() {
         { icon:zi('brain'), title:'Sleep fuels growth', text:'Growth hormone is primarily released during deep sleep. Consistent, adequate sleep directly supports physical growth, brain development, and immune function.' },
         { icon:zi('warn'), title:'Overtiredness spiral', text:'An overtired baby produces cortisol and adrenaline, making it harder to fall asleep and stay asleep. Catch sleepy cues early — prevention is easier than correction.' },
         { icon:zi('baby'), title:'Teething and sleep', text:'Teething can unsettle sleep for a few nights as a tooth comes through. Offer a chilled (not frozen) teether before bed. Pain relief (consult doctor) may help on rough nights — but don\'t blame every bad night on teething.' },
-        { icon:zi('chart'), title:'Developmental leaps', text:'Major motor milestones (crawling, standing, walking) temporarily disrupt sleep. She may practice new skills in her sleep. This is normal and passes in 1–2 weeks.' },
-        { icon:zi('flame'), title:'Illness recovery', text:'After illness, sleep patterns may take 1–2 weeks to normalise. Return to the pre-illness routine as soon as she\'s recovered — don\'t create new habits during sick days.' },
+        { icon:zi('chart'), title:'Developmental leaps', text:'Major motor milestones (crawling, standing, walking) temporarily disrupt sleep. ' + pron('subj', true) + ' may practice new skills in ' + pron('poss') + ' sleep. This is normal and passes in 1–2 weeks.' },
+        { icon:zi('flame'), title:'Illness recovery', text:'After illness, sleep patterns may take 1–2 weeks to normalise. Return to the pre-illness routine as soon as ' + pron('subj') + '\'s recovered — don\'t create new habits during sick days.' },
       ]
     },
     {
@@ -58853,18 +58853,18 @@ function renderSleepTips() {
       // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
       // a bed: alcohol, sedating medicine, smoking, sofas).
       tips: ageM >= 12 ? [
-        { icon:zi('baby'), title:'Her own sleep position', text:'Now that she rolls and moves freely, she can settle in whatever position she likes. There is no need to turn her back.' },
-        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap she can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
-        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from her face. A light blanket of her own is fine from about 1 year.' },
+        { icon:zi('baby'), title:'' + pron('poss', true) + ' own sleep position', text:'Now that ' + pron('subj') + ' rolls and moves freely, ' + pron('subj') + ' can settle in whatever position ' + pron('subj') + ' likes. There is no need to turn ' + pron('obj') + ' back.' },
+        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap ' + pron('subj') + ' can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
+        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from ' + pron('poss') + ' face. A light blanket of ' + pron('poss') + ' own is fine from about 1 year.' },
         // No bed rails under 2 y: a toddler can be trapped between rail and mattress (CPSC 16 CFR
         // 1224; AAP HealthyChildren) — Maren B-2 on #273.
-        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. The safest setup is the mattress on the floor, away from the walls. If the bed stays raised, keep her on the side away from the edge, keep the floor beside it clear and soft, and don\'t use bed rails before age 2: she can get trapped between the rail and the mattress.' },
-        { icon:zi('eye'), title:'Naps on the big bed', text:'Don\'t leave her alone on the adult bed for a nap. Put her down on a floor mattress, or stay with her.' },
-        { icon:zi('baby'), title:'Who shares the bed', text:'Keep pets and other children out of the bed when she sleeps in it.' },
+        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. The safest setup is the mattress on the floor, away from the walls. If the bed stays raised, keep ' + pron('obj') + ' on the side away from the edge, keep the floor beside it clear and soft, and don\'t use bed rails before age 2: ' + pron('subj') + ' can get trapped between the rail and the mattress.' },
+        { icon:zi('eye'), title:'Naps on the big bed', text:'Don\'t leave ' + pron('obj') + ' alone on the adult bed for a nap. Put ' + pron('obj') + ' down on a floor mattress, or stay with ' + pron('obj') + '.' },
+        { icon:zi('baby'), title:'Who shares the bed', text:'Keep pets and other children out of the bed when ' + pron('subj') + ' sleeps in it.' },
         { icon:zi('no-entry'), title:'When not to share the bed', text:'Not next to an adult who has had alcohol, sedating medicine, or is a smoker, and never asleep together on a sofa or armchair.' },
-        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around her. Smoke on clothes and furnishings also harms her breathing and sleep.' },
+        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around ' + pron('obj') + '. Smoke on clothes and furnishings also harms ' + pron('poss') + ' breathing and sleep.' },
       ] : [
-        { icon:zi('baby'), title:'Always on the back', text:'Place her on her back for every sleep. Once she can roll both ways independently, she can find her own position — but always start on the back.' },
+        { icon:zi('baby'), title:'Always on the back', text:'Place ' + pron('obj') + ' on ' + pron('poss') + ' back for every sleep. Once ' + pron('subj') + ' can roll both ways independently, ' + pron('subj') + ' can find ' + pron('poss') + ' own position — but always start on the back.' },
         { icon:zi('warn'), title:'Nothing in the crib', text:'No pillows, blankets, bumpers, stuffed animals, or positioners. A fitted sheet on a firm mattress is all that\'s needed.' },
         { icon:zi('sprout'), title:'Air circulation', text:'A ceiling fan or gentle air circulation reduces SIDS risk. Keep the room ventilated but not drafty.' },
         { icon:zi('shield'), title:'Smoke-free environment', text:'No smoking in the house or around the baby. Secondhand and thirdhand smoke significantly increase SIDS risk.' },
@@ -63329,7 +63329,7 @@ function renderInfoGrowthVelocity() {
     if (data.weight) {
       var w2 = data.weight;
       if (w2.tooShort) {
-        iHtml += '<div class="si-insight si-insight-info">Her last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
+        iHtml += '<div class="si-insight si-insight-info">' + pron('poss', true) + ' last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
       } else if (w2.status === 'on-track') {
         iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + w2.expectedRange.label + '.</div>';
       } else if (w2.status === 'slow') {
@@ -63648,23 +63648,27 @@ function _qaHandleBlur() {
   }, 200);
 }
 
-var QA_PLACEHOLDERS = [
-  'How is she doing?',
+// Built at call time, not load time: the chips and placeholders carry the child's pronouns
+// (child-sex-v1 S2, V-K-281-3), and childSex() is only known once the profile has loaded.
+// A tapped or typed boy's phrasing folds back to the canonical she/her match vocabulary in
+// _qaNameAsShe, so the intents still fire.
+function qaPlaceholders() { return [
+  'How is ' + pron('subj') + ' doing?',
   'ragi, banana \u2014 best combos?',
   'Can I give honey?',
-  'She has a rash\u2026',
+  pron('subj', true) + ' has a rash\u2026',
   'Going out tomorrow',
-  'What nutrients is she missing?',
+  'What nutrients is ' + pron('subj') + ' missing?',
   'Which food helps sleep?',
   'carrot, dal, ghee \u2014 what to make?',
   'How do I improve sleep?'
-];
+]; }
 
 // ── TYPEAHEAD SUGGESTION POOL ──
 
-var QA_SUGGEST_POOL = [
+function qaSuggestPool() { return [
   // Sleep
-  { text: 'How is her sleep?', color: 'indigo' },
+  { text: 'How is ' + pron('poss') + ' sleep?', color: 'indigo' },
   { text: 'Why is sleep bad?', color: 'indigo' },
   { text: 'How to improve sleep?', color: 'indigo' },
   { text: 'Sleep yesterday', color: 'indigo' },
@@ -63674,12 +63678,12 @@ var QA_SUGGEST_POOL = [
   { text: 'Earlier bedtime tips', color: 'indigo' },
   // Diet
   { text: 'What should I feed today?', color: 'peach' },
-  { text: 'What did she eat yesterday?', color: 'peach' },
-  { text: 'What nutrients is she missing?', color: 'peach' },
+  { text: 'What did ' + pron('subj') + ' eat yesterday?', color: 'peach' },
+  { text: 'What nutrients is ' + pron('subj') + ' missing?', color: 'peach' },
   { text: 'Food variety tips', color: 'peach' },
   { text: 'Texture progression', color: 'peach' },
   { text: 'Can I give honey?', color: 'peach' },
-  { text: 'Can she eat egg?', color: 'peach' },
+  { text: 'Can ' + pron('subj') + ' eat egg?', color: 'peach' },
   { text: 'Iron-rich foods', color: 'peach' },
   // Poop
   { text: 'Poop update', color: 'amber' },
@@ -63700,15 +63704,15 @@ var QA_SUGGEST_POOL = [
   { text: 'Rash', color: 'sky' },
   { text: 'Teething', color: 'sky' },
   // Growth
-  { text: 'How is her growth?', color: 'rose' },
+  { text: 'How is ' + pron('poss') + ' growth?', color: 'rose' },
   { text: 'Weight gain tips', color: 'rose' },
   { text: 'Growth percentile', color: 'rose' },
   // Milestones
   { text: 'Milestone progress', color: 'lav' },
-  { text: 'Is she on track?', color: 'lav' },
+  { text: 'Is ' + pron('subj') + ' on track?', color: 'lav' },
   { text: 'Crawling progress', color: 'lav' },
   // Activities
-  { text: 'Best activities for her age?', color: 'sage' },
+  { text: 'Best activities for ' + pron('poss') + ' age?', color: 'sage' },
   { text: 'Activities for motor skills', color: 'sage' },
   { text: 'Tummy time tips', color: 'sage' },
   // Temporal
@@ -63717,7 +63721,7 @@ var QA_SUGGEST_POOL = [
   { text: 'Last week', color: 'indigo' },
   { text: 'This month', color: 'indigo' },
   // Overall
-  { text: 'How is she doing?', color: 'rose' },
+  { text: 'How is ' + pron('subj') + ' doing?', color: 'rose' },
   { text: 'Overall score', color: 'rose' },
   { text: 'Going out tomorrow', color: 'sage' },
   { text: 'Doctor visit prep', color: 'sky' },
@@ -63725,21 +63729,21 @@ var QA_SUGGEST_POOL = [
   // Session B: Lookback + Pattern + Planning
   { text: 'Last poop', color: 'amber' },
   { text: 'Last nap', color: 'lav' },
-  { text: 'When did she last eat ragi?', color: 'peach' },
-  { text: 'What is her routine?', color: 'indigo' },
-  { text: 'What does she like?', color: 'peach' },
-  { text: 'Foods she rejects', color: 'peach' },
+  { text: 'When did ' + pron('subj') + ' last eat ragi?', color: 'peach' },
+  { text: 'What is ' + pron('poss') + ' routine?', color: 'indigo' },
+  { text: 'What does ' + pron('subj') + ' like?', color: 'peach' },
+  { text: 'Foods ' + pron('subj') + ' rejects', color: 'peach' },
   { text: 'What is improving?', color: 'sage' },
   { text: 'Any concerns?', color: 'amber' },
   { text: 'This week vs last week', color: 'indigo' },
-  { text: 'How old is she?', color: 'rose' },
+  { text: 'How old is ' + pron('subj') + '?', color: 'rose' },
   { text: 'Logging streak', color: 'amber' },
   { text: 'Tomorrow plan', color: 'lav' },
   // Ingredient picker
   { text: 'What can I make?', color: 'peach' },
   { text: 'Ingredient picker', color: 'peach' },
   { text: 'Meal combo ideas', color: 'peach' }
-];
+]; }
 
 function _qaUpdateSuggestions(text) {
   var el = document.getElementById('qaSuggest');
@@ -63755,16 +63759,17 @@ function _qaUpdateSuggestions(text) {
 
   var lower = text.toLowerCase();
   var matches = [];
+  var pool = qaSuggestPool();
 
   // For short inputs (2-3 chars), match word boundaries only to avoid noise
   // For longer inputs (4+), allow full substring matching
   if (lower.length <= 3) {
     var wordStartRx = new RegExp('\\b' + lower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    matches = QA_SUGGEST_POOL.filter(function(s) {
+    matches = pool.filter(function(s) {
       return wordStartRx.test(s.text.toLowerCase());
     });
   } else {
-    matches = QA_SUGGEST_POOL.filter(function(s) {
+    matches = pool.filter(function(s) {
       return s.text.toLowerCase().indexOf(lower) !== -1;
     });
   }
@@ -63772,7 +63777,7 @@ function _qaUpdateSuggestions(text) {
   // Multi-token fallback for longer inputs
   if (matches.length < 3 && lower.length >= 3) {
     var tokens = lower.split(/\s+/);
-    QA_SUGGEST_POOL.forEach(function(s) {
+    pool.forEach(function(s) {
       if (matches.indexOf(s) !== -1) return;
       var sLower = s.text.toLowerCase();
       var allMatch = tokens.every(function(t) { return t.length >= 2 && sLower.indexOf(t) !== -1; });
@@ -65085,7 +65090,7 @@ function _isFoodName(token) {
   var t = token.toLowerCase().trim();
   if (t.length < 2) return false;
   // Exclude common non-food words that might match
-  var excludeWords = ['how','is','the','she','her','and','for','not','can','has','was','are','its','too','but','all','had','what','when','does','this','that','with','from','will','just','more','only','very','been','have','also','most','give','baby','safe','help'];
+  var excludeWords = ['how','is','the','she','her','he','him','his','himself','they','them','their','and','for','not','can','has','was','are','its','too','but','all','had','what','when','does','this','that','with','from','will','just','more','only','very','been','have','also','most','give','baby','safe','help'];
   if (excludeWords.indexOf(t) !== -1) return false;
   // Check NUTRITION keys
   if (NUTRITION[t]) return true;
@@ -65108,13 +65113,25 @@ function _isLikelyFoodList(tokens) {
 
 // The child's name is the family's own word, so it must never trip a keyword ("Sita" → sit,
 // "Rashi" → rash, "Agastya" → age). Before classifying, the profile name reads as "she" (V-K-280-5).
+// For a boy (child-sex-v1 S2, V-K-281-1) his pronouns fold the same way, so the canonical
+// she/her vocabulary below (triggers, classifier regexes, lookback strippers) matches "Can he
+// eat egg?" / "How's his sleep?" / "when did he last eat ragi". A girl's text is left as typed.
+var _QA_HE_AS_SHE = { he: 'she', him: 'her', his: 'her', himself: 'herself' };
 function _qaNameAsShe(text) {
+  if (typeof text !== 'string') return text;
   var n = (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) ? String(profile.child.name) : '';
-  if (!n || typeof text !== 'string') return text;
   // A name that is itself a food (Honey, Olive) stays as typed: the food reading is the safer one (Cipher #5).
-  if (typeof getNutrition === 'function' && typeof _baseFoodName === 'function' && getNutrition(_baseFoodName(n.toLowerCase()))) return text;
-  var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
-  return text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
+  if (n && !(typeof getNutrition === 'function' && typeof _baseFoodName === 'function' && getNutrition(_baseFoodName(n.toLowerCase())))) {
+    var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
+    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
+  }
+  if (typeof childSex === 'function' && childSex() === 'm') {
+    text = text.replace(/(^|[^\p{L}])(he|him|his|himself)(?![\p{L}])/giu, function(m, pre, w) {
+      var c = _QA_HE_AS_SHE[w.toLowerCase()];
+      return pre + (w.charAt(0) === w.charAt(0).toUpperCase() ? c.charAt(0).toUpperCase() + c.slice(1) : c);
+    });
+  }
+  return text;
 }
 function qaClassifyInput(text) {
   text = _qaNameAsShe(text);
@@ -65154,7 +65171,7 @@ function qaClassifyInput(text) {
   // 4. Single food name without safety prefix → ingredient mode
   //    But not if remaining tokens look like a question (e.g. "how is ragi")
   if (foodMatches.length === 1 && tokens.length <= 3) {
-    var qaWords = ['how','is','what','why','when','does','should','can','will','do','are','was','her','she','about','much','many'];
+    var qaWords = ['how','is','what','why','when','does','should','can','will','do','are','was','her','she','he','him','his','they','them','their','about','much','many'];
     var hasQAWord = tokens.some(function(t) { return qaWords.indexOf(t) !== -1; });
     if (!hasQAWord) {
       return { mode: 'ingredient', foods: foodMatches, raw: text };
@@ -65538,7 +65555,7 @@ function _iqScoreCombo(combo, ctx) {
   if (combo.avgIntake !== null) {
     if (combo.avgIntake >= 0.8) {
       score += 15;
-      reasons.push('She finishes ' + Math.round(combo.avgIntake * 100) + '% \u2014 loves it');
+      reasons.push(pron('subj', true) + ' finishes ' + Math.round(combo.avgIntake * 100) + '% \u2014 loves it');
     } else if (combo.avgIntake >= 0.5) {
       score += 8;
     } else if (combo.avgIntake < 0.3 && combo.intakes.length >= 3) {
@@ -66139,7 +66156,7 @@ function qaHandleFoodSafety(classified) {
   return {
     icon: 'shield',
     domain: 'peach',
-    title: rawFoods.length === 1 ? 'Can she eat ' + rawFoods[0] + '?' : 'Food safety check',
+    title: rawFoods.length === 1 ? 'Can ' + pron('subj') + ' eat ' + rawFoods[0] + '?' : 'Food safety check',
     recipeCard: _recipeCard,
     // headline from the record (food-effects v2 \u00a73.1/\u00a73.2, M-S-2): the hazard for
     // an acute-toxin, the encourage title for an age-appropriate allergen \u2014 never
@@ -66323,7 +66340,7 @@ function qaGetContextualQuickQuestions() {
   try {
     var sleepScore = getSleepScore24h();
     if (sleepScore && sleepScore.score < 70) {
-      questions.push({ text: 'How\'s her sleep?', intent: 'sleep_quality', context: true });
+      questions.push({ text: 'How\'s ' + pron('poss') + ' sleep?', intent: 'sleep_quality', context: true });
     }
   } catch(e) {}
 
@@ -66367,9 +66384,9 @@ function qaGetContextualQuickQuestions() {
   // Fill defaults if under 5
   var defaults = [
     { text: 'What can I make?', intent: '_uib_picker' },
-    { text: 'Her routine', intent: '_isl_routine' },
-    { text: 'What does she like?', intent: '_isl_likes' },
-    { text: 'Is she on track?', intent: 'milestone_general' }
+    { text: pron('poss', true) + ' routine', intent: '_isl_routine' },
+    { text: 'What does ' + pron('subj') + ' like?', intent: '_isl_likes' },
+    { text: 'Is ' + pron('subj') + ' on track?', intent: 'milestone_general' }
   ];
 
   defaults.forEach(function(d) {
@@ -66458,8 +66475,8 @@ function renderQABar() {
         '_isl_tomorrow': 'Tomorrow plan',
         '_isl_doctor': 'Doctor visit prep',
         '_isl_share': 'Share today',
-        '_isl_routine': 'What is her routine',
-        '_isl_likes': 'What does she like'
+        '_isl_routine': 'What is ' + pron('poss') + ' routine',
+        '_isl_likes': 'What does ' + pron('subj') + ' like'
       };
       if (islChipMap[intentId]) { text = islChipMap[intentId]; }
       input.value = text;
@@ -66555,12 +66572,13 @@ function _qaHandleClear() {
 function _qaStartPlaceholderRotation(input) {
   if (_qaPlaceholderTimer) clearInterval(_qaPlaceholderTimer);
   _qaPlaceholderIdx = 0;
-  input.placeholder = QA_PLACEHOLDERS[0];
+  var placeholders = qaPlaceholders();
+  input.placeholder = placeholders[0];
   _qaPlaceholderTimer = setInterval(function() {
     if (document.activeElement === input) return;
     if (input.value.length > 0) return;
-    _qaPlaceholderIdx = (_qaPlaceholderIdx + 1) % QA_PLACEHOLDERS.length;
-    input.placeholder = QA_PLACEHOLDERS[_qaPlaceholderIdx];
+    _qaPlaceholderIdx = (_qaPlaceholderIdx + 1) % placeholders.length;
+    input.placeholder = placeholders[_qaPlaceholderIdx];
   }, 5000);
 }
 
@@ -66568,7 +66586,7 @@ function _qaStartPlaceholderRotation(input) {
 
 function qaExecuteQuery(text) {
   _qaCache = {};
-  _qaCache._queryText = text.toLowerCase().replace(/[?!.,]/g, '').trim();
+  _qaCache._queryText = _qaNameAsShe(text).toLowerCase().replace(/[?!.,]/g, '').trim();
   var answerEl = document.getElementById('qaAnswerContainer');
   if (!answerEl) return;
 
@@ -67263,7 +67281,7 @@ function _qaHandleLookback(classified) {
 
 function _qaFoodLookback(foodQuery) {
   if (!foodQuery || foodQuery.trim().length === 0) {
-    return { title: 'Food Lookback', headline: 'What food are you looking for?', icon: 'scope', domain: 'peach', sections: [], dataGap: 'Try: "When did she last eat ragi?" or "Last time she had dal rice"' };
+    return { title: 'Food Lookback', headline: 'What food are you looking for?', icon: 'scope', domain: 'peach', sections: [], dataGap: 'Try: "When did ' + pron('subj') + ' last eat ragi?" or "Last time ' + pron('subj') + ' had dal rice"' };
   }
 
   var query = foodQuery.trim().toLowerCase();
@@ -67339,7 +67357,7 @@ function _qaFoodLookback(foodQuery) {
   }
 
   return {
-    title: 'Last time she had ' + bestMatch,
+    title: 'Last time ' + pron('subj') + ' had ' + bestMatch,
     headline: daysAgoText,
     icon: 'scope',
     domain: 'peach',
@@ -67587,7 +67605,7 @@ function _qaFoodLikes() {
   });
 
   return {
-    title: 'Foods She Likes',
+    title: 'Foods ' + pron('subj', true) + ' Likes',
     headline: liked.length + ' favorites in last 30 days',
     icon: 'star',
     domain: 'peach',
@@ -67598,12 +67616,12 @@ function _qaFoodLikes() {
 function _qaFoodDislikes() {
   var acceptance = computeFoodAcceptance(30);
   if (acceptance.length === 0) {
-    return { title: 'Foods She Rejects', headline: 'No food data yet', icon: 'warn', domain: 'peach', sections: [], dataGap: 'Log meals to track food preferences.' };
+    return { title: 'Foods ' + pron('subj', true) + ' Rejects', headline: 'No food data yet', icon: 'warn', domain: 'peach', sections: [], dataGap: 'Log meals to track food preferences.' };
   }
 
   var disliked = acceptance.filter(function(f) { return f.avgIntake < 0.4 && f.timesServed >= 2; }).slice(0, 6);
   if (disliked.length === 0) {
-    return { title: 'Foods She Rejects', headline: 'No consistently rejected foods found', icon: 'check', domain: 'peach', sections: [] };
+    return { title: 'Foods ' + pron('subj', true) + ' Rejects', headline: 'No consistently rejected foods found', icon: 'check', domain: 'peach', sections: [] };
   }
 
   var items = disliked.map(function(f) {
@@ -67612,7 +67630,7 @@ function _qaFoodDislikes() {
   });
 
   return {
-    title: 'Foods She Rejects',
+    title: 'Foods ' + pron('subj', true) + ' Rejects',
     headline: disliked.length + ' low-acceptance foods',
     icon: 'warn',
     domain: 'peach',
@@ -68333,7 +68351,7 @@ function qaAnswerFoodGeneral(intentId) {
     // Effective intake
     if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake !== undefined) {
       if (diet.detail.effectiveIntake < 50) {
-        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% — she\'s eating less than half of served portions', signal: 'warn' });
+        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% — ' + pron('subj') + '\'s eating less than half of served portions', signal: 'warn' });
       } else if (diet.detail.effectiveIntake < 75) {
         dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% of served portions', signal: 'info' });
       }
@@ -68975,7 +68993,7 @@ function qaAnswerNaps(intentId) {
   if (ageMo >= 7 && ageMo <= 9) {
     actionItems.push({ text: 'Approaching 3-to-2 nap transition — watch for longer wake windows', signal: 'info' });
   } else if (ageMo >= 12 && ageMo < 18) {
-    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if she resists the second nap, try one longer midday nap', signal: 'info' });
+    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if ' + pron('subj') + ' resists the second nap, try one longer midday nap', signal: 'info' });
   }
 
   actionItems.push({ text: 'Keep nap environment dark and consistent', signal: 'action' });
@@ -69241,7 +69259,7 @@ function _qaDeepNutrientCard(nutrient) {
       richFoodItems.push({ text: s.food + ' \u2014 ' + intakePct + '% intake (' + accLabel + ', served ' + s.acc.timesServed + 'x)', signal: signal });
     });
   }
-  if (richFoodItems.length > 0) sections.push({ label: 'HER ' + nutrientLabel.toUpperCase() + '-RICH FOODS', icon: zi('bowl'), items: richFoodItems });
+  if (richFoodItems.length > 0) sections.push({ label: pron('poss').toUpperCase() + ' ' + nutrientLabel.toUpperCase() + '-RICH FOODS', icon: zi('bowl'), items: richFoodItems });
 
   // 3. TRY NEXT: Foods she hasn't had or hasn't had recently
   var tryItems = [];
@@ -69257,7 +69275,7 @@ function _qaDeepNutrientCard(nutrient) {
   // Foods she likes that are iron-rich — serve more often
   var liked = served.filter(function(s) { return s.acc.avgIntake >= 0.7 && s.acc.timesServed < 5; });
   if (liked.length > 0) {
-    tryItems.push({ text: 'Serve more often (she likes these): ' + liked.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'good' });
+    tryItems.push({ text: 'Serve more often (' + pron('subj') + ' likes these): ' + liked.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'good' });
   }
 
   // 4. TIPS: Nutrient-specific absorption and pairing advice
@@ -69300,7 +69318,7 @@ function _qaNutrientTips(nutrient) {
       { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
     ],
     'calcium': [
-      { text: 'Vitamin D helps her absorb calcium \u2014 keep her Vitamin D supplement as prescribed', signal: 'info' },
+      { text: 'Vitamin D helps ' + pron('obj') + ' absorb calcium \u2014 keep ' + pron('poss') + ' Vitamin D supplement as prescribed', signal: 'info' },
       { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
     ],
     'protein': [
@@ -69991,8 +70009,8 @@ function qaAnswerMilestoneSpecific(intentId) {
     var tHead = ts.count ? ts.count + ' of 20 baby teeth recorded' : 'No teeth recorded yet';
     if (ts.latest) dataItems.push({ text: 'Latest: ' + ts.latest.name + ' (' + ts.latest.date + ')', signal: 'good' });
     ts.next.forEach(function(r) { dataItems.push({ text: 'Coming next: ' + r, signal: 'info' }); });
-    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth she has on the Teeth chart (Milestones, Library)', signal: 'action' });
-    actionItems.push({ text: 'Teething does not cause fever. If she has a temperature, look for another cause.', signal: 'info' });
+    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth ' + pron('subj') + ' has on the Teeth chart (Milestones, Library)', signal: 'action' });
+    actionItems.push({ text: 'Teething does not cause fever. If ' + pron('subj') + ' has a temperature, look for another cause.', signal: 'info' });
     var tSections = [];
     if (dataItems.length) tSections.push({ label: 'TEETH', icon: zi('tooth'), items: dataItems });
     tSections.push({ label: 'WHAT TO DO', icon: zi('bulb'), items: actionItems });
@@ -71594,8 +71612,8 @@ function epEditResolved(kind, id) {
     .map(e => new Date(e.startedAt).getTime()).reduce((a, b) => Math.min(a, b), Infinity);
   const when = t => formatDate(_epLocalDateStr(new Date(t).toISOString())) + ', ' + _feverTimeShort(new Date(t).toISOString());
   let hint = kind === 'fever'
-    ? 'Set the time her temperature was back to normal (below 99°F).'
-    : 'Set the time she was well again.';
+    ? 'Set the time ' + pron('poss') + ' temperature was back to normal (below 99°F).'
+    : 'Set the time ' + pron('subj') + ' was well again.';
   hint += ' Started ' + when(started) + '.';
   if (last) hint += ' Last ' + cfg.what + ': ' + (kind === 'fever' && typeof last.entry.temp === 'number' ? last.entry.temp.toFixed(1) + '°F, ' : '') + when(last.t) + '.';
   let confirmLongerFor = null;
@@ -75658,8 +75676,8 @@ function _qlSleepInsight(dateStr, kind) {
       var n = todayNaps.length;
       var lateEnough = new Date().getHours() >= 15 || (lastNap && parseInt(lastNap.bedtime) >= 11);
       if (n >= 1 && n >= ideal[0] && n <= ideal[1] && (n === ideal[1] || lateEnough)) {
-        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at her age.';
-        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for her age.';
+        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at this age.';
+        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for this age.';
       }
     }
 
@@ -83007,7 +83025,7 @@ var CT_TEMPLATES = {
       { id: 'drowsiness', type: 'bool', label: 'Any unusual drowsiness?' },
       { id: 'mobility', type: 'select', label: 'Moving normally?',
         options: ['Yes', 'Favoring one side', 'Not moving much'], clearValue: 'Yes' },
-      { id: 'crying', type: 'select', label: 'Is she still crying?',
+      { id: 'crying', type: 'select', label: 'Still crying?',
         options: ['Yes, inconsolable', 'Whimpering', 'Stopped'], clearValue: 'Stopped' },
       { id: 'swelling', type: 'bool', label: 'Swelling or bruise visible?',
         resolutionBlocking: false }
@@ -83032,7 +83050,7 @@ var CT_TEMPLATES = {
       { id: 'drowsiness', type: 'bool', label: 'Any unusual drowsiness or confusion?' },
       { id: 'pupils', type: 'select', label: 'Pupils look normal?',
         options: ['Yes, equal size', 'Unequal', 'Not sure'], clearValue: 'Yes, equal size' },
-      { id: 'crying', type: 'select', label: 'Is she still crying?',
+      { id: 'crying', type: 'select', label: 'Still crying?',
         options: ['Yes, inconsolable', 'Whimpering', 'Stopped'], clearValue: 'Stopped' },
       { id: 'swelling', type: 'bool', label: 'Bump or swelling on head?',
         resolutionBlocking: false }
@@ -83051,7 +83069,7 @@ var CT_TEMPLATES = {
     type: 'incident', title: 'Ate something concerning', icon: 'alert-circle', domainColor: 'rose',
     followUps: [15, 30, 60, 120, 240],
     questions: [
-      { id: 'substance', type: 'text', label: 'What did she eat/drink?', onceOnly: true },
+      { id: 'substance', type: 'text', label: 'What did your child eat or drink?', onceOnly: true },
       { id: 'quantity', type: 'text', label: 'How much (estimate)?', onceOnly: true },
       { id: 'breathing', type: 'select', label: 'Breathing normally?',
         options: ['Yes', 'Wheezing', 'Labored'], clearValue: 'Yes' },
@@ -84099,7 +84117,7 @@ function _ctRenderCheckIn(t, tpl) {
   }
 
   // Preamble
-  html += '<div class="ct-preamble">' + (isIncident ? 'How is she right now?' : 'Quick update') + '</div>';
+  html += '<div class="ct-preamble">' + (isIncident ? 'How is ' + pron('subj') + ' right now?' : 'Quick update') + '</div>';
 
   // Quick-clear button
   if (ctCanQuickClear(t)) {
@@ -84589,7 +84607,7 @@ function ctForceResolve(ticketId) {
   html += '<div class="ct-overlay-title">Why are you resolving this?</div>';
   html += '<div class="ct-divider"></div>';
   html += '<div class="ct-chips-row" id="ctForceReasons">';
-  var reasons = ['Doctor confirmed she\'s okay', 'I\'m confident she\'s fine', 'Other'];
+  var reasons = ['Doctor confirmed ' + pron('subj') + '\'s okay', 'I\'m confident ' + pron('subj') + '\'s fine', 'Other'];
   reasons.forEach(function(r) {
     html += '<span class="chip ct-reason-chip" data-action="ctForceResolveReason" data-id="' + escAttr(ticketId) + '" data-arg="' + escAttr(r) + '">' + escHtml(r) + '</span>';
   });
@@ -85114,7 +85132,7 @@ function ctGetTSFEvents() {
 function ctShouldTriggerCreate(text) {
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   var strongSignals = ['track', 'tracking', 'monitor', 'monitor this', 'start watching', 'raise concern'];
-  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'ate something'];
+  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'hit his head', 'ate something'];
   var negativeSignals = ['asleep', 'sleep', 'behind', 'apart', 'fall asleep', 'fell asleep', 'sleep track'];
 
   // Check negative signals
