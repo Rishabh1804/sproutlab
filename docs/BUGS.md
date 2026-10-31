@@ -53,7 +53,7 @@ Entries 5–6 were found by the S2 load-time-tables builder and caught in code r
 - **Fix (this build):** only `desc:` was reworded. The 9 `text:` fields containing she/her (data.js 3986, 4003, 4016, 4017, 4035, 4036, 4055, 4067, 4088) are left as they are.
 - **Where:** data.js `MILESTONE_STANDARDS`; core.js ~7446–7460; home.js ~4466.
 - **Caught by:** code review (S2 load-time-tables builder); no test.
-- **Status:** **Open.** Needs a Carina decision: a slug-alias migration, or a render-time display label. Until then the S2 pronoun audit must allowlist these 9 rows. Update: Carina chose the render-time display label (see #34, in progress).
+- **Status:** **Fixed.** Carina chose the render-time display label (see #34). `MILESTONE_STANDARDS` `text:` is frozen as the record key. The 9 rows gain a neutral `label:`, and `msLabel(text)` / `msLabelById(id)` in core.js are used at every render site. Keys, slugs and stored records stay raw. `audit-pronouns-v1` exempts a milestone text only when its row has a pronoun-free label. Test `milestone-labels.spec.ts` passes.
 
 #### P1 — Activity keyword rows had girls' forms only (6)
 - **Symptom:** a boy's activity log ("put himself to sleep", "dragged himself", "clapped himself", "when he saw/does", "knows he is funny") never matched those milestone/activity evidence rows.
@@ -288,10 +288,10 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 #### P1 — Milestone titles with "her" render to a boy's family (34)
 - **Symptom:** 9 rows. See #5; `text:` is the record key.
 - **Cause:** as #5.
-- **Fix:** Carina's decision is a render-time display label (`label` field + `msLabel()`), never changing `text`.
-- **Where:** data.js `MILESTONE_STANDARDS`; `msLabel()`.
-- **Caught by:** V-CA-282-1 / #5.
-- **Status:** **In progress.** This resolves the Carina decision pending in #5. Mark both Fixed when it lands.
+- **Fix:** Carina's decision, a render-time display label, never changing `text`. `MILESTONE_STANDARDS` `text:` is frozen as the record key. The 9 rows gain a neutral `label:`, and `msLabel(text)` / `msLabelById(id)` in core.js are used at every render site. Keys, slugs and stored records stay raw. `audit-pronouns-v1` exempts a milestone text only when its row has a pronoun-free label.
+- **Where:** data.js `MILESTONE_STANDARDS`; core.js `msLabel` / `msLabelById`.
+- **Caught by:** V-CA-282-1 / #5. Test: `milestone-labels.spec.ts` passes.
+- **Status:** **Fixed.** Resolves #5.
 
 #### P2 — Food-effects manifest still had the girls-only oily-fish note (35)
 - **Symptom:** the manifest showed the girls-only note.
@@ -369,10 +369,45 @@ Entry 44 was caught by the full e2e run on the assembled build.
 #### P1 — Sync ledger race: a same-millisecond write during a full push was never re-pushed (44)
 - **Symptom:** a write landing in the same millisecond as a full push start was cleared and never re-pushed (silent sync loss, rare). sync-unsynced-ledger.spec.ts:388 (F17) failed about 1 run in 3 (3 reruns: 1 failed, 2 passed). The S4 builder also saw it fail on untouched main, so it predates this PR.
 - **Cause:** `_syncFlushDirty` clears an entry when `l <= startedAt`. Ledger stamps are whole milliseconds, so a mid-push write stamped == `startedAt` looked "not late".
-- **Fix:** `_syncFlushStartedAt` tracks the push in flight. `_syncMarkDirty` stamps a write at least `startedAt+1` while it runs.
-- **Where:** split/sync.js `_syncMarkDirty` / `_syncFlushDirty`.
+- **First fix (insufficient):** `_syncFlushStartedAt` tracked the push in flight, and `_syncMarkDirty` stamped a write at least `startedAt+1` while it ran. This only moved the tie: a re-pass starting in the same millisecond as the late write looped once more (3 of 10 runs).
+- **Root fix:** `_syncNow()` in sync.js returns strictly increasing ms for every ledger stamp, push start (`_syncFlushDirty` and the two diff-push paths) and the session-attach mark.
+- **Where:** split/sync.js `_syncNow` / `_syncMarkDirty` / `_syncFlushDirty` (plus the two diff-push paths).
 - **Caught by:** full e2e run on the assembled build (`sync-unsynced-ledger.spec.ts:388`, F17).
-- **Status:** **Fixed.** Verify with repeated F17 runs after rebuild.
+- **Status:** **Fixed.** Verified: F17 passes 15/15; the whole sync-unsynced-ledger spec passes.
+
+Entries 45–48 were found by the label builder (the #5 / #34 work).
+
+#### P2 — Evidence rollup title showed a slug as a label (45)
+- **Symptom:** once a milestone got 3+ taps in 7 days, the title read like "Takes-A-Few-Steps-On-Her-Own". That is a pronoun leak and an ugly title.
+- **Cause:** `createMilestoneLabel(slug)` was used when the tap text didn't resolve to a short keyword.
+- **Fix:** `msLabelById(slug)` in `renderRecentEvidence`.
+- **Where:** home.js `renderRecentEvidence`.
+- **Caught by:** the label builder.
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun build gate failed on the head-injury match keywords (46)
+- **Symptom:** the gate flagged the head-injury match keywords added in the Kael fold ('hit her head' etc.). The build would have aborted.
+- **Cause:** the gate treated match vocabulary as copy.
+- **Fix:** allowlisted as match vocabulary (folded for boys).
+- **Where:** `audit-pronouns-v1.sh` allowlist.
+- **Caught by:** the label builder running the gate.
+- **Status:** **Fixed.**
+
+#### P2 (test) — qa-boy.spec first draft used phrasings an earlier classifier branch catches (47)
+- **Symptom:** `foodQuery` was undefined. "when did she last…" went to general lookback and "dates" matched a time word.
+- **Cause:** test bug, not an app bug.
+- **Fix:** phrasings changed in the spec.
+- **Where:** tests/e2e qa-boy.spec.
+- **Caught by:** the label builder (spec run).
+- **Status:** **Fixed.**
+
+#### P2 — Sleep-regression cause text inserted without escHtml (48)
+- **Symptom:** the cause text goes into the render without `escHtml` (HR-4). The strings are constants today, so there is no live exposure. Pre-existing.
+- **Cause:** missing render-boundary escape.
+- **Fix:** none yet. Wrap in `escHtml()`.
+- **Where:** intelligence-quicklog.js ~5221.
+- **Caught by:** noted by the label builder.
+- **Status:** **Open.**
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
