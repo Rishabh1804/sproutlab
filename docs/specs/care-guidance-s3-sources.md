@@ -87,7 +87,9 @@ This covers both a newborn circumcision and one done later under anaesthetic, wh
 | **See the doctor:** a testis still isn't in the scrotum by 6 months (corrected for prematurity). The doctor should refer to a surgeon. | AUA (Statement 3) | "Providers should refer infants with a history of cryptorchidism (detected at birth) who do not have spontaneous testicular descent by six months (corrected for gestational age) to an appropriate surgical specialist" |
 | Surgery is advised within the next year, before about 18 months. | AUA (Statement 11); AAP-UDT | "specialists should perform surgery within the next year" / "Ideally, orchiopexy surgery should be done within the first 18 months of life." |
 | **See the doctor:** a testis that used to be down can't be found any more. | AUA (Statement 4); RCH-UDT | "Providers should refer boys with the possibility of newly diagnosed (acquired) cryptorchidism after six months" / "If your baby's testes were in the scrotum at birth, and one or both of them disappears from the scrotum, see your GP." |
-| **See the doctor sooner:** both sides are empty. | NHS-UDT | "If both testicles are affected, your child may be referred to a specialist sooner, usually after 8 weeks." |
+| **Neither testis can be felt, especially in a newborn: tell the doctor straight away.** | AUA | Guideline Statement 5 (2025 numbering; Statement 2 in 2014): "Providers must immediately consult an appropriate specialist for all phenotypic male newborns with bilateral, nonpalpable testes for evaluation of a possible disorder of sex development (DSD)." (auanet.org, fetched 2026-10-31) |
+| **You think a testis is not in the scrotum: tell the doctor.** | NHS-UDT | "Non-urgent advice: See a GP if: you think you or your child may have undescended testicles" (fetched 2026-10-31, Maren audit) |
+| ~~See the doctor sooner, from about 8 weeks~~ (removed, V-M-282-1) | NHS-UDT | "If both testicles are affected, your child may be referred to a specialist sooner, usually after 8 weeks." — this is when a doctor refers to a specialist after examining the baby, not when a parent should first see a doctor. |
 | **Emergency:** groin or scrotal pain in a boy with an undescended testis (it may be twisted). | AAP-UDT | "If your child has an undescended testicle and complains of pain in the groin or scrotal area, call your pediatrician or go to a hospital emergency department immediately." |
 
 - ⚠ **Disagree (timing).** AUA, AAP and RCH: refer at 6 months, surgery by 18 months. NHS refers earlier (4–5 months for one side, about 8 weeks for both) and plans surgery "around 1 year old". The app uses AUA's 6 months, as the spec asked, and adds NHS's "both sides: sooner" line. The two are consistent, since NHS is only earlier.
@@ -154,7 +156,7 @@ This covers both a newborn circumcision and one done later under anaesthetic, wh
 
 - ⚠ **Nuance for Maren ("never separate at home").** OUH-LABIAL says that for moderate cases treatment "may involve several weeks of applying a mild emollient ointment and gentle separation. The doctor will show you how to do this." So "never at home" is right for a parent acting alone, but a doctor may teach a gentle technique. The app says "Never try to pull them apart yourself; if treatment is needed, the doctor will show you exactly what to do", which stays true under both readings.
 
-### G3. Newborn discharge: ages 0–1 m
+### G3. Newborn discharge: first weeks only (ageMaxMo 0; V-M-282-3)
 | Claim | Source | Quote |
 |---|---|---|
 | A white discharge, and sometimes slight bleeding like a mini period, can appear in the first days. It comes from the mother's hormones and is nothing to worry about. | NHS-NAPPY | "If you have a girl, you may see a white discharge on her nappy for a few days after birth. … These hormones can occasionally cause slight bleeding like a mini period, but in both cases it's nothing to worry about." |
@@ -173,14 +175,21 @@ This covers both a newborn circumcision and one done later under anaesthetic, wh
 | **Emergency (stuck/incarcerated):** the bulge stays out when the child is calm, or is hard, tender or painful. | AAP-HERNIA | "If the bulge becomes trapped even when your child relaxes … This is called an "incarcerated hernia" and requires immediate medical attention. Your child will likely have pain or feel tenderness (or even have vomiting). The bulge may also become much firmer or even red" |
 | **Emergency:** call an ambulance with a known hernia plus any of: unwell, groin pain, vomiting, bloated tummy, fever, a red or blue-grey tender swelling, a swelling that doesn't change with crying. | RCH-HERNIA | "You should call an ambulance if your child has an inguinal hernia and they develop any of the following symptoms: being generally unwell; pain in the groin; nausea and vomiting; bloating or full abdomen; fever; a swelling that is red or pale blue-grey in colour and is noticeably tender; a swelling that does not change in size when your child is crying." |
 
-### X2. Newborn breast swelling: ages 0–1 m
+### X2. Newborn breast swelling: first weeks only (ageMaxMo 0; V-M-282-3)
 | Claim | Source | Quote |
 |---|---|---|
 | Breast swelling is common in newborn boys and girls, from the mother's hormones, and goes by about the second week. | MEDLINE-HORM | "By the third day after birth, breast swelling may also be seen in newborn boys and girls." / "The breast swelling should go away by the second week after birth" |
 | A little milky fluid may leak from the nipples, usually for under 2 weeks. | MEDLINE-HORM | "Hormones from the mother may also cause some fluid to leak from the infant's nipples. … It is common and most often goes away within 2 weeks." |
 | Don't squeeze or massage the breasts, because this can cause an abscess. | MEDLINE-HORM | "Do not squeeze or massage the newborn's breasts because this can cause an infection under the skin (abscess)." |
 
-### X3. Fever with no clear cause: possible UTI, ages 0–24 m (Body care entry + fever-card hint)
+### X4. Fever in a baby under 3 months: ages 0–2 m (Body care entry + fever card; V-M-282-2)
+| Claim | Source | Quote |
+|---|---|---|
+| **Under 3 months, any temperature of 38°C (100.4°F) or more needs a doctor the same day.** | NHS-FEVER (https://www.nhs.uk/conditions/fever-in-children/, fetched 2026-10-31) | "Urgent advice: Call 111 if your child: is under 3 months old and has a temperature of 38C or higher, or you think they have a high temperature" |
+| **Does not want to feed, or is not their usual self: see the doctor.** | NHS-FEVER | "does not want to eat, or is not their usual self and you're worried" |
+- The urine-test entry (X3) starts at 3 months, so its "more than 2 days" wording never reaches a baby under 3 months.
+
+### X3. Fever with no clear cause: possible UTI, ages 3–24 m (Body care entry + fever-card hint)
 | Claim | Source | Quote |
 |---|---|---|
 | In a child under 2, a UTI is an important cause of fever with no other obvious source. | ISPN-2011 | "UTI is an important cause for fever without a focus, especially in children less than 2 years old" |

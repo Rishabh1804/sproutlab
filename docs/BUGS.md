@@ -364,6 +364,16 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Caught by:** Ceres (V-C-282-5).
 - **Status:** **Fixed.**
 
+Entry 44 was caught by the full e2e run on the assembled build.
+
+#### P1 — Sync ledger race: a same-millisecond write during a full push was never re-pushed (44)
+- **Symptom:** a write landing in the same millisecond as a full push start was cleared and never re-pushed (silent sync loss, rare). sync-unsynced-ledger.spec.ts:388 (F17) failed about 1 run in 3 (3 reruns: 1 failed, 2 passed). The S4 builder also saw it fail on untouched main, so it predates this PR.
+- **Cause:** `_syncFlushDirty` clears an entry when `l <= startedAt`. Ledger stamps are whole milliseconds, so a mid-push write stamped == `startedAt` looked "not late".
+- **Fix:** `_syncFlushStartedAt` tracks the push in flight. `_syncMarkDirty` stamps a write at least `startedAt+1` while it runs.
+- **Where:** split/sync.js `_syncMarkDirty` / `_syncFlushDirty`.
+- **Caught by:** full e2e run on the assembled build (`sync-unsynced-ledger.spec.ts:388`, F17).
+- **Status:** **Fixed.** Verify with repeated F17 runs after rebuild.
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
