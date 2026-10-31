@@ -63,6 +63,64 @@ Entries 5–6 were found by the S2 load-time-tables builder and caught in code r
 - **Caught by:** code review (S2 load-time-tables builder); no test.
 - **Status:** **Fixed.**
 
+Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder, caught in code review or by their new specs.
+
+#### P1 — Infant weight-gain bands narrower than WHO (7)
+- **Symptom:** a normal 9–12 m infant gaining 40 g/week read "below typical range"; a 0–2 m boy at the WHO median (~255 g/week) read "above".
+- **Cause:** hand-typed 0–12 m bands (150–250 / 100–180 / 70–130 / 55–100 g/wk) copy-pasted into ~10 sites. They were not taken from WHO and not keyed by sex.
+- **Fix:** core.js `GROWTH_VELOCITY_BANDS` `{f,m}` from the WHO 2-month velocity tables (P15–P85, cited), plus `growthVelocityBand(age)`. Every site reads it.
+- **Where:** core.js `getGrowthNarrative`; home.js `computeBaselines`, `renderTrendChips`, `_orig_renderInsights*`; medical.js `renderVelocity`, `computeGrowthVelocity`.
+- **Caught by:** spec §5 / V-M-281-8; test `growth-velocity-bands.spec.ts`.
+- **Status:** **Fixed.**
+
+#### P1 — The growth-velocity band copies had drifted apart (8)
+- **Symptom:** different cards gave different "expected" ranges for the same child. `computeGrowthVelocity` gave 8–13 g/day for 9–12 m, `renderVelocity` gave 8–14. Height bands were 2.0–3.5 / 1.0–2.5 in one file and 2.5–4.0 in another.
+- **Cause:** copy-paste.
+- **Fix:** the same single source as #7.
+- **Where:** `computeGrowthVelocity`, `renderVelocity` (medical.js) and the height-band copies in the other files (as in #7).
+- **Caught by:** code review / S4 spec.
+- **Status:** **Fixed.**
+
+#### P1 — `renderGrowthFacts` told every infant the same 15–30 g/day norm (9)
+- **Symptom:** a normal 10-month-old at 8 g/day got no message. One at 16 g/day was told a false norm: "The expected rate at N months is 15–30g/day". 15–40 g/day was counted as on track.
+- **Cause:** one hard-coded band regardless of age.
+- **Fix:** an age- and sex-specific g/day band. Above the max it falls through to the "healthy appetite" card, whose copy no longer assumes solids (that was wrong before ~6 months).
+- **Where:** medical.js `renderGrowthFacts`.
+- **Caught by:** code review / S4 spec.
+- **Status:** **Fixed.**
+
+#### P2 — CareTicket weight goal fixed at 80 g/week under 12 m (10)
+- **Symptom:** the goal is far below the 0–4 m median (~175–255) and above the 9–12 m median (~55). A weight ticket closed too early for young infants and too late for older ones.
+- **Cause:** a fixed 80 g/week figure.
+- **Fix:** resolves at `growthVelocityBand(age).wGWkMedian`.
+- **Where:** intelligence-caretickets.js `resolutionCriteria`.
+- **Caught by:** code review / S4 spec.
+- **Status:** **Fixed.**
+
+#### P2 — 12–24 m length floor near WHO P10 late in year 2 (11)
+- **Symptom:** a normal toddler could read "slower than typical" late in year 2. The floor of 0.6 cm/month sat near WHO P10 at 22–24 m.
+- **Cause:** floor set too high for late year 2.
+- **Fix:** WHO P15 for 22–24 m, 0.45 cm/month (both sexes).
+- **Where:** growth-velocity bands (core.js `GROWTH_VELOCITY_BANDS`).
+- **Caught by:** code review / S4 spec.
+- **Status:** **Fixed.**
+
+#### P2 (test infrastructure) — e2e fixtures hard-code origin 127.0.0.1:5173 (12)
+- **Symptom:** on any other port the profile is not loaded and the gate stays up silently, so tests behave as if the sex were unknown. Seen as torsion showing for a girl in `body-care.spec` on port 5291. Not an app bug.
+- **Cause:** `tests/e2e/fixtures/storage.json` and `privacy-empty-household.spec.ts` hard-code the origin.
+- **Fix shape:** derive the origin from `baseURL`.
+- **Where:** tests/e2e/fixtures/storage.json; privacy-empty-household.spec.ts.
+- **Caught by:** `body-care.spec` run on port 5291 (S3 care builder).
+- **Status:** **Open** (test-only).
+
+#### P2 (spec) — child-sex-v1 §4 said a hydrocele "stays the same size" (13)
+- **Symptom:** the spec was wrong. AAP says a hydrocele can change size, which is also a hernia sign. The app does not use size to tell them apart.
+- **Cause:** spec wording.
+- **Fix:** spec corrected at assembly.
+- **Where:** docs/specs/child-sex-v1.md §4.
+- **Caught by:** S3 care builder, checking the spec against AAP.
+- **Status:** **Fixed** (spec).
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
