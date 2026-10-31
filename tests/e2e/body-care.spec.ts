@@ -138,3 +138,18 @@ test('child-sex S3: the fever card carries the one-line urine-test hint under 2'
   });
   expect(text).toContain('urine test');
 });
+
+test('child-sex S3: under 3 months the fever entry says same day; the urine-test entry starts at 3 months (V-M-282-2)', async ({ page }) => {
+  await page.goto('/index.html?nosync');
+  await page.waitForFunction(() => typeof (window as any).bodyCareEntriesFor === 'function', null, { timeout: 15_000 });
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    const ids = (mo: number) => w.bodyCareEntriesFor('f', mo).map((e: any) => e.id);
+    const young = w.bodyCareEntriesFor('f', 1).find((e: any) => e.id === 'fever-young-baby');
+    return { at0: ids(0), at2: ids(2), at3: ids(3), youngLine: young ? young.seeDoctorIf[0] : '' };
+  });
+  for (const k of ['at0', 'at2'] as const) { expect(r[k]).toContain('fever-young-baby'); expect(r[k]).not.toContain('fever-uti'); }
+  expect(r.at3).toContain('fever-uti');
+  expect(r.at3).not.toContain('fever-young-baby');
+  expect(r.youngLine).toMatch(/38°C \(100\.4°F\) or more .*same day/);
+});
