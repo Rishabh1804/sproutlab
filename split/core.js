@@ -2121,6 +2121,7 @@ function computeMedicalModifier() {
     else if (status === 'fast') gvVal = 70;
     else if (status === 'slow') gvVal = 50;
     else if (status === 'plateau') gvVal = 25;
+    // 'newborn' (first 14 days, _gvNewbornWindow) keeps the neutral 70: no verdict either way.
   }
   factors.push({ name: 'Growth velocity', value: gvVal, weight: 0.30 });
 
@@ -6340,6 +6341,9 @@ function getGrowthVelocity() {
     const gainG = Math.round((latest.wt - best.wt) * 1000);
     result.wtGPerWeek = Math.floor((gainG / days) * 7);
     result.wtDays = days;
+    // Span of the whole weight record, read by Home's "healthy growth for N weeks" alert, which was
+    // never set (NaN), so that positive alert could never fire (PC-3, found with #25).
+    result.wtSpanDays = Math.max(0, Math.round((new Date(latest.date) - new Date(wtEntries[0].date)) / 86400000));
     result.wtLatest = latest;
     result.wtPrevious = best;
   }
@@ -6358,6 +6362,10 @@ function getGrowthVelocity() {
     const gainCm = latest.ht - best.ht;
     result.htCmPerMonth = +((gainCm / days) * 30.44).toFixed(1);
     result.htDays = days;
+    // The rows each velocity ends on, so every reader judges it at the measurement's age (gvAgeAt) —
+    // weight at wtLatest.date, height at htLatest.date (PC-1, bug #25).
+    result.htLatest = latest;
+    result.htPrevious = best;
   }
 
   return result;
@@ -6390,16 +6398,33 @@ const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12,
 //     (cdn.who.int/…/child-growth-standards/indicators/weight-velocity/)
 //   ttt_length_girls_2mon_p.xlsx, ttt_length_boys_2mon_p.xlsx
 //     (cdn.who.int/…/child-growth-standards/indicators/length-velocity/), all fetched 2026-10-31.
-// A bracket [fromMo, toMo) takes the 2-month intervals that END inside it (the window a recent gain
-// at that age spans: 9–12 m = 8–10, 9–11, 10–12 mo). Band = lowest P15 to highest P85 of those
-// intervals (grams per 61 days → g/week = g / (61/7), g/day = g / 61; cm per 2 months / 2 → cm/mo),
+// Under 6 months (PC-1, bug #27) each row is ONE month wide and comes from the single WHO 2-month
+// interval centred on its first month: row m–(m+1) uses interval (m−1)–(m+1), and row 0–1 uses 0–2
+// (WHO's first interval). Velocity changes fastest here: the old 2-month brackets (0–2, 2–4, 4–6)
+// took the lowest P15 of every interval ending inside them, so at the START of a bracket the floor
+// sat near P3–P5 of the interval that actually applied (girls at 4.0 m: floor 65 g/week against
+// the 3–5 m interval's P15 of 89). Weight files re-fetched 2026-10-31 from
+//   cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/
+//     weight-velocity/ttt-weight-{girls,boys}-2mon-p.xlsx
+// and length files from the links on who.int/tools/child-growth-standards/standards/length-velocity
+//   (…/indicators/length-velocity/ttt_length_girls_2mon_p.xlsx?sfvrsn=a2308bcd_7,
+//    …/ttt_length_boys_2mon_p.xlsx?sfvrsn=809dc745_7), parsed with openpyxl (columns 15th/50th/85th).
+//   girls g/2mo P15/P50/P85: 0–2 1455/1897/2386 · 1–3 1317/1714/2163 · 2–4 978/1307/1681
+//                            3–5 773/1074/1413 · 4–6 600/883/1200
+//   boys  g/2mo P15/P50/P85: 0–2 1720/2216/2737 · 1–3 1549/1992/2463 · 2–4 1081/1438/1822
+//                            3–5 820/1145/1496 · 4–6 634/941/1277
+//   girls cm/2mo P15–P85: 0–2 6.7–9.1 · 1–3 5.4–7.4 · 2–4 4.2–6.1 · 3–5 3.4–5.2 · 4–6 2.7–4.5
+//   boys  cm/2mo P15–P85: 0–2 7.3–9.7 · 1–3 6.0–8.0 · 2–4 4.6–6.6 · 3–5 3.5–5.5 · 4–6 2.8–4.7
+// From 6 months a bracket [fromMo, toMo) takes the 2-month intervals that END inside it (the window
+// a recent gain at that age spans: 9–12 m = 8–10, 9–11, 10–12 mo); growth slows, so the wider
+// brackets cost little there. Band = lowest P15 to highest P85 of the interval(s)
+// (grams per 61 days → g/week = g / (61/7), g/day = g / 61; cm per 2 months / 2 → cm/mo),
 // rounded outward (g/week to 5, g/day to 0.1, cm/mo to 0.05) so a child at P15–P85 never reads off;
 // g/day keeps a decimal so it never sits below the g/week floor (V-M-282-11).
-// Median = mean P50, to 5 g/week. cm/week text = the cm/mo band / 4.348, to 0.05.
-//   girls g/2mo P15–P85: 0–2 1455–2386 · 2–4 978–2163 · 4–6 600–1413 · 6–9 306–1048 · 9–12 179–814
-//   boys  g/2mo P15–P85: 0–2 1720–2737 · 2–4 1081–2463 · 4–6 634–1496 · 6–9 323–1096 · 9–12 187–848
-//   girls cm/2mo P15–P85: 0–2 6.7–9.1 · 2–4 4.2–7.4 · 4–6 2.7–5.2 · 6–9 2.0–4.0 · 9–12 1.7–3.6
-//   boys  cm/2mo P15–P85: 0–2 7.3–9.7 · 2–4 4.6–8.0 · 4–6 2.8–5.5 · 6–9 2.0–4.1 · 9–12 1.7–3.5
+// Median = mean P50, to 5 g/week. cm/week text = the cm/mo band / 4.348, to the nearest 0.05.
+//   girls g/2mo P15–P85: 6–9 306–1048 · 9–12 179–814    boys: 6–9 323–1096 · 9–12 187–848
+//   girls cm/2mo P15–P85: 6–9 2.0–4.0 · 9–12 1.7–3.6    boys: 6–9 2.0–4.1 · 9–12 1.7–3.5
+// (The 6–24 m rows predate PC-1 and are unchanged.)
 // Replaces the 0–12 m bands copied into ~9 sites (150–250 / 100–180 / 70–130 / 55–100 g/week),
 // which were narrower than WHO P15–P85: a normal 9–12 m infant read "slow", a 0–2 m boy at the
 // median read "above".
@@ -6410,17 +6435,23 @@ const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12,
 // carries the rest. The old one-row 12–24 band (20–85 g/week) read a normal P15–P25 toddler "slow".
 const GROWTH_VELOCITY_BANDS = {
   f: [
-    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23.8, wGDayMax: 39.2, hCmMoMin: 3.3, hCmMoMax: 4.6, hCmWk: '0.75–1.05' },
-    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 110, wGWkMax: 250, wGWkMedian: 175, wGDayMin: 16, wGDayMax: 35.5, hCmMoMin: 2.1, hCmMoMax: 3.7, hCmWk: '0.5–0.85' },
-    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 65, wGWkMax: 165, wGWkMedian: 110, wGDayMin: 9.8, wGDayMax: 23.2, hCmMoMin: 1.3, hCmMoMax: 2.6, hCmWk: '0.3–0.6' },
+    { fromMo: 0, toMo: 1, label: '0–1 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23.8, wGDayMax: 39.2, hCmMoMin: 3.35, hCmMoMax: 4.55, hCmWk: '0.75–1.05' },
+    { fromMo: 1, toMo: 2, label: '1–2 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23.8, wGDayMax: 39.2, hCmMoMin: 3.35, hCmMoMax: 4.55, hCmWk: '0.75–1.05' },
+    { fromMo: 2, toMo: 3, label: '2–3 months', wGWkMin: 150, wGWkMax: 250, wGWkMedian: 195, wGDayMin: 21.5, wGDayMax: 35.5, hCmMoMin: 2.7, hCmMoMax: 3.7, hCmWk: '0.6–0.85' },
+    { fromMo: 3, toMo: 4, label: '3–4 months', wGWkMin: 110, wGWkMax: 195, wGWkMedian: 150, wGDayMin: 16, wGDayMax: 27.6, hCmMoMin: 2.1, hCmMoMax: 3.05, hCmWk: '0.5–0.7' },
+    { fromMo: 4, toMo: 5, label: '4–5 months', wGWkMin: 85, wGWkMax: 165, wGWkMedian: 125, wGDayMin: 12.6, wGDayMax: 23.2, hCmMoMin: 1.7, hCmMoMax: 2.6, hCmWk: '0.4–0.6' },
+    { fromMo: 5, toMo: 6, label: '5–6 months', wGWkMin: 65, wGWkMax: 140, wGWkMedian: 100, wGDayMin: 9.8, wGDayMax: 19.7, hCmMoMin: 1.35, hCmMoMax: 2.25, hCmWk: '0.3–0.5' },
     { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 125, wGWkMedian: 75, wGDayMin: 5, wGDayMax: 17.2, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.25–0.45' },
     { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 95, wGWkMedian: 55, wGDayMin: 2.9, wGDayMax: 13.4, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
     { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 10, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.7, wGDayMax: 12.3, hCmMoMin: 0.65, hCmMoMax: 1.6, hCmWk: '0.15–0.35' },
     { fromMo: 18, toMo: 24, label: '18–24 months', wGWkMin: 0, wGWkMax: 90, wGWkMedian: 45, wGDayMin: 0.6, wGDayMax: 12.4, hCmMoMin: 0.45, hCmMoMax: 1.45, hCmWk: '0.1–0.35' } ],
   m: [
-    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28.1, wGDayMax: 44.9, hCmMoMin: 3.6, hCmMoMax: 4.9, hCmWk: '0.85–1.15' },
-    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 120, wGWkMax: 285, wGWkMedian: 195, wGDayMin: 17.7, wGDayMax: 40.4, hCmMoMin: 2.3, hCmMoMax: 4.0, hCmWk: '0.55–0.9' },
-    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 70, wGWkMax: 175, wGWkMedian: 120, wGDayMin: 10.3, wGDayMax: 24.6, hCmMoMin: 1.4, hCmMoMax: 2.8, hCmWk: '0.3–0.65' },
+    { fromMo: 0, toMo: 1, label: '0–1 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28.1, wGDayMax: 44.9, hCmMoMin: 3.65, hCmMoMax: 4.85, hCmWk: '0.85–1.1' },
+    { fromMo: 1, toMo: 2, label: '1–2 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28.1, wGDayMax: 44.9, hCmMoMin: 3.65, hCmMoMax: 4.85, hCmWk: '0.85–1.1' },
+    { fromMo: 2, toMo: 3, label: '2–3 months', wGWkMin: 175, wGWkMax: 285, wGWkMedian: 230, wGDayMin: 25.3, wGDayMax: 40.4, hCmMoMin: 3.0, hCmMoMax: 4.0, hCmWk: '0.7–0.9' },
+    { fromMo: 3, toMo: 4, label: '3–4 months', wGWkMin: 120, wGWkMax: 210, wGWkMedian: 165, wGDayMin: 17.7, wGDayMax: 29.9, hCmMoMin: 2.3, hCmMoMax: 3.3, hCmWk: '0.55–0.75' },
+    { fromMo: 4, toMo: 5, label: '4–5 months', wGWkMin: 90, wGWkMax: 175, wGWkMedian: 130, wGDayMin: 13.4, wGDayMax: 24.6, hCmMoMin: 1.75, hCmMoMax: 2.75, hCmWk: '0.4–0.65' },
+    { fromMo: 5, toMo: 6, label: '5–6 months', wGWkMin: 70, wGWkMax: 150, wGWkMedian: 110, wGDayMin: 10.3, wGDayMax: 21, hCmMoMin: 1.4, hCmMoMax: 2.35, hCmWk: '0.3–0.55' },
     { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 130, wGWkMedian: 80, wGDayMin: 5.2, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.1, hCmWk: '0.25–0.5' },
     { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 100, wGWkMedian: 60, wGDayMin: 3, wGDayMax: 14, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
     { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 5, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.3, wGDayMax: 12.9, hCmMoMin: 0.55, hCmMoMax: 1.6, hCmWk: '0.1–0.35' },
@@ -6428,9 +6459,12 @@ const GROWTH_VELOCITY_BANDS = {
 };
 // The band for an age in months. A fractional age is bracketed by completed months, except in the
 // half month before the first birthday, which takes the toddler row (the V-M-266-4 rounding, kept
-// at 12 m only) — so a 1.6-month baby is judged on the 0–2 row, never the gentler 2–4 one
+// at 12 m only) — so a 1.6-month baby is judged on the 1–2 row, never the gentler 2–3 one
 // (V-M-282-9, V-K-282-3). Past 24 m: the last row. Sex unknown → the girls' set as a stand-in, like
 // whoT(): only reachable behind the profile gate, where nothing renders it.
+// Pass the age AT THE LATEST MEASUREMENT the velocity ends on (gvAgeAt), never today's age: two
+// cards reading one velocity must pick one band, even when a month boundary has passed since the
+// weigh-in (PC-1, bug #25).
 function growthVelocityBand(ageMonths) {
   const rows = GROWTH_VELOCITY_BANDS[childSex() || 'f'];
   const raw = Number(ageMonths) || 0;
@@ -6439,31 +6473,82 @@ function growthVelocityBand(ageMonths) {
   return rows[rows.length - 1];
 }
 
+// The age (fractional months) to judge a velocity at: the age on the date of the latest measurement
+// it ends on (a growthData row, or a bare date string). Today's age only when there is no date.
+// The fallback keeps calendar months (ageAt) and adds the days, so its whole part equals ageAt().months.
+function gvAgeAt(entryOrDate) {
+  const date = (entryOrDate && typeof entryOrDate === 'object') ? entryOrDate.date : entryOrDate;
+  if (date && typeof ageMonthsAt === 'function') {
+    const mo = ageMonthsAt(date);
+    if (isFinite(mo)) return Math.max(0, mo);
+  }
+  const a = ageAt();
+  return a.months + a.days / 30.44;
+}
+
+// ── Newborn carve-out (PC-1, bug #27) ──
+// In the first two weeks a weight change is not a growth rate: babies lose weight after birth and
+// regain it by about 2 weeks, so a window ending before day 14 is never called slow, a plateau or
+// below range. Every weight-velocity verdict goes through this one check.
+//   AAP / HealthyChildren.org, "Your Baby's First Month: Growth & Physical Appearance"
+//   (https://www.healthychildren.org/English/ages-stages/baby/Pages/First-Month-Physical-Appearance-and-Growth.aspx,
+//   read 2026-10-31): "All newborns lose weight during the first 7 days. Beginning once they are
+//   about 5 days old, they should start gaining weight steadily. Then, by about 2 weeks of age, they
+//   should be back at their original birth weight. Almost all babies will have regained their birth
+//   weight by 3 weeks of age."
+//   NHS, "Your baby's weight and height"
+//   (https://www.nhs.uk/baby/babys-development/height-weight-and-reviews/baby-height-and-weight/,
+//   read 2026-10-31): "It's normal for babies to lose some weight in the first few days after birth.
+//   Your baby will be weighed during their first 2 weeks to make sure they're regaining their
+//   birthweight. Most babies are at, or above, their birthweight by 3 weeks."
+const GV_NEWBORN_DAYS = 14;
+function _gvNewbornWindow(ageMonthsAtMeasurement) {
+  const mo = Number(ageMonthsAtMeasurement);
+  return isFinite(mo) && Math.round(mo * 30.44) < GV_NEWBORN_DAYS;
+}
+// The plain-words line every surface shows instead of a "slow" verdict in that window.
+const GV_NEWBORN_NOTE = 'Early days — most babies lose a little weight after birth and are back to birth weight by about 2 weeks. The newborn weight checks look for exactly this.';
+const GV_NEWBORN_SHORT = 'Early days — back to birth weight by about 2 weeks';   // for gauges and chips
+
+// One verdict for a weight gain (g/week) at an age (gvAgeAt): 'in' | 'above' | 'below' | 'newborn'.
+// 'newborn' replaces 'below' inside the first 14 days (_gvNewbornWindow); a gain above the band
+// still reads 'above'.
+function gvWeightVerdict(gPerWeek, ageMo) {
+  const band = growthVelocityBand(ageMo);
+  if (gPerWeek >= band.wGWkMin && gPerWeek <= band.wGWkMax) return 'in';
+  if (gPerWeek > band.wGWkMax) return 'above';
+  return _gvNewbornWindow(ageMo) ? 'newborn' : 'below';
+}
+
 function getGrowthNarrative(velocity) {
   const lines = [];
-  const ageM = ageAt().months;
 
   if (velocity.wtGPerWeek != null) {
     const gw = velocity.wtGPerWeek;
-    // WHO P15–P85 by age and sex (g/week; GROWTH_VELOCITY_BANDS)
-    const band = growthVelocityBand(ageM);
+    // WHO P15–P85 by age and sex (g/week; GROWTH_VELOCITY_BANDS), at the latest weigh-in's age
+    const wAge = gvAgeAt(velocity.wtLatest);
+    const band = growthVelocityBand(wAge);
     const expectedMin = band.wGWkMin;
     const expectedMax = band.wGWkMax;
+    const verdict = gvWeightVerdict(gw, wAge);
     let interp;
-    if (gw >= expectedMin && gw <= expectedMax) {
-      interp = `gaining ${gw}g/week — healthy pace for ${ageM} months`;
-    } else if (gw < expectedMin) {
+    if (verdict === 'in') {
+      interp = `gaining ${gw}g/week — healthy pace for ${Math.floor(wAge)} months`;
+    } else if (verdict === 'newborn') {
+      interp = null;   // no verdict: the window ends inside the first two weeks
+    } else if (verdict === 'below') {
       interp = `gaining ${gw}g/week — below typical range (${expectedMin}–${expectedMax}g/week). Monitor closely`;
     } else {
       interp = `gaining ${gw}g/week — above typical range (${expectedMin}–${expectedMax}g/week). Likely a growth spurt`;
     }
     const windowText = velocity.wtDays >= 21 ? `over ${Math.round(velocity.wtDays / 7)} weeks` : `over ${velocity.wtDays} days`;
-    lines.push(`${zi('scale')} Weight: ${interp} (${windowText})`);
+    if (interp == null) lines.push(`${zi('scale')} Weight: ${gw >= 0 ? 'up' : 'down'} ${Math.abs(gw)}g/week (${windowText}). ${GV_NEWBORN_NOTE}`);
+    else lines.push(`${zi('scale')} Weight: ${interp} (${windowText})`);
   }
 
   if (velocity.htCmPerMonth != null) {
     const cm = velocity.htCmPerMonth;
-    const band = growthVelocityBand(ageM);
+    const band = growthVelocityBand(gvAgeAt(velocity.htLatest));
     const expectedMin = band.hCmMoMin;
     const expectedMax = band.hCmMoMax;
     let interp;

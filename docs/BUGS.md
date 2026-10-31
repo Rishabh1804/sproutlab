@@ -219,7 +219,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** `growthVelocityBand` brackets by completed months (12 m from 11.5) for every caller.
 - **Where:** core.js `growthVelocityBand`; medical.js `computeGrowthVelocity`.
 - **Caught by:** V-M-282-9, V-K-282-3.
-- **Status:** **Fixed.** Residual, **Open:** some callers still pass today's age, others the measurement's age.
+- **Status:** **Fixed.** Residual (some callers passed today's age, others the measurement's age) **fixed in PC-1**: every caller now judges a velocity at the age of the latest measurement it ends on, via one helper `gvAgeAt(entry)` (core.js; today's age only when no date), weight at `wtLatest.date`, height at `htLatest.date` (`getGrowthVelocity` now returns `htLatest`). Sites: core.js `getGrowthNarrative`; home.js `computeBaselines`, `renderTrendChips`, `_orig_renderInsightsStats`, `_orig_renderInsightsGrowth`; medical.js `renderGrowthFacts`, `renderVelocity` (both used `Math.round(today's age)`). Test: growth-velocity-bands.spec "Home and the Growth tab agree at a bracket edge". Pending the canon-cc-008 chain.
 
 #### P2 — g/day floors rounded below the g/week floors (26)
 - **Symptom:** for example, girls 9–12 m showed a g/day floor of 2 against 2.86 g/day from the g/week figure.
@@ -232,10 +232,10 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 #### P2 — Infant bracket floors sit near P3–P5 at the start of each bracket (27)
 - **Symptom:** a floor can be too lenient at the start of a bracket, by the bracket method.
 - **Cause:** bracketed bands.
-- **Fix:** none yet. Carry forward to Kael and Maren: one-month resolution under 6 m, and a 0–14-day newborn weight-loss carve-out.
-- **Where:** core.js `GROWTH_VELOCITY_BANDS`.
+- **Fix (PC-1):** under 6 m the rows are one month wide (0–1 … 5–6), each from the single WHO 2-month interval centred on its first month (row m–(m+1) ← interval (m−1)–(m+1); 0–1 ← 0–2), recomputed from the WHO xlsx files (fetched 2026-10-31) by the existing rounding rule; 6–24 m rows unchanged. Girls at 4.0 m: floor 85 g/week (was 65). Newborn carve-out: `_gvNewbornWindow(ageMonthsAtMeasurement)` — a weight-velocity window ending before day 14 is never "slow", "plateau" or "below range" (AAP HealthyChildren + NHS quoted in core.js). `gvWeightVerdict` returns `'newborn'` and `computeGrowthVelocity` sets `status:'newborn'`, `newborn:true`, and every reader shows `GV_NEWBORN_NOTE` in place of a verdict (Home chips/pills, Growth facts and gauge, Info growth-velocity card, growth-diet card, Q&A weight/growth answers, visit prep).
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`, `_gvNewbornWindow`, `gvWeightVerdict`; medical.js `computeGrowthVelocity` and its readers; intelligence-cards.js; intelligence-qa-handlers.js.
 - **Caught by:** V-M-282-10.
-- **Status:** **Open** (carry forward).
+- **Status:** **Fixed** (PC-1), pending the canon-cc-008 chain. Tests: growth-velocity-bands.spec band table, "a bracket floor sits at P15…", "a 10-day-old who has lost weight…".
 
 #### P1 — Q&A for a boy echoed "Can he eat her egg?" (28)
 - **Symptom:** "Can he eat his egg?" folded to "her egg" and echoed "Can he eat her egg?".
@@ -462,10 +462,10 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 #### P2 — `ageMonthsAt` parses 'YYYY-MM-DD' as UTC (55)
 - **Symptom:** hours of age drift. It matters only at a band edge, but the CareTicket weight goal now reads it. Pre-existing (HR-12).
 - **Cause:** UTC date parsing.
-- **Fix:** none yet. Use timezone-safe date construction.
+- **Fix (PC-1):** a bare 'YYYY-MM-DD' goes through `_parseLocalDate` (local noon) and counts whole calendar days from the birth date (rounded, DST-safe), so the age is the same in every timezone; a full date-time keeps its exact instant.
 - **Where:** medical.js `ageMonthsAt`.
 - **Caught by:** Cipher N6.
-- **Status:** **Open.**
+- **Status:** **Fixed** (PC-1), pending the canon-cc-008 chain. Test: growth-velocity-bands.spec "a YYYY-MM-DD age is whole calendar days…" in Asia/Kolkata and America/Los_Angeles.
 
 #### P2 (test) — Test gaps (56)
 - **Symptom:** no e2e pins the 2→3-month switch from `fever-young-baby` to `fever-uti`. None pins the CareTicket weigh-in-age goal either.
@@ -473,7 +473,7 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** the fever switch is pinned (body-care.spec "under 3 months the fever entry says same day; the urine-test entry starts at 3 months"). The CareTicket weigh-in-age goal is still unpinned.
 - **Where:** tests/e2e.
 - **Caught by:** Cipher (Edict V).
-- **Status:** **Partly fixed** (fever switch); CareTicket goal test **Open**.
+- **Status:** **Fixed.** The CareTicket goal is pinned in PC-1: growth-velocity-bands.spec "the CareTicket weight goal uses the median for the latest weigh-in age" (weigh-in ≈ 3.9 m, today ≈ 4.1 m → the 3–4 m median, 150 g/week, not 4–5 m's 125).
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 

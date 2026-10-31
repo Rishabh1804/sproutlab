@@ -8679,10 +8679,8 @@ function computeBaselines() {
   b.wtGPerWeek = velocity.wtGPerWeek;
   b.wtInHealthyRange = false;
   if (velocity.wtGPerWeek != null) {
-    const ageM = ageAt().months;
-    const expMin = growthVelocityBand(ageM).wGWkMin;
-    const expMax = growthVelocityBand(ageM).wGWkMax;
-    b.wtInHealthyRange = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
+    // Judged at the latest weigh-in's age, like the Growth tab (PC-1, bug #25).
+    b.wtInHealthyRange = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest)) === 'in';
     // Check if healthy for 4+ weeks
     b.growthConsistentWeeks = velocity.wtEntryCount >= 3 ? Math.min(Math.floor(velocity.wtSpanDays / 7), 8) : 0;
   }
@@ -10346,7 +10344,6 @@ function renderTrendChips() {
   const container = document.getElementById('trendChipsContainer');
   if (!container) return;
 
-  const ageM = ageAt().months;
   const sleepT = getSleepTrend7d();
   const poopT = getPoopTrend7d();
   const feedT = getFeedingTrend7d();
@@ -10357,12 +10354,13 @@ function renderTrendChips() {
 
   const chips = [];
 
-  // Growth
+  // Growth — judged at the latest weigh-in's age, like the Growth tab (PC-1, bug #25); in the
+  // first two weeks a dip is expected, so no "check" (_gvNewbornWindow).
   if (velocity.wtGPerWeek != null) {
-    const expMin = growthVelocityBand(ageM).wGWkMin;
-    const expMax = growthVelocityBand(ageM).wGWkMax;
-    const ok = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
-    chips.push({ icon:zi('chart'), label:'Growth', value: velocity.wtGPerWeek + 'g/wk', delta: ok ? zi('check') + ' healthy' : zi('warn') + ' check', cls: ok ? 'tc-good' : 'tc-warn', tab:'growth' });
+    const verdict = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest));
+    const ok = verdict === 'in';
+    const delta = ok ? zi('check') + ' healthy' : verdict === 'newborn' ? 'early days' : zi('warn') + ' check';
+    chips.push({ icon:zi('chart'), label:'Growth', value: velocity.wtGPerWeek + 'g/wk', delta, cls: ok ? 'tc-good' : verdict === 'newborn' ? 'tc-neutral' : 'tc-warn', tab:'growth' });
   } else {
     chips.push({ icon:zi('chart'), label:'Growth', value:'Need 2+ measurements', delta:'—', cls:'tc-neutral', tab:'growth' });
   }
@@ -10501,11 +10499,10 @@ function renderInsightsStats() { /* v2.4: DORMANT — insights cards replaced by
 
   // Growth velocity pill
   const velVal = velocity.wtGPerWeek != null ? velocity.wtGPerWeek + 'g' : '—';
-  const ageM = ageAt().months;
-  const expMin = growthVelocityBand(ageM).wGWkMin;
-  const expMax = growthVelocityBand(ageM).wGWkMax;
-  const velInRange = velocity.wtGPerWeek != null && velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
-  const velColor = velocity.wtGPerWeek != null ? (velInRange ? 'hsp-sage' : 'hsp-peach') : 'hsp-rose';
+  // At the latest weigh-in's age (PC-1, bug #25); a newborn dip reads neutral, not off-range.
+  const velVerdict = velocity.wtGPerWeek != null ? gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest)) : null;
+  const velInRange = velVerdict === 'in';
+  const velColor = velVerdict == null ? 'hsp-rose' : velInRange ? 'hsp-sage' : velVerdict === 'newborn' ? 'hsp-sky' : 'hsp-peach';
 
   el.innerHTML = `
     <div class="home-stat-pill ${wtColor}" data-scroll-to="insightsGrowthCard" data-scroll-block="start">
@@ -10610,13 +10607,11 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
 
   // Preview strip
   if (prevEl) {
-    const ageM = ageAt().months;
     let pills = '';
     if (velocity.wtGPerWeek != null) {
-      const expMin = growthVelocityBand(ageM).wGWkMin;
-      const expMax = growthVelocityBand(ageM).wGWkMax;
-      const ok = velocity.wtGPerWeek >= expMin && velocity.wtGPerWeek <= expMax;
-      pills += `<span class="ins-preview-pill ${ok ? 'ipp-good' : 'ipp-warn'}">${zi('scale')} ${velocity.wtGPerWeek}g/wk</span>`;
+      const verdict = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest));
+      const pillCls = verdict === 'in' ? 'ipp-good' : verdict === 'newborn' ? 'ipp-neutral' : 'ipp-warn';
+      pills += `<span class="ins-preview-pill ${pillCls}">${zi('scale')} ${velocity.wtGPerWeek}g/wk</span>`;
     }
     const latestWt = getLatestWeight();
     if (latestWt) {
@@ -10628,26 +10623,27 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
   }
 
   let html = '';
-  const ageM = ageAt().months;
+  const ageM = ageAt().months;   // today's age — weigh-in cadence below; velocities use gvAgeAt
 
-  // Velocity rows
+  // Velocity rows — each judged at its own latest measurement's age (PC-1, bug #25)
   if (velocity.wtGPerWeek != null) {
-    const expectedMin = growthVelocityBand(ageM).wGWkMin;
-    const expectedMax = growthVelocityBand(ageM).wGWkMax;
-    const inRange = velocity.wtGPerWeek >= expectedMin && velocity.wtGPerWeek <= expectedMax;
-    const cls = inRange ? 'trend-up' : velocity.wtGPerWeek < expectedMin ? 'trend-down' : 'trend-flat';
+    const verdict = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest));
+    const inRange = verdict === 'in';
+    const cls = inRange ? 'trend-up' : verdict === 'below' ? 'trend-down' : 'trend-flat';
+    const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : verdict === 'newborn' ? 'early days' : '↑ above range';
     html += `<div class="insight-row">
       <div class="ir-icon">${zi('scale')}</div>
       <div class="ir-body">
         <div class="ir-label">Weight velocity (4-week)</div>
-        <div class="ir-value">${velocity.wtGPerWeek} g/week <span class="ir-delta ${cls}">${inRange ? zi('check') + ' healthy' : velocity.wtGPerWeek < expectedMin ? '↓ below range' : '↑ above range'}</span></div>
+        <div class="ir-value">${velocity.wtGPerWeek} g/week <span class="ir-delta ${cls}">${deltaText}</span></div>
       </div>
     </div>`;
   }
 
   if (velocity.htCmPerMonth != null) {
-    const expectedMin = growthVelocityBand(ageM).hCmMoMin;
-    const expectedMax = growthVelocityBand(ageM).hCmMoMax;
+    const hBand = growthVelocityBand(gvAgeAt(velocity.htLatest));
+    const expectedMin = hBand.hCmMoMin;
+    const expectedMax = hBand.hCmMoMax;
     const inRange = velocity.htCmPerMonth >= expectedMin && velocity.htCmPerMonth <= expectedMax;
     const cls = inRange ? 'trend-up' : velocity.htCmPerMonth < expectedMin ? 'trend-down' : 'trend-flat';
     html += `<div class="insight-row">

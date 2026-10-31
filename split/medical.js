@@ -863,7 +863,6 @@ function renderGrowthFacts() {
   const el = document.getElementById('growthFacts');
   if (!el) return;
   const facts = [];
-  const mo   = Math.round(getAgeInMonths());
   const lh   = getLatestHeight();
   const lwFact = getLatestWeight();
 
@@ -878,13 +877,18 @@ function renderGrowthFacts() {
     // From 1 year the WHO band is ~3–12 g/day (GROWTH_VELOCITY_12_24); the 15–30 g/day line
     // is the early-infancy rate and must not be quoted to a toddler (12-month audit). Under 12 m
     // the band is WHO P15–P85 for the age and sex too (S4) — 15–30 g/day was wrong after ~4 m.
-    const vb = growthVelocityBand(mo);
-    if (mo >= 12) {
+    // The band is the one for the age at the latest weigh-in, not today's (PC-1, bug #25).
+    const wAgeFact = gvAgeAt(wtLast);
+    const vMo = Math.floor(wAgeFact);
+    const vb = growthVelocityBand(wAgeFact);
+    if (vb.fromMo >= 12) {
       if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
-        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. ${childNameCapHtml()} is growing steadily.` });
+        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${Math.max(12, vMo)} months. ${childNameCapHtml()} is growing steadily.` });
       }
+    } else if (gPerDay < vb.wGDayMin && _gvNewbornWindow(wAgeFact)) {
+      facts.push({ type:'info', icon:zi('scale'), title:`Weight ${wtGain >= 0 ? 'up' : 'down'} ${Math.abs(wtGain)}g in ${daysDiff} day${daysDiff === 1 ? '' : 's'}`, body:GV_NEWBORN_NOTE });
     } else if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
-      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is ${vb.wGDayMin}–${vb.wGDayMax}g/day. ${childNameCapHtml()} is growing beautifully.` });
+      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${vMo} months is ${vb.wGDayMin}–${vb.wGDayMax}g/day. ${childNameCapHtml()} is growing beautifully.` });
     } else if (gPerDay > vb.wGDayMax) {
       facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain, which is usually fine while a baby finds their own growth curve. Watch the trend across visits.` });
     }
@@ -1130,8 +1134,19 @@ function getLatestHeight() {
   return null;
 }
 
+// Age in months (30.44-day months) on a date. A bare 'YYYY-MM-DD' — how every growth row, visit and
+// chart point is stored — is a LOCAL calendar day (HR-12): it counts whole calendar days from the
+// birth date, so the answer is the same in every timezone. It used new Date('YYYY-MM-DD'), which is
+// UTC midnight: 05:30 in IST and the previous evening west of Greenwich, so the age shifted by
+// hours with the phone's timezone — enough to cross a velocity-band or chart edge (PC-1, bug #55).
+// A full date-time string keeps its exact instant, measured from the birth moment.
 function ageMonthsAt(dateStr) {
-  const d = new Date(dateStr);
+  const day = (typeof _parseLocalDate === 'function') ? _parseLocalDate(dateStr) : null;   // local noon, or null
+  if (day) {
+    const dobDay = new Date(DOB.getFullYear(), DOB.getMonth(), DOB.getDate(), 12);   // HR-12: local parts
+    return Math.round((day - dobDay) / 86400000) / 30.44;   // round: a DST day is 23 or 25 hours
+  }
+  const d = new Date(dateStr);   // HR-12: a full date-time (or Date) is an instant, not a calendar day
   return (d - DOB) / (30.44 * 86400000);
 }
 
@@ -1644,7 +1659,6 @@ function renderVelocity() {
   const lastWt = wtEntries[wtEntries.length - 1];
   const prevWt = wtEntries[wtEntries.length - 2];
   const days = Math.max(1, Math.round((new Date(lastWt.date) - new Date(prevWt.date)) / 86400000));
-  const mo = Math.round(getAgeInMonths());
   const moExact = ageMonthsAt(lastWt.date);
   const ref = getGrowthRef(moExact);
   const refLabel = 'WHO';
@@ -1652,10 +1666,14 @@ function renderVelocity() {
   // Weight velocity
   const wtGainG = Math.round((lastWt.wt - prevWt.wt) * 1000);
   const gPerDay = Math.round(wtGainG / days);
-  const expectedMin = growthVelocityBand(mo).wGDayMin; // WHO P15–P85, by age and sex
-  const expectedMax = growthVelocityBand(mo).wGDayMax;
+  // WHO P15–P85 by age and sex, at the latest weigh-in's age — not today's, which could sit in the
+  // next band and disagree with the velocity cards (PC-1, bug #25). Was Math.round(today's age).
+  const wAgeV = gvAgeAt(lastWt);
+  const expectedMin = growthVelocityBand(wAgeV).wGDayMin;
+  const expectedMax = growthVelocityBand(wAgeV).wGDayMax;
+  const wtNewborn = gPerDay < expectedMin && _gvNewbornWindow(wAgeV);   // no "slow" before day 14
   const wtPctFill = Math.min(100, Math.max(5, ((gPerDay - 0) / (expectedMax * 1.5)) * 100));
-  const wtColor = (gPerDay >= expectedMin && gPerDay <= expectedMax * 1.3) ? 'var(--tc-sage)' : gPerDay < expectedMin ? 'var(--tc-caution)' : 'var(--tc-sky)';
+  const wtColor = (gPerDay >= expectedMin && gPerDay <= expectedMax * 1.3) ? 'var(--tc-sage)' : wtNewborn ? 'var(--tc-sky)' : gPerDay < expectedMin ? 'var(--tc-caution)' : 'var(--tc-sky)';
 
   // Position relative to reference 50th
   const wtPct = calcPercentile(lastWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85); // 5-point, matches the badge (V-M-266-16)
@@ -1668,7 +1686,7 @@ function renderVelocity() {
       <div class="vg-info">
         <div><span class="vg-value" style="color:${wtColor};">${gPerDay}</span><span class="vg-unit">g/day</span></div>
         <div class="vg-label">Gain rate</div>
-        <div class="vg-context">Expected: ${expectedMin}–${expectedMax} g/day</div>
+        <div class="vg-context">${wtNewborn ? GV_NEWBORN_SHORT : `Expected: ${expectedMin}–${expectedMax} g/day`}</div>
       </div>
     </div>`;
 
@@ -1690,7 +1708,7 @@ function renderVelocity() {
     const htDays = Math.max(1, Math.round((new Date(htLast.date) - new Date(htPrev.date)) / 86400000));
     const htGainCm = (htLast.ht - htPrev.ht).toFixed(1);
     const cmPerWeek = ((htLast.ht - htPrev.ht) / (htDays / 7)).toFixed(1);
-    const expCmWk = growthVelocityBand(mo).hCmWk;
+    const expCmWk = growthVelocityBand(gvAgeAt(htLast)).hCmWk;   // at the latest height's age (bug #25)
     const htColor = parseFloat(cmPerWeek) > 0 ? 'var(--tc-sky)' : 'var(--tc-caution)';
     html += `
       <div class="velocity-gauge vg-sky">
@@ -10644,6 +10662,12 @@ function computeGrowthVelocity() {
     var wTooShort = bandMo >= 12 && wDaysBetween < 28;
     if (wTooShort) { wStatus = 'on-track'; isPlateau = false; }
 
+    // Newborn carve-out (_gvNewbornWindow, core.js — AAP / NHS cited there): a window ending before
+    // day 14 spans the normal after-birth dip, so a low or negative gain is 'newborn', never 'slow'
+    // or 'plateau'. Readers show GV_NEWBORN_NOTE in place of a verdict (PC-1, bug #27).
+    var wNewborn = (wStatus === 'slow' || wStatus === 'plateau') && _gvNewbornWindow(ageMo);
+    if (wNewborn) { wStatus = 'newborn'; isPlateau = false; }
+
     // Freshness — toddlers are weighed about monthly, so "stale" moves from 3 to 5 weeks at 12 m+.
     var daysSinceWeight = Math.round((new Date(todayStr) - new Date(wLatest.date)) / 86400000);
     var weightStale = daysSinceWeight > (bandMo >= 12 ? 35 : 21);
@@ -10662,6 +10686,7 @@ function computeGrowthVelocity() {
       status: wStatus,
       isPlateau: isPlateau,
       tooShort: wTooShort,
+      newborn: wNewborn,
       daysSince: daysSinceWeight,
       stale: weightStale,
       totalGainG: totalGainG
@@ -10778,7 +10803,7 @@ function renderInfoGrowthVelocity() {
   }
 
   // Summary line
-  var wStr = data.weight ? data.weight.gPerDay + 'g/day (' + data.weight.status + ')' : '—';
+  var wStr = data.weight ? data.weight.gPerDay + 'g/day (' + (data.weight.newborn ? 'early days' : data.weight.status) + ')' : '—';
   var hStr = data.height ? data.height.cmPerMonth + 'cm/mo (' + data.height.status + ')' : '—';
   var pStr = data.latestPercentile !== null ? Math.round(data.latestPercentile) + 'th' : '—';
   summaryEl.innerHTML = '<span class="t-sm t-mid" >Weight: ' + wStr + ' · Height: ' + hStr + ' · ' + pStr + ' percentile</span>';
@@ -10847,7 +10872,9 @@ function renderInfoGrowthVelocity() {
     var iHtml = '';
     if (data.weight) {
       var w2 = data.weight;
-      if (w2.tooShort) {
+      if (w2.newborn) {
+        iHtml += '<div class="si-insight si-insight-info">' + GV_NEWBORN_NOTE + '</div>';
+      } else if (w2.tooShort) {
         iHtml += '<div class="si-insight si-insight-info">' + pron('poss', true) + ' last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
       } else if (w2.status === 'on-track') {
         iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + w2.expectedRange.label + '.</div>';
@@ -10923,7 +10950,7 @@ function computeVisitPrep() {
   if (weightDelta !== null) { sections.growth.items.push('Gained ' + weightDelta + 'g'); changes++; }
   if (heightDelta !== null) { sections.growth.items.push('Grew ' + heightDelta + 'cm'); changes++; }
   if (latestPct !== null) sections.growth.items.push(Math.round(latestPct) + 'th percentile');
-  if (gvData && !gvData.insufficient && gvData.weight) sections.growth.items.push(gvData.weight.status + ' velocity');
+  if (gvData && !gvData.insufficient && gvData.weight) sections.growth.items.push(gvData.weight.newborn ? 'early-days weight dip (expected)' : gvData.weight.status + ' velocity');
 
   // 2. Milestone changes
   var newMilestones = (milestones || []).filter(function(m) {

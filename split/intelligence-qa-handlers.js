@@ -1010,6 +1010,10 @@ function qaAnswerWeightGain(intentId) {
     } else if (w.status === 'fast') {
       headline += 'gaining quickly (' + w.gPerDay + ' g/day)';
       dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — above expected range', signal: 'info' });
+    } else if (w.status === 'newborn') {
+      // First 14 days: the after-birth dip, not a growth rate (_gvNewbornWindow, PC-1 bug #27).
+      headline += 'early days';
+      dataItems.push({ text: 'Weight change: ' + w.gainG + ' g in ' + w.daysBetween + ' day' + (w.daysBetween === 1 ? '' : 's') + '. ' + GV_NEWBORN_NOTE, signal: 'info' });
     }
 
     if (w.totalGainG) {
@@ -1048,12 +1052,12 @@ function qaAnswerWeightGain(intentId) {
   // Diet link
   try {
     var diet = calcDietScore();
-    if (diet.score < 60 && (intentId === 'weight_gain' || (gv.weight && gv.weight.status === 'slow'))) {
+    if (diet.score < 60 && !(gv.weight && gv.weight.newborn) && (intentId === 'weight_gain' || (gv.weight && gv.weight.status === 'slow'))) {
       dataItems.push({ text: 'Diet score is ' + diet.score + '/100 — nutrition gaps may affect weight gain', signal: 'warn' });
       actionItems.push({ text: 'Focus on nutrient-dense meals (see Food tab)', signal: 'action' });
     }
     // Low intake + slow gain is the key insight
-    if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake < 60 && gv.weight && gv.weight.status !== 'on-track') {
+    if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake < 60 && gv.weight && (gv.weight.status === 'slow' || gv.weight.status === 'plateau')) {
       dataItems.push({ text: 'Low meal intake (' + diet.detail.effectiveIntake + '%) may explain slow weight gain', signal: 'warn' });
       actionItems.push({ text: 'Try smaller, more frequent meals with calorie-dense foods', signal: 'action' });
     }
@@ -1787,6 +1791,8 @@ function qaAnswerWeightConcern(intentId) {
       dataItems.push({ text: 'Weight gain is above typical range (' + w.gPerDay + ' g/day vs expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'warn' });
     } else if (w.status === 'on-track') {
       dataItems.push({ text: 'Weight gain is within normal range (' + w.gPerDay + ' g/day)', signal: 'good' });
+    } else if (w.status === 'newborn') {
+      dataItems.push({ text: GV_NEWBORN_NOTE, signal: 'info' });
     } else {
       dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'info' });
     }
@@ -1850,7 +1856,8 @@ function qaAnswerGrowth(intentId) {
     var w = gv.weight;
     dataItems.push({ text: 'Weight: ' + w.latest.wt + ' kg (' + (w.stale ? 'measured ' + w.daysSince + ' days ago' : 'recent'), signal: w.stale ? 'warn' : 'good' });
     var wSignal = w.status === 'on-track' ? 'good' : w.status === 'slow' || w.status === 'plateau' ? 'warn' : 'info';
-    dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + w.status.replace('-', ' ') + ')', signal: wSignal });
+    dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + (w.newborn ? 'early days' : w.status.replace('-', ' ')) + ')', signal: wSignal });
+    if (w.newborn) dataItems.push({ text: GV_NEWBORN_NOTE, signal: 'info' });
   }
 
   // Height

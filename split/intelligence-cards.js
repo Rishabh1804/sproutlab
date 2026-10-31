@@ -975,6 +975,7 @@ function renderInfoGrowthDiet() {
   var daysBetweenMeasurements = gvW.daysBetween;
   var velocity = gvW.gPerDay;
   var velLabel = gvW.tooShort ? 'normal'
+    : gvW.newborn ? 'newborn'   // first 14 days: no verdict (_gvNewbornWindow, PC-1 bug #27)
     : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
     : gvW.status === 'fast' ? 'rapid' : 'normal';
 
@@ -1061,6 +1062,8 @@ function renderInfoGrowthDiet() {
       } else {
         iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day) — monitor at next weigh-in</div>';
       }
+    } else if (velLabel === 'newborn') {
+      iHtml += '<div class="si-insight si-insight-info">' + GV_NEWBORN_NOTE + '</div>';
     } else {
       iHtml += '<div class="si-insight si-insight-good">Growth velocity is ' + velLabel + ' at ' + velocity + ' g/day with ' + avgMeals + ' meals/day</div>';
     }
