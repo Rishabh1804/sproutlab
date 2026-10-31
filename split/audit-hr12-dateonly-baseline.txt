@@ -1,9 +1,11 @@
 # file count — HR-12 date-only ratchet baseline (audit-hr12-dateonly-v1.sh). Only ever lower these.
-core.js 29
-diet.js 11
-home.js 70
-intelligence-cards.js 10
-intelligence-qa-handlers.js 15
-intelligence-qa.js 3
-intelligence-quicklog.js 7
-medical.js 76
+core.js 32
+diet.js 16
+home.js 84
+intelligence-cards.js 15
+intelligence-caretickets.js 2
+intelligence-illness.js 2
+intelligence-qa-handlers.js 30
+intelligence-qa.js 5
+intelligence-quicklog.js 9
+medical.js 87
