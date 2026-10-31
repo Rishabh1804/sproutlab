@@ -14,7 +14,9 @@ cd "$(dirname "$0")"
 node - "$@" <<'NODE'
 const fs = require('fs');
 const RX = /new Date\(\s*(?:[\w$.]*(?:date|Date|key|Key|Str)|today\(\s*\))\s*\)/g;
-const count = src => src.split('\n').reduce((n, l) => /\/\/\s*HR-12/.test(l) ? n : n + ((l.match(RX) || []).length), 0);
+// A site is exempt only with a reason: `// HR-12: why` (or `// HR-12 safe: why`); a bare `// HR-12` still counts (V-CA-282d-3).
+const EXEMPT = /\/\/\s*HR-12\b[^:\n]{0,40}:\s*\S/;
+const count = src => src.split('\n').reduce((n, l) => EXEMPT.test(l) ? n : n + ((l.match(RX) || []).length), 0);
 const T = [
   { src: 'const d = new Date(entry.date);', n: 1 },
   { src: 'const d = new Date(dateStr);', n: 1 },
@@ -24,6 +26,8 @@ const T = [
   { src: 'const d = new Date(todayStr); d.setDate(d.getDate() - 1);', n: 1 },
   { src: 'const d = new Date(today());', n: 1 },
   { src: 'const d = new Date(ts); const e = new Date();', n: 0 },
+  { src: 'const d = new Date(e.date); // HR-12', n: 1 },
+  { src: 'const d = new Date(e.date); // HR-12 safe: integer day count', n: 0 },
 ];
 let fails = 0;
 T.forEach((t, i) => { const n = count(t.src); if (n !== t.n) { fails++; console.error(`audit-hr12-dateonly: SELF-TEST FAIL fixture ${i}: ${n} (want ${t.n})`); } });
@@ -34,6 +38,8 @@ const BASE = 'audit-hr12-dateonly-baseline.txt';
 const total = o => Object.values(o).reduce((a, b) => a + b, 0);
 const readBase = () => { const b = {}; fs.readFileSync(BASE, 'utf8').split('\n').filter(l => l && !l.startsWith('#')).forEach(l => { const [f, n] = l.trim().split(/\s+/); b[f] = +n; }); return b; };
 if (process.argv.includes('--update')) {
+  // With no baseline every count is a raise from zero, so writing one also needs --allow-raise (V-CA-282d-3).
+  if (!fs.existsSync(BASE) && !process.argv.includes('--allow-raise')) { console.error('audit-hr12-dateonly: --update refused; no baseline exists. Restore it from git, or pass --allow-raise to write a new one'); process.exit(1); }
   // Writing the baseline may only lower counts unless --allow-raise is given (V-CA-282c-2).
   if (fs.existsSync(BASE) && !process.argv.includes('--allow-raise')) {
     const old = readBase(); const up = Object.entries(now).filter(([f, n]) => n > (old[f] || 0));
