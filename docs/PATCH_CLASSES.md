@@ -1,6 +1,6 @@
 # SproutLab — Patch classes
 
-**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#56). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
+**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#102). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
 
 **How to use it:**
 - **Builder (Lyra):** before opening a PR, run the "Look for" list of every class the diff touches.
@@ -42,7 +42,10 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 - `new Date('YYYY-MM-DD')` or `Date.parse` on a date-only string;
 - `Math.round` versus `Math.floor` on an age that picks a bracket;
 - `Date.now()` used to order two events that can happen in the same tick;
-- a threshold copied into more than one file.
+- a threshold copied into more than one file;
+- `isFinite(x)` or `Number(x)` where `x` can be `null` or `''`. Global `isFinite(null)` is `true` and `Number(null)` is `0`, so a missing age reads as month 0 or day 0 and lands in the newborn row or window (#99, #100). Use `Number.isFinite(x)` with an explicit `x == null` guard.
+
+**Also fixed in #282 (rounds 2–3):** #80 (below birth weight past day 28), #94 (length rows recomputed), #96 (`getSleepScore24h` parsed a date-only string as UTC), #99 and #100 (null read as age 0).
 
 **Guards:**
 - **Guarded:**
@@ -91,16 +94,19 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 
 **Guards:** **Rule:** before editing a function to fix behaviour, prove it is reachable (grep its callers and dispatcher entries). Before reading a property, grep that its producer sets it.
 
-## PC-4 · Escape at the render boundary (HR-4)
-**Pattern:** text goes into `innerHTML` without `escHtml`, usually where it "is only a constant today".
+## PC-4 · Render-boundary hard rules (HR-4 escaping, HR-2 inline styles)
+**Pattern:** text goes into `innerHTML` without `escHtml`, usually where it "is only a constant today"; or a render adds an inline `style=` where a token class exists.
 
 | # | Item | Patch |
 |---|---|---|
 | 48 | Sleep-regression cause text unescaped in quicklog | `escHtml` at the boundary; sibling builds checked |
+| 101 | Birth-ratio gauge colour added as an inline style | Utility class (`t-sage` / `t-caution` / `t-mid` / `t-lav`) |
 
 **Look for:** string concatenation into `innerHTML` of anything not literal: `x.text`, a label, a name, a value that passed through a lookup (`msLabel`, `pron` and `childKinWord` return constants, but the thing beside them may not).
 
-**Guards:** **Rule:** HR-4. An HR-4 audit gate is the logical next guard (candidate).
+Also look for: a new `style="color:` / `background:` built from a JS value; check styles.css for an existing utility class first (`t-*`, `tc-*`).
+
+**Guards:** **Rule:** HR-4 and HR-2. An HR-4 audit gate is the logical next guard (candidate); an HR-2 ratchet on `style=` counts per file would stop the debt growing.
 
 ## PC-5 · Gate coverage: a gate that can't fail, or misses a surface
 **Pattern:** a build gate passes because it doesn't look where the problem is, or because its scanner silently broke.
@@ -110,13 +116,15 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 | 51 | Pronoun gate ignored template attribute copy | Scans placeholder, aria-label, title and alt |
 | 54 | Pronoun gate had no self-tests | 16 adversarial fixtures run first; a scanner regression fails the build |
 
-**Same class, already fixed in #282:** #46 (gate failed on new keywords, caught before shipping), #50 (substring allow entries), #52 (missing anchor switched a rule off).
+**Same class, already fixed in #282:** #46 (gate failed on new keywords, caught before shipping), #50 (substring allow entries), #52 (missing anchor switched a rule off), #97 (growth-age gate bypasses: a today-age fallback hidden behind an approved helper, unscanned verdict helpers, multi-line and property-path arguments), #98 (HR-12 ratchet passed with no baseline and missed `*Str` / `today()`).
 
 **Look for:** a new audit gate without fixtures; an allowlist matched by substring; a rule keyed on an anchor that could be renamed.
 
 **Guards:**
 - **Guarded:** `audit-pronouns-v1` self-test.
 - **Rule:** every new gate ships with fixtures for its pass and fail cases and a stale-entry check.
+- **Rule:** every bypass a reviewer finds becomes a self-test fixture in the same commit as the scanner fix. Fixtures run before the scan, and a mismatch fails the build (exit 2). audit-growth-age-v1 grew from 8 fixtures to 20 this way.
+- **Rule (fail closed):** a missing baseline, anchor or input fails the gate; it never passes (#52, #98). A baseline update may only lower counts unless the raise is explicit (`--allow-raise`).
 
 ## PC-6 · Test infrastructure and coverage
 **Pattern:** tests pass or fail for reasons unrelated to the code: a hard-coded origin, a phrasing that never reaches the path under test, a state-machine edge left unpinned.
@@ -186,9 +194,39 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 - **Rule:** every cited registry row states its source file, fetch date, method and rounding, and the PR body shows the recompute.
 - **Candidate (Carina owns):** `audit-growth-bands-provenance-v1`. It would commit the WHO tables as CSVs with a manifest of URLs and fetch dates under docs/research/, recompute the bands by the documented method, and fail on drift.
 
+## PC-10 · One state, two answers (tone, score and surface drift)
+**Pattern:** one state is judged in two places that compute separately, so they disagree. Typical forms:
+- the colour or wording comes from one function and the score or status from another;
+- two surfaces judge the same number in different units, each rounded on its own;
+- one surface checks a special case (too short, newborn) before the general verdict and another checks it after.
+
+**Items (all fixed in #282):**
+
+| # | Item | Patch |
+|---|---|---|
+| 78 | Back at birth weight but dropping read green | One newborn result carries the tone; readers don't recompute it |
+| 81 | Caution newborn line coloured amber but scored a neutral 70 | The score reads the same `recheck` flag the tone reads |
+| 84 | Too-short window shown as on-track on some surfaces | `gvTooShortText()`; too-short checked first everywhere |
+| 86, 88 | Preview tile and birth-ratio gauge ignored the newborn line | Both take tone and label from `weight.nb` |
+| 93 | Home (g/week) and the Growth tab (g/day) disagreed near a limit | Every weight verdict is made in g/week through `gvBandVerdict`; g/day is display only |
+
+**Same family, earlier:** #25 (PC-1: two cards, two ages), #63.
+
+**Look for:**
+- a `tone`, colour or chip decided in one function and a score or status in another, from the same inputs;
+- the same comparison written in two units;
+- a special case handled on one surface only.
+
+**Guards:**
+- **Design:** derive tone, score, text and chip from one result object (`gvNewbornCheck`, `gvBandVerdict`); readers never recompute them.
+- **Tests:** growth-velocity-bands.spec (Home and the Growth tab agree at girls 7–8 m; a caution line gives a caution score).
+- **Rule:** when adding a surface for an existing state, take every field from the shared result. When adding a field, add it to the shared result, not to one reader.
+
 ## Guard backlog (candidates, by owner)
 1. `audit-growth-bands-provenance-v1` (PC-9). Owner: Carina.
 2. HR-4 render-boundary gate (PC-4). Owners: Carina (`escHtml` root) and Cipher.
 3. A record-shape freeze test for `KEYS`-stored records, generalising milestone-labels.spec (PC-8). Owner: Carina.
 4. A schema test that every property readers take from `getGrowthVelocity()` is set (PC-3). Owners: Carina and Kael.
 5. A test-origin rule: one exported baseURL helper; no spec builds its own origin (PC-6).
+6. An HR-2 ratchet: per-file count of inline `style=` that may only fall (PC-4). Owners: Vela and Carina.
+7. A lint for bare global `isFinite(` / `Number(` on nullable values in growth and age code (PC-1). Owner: Carina.

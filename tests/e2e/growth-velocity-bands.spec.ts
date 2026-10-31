@@ -735,7 +735,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
   });
 });
 
-test.describe('HR-12: getSleepScore24h reads yesterday as a local calendar day (V-CA-282c-4)', () => {
+test.describe('HR-12: getSleepScore24h reads yesterday as a local calendar day (V-CA-282c-2)', () => {
   test.use({ timezoneId: 'America/New_York' });
   test('west of Greenwich "yesterday" is the day before today, not two days back', async ({ page }) => {
     await page.goto('/index.html?nosync');

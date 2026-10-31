@@ -2675,7 +2675,7 @@ function getSleepScore24h() {
   // If yesterday has no data, try today (in case sleep was logged under today's date).
   const todayStr = today();
   // HR-12: a local calendar day. new Date('YYYY-MM-DD') is UTC midnight, so west of Greenwich the
-  // local parts read the day before and "yesterday" became the day before yesterday (V-CA-282c-4).
+  // local parts read the day before and "yesterday" became the day before yesterday (V-CA-282c-2).
   const yesterday = _parseLocalDate(todayStr) || new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = toDateStr(yesterday);
