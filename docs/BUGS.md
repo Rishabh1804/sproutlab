@@ -409,6 +409,72 @@ Entries 45–48 were found by the label builder (the #5 / #34 work).
 - **Caught by:** noted by the label builder.
 - **Status:** **Open.**
 
+Entries 49–56 are Cipher's Edict V findings on #282.
+
+#### P1 — Ledger clock not yet one clock (49)
+- **Symptom:** an import or autosave-restore landing mid-push could tie with the push start and be cleared unpushed. This is the F17 silent-loss class, on the "parent's chosen truth" path.
+- **Cause:** `_syncMarkNeedsFull` and `syncMarkUnsynced` still stamped with `Date.now()`, while push starts used `_syncNow()`, which can run a ms ahead.
+- **Fix:** both use `_syncNow()`.
+- **Where:** sync.js `_syncMarkNeedsFull`, `syncMarkUnsynced`.
+- **Caught by:** Cipher A1.
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun gate allow entries matched by substring (50)
+- **Symptom:** copy containing "can she eat", "how is she" or "hit her head" would pass the gate.
+- **Cause:** three one-phrase allow entries matched by substring.
+- **Fix:** exact-match (`=`) entries.
+- **Where:** `audit-pronouns-v1.sh` allowlist.
+- **Caught by:** Cipher N1.
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun gate ignores template.html attribute copy (51)
+- **Symptom:** `<input placeholder="What did she eat">` passes. No current hits.
+- **Cause:** the gate does not scan placeholder, aria-label, title or alt attributes.
+- **Fix:** none yet.
+- **Where:** `audit-pronouns-v1.sh`; template.html.
+- **Caught by:** Cipher N2.
+- **Status:** **Open.**
+
+#### P2 — Renamed MILESTONE_STANDARDS anchor silently disabled the label rule (52)
+- **Symptom:** the pronoun gate's milestone label rule stopped working without any failure.
+- **Cause:** the rule anchors on the `MILESTONE_STANDARDS` name, and a missing anchor was skipped.
+- **Fix:** a missing anchor fails the gate.
+- **Where:** `audit-pronouns-v1.sh`.
+- **Caught by:** Cipher N3.
+- **Status:** **Fixed.**
+
+#### P2 — Head-injury keywords had only her-forms (53)
+- **Symptom:** home and Medical symptom searches don't fold a boy's wording. A girl's family got a +2 exact match that a boy's did not.
+- **Cause:** only her-forms in the keywords.
+- **Fix:** his-forms added; allowlist comment corrected.
+- **Where:** SYMPTOM_DB head-injury keywords; `audit-pronouns-v1.sh` allowlist comment.
+- **Caught by:** Cipher N4.
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun gate has no adversarial self-test fixtures (54)
+- **Symptom:** the gate has no fixtures proving it catches what it should. Its sibling gates have them.
+- **Cause:** not written.
+- **Fix:** none yet.
+- **Where:** `audit-pronouns-v1.sh`.
+- **Caught by:** Cipher N5.
+- **Status:** **Open.**
+
+#### P2 — `ageMonthsAt` parses 'YYYY-MM-DD' as UTC (55)
+- **Symptom:** hours of age drift. It matters only at a band edge, but the CareTicket weight goal now reads it. Pre-existing (HR-12).
+- **Cause:** UTC date parsing.
+- **Fix:** none yet. Use timezone-safe date construction.
+- **Where:** medical.js `ageMonthsAt`.
+- **Caught by:** Cipher N6.
+- **Status:** **Open.**
+
+#### P2 (test) — Test gaps (56)
+- **Symptom:** no e2e pins the 2→3-month switch from `fever-young-baby` to `fever-uti`. None pins the CareTicket weigh-in-age goal either.
+- **Cause:** coverage gaps.
+- **Fix:** the fever switch is pinned (body-care.spec "under 3 months the fever entry says same day; the urine-test entry starts at 3 months"). The CareTicket weigh-in-age goal is still unpinned.
+- **Where:** tests/e2e.
+- **Caught by:** Cipher (Edict V).
+- **Status:** **Partly fixed** (fever switch); CareTicket goal test **Open**.
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
