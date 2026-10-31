@@ -45,6 +45,24 @@ Entries 1–4 were found by the S2 render-time pronoun builder while working and
 - **Caught by:** code review (S2 render-time pronoun builder); no test.
 - **Status:** **Open** (accepted, low).
 
+Entries 5–6 were found by the S2 load-time-tables builder and caught in code review.
+
+#### P1 — Milestone title is the record key (data-integrity trap, avoided) (5)
+- **Symptom it would cause:** rewording a milestone's `text:` silently disconnects stored records: the parents' 27 "yes" marks, `milestoneSuppress` hides, and Confirm/Practicing activity entries.
+- **Cause:** `MILESTONE_STANDARDS` rows have no id. The id is `slugify(row.text)`, matched in core.js ~7446–7460 and home.js ~4466.
+- **Fix (this build):** only `desc:` was reworded. The 9 `text:` fields containing she/her (data.js 3986, 4003, 4016, 4017, 4035, 4036, 4055, 4067, 4088) are left as they are.
+- **Where:** data.js `MILESTONE_STANDARDS`; core.js ~7446–7460; home.js ~4466.
+- **Caught by:** code review (S2 load-time-tables builder); no test.
+- **Status:** **Open.** Needs a Carina decision: a slug-alias migration, or a render-time display label. Until then the S2 pronoun audit must allowlist these 9 rows.
+
+#### P1 — Activity keyword rows had girls' forms only (6)
+- **Symptom:** a boy's activity log ("put himself to sleep", "dragged himself", "clapped himself", "when he saw/does", "knows he is funny") never matched those milestone/activity evidence rows.
+- **Cause:** the data.js keyword tables (rows ~222, 327, 356, 1005, 1242, 1317, 1377) listed only she/herself phrases. Rows 143, 335 and 1217 already had himself.
+- **Fix:** added the he/himself variants alongside the existing phrases.
+- **Where:** data.js activity keyword tables.
+- **Caught by:** code review (S2 load-time-tables builder); no test.
+- **Status:** **Fixed.**
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
