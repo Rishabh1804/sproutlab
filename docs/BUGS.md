@@ -9,7 +9,7 @@
 
 ### Child-sex S2–S4 build — 2026-10-31 (pronouns, care guidance, infant weight gain)
 
-Session record of every bug found while building and testing S2 (pronouns), S3 (sex-specific care guidance) and S4 (infant weight-gain bands) per [`specs/child-sex-v1.md`](./specs/child-sex-v1.md). Entry form: symptom, cause, fix, where (file:symbol), how caught, status. Fixed entries stay here as the session record and move to Fixed Bugs at merge.
+Session record of every bug found while building and testing S2 (pronouns), S3 (sex-specific care guidance) and S4 (infant weight-gain bands) per [`specs/child-sex-v1.md`](./specs/child-sex-v1.md). Entry form: symptom, cause, fix, where (file:symbol), how caught, status. The S2 pronoun build gate `audit-pronouns-v1.sh` now exists and is wired into `build.sh` (V-K-282-9, spec §3). Fixed entries stay here as the session record and move to Fixed Bugs at merge.
 
 Entries 1–4 were found by the S2 render-time pronoun builder while working and caught in code review, not by a test.
 
@@ -53,7 +53,7 @@ Entries 5–6 were found by the S2 load-time-tables builder and caught in code r
 - **Fix (this build):** only `desc:` was reworded. The 9 `text:` fields containing she/her (data.js 3986, 4003, 4016, 4017, 4035, 4036, 4055, 4067, 4088) are left as they are.
 - **Where:** data.js `MILESTONE_STANDARDS`; core.js ~7446–7460; home.js ~4466.
 - **Caught by:** code review (S2 load-time-tables builder); no test.
-- **Status:** **Open.** Needs a Carina decision: a slug-alias migration, or a render-time display label. Until then the S2 pronoun audit must allowlist these 9 rows.
+- **Status:** **Open.** Needs a Carina decision: a slug-alias migration, or a render-time display label. Until then the S2 pronoun audit must allowlist these 9 rows. Update: Carina chose the render-time display label (see #34, in progress).
 
 #### P1 — Activity keyword rows had girls' forms only (6)
 - **Symptom:** a boy's activity log ("put himself to sleep", "dragged himself", "clapped himself", "when he saw/does", "knows he is funny") never matched those milestone/activity evidence rows.
@@ -158,10 +158,211 @@ Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 w
 #### P2 — No e2e test renders the Nutrition safety copy for a boy (18)
 - **Symptom:** nothing tests that the meal-planner allergen caution, the Library choke panel and the mercury flag render correctly for a boy. They depend on pron obj vs poss.
 - **Cause:** test coverage gap.
-- **Fix:** an e2e test is being added this round.
+- **Fix:** e2e added: meal-planner-ui.spec "the safety lead reads right for a boy" (see #43).
 - **Where:** tests/e2e (Nutrition surfaces: meal planner, Library, mercury flag).
 - **Caught by:** Ceres V-C-282-5.
-- **Status:** **Open**, being added this round.
+- **Status:** **Fixed.**
+
+Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by" is the Governor tag. Entries are all Fixed unless marked.
+
+#### P0 (safety) — Newborn with neither testis felt told to wait until about 8 weeks (19)
+- **Symptom:** Body care told parents of a newborn with NEITHER testis felt to "see the doctor sooner, from about 8 weeks".
+- **Cause:** the S3 builder misread NHS. Eight weeks is the specialist-referral time after a doctor's exam. Bilateral non-palpable testes in a newborn need immediate review (possible DSD/CAH).
+- **Fix:** "Neither testis can be felt, especially in a newborn: tell the doctor straight away" (AUA guideline Statement 5, verified 2026-10-31), plus "You think a testis is not in the scrotum: tell the doctor" (NHS).
+- **Where:** config.js `BODY_CARE_GUIDANCE` undescended-testes.
+- **Caught by:** V-M-282-1.
+- **Status:** **Fixed.**
+
+#### P0 (safety) — Fever guidance told parents of a baby under 3 months to wait (20)
+- **Symptom:** fever guidance from birth said "especially if it lasts more than 2 days", and the fever card said call at 102°F / 48 h. Both tell a parent of a baby under 3 months to wait.
+- **Cause:** no young-infant fever rule.
+- **Fix:** new Body care entry `fever-young-baby` (0–2 m): any 38°C/100.4°F or more means the doctor the same day (NHS fever-in-children, quoted). The urine-test entry now starts at 3 months. The fever card shows the under-3-months line.
+- **Where:** config.js `BODY_CARE_GUIDANCE`; intelligence-illness.js fever card.
+- **Caught by:** V-M-282-2.
+- **Status:** **Fixed.**
+
+#### P1 — Newborn discharge / breast-swelling entries showed until about day 60 (21)
+- **Symptom:** a 7-week-old with bleeding read "nothing to worry about".
+- **Cause:** `ageMaxMo 1` counts completed months, so the entries ran to about day 60.
+- **Fix:** `ageMaxMo 0`.
+- **Where:** config.js `BODY_CARE_GUIDANCE` (newborn discharge and breast-swelling entries).
+- **Caught by:** V-M-282-3.
+- **Status:** **Fixed.**
+
+#### P1 — Torsion card: "Call 112 now" button contradicted step 1 (22)
+- **Symptom:** a big "Call 112 now" button sat above step 1, "Go to the emergency department now".
+- **Cause:** conflicting calls to action, plus source-wording drift.
+- **Fix:** `callLead` false (drive; call if you can't get there fast). "Every hour counts" replaces "4 to 6 hours". "Can happen in a testis that has not come down" (source wording).
+- **Where:** Body care torsion card (config.js `BODY_CARE_GUIDANCE` and its render).
+- **Caught by:** V-M-282-4..6, V-V-282-4.
+- **Status:** **Fixed.**
+
+#### P1 — Hydrocele entry reassured before telling parents to have it checked (23)
+- **Symptom:** it said "bigger after crying", which is also a hernia sign, before telling parents to have it checked.
+- **Cause:** point ordering.
+- **Fix:** the check-first point now leads. "A swelling that comes and goes with crying may be a hernia: see the doctor soon."
+- **Where:** Body care hydrocele entry.
+- **Caught by:** V-M-282-7.
+- **Status:** **Fixed.**
+
+#### P1 — The single 12–24 m weight band read normal toddlers as "slow" (24)
+- **Symptom:** the one band (20–85 g/wk) read a normal P15–P25 toddler as "slow" or "plateau" in year two, and would have reached Ziva.
+- **Cause:** one band across the whole year, with too high a floor.
+- **Fix:** separate 12–18 and 18–24 rows by the same WHO P15–P85 rule (floors 0–10 g/wk).
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`.
+- **Caught by:** V-M-282-8, V-CA-282-2.
+- **Status:** **Fixed.**
+
+#### P1 — Band age rule differed by caller (25)
+- **Symptom:** near a bracket edge the engine said "on track" while Home said "check" (e.g. a 1.6-month girl at 18 g/day).
+- **Cause:** `computeGrowthVelocity` rounded the age, while the other callers used completed months.
+- **Fix:** `growthVelocityBand` brackets by completed months (12 m from 11.5) for every caller.
+- **Where:** core.js `growthVelocityBand`; medical.js `computeGrowthVelocity`.
+- **Caught by:** V-M-282-9, V-K-282-3.
+- **Status:** **Fixed.** Residual, **Open:** some callers still pass today's age, others the measurement's age.
+
+#### P2 — g/day floors rounded below the g/week floors (26)
+- **Symptom:** for example, girls 9–12 m showed a g/day floor of 2 against 2.86 g/day from the g/week figure.
+- **Cause:** g/day rounded to a whole number.
+- **Fix:** g/day to 0.1.
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`.
+- **Caught by:** V-M-282-11.
+- **Status:** **Fixed.**
+
+#### P2 — Infant bracket floors sit near P3–P5 at the start of each bracket (27)
+- **Symptom:** a floor can be too lenient at the start of a bracket, by the bracket method.
+- **Cause:** bracketed bands.
+- **Fix:** none yet. Carry forward to Kael and Maren: one-month resolution under 6 m, and a 0–14-day newborn weight-loss carve-out.
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`.
+- **Caught by:** V-M-282-10.
+- **Status:** **Open** (carry forward).
+
+#### P1 — Q&A for a boy echoed "Can he eat her egg?" (28)
+- **Symptom:** "Can he eat his egg?" folded to "her egg" and echoed "Can he eat her egg?".
+- **Cause:** determiners were not stripped from food tokens.
+- **Fix:** strip leading determiners from food tokens.
+- **Where:** intelligence-qa.js `qaHandleFoodSafety`.
+- **Caught by:** V-K-282-1.
+- **Status:** **Fixed.**
+
+#### P1 — CareTicket weight goal flipped to "met" on a stale weigh-in (29)
+- **Symptom:** a stale weigh-in flipped to "met" when the child crossed an age band.
+- **Cause:** the target was picked by today's age.
+- **Fix:** band by the latest weigh-in's age.
+- **Where:** intelligence-caretickets.js (weight goal / `resolutionCriteria`).
+- **Caught by:** V-K-282-2.
+- **Status:** **Fixed.**
+
+#### P1 — Head-injury questions matched no SYMPTOM_DB row (30)
+- **Symptom:** "she/he hit her/his head" matched no `SYMPTOM_DB` row. The S2 'hit his head' addition went into dead code (`ctShouldTriggerCreate` has no callers).
+- **Cause:** keywords were not canonical, and the addition landed in dead code.
+- **Fix:** canonical 'hit her head', 'banged her head' and 'bumped her head' added to the head-injury keywords. The dead addition is removed.
+- **Where:** SYMPTOM_DB head-injury keywords; intelligence-caretickets.js `ctShouldTriggerCreate`.
+- **Caught by:** V-K-282-4.
+- **Status:** **Fixed.** **Open:** wire or delete `ctShouldTriggerCreate`.
+
+#### P2 — Food-lookback stripper had no word boundaries (31)
+- **Symptom:** "dates" became "ds", "thepla" became "pla", "sheera" became "era". Pre-existing.
+- **Cause:** pronoun stripping without word boundaries.
+- **Fix:** `\b`-bounded, and drops a folded "her".
+- **Where:** food-lookback stripper in intelligence-qa*.js.
+- **Caught by:** V-K-282-5.
+- **Status:** **Fixed.**
+
+#### P2 — CareTicket force-resolve reasons stored a pronoun (32)
+- **Symptom:** `resolvedNotes` held a pronoun.
+- **Cause:** pronoun-bearing reason text.
+- **Fix:** neutral "Doctor confirmed all is well" / "I'm confident all is fine".
+- **Where:** intelligence-caretickets.js force-resolve reasons.
+- **Caught by:** V-K-282-7.
+- **Status:** **Fixed.**
+
+#### P2 — `qaWords` gained he/him/his for every sex (33)
+- **Symptom:** "ragi thik he" skips ingredient mode.
+- **Cause:** spec-mandated addition.
+- **Fix:** none.
+- **Where:** intelligence-qa.js `qaWords`.
+- **Caught by:** V-K-282-6.
+- **Status:** **Open** (accepted).
+
+#### P1 — Milestone titles with "her" render to a boy's family (34)
+- **Symptom:** 9 rows. See #5; `text:` is the record key.
+- **Cause:** as #5.
+- **Fix:** Carina's decision is a render-time display label (`label` field + `msLabel()`), never changing `text`.
+- **Where:** data.js `MILESTONE_STANDARDS`; `msLabel()`.
+- **Caught by:** V-CA-282-1 / #5.
+- **Status:** **In progress.** This resolves the Carina decision pending in #5. Mark both Fixed when it lands.
+
+#### P2 — Food-effects manifest still had the girls-only oily-fish note (35)
+- **Symptom:** the manifest showed the girls-only note.
+- **Cause:** missed in the data.js oily-fish rewrite (#15).
+- **Fix:** both-sexes wording.
+- **Where:** food-effects manifest (data.js `FOOD_EFFECTS`).
+- **Caught by:** V-CA-282-3.
+- **Status:** **Fixed.**
+
+#### P2 — `GENERAL_EMERGENCIES` sex filter hid an entry on a typo (36)
+- **Symptom:** an entry vanished for everyone on a typo ('M', 'male').
+- **Cause:** a strict filter.
+- **Fix:** only 'f'/'m' filter; anything else shows.
+- **Where:** config.js `GENERAL_EMERGENCIES` sex filter.
+- **Caught by:** V-CA-282-4.
+- **Status:** **Fixed.**
+
+#### P2 — AAP 2011 UTI guideline missing from the fever entry's sources (37)
+- **Symptom:** the fever entry listed no AAP 2011 UTI source.
+- **Cause:** omission.
+- **Fix:** added.
+- **Where:** config.js `BODY_CARE_GUIDANCE` fever entry sources.
+- **Caught by:** V-CA-282-6.
+- **Status:** **Fixed.**
+
+#### P2 — He-forms in activity keyword tables can fire on a girl's note about her father (38)
+- **Symptom:** a girl's note such as "when he does" can match.
+- **Cause:** the he/himself variants added in #6 are not sex-filtered.
+- **Fix:** none. Optional matcher filter by sex.
+- **Where:** data.js activity keyword tables.
+- **Caught by:** V-CA-282-5.
+- **Status:** **Open** (advisory).
+
+#### P1 — Body care light theme: emergency block weaker than the see-the-doctor block (39)
+- **Symptom:** the emergency block looked weaker than the see-the-doctor block, and a red "Emergency signs" pill sat on 7 of 8 boys' topics.
+- **Cause:** styling and tag logic.
+- **Fix:** emergency block gets a rose fill and a thick danger rail; the doctor block gets a rail only. The tag shows only on torsion. Topics with an Emergency Room card get an "Open the emergency steps" button. The chevron is fixed top-right. Source links are 32px.
+- **Where:** Body care render and styles.css.
+- **Caught by:** V-V-282-1/2/3/9/10.
+- **Status:** **Fixed.**
+
+#### P2 — Every General-room doctor summary said "Known allergies: none recorded yet" (40)
+- **Symptom:** the line "Known allergies: none recorded yet (this may be a first reaction)" appeared in every General-room doctor summary.
+- **Cause:** the line was not gated to the allergic reaction.
+- **Fix:** shown only on allergic-reaction.
+- **Where:** config.js `GENERAL_EMERGENCIES` doctor summary (General room).
+- **Caught by:** V-V-282-5.
+- **Status:** **Fixed.**
+
+#### P2 — Body care and Emergency Room copy and icon nits (41)
+- **Symptom:** torsion shared the anaphylaxis icon; 'Both testes in the scrotum' read as reassurance; two see-the-doctor items weren't conditions; "Hide a toy … in full view"; CPR "They call 112" was ambiguous; the sleep help tip was stuck at 6–8 months.
+- **Cause:** assorted copy and icon issues.
+- **Fix:** all corrected.
+- **Where:** Body care / Emergency Room cards and the sleep tip.
+- **Caught by:** V-V-282-6/7/8/12/13/14.
+- **Status:** **Fixed.**
+
+#### P2 — Safe-sleep and Body care copy fixes (42)
+- **Symptom:** "turn him back" (safe sleep); "Coughing or crying?"; "draws both legs up"; "ask your doctor".
+- **Cause:** pronoun and wording issues.
+- **Fix:** "turn him onto his back"; "Can your child cough or cry?"; "draws the legs up"; "ask the doctor".
+- **Where:** Body care / safe-sleep copy.
+- **Caught by:** V-M-282-12/13.
+- **Status:** **Fixed.**
+
+#### P1 — Ceres: no e2e for a boy's Nutrition safety copy (43)
+- **Symptom:** see #18.
+- **Fix:** e2e added: meal-planner-ui.spec "the safety lead reads right for a boy". #18 is marked Fixed.
+- **Where:** tests/e2e meal-planner-ui.spec.
+- **Caught by:** Ceres (V-C-282-5).
+- **Status:** **Fixed.**
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 

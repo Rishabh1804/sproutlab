@@ -283,10 +283,16 @@ function _syncLedgerActive() {
 function _syncAttachedOnce() {
   try { return localStorage.getItem(SYNC_ATTACHED_KEY) === '1'; } catch(e) { return false; }
 }
+// The start time of the full push in flight (0 when none). A write stamped in the same
+// millisecond as the push start would look "not late" (l > startedAt is false), get cleared,
+// and never be re-pushed; so while a push runs, a write is always stamped after its start
+// (F17 race, seen as an intermittent e2e failure; 2026-10-31).
+var _syncFlushStartedAt = 0;
 function _syncMarkDirty(key) {
   if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;
   var m = _syncLoadDirty();
   var now = Date.now();
+  if (_syncFlushStartedAt && now <= _syncFlushStartedAt) now = _syncFlushStartedAt + 1;
   var e = _syncLedgerEntry(m[key]) || { f: now, l: now, nf: false };
   if (!e.f) e.f = now;
   e.l = now;                      // first write time is kept — a later write never launders earlier dirt (Kael F1)
@@ -1657,6 +1663,7 @@ function _syncFlushDirty(hRef, _pass) {
   if (dirtyKeys.length === 0) return Promise.resolve(0);
   if (!_syncUser || !hRef) return Promise.reject(new Error('not signed in'));
   var startedAt = Date.now();
+  _syncFlushStartedAt = startedAt;
   var db = hRef.firestore || ((typeof firebase !== 'undefined') ? firebase.firestore() : null);
   var writer = { uid: _syncUser.uid || null, name: _syncUser.displayName || 'Parent' };
   var settled = [];        // per-entry keys with an empty local array — nothing to push
@@ -1709,6 +1716,7 @@ function _syncFlushDirty(hRef, _pass) {
       return Promise.all(promises);
     })
     .then(function() {
+      _syncFlushStartedAt = 0;
       _syncClearDirty(dirtyKeys, startedAt);
       // A write that landed mid-push kept its entry (l > startedAt) with a first
       // stamp no diff can ever clear — push once more, bounded (Kael F17).
