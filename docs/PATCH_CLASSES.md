@@ -9,6 +9,8 @@
 
 **Status legend:** **Guarded** means a build gate or test catches it now. **Rule** means a written check only, for Builders and Governors to apply.
 
+**Open items from #282:** all 12, plus one found while fixing (#57), are patched in #282: PC-1 #25, #27, #55, #56; PC-2 #4, #33, #38; PC-3 #30, #57; PC-4 #48; PC-5 #51, #54; PC-6 #12, #56.
+
 ---
 
 ## PC-1 · Time and age semantics: one clock, one age, local dates
@@ -23,7 +25,7 @@
 | # | Item | Patch |
 |---|---|---|
 | 25 | Band picked by today's age in some callers, measurement age in others | Every velocity is judged at the age of its own latest measurement |
-| 27 | Infant bracket floors near P3–P5 at the start of a bracket; no newborn weight-loss window | One-month rows under 6 m; first-14-days carve-out (cited) |
+| 27 | Infant bracket floors near P3–P5 at the start of a bracket; no newborn weight-loss window | One-month rows under 6 m; first-14-days carve-out (AAP + NHS cited). Maren to decide 14 vs 21 days, and whether to flag more than 10% loss |
 | 55 | `ageMonthsAt('YYYY-MM-DD')` parsed as UTC (HR-12) | Local calendar parse |
 | 56 | CareTicket weight goal at weigh-in age untested | e2e pins it |
 
@@ -70,11 +72,14 @@
 
 | # | Item | Patch |
 |---|---|---|
-| 30 | `ctShouldTriggerCreate` has no callers; a keyword was added there | Removed, or reported if it was meant to be wired |
+| 30 | `ctShouldTriggerCreate` has no callers; a keyword was added there | Removed: its lists had drifted from the live `ct_create` intent |
+| 57 | Home's "healthy growth for N weeks" alert read `wtSpanDays`, which was never set (NaN), so it could never fire | `getGrowthVelocity` sets it |
 
-**Look for:** a change inside a function that grep finds no caller for, including `data-action` strings and dispatcher maps.
+**Look for:**
+- a change inside a function that grep finds no caller for, including `data-action` strings and dispatcher maps;
+- a property read (`obj.x`) that its producer never sets (#57).
 
-**Guards:** **Rule:** before editing a function to fix behaviour, prove it is reachable (grep its callers and dispatcher entries).
+**Guards:** **Rule:** before editing a function to fix behaviour, prove it is reachable (grep its callers and dispatcher entries). Before reading a property, grep that its producer sets it.
 
 ## PC-4 · Escape at the render boundary (HR-4)
 **Pattern:** text goes into `innerHTML` without `escHtml`, usually where it "is only a constant today".

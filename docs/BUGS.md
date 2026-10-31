@@ -9,6 +9,8 @@
 
 ### Child-sex S2–S4 build — 2026-10-31 (pronouns, care guidance, infant weight gain)
 
+**Patch classes (2026-10-31):** every open item was fixed as a patch to #282 and tagged with its class; the classes, what to look for and their guards are in [`PATCH_CLASSES.md`](./PATCH_CLASSES.md).
+
 Session record of every bug found while building and testing S2 (pronouns), S3 (sex-specific care guidance) and S4 (infant weight-gain bands) per [`specs/child-sex-v1.md`](./specs/child-sex-v1.md). Entry form: symptom, cause, fix, where (file:symbol), how caught, status. The S2 pronoun build gate `audit-pronouns-v1.sh` now exists and is wired into `build.sh` (V-K-282-9, spec §3). Fixed entries stay here as the session record and move to Fixed Bugs at merge.
 
 Entries 1–4 were found by the S2 render-time pronoun builder while working and caught in code review, not by a test.
@@ -43,7 +45,8 @@ Entries 1–4 were found by the S2 render-time pronoun builder while working and
 - **Fix:** none. The result still matches intents, so it was left as is.
 - **Where:** intelligence-qa.js `_qaNameAsShe`.
 - **Caught by:** code review (S2 render-time pronoun builder); no test.
-- **Status:** **Open** (accepted, low).
+- **Patch class:** PC-2 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): a possessive name folds to "her" before the bare name folds to "she" (intelligence-qa.js `_qaNameAsShe`); qa-sex-aware-match.spec.
 
 Entries 5–6 were found by the S2 load-time-tables builder and caught in code review.
 
@@ -111,7 +114,8 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Fix shape:** derive the origin from `baseURL`.
 - **Where:** tests/e2e/fixtures/storage.json; privacy-empty-household.spec.ts.
 - **Caught by:** `body-care.spec` run on port 5291 (S3 care builder).
-- **Status:** **Open** (test-only).
+- **Patch class:** PC-6 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): playwright.config rewrites the fixture origin to the served baseURL; privacy-empty-household derives it from PORT. Verified on port 5297 (25/25).
 
 #### P2 (spec) — child-sex-v1 §4 said a hydrocele "stays the same size" (13)
 - **Symptom:** the spec was wrong. AAP says a hydrocele can change size, which is also a hernia sign. The app does not use size to tell them apart.
@@ -219,7 +223,8 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** `growthVelocityBand` brackets by completed months (12 m from 11.5) for every caller.
 - **Where:** core.js `growthVelocityBand`; medical.js `computeGrowthVelocity`.
 - **Caught by:** V-M-282-9, V-K-282-3.
-- **Status:** **Fixed.** Residual (some callers passed today's age, others the measurement's age) **fixed in PC-1**: every caller now judges a velocity at the age of the latest measurement it ends on, via one helper `gvAgeAt(entry)` (core.js; today's age only when no date), weight at `wtLatest.date`, height at `htLatest.date` (`getGrowthVelocity` now returns `htLatest`). Sites: core.js `getGrowthNarrative`; home.js `computeBaselines`, `renderTrendChips`, `_orig_renderInsightsStats`, `_orig_renderInsightsGrowth`; medical.js `renderGrowthFacts`, `renderVelocity` (both used `Math.round(today's age)`). Test: growth-velocity-bands.spec "Home and the Growth tab agree at a bracket edge". Pending the canon-cc-008 chain.
+- **Patch class:** PC-1 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282, residual closed): `gvAgeAt(entry)` judges every velocity at its own latest measurement's age (Home, narrative, Growth facts, gauge); growth-velocity-bands.spec "Home and the Growth tab agree at a bracket edge".
 
 #### P2 — g/day floors rounded below the g/week floors (26)
 - **Symptom:** for example, girls 9–12 m showed a g/day floor of 2 against 2.86 g/day from the g/week figure.
@@ -235,7 +240,8 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix (PC-1):** under 6 m the rows are one month wide (0–1 … 5–6), each from the single WHO 2-month interval centred on its first month (row m–(m+1) ← interval (m−1)–(m+1); 0–1 ← 0–2), recomputed from the WHO xlsx files (fetched 2026-10-31) by the existing rounding rule; 6–24 m rows unchanged. Girls at 4.0 m: floor 85 g/week (was 65). Newborn carve-out: `_gvNewbornWindow(ageMonthsAtMeasurement)` — a weight-velocity window ending before day 14 is never "slow", "plateau" or "below range" (AAP HealthyChildren + NHS quoted in core.js). `gvWeightVerdict` returns `'newborn'` and `computeGrowthVelocity` sets `status:'newborn'`, `newborn:true`, and every reader shows `GV_NEWBORN_NOTE` in place of a verdict (Home chips/pills, Growth facts and gauge, Info growth-velocity card, growth-diet card, Q&A weight/growth answers, visit prep).
 - **Where:** core.js `GROWTH_VELOCITY_BANDS`, `_gvNewbornWindow`, `gvWeightVerdict`; medical.js `computeGrowthVelocity` and its readers; intelligence-cards.js; intelligence-qa-handlers.js.
 - **Caught by:** V-M-282-10.
-- **Status:** **Fixed** (PC-1), pending the canon-cc-008 chain. Tests: growth-velocity-bands.spec band table, "a bracket floor sits at P15…", "a 10-day-old who has lost weight…".
+- **Patch class:** PC-1 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): one-month rows under 6 m from the WHO interval centred on each month (girls 4.0 m floor 85, was 65); newborn window (first 14 days; AAP + NHS cited) shows a weight-loss note instead of slow/plateau. Open for Maren: 14 vs 21 days; no >10% loss flag yet.
 
 #### P1 — Q&A for a boy echoed "Can he eat her egg?" (28)
 - **Symptom:** "Can he eat his egg?" folded to "her egg" and echoed "Can he eat her egg?".
@@ -259,7 +265,8 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** canonical 'hit her head', 'banged her head' and 'bumped her head' added to the head-injury keywords. The dead addition is removed.
 - **Where:** SYMPTOM_DB head-injury keywords; intelligence-caretickets.js `ctShouldTriggerCreate`.
 - **Caught by:** V-K-282-4.
-- **Status:** **Fixed.** **Open:** wire or delete `ctShouldTriggerCreate`.
+- **Patch class:** PC-3 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): `ctShouldTriggerCreate` removed (no callers; its lists had drifted from the live `ct_create` intent); CARETICKETS spec note updated.
 
 #### P2 — Food-lookback stripper had no word boundaries (31)
 - **Symptom:** "dates" became "ds", "thepla" became "pla", "sheera" became "era". Pre-existing.
@@ -283,7 +290,8 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** none.
 - **Where:** intelligence-qa.js `qaWords`.
 - **Caught by:** V-K-282-6.
-- **Status:** **Open** (accepted).
+- **Patch class:** PC-2 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): 'he' removed from qaWords (a boy's "he" is folded first); "ragi thik he" stays ingredient mode; qa-sex-aware-match.spec.
 
 #### P1 — Milestone titles with "her" render to a boy's family (34)
 - **Symptom:** 9 rows. See #5; `text:` is the record key.
@@ -323,7 +331,8 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** none. Optional matcher filter by sex.
 - **Where:** data.js activity keyword tables.
 - **Caught by:** V-CA-282-5.
-- **Status:** **Open** (advisory).
+- **Patch class:** PC-2 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): classifyActivity skips keywords in the other sex's pronouns (`kwFitsChildSex`, medical.js); `require`/`exclude` stay sex-blind; qa-sex-aware-match.spec.
 
 #### P1 — Body care light theme: emergency block weaker than the see-the-doctor block (39)
 - **Symptom:** the emergency block looked weaker than the see-the-doctor block, and a red "Emergency signs" pill sat on 7 of 8 boys' topics.
@@ -407,7 +416,8 @@ Entries 45–48 were found by the label builder (the #5 / #34 work).
 - **Fix:** none yet. Wrap in `escHtml()`.
 - **Where:** intelligence-quicklog.js ~5221.
 - **Caught by:** noted by the label builder.
-- **Status:** **Open.**
+- **Patch class:** PC-4 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): escHtml at the boundary (intelligence-quicklog.js renderInfoSleepRegression).
 
 Entries 49–56 are Cipher's Edict V findings on #282.
 
@@ -433,7 +443,8 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** none yet.
 - **Where:** `audit-pronouns-v1.sh`; template.html.
 - **Caught by:** Cipher N2.
-- **Status:** **Open.**
+- **Patch class:** PC-5 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): audit-pronouns-v1 scans placeholder, aria-label, title and alt in template.html.
 
 #### P2 — Renamed MILESTONE_STANDARDS anchor silently disabled the label rule (52)
 - **Symptom:** the pronoun gate's milestone label rule stopped working without any failure.
@@ -457,7 +468,8 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** none yet.
 - **Where:** `audit-pronouns-v1.sh`.
 - **Caught by:** Cipher N5.
-- **Status:** **Open.**
+- **Patch class:** PC-5 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): 16 adversarial self-test fixtures run before the scan; a scanner regression fails the build (exit 2).
 
 #### P2 — `ageMonthsAt` parses 'YYYY-MM-DD' as UTC (55)
 - **Symptom:** hours of age drift. It matters only at a band edge, but the CareTicket weight goal now reads it. Pre-existing (HR-12).
@@ -465,7 +477,8 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix (PC-1):** a bare 'YYYY-MM-DD' goes through `_parseLocalDate` (local noon) and counts whole calendar days from the birth date (rounded, DST-safe), so the age is the same in every timezone; a full date-time keeps its exact instant.
 - **Where:** medical.js `ageMonthsAt`.
 - **Caught by:** Cipher N6.
-- **Status:** **Fixed** (PC-1), pending the canon-cc-008 chain. Test: growth-velocity-bands.spec "a YYYY-MM-DD age is whole calendar days…" in Asia/Kolkata and America/Los_Angeles.
+- **Patch class:** PC-1 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): date-only strings parse as local calendar dates (whole days / 30.44); a 61-day weigh-in read 60.85 (IST) / 60.33 (LA) days. Tested in both zones.
 
 #### P2 (test) — Test gaps (56)
 - **Symptom:** no e2e pins the 2→3-month switch from `fever-young-baby` to `fever-uti`. None pins the CareTicket weigh-in-age goal either.
@@ -473,7 +486,17 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** the fever switch is pinned (body-care.spec "under 3 months the fever entry says same day; the urine-test entry starts at 3 months"). The CareTicket weigh-in-age goal is still unpinned.
 - **Where:** tests/e2e.
 - **Caught by:** Cipher (Edict V).
-- **Status:** **Fixed.** The CareTicket goal is pinned in PC-1: growth-velocity-bands.spec "the CareTicket weight goal uses the median for the latest weigh-in age" (weigh-in ≈ 3.9 m, today ≈ 4.1 m → the 3–4 m median, 150 g/week, not 4–5 m's 125).
+- **Patch class:** PC-6 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): fever switch pinned (body-care.spec) and the CareTicket weigh-in-age goal pinned (growth-velocity-bands.spec).
+
+#### P2 — Home's "healthy growth for N weeks" alert could never fire (57)
+- **Symptom:** the positive "consistent healthy growth" alert never showed, whatever the record.
+- **Cause:** home.js `computeBaselines` read `velocity.wtSpanDays`, which `getGrowthVelocity` never set (NaN). Pre-existing.
+- **Fix:** `getGrowthVelocity` sets `wtSpanDays` (days from the first to the latest weight entry).
+- **Where:** core.js `getGrowthVelocity`; home.js `computeBaselines`.
+- **Caught by:** the PC-1 builder while unifying the band age (#25).
+- **Patch class:** PC-3 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282).
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
