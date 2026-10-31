@@ -1,0 +1,38 @@
+# audit-pronouns allowlist — "file|fragment" (fragment starting with '=' must equal the whole string).
+# Strings that are NOT copy and are meant to say she/her. See audit-pronouns-v1.sh.
+#
+# The pronoun table itself.
+core.js|=she
+core.js|=her
+core.js|=herself
+# Q&A match vocabulary: canonical she/her; _qaNameAsShe folds a boy's he/him/his onto it (V-K-281-1/2).
+intelligence-qa.js|can she eat
+intelligence-qa.js|how is she
+intelligence-qa.js|=she
+intelligence-qa.js|=her
+intelligence-qa.js|=herself
+# CareTicket weak-signal match words (both forms listed).
+intelligence-caretickets.js|hit her head
+# Activity keyword tables: match vocabulary for parents' notes, both forms listed.
+data.js|=fed herself
+data.js|=ate by herself
+data.js|=when she saw
+data.js|=put herself to sleep
+data.js|=by herself
+data.js|=when she does
+data.js|=knows she is funny
+data.js|=played by herself
+data.js|=dragged herself
+data.js|=clapped herself
+# Milestone text: fields are record keys (id = slugify(text)); reworded only with Carina's migration (BUGS.md S2–S4 #5).
+data.js|=Understands far more words than she can say
+data.js|=Shows you an object she likes
+data.js|=Takes a few steps on her own
+data.js|=Uses fingers to feed herself some food
+data.js|=Wants to do things herself
+data.js|=Tries to take off her shoes or socks
+data.js|=Feeds herself with her fingers
+data.js|=Shows pride when she does something new
+data.js|=Repeats words she overhears
+# Citation org label (an acronym: AAP Healthy Eating Research).
+recipes.js|=AAP/HER

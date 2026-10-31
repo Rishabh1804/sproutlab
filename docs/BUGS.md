@@ -121,6 +121,48 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Caught by:** S3 care builder, checking the spec against AAP.
 - **Status:** **Fixed** (spec).
 
+Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 were introduced by the S2 load-time rewording.
+
+#### P1 — Litchi step lost its subject (14)
+- **Symptom:** recipes.js:1744 read "Serve only after a meal has been eaten". A parent can read that as "after mealtime" and give litchi as dessert to a child who barely ate. Litchi on an empty stomach is the hypoglycaemia mechanism the gate exists for.
+- **Cause:** the S2 neutral rewording used a passive.
+- **Fix:** "Serve only after the child has eaten a meal."
+- **Where:** recipes.js:1744.
+- **Caught by:** Ceres V-C-282-1.
+- **Status:** **Fixed.**
+
+#### P1 — Oily-fish limit softened (15)
+- **Symptom:** data.js:2750 said "NHS suggests up to 2 portions… for girls". That reads as a target, not a ceiling (NHS: "best to give girls no more than 2").
+- **Cause:** the S2 rewrite changed the verb.
+- **Fix:** "NHS advises no more than 2 portions of oily fish a week for girls, and up to 4 for boys (because of pollutants)."
+- **Where:** data.js:2750.
+- **Caught by:** Ceres V-C-282-2.
+- **Status:** **Fixed.**
+
+#### P2 — Egg/fish allergen ladders lost "to whom" (16)
+- **Symptom:** the copy read "If egg is new, …" and "If fish is new, watch closely…", with no subject.
+- **Cause:** the S2 rewording dropped the pronoun.
+- **Fix:** "new to the child" and "watch the child closely".
+- **Where:** recipes.js 549, 763, 681.
+- **Caught by:** Ceres V-C-282-3.
+- **Status:** **Fixed.**
+
+#### P2 — Family-food tip said the grinding molars are not in yet, with no upper age (17)
+- **Symptom:** the tip claimed "the grinding molars are not in yet" for every toddler from 12 m with no upper age. First molars erupt ~13–19 m, so the claim goes stale.
+- **Cause:** age-unbounded copy.
+- **Fix:** "…until the grinding molars come in."
+- **Where:** diet.js `ALL_TIPS` ~3082.
+- **Caught by:** Ceres V-C-282-4.
+- **Status:** **Fixed.**
+
+#### P2 — No e2e test renders the Nutrition safety copy for a boy (18)
+- **Symptom:** nothing tests that the meal-planner allergen caution, the Library choke panel and the mercury flag render correctly for a boy. They depend on pron obj vs poss.
+- **Cause:** test coverage gap.
+- **Fix:** an e2e test is being added this round.
+- **Where:** tests/e2e (Nutrition surfaces: meal planner, Library, mercury flag).
+- **Caught by:** Ceres V-C-282-5.
+- **Status:** **Open**, being added this round.
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
