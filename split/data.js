@@ -219,7 +219,7 @@ const EVIDENCE_PATTERNS = [
   // ── Mama/Dada (with meaning) ──
   { keywords: ['mama', 'dada', 'papa', 'mamma', 'mumma'],
     milestone: 'mama_dada_meaning', domain: 'language', confidence: 'high', context: 'directed_at_parent',
-    require: ['when i', 'when she saw', 'looking at', 'pointed at', 'reached for', 'called', 'saw me', 'entered', 'came in', 'looking at me'] },
+    require: ['when i', 'when she saw', 'when he saw', 'looking at', 'pointed at', 'reached for', 'called', 'saw me', 'entered', 'came in', 'looking at me'] },
 
   // ── First words ──
   { keywords: ['said', 'says', 'word', 'called me', 'first word', 'new word'],
@@ -324,7 +324,7 @@ const EVIDENCE_PATTERNS = [
     milestone: 'joint_attention', domain: 'social', confidence: 'high', context: 'gaze_following' },
 
   // ── Sleeps independently (social) ──
-  { keywords: ['slept alone', 'sleeps independently', 'self soothe', 'self-soothe', 'fell asleep alone', 'put herself to sleep'],
+  { keywords: ['slept alone', 'sleeps independently', 'self soothe', 'self-soothe', 'fell asleep alone', 'put herself to sleep', 'put himself to sleep'],
     milestone: 'independent_sleep', domain: 'social', confidence: 'high', context: 'self_regulation' },
   { keywords: ['khud so gayi', 'akele soyi', 'apne aap soyi'],
     milestone: 'independent_sleep', domain: 'social', confidence: 'high', context: 'hindi_independent_sleep' },
@@ -353,7 +353,7 @@ const EVIDENCE_PATTERNS = [
   // ── Cause and effect ──
   { keywords: ['pressed button', 'push button', 'figured out', 'learned that', 'realized', 'knew that', 'cause and effect'],
     milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'causal_reasoning' },
-  { keywords: ['if i do', 'when she does', 'makes it', 'to make', 'to get'],
+  { keywords: ['if i do', 'when she does', 'when he does', 'makes it', 'to make', 'to get'],
     milestone: 'cause_effect', domain: 'cognitive', confidence: 'medium', context: 'intentional_action' },
   { keywords: ['light switch', 'switch on', 'switch off', 'turn on', 'turn off'],
     milestone: 'cause_effect', domain: 'cognitive', confidence: 'high', context: 'switch_operation' },
@@ -1002,7 +1002,7 @@ const EVIDENCE_PATTERNS = [
     milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'deep_laughter' },
   { keywords: ['smiled at stranger', 'smiled at baby', 'smiled at mirror'],
     milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'directed_smile' },
-  { keywords: ['cheeky smile', 'mischievous', 'naughty smile', 'knows she is funny'],
+  { keywords: ['cheeky smile', 'mischievous', 'naughty smile', 'knows she is funny', 'knows he is funny'],
     milestone: 'social_smile', domain: 'social', confidence: 'high', context: 'intentional_humor' },
 
   // ── Imitation: more ──
@@ -1239,7 +1239,7 @@ const EVIDENCE_PATTERNS = [
   // ── Sleep related ──
   { keywords: ['fought sleep', 'wouldn\'t sleep', 'resisted sleep'],
     milestone: 'self_regulate', domain: 'social', confidence: 'low', context: 'sleep_resistance' },
-  { keywords: ['put herself to sleep', 'fell asleep on own', 'self settled'],
+  { keywords: ['put herself to sleep', 'put himself to sleep', 'fell asleep on own', 'self settled'],
     milestone: 'independent_sleep', domain: 'social', confidence: 'high', context: 'self_settling' },
 
   // ── Exploration: containers/spatial ──
@@ -1314,7 +1314,7 @@ const EVIDENCE_PATTERNS = [
     milestone: 'sit', domain: 'motor', confidence: 'high', context: 'transition_to_sit' },
   { keywords: ['on all 4', 'all 4s', 'on fours'],
     milestone: 'crawl', domain: 'motor', confidence: 'medium', context: 'all_fours_informal' },
-  { keywords: ['belly scoot', 'belly scooting', 'dragged herself'],
+  { keywords: ['belly scoot', 'belly scooting', 'dragged herself', 'dragged himself'],
     milestone: 'crawl', domain: 'motor', confidence: 'high', context: 'belly_scoot' },
   { keywords: ['stood at', 'standing at', 'stands at'],
     milestone: 'pull_to_stand', domain: 'motor', confidence: 'high', context: 'standing_at_surface' },
@@ -1374,7 +1374,7 @@ const EVIDENCE_PATTERNS = [
     milestone: 'wave', domain: 'social', confidence: 'high', context: 'stranger_friendly' },
   { keywords: ['pulled cloth off', 'took cloth off face', 'removed cloth'],
     milestone: 'object_permanence', domain: 'cognitive', confidence: 'high', context: 'cloth_removal' },
-  { keywords: ['clapped when finished', 'clapped herself', 'self applause'],
+  { keywords: ['clapped when finished', 'clapped herself', 'clapped himself', 'self applause'],
     milestone: 'clap', domain: 'social', confidence: 'high', context: 'self_celebration' },
   { keywords: ['tore roti', 'roti piece', 'broke roti', 'roti toda'],
     milestone: 'pincer', domain: 'motor', confidence: 'high', context: 'hindi_roti_tear' },
@@ -1829,51 +1829,51 @@ const INDIAN_HOLIDAYS = [
 // ── Activity suggestions per event type ──
 const EVENT_ACTIVITIES = {
   birthday: [
-    { icon:zi('star'), text:'Sing "Happy Birthday" together — she\'ll love the rhythm and clapping' },
+    { icon:zi('star'), text:'Sing "Happy Birthday" together — toddlers love the rhythm and clapping' },
     { icon:zi('camera'), text:'Photo session in a festive outfit — monthly photos are precious keepsakes' },
-    { icon:zi('balloon'), text:'Let her explore balloons (supervised) — great for sensory and colour learning' },
+    { icon:zi('balloon'), text:'Let your little one explore balloons (supervised) — great for sensory and colour learning' },
     { icon:zi('party'), text:'Offer a new fruit or food to mark the occasion — a sweet first-taste tradition' },
   ],
   holiday: {
     'Holi':              [{ icon:zi('palette'), text:'Safe colour play with food-grade haldi on paper — sensory delight, zero chemicals' }, { icon:zi('drop'), text:'Warm water play in a basin with flower petals — festive and calming' }],
-    'Diwali':            [{ icon:zi('diya'), text:'Show her a diya glow from safe distance — tracking the flicker builds visual focus' }, { icon:zi('sparkle'), text:'Explore fairy lights up close (supervised) — new light patterns stimulate curiosity' }],
-    'Dussehra':          [{ icon:zi('star'), text:'Show her bright Ravana effigy pictures — bold colours and contrast build visual discrimination' }, { icon:zi('bell'), text:'Clap and cheer together — teaches emotional expression and turn-taking' }],
-    'Raksha Bandhan':    [{ icon:zi('baby'), text:'Let her feel different thread and ribbon textures (supervised) — rich tactile sensory play' }, { icon:zi('baby'), text:'Encourage older cousins to play peek-a-boo — social bonding across ages' }],
+    'Diwali':            [{ icon:zi('diya'), text:'Show a diya glow from safe distance — tracking the flicker builds visual focus' }, { icon:zi('sparkle'), text:'Explore fairy lights up close (supervised) — new light patterns stimulate curiosity' }],
+    'Dussehra':          [{ icon:zi('star'), text:'Show bright Ravana effigy pictures — bold colours and contrast build visual discrimination' }, { icon:zi('bell'), text:'Clap and cheer together — teaches emotional expression and turn-taking' }],
+    'Raksha Bandhan':    [{ icon:zi('baby'), text:'Offer different thread and ribbon textures to feel (supervised) — rich tactile sensory play' }, { icon:zi('baby'), text:'Encourage older cousins to play peek-a-boo — social bonding across ages' }],
     'Ganesh Chaturthi':  [{ icon:zi('star'), text:'Safe play-dough or atta dough — squeezing and pinching builds fine motor strength' }, { icon:zi('baby'), text:'Show elephant pictures and make trunk sounds — animal play builds sound association' }],
-    'Krishna Janmashtami': [{ icon:zi('star'), text:'Show her peacock feathers (supervised) — vibrant colours and soft texture for sensory play' }, { icon:zi('spoon'), text:'Let her taste a tiny bit of makkhan — new taste and creamy texture exploration' }],
-    'Makar Sankranti':   [{ icon:zi('star'), text:'Go outside and watch kites — tracking movement across the sky builds visual focus' }, { icon:zi('sun'), text:'Morning sunshine time — the festival of the sun aligns with her Vitamin D routine' }],
-    'Independence Day':  [{ icon:zi('flag-in'), text:'Dress her in orange, white, green — colour recognition and a memorable photo op' }, { icon:zi('star'), text:'March around the room while humming a tune — motor movement and rhythm play' }],
-    'Republic Day':      [{ icon:zi('flag-in'), text:'Watch parade clips on TV — marching bands are amazing for rhythm and visual tracking' }, { icon:zi('star'), text:'Let her wave a small soft cloth flag — grasping and waving builds arm coordination' }],
-    'Christmas':         [{ icon:zi('star'), text:'Let her explore unbreakable ornaments — shiny surfaces and new shapes for sensory play' }, { icon:zi('star'), text:'Play gentle Christmas carols — new melodies expand her auditory palette' }],
-    'Chhath Puja':       [{ icon:zi('sun'), text:'Watch the sunrise together — natural light exposure supports circadian rhythm' }, { icon:zi('spoon'), text:'Let her explore the fruit offerings (supervised) — naming fruits builds vocabulary' }],
-    'Rama Navami':       [{ icon:zi('diya'), text:'Show her a small diya flame from safe distance — tracking the flicker builds attention' }, { icon:zi('book'), text:'Read a simple picture book about the story — early narrative exposure and bonding' }],
-    'Mahavir Jayanti':   [{ icon:zi('sprout'), text:'Nature walk to a park — Jain philosophy celebrates all life, name the birds and plants she sees' }, { icon:zi('star'), text:'Practice a quiet moment together — gentle breathing, soft music, early calm-down routine' }],
-    'Good Friday':       [{ icon:zi('star'), text:'Show her a candle flame from safe distance — visual focus on a still point builds attention span' }, { icon:zi('baby'), text:'Quiet bonding time — hold her close, read softly, match the reflective mood of the day' }],
-    'Ambedkar Jayanti':  [{ icon:zi('book'), text:'Read a board book together — celebrate knowledge and learning, even at 6 months' }, { icon:zi('rainbow'), text:'Show her pictures of diverse faces — babies are building facial recognition skills' }],
-    'May Day':           [{ icon:zi('sprout'), text:'Go outside and let her touch leaves and flowers — nature sensory exploration' }, { icon:zi('baby'), text:'Play with toy tools or blocks — early "building" play for spatial awareness' }],
-    'Buddha Purnima':    [{ icon:zi('lotus'), text:'Show her a lotus flower or pictures — name the parts (petals, stem) for vocabulary' }, { icon:zi('lotus'), text:'Gentle baby yoga stretches together — calming and builds flexibility' }],
-    'Muharram':          [{ icon:zi('moon'), text:'Show her the moon at night — pointing and naming builds joint attention, a key social skill' }, { icon:zi('star'), text:'Let her hold and explore safe beaded items — grasping builds pincer grip development' }],
+    'Krishna Janmashtami': [{ icon:zi('star'), text:'Show peacock feathers (supervised) — vibrant colours and soft texture for sensory play' }, { icon:zi('spoon'), text:'Offer a tiny taste of makkhan — new taste and creamy texture exploration' }],
+    'Makar Sankranti':   [{ icon:zi('star'), text:'Go outside and watch kites — tracking movement across the sky builds visual focus' }, { icon:zi('sun'), text:'Morning sunshine time — the festival of the sun aligns with the daily Vitamin D routine' }],
+    'Independence Day':  [{ icon:zi('flag-in'), text:'Dress your little one in orange, white, green — colour recognition and a memorable photo op' }, { icon:zi('star'), text:'March around the room while humming a tune — motor movement and rhythm play' }],
+    'Republic Day':      [{ icon:zi('flag-in'), text:'Watch parade clips on TV — marching bands are amazing for rhythm and visual tracking' }, { icon:zi('star'), text:'Offer a small soft cloth flag to wave — grasping and waving builds arm coordination' }],
+    'Christmas':         [{ icon:zi('star'), text:'Explore unbreakable ornaments together — shiny surfaces and new shapes for sensory play' }, { icon:zi('star'), text:'Play gentle Christmas carols — new melodies expand the auditory palette' }],
+    'Chhath Puja':       [{ icon:zi('sun'), text:'Watch the sunrise together — natural light exposure supports circadian rhythm' }, { icon:zi('spoon'), text:'Explore the fruit offerings together (supervised) — naming fruits builds vocabulary' }],
+    'Rama Navami':       [{ icon:zi('diya'), text:'Show a small diya flame from safe distance — tracking the flicker builds attention' }, { icon:zi('book'), text:'Read a simple picture book about the story — early narrative exposure and bonding' }],
+    'Mahavir Jayanti':   [{ icon:zi('sprout'), text:'Nature walk to a park — Jain philosophy celebrates all life, name the birds and plants you see' }, { icon:zi('star'), text:'Practice a quiet moment together — gentle breathing, soft music, early calm-down routine' }],
+    'Good Friday':       [{ icon:zi('star'), text:'Show a candle flame from safe distance — visual focus on a still point builds attention span' }, { icon:zi('baby'), text:'Quiet bonding time — hold your little one close, read softly, match the reflective mood of the day' }],
+    'Ambedkar Jayanti':  [{ icon:zi('book'), text:'Read a board book together — celebrate knowledge and learning, even at 6 months' }, { icon:zi('rainbow'), text:'Show pictures of diverse faces — babies are building facial recognition skills' }],
+    'May Day':           [{ icon:zi('sprout'), text:'Go outside and touch leaves and flowers together — nature sensory exploration' }, { icon:zi('baby'), text:'Play with toy tools or blocks — early "building" play for spatial awareness' }],
+    'Buddha Purnima':    [{ icon:zi('lotus'), text:'Show a lotus flower or pictures — name the parts (petals, stem) for vocabulary' }, { icon:zi('lotus'), text:'Gentle baby yoga stretches together — calming and builds flexibility' }],
+    'Muharram':          [{ icon:zi('moon'), text:'Show the moon at night — pointing and naming builds joint attention, a key social skill' }, { icon:zi('star'), text:'Offer safe beaded items to hold and explore — grasping builds pincer grip development' }],
     'Milad un-Nabi':     [{ icon:zi('moon'), text:'Nighttime stargazing from a window — pointing at lights builds visual tracking' }, { icon:zi('star'), text:'Play soft nasheeds — new musical patterns expand auditory processing' }],
-    'Eid ul-Fitr':       [{ icon:zi('sprout'), text:'Let her touch and smell flowers used for decoration — multi-sensory exploration' }, { icon:zi('baby'), text:'Practice "salaam" hand gesture — early social mimicry and motor coordination' }],
-    'Eid ul-Adha':       [{ icon:zi('star'), text:'Show her animal picture books — name the animals clearly for word-object linking' }, { icon:zi('baby'), text:'Let her "share" food from her plate with you — builds social giving behaviour' }],
-    'Gandhi Jayanti':    [{ icon:zi('star'), text:'Quiet outdoor time — sit on grass, feel the breeze, listen to bird sounds together' }, { icon:zi('baby'), text:'Let her "help" wipe a surface with a cloth — imitation play builds motor skills' }],
-    'Navratri':          [{ icon:zi('star'), text:'Hold her and sway to garba music — vestibular stimulation and rhythm bonding' }, { icon:zi('bell'), text:'Give her a small bell or rattle to shake to the beat — cause-effect and motor skills' }],
-    'Bhai Dooj':         [{ icon:zi('baby'), text:'Let siblings or cousins do tilak on each other — she can watch the ritual and faces up close' }, { icon:zi('spoon'), text:'Offer her a new fruit as her special "treat" — taste exploration on a sweet-themed day' }],
+    'Eid ul-Fitr':       [{ icon:zi('sprout'), text:'Touch and smell flowers together used for decoration — multi-sensory exploration' }, { icon:zi('baby'), text:'Practice "salaam" hand gesture — early social mimicry and motor coordination' }],
+    'Eid ul-Adha':       [{ icon:zi('star'), text:'Share animal picture books — name the animals clearly for word-object linking' }, { icon:zi('baby'), text:'Ask for a "share" of the food on your little one’s plate — builds social giving behaviour' }],
+    'Gandhi Jayanti':    [{ icon:zi('star'), text:'Quiet outdoor time — sit on grass, feel the breeze, listen to bird sounds together' }, { icon:zi('baby'), text:'Invite a little "help" wiping a surface with a cloth — imitation play builds motor skills' }],
+    'Navratri':          [{ icon:zi('star'), text:'Hold your little one and sway to garba music — vestibular stimulation and rhythm bonding' }, { icon:zi('bell'), text:'Offer a small bell or rattle to shake to the beat — cause-effect and motor skills' }],
+    'Bhai Dooj':         [{ icon:zi('baby'), text:'Let siblings or cousins do tilak on each other — your little one can watch the ritual and faces up close' }, { icon:zi('spoon'), text:'Offer a new fruit as a special "treat" — taste exploration on a sweet-themed day' }],
     'Guru Nanak Jayanti': [{ icon:zi('star'), text:'Play soft kirtan music — soothing new melodic patterns for auditory development' }, { icon:zi('baby'), text:'Practice "sharing" by handing toys back and forth — builds social reciprocity' }],
-    _default:            [{ icon:zi('party'), text:'Dress her up and take photos — she\'ll love seeing these when she\'s older' }, { icon:zi('baby'), text:'Family time together — let her soak in the festive atmosphere, sounds, and faces' }],
+    _default:            [{ icon:zi('party'), text:'Dress your little one up and take photos — lovely to look back on in years to come' }, { icon:zi('baby'), text:'Family time together — soak in the festive atmosphere together, sounds, and faces' }],
   },
   vacation: [
-    { icon:zi('baby'), text:'Pack familiar foods — maintain her meal routine even while travelling' },
-    { icon:zi('pill'), text:'Don\'t forget her Vitamin D supplement — travel disrupts routines' },
+    { icon:zi('baby'), text:'Pack familiar foods — keep the usual meal routine even while travelling' },
+    { icon:zi('pill'), text:'Don\'t forget the Vitamin D supplement — travel disrupts routines' },
     { icon:zi('baby'), text:'Carry baby sunscreen + mosquito repellent if going outdoors' },
     { icon:zi('spoon'), text:'Pre-make ragi/dal powder in small zip bags — just add water for instant meals' },
     { icon:zi('moon'), text:'Try to keep nap and bedtime consistent — sleep routine matters more than location' },
   ],
   family: [
-    { icon:zi('handshake'), text:'Let relatives interact at her pace — don\'t force if she\'s showing stranger anxiety (normal at this age)' },
-    { icon:zi('camera'), text:'Great opportunity for multi-generational photos — she\'ll treasure these later' },
-    { icon:zi('chat'), text:'Encourage family to speak to her in different languages — multilingual exposure boosts language circuits' },
-    { icon:zi('bowl'), text:'If eating out, carry her food — restaurant food is too salty/spicy for babies' },
+    { icon:zi('handshake'), text:'Let relatives interact at your child\'s pace — don\'t force it if there are signs of stranger anxiety (normal at this age)' },
+    { icon:zi('camera'), text:'Great opportunity for multi-generational photos — keepsakes to treasure later' },
+    { icon:zi('chat'), text:'Encourage family to speak to your child in different languages — multilingual exposure boosts language circuits' },
+    { icon:zi('bowl'), text:'If eating out, carry food from home — restaurant food is too salty/spicy for babies' },
   ],
 };
 // @@DATA_BLOCK_4_END@@
@@ -2422,7 +2422,7 @@ const AGE_RULES = {
   // 12–24 m PR 3: was 10 while its own reason said 'no added sugar before 2'; ICMR-NIN 2024 lists biscuits as HFSS to avoid; matches rusk (24).
   'biscuit':  { minMonth:24, reason:'Most biscuits carry added sugar, salt and refined flour — no added sugar before 2 (WHO, ICMR-NIN). Offer soft roti, fruit or plain home snacks instead.' },
   // Rusk (Ceres V-C-268-6): the teething guide warns against rusks; the food log gates them too.
-  'rusk':     { minMonth:24, aliases:['rusks','toast rusk','teething rusk','suji rusk','cake rusk'], reason:'Most rusks contain added sugar and break into hard chunks she can\'t chew yet (choking). Avoid before 2 years; offer soft bread or roti pieces instead.' },
+  'rusk':     { minMonth:24, aliases:['rusks','toast rusk','teething rusk','suji rusk','cake rusk'], reason:'Most rusks contain added sugar and break into hard chunks a toddler can\'t chew yet (choking). Avoid before 2 years; offer soft bread or roti pieces instead.' },
   'chips':    { minMonth:24, reason:'Very salty and fried, and a choking risk. Not for under-2s (WHO: high-salt, trans-fat foods should not be given before 2).' },
   'ice cream':{ minMonth:24, reason:'High in added sugar. Avoid before 2 years.' },
   'kheer':    { minMonth:10, reason:'Only unsweetened — sweeten with mashed fruit or dates, not sugar or jaggery (no added sugar before 2 years).' },
@@ -2743,7 +2743,11 @@ const FOOD_EFFECTS = {
       glance:   'Low-mercury, deboned, well-cooked',
       ok:       ['low-mercury fish — salmon, sardine, Indian mackerel (bangda), rohu, catla, pomfret, trout — thoroughly cooked, all bones removed, flaked small', 'canned light tuna (not albacore or white)'],
       never:    ['high-mercury fish — shark (sura), swordfish, king mackerel (surmai or seer), marlin, bigeye tuna', 'raw or undercooked fish or sushi, and raw or lightly-cooked shellfish (food poisoning)', 'fish with bones left in or not hand-checked for pin bones (rohu and catla are very bony — a choking risk)', 'dried or salted fish (Bombay duck / bombil) — too much salt for a baby'],
-      note:     'Choose low-mercury fish, cook it through, and debone meticulously. Finfish is a separate allergen from shellfish. Oily fish is great — for a girl, NHS caps oily fish at about 2 portions a week (pollutants).',
+      // Oily-fish limit, both sexes stated (load-time table — never keyed on childSex()): NHS "Fish and
+      // shellfish" — "You can give boys up to 4 portions of oily fish a week, but it is best to give girls
+      // no more than 2 portions a week." https://www.nhs.uk/live-well/eat-well/food-types/fish-and-shellfish-nutrition/
+      // (checked 2026-10-31; child-sex S2, Cipher #281 nit 3).
+      note:     'Choose low-mercury fish, cook it through, and debone meticulously. Finfish is a separate allergen from shellfish. Oily fish is great — NHS suggests up to 2 portions of oily fish a week for girls and up to 4 for boys (pollutants).',
     },
     howToIntroduce: {
       amount:   'a small amount of well-cooked, deboned, flaked low-mercury fish',
@@ -2899,7 +2903,7 @@ const FOOD_EFFECTS = {
     // seekCare is CHOKING FIRST AID — mechanical airway rescue, NO adrenaline (the floor follows
     // the hazard, milk-spec §9). Child 1y+: 5 back blows + 5 abdominal
     // thrusts (NHS 'How to stop a child from choking'); the under-1 chest-thrust line is retired.
-    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or she can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if she becomes unresponsive → start CPR. Even once it clears, get her checked — abdominal thrusts can injure inside.',
+    seekCare:   'Choking is a MECHANICAL emergency — not an allergy, so NO adrenaline. If the cough is effective, encourage coughing. If the cough is silent or the child can\'t breathe — alternate 5 back blows (face-down across your lap, head low, or leaning forward; heel of the hand between the shoulder blades) and 5 abdominal thrusts (from behind, fist between the belly button and the ribs, pull sharply inwards and upwards; keep off the lower ribs). No blind finger sweep — remove only what you can clearly see. Not clearing → call 112 / 108; if the child becomes unresponsive → start CPR. Even once it clears, get the child checked — abdominal thrusts can injure inside.',
     timeCourse: 'sudden, during eating; choking can be silent and fast — prevention (right-sized food + sitting upright + active supervision) is the primary defence',
     culturalNote:'Whole GROUNDNUT (peanut) is the single most common aspirated food in Indian children (≈67.5% in one ENT series), often handed loose to toddlers to console them — grind it or thin the butter. SUPARI / areca nut is a double danger (in airways AND acutely toxic — seizures, liver injury) — keep it away from children. Other Indian hazards: chana / roasted gram, hard sev / namkeen / murukku, whole makhana, ber (jujube) pits.',
     confidence: 'high',
@@ -2925,11 +2929,11 @@ const EMERGENCY_PROTOCOL = {
       '**If you have an adrenaline auto-injector — use it now.** Outer thigh, hold it in place — slowly count to 10 to be sure. _(Most families won’t have one — if not, go straight to step 2.)_',
       '**Call 112** — tell them your baby has trouble breathing after food; say **“anaphylaxis”** if you can.',
       // Positioning harmonized with the General-room surface (Maren V-M-238): "raise shoulders / sit up slightly" — fully uprighting a hypotensive baby is the one posture anaphylaxis guidance warns against.
-      '**Lie her flat, legs raised.** Hard to breathe → raise her shoulders or sit her up slightly. Vomiting → on her side. **Never stand her up.**',
+      '**Lie the child flat, legs raised.** Hard to breathe → raise the shoulders or sit the child up slightly. Vomiting → on their side. **Never stand the child up.**',
       'No better after **5 minutes**? A second dose, if you have one.',
     ],
     after: [
-      '**Go to hospital even if she settles** — a reaction can return hours later.',
+      '**Go to hospital even if symptoms settle** — a reaction can return hours later.',
       'Note the **time**, the **food**, and what you **gave**.',
     ],
     xlink: { hazard: 'choking', label: 'Choking on it instead? See the Choking card.' },
@@ -2948,12 +2952,12 @@ const EMERGENCY_PROTOCOL = {
       'going blue around the lips, or going floppy',
     ],
     steps: [
-      '**Can she cough or cry?** Encourage coughing — don’t intervene.',
+      '**Coughing or crying?** Encourage coughing — don’t intervene.',
       '**Silent / can’t breathe → 5 back blows** — face-down across your lap, head low (or leaning forward), between the shoulder blades. _(If someone is with you, have them call 112 now.)_',
       '**Then 5 abdominal thrusts** — from behind, fist between the belly button and the ribs, pull **inwards and upwards**. Keep off the lower ribs.',
       '**Alternate** back blows + abdominal thrusts. Not clearing → **Call 112**. Unresponsive → start **CPR**.',
     ],
-    after: [ 'Even once cleared, get her checked — a retained fragment, airway irritation, or injury from the abdominal thrusts can follow.' ],
+    after: [ 'Even once cleared, get the child checked — a retained fragment, airway irritation, or injury from the abdominal thrusts can follow.' ],
     doc: {
       suspected: 'Choking',
       stamps: [ { id: 'reaction', label: 'Time it happened' } ],
@@ -2967,7 +2971,7 @@ const EMERGENCY_PROTOCOL = {
     recogniseFrom: { key: 'honey', field: 'watchFor' },
     steps: [
       '**Call your doctor** and say honey was given — this is the right first step, not 112.',
-      '**But if she struggles to breathe, can’t feed, or goes limp — don’t wait. Call 112.**',
+      '**But if the child struggles to breathe, can’t feed, or goes limp — don’t wait. Call 112.**',
     ],
     after: [],
     doc: {
@@ -3015,7 +3019,7 @@ const ALLERGENS = {
 // ── COMBINATION LOGIC ──
 const COMBO_RULES = [
   { foods:['iron','calcium'], type:'caution', title:'Iron + Calcium compete for absorption',
-    detail:'Calcium lowers iron absorption at the same meal. For her main iron meal, keep big dairy portions and any calcium supplement dose apart; a little curd with dal is fine.' },
+    detail:'Calcium lowers iron absorption at the same meal. For the main iron meal, keep big dairy portions and any calcium supplement dose apart; a little curd with dal is fine.' },
   { foods:['iron','vitamin c'], type:'boost', title:'Iron + Vitamin C = absorption boost',
     detail:'Vitamin C increases iron absorption by up to 3×. This is an excellent combination! Pair ragi/dal with lemon, tomato, orange, or mango.' },
   { foods:['iron','tea'], type:'avoid', title:'Tea blocks iron absorption',
@@ -3916,7 +3920,7 @@ const MILESTONE_STANDARDS = {
     { text:'Recognises familiar faces from across the room', icon:zi('eye'), desc:'Lights up when a familiar person walks in — visual recognition + social memory at distance.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Responds to different tones of voice', icon:zi('chat'), desc:'Reacts differently to a soothing voice vs an excited voice — auditory + emotional discrimination.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Pats and pokes textured surfaces with intent', icon:zi('sparkle'), desc:'Investigates rough, smooth, soft, bumpy with deliberate touch. Tactile vocabulary expanding.', advanced:false, domain:'sensory', source:'unverified' },
-    { text:'Looks for a fallen toy', icon:zi('star'), desc:'Glances down when something drops from her hand — emerging object-permanence + cause-effect.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Looks for a fallen toy', icon:zi('star'), desc:'Glances down after dropping something — emerging object-permanence + cause-effect.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Babbles long strings of sounds', icon:zi('chat'), desc:'"Bababa", "mamamama", "dadada" extended runs with rhythm and intonation — pre-speech jargon.', advanced:false, domain:'language', source:'unverified' },
     { text:'Plays interactive games (so big! pat-a-cake)', icon:zi('handshake'), desc:'Joins in with simple back-and-forth games — social engagement + memory.', advanced:false, domain:'social', source:'unverified' },
   ],
@@ -3933,7 +3937,7 @@ const MILESTONE_STANDARDS = {
     { text:'Plays with food textures (squishing, mashing)', icon:zi('bowl'), desc:'Explores food with hands deliberately — squishes banana, mashes rice. Tactile + oral sensory integration.', advanced:false, domain:'sensory', source:'unverified', safetyTier:true },
     { text:'Notices subtle sound differences', icon:zi('bell'), desc:'Turns toward a soft click, a distant voice, footsteps. Auditory discrimination refining.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Visually inspects small details', icon:zi('eye'), desc:'Studies a leaf, an ant, a button — close focus on small things signals visual acuity maturing.', advanced:false, domain:'sensory', source:'unverified' },
-    { text:'Looks at named pictures in a book', icon:zi('book'), desc:'You say "where\'s the dog?" and she looks at the picture. Receptive vocabulary + symbol recognition.', advanced:false, domain:'cognitive', source:'unverified' },
+    { text:'Looks at named pictures in a book', icon:zi('book'), desc:'Ask "where\'s the dog?" and the eyes go to the picture. Receptive vocabulary + symbol recognition.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Shows preference for certain toys', icon:zi('heart'), desc:'Reaches for favorites repeatedly, may protest when taken away. Early preference + memory.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Shares interest by looking back and forth', icon:zi('eye'), desc:'Looks at an object, then at you, then back — "joint attention", a key social-cognitive milestone.', advanced:false, domain:'social', source:'unverified' },
   ],
@@ -3951,7 +3955,7 @@ const MILESTONE_STANDARDS = {
     { text:'Puts objects into containers', icon:zi('note'), desc:'Drops toys into a box deliberately — understanding of "in" and "out".', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Imitates actions', icon:zi('mirror'), desc:'Copies clapping, stirring, phone-to-ear — social learning through observation.', advanced:false, domain:'social', source:'unverified' },
     { text:'Walks independently', icon:zi('run'), desc:'Many babies walk between 11–13 months — wide range is completely normal.', advanced:false, domain:'motor', source:'unverified' },
-    { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understands far more than she speaks.', advanced:true, domain:'language', source:'unverified' },
+    { text:'Says 3–5 words', icon:zi('chat'), desc:'Small vocabulary of meaningful words. Understanding runs far ahead of speaking.', advanced:true, domain:'language', source:'unverified' },
   ],
   12: [
     { text:'Walks independently', icon:zi('run'), desc:'Most babies walk by 12–15 months. Steady gait develops over the following months.', advanced:false, domain:'motor', source:'unverified', endMonth:15 },
@@ -3981,14 +3985,14 @@ const MILESTONE_STANDARDS = {
     { text:'Carries a book to you to read', icon:zi('book'), desc:'Brings a favourite board book and hands it over — a lovely early sign of shared attention and a love of stories.', advanced:false, domain:'social', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
     { text:'Understands far more words than she can say', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
     { text:'Squats to pick up a toy and stands back up', icon:zi('run'), desc:'Bends down mid-play, grabs the toy, rises without holding on — balance and leg strength working together.', advanced:false, domain:'motor', source:'unverified' },
-    { text:'Climbs stairs on hands and knees', icon:zi('run'), desc:'Crawls up a few steps with you right behind her. A gate at the top and bottom keeps practice safe.', advanced:false, domain:'motor', source:'unverified' },
+    { text:'Climbs stairs on hands and knees', icon:zi('run'), desc:'Crawls up a few steps with you right behind. A gate at the top and bottom keeps practice safe.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Enjoys simple songs with actions', icon:zi('sparkle'), desc:'Joins in with a clap or a wave during action songs — rhythm, listening and imitation all at once.', advanced:false, domain:'sensory', source:'unverified' },
-    { text:'Uses a word plus a gesture to ask for something', icon:zi('chat'), desc:'Points and says "ball" to ask you to roll it — her first sentence is a word and a gesture together.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1
+    { text:'Uses a word plus a gesture to ask for something', icon:zi('chat'), desc:'Points and says "ball" to ask you to roll it — a first sentence made of a word and a gesture together.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-LANG1
   ],
   14: [
     { text:'Notices when a book is upside down', icon:zi('book'), desc:'Turns the book the right way round, or looks puzzled when it is not — an early step toward reading.', advanced:false, domain:'cognitive', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
     { text:'Drinks from a straw cup', icon:zi('drop'), desc:'Sips water from a straw cup — mouth and tongue coordination growing. Sit down for drinks and snacks.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
-    { text:'Says "uh-oh" or another everyday word', icon:zi('chat'), desc:'Little words tied to moments — "uh-oh" when something drops, "up" when she wants lifting.', advanced:false, domain:'language', source:'unverified' },
+    { text:'Says "uh-oh" or another everyday word', icon:zi('chat'), desc:'Little words tied to moments — "uh-oh" when something drops, "up" to ask to be lifted.', advanced:false, domain:'language', source:'unverified' },
     { text:'Enjoys being chased in play', icon:zi('handshake'), desc:'Squeals and toddles off when you pretend to chase — a playful social game full of turn-taking.', advanced:false, domain:'social', source:'unverified' },
     { text:'Enjoys water play — pouring and splashing', icon:zi('sparkle'), desc:'Fills and tips cups in the bath or a basin. Always within arm\'s reach around water.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Fits a round piece into a shape sorter', icon:zi('star'), desc:'Finds the circle hole with a little trial and error — shape matching and hand control together.', advanced:true, domain:'cognitive', source:'unverified' },
@@ -3997,20 +4001,20 @@ const MILESTONE_STANDARDS = {
     // CDC "Milestones by 15 Months" — Social/Emotional
     { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
-    { text:'Claps when excited', icon:zi('party'), desc:'Claps for herself or along with you when something delights her.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Claps when excited', icon:zi('party'), desc:'Claps in self-applause, or along with you, at something delightful.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
-    { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses of her own — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses unprompted — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     // CDC 15 m — Language/Communication
     { text:'Tries to say 1–2 words besides mama or dada', icon:zi('chat'), desc:'Words are often partial — "ba" for ball, "da" for dog. Repeat the full word back warmly.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
-    { text:'Looks at a familiar object when you name it', icon:zi('eye'), desc:'You say "where\'s the cup?" and her eyes go straight to it — words are linking to things.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Looks at a familiar object when you name it', icon:zi('eye'), desc:'You say "where\'s the cup?" and the eyes go straight to it — words are linking to things.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
     { text:'Follows a direction given with words and a gesture', icon:zi('list'), desc:'Hands you the toy when you hold out your hand and say "give me the toy".', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
-    { text:'Points to ask for something or for help', icon:zi('target'), desc:'Points at the shelf she cannot reach — asking with her finger before she has the words.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
+    { text:'Points to ask for something or for help', icon:zi('target'), desc:'Points at a shelf out of reach — asking with a finger before the words arrive.', advanced:false, domain:'language', source:'CDC', checkpoint:15 },
     // CDC 15 m — Cognitive
-    { text:'Uses everyday things the right way, like a phone or a book', icon:zi('phone'), desc:'Holds a phone to her ear, lifts a cup to drink, opens a book — she knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
+    { text:'Uses everyday things the right way, like a phone or a book', icon:zi('phone'), desc:'Holds a phone to an ear, lifts a cup to drink, opens a book — knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     // CDC 15 m — Movement/Physical
-    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
-    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and feeds herself. Offer soft, bite-sized food and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
+    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
+    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and self-feeds. Offer soft, bite-sized food and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
     // AAP — explicit 15–18 m timing
     { text:'Says several single words', icon:zi('chat'), desc:'A small handful of real words used on purpose. The pace varies a lot from child to child.', advanced:false, domain:'language', source:'AAP', endMonth:18 }, // AAP-2Y "by fifteen to eighteen months"
     { text:'Uses a few simple signs or gestures (more, all done)', icon:zi('handshake'), desc:'Taps fingers for "more" or waves hands for "all done" — gestures bridge the gap before words.', advanced:true, domain:'language', source:'unverified' },
@@ -4018,13 +4022,13 @@ const MILESTONE_STANDARDS = {
   16: [
     { text:'Turns board-book pages, a few at a time', icon:zi('book'), desc:'Flips thick pages — often several at once. Hands and interest in books growing together.', advanced:false, domain:'motor', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
     { text:'Builds a tower of three blocks', icon:zi('star'), desc:'Stacks three before the happy crash — hand steadiness and patience growing.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1 towers in the second year
-    { text:'Walks while pulling a toy along', icon:zi('run'), desc:'Walks while tugging a pull-toy behind her — walking is now steady enough to multitask.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
-    { text:'Knows the names of familiar people', icon:zi('chat'), desc:'Looks toward Nani or Papa when you say their name — a growing map of the people she loves.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
+    { text:'Walks while pulling a toy along', icon:zi('run'), desc:'Walks while tugging a pull-toy along behind — walking is now steady enough to multitask.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Knows the names of familiar people', icon:zi('chat'), desc:'Looks toward Nani or Papa when you say their name — a growing map of loved ones.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
     { text:'Plays alongside other children', icon:zi('handshake'), desc:'Happy to play near another child — side-by-side play comes long before sharing.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
-    { text:'Points to one body part when asked', icon:zi('eye'), desc:'Touches her nose when you ask "where\'s your nose?" — an early stretch toward naming body parts.', advanced:true, domain:'language', source:'unverified' },
+    { text:'Points to one body part when asked', icon:zi('eye'), desc:'Touches the nose when you ask "where\'s your nose?" — an early stretch toward naming body parts.', advanced:true, domain:'language', source:'unverified' },
   ],
   17: [
-    { text:'Walks while carrying a big toy', icon:zi('run'), desc:'Carries a teddy or a ball in both arms while walking — balance without using arms to steady herself.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Walks while carrying a big toy', icon:zi('run'), desc:'Carries a teddy or a ball in both arms while walking — balance with no arms free for steadying.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
     { text:'Pretends to feed a doll or teddy', icon:zi('spoon'), desc:'Offers a spoon to a teddy — the first seeds of pretend play.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins make-believe"
     { text:'Takes toys apart and puts them back together', icon:zi('bulb'), desc:'Pulls apart stacking cups or pop-beads and tries to fit them again — little problem-solving at work.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1
     { text:'Uses a word to ask for help or "more"', icon:zi('chat'), desc:'Says "more" at snack time or "help" with a stuck lid — words starting to do real work.', advanced:false, domain:'language', source:'unverified' },
@@ -4033,9 +4037,9 @@ const MILESTONE_STANDARDS = {
   ],
   18: [
     // CDC "Milestones by 18 Months" — Social/Emotional
-    { text:'Moves away from you but checks you are close by', icon:zi('eye'), desc:'Explores a little way off, then glances back to find you — you are her safe base.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Moves away from you but checks you are close by', icon:zi('eye'), desc:'Explores a little way off, then glances back to find you — you are the safe base.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
     { text:'Points to show you something interesting', icon:zi('target'), desc:'Points at the bird or the bus just to share the moment with you.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
-    { text:'Puts hands out for you to wash them', icon:zi('drop'), desc:'Holds out her hands at the tap — joining in with daily routines.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
+    { text:'Puts hands out for you to wash them', icon:zi('drop'), desc:'Holds out both hands at the tap — joining in with daily routines.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
     { text:'Looks at a few pages in a book with you', icon:zi('book'), desc:'Sits for a few pages of a story together — shared reading time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
     { text:'Helps with dressing by pushing an arm through or lifting a foot', icon:zi('handshake'), desc:'Pushes an arm through the sleeve or lifts a foot for a shoe — teamwork at dressing time.', advanced:false, domain:'social', source:'CDC', checkpoint:18 },
     // CDC 18 m — Language/Communication
@@ -4045,24 +4049,24 @@ const MILESTONE_STANDARDS = {
     { text:'Copies you doing chores, like sweeping', icon:zi('mirror'), desc:'Pushes a broom or wipes the table like you do — learning by imitation.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
     { text:'Plays with toys in a simple way, like pushing a car', icon:zi('star'), desc:'Rolls a car along the floor, not just mouths or bangs it — playing with purpose.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:18 },
     // CDC 18 m — Movement/Physical
-    { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks on her own around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months. If she is not walking on her own by 18 months, mention it to her doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 }, // desc context: WHO-MGRS 99th pct 17.6 m
+    { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks alone around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 }, // desc context: WHO-MGRS 99th pct 17.6 m
     { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
-    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds her own meals. Keep offering soft, bite-sized pieces and stay close while she eats.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
-    { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for her mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
-    { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down by herself. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
+    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds through meals. Keep offering soft, bite-sized pieces and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for the mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down unaided. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     // AAP — explicit timing
     { text:'Starts using simple phrases', icon:zi('chat'), desc:'Short phrases like "ball up" or "drink milk" begin to appear somewhere in this stretch.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-2Y "by eighteen to twenty-four months"
-    { text:'Uses action and direction words (go, up, down)', icon:zi('chat'), desc:'Words like "go", "up", "down", "in" and "out" join her naming words.', advanced:false, domain:'language', source:'unverified' }, // AAP-LANG1 "by midyear" of the second year
+    { text:'Uses action and direction words (go, up, down)', icon:zi('chat'), desc:'Words like "go", "up", "down", "in" and "out" join the naming words.', advanced:false, domain:'language', source:'unverified' }, // AAP-LANG1 "by midyear" of the second year
     { text:'Walks backwards a few steps', icon:zi('run'), desc:'Steps backwards while pulling a toy or watching you — balance keeps refining.', advanced:true, domain:'motor', source:'unverified' },
   ],
   19: [
     { text:'Walks up steps with a hand held', icon:zi('handshake'), desc:'Steps up the stairs holding your hand or a rail. Gates stay up for unsupervised moments.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y stairs holding support
     { text:'Fits simple shapes into a shape sorter', icon:zi('star'), desc:'Matches a few shapes to their holes — trial and error turning into planning.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins to sort by shapes"
-    { text:'Picks up new words almost every week', icon:zi('chat'), desc:'New words keep arriving — names of foods, animals and people she sees every day.', advanced:false, domain:'language', source:'unverified' },
-    { text:'Shows pride when she does something new', icon:zi('trophy'), desc:'Claps for herself or looks to you beaming after a new feat — confidence growing.', advanced:false, domain:'social', source:'unverified' },
-    { text:'Points out everyday sounds (dog, plane, bell)', icon:zi('bell'), desc:'Stops and points when she hears a dog or a plane — listening closely to her world.', advanced:false, domain:'sensory', source:'unverified' },
-    { text:'Turns a knob or unscrews a loose lid', icon:zi('bulb'), desc:'Twists a knob or a loose lid with her wrist — fine motor control getting precise.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-HAND1 turning knobs
+    { text:'Picks up new words almost every week', icon:zi('chat'), desc:'New words keep arriving — names of foods, animals and people seen every day.', advanced:false, domain:'language', source:'unverified' },
+    { text:'Shows pride when she does something new', icon:zi('trophy'), desc:'Claps in self-applause or looks to you beaming after a new feat — confidence growing.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Points out everyday sounds (dog, plane, bell)', icon:zi('bell'), desc:'Stops and points at the sound of a dog or a plane — listening closely to the world around.', advanced:false, domain:'sensory', source:'unverified' },
+    { text:'Turns a knob or unscrews a loose lid', icon:zi('bulb'), desc:'Twists a knob or a loose lid with a turn of the wrist — fine motor control getting precise.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-HAND1 turning knobs
   ],
   20: [
     { text:'Names familiar pictures when you ask "what\'s that?"', icon:zi('book'), desc:'Names a dog, ball or cup in a picture book — words and pictures linking up.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-LIT 18–24 m
@@ -4070,19 +4074,19 @@ const MILESTONE_STANDARDS = {
     { text:'Turns a container over to pour things out', icon:zi('note'), desc:'Tips a box to get the toys out — using a tool-like action to solve a problem.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
     { text:'Plays dress-up with hats or shoes', icon:zi('sparkle'), desc:'Tries on your hat or steps into your shoes — pretend play is blooming.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Pats or hugs a teddy that is "crying"', icon:zi('heart'), desc:'Comforts a toy when you pretend it is sad — early empathy taking shape.', advanced:false, domain:'social', source:'unverified' },
-    { text:'Stands on tiptoe', icon:zi('run'), desc:'Rises onto her toes to reach something — calf strength and balance on show.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-2Y
+    { text:'Stands on tiptoe', icon:zi('run'), desc:'Rises up on the toes to reach something — calf strength and balance on show.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-2Y
   ],
   21: [
-    { text:'Finishes a line in a favourite book', icon:zi('book'), desc:'Pause before the last word of a well-loved book and she fills it in.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-LIT 18–24 m
+    { text:'Finishes a line in a favourite book', icon:zi('book'), desc:'Pause before the last word of a well-loved book and hear it filled in.', advanced:false, domain:'language', source:'AAP', endMonth:24 }, // AAP-LIT 18–24 m
     { text:'Walks down steps holding a rail or your hand', icon:zi('handshake'), desc:'Coming down is harder than going up — a hand to hold makes it safe.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y
     { text:'Finds a toy hidden under two covers', icon:zi('star'), desc:'Lifts one cloth, then the next, to find the toy — memory and problem-solving together.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
     { text:'Matches two identical objects or pictures', icon:zi('eye'), desc:'Puts two matching cups or cards together — noticing what is the same.', advanced:false, domain:'cognitive', source:'unverified' },
-    { text:'Wants to help with simple tasks', icon:zi('sprout'), desc:'Fetches her shoes or puts socks in the basket — being a helper feels big.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Wants to help with simple tasks', icon:zi('sprout'), desc:'Fetches shoes or puts socks in the basket — being a helper feels big.', advanced:false, domain:'social', source:'unverified' },
   ],
   22: [
     { text:'Begins sorting by shape or colour', icon:zi('palette'), desc:'Groups the red blocks or the round ones — early sorting and matching.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
     { text:'Repeats words she overhears', icon:zi('chat'), desc:'Echoes words from your conversations — sometimes at surprising moments.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
-    { text:'Uses a spoon with less spilling', icon:zi('spoon'), desc:'More food reaches her mouth than the floor. Keep meals seated and supervised.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
+    { text:'Uses a spoon with less spilling', icon:zi('spoon'), desc:'More food reaches the mouth than the floor. Keep meals seated and supervised.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
     { text:'Shows a wider range of feelings', icon:zi('heart'), desc:'Joy, frustration, pride and shyness all show clearly now. Short tantrums are a normal part of this age.', advanced:false, domain:'social', source:'unverified' },
     { text:'Enjoys dancing and moving to music', icon:zi('sparkle'), desc:'Bounces, sways and spins when music plays — rhythm and body awareness.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Throws a ball overhand', icon:zi('run'), desc:'A wobbly overhand throw — aim comes later, the arm action comes first.', advanced:true, domain:'motor', source:'unverified' },
@@ -4091,7 +4095,7 @@ const MILESTONE_STANDARDS = {
     { text:'Climbs on low playground equipment', icon:zi('run'), desc:'Climbs a low ladder or slide steps with you close by — coordination and courage.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Completes a simple 2–3 piece puzzle', icon:zi('bulb'), desc:'Fits a few chunky puzzle pieces in place — shape sense and persistence.', advanced:false, domain:'cognitive', source:'unverified' },
     { text:'Plays simple turn-taking games with you', icon:zi('handshake'), desc:'Rolls the ball back, waits, rolls again — the rhythm of taking turns.', advanced:false, domain:'social', source:'unverified' },
-    { text:'Tries to jump with both feet', icon:zi('run'), desc:'Bends her knees and tries to leave the ground — both feet may not lift yet.', advanced:true, domain:'motor', source:'unverified' },
+    { text:'Tries to jump with both feet', icon:zi('run'), desc:'Bends the knees and tries to leave the ground — both feet may not lift yet.', advanced:true, domain:'motor', source:'unverified' },
     { text:'Uses three- or four-word sentences', icon:zi('chat'), desc:'Longer sentences like "Mama, more milk please" — a stretch skill that many reach closer to age two or later.', advanced:true, domain:'language', source:'unverified' }, // content: AAP-2Y "two- to four-word sentences"
   ],
   24: [
@@ -4101,8 +4105,8 @@ const MILESTONE_STANDARDS = {
     // CDC 24 m — Language/Communication
     { text:'Points to things in a book when you ask', icon:zi('book'), desc:'Finds the bear when you ask "where is the bear?" — understanding and pointing together.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
     { text:'Says at least two words together, like "more milk"', icon:zi('chat'), desc:'Two-word combinations appear — "more milk", "bye Papa", "big ball".', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
-    { text:'Points to at least two body parts when asked', icon:zi('target'), desc:'Shows you her nose, tummy or toes when you ask.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
-    { text:'Uses more gestures, like blowing a kiss or nodding yes', icon:zi('handshake'), desc:'Blows a kiss or nods yes — a richer set of gestures to go with her words.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Points to at least two body parts when asked', icon:zi('target'), desc:'Points out a nose, tummy or toes when you ask.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
+    { text:'Uses more gestures, like blowing a kiss or nodding yes', icon:zi('handshake'), desc:'Blows a kiss or nods yes — a richer set of gestures to go with the words.', advanced:false, domain:'language', source:'CDC', checkpoint:24 },
     // CDC 24 m — Cognitive
     { text:'Holds something in one hand while using the other', icon:zi('bulb'), desc:'Holds a container steady and pulls the lid off with the other hand — two hands with two jobs.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
     { text:'Tries to use switches, knobs or buttons on a toy', icon:zi('star'), desc:'Presses, twists and flips to make toys work — figuring out how things function.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:24 },
@@ -4110,8 +4114,8 @@ const MILESTONE_STANDARDS = {
     // CDC 24 m — Movement/Physical
     { text:'Kicks a ball', icon:zi('run'), desc:'Swings a leg and connects with a ball — balance on one foot for a moment.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
     { text:'Runs', icon:zi('run'), desc:'Runs across the room or park — still a little stiff, and full of joy.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
-    { text:'Walks up a few stairs, with or without help', icon:zi('run'), desc:'Walks (not crawls) up a few steps, holding on or on her own. Gates stay up when you are not beside her.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
-    { text:'Eats with a spoon', icon:zi('spoon'), desc:'Feeds herself with a spoon for much of the meal. Seated, supervised meals remain the safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:24, safetyTier:true },
+    { text:'Walks up a few stairs, with or without help', icon:zi('run'), desc:'Walks (not crawls) up a few steps, holding on or alone. Gates stay up whenever you are not right there.', advanced:false, domain:'motor', source:'CDC', checkpoint:24 },
+    { text:'Eats with a spoon', icon:zi('spoon'), desc:'Self-feeds with a spoon for much of the meal. Seated, supervised meals remain the safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:24, safetyTier:true },
     // AAP — "by two years"
     { text:'Builds a tower of four or more blocks', icon:zi('star'), desc:'Stacks four blocks or more before knocking them down — steady hands and focus.', advanced:false, domain:'cognitive', source:'AAP', checkpoint:24 }, // AAP-2Y
     { text:'May start to favour one hand', icon:zi('palette'), desc:'Might reach or scribble with one hand more often. Many children settle handedness later — both are normal.', advanced:false, domain:'motor', source:'AAP', checkpoint:24 }, // AAP-2Y + AAP-HAND1
@@ -4376,12 +4380,12 @@ const SLEEP_STANDARDS = {
 const MILESTONE_ACTIVITIES = {
   // ── Motor ──
   pull_to_stand: [
-    { text: 'Supported standing at sofa', duration: 5, icon: 'run', tip: 'Let her pull up on furniture — stay close' },
+    { text: 'Supported standing at sofa', duration: 5, icon: 'run', tip: 'Let your child pull up on furniture — stay close' },
     { text: 'Standing play at low table', duration: 10, icon: 'run', tip: 'Place toys on a low table to encourage standing' },
   ],
   cruise: [
     { text: 'Cruising along furniture', duration: 5, icon: 'run', tip: 'Place toys along the sofa edge to encourage sideways steps' },
-    { text: 'Push walker practice', duration: 10, icon: 'run', tip: 'Hold the walker steady while she pushes' },
+    { text: 'Push walker practice', duration: 10, icon: 'run', tip: 'Hold the walker steady while your child pushes' },
   ],
   sit: [
     { text: 'Sitting with toys in reach', duration: 10, icon: 'crystal', tip: 'Place toys just out of reach to encourage balance' },
@@ -4391,22 +4395,22 @@ const MILESTONE_ACTIVITIES = {
   ],
   crawl: [
     { text: 'Crawling obstacle course', duration: 10, icon: 'run', tip: 'Use pillows and cushions as gentle obstacles' },
-    { text: 'Chase crawling game', duration: 5, icon: 'run', tip: 'Crawl alongside her — babies love parallel play' },
+    { text: 'Chase crawling game', duration: 5, icon: 'run', tip: 'Crawl alongside — babies love parallel play' },
   ],
   pincer: [
     { text: 'Small food pick-up practice', duration: 10, icon: 'spoon', tip: 'Puffed rice, small pieces — encourage thumb-finger pinch' },
     { text: 'Peel-off sticker play', duration: 10, icon: 'crystal', tip: 'Large stickers on paper — peeling builds pincer grip' },
   ],
   finger_feed: [
-    { text: 'Self-feeding finger foods', duration: 10, icon: 'spoon', tip: 'Soft pieces she can pick up — banana, paneer, idli' },
+    { text: 'Self-feeding finger foods', duration: 10, icon: 'spoon', tip: 'Soft pieces easy to pick up — banana, paneer, idli' },
   ],
   bang: [
-    { text: 'Banging pots and spoons', duration: 5, icon: 'bell', tip: 'Give her a wooden spoon and a steel plate — rhythm play' },
-    { text: 'Block banging game', duration: 5, icon: 'crystal', tip: 'Two blocks — show her how to bang them together' },
+    { text: 'Banging pots and spoons', duration: 5, icon: 'bell', tip: 'Offer a wooden spoon and a steel plate — rhythm play' },
+    { text: 'Block banging game', duration: 5, icon: 'crystal', tip: 'Two blocks — show how to bang them together' },
   ],
   // ── Language ──
   babble: [
-    { text: 'Babble back-and-forth', duration: 5, icon: 'chat', tip: 'When she babbles, respond as if conversation' },
+    { text: 'Babble back-and-forth', duration: 5, icon: 'chat', tip: 'Answer each babble as if it were conversation' },
     { text: 'Narrate what you are doing', duration: 10, icon: 'chat', tip: 'Mama is cutting banana. See? Yellow banana!' },
   ],
   mama_dada: [
@@ -4415,21 +4419,21 @@ const MILESTONE_ACTIVITIES = {
   ],
   first_word: [
     { text: 'Name objects during play', duration: 10, icon: 'chat', tip: 'Point and name: ball, cup, mama' },
-    { text: 'Book reading with pointing', duration: 10, icon: 'book', tip: 'Point to pictures, name them, wait for her response' },
+    { text: 'Book reading with pointing', duration: 10, icon: 'book', tip: 'Point to pictures, name them, wait for a response' },
   ],
   respond_name: [
-    { text: 'Name recognition game', duration: 5, icon: 'chat', tip: 'Call her name from different spots — praise when she turns' },
+    { text: 'Name recognition game', duration: 5, icon: 'chat', tip: 'Call your child’s name from different spots — praise every turn toward you' },
   ],
   // ── Cognitive ──
   object_permanence: [
     { text: 'Peek-a-boo variations', duration: 5, icon: 'handshake', tip: 'Hide behind a cloth, pop out. Try hiding toys under cups.' },
-    { text: 'Find the hidden toy', duration: 10, icon: 'brain', tip: 'Hide a toy under a blanket while she watches — can she find it?' },
+    { text: 'Find the hidden toy', duration: 10, icon: 'brain', tip: 'Hide a toy under a blanket in full view — then see if it gets found' },
   ],
   cause_effect: [
     { text: 'Push-button toy play', duration: 10, icon: 'brain', tip: 'Toys that light up or make sounds when pressed — cause and effect' },
   ],
   stack: [
-    { text: 'Block stacking practice', duration: 10, icon: 'brain', tip: 'Start with 2 blocks — celebrate when she stacks them' },
+    { text: 'Block stacking practice', duration: 10, icon: 'brain', tip: 'Start with 2 blocks — celebrate each stack' },
   ],
   // ── Social ──
   separation_anxiety: [
@@ -4437,7 +4441,7 @@ const MILESTONE_ACTIVITIES = {
     { text: 'Peek-a-boo for attachment', duration: 5, icon: 'handshake', tip: 'Reinforces: I leave but I always come back' },
   ],
   social_game: [
-    { text: 'Pat-a-cake together', duration: 5, icon: 'handshake', tip: 'Sing along and clap her hands gently' },
+    { text: 'Pat-a-cake together', duration: 5, icon: 'handshake', tip: 'Sing along and clap your child’s hands gently' },
   ],
   wave: [
     { text: 'Wave practice', duration: 2, icon: 'handshake', tip: 'Model waving every time someone arrives or leaves' },
@@ -4486,7 +4490,7 @@ const MILESTONE_TIDBITS = [
   },
   {
     match: ['babbling', 'babbl'],
-    unlocks: 'Start naming everything she looks at. Respond to her babbles as if they\'re words — this builds conversational turn-taking.',
+    unlocks: 'Start naming everything your child looks at. Respond to babbles as if they\'re words — this builds conversational turn-taking.',
     doctor: 'Babbling is a key 6-month language marker. Consonant sounds (ba, da, ma) are more significant than vowel-only sounds.',
     funFact: 'Babbling uses 70+ muscles in the face, tongue, and throat. Babies babble in the rhythm patterns of their native language.',
   },
@@ -4500,7 +4504,7 @@ const MILESTONE_TIDBITS = [
     match: ['pulls to stand', 'pull to stand'],
     unlocks: 'Ready for: standing play at a sturdy table, cruising prep along furniture, and supported stepping games.',
     doctor: 'Pulling to stand is typically expected at 8–9 months. Doing this at 6 months is in the top 5–10% — mention it at the next visit.',
-    funFact: 'This milestone means her legs can support her full body weight — roughly 4× the load per leg compared to sitting.',
+    funFact: 'This milestone means the legs can support full body weight — roughly 4× the load per leg compared to sitting.',
   },
   {
     match: ['crawl', 'commando'],
@@ -4522,13 +4526,13 @@ const MILESTONE_TIDBITS = [
   },
   {
     match: ['stranger', 'familiar faces'],
-    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let your child warm up at her own pace.',
-    doctor: 'Stranger awareness is actually a positive cognitive milestone — it means she can distinguish familiar from unfamiliar.',
+    unlocks: 'Shows healthy attachment forming. Introduce new people gradually — let your child warm up at their own pace.',
+    doctor: 'Stranger awareness is actually a positive cognitive milestone — it means your child can distinguish familiar from unfamiliar.',
     funFact: 'Babies can distinguish their mother\'s face from others within hours of birth, but active stranger wariness peaks around 8 months.',
   },
   {
     match: ['consonant babbling', 'ba-ba', 'da-da'],
-    unlocks: 'Start exaggerating sounds back to her. "Ba-ba" games build phoneme recognition — the building blocks of words.',
+    unlocks: 'Start exaggerating sounds back to your child. "Ba-ba" games build phoneme recognition — the building blocks of words.',
     doctor: 'Consonant-vowel babbling is more developmentally significant than vowel-only cooing. Report the specific sounds you hear.',
     funFact: 'Deaf babies babble with their hands at the same age hearing babies babble vocally — it\'s a universal brain pattern.',
   },
@@ -4560,7 +4564,7 @@ const MILESTONE_TIDBITS = [
     match: ['separation anxiety'],
     unlocks: 'Practice short separations with a calm goodbye routine. A transitional object (soft toy) can help.',
     doctor: 'Separation anxiety peaks at 8–10 months and is a sign of healthy attachment, not a regression.',
-    funFact: 'Object permanence drives separation anxiety — she now knows you exist even when she can\'t see you, and wants you back!',
+    funFact: 'Object permanence drives separation anxiety — your child now knows you exist even when you are out of sight, and wants you back!',
   },
   {
     match: ['object permanence'],
@@ -4571,18 +4575,18 @@ const MILESTONE_TIDBITS = [
   {
     match: ['clap'],
     unlocks: 'Can now learn pat-a-cake, rhythm games, and action songs. Clapping builds motor planning and social timing.',
-    doctor: 'Clapping is both a motor and social milestone — it shows she can imitate a complex two-handed action on cue.',
+    doctor: 'Clapping is both a motor and social milestone — it shows your child can imitate a complex two-handed action on cue.',
     funFact: 'Clapping in rhythm activates the same brain regions as language processing — music and speech share neural real estate.',
   },
   {
     match: ['point'],
-    unlocks: 'Pointing unlocks joint attention — follow her point and name what she\'s looking at. This accelerates vocabulary.',
+    unlocks: 'Pointing unlocks joint attention — follow the point and name what your child is looking at. This accelerates vocabulary.',
     doctor: 'Pointing is one of the strongest predictors of language development. Paediatricians specifically screen for this at 12 months.',
     funFact: 'Pointing is uniquely human among primates in its communicative intent — even chimps rarely point to share interest.',
   },
   {
     match: ['mama', 'dada', 'first word'],
-    unlocks: 'Respond enthusiastically when she uses words correctly. Expand her phrases — if she says "da", say "yes, dada!"',
+    unlocks: 'Respond enthusiastically when words are used correctly. Expand the phrases — when you hear "da", say "yes, dada!"',
     doctor: 'Specific mama/dada (directed at the right parent) is expected by 10–12 months. Non-specific use is normal at 7–9 months.',
     funFact: 'Babies say "dada" before "mama" in most languages — not because of preference, but because "d" is an easier consonant to produce.',
   },
@@ -4681,7 +4685,7 @@ const VACC_GUIDANCE = {
     note: 'Conjugate vaccine against typhoid fever. IAP recommended from 6 months onwards.',
   },
   'mcv': {
-    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask her doctor', 'If her doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
+    dos: ['For special situations only (travel, outbreaks, some medical conditions) — ask your doctor', 'If the doctor has started the series, complete both doses at least 3 months apart, before 23 months'],
     donts: ['Don\'t confuse it with the measles vaccine (in India "MCV" often means measles-containing vaccine)'],
     note: 'MenACWY protects against meningococcal meningitis and septicaemia. IAP lists it for special situations, not routine use.',
   },
@@ -4717,10 +4721,10 @@ const SYMPTOM_DB = [
     condition: function(q, mo) { return mo < 3 || q.match(/10[3-5]|above 102|very high|burning/i); },
     summary: 'Sponge with lukewarm water, light clothing, breastfeed often, call doctor for medication',
     whatToDo: [
-      'Sponge your child with lukewarm water (never cold). Keep her lightly dressed.',
+      'Sponge your child with lukewarm water (never cold). Keep them lightly dressed.',
       'Breastfeed frequently to prevent dehydration.',
       'Call your pediatrician for medication advice before giving anything.',
-      'Monitor her temperature every 30 minutes.'
+      'Monitor the temperature every 30 minutes.'
     ],
     precautions: [
       'Watch for stiff neck, rash, or difficulty breathing alongside the fever.',
@@ -4731,7 +4735,7 @@ const SYMPTOM_DB = [
       { text: 'Give aspirin to your child', critical: true },
       { text: 'Give any fever medication without doctor advice', critical: true },
       { text: 'Use ice or cold water for sponging', critical: false },
-      { text: 'Over-bundle her in blankets or clothing', critical: false }
+      { text: 'Over-bundle in blankets or clothing', critical: false }
     ],
     emergency: [
       'Fever exceeds 102°F (38.9°C) under 6 months',
@@ -4752,7 +4756,7 @@ const SYMPTOM_DB = [
     summary: 'Monitor every 2 hours, light clothing, offer fluids, escalate above 102°F (38.9°C)',
     whatToDo: [
       'Monitor your child’s temperature every 2 hours.',
-      'Keep her comfortable and lightly dressed.',
+      'Keep your child comfortable and lightly dressed.',
       'Offer breast milk or fluids frequently.',
       'A mild fever within 48 hours of vaccination is usually normal.'
     ],
@@ -4763,7 +4767,7 @@ const SYMPTOM_DB = [
     ],
     doNot: [
       { text: 'Give fever medication without doctor advice', critical: true },
-      { text: 'Bundle her in heavy blankets to "sweat it out"', critical: false }
+      { text: 'Bundle your child in heavy blankets to "sweat it out"', critical: false }
     ],
     emergency: [
       'Fever rises above 102°F (38.9°C)',
@@ -4776,7 +4780,7 @@ const SYMPTOM_DB = [
     triageQuestions: [
       { q: 'Is your child under 3 months old?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Has the fever lasted more than 48 hours?', yesSeverity: 'warning', noSeverity: null },
-      { q: 'Is she unusually lethargic or refusing fluids?', yesSeverity: 'emergency', noSeverity: null }
+      { q: 'Is your child unusually lethargic or refusing fluids?', yesSeverity: 'emergency', noSeverity: null }
     ],
     callDoctor: false
   },
@@ -4799,8 +4803,8 @@ const SYMPTOM_DB = [
     ],
     doNot: [
       { text: 'Give anti-emetic medication without doctor advice', critical: true },
-      { text: 'Force-feed her if she keeps vomiting', critical: false },
-      { text: 'Introduce new foods or formula until she recovers', critical: false }
+      { text: 'Force-feed if the vomiting keeps on', critical: false },
+      { text: 'Introduce new foods or formula until fully recovered', critical: false }
     ],
     emergency: [
       'Vomit is projectile or contains blood',
@@ -4909,9 +4913,9 @@ const SYMPTOM_DB = [
     lifeThreat: false,
     triage: true,
     triageQuestions: [
-      { q: 'Are her ribs sucking in with each breath, or are her nostrils flaring?', yesSeverity: 'emergency', noSeverity: null },
-      { q: 'Does she have a fever above 100.4°F (38°C)?', yesSeverity: 'warning', noSeverity: null },
-      { q: 'Is she refusing fluids or her usual feeds?', yesSeverity: 'warning', noSeverity: null }
+      { q: 'Are the ribs sucking in with each breath, or are the nostrils flaring?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is there a fever above 100.4°F (38°C)?', yesSeverity: 'warning', noSeverity: null },
+      { q: 'Is your child refusing fluids or the usual feeds?', yesSeverity: 'warning', noSeverity: null }
     ],
     callDoctor: false
   },
@@ -4923,9 +4927,9 @@ const SYMPTOM_DB = [
     summary: 'Keep upright, clear nose with saline, count breaths, call 108 if severe',
     whatToDo: [
       'Keep your child upright.',
-      'Clear her nose with saline drops and a nasal aspirator.',
-      'Stay calm so she stays calm.',
-      'Count her breaths for a full minute while she is calm (normal at 1–2 years: under 40, usually about 24–39). 40 or more at rest is fast breathing — call the doctor.'
+      'Clear the nose with saline drops and a nasal aspirator.',
+      'Stay calm so your child stays calm.',
+      'Count the breaths for a full minute while your child is calm (normal at 1–2 years: under 40, usually about 24–39). 40 or more at rest is fast breathing — call the doctor.'
     ],
     precautions: [
       'Watch for the chest retracting (sucking in) with each breath.',
@@ -4934,7 +4938,7 @@ const SYMPTOM_DB = [
     ],
     doNot: [
       { text: 'Give cough medication or sedative drugs', critical: true },
-      { text: 'Lay her flat on her back if she is struggling to breathe', critical: false },
+      { text: 'Lay your child flat on their back if they are struggling to breathe', critical: false },
       { text: 'Wait to see if it gets better on its own', critical: false }
     ],
     emergency: [
@@ -4966,7 +4970,7 @@ const SYMPTOM_DB = [
       'Monitor wet diapers to confirm hydration is adequate.'
     ],
     doNot: [
-      { text: 'Force-feed her by holding her mouth open', critical: false },
+      { text: 'Force-feed by holding the mouth open', critical: false },
       { text: 'Bribe with sweets or substitute juices for meals', critical: false },
       { text: 'Give appetite stimulants without doctor advice', critical: true }
     ],
@@ -4979,9 +4983,9 @@ const SYMPTOM_DB = [
     lifeThreat: false,
     triage: true,
     triageQuestions: [
-      { q: 'Does she seem unusually lethargic or hard to rouse?', yesSeverity: 'emergency', noSeverity: null },
-      { q: 'Is she also refusing fluids (including breast milk)?', yesSeverity: 'warning', noSeverity: null },
-      { q: 'Has she been refusing food for more than 24 hours?', yesSeverity: 'warning', noSeverity: null }
+      { q: 'Does your child seem unusually lethargic or hard to rouse?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is your child also refusing fluids (including breast milk)?', yesSeverity: 'warning', noSeverity: null },
+      { q: 'Has your child been refusing food for more than 24 hours?', yesSeverity: 'warning', noSeverity: null }
     ],
     callDoctor: false
   },
@@ -4994,13 +4998,13 @@ const SYMPTOM_DB = [
     whatToDo: [
       'Offer a clean, chilled (not frozen) teething ring.',
       'Gently massage gums with a clean finger.',
-      'Offer cold water in her cup, or soft ripe chilled fruit like melon in small pieces, with her sitting down and you beside her.',
+      'Offer cold water in a cup, or soft ripe chilled fruit like melon in small pieces, with your child sitting down and you alongside.',
       'Wipe drool frequently to prevent chin rash.'
     ],
     precautions: [
       // AAP (HealthyChildren "Teething Pain", 2025): fever is a false symptom of teething.
-      'Teething does not cause fever, diarrhoea or hours of crying. If she has any of these, it is something else: check her and call her doctor.',
-      'A fever of 38.3°C (101°F) or more is not teething: call her doctor the same day.',
+      'Teething does not cause fever, diarrhoea or hours of crying. If any of these are present, it is something else: check your child and call the doctor.',
+      'A fever of 38.3°C (101°F) or more is not teething: call the doctor the same day.',
       'Back teeth can be sorer and slower: first molars come through around 13–19 months, canines 16–23, second molars 23–33 (ADA).',
       'Watch for inconsolable crying lasting more than a couple of hours.',
       'Record each tooth on the Teeth chart (Milestones, Library) for the paediatrician or dentist.'
@@ -5008,7 +5012,7 @@ const SYMPTOM_DB = [
     doNot: [
       { text: 'Use teething gels containing benzocaine or lidocaine', critical: true },
       { text: 'Give homeopathic teething tablets', critical: true },
-      { text: 'Tie a teething necklace around her neck (strangulation risk)', critical: false },
+      { text: 'Tie a teething necklace around the neck (strangulation risk)', critical: false },
       { text: 'Freeze a teething ring solid or use a liquid-filled teether', critical: false },
       { text: 'Offer rusks or teething biscuits (most contain sugar, and hard pieces can break off)', critical: false }
     ],
@@ -5032,8 +5036,8 @@ const SYMPTOM_DB = [
     whatToDo: [
       'Increase water intake between meals.',
       'Offer high-fibre foods: prune puree, pear, papaya, sweet potato.',
-      'Massage her tummy gently in clockwise circles.',
-      'Try bicycle leg movements while she lies on her back.'
+      'Massage the tummy gently in clockwise circles.',
+      'Try bicycle leg movements with your child lying face-up.'
     ],
     precautions: [
       'A breastfed baby may go 3–5 days without pooping — this is normal if the stool is soft when it comes.',
@@ -5043,7 +5047,7 @@ const SYMPTOM_DB = [
     doNot: [
       { text: 'Use suppositories or laxatives without doctor advice', critical: true },
       { text: 'Give mineral oil or castor oil', critical: true },
-      { text: 'Add corn syrup or sugar to her bottle', critical: false }
+      { text: 'Add corn syrup or sugar to the bottle', critical: false }
     ],
     emergency: [
       'No stool for 5+ days alongside visible discomfort',
@@ -5069,25 +5073,25 @@ const SYMPTOM_DB = [
     precautions: [
       'Evening fussiness around 5–8 PM is common at this age.',
       'Track whether crying is linked to feeding (could be reflux or food sensitivity).',
-      'Note if the cry sounds high-pitched or different from her usual cry.'
+      'Note if the cry sounds high-pitched or different from the usual cry.'
     ],
     doNot: [
       { text: 'Give gripe water or colic syrups without doctor advice', critical: true },
-      { text: 'Shake her, even gently — it can cause serious head injury', critical: true },
-      { text: 'Leave her alone for long stretches when you feel overwhelmed (ask for help)', critical: false }
+      { text: 'Shake your child, even gently — it can cause serious head injury', critical: true },
+      { text: 'Leave your child alone for long stretches when you feel overwhelmed (ask for help)', critical: false }
     ],
     emergency: [
-      'Cry is high-pitched and unlike her normal crying',
+      'Cry is high-pitched and unlike the usual crying',
       'Crying accompanied by fever or vomiting',
-      'Your child draws her legs up to her abdomen repeatedly (possible intussusception)',
-      'Nothing calms her for more than 3 hours'
+      'Your child draws both legs up to the abdomen repeatedly (possible intussusception)',
+      'Nothing calms your child for more than 3 hours'
     ],
     lifeThreat: false,
     triage: true,
     triageQuestions: [
-      { q: 'Is the cry high-pitched, weak, or unlike her normal cry?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is the cry high-pitched, weak, or unlike the usual cry?', yesSeverity: 'emergency', noSeverity: null },
       { q: 'Is there a fever, vomiting, or refusal to feed alongside the crying?', yesSeverity: 'warning', noSeverity: null },
-      { q: 'Has nothing calmed her for more than 3 hours straight?', yesSeverity: 'warning', noSeverity: null }
+      { q: 'Has nothing calmed your child for more than 3 hours straight?', yesSeverity: 'warning', noSeverity: null }
     ],
     callDoctor: false
   },
@@ -5116,7 +5120,7 @@ const SYMPTOM_DB = [
     emergency: [
       'Redness with thick yellow or green discharge',
       'Swelling around the eye or eyelid',
-      'Your child rubs her eyes constantly or seems in pain',
+      'Your child rubs at the eyes constantly or seems in pain',
       'Vision seems affected (not tracking or focusing)'
     ],
     lifeThreat: false,
@@ -5137,7 +5141,7 @@ const SYMPTOM_DB = [
       'Ear-pulling alone is often just exploration at this age.',
       'Ear infections often follow upper respiratory infections.',
       'Note any change in how your child responds to your voice (hearing concerns).',
-      'Ear-pulling with a fever of 38.3°C (101°F) or more: call her doctor the same day; it is often an ear infection.'
+      'Ear-pulling with a fever of 38.3°C (101°F) or more: call the doctor the same day; it is often an ear infection.'
     ],
     doNot: [
       { text: 'Insert cotton buds, fingers, or any object into the ear canal', critical: true },
@@ -5163,8 +5167,8 @@ const SYMPTOM_DB = [
     whatToDo: [
       'Stay calm. Apply a cold compress wrapped in cloth to any bump for 10–15 minutes.',
       'Observe your child closely for the next 24 hours.',
-      'Let her rest but check on her every 2 hours while sleeping.',
-      'Note the height of the fall and what she landed on.'
+      'Let your child rest, but check in every 2 hours while sleeping.',
+      'Note the height of the fall and what your child landed on.'
     ],
     precautions: [
       'Minor bumps from rolling or low crawling height are usually not serious.',
@@ -5173,8 +5177,8 @@ const SYMPTOM_DB = [
     ],
     doNot: [
       { text: 'Give pain medication without doctor advice', critical: true },
-      { text: 'Let her sleep without 2-hour checks for the first 24 hours', critical: false },
-      { text: 'Move her if you suspect a neck or spine injury (wait for help)', critical: false }
+      { text: 'Let your child sleep without 2-hour checks for the first 24 hours', critical: false },
+      { text: 'Move your child if you suspect a neck or spine injury (wait for help)', critical: false }
     ],
     emergency: [
       'Loss of consciousness, even briefly',
@@ -5182,15 +5186,15 @@ const SYMPTOM_DB = [
       'Seizure',
       'Clear fluid from the nose or ears',
       'Unequal pupil size',
-      'Unusual sleepiness or difficulty waking her',
+      'Unusual sleepiness or being hard to wake',
       'Fall from more than 3 feet or onto a hard surface'
     ],
     lifeThreat: true,
     triage: true,
     triageQuestions: [
       { q: 'Did your child lose consciousness, even briefly?', yesSeverity: 'emergency', noSeverity: null },
-      { q: 'Has she vomited more than once since the fall?', yesSeverity: 'emergency', noSeverity: null },
-      { q: 'Is she unusually sleepy or hard to wake?', yesSeverity: 'emergency', noSeverity: null }
+      { q: 'Has your child vomited more than once since the fall?', yesSeverity: 'emergency', noSeverity: null },
+      { q: 'Is your child unusually sleepy or hard to wake?', yesSeverity: 'emergency', noSeverity: null }
     ],
     callDoctor: true
   },
@@ -5202,13 +5206,13 @@ const SYMPTOM_DB = [
     summary: 'Stop suspected food, watch breathing and swelling, call 108 if airway involved',
     whatToDo: [
       'Stop the suspected food immediately.',
-      'Watch her breathing and any swelling closely — this can escalate within minutes.',
+      'Watch the breathing and any swelling closely — this can escalate within minutes.',
       'Call your pediatrician (or emergency services if breathing is affected).',
-      'Take a photo of any rash and note what she ate and when symptoms started, for the doctor.'
+      'Take a photo of any rash and note what was eaten and when symptoms started, for the doctor.'
     ],
     precautions: [
       'Mark any new food as "watch" in the app until reviewed with the doctor.',
-      'Symptoms can escalate quickly within minutes — stay near her.',
+      'Symptoms can escalate quickly within minutes — stay close by.',
       'Re-exposure can be worse than first exposure.'
     ],
     doNot: [
@@ -5236,7 +5240,7 @@ const SYMPTOM_DB = [
       'Offer breast milk or ORS frequently in small amounts.',
       'If breastfeeding, nurse more often than usual.',
       'Keep track of wet diapers — aim for at least 6 in 24 hours.',
-      'Watch her fontanelle (soft spot on top of head) for sinking.'
+      'Watch the fontanelle (soft spot on top of head) for sinking.'
     ],
     precautions: [
       'Dry mouth or lips, sunken fontanelle, and no tears when crying are warning signs.',
@@ -5246,7 +5250,7 @@ const SYMPTOM_DB = [
     doNot: [
       { text: 'Give plain water alone to babies under 6 months', critical: true },
       { text: 'Give fruit juices or sugary drinks instead of ORS', critical: false },
-      { text: 'Wait to see if she perks up on her own', critical: false }
+      { text: 'Wait to see if your child perks up unaided', critical: false }
     ],
     emergency: [
       'Sunken fontanelle (soft spot)',
@@ -5277,8 +5281,8 @@ const SYMPTOM_DB = [
     ],
     doNot: [
       { text: 'Give melatonin or sleep aids without doctor advice', critical: true },
-      { text: 'Put soft pillows, bumpers, or stuffed toys in her crib', critical: true },
-      { text: 'Add cereal to her bottle to "help her sleep"', critical: false }
+      { text: 'Put soft pillows, bumpers, or stuffed toys in the crib', critical: true },
+      { text: 'Add cereal to the bottle to "help with sleep"', critical: false }
     ],
     emergency: [
       'Sleep disruption combined with fever, breathing issues, or inconsolable crying',
@@ -5293,11 +5297,11 @@ const SYMPTOM_DB = [
     keywords: ['seizure','convulsion','fit','jerking','twitching','febrile seizure','fits','shaking','stiffening'],
     severity: 'emergency',
     title: 'Seizure / Convulsion',
-    summary: 'Lay her on her side, clear the area, time the seizure, do not restrain',
+    summary: 'Lay your child on their side, clear the area, time the seizure, do not restrain',
     whatToDo: [
-      'Lay your child on her side on a flat surface (recovery position).',
-      'Clear the area around her of hard or sharp objects.',
-      'Loosen any tight clothing around her neck.',
+      'Lay your child on their side on a flat surface (recovery position).',
+      'Clear hard or sharp objects from the area around your child.',
+      'Loosen any tight clothing around the neck.',
       'Time the seizure from start to finish.',
       'Call your pediatrician or emergency services immediately.'
     ],
@@ -5307,15 +5311,15 @@ const SYMPTOM_DB = [
       'Note what happened just before the seizure (fever, head bump, missed feed).'
     ],
     doNot: [
-      { text: 'Put anything in her mouth (she will not swallow her tongue)', critical: true },
-      { text: 'Restrain her arms or legs during the seizure', critical: true },
+      { text: 'Put anything in the mouth (it is not possible to swallow the tongue)', critical: true },
+      { text: 'Restrain the arms or legs during the seizure', critical: true },
       { text: 'Give water, milk, or medication during the seizure', critical: true },
-      { text: 'Move her unless she is in immediate danger', critical: false }
+      { text: 'Move your child unless they are in immediate danger', critical: false }
     ],
     emergency: [
       'Seizure lasts longer than 5 minutes',
       'A second seizure follows the first',
-      'She does not wake up afterwards or remains floppy and unresponsive',
+      'Does not wake up afterwards or remains floppy and unresponsive',
       'Breathing trouble, blue lips, or noisy gasping',
       'Seizure follows a head injury'
     ],
@@ -5327,26 +5331,26 @@ const SYMPTOM_DB = [
     keywords: ['choking','choke','airway','blocked airway','food stuck','swallowed','object in mouth','can\'t breathe','gagging','coughing food'],
     severity: 'emergency',
     title: 'Choking',
-    summary: 'If she can cough, let her. If silent and not breathing, back blows then abdominal thrusts',
+    summary: 'Coughing? Let it continue. If silent and not breathing, back blows then abdominal thrusts',
     whatToDo: [
-      'If your child is coughing forcefully, let her keep coughing — do not interfere.',
-      'If she cannot cry, cough, or breathe, lay her face-down across your lap with her head low, or support her leaning forward.',
-      'Give 5 firm back blows between her shoulder blades with the heel of your hand.',
-      'Still stuck? Kneel behind her, make a fist between her belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
-      'Repeat back blows and abdominal thrusts until the object comes out or she starts breathing.',
-      'If she goes limp or unresponsive: lay her on a firm, flat surface, call 112 on speakerphone, remove an object only if you can clearly see and grasp it, and start CPR.',
+      'If your child is coughing forcefully, let the coughing continue — do not interfere.',
+      'If your child cannot cry, cough, or breathe, lay them face-down across your lap with the head low, or support them leaning forward.',
+      'Give 5 firm back blows between the shoulder blades with the heel of your hand.',
+      'Still stuck? Kneel behind your child, make a fist between the belly button and ribs, grasp it with your other hand and give up to 5 sharp inward-and-upward abdominal thrusts.',
+      'Repeat back blows and abdominal thrusts until the object comes out or your child starts breathing.',
+      'If your child goes limp or unresponsive: lay them on a firm, flat surface, call 112 on speakerphone, remove an object only if you can clearly see and grasp it, and start CPR.',
       'Call emergency services as soon as possible — ideally have someone call while you do first aid.'
     ],
     precautions: [
       'Stay calm — your composure helps the rescue work.',
-      'Look in her mouth only if you can clearly see the object and remove it with one finger sweep.',
-      'After the object comes out, she still needs to be checked by a doctor — abdominal thrusts can cause internal injury.'
+      'Look in the mouth only if you can clearly see the object and remove it with one finger sweep.',
+      'After the object comes out, your child still needs to be checked by a doctor — abdominal thrusts can cause internal injury.'
     ],
     doNot: [
-      { text: 'Do a blind finger sweep inside her mouth (it can push the object deeper)', critical: true },
+      { text: 'Do a blind finger sweep inside the mouth (it can push the object deeper)', critical: true },
       { text: 'Give water, food, or medication during a choking episode', critical: true },
-      { text: 'Press on her lower ribs during abdominal thrusts (it can cause injury)', critical: true },
-      { text: 'Hold her upside down by the ankles', critical: false }
+      { text: 'Press on the lower ribs during abdominal thrusts (it can cause injury)', critical: true },
+      { text: 'Hold your child upside down by the ankles', critical: false }
     ],
     emergency: [
       'Cannot cry, cough, or breathe',
@@ -5365,11 +5369,11 @@ const SYMPTOM_DB = [
     title: 'Head Injury',
     summary: 'Stabilize and observe, apply cold compress to bumps, wake every 2h for 24h',
     whatToDo: [
-      'Stay calm. Keep your child still while you assess her.',
+      'Stay calm. Keep your child still while you check them over.',
       'Apply a cold compress wrapped in cloth to any visible bump for 10–15 minutes.',
-      'Observe her closely for the next 24 hours.',
-      'Wake her every 2 hours while she sleeps to check responsiveness.',
-      'Note the height of the fall and what surface she hit.'
+      'Observe your child closely for the next 24 hours.',
+      'During sleep, wake your child every 2 hours to check responsiveness.',
+      'Note the height of the fall and what surface your child hit.'
     ],
     precautions: [
       'Watch for repeated vomiting, unusual drowsiness, or behaviour changes.',
@@ -5378,7 +5382,7 @@ const SYMPTOM_DB = [
     ],
     doNot: [
       { text: 'Give pain medication without doctor advice', critical: true },
-      { text: 'Move her if you suspect a neck or spine injury', critical: false },
+      { text: 'Move your child if you suspect a neck or spine injury', critical: false },
       { text: 'Skip the 2-hour wake checks in the first 24 hours', critical: false }
     ],
     emergency: [
@@ -5402,21 +5406,21 @@ const SYMPTOM_DB = [
     title: 'Unresponsive / Unconscious',
     summary: 'Check breathing, place on side if breathing, start child CPR if not (5 breaths, then 30 compressions : 2 breaths), call 112',
     whatToDo: [
-      'Tap her arm and call her name loudly to see if she responds.',
-      'Check whether she is breathing — look at her chest, listen, feel for air on your cheek, for up to 10 seconds. Gasping is not breathing.',
-      'If she is breathing, place her on her side (recovery position) and call 112 on speakerphone.',
-      'If she is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? They call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
-      'Stay with her until help arrives.'
+      'Tap the arm and call your child’s name loudly to check for a response.',
+      'Check for breathing — look at the chest, listen, feel for air on your cheek, for up to 10 seconds. Gasping is not breathing.',
+      'If your child is breathing, place them on their side (recovery position) and call 112 on speakerphone.',
+      'If your child is not breathing, start child CPR now (Emergency Room, top card): 5 rescue breaths, then 30 compressions : 2 breaths. Someone with you? They call 112. On your own? 1 minute of CPR first, then call on speakerphone and keep going.',
+      'Stay with your child until help arrives.'
     ],
     precautions: [
-      'Note when she became unresponsive and what happened just before.',
+      'Note when your child became unresponsive and what happened just before.',
       'Check for any obvious injury, especially to the head.',
-      'Note her colour — pale, blue, or grey is a serious sign.'
+      'Note your child’s colour — pale, blue, or grey is a serious sign.'
     ],
     doNot: [
-      { text: 'Give water, milk, or medication to her while she is unresponsive', critical: true },
-      { text: 'Shake her to try to wake her', critical: true },
-      { text: 'Leave her alone to find help (call from where she is)', critical: false }
+      { text: 'Give water, milk, or medication while your child is unresponsive', critical: true },
+      { text: 'Shake your child to try to wake them', critical: true },
+      { text: 'Leave your child alone to find help (call from beside them)', critical: false }
     ],
     emergency: [
       'Not breathing or breathing in slow gasps',
@@ -5438,12 +5442,12 @@ const SYMPTOM_DB = [
       'Call your poison control centre or emergency services immediately.',
       'Save the container, label, or plant sample to show medical staff.',
       'Note what was swallowed, how much, and when.',
-      'Wipe out her mouth gently with a damp cloth if anything is visible.',
-      'Stay calm and keep her with you while help is on the way.'
+      'Wipe out the mouth gently with a damp cloth if anything is visible.',
+      'Stay calm and keep your child with you while help is on the way.'
     ],
     precautions: [
       'Common household risks: cleaning products, medications, button batteries, magnets, alcohol, certain plants.',
-      'Symptoms can be delayed by hours — do not wait to "see if she\'s okay".',
+      'Symptoms can be delayed by hours — do not wait to "see if all is okay".',
       'Bring the container with you to the hospital.'
     ],
     doNot: [
@@ -5468,7 +5472,7 @@ const SYMPTOM_DB = [
 // From home.js
 const ESCALATING_TIPS = {
   'no-feed-today': [
-    'Even partial meals matter — log what she\'s had so far to track her intake pattern.',
+    'Even partial meals matter — log what has been eaten so far to track the intake pattern.',
     'If appetite is low, try smaller, more frequent offerings. Teething or illness can suppress hunger temporarily.',
     'Repeated low intake days this month. If your child is consistently refusing meals, discuss with your paediatrician at the next visit.',
   ],
@@ -5500,8 +5504,8 @@ const ESCALATING_TIPS = {
   ],
   'food-variety-stale': [
     'Introduce one new food at a time with a 3-day gap. Try different textures and colours to build acceptance.',
-    'Variety exposure in the first year shapes long-term food preferences. Even if she rejects a food, offer it again in a week — it can take 10-15 exposures.',
-    'Your child has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups she hasn\'t explored: leafy greens, different lentils, or new fruits.',
+    'Variety exposure in the first year shapes long-term food preferences. Even if a food is rejected, offer it again in a week — it can take 10-15 exposures.',
+    'Your child has been eating the same foods for a while now. Dietary variety is important for micronutrient balance. Try foods from groups not yet explored: leafy greens, different lentils, or new fruits.',
   ],
   'food-correlation': [
     'This is a pattern SproutLab spotted in the log — this food has appeared close to a few unusual nappies. A pattern is not a diagnosis, and with a small number of days coincidence is very likely. Keep offering the food normally and note the stool each time so the picture gets clearer.',
@@ -5518,7 +5522,7 @@ const ESCALATING_TIPS = {
   ],
   'supp-streak-broken': [
     'Vitamin D3 helps your child absorb calcium and build bone strength, and it is also part of healthy immunity. A missed day or two will not undo that — the body stores Vitamin D and releases it gradually, so short gaps are not harmful. Just give today\'s dose as usual; there is no need to double up for the missed one.',
-    'Daily D3 simply keeps her stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking each dose to a meal or her milk makes it hard to forget.',
+    'Daily D3 simply keeps vitamin D stores topped up — it is not a dose that has to land at the same minute each day. Low Vitamin D builds up slowly, over weeks to months, not from one or two missed days. The easiest fix is an anchor: linking each dose to a meal or a milk feed makes it hard to forget.',
     'Doses have been missed fairly often this month. This still is not an emergency — but over many weeks, consistently sparse D3 can let stores run low, and that matters for steady bone development at this age. A daily phone alarm, or keeping the bottle next to the feeding chair, makes consistency almost automatic. It is also worth mentioning the pattern at the next paediatrician visit so they can confirm the dose is still right for your child.',
   ],
   'low-iron': [
