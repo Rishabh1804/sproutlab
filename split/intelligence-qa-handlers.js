@@ -29,7 +29,7 @@ function _qaHandleLookback(classified) {
 
 function _qaFoodLookback(foodQuery) {
   if (!foodQuery || foodQuery.trim().length === 0) {
-    return { title: 'Food Lookback', headline: 'What food are you looking for?', icon: 'scope', domain: 'peach', sections: [], dataGap: 'Try: "When did she last eat ragi?" or "Last time she had dal rice"' };
+    return { title: 'Food Lookback', headline: 'What food are you looking for?', icon: 'scope', domain: 'peach', sections: [], dataGap: 'Try: "When did ' + pron('subj') + ' last eat ragi?" or "Last time ' + pron('subj') + ' had dal rice"' };
   }
 
   var query = foodQuery.trim().toLowerCase();
@@ -105,7 +105,7 @@ function _qaFoodLookback(foodQuery) {
   }
 
   return {
-    title: 'Last time she had ' + bestMatch,
+    title: 'Last time ' + pron('subj') + ' had ' + bestMatch,
     headline: daysAgoText,
     icon: 'scope',
     domain: 'peach',
@@ -353,7 +353,7 @@ function _qaFoodLikes() {
   });
 
   return {
-    title: 'Foods She Likes',
+    title: 'Foods ' + pron('subj', true) + ' Likes',
     headline: liked.length + ' favorites in last 30 days',
     icon: 'star',
     domain: 'peach',
@@ -364,12 +364,12 @@ function _qaFoodLikes() {
 function _qaFoodDislikes() {
   var acceptance = computeFoodAcceptance(30);
   if (acceptance.length === 0) {
-    return { title: 'Foods She Rejects', headline: 'No food data yet', icon: 'warn', domain: 'peach', sections: [], dataGap: 'Log meals to track food preferences.' };
+    return { title: 'Foods ' + pron('subj', true) + ' Rejects', headline: 'No food data yet', icon: 'warn', domain: 'peach', sections: [], dataGap: 'Log meals to track food preferences.' };
   }
 
   var disliked = acceptance.filter(function(f) { return f.avgIntake < 0.4 && f.timesServed >= 2; }).slice(0, 6);
   if (disliked.length === 0) {
-    return { title: 'Foods She Rejects', headline: 'No consistently rejected foods found', icon: 'check', domain: 'peach', sections: [] };
+    return { title: 'Foods ' + pron('subj', true) + ' Rejects', headline: 'No consistently rejected foods found', icon: 'check', domain: 'peach', sections: [] };
   }
 
   var items = disliked.map(function(f) {
@@ -378,7 +378,7 @@ function _qaFoodDislikes() {
   });
 
   return {
-    title: 'Foods She Rejects',
+    title: 'Foods ' + pron('subj', true) + ' Rejects',
     headline: disliked.length + ' low-acceptance foods',
     icon: 'warn',
     domain: 'peach',
@@ -1099,7 +1099,7 @@ function qaAnswerFoodGeneral(intentId) {
     // Effective intake
     if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake !== undefined) {
       if (diet.detail.effectiveIntake < 50) {
-        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% — she\'s eating less than half of served portions', signal: 'warn' });
+        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% — ' + pron('subj') + '\'s eating less than half of served portions', signal: 'warn' });
       } else if (diet.detail.effectiveIntake < 75) {
         dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% of served portions', signal: 'info' });
       }
@@ -1741,7 +1741,7 @@ function qaAnswerNaps(intentId) {
   if (ageMo >= 7 && ageMo <= 9) {
     actionItems.push({ text: 'Approaching 3-to-2 nap transition — watch for longer wake windows', signal: 'info' });
   } else if (ageMo >= 12 && ageMo < 18) {
-    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if she resists the second nap, try one longer midday nap', signal: 'info' });
+    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if ' + pron('subj') + ' resists the second nap, try one longer midday nap', signal: 'info' });
   }
 
   actionItems.push({ text: 'Keep nap environment dark and consistent', signal: 'action' });
@@ -2007,7 +2007,7 @@ function _qaDeepNutrientCard(nutrient) {
       richFoodItems.push({ text: s.food + ' \u2014 ' + intakePct + '% intake (' + accLabel + ', served ' + s.acc.timesServed + 'x)', signal: signal });
     });
   }
-  if (richFoodItems.length > 0) sections.push({ label: 'HER ' + nutrientLabel.toUpperCase() + '-RICH FOODS', icon: zi('bowl'), items: richFoodItems });
+  if (richFoodItems.length > 0) sections.push({ label: pron('poss').toUpperCase() + ' ' + nutrientLabel.toUpperCase() + '-RICH FOODS', icon: zi('bowl'), items: richFoodItems });
 
   // 3. TRY NEXT: Foods she hasn't had or hasn't had recently
   var tryItems = [];
@@ -2023,7 +2023,7 @@ function _qaDeepNutrientCard(nutrient) {
   // Foods she likes that are iron-rich — serve more often
   var liked = served.filter(function(s) { return s.acc.avgIntake >= 0.7 && s.acc.timesServed < 5; });
   if (liked.length > 0) {
-    tryItems.push({ text: 'Serve more often (she likes these): ' + liked.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'good' });
+    tryItems.push({ text: 'Serve more often (' + pron('subj') + ' likes these): ' + liked.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'good' });
   }
 
   // 4. TIPS: Nutrient-specific absorption and pairing advice
@@ -2066,7 +2066,7 @@ function _qaNutrientTips(nutrient) {
       { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
     ],
     'calcium': [
-      { text: 'Vitamin D helps her absorb calcium \u2014 keep her Vitamin D supplement as prescribed', signal: 'info' },
+      { text: 'Vitamin D helps ' + pron('obj') + ' absorb calcium \u2014 keep ' + pron('poss') + ' Vitamin D supplement as prescribed', signal: 'info' },
       { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
     ],
     'protein': [
@@ -2757,8 +2757,8 @@ function qaAnswerMilestoneSpecific(intentId) {
     var tHead = ts.count ? ts.count + ' of 20 baby teeth recorded' : 'No teeth recorded yet';
     if (ts.latest) dataItems.push({ text: 'Latest: ' + ts.latest.name + ' (' + ts.latest.date + ')', signal: 'good' });
     ts.next.forEach(function(r) { dataItems.push({ text: 'Coming next: ' + r, signal: 'info' }); });
-    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth she has on the Teeth chart (Milestones, Library)', signal: 'action' });
-    actionItems.push({ text: 'Teething does not cause fever. If she has a temperature, look for another cause.', signal: 'info' });
+    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth ' + pron('subj') + ' has on the Teeth chart (Milestones, Library)', signal: 'action' });
+    actionItems.push({ text: 'Teething does not cause fever. If ' + pron('subj') + ' has a temperature, look for another cause.', signal: 'info' });
     var tSections = [];
     if (dataItems.length) tSections.push({ label: 'TEETH', icon: zi('tooth'), items: dataItems });
     tSections.push({ label: 'WHAT TO DO', icon: zi('bulb'), items: actionItems });

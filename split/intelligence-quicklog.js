@@ -1622,8 +1622,8 @@ function _qlSleepInsight(dateStr, kind) {
       var n = todayNaps.length;
       var lateEnough = new Date().getHours() >= 15 || (lastNap && parseInt(lastNap.bedtime) >= 11);
       if (n >= 1 && n >= ideal[0] && n <= ideal[1] && (n === ideal[1] || lateEnough)) {
-        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at her age.';
-        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for her age.';
+        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at this age.';
+        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for this age.';
       }
     }
 

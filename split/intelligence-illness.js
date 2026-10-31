@@ -619,8 +619,8 @@ function epEditResolved(kind, id) {
     .map(e => new Date(e.startedAt).getTime()).reduce((a, b) => Math.min(a, b), Infinity);
   const when = t => formatDate(_epLocalDateStr(new Date(t).toISOString())) + ', ' + _feverTimeShort(new Date(t).toISOString());
   let hint = kind === 'fever'
-    ? 'Set the time her temperature was back to normal (below 99°F).'
-    : 'Set the time she was well again.';
+    ? 'Set the time ' + pron('poss') + ' temperature was back to normal (below 99°F).'
+    : 'Set the time ' + pron('subj') + ' was well again.';
   hint += ' Started ' + when(started) + '.';
   if (last) hint += ' Last ' + cfg.what + ': ' + (kind === 'fever' && typeof last.entry.temp === 'number' ? last.entry.temp.toFixed(1) + '°F, ' : '') + when(last.t) + '.';
   let confirmLongerFor = null;

@@ -1457,7 +1457,7 @@ function renderHomeVacc() {
     statusLine = `<div style="font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;margin-top:4px;cursor:pointer;" data-action="openVaccApptModal" data-arg="${escAttr(upcoming.name)}">${zi('check')} Booked — tap to add date & time</div>`;
   } else if (daysTo < 0) {
     // Overdue reads as overdue, with the two ways out (Maren S-2 on #273).
-    statusLine = '<div class="t-sub tc-danger mt-4">' + zi('warn') + ' ' + (-daysTo) + ' day' + (daysTo === -1 ? '' : 's') + ' overdue. Tap Mark given if she has had it, or book it.</div>';
+    statusLine = '<div class="t-sub tc-danger mt-4">' + zi('warn') + ' ' + (-daysTo) + ' day' + (daysTo === -1 ? '' : 's') + ' overdue. Tap Mark given if ' + pron('subj') + ' has had it, or book it.</div>';
   } else {
     statusLine = safe <= 3 ? '<div style="font-size:var(--fs-sm);color:var(--tc-danger);font-weight:700;margin-top:4px;">' + zi('warn') + ' Due very soon — book your appointment!</div>' : '<div style="font-size:var(--fs-sm);color:var(--tc-caution);font-weight:600;margin-top:4px;">' + zi('clock') + ' Coming up this week</div>';
   }
@@ -1629,16 +1629,16 @@ function renderRecoFood() {
       tips:'{{OK}} Gluten-free — safe for sensitive babies.\n{{OK}} Higher protein than rice.\n{{NO}} Stir continuously to prevent lumps.\n{{NO}} Don\'t make too thick — should be pourable.' },
     { icon:zi('bowl'), name:'Bajra porridge', reason:'Iron + zinc rich millet — great for growth', newFood:'bajra',
       recipe:'1. Dry roast 1 tbsp bajra flour 2 min.\n2. Add ½ cup water, stir well.\n3. Cook 5–6 min on low.\n4. Add ghee + jaggery-free date paste for sweetness.',
-      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Pair with amla, lemon or tomato — vitamin C helps her absorb the iron.\n{{NO}} Cook it well — raw or lumpy millet is hard to digest.\n{{NO}} Introduce after 7 months.' },
+      tips:'{{OK}} Rich in iron and zinc — growth minerals.\n{{OK}} Pair with amla, lemon or tomato — vitamin C helps ' + pron('obj') + ' absorb the iron.\n{{NO}} Cook it well — raw or lumpy millet is hard to digest.\n{{NO}} Introduce after 7 months.' },
     { icon:zi('spoon'), name:'Chiku puree', reason:'Natural sweetness + iron + calcium', newFood:'chiku',
       recipe:'1. Choose a ripe, soft chiku.\n2. Peel, remove seeds, scoop out 2–3 tbsp flesh.\n3. Mash smooth with fork.\n4. Serve immediately.',
       tips:'{{OK}} Naturally one of the sweetest fruits.\n{{OK}} Contains iron — unusual for a fruit.\n{{NO}} Always remove ALL seeds — choking hazard.\n{{NO}} Only use very ripe ones — unripe causes irritation.' },
     { icon:zi('drop'), name:'Watermelon juice (sips)', reason:'Hydrating + Vit C — refreshing on warm days', newFood:'watermelon',
       recipe:'1. Cut 3–4 small cubes of seedless watermelon.\n2. Mash through a strainer to extract juice.\n3. Offer 2–3 tsp in a cup — not a bottle.',
       tips:'{{OK}} Best hydration food in hot weather.\n{{OK}} Natural electrolytes.\n{{NO}} Don\'t give in large quantities — mostly water.\n{{NO}} Remove every seed — choking risk.' },
-    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Vitamin C — helps her absorb iron from the meal', newFood:'pomegranate',
+    { icon:zi('sparkle'), name:'Pomegranate juice', reason:'Vitamin C — helps ' + pron('obj') + ' absorb iron from the meal', newFood:'pomegranate',
       recipe:'1. Extract seeds from ¼ pomegranate.\n2. Blend lightly and strain for juice.\n3. Offer 2–3 tsp diluted with equal water.',
-      tips:'{{OK}} Vitamin C helps her absorb iron from the same meal.\n{{OK}} Offer it in an open cup with a meal, never a bottle.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Whole fruit is better — keep juice to a few spoonfuls.' },
+      tips:'{{OK}} Vitamin C helps ' + pron('obj') + ' absorb iron from the same meal.\n{{OK}} Offer it in an open cup with a meal, never a bottle.\n{{NO}} Always strain — seed pieces are a choking hazard.\n{{NO}} Whole fruit is better — keep juice to a few spoonfuls.' },
     { icon:zi('spoon'), name:'Kiwi mash', reason:'Vitamin C powerhouse — great iron-absorption booster', newFood:'kiwi',
       recipe:'1. Peel 1 ripe kiwi, scoop flesh.\n2. Mash with fork — seeds are fine to eat.\n3. Serve 1–2 tbsp.',
       tips:'{{OK}} Highest Vit C per gram of any common fruit.\n{{OK}} Serve after ragi/dal meals for iron boost.\n{{NO}} May cause mouth tingling — start small.\n{{NO}} Avoid if family has allergy history.' },
@@ -3063,7 +3063,7 @@ function renderMsTrajectoryRibbon() {
   if (merged.length === 0) {
     el.innerHTML = '<div class="card-header"><div class="card-title"><div class="icon icon-lav">'
       + zi('chart') + '</div> Trajectory</div></div>'
-      + '<div class="t-sub-light text-center py-4">' + childNameCapHtml() + '\'s journey is just beginning — milestones will appear here as she grows.</div>';
+      + '<div class="t-sub-light text-center py-4">' + childNameCapHtml() + '\'s journey is just beginning — milestones will appear here as ' + pron('subj') + ' grows.</div>';
     return;
   }
 
@@ -3269,7 +3269,7 @@ function _tcToothName(t, plural) {
   const arch = t.arch === 'upper' ? 'Upper' : 'Lower';
   // Singular names say whose side ("her left"): the diagram faces her, so
   // her left is on the viewer's right.
-  return plural ? arch + ' ' + n + 's' : arch + ' ' + n + ', her ' + t.side;
+  return plural ? arch + ' ' + n + 's' : arch + ' ' + n + ', ' + pron('poss') + ' ' + t.side;
 }
 function _tcErupted(id) {
   const e = teethLog && teethLog[id];
@@ -3356,7 +3356,7 @@ function renderMsTeeth() {
   let html = '<div class="tth-diagram">' + svg +
     '<div class="tth-center" aria-hidden="true"><div class="tth-count">' + (count || '—') + '</div><div class="tth-count-sub">' + (count ? 'of 20 teeth' : 'none recorded yet') + '</div></div>' +
     '</div>' +
-    '<div class="tth-sides"><span>Her right</span><span>Her left</span></div>' +
+    '<div class="tth-sides"><span>' + pron('poss', true) + ' right</span><span>' + pron('poss', true) + ' left</span></div>' +
     '<div class="tth-legend">' +
       '<span class="tth-key"><span class="tth-swatch is-in"></span>Came through</span>' +
       '<span class="tth-key"><span class="tth-swatch is-due"></span>Any time now</span>' +
@@ -3377,7 +3377,7 @@ function renderMsTeeth() {
   if (count === 0 && ageMo >= 18) {
     // src: AAP/HealthyChildren "Baby's First Tooth: 7 Facts Parents Should Know"
     // (no teeth by 18 months → see a dentist); ADA eruption chart for windows.
-    note = 'No teeth recorded yet. If none have come through by 18 months, mention it to her paediatrician or a dentist.';
+    note = 'No teeth recorded yet. If none have come through by 18 months, mention it to ' + pron('poss') + ' paediatrician or a dentist.';
   } else if (count === 0) {
     note = 'Tap a tooth to record when it came through. An approximate date is fine.';
   } else {
@@ -3401,7 +3401,7 @@ function teethTap(id) {
       const d = String(v.date || '');
       if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return 'Pick a date.';
       if (d > todayStr) return 'That date is in the future.';
-      if (d < toDateStr(DOB)) return 'That date is before she was born.';
+      if (d < toDateStr(DOB)) return 'That date is before ' + pron('subj') + ' was born.';
       teethLog[id] = { date: d, ts: Date.now() };
       save(KEYS.teeth, teethLog);
       renderMsTeeth();
@@ -6586,7 +6586,7 @@ function _obRenderMeal(outing) {
   // Starred pick
   var top = portableMeals[0];
   var acceptRate = getFoodAcceptanceRate(top.base);
-  var acceptLabel = acceptRate > 0 ? ', she eats ' + Math.round(acceptRate) + '%' : '';
+  var acceptLabel = acceptRate > 0 ? ', ' + pron('subj') + ' eats ' + Math.round(acceptRate) + '%' : '';
 
   html += '<div class="ob-meal-pick">';
   html += '<div class="ob-meal-star"><span class="icon">' + zi('star') + '</span> ' + escHtml(top.name) + '</div>';
@@ -6718,7 +6718,7 @@ function _obRenderMedical() {
   var vitD3 = _obCheckVitD3Needed('outing-give');
   if (vitD3) {
     var _vdg = vitDSupplement();
-    items.push({ icon: 'pill', color: 'sky', text: 'Give her ' + (_vdg ? _vdg.name : 'Vitamin D') + ' dose before leaving (if not already given)' });
+    items.push({ icon: 'pill', color: 'sky', text: 'Give ' + pron('obj') + ' ' + (_vdg ? _vdg.name : 'Vitamin D') + ' dose before leaving (if not already given)' });
   }
 
   // Next vaccination
@@ -7765,7 +7765,7 @@ function renderPoopGuide() {
         { pcolor:'green',  title:'Green',           text:'Usually normal — can be caused by green vegetables (spinach, peas), iron supplements, or fast gut transit. Occasional green is fine; persistent green with diarrhoea warrants a call to the doctor.' },
         { pcolor:'orange', title:'Orange',          text:'Normal. Often seen after eating carrots, sweet potatoes, or squash. Nothing to worry about.' },
         { pcolor:'dark',   title:'Dark Brown',      text:'Normal for older babies on a varied solid diet. Can also indicate iron-rich foods.' },
-        { pcolor:'red',    title:'Red',          warn:true, text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and she hasn\'t eaten red foods.' },
+        { pcolor:'red',    title:'Red',          warn:true, text:'May indicate blood. Could be from beet/tomato (harmless) or an anal fissure, allergy, or infection. Contact your paediatrician if you see red and ' + pron('subj') + ' hasn\'t eaten red foods.' },
         { pcolor:'white',  title:'White / Pale',  warn:true, text:'Rare but potentially serious. May indicate a bile duct issue. Contact your paediatrician promptly if you see chalky white or very pale stools.' },
         { pcolor:'black',  title:'Black',        warn:true, text:'Normal only in the first few days (meconium) or with iron supplements. After the newborn period, black tarry stools can indicate upper GI bleeding — contact your doctor.' },
       ]
@@ -7784,7 +7784,7 @@ function renderPoopGuide() {
       id: 'frequency', icon: zi('chart'), label: 'Frequency by Age', color: 'sage',
       tips: ageM <= 8 ? [
         { icon:zi('baby'), title:'6–8 months: 1–4 times/day', text:'Wide range is normal. Some babies go after every meal, others once a day. Breastfed babies can even skip days. As solids increase, frequency often decreases and consistency firms up.' },
-        { icon:zi('timer'), title:'When to worry: no poop for 3+ days', text:'If she hasn\'t pooped in 3+ days AND seems uncomfortable (straining, crying, hard belly), consult your paediatrician. Some breastfed babies normally go less often.' },
+        { icon:zi('timer'), title:'When to worry: no poop for 3+ days', text:'If ' + pron('subj') + ' hasn\'t pooped in 3+ days AND seems uncomfortable (straining, crying, hard belly), consult your paediatrician. Some breastfed babies normally go less often.' },
         { icon:zi('chart'), title:'Solids change everything', text:'When starting solids, poop colour, smell, and frequency all change. This is normal. New foods = new poop. Give the gut 2–3 days to adjust to each new food.' },
         { icon:zi('spoon'), title:'Food-poop connection', text:'Track which foods cause changes. Common culprits: bananas (can constipate), prunes (loosen), iron-fortified cereal (darker, firmer). Use the Diet tab alongside this tracker.' },
       ] : [
@@ -8702,7 +8702,7 @@ const D3_KNOWLEDGE = {
   donts: [
     'Don\'t exceed 1000 IU/day without paediatrician guidance — excess Vitamin D can cause calcium buildup.',
     'Don\'t mix into a full bottle or cup — baby may not finish, leading to underdosing.',
-    'Don\'t skip because "she gets sunlight" — infants under 12 months should avoid direct sun exposure (AAP recommendation).',
+    'Don\'t skip because "there\'s plenty of sunlight" — infants under 12 months should avoid direct sun exposure (AAP recommendation).',
     'Don\'t double up if a dose is missed — just continue with the regular dose the next day.',
     'Don\'t stop at 12 months — most paediatricians recommend continuing through the second year, especially for breastfed babies.',
   ],
@@ -8715,18 +8715,18 @@ const CALCIUM_D3_KNOWLEDGE = {
   dos: [
     'Shake the bottle well before every dose — the minerals settle at the bottom of a suspension.',
     'Measure with the dosing cup or an oral syringe, not a kitchen spoon.',
-    'Space the doses through the day — for example after breakfast, and with her evening milk or a curd snack — at about the same times each day.',
+    'Space the doses through the day — for example after breakfast, and with the evening milk or a curd snack — at about the same times each day.',
     'Give it with or after a meal or a milk or curd snack — Vitamin D absorbs better with a little fat.',
     // Spacing: calcium lowers non-heme iron absorption at the same meal (Hallberg, AJCN 1991);
     // ~2 h from iron products is standard label guidance. Ceres/Maren-audited.
-    'If she is given iron drops, keep them about 2 hours apart from this dose.',
-    'If she gets constipated, vomits, or goes off her feeds after starting it, tell her doctor.',
+    'If iron drops are also given, keep them about 2 hours apart from this dose.',
+    'If your child gets constipated, vomits, or goes off feeds after starting it, tell the doctor.',
   ],
   donts: [
-    'Try not to give it with her main iron meal (masoor dal, rajma or chana) — calcium lowers how much iron she absorbs from it.',
+    'Try not to give it with the main iron meal (masoor dal, rajma or chana) — calcium lowers how much iron is absorbed from it.',
     'Don\'t add separate Vitamin D drops unless the doctor asks — this already contains Vitamin D3.',
     'Don\'t double up if a dose is missed — just give the next one at its usual time.',
-    'Don\'t change the dose or stop it without checking with her doctor.',
+    'Don\'t change the dose or stop it without checking with the doctor.',
   ],
 };
 
@@ -8798,7 +8798,7 @@ const SYNTHESIS_RULES = [
   {
     ids: ['poop-gap', 'hard-stool-streak'],
     title: 'Constipation — no poop + hard stools pattern',
-    body: 'Extended poop gap combined with hard stools when she does go. This is a clear constipation pattern.',
+    body: 'Extended poop gap combined with hard stools when a poop does come. This is a clear constipation pattern.',
     tip: 'Increase water intake, add prune/pear/papaya to meals, reduce rice and banana. Tummy massage before feeds. If no improvement in 2-3 days, consult your paediatrician.',
     icon: zi('link'), severity: 'action',
   },
@@ -8907,7 +8907,7 @@ function computeAlerts() {
       const sev = daysSince >= actionThresh ? 'action' : daysSince >= watchThresh ? 'watch' : 'info';
       const key = 'poop-gap-' + lastPoopDate;
       if (!isDismissed(key)) {
-        const aboveBaseline = bl.poopAvgGapDays ? ' (her usual is every ' + bl.poopAvgGapDays + ' days)' : '';
+        const aboveBaseline = bl.poopAvgGapDays ? ' (' + pron('poss') + ' usual is every ' + bl.poopAvgGapDays + ' days)' : '';
         const bodyText = daysSince >= actionThresh
           ? 'This is getting long' + aboveBaseline + ' — watch for straining, hard belly, or discomfort. Consider calling your paediatrician.'
           : daysSince >= watchThresh
@@ -9347,7 +9347,7 @@ function computeAlerts() {
       severity: 'positive', icon: zi('sparkle'),
       title: 'First full night\'s sleep!',
       body: '' + childNameCapHtml() + ' slept through the night with zero wake-ups for the first time ever! This is a huge milestone.',
-      tip: 'This doesn\'t mean every night will be like this — but it shows she CAN do it. Keep the same bedtime routine that worked.',
+      tip: 'This doesn\'t mean every night will be like this — but it shows ' + pron('subj') + ' CAN do it. Keep the same bedtime routine that worked.',
       action: { label: 'View Sleep', fn: 'switchTab("sleep")' },
       tab: 'sleep'    });
   }
@@ -9373,7 +9373,7 @@ function computeAlerts() {
       severity: 'positive', icon: zi('check'),
       title: 'Digestion has been stable for ' + bl.poopConsistentStreak + '+ entries',
       body: 'All recent poops have been normal or soft consistency. ' + childNameCapHtml() + '\'s tummy is happy!',
-      tip: 'Stable digestion means her gut is adjusting well to her current diet. A great time to try a new food if you haven\'t recently.',
+      tip: 'Stable digestion means ' + pron('poss') + ' gut is adjusting well to ' + pron('poss') + ' current diet. A great time to try a new food if you haven\'t recently.',
       action: null, tab: 'poop'    });
   }
 
@@ -9436,7 +9436,7 @@ function computeAlerts() {
       const vd = isVitDSupplement(m);
       const milestoneMsg = !vd ? 'Every dose given as prescribed.'
         : streak >= 30
-        ? 'Steady Vitamin D supports her bones and how she uses calcium.'
+        ? 'Steady Vitamin D supports ' + pron('poss') + ' bones and how ' + pron('subj') + ' uses calcium.'
         : streak >= 14
         ? 'Two weeks of every dose, just as prescribed.'
         : 'Building strong bones, one dose at a time.';
@@ -9931,7 +9931,7 @@ function renderTodayPlan() {
       } else {
         // A calcium + D3 evening dose goes with milk or curd, not her dal/rajma meal (Ceres V-C-270-15).
         doneDetail = (d3Med.dose ? d3Med.dose + ' — ' : '')
-          + (isCalciumSupplement(d3Med) && sl.label === 'evening' ? 'with her evening milk or a curd snack, not with a dal or rajma meal'
+          + (isCalciumSupplement(d3Med) && sl.label === 'evening' ? 'with ' + pron('poss') + ' evening milk or a curd snack, not with a dal or rajma meal'
              : 'give with or after a meal for best absorption');
       }
       items.push({
@@ -9949,7 +9949,7 @@ function renderTodayPlan() {
   const _calcSupp = d3Med && isCalciumSupplement(d3Med);
   let bfSuggestion = '';
   if (!bfDone) {
-    if (bfNutrientGap.includes('iron') && _calcSupp) bfSuggestion = 'Milk or curd with fruit here — save her iron meal (masoor dal, rajma) for lunch, away from her calcium dose';
+    if (bfNutrientGap.includes('iron') && _calcSupp) bfSuggestion = 'Milk or curd with fruit here — save ' + pron('poss') + ' iron meal (masoor dal, rajma) for lunch, away from ' + pron('poss') + ' calcium dose';
     else if (bfNutrientGap.includes('iron')) bfSuggestion = 'Try ragi porridge — excellent iron source for this age';
     else if (bfNutrientGap.includes('calcium')) bfSuggestion = 'Ragi or almond porridge for calcium boost';
     else if (bfNutrientGap.includes('protein')) bfSuggestion = 'Add almond paste or dal water to porridge for protein';
@@ -9977,9 +9977,9 @@ function renderTodayPlan() {
   const todayMainNapOnly = _todayNapList.length === 1 && parseInt(_todayNapList[0].bedtime) >= 11;
   if (!oneNapAge) {
     items.push({
-      time: '9:30', icon: zi('zzz'), title: toddlerNaps ? 'Morning nap (if she still takes one)' : 'Morning nap',
+      time: '9:30', icon: zi('zzz'), title: toddlerNaps ? 'Morning nap (if ' + pron('subj') + ' still takes one)' : 'Morning nap',
       detail: hasMorningNap ? zi('check') + ' Logged'
-        : (toddlerNaps ? 'Many toddlers drop this nap between 12 and 18 months. If she takes it, about ' + napDuration + '.'
+        : (toddlerNaps ? 'Many toddlers drop this nap between 12 and 18 months. If ' + pron('subj') + ' takes it, about ' + napDuration + '.'
           : 'Aim for ' + napDuration + '. Watch for yawning, eye rubbing, fussiness.'),
       tag: 'sleep', done: hasMorningNap && !(toddlerNaps && todayMainNapOnly), htmlDetail: hasMorningNap && !(toddlerNaps && todayMainNapOnly)
     });
@@ -10152,7 +10152,7 @@ function renderTodayPlan() {
 
   items.push({
     time: bedtimeStr.replace(/^(\d):/, '0$1:').substring(0, 5), icon: zi('moon'), title: 'Wind down → bedtime',
-    detail: 'Bath → dim lights → feed → bed. ' + (avgBedtime ? 'Her usual bedtime is around ' + bedtimeStr.substring(0, 5) + '.' : 'Aim for consistent bedtime.'),
+    detail: 'Bath → dim lights → feed → bed. ' + (avgBedtime ? pron('poss', true) + ' usual bedtime is around ' + bedtimeStr.substring(0, 5) + '.' : 'Aim for consistent bedtime.'),
     tag: 'sleep'
   });
 
@@ -10182,8 +10182,8 @@ function renderTodayPlan() {
     const teethingMentioned = recentNotes.some(n => /\b(teeth|teething|tooth|molars?|drool\w*|gums?)\b/i.test(n.text));
     if (teethingMentioned) {
       const teethTxt = ageM >= 13
-        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps. Teething does not cause fever: if she has a temperature, look for another cause.'
-        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. A chilled (not frozen) teething ring helps. Teething does not cause fever: if she has a temperature, look for another cause.';
+        ? 'Teething signs noted recently. Molars and canines come through between about 13 and 33 months and can be sorer. Expect drooling, chewing and fussiness. A chilled (not frozen) teether helps. Teething does not cause fever: if ' + pron('subj') + ' has a temperature, look for another cause.'
+        : 'Teething signs noted recently. Expect fussiness, disrupted sleep, reduced appetite. A chilled (not frozen) teething ring helps. Teething does not cause fever: if ' + pron('subj') + ' has a temperature, look for another cause.';
       lookouts.push({ icon: zi('baby'), text: teethTxt, tag: 'lookout' });
     }
   }

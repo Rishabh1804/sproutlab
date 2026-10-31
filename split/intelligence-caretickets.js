@@ -34,7 +34,7 @@ var CT_TEMPLATES = {
       { id: 'drowsiness', type: 'bool', label: 'Any unusual drowsiness?' },
       { id: 'mobility', type: 'select', label: 'Moving normally?',
         options: ['Yes', 'Favoring one side', 'Not moving much'], clearValue: 'Yes' },
-      { id: 'crying', type: 'select', label: 'Is she still crying?',
+      { id: 'crying', type: 'select', label: 'Still crying?',
         options: ['Yes, inconsolable', 'Whimpering', 'Stopped'], clearValue: 'Stopped' },
       { id: 'swelling', type: 'bool', label: 'Swelling or bruise visible?',
         resolutionBlocking: false }
@@ -59,7 +59,7 @@ var CT_TEMPLATES = {
       { id: 'drowsiness', type: 'bool', label: 'Any unusual drowsiness or confusion?' },
       { id: 'pupils', type: 'select', label: 'Pupils look normal?',
         options: ['Yes, equal size', 'Unequal', 'Not sure'], clearValue: 'Yes, equal size' },
-      { id: 'crying', type: 'select', label: 'Is she still crying?',
+      { id: 'crying', type: 'select', label: 'Still crying?',
         options: ['Yes, inconsolable', 'Whimpering', 'Stopped'], clearValue: 'Stopped' },
       { id: 'swelling', type: 'bool', label: 'Bump or swelling on head?',
         resolutionBlocking: false }
@@ -78,7 +78,7 @@ var CT_TEMPLATES = {
     type: 'incident', title: 'Ate something concerning', icon: 'alert-circle', domainColor: 'rose',
     followUps: [15, 30, 60, 120, 240],
     questions: [
-      { id: 'substance', type: 'text', label: 'What did she eat/drink?', onceOnly: true },
+      { id: 'substance', type: 'text', label: 'What did your child eat or drink?', onceOnly: true },
       { id: 'quantity', type: 'text', label: 'How much (estimate)?', onceOnly: true },
       { id: 'breathing', type: 'select', label: 'Breathing normally?',
         options: ['Yes', 'Wheezing', 'Labored'], clearValue: 'Yes' },
@@ -1126,7 +1126,7 @@ function _ctRenderCheckIn(t, tpl) {
   }
 
   // Preamble
-  html += '<div class="ct-preamble">' + (isIncident ? 'How is she right now?' : 'Quick update') + '</div>';
+  html += '<div class="ct-preamble">' + (isIncident ? 'How is ' + pron('subj') + ' right now?' : 'Quick update') + '</div>';
 
   // Quick-clear button
   if (ctCanQuickClear(t)) {
@@ -1616,7 +1616,7 @@ function ctForceResolve(ticketId) {
   html += '<div class="ct-overlay-title">Why are you resolving this?</div>';
   html += '<div class="ct-divider"></div>';
   html += '<div class="ct-chips-row" id="ctForceReasons">';
-  var reasons = ['Doctor confirmed she\'s okay', 'I\'m confident she\'s fine', 'Other'];
+  var reasons = ['Doctor confirmed ' + pron('subj') + '\'s okay', 'I\'m confident ' + pron('subj') + '\'s fine', 'Other'];
   reasons.forEach(function(r) {
     html += '<span class="chip ct-reason-chip" data-action="ctForceResolveReason" data-id="' + escAttr(ticketId) + '" data-arg="' + escAttr(r) + '">' + escHtml(r) + '</span>';
   });
@@ -2141,7 +2141,7 @@ function ctGetTSFEvents() {
 function ctShouldTriggerCreate(text) {
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   var strongSignals = ['track', 'tracking', 'monitor', 'monitor this', 'start watching', 'raise concern'];
-  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'ate something'];
+  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'hit his head', 'ate something'];
   var negativeSignals = ['asleep', 'sleep', 'behind', 'apart', 'fall asleep', 'fell asleep', 'sleep track'];
 
   // Check negative signals

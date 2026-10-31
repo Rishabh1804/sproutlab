@@ -1790,7 +1790,7 @@ function renderSizeComparison() {
     { max:60, pool:[
       { icon:zi('star'), text:'About as tall as a large teddy bear', sub:'The most huggable height' },
       { icon:zi('target'), text:'As long as an archery arrow', sub:'Always hitting the target' },
-      { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior princess' },
+      { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior ' + (childSex() === 'm' ? 'prince' : 'princess') },
     ]},
     { max:64, pool:[
       { icon:zi('run'), text:'About the length of a full cricket stump', sub:'Stumped by that cuteness' },
@@ -3641,7 +3641,7 @@ function renderVaccInfoPanel(vaccName) {
   } else if (VACC_RETIRED.some(n => normVacc(n) === normVacc(vaccName))) {
     // Only doses this schedule actually retired — a parent's own wording ("Flu
     // vaccine", "Hep A") must never read as "may not be needed" (Cipher E-V 1).
-    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask her doctor whether it is still needed.</div></div></div>`;
+    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask ${pron('poss')} doctor whether it is still needed.</div></div></div>`;
   }
 
   // Note
@@ -4243,8 +4243,8 @@ function renderVaccCoverage() {
   // A family that has logged no doses yet has not told us her history: no red "Missing" list,
   // just an invitation to add the doses on her card (V-M-280-4).
   if (pastCount === 0) {
-    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on her vaccination card to see what is due.</span></div>`;
-    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once her past doses are logged, this card checks them against the full IAP schedule.</span></div>`
+    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on ${pron('poss')} vaccination card to see what is due.</span></div>`;
+    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once ${pron('poss')} past doses are logged, this card checks them against the full IAP schedule.</span></div>`
       + `<button class="btn btn-soft btn-compact" data-action="openVaccModal">${zi('plus')} Add a dose</button>`;
     return;
   }
@@ -4321,7 +4321,7 @@ function renderVaccCoverage() {
 
   // Conditional doses — not for every child; never counted as missing.
   if (checkList.length > 0) {
-    html += `<div class="section-label-check">${zi('steth')} Check with her doctor</div>`;
+    html += `<div class="section-label-check">${zi('steth')} Check with ${pron('poss')} doctor</div>`;
     checkList.forEach(v => { html += renderVaccItem(v, 'check'); });
   }
 
@@ -4341,7 +4341,7 @@ function renderVaccCoverage() {
   const otherGiven = givenList.filter(e => e && e.name && !_schedNorm.has(normVacc(e.name))
     && !(/influenza|flu/i.test(e.name) && given.some(g => g.seasonal)));
   if (otherGiven.length > 0) {
-    html += `<div class="section-label-light vacc-other-label">Other doses on her record (${otherGiven.length})</div><div class="vacc-chip-row">`;
+    html += `<div class="section-label-light vacc-other-label">Other doses on ${pron('poss')} record (${otherGiven.length})</div><div class="vacc-chip-row">`;
     otherGiven.forEach(e => { html += `<span class="vacc-chip-other">${escHtml(e.name)}</span>`; });
     html += `</div>`;
   }
@@ -4642,7 +4642,7 @@ function saveMed() {
   renderMeds();
   if (oldVd.length) {
     // confirmAction renders msg as HTML — escape the parent-typed names (HR-4).
-    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if her doctor asked for both.', () => {
+    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if ' + pron('poss') + ' doctor asked for both.', () => {
       oldVd.forEach(m => { m.active = false; });
       renderMeds();
     }, 'Stop');
@@ -4688,7 +4688,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo <= 8 && msStatus('crawl') !== 'done' },
 
   { type:'motor', icon:zi('baby'), title:'Supported sitting practice',
-    desc:'Sit her with pillows around for safety and let her balance. Reaching for toys while sitting builds core stability.',
+    desc:'Sit your baby up with pillows around for safety and practise balancing. Reaching for toys while sitting builds core stability.',
     condition: (mo) => msStatus('sit') !== 'done' && mo >= 5 && mo <= 9 },
 
   { type:'motor', icon:zi('baby'), title:'Object transfer hand to hand',
@@ -4700,7 +4700,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo < 12 && (msStatus('crawl') === 'in_progress' || (msStatus('crawl') !== 'done' && mo >= 6)) },
 
   { type:'motor', icon:zi('run'), title:'Supported standing',
-    desc:'She\'s already pulling to stand — encourage brief standing at a stable surface. Builds leg strength and balance for cruising.',
+    desc:'Already pulling to stand — encourage brief standing at a stable surface. Builds leg strength and balance for cruising.',
     condition: (mo) => msStatus('pull') === 'done' && msStatus('cruis') !== 'done' && mo < 15 },
 
   { type:'motor', icon:zi('run'), title:'Cruising practice',
@@ -4708,15 +4708,15 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo < 15 && (msStatus('cruis') === 'in_progress' || (msStatus('pull') === 'done' && msStatus('walks independently') !== 'done' && mo >= 7)) },
 
   { type:'motor', icon:zi('run'), title:'Supported walking',
-    desc:'Hold both hands and let her step forward. Gradually shift to one hand as confidence builds.',
+    desc:'Hold both hands and let your baby step forward. Gradually shift to one hand as confidence builds.',
     condition: (mo) => msStatus('cruis') === 'done' && msStatus('walks independently') !== 'done' && mo < 18 },
 
   { type:'motor', icon:zi('baby'), title:'Stack & knock blocks',
-    desc:'Stack 2–3 soft blocks and let her knock them down. Builds spatial understanding and cause-effect learning.',
+    desc:'Stack 2–3 soft blocks and let your baby knock them down. Builds spatial understanding and cause-effect learning.',
     condition: (mo) => msStatus('stack') !== 'done' && mo >= 7 && mo < 12 },
 
   { type:'motor', icon:zi('note'), title:'Banging & dropping toys',
-    desc:'Let her bang safe objects together or drop them from the highchair. She is learning cause-and-effect.',
+    desc:'Let your baby bang safe objects together or drop them from the highchair. This is how cause-and-effect is learned.',
     condition: (mo) => mo >= 6 && mo <= 10 && msStatus('bang') !== 'done' },
 
   // ── MOTOR: Fine motor ──
@@ -4725,11 +4725,11 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => msStatus('pincer') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'motor', icon:zi('spoon'), title:'Self-feeding with spoon',
-    desc:'Let her hold a pre-loaded spoon during meals. It will be messy but builds oral motor skills and independence.',
+    desc:'Let your baby hold a pre-loaded spoon during meals. It will be messy but builds oral motor skills and independence.',
     condition: (mo) => mo >= 7 && mo < 12 && msStatus('finger feed') !== 'done' },
 
   { type:'motor', icon:zi('spoon'), title:'Finger food practice',
-    desc:'Offer soft finger foods she can grasp. Builds pincer grasp, hand-to-mouth coordination, and chewing skills.',
+    desc:'Offer soft finger foods that are easy to grasp. Builds pincer grasp, hand-to-mouth coordination, and chewing skills.',
     condition: (mo) => mo < 12 && (msStatus('finger feed') === 'in_progress' || (msStatus('finger feed') !== 'done' && mo >= 6)) },
 
   // ── LANGUAGE ──
@@ -4742,19 +4742,19 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 12 },
 
   { type:'language', icon:zi('chat'), title:'Name body parts',
-    desc:'Touch her nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
+    desc:'Touch your baby\'s nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
     condition: (mo) => mo >= 6 && mo < 18 && msStatus('body part') !== 'done' },
 
-  { type:'language', icon:zi('chat'), title:'Imitation games — copy her sounds',
-    desc:'Repeat her babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
+  { type:'language', icon:zi('chat'), title:'Imitation games — copy baby sounds',
+    desc:'Repeat the babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
     condition: (mo) => mo < 15 && (msStatus('babbl') === 'done' || msStatus('babbl') === 'in_progress') },
 
   { type:'language', icon:zi('target'), title:'Respond to name — reinforce it',
-    desc:'Call her name from different positions and reward with a smile when she turns. Strengthens name recognition.',
+    desc:'Call your baby\'s name from different positions and reward each head-turn with a smile. Strengthens name recognition.',
     condition: (mo) => msStatus('respond') === 'in_progress' },
 
   { type:'language', icon:zi('list'), title:'Simple instructions practice',
-    desc:'"Give me the ball", "clap your hands" — one-step commands with gestures help her link words to actions.',
+    desc:'"Give me the ball", "clap your hands" — one-step commands with gestures help link words to actions.',
     condition: (mo) => mo >= 8 && msStatus('follow') !== 'done' },
 
   // ── SENSORY ──
@@ -4763,7 +4763,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo <= 24 },
 
   { type:'sensory', icon:zi('sprout'), title:'Texture exploration',
-    desc:'Let her touch different safe textures — soft cloth, smooth spoon, cool bowl, bumpy ball. Sensory variety accelerates brain development.',
+    desc:'Offer different safe textures to touch — soft cloth, smooth spoon, cool bowl, bumpy ball. Sensory variety accelerates brain development.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'sensory', icon:zi('drop'), title:'Water play',
@@ -4771,16 +4771,16 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 15 },
 
   { type:'sensory', icon:zi('star'), title:'Instrument exploration',
-    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let her make noise — it builds cause-and-effect understanding and auditory processing.',
+    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let your baby make noise — it builds cause-and-effect understanding and auditory processing.',
     condition: (mo) => mo >= 6 },
 
   { type:'sensory', icon:zi('palette'), title:'Food-safe finger painting',
-    desc:'Smear a little puree on a tray and let her explore with fingers. Rich tactile experience — great for sensory-averse babies too.',
+    desc:'Smear a little puree on a tray and let little fingers explore. Rich tactile experience — great for sensory-averse babies too.',
     condition: (mo) => mo >= 7 },
 
   // ── SOCIAL ──
   { type:'social', icon:zi('mirror'), title:'Mirror play',
-    desc:'Hold her in front of a mirror. She\'ll study her face and expressions — builds self-awareness and social cognition.',
+    desc:'Hold your baby up to a mirror. Babies love to study faces and expressions — builds self-awareness and social cognition.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'social', icon:zi('baby'), title:'Peek-a-boo',
@@ -4788,19 +4788,19 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 12 && msStatus('object perm') !== 'done' },
 
   { type:'social', icon:zi('baby'), title:'Practise waving bye-bye',
-    desc:'Model waving every time someone leaves. She\'ll start imitating — a key social communication milestone.',
+    desc:'Model waving every time someone leaves. Imitation follows — a key social communication milestone.',
     condition: (mo) => msStatus('wave') !== 'done' && mo >= 6 && mo < 15 },
 
   { type:'social', icon:zi('baby'), title:'Clapping games',
-    desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
+    desc:'Clap your hands and encourage your baby to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
     condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'social', icon:zi('shy'), title:'Manage stranger anxiety gently',
-    desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
+    desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — give your baby time to warm up.',
     condition: (mo) => msStatus('separation') === 'in_progress' || (mo >= 8 && mo <= 11) },
 
   { type:'social', icon:zi('baby'), title:'Pointing practice',
-    desc:'Point at objects and name them. Encourage her to point too — "Where\'s the dog?" Pointing is a major communication milestone.',
+    desc:'Point at objects and name them. Encourage your baby to point too — "Where\'s the dog?" Pointing is a major communication milestone.',
     condition: (mo) => msStatus('point') !== 'done' && mo >= 8 && mo < 18 },
   // ═══ TODDLER, 12–24 months (2026-09-24) ═══
   // Sources (fetched 2026-09-24): CDC "What You Can Do" tips at
@@ -4810,12 +4810,12 @@ const DYNAMIC_ACTIVITIES = [
   // pages; WHO 2019 physical-activity guideline (1–2 y). Keys in // src: lines.
   // ── MOTOR: Toddler gross motor ──
   { type:'motor', icon:zi('run'), title:'Push and pull toys',
-    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
+    desc:'Offer a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'"); cord guard: ASTM F963 (cords under 30 cm on toys for under-18-month-olds)
 
   { type:'motor', icon:zi('leaf'), title:'Child-led walks outside',
-    desc:'Let her lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
+    desc:'Let your toddler lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: AAP-ACT ("Child-led walks ... let your toddler lead the way ... stay close"); WHO-PA (1–2 y: at least 180 min of varied physical activity; not restrained for more than 1 hour at a time)
 
@@ -4825,96 +4825,96 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-18M ("rolling balls back and forth"); ZTT-SP ("roll the ball back-and-forth ... a game that builds social skills like turn-taking")
 
   { type:'motor', icon:zi('goal'), title:'Kick and throw',
-    desc:'Give her a soft ball to kick, throw and chase. Show her how to swing a leg to kick while you hold her hand for balance at first.',
+    desc:'Give your toddler a soft ball to kick, throw and chase. Show how to swing a leg to kick while you hold hands for balance at first.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-2Y ("Give your child balls to kick, roll, and throw"); AAP-ACT 19–24 m (throwing and kicking a ball); ZTT-SP (balls of different sizes to roll, throw, and chase)
 
   { type:'motor', icon:zi('run'), title:'Cushion obstacle course',
-    desc:'Make a soft course: crawl through a big box, climb over a cushion, bounce on folded blankets, then come to you for a hug. Stay beside her the whole time.',
+    desc:'Make a soft course: crawl through a big box, climb over a cushion, bounce on folded blankets, then come to you for a hug. Stay beside your toddler the whole time.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: ZTT-SP ("Create a toddler obstacle course where your child has a chance to crawl (through a moving box), climb (over a cushion), bounce (on a pile of blankets)"; stool climbing "with supervision"); ZTT-LP ("On a rainy day, try creating an obstacle course indoors")
 
   { type:'motor', icon:zi('run'), title:'Stairs with a hand to hold',
-    desc:'Put a toy a few steps up. Hold her hand going up and down, singing "up, up, up" and "down, down, down". Keep stair gates closed at all other times.',
+    desc:'Put a toy a few steps up. Hold your toddler\'s hand going up and down, singing "up, up, up" and "down, down, down". Keep stair gates closed at all other times.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: AAP-ACT 19–24 m ("Climbing stairs. Place a toy up a few steps ... hold their hand as they walk up and down ... sing 'up, up, up'"); AAP-MOV ("keep the stairs gated at all times")
 
   // ── MOTOR: Fine motor & self-help ──
   { type:'motor', icon:zi('target'), title:'Block towers',
-    desc:'Stack blocks together and let her knock them down, then take turns building. Towers of 3–4 blocks are a typical early-toddler goal.',
+    desc:'Stack blocks together and let your toddler knock them down, then take turns building. Towers of 3–4 blocks are a typical early-toddler goal.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("You can stack the blocks and she can knock them down"); CDC-2Y ("Take turns building towers and knocking them down"); AAP-ACT 12–18 m ("may be able to make a tower of 3 or 4 blocks")
 
   { type:'motor', icon:zi('palette'), title:'First scribbles',
-    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside her, as crayons get bitten. Talk about the colours, then put her art on the wall.',
+    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside your toddler, as crayons get bitten. Talk about the colours, then put the artwork on the wall.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-2Y ("Give your child crayons or put some finger paint on paper ... Hang it on the wall or refrigerator"); AAP-ACT 12–18 m ("scribble on paper"); NHS-BSIL ("Draw simple pictures and encourage your child to add marks and colours")
 
   { type:'motor', icon:zi('star'), title:'Fill and dump',
-    desc:'Give her a basket of soft balls or blocks too big to fit in her mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
+    desc:'Give your toddler a basket of soft balls or blocks too big to fit in a toddler\'s mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so each trip is a little walk.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: ZTT-PA ("Fill and Dump ... If the child is walking, place the baskets a few steps apart"); CDC-18M ("putting blocks or other items in and out of containers")
 
   { type:'motor', icon:zi('bulb'), title:'Shape sorters and chunky puzzles',
-    desc:'Try a shape sorter or a chunky wooden puzzle together. Name each piece — shape, colour or animal — as she fits it in.',
+    desc:'Try a shape sorter or a chunky wooden puzzle together. Name each piece — shape, colour or animal — as each one goes in.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-2Y ("Help your child do simple puzzles with shapes, colors, or animals. Name each piece"); ZTT-SP (nesting cups, shape-sorters, chunky wooden puzzles)
 
   { type:'motor', icon:zi('spoon'), title:'Open cup and spoon practice',
-    desc:'Let her drink from a small open cup (no lid) and scoop with her own spoon at every meal. Sit with her and expect spills — messy is how she learns.',
+    desc:'Let your toddler drink from a small open cup (no lid) and scoop with a spoon at every meal. Sit together and expect spills — messy is how toddlers learn.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M + CDC-18M ("Let your child use a cup without a lid for drinking and practice eating with a spoon. Learning to eat and drink is messy but fun!"); CDC-18M ("sit at the table with your child when she's eating")
 
   { type:'motor', icon:zi('sparkle'), title:'Toothbrushing together',
-    desc:'Twice a day, brush her teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Let her have a turn holding the brush while she sits or stands still, never walking about with it in her mouth. Brushing in front of a mirror makes it a game.',
+    desc:'Twice a day, brush your toddler\'s teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Give a turn holding the brush while sitting or standing still, never walking about with it in the mouth. Brushing in front of a mirror makes it a game.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("Create a calm, quiet bedtime ... brush his teeth, and read 1 or 2 books"); ZTT-TS ("Encourage your child to take on some self-care activities — combing hair, brushing teeth"); NHS-TEETH ("Start brushing your baby's teeth with fluoride toothpaste as soon as their first milk tooth breaks through")
     // src (amount + frequency, Maren/Ceres fold): NHS "Children's teeth" (under 3: a smear, >=1,000 ppm, twice daily); AAP clinical report "Fluoride Use in Caries Prevention in the Primary Care Setting", Pediatrics 2014;134:626 (smear / rice-grain under 3, twice daily); ADA Council on Scientific Affairs, JADA 2014;145:190.
 
   // ── LANGUAGE ──
-  { type:'language', icon:zi('chat'), title:'Build on her words',
-    desc:'When she says part of a word, say the whole thing back and add a little: "Ba" — "Ball! Yes, a big red ball." Early words are not complete, and that is fine.',
+  { type:'language', icon:zi('chat'), title:'Build on first words',
+    desc:'When your toddler says part of a word, say the whole thing back and add a little: "Ba" — "Ball! Yes, a big red ball." Early words are not complete, and that is fine.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-1Y ("Build on what your baby tries to say ... 'Yes, that's a big, blue truck'"); CDC-15M ("A child's early words are not complete. Repeat and add to what he says"); CDC-18M ("Teach your child more words by adding to the words she says")
 
   { type:'language', icon:zi('target'), title:'Name it, then pause',
-    desc:'When she points at something, name it and wait a few seconds before handing it over. If she makes a sound, cheer and say the word again: "Yes! Cup."',
+    desc:'When your toddler points at something, name it and wait a few seconds before handing it over. If a sound comes, cheer and say the word again: "Yes! Cup."',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Tell your child the names of objects when he points to them and wait a few seconds to see if he makes any sounds ... 'Yes! Cup.'"); CDC-1Y ("Respond with words when your baby points")
 
   { type:'language', icon:zi('book'), title:'Toddler book time',
-    desc:'Let her pick the book and turn the pages. Point to pictures and ask "What\'s that?", giving her time to point or answer. Try a new book right after her favourite.',
+    desc:'Let your toddler pick the book and turn the pages. Point to pictures and ask "What\'s that?", giving time to point or answer. Try a new book right after a favourite.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-1Y ("books with things they can feel or flaps they can lift"); CDC-15M ("Read a new book after a favorite one"); CDC-18M ("Ask ... 'What is that?'"; "Read books and talk about the pictures using simple words"); NHS-BSIL ("give your child time to point things out"); WHO-PA ("When sedentary, engaging in reading and storytelling with a caregiver is encouraged")
 
   { type:'language', icon:zi('camera'), title:'Family photo book',
-    desc:'Make a little book of photos of family, pets and her. Look through it together and name each person — she will start to point and say names.',
+    desc:'Make a little book of photos of family, pets and your child too. Look through it together and name each person — pointing and names will follow.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Make a 'book' with pictures of people and pets in your child's life. Name them ... Include a picture of your child")
 
   { type:'language', icon:zi('baby'), title:'Body-part song',
-    desc:'Sing "Head, Shoulders, Knees and Toes" and touch each part. Point to her nose and yours: "Here\'s your nose, here\'s my nose." After a few rounds, pause and see if she sings a word.',
+    desc:'Sing "Head, Shoulders, Knees and Toes" and touch each part. Point to your toddler\'s nose and yours: "Here\'s your nose, here\'s my nose." After a few rounds, pause and listen for a sung word.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-18M ("teach your child the names for body parts ... 'Here's your nose, here's my nose'"); CDC-2Y ("Sing songs, such as 'Head, Shoulders, Knees, and Toes' ... see if your child sings some of the words")
 
   { type:'language', icon:zi('list'), title:'Offer simple choices',
-    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so she can point or say which. Choices grow words and independence.',
+    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so your toddler can point or say which. Choices grow words and independence.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-18M ("Give simple choices ... red or blue shirt"); NHS-BSIL ("Name objects and offer your child choices, for example, 'Do you want an apple or an orange?'")
 
   { type:'language', icon:zi('sun'), title:'Sound walk',
-    desc:'Out and about, stop and listen: the car goes "vroom", the bird goes "cheep", the shop till goes "beep". Make the sound and see if she joins in.',
+    desc:'Out and about, stop and listen: the car goes "vroom", the bird goes "cheep", the shop till goes "beep". Make the sound and see if your toddler joins in.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL ("Out and about ... a car go 'vroom vroom' ... the till go 'beep beep' ... birds singing 'cheep cheep'. Make the sounds and see if your child joins in")
 
   { type:'language', icon:zi('chat'), title:'Mealtime and dressing chat',
-    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help her match words to things and actions.',
+    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help match words to things and actions.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL (senses at mealtimes — "This yoghurt is sweet"; getting dressed — "1 arm in, 2 arms in"; "hear the same words every day ... matching words ... to things and actions")
 
   // ── SENSORY ──
   { type:'sensory', icon:zi('drop'), title:'Sand, scoop and pour',
-    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water, and tip the tub out afterwards.',
+    desc:'Offer cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave your toddler alone near water, and tip the tub out afterwards.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-2Y ("Let your child play with sand toys or plastic containers, spoons, or a funnel in the tub or in a sandbox"); ZTT-PA ("Squishy Sponges ... it is critical to supervise children carefully as they play" with water)
 
@@ -4926,42 +4926,42 @@ const DYNAMIC_ACTIVITIES = [
 
   // ── SOCIAL ──
   { type:'social', icon:zi('bubble'), title:'Bubble pop',
-    desc:'Blow bubbles and let her point, chase and pop them. Say "pop, pop!" each time — a simple game where you both have a part.',
+    desc:'Blow bubbles and let your toddler point, chase and pop them. Say "pop, pop!" each time — a simple game where you both have a part.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M + CDC-18M ("Blow bubbles and let your child pop them. Say things as she pops them, such as 'Pop, pop'"); AAP-ACT ("Bubble play ... practice pointing at the bubbles ... chase the bubbles to pop them")
 
   { type:'social', icon:zi('mirror'), title:'Copy me',
-    desc:'Show her a hat: "What do you do with a hat? It goes on your head!" Put it on, then hand it to her. Try it with a cup, a comb, a book.',
+    desc:'Show your toddler a hat: "What do you do with a hat? It goes on your head!" Put it on, then hand it over. Try it with a cup, a comb, a book.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Show your child different things, such as a hat ... Put it on your head and then give it to him to see if he copies you. Do this with other objects, such as a book or a cup")
 
   { type:'social', icon:zi('baby'), title:'Hide-and-find',
-    desc:'Let her watch you hide behind a chair, then wait for her to find you. Or hide a toy under a cup while she watches — then try two cups.',
+    desc:'Let your toddler watch you hide behind a chair, then wait to be found. Or hide a toy under a cup in plain view — then try two cups.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Play simple games, such as hide and seek. Let your child watch you hide behind a chair"); ZTT-PA ("Try the Classic Shell Game ... try it with two cups"); AAP-ACT 12–18 m ("Scavenger hunt. Hide a toy with one part sticking out")
 
   { type:'social', icon:zi('heart'), title:'Teddy talks',
-    desc:'Make a soft toy "talk" to her, and see if she copies you or makes her own toy talk back. Early pretend play starts here.',
+    desc:'Make a soft toy "talk" to your toddler, and see if you get copied or another toy talks back. Early pretend play starts here.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("'Pretend talk' to your child with a stuffed animal. See if your child tries to copy you or if he uses another stuffed animal to 'talk' with the one you are holding")
 
   { type:'social', icon:zi('heart'), title:'Pretend play: feed the teddy',
-    desc:'Give her a spoon, cup and blanket and take turns feeding teddy, giving dolly a bath, or tucking teddy in to sleep. Talk about each step.',
+    desc:'Offer a spoon, cup and blanket and take turns feeding teddy, giving dolly a bath, or tucking teddy in to sleep. Talk about each step.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-18M ("Encourage 'pretend' play. Give your child a spoon so she can pretend to feed her stuffed animal. Take turns pretending"; "a doll and a baby blanket"); ZTT-PA ("Starting at about 18 months, children are just beginning to play pretend ... 'give Teddy a drink' or 'put Teddy to sleep'"); NHS-BSIL ("giving dolly a bath")
 
   { type:'social', icon:zi('handshake'), title:'Little helper jobs',
-    desc:'Give her small real jobs: fetch her shoes, put socks in the basket, carry a cup to the table, tidy toys to a clean-up song. Thank her every time.',
+    desc:'Give your toddler small real jobs: fetch the shoes, put socks in the basket, carry a cup to the table, tidy toys to a clean-up song. Say thank you every time.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-15M ("Let her get her shoes ... put the socks in the basket"; "Make up a simple 'cleanup song'"); CDC-2Y ("letting him carry things to the table, such as plastic cups or napkins. Thank your child for helping"; "putting toys or laundry in a basket"); ZTT-TS ("Give your child the chance to help around the house")
 
   { type:'social', icon:zi('heart'), title:'Name the feeling',
-    desc:'Say what you think she feels: "You\'re frustrated — the tower fell." Point out feelings in others too: "He looks sad." Tantrums are normal at this age.',
+    desc:'Say what you think your toddler feels: "You\'re frustrated — the tower fell." Point out feelings in others too: "He looks sad." Tantrums are normal at this age.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-15M ("Say what you think your child is feeling (for example, sad, mad, frustrated, happy)"; "Expect tantrums. They are normal at this age"); CDC-18M ("when he sees a child who is sad, say 'He looks sad'")
 
   { type:'social', icon:zi('phone'), title:'Video calls with family',
-    desc:'Video calls with grandparents and family are the one screen use advised under 2. Let her wave, show toys and hear familiar voices.',
+    desc:'Video calls with grandparents and family are the one screen use advised under 2. Let your toddler wave, show toys and hear familiar voices.',
     condition: (mo) => mo >= 12 && mo < 24 },
     // src: CDC-1Y / CDC-15M / CDC-18M ("Limit screen time (TV, tablets, phones, etc.) to video calling with loved ones. Screen time is not recommended for children younger than 2 years of age"); WHO-PA ("For 1-year-olds, sedentary screen time ... is not recommended")
     // NOTE: at 24 m CDC-2Y shifts to "no more than 1 hour a day of a children's program with an adult present" — hence `mo < 24`.
@@ -6198,7 +6198,7 @@ function drawSleepChart() {
       const target = getSleepTargets(ageAt().months).totalTarget; // age-aware (was a fixed 14 h)
       const pct = Math.round((avg / target) * 100);
       const tH = Math.floor(target / 60), tM = target % 60;
-      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for her age)`;
+      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for ${pron('poss')} age)`;
     }
   }
 }
@@ -6220,12 +6220,12 @@ function renderSleepTips() {
         { icon:zi('star'), title:'Consistent sleep cue', text:'A specific lullaby, white noise pattern, or phrase ("time to sleep") used every night builds a strong association over time.' },
       ] : ageM < 12 ? [
         { icon:zi('moon'), title:'Keep the routine consistent', text:'At 9–12 months, separation anxiety peaks. A strong, predictable routine provides security — same time ±15 minutes, same sequence.' },
-        { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if she gets past her sleep window, cortisol spikes make falling asleep harder.' },
+        { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if ' + pron('subj') + ' gets past ' + pron('poss') + ' sleep window, cortisol spikes make falling asleep harder.' },
         { icon:zi('book'), title:'Add a short book', text:'Board books before bed build both sleep associations and early literacy. 1–2 short books is perfect.' },
         { icon:zi('baby'), title:'Goodbye ritual', text:'A brief, warm goodbye ritual ("goodnight, I love you, see you in the morning") helps with separation anxiety at this age.' },
       ] : [
         { icon:zi('moon'), title:'Same wind-down, same time', text:'Toddlers thrive on a predictable routine: bath, teeth, one or two books, lights out. Regular sleep and wake times matter more than the exact hour (WHO 2019).' },
-        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If she fights sleep, a slightly earlier bedtime often helps more than a later one.' },
+        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If ' + pron('subj') + ' fights sleep, a slightly earlier bedtime often helps more than a later one.' },
         { icon:zi('no-entry'), title:'Screens off', text:'No screen time under 2 years (WHO; IAP 2022), and none in the hour before bed. Video calls with family are fine, says the AAP.' },
         { icon:zi('baby'), title:'Short, warm goodnight', text:'A brief goodnight ritual helps with separation worries, which often flare again around 18 months.' },
       ]
@@ -6233,7 +6233,7 @@ function renderSleepTips() {
     {
       id: 'environment', icon: zi('flame'), label: 'Sleep Environment', color: 'sky',
       tips: [
-        { icon:zi('flame'), title:'Room temp: 20–22°C', text:'Overheating is a bigger risk than being cold. Dress in one more layer than you\'d wear. Feel the back of her neck — it should be warm, not sweaty.' },
+        { icon:zi('flame'), title:'Room temp: 20–22°C', text:'Overheating is a bigger risk than being cold. Dress in one more layer than you\'d wear. Feel the back of ' + pron('poss') + ' neck — it should be warm, not sweaty.' },
         { icon:zi('moon'), title:'Darkness matters', text:'Use blackout curtains. Even small light leaks can disrupt melatonin. A dim red/orange night light is OK if needed for feeds — avoid white/blue light.' },
         { icon:zi('bell'), title:'White noise', text:'Consistent white noise (not music) at 50–65 dB helps mask household sounds. Place the machine across the room, not right next to the crib.' },
         { icon:zi('moon'), title:'Safe sleep surface', text:'Firm, flat mattress. No pillows, loose blankets, bumpers, or soft toys in the crib. Back sleeping position.' },
@@ -6243,43 +6243,43 @@ function renderSleepTips() {
     {
       id: 'naps', icon: zi('zzz'), label: 'Nap Guide', color: 'sage',
       tips: ageM <= 8 ? [
-        { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, she can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
+        { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, ' + pron('subj') + ' can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
-        { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
+        { icon:zi('warn'), title:'Don\'t force naps', text:'If ' + pron('subj') + '\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
       ] : ageM < 12 ? [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
-        { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
+        { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, ' + pron('subj') + ' may be ready for the 2-to-1 transition (usually around 12–15 months).' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ] : [
         { icon:zi('list'), title:'One or two naps are both normal', text:'Between 12 and 18 months most toddlers move from two naps to one, and by about 18 months most take one midday nap. Some keep two until nearer 2 years.' },
-        { icon:zi('eye'), title:'Signs she is ready for one nap', text:'Refusing one of her naps most days for a week or two, or the second nap pushing bedtime late.' },
-        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while she adjusts.' },
+        { icon:zi('eye'), title:'Signs ' + pron('subj') + ' is ready for one nap', text:'Refusing one of ' + pron('poss') + ' naps most days for a week or two, or the second nap pushing bedtime late.' },
+        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while ' + pron('subj') + ' adjusts.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
     {
       id: 'night', icon: zi('moon'), label: 'Night Sleep', color: 'indigo',
       tips: ageM <= 8 ? [
-        { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — she feeds and goes back to sleep easily.' },
+        { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — ' + pron('subj') + ' feeds and goes back to sleep easily.' },
         { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
-        { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
-        { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
+        { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If ' + pron('subj') + '\'s consistently getting less than 10h, the schedule may need adjusting.' },
+        { icon:zi('hourglass'), title:'Split nights', text:'If ' + pron('subj') + ' wakes for 1+ hour in the middle of the night, ' + pron('subj') + ' may be getting too much daytime sleep or have too early a bedtime.' },
       ] : ageM < 12 ? [
-        { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If she still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
+        { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If ' + pron('subj') + ' still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep of 11–12 hours. Early morning waking (before 6 AM) often means bedtime is too late or too early — experiment in 15-min increments.' },
         { icon:zi('hourglass'), title:'Sleep regressions', text:'The 8–10 month regression is real — linked to crawling, pulling up, separation anxiety. It\'s temporary (2–4 weeks). Stay consistent with the routine.' },
-        { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If she needs rocking/feeding to sleep, she\'ll need it at every wake-up.' },
+        { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If ' + pron('subj') + ' needs rocking/feeding to sleep, ' + pron('subj') + '\'ll need it at every wake-up.' },
       ] : [
         { icon:zi('bars'), title:'About 11–14 hours a day', text:'Across 24 hours, including naps, 1–2 year olds need about 11–14 hours (AASM, WHO). Night sleep is usually 10–12 hours.' },
         // src: AAPD policy on early childhood caries (no bottle in bed; milk before brushing);
         // Diet tab milk guide (diet.js: open cup, ~500 ml/day cap from 12 m; breastfeeding to 2 y).
-        { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on her teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
+        { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on ' + pron('poss') + ' teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
         { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
         { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
         // src: AAP 2012 OSA clinical practice guideline (symptoms incl. cyanosis); Sheffield Children's NHS (film her sleeping).
-        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with her neck stretched back. If you see gasps or pauses in her breathing, call her doctor this week and take a short phone video of her sleeping.' },
+        { icon:zi('steth'), title:'When to mention it to ' + pron('poss') + ' doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with ' + pron('poss') + ' neck stretched back. If you see gasps or pauses in ' + pron('poss') + ' breathing, call ' + pron('poss') + ' doctor this week and take a short phone video of ' + pron('obj') + ' sleeping.' },
         { icon:zi('siren'), title:'Get help now', text:'Blue or grey lips or face, or struggling to breathe: seek medical care straight away.' },
       ]
     },
@@ -6289,8 +6289,8 @@ function renderSleepTips() {
         { icon:zi('brain'), title:'Sleep fuels growth', text:'Growth hormone is primarily released during deep sleep. Consistent, adequate sleep directly supports physical growth, brain development, and immune function.' },
         { icon:zi('warn'), title:'Overtiredness spiral', text:'An overtired baby produces cortisol and adrenaline, making it harder to fall asleep and stay asleep. Catch sleepy cues early — prevention is easier than correction.' },
         { icon:zi('baby'), title:'Teething and sleep', text:'Teething can unsettle sleep for a few nights as a tooth comes through. Offer a chilled (not frozen) teether before bed. Pain relief (consult doctor) may help on rough nights — but don\'t blame every bad night on teething.' },
-        { icon:zi('chart'), title:'Developmental leaps', text:'Major motor milestones (crawling, standing, walking) temporarily disrupt sleep. She may practice new skills in her sleep. This is normal and passes in 1–2 weeks.' },
-        { icon:zi('flame'), title:'Illness recovery', text:'After illness, sleep patterns may take 1–2 weeks to normalise. Return to the pre-illness routine as soon as she\'s recovered — don\'t create new habits during sick days.' },
+        { icon:zi('chart'), title:'Developmental leaps', text:'Major motor milestones (crawling, standing, walking) temporarily disrupt sleep. ' + pron('subj', true) + ' may practice new skills in ' + pron('poss') + ' sleep. This is normal and passes in 1–2 weeks.' },
+        { icon:zi('flame'), title:'Illness recovery', text:'After illness, sleep patterns may take 1–2 weeks to normalise. Return to the pre-illness routine as soon as ' + pron('subj') + '\'s recovered — don\'t create new habits during sick days.' },
       ]
     },
     {
@@ -6300,18 +6300,18 @@ function renderSleepTips() {
       // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
       // a bed: alcohol, sedating medicine, smoking, sofas).
       tips: ageM >= 12 ? [
-        { icon:zi('baby'), title:'Her own sleep position', text:'Now that she rolls and moves freely, she can settle in whatever position she likes. There is no need to turn her back.' },
-        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap she can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
-        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from her face. A light blanket of her own is fine from about 1 year.' },
+        { icon:zi('baby'), title:'' + pron('poss', true) + ' own sleep position', text:'Now that ' + pron('subj') + ' rolls and moves freely, ' + pron('subj') + ' can settle in whatever position ' + pron('subj') + ' likes. There is no need to turn ' + pron('obj') + ' back.' },
+        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap ' + pron('subj') + ' can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
+        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from ' + pron('poss') + ' face. A light blanket of ' + pron('poss') + ' own is fine from about 1 year.' },
         // No bed rails under 2 y: a toddler can be trapped between rail and mattress (CPSC 16 CFR
         // 1224; AAP HealthyChildren) — Maren B-2 on #273.
-        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. The safest setup is the mattress on the floor, away from the walls. If the bed stays raised, keep her on the side away from the edge, keep the floor beside it clear and soft, and don\'t use bed rails before age 2: she can get trapped between the rail and the mattress.' },
-        { icon:zi('eye'), title:'Naps on the big bed', text:'Don\'t leave her alone on the adult bed for a nap. Put her down on a floor mattress, or stay with her.' },
-        { icon:zi('baby'), title:'Who shares the bed', text:'Keep pets and other children out of the bed when she sleeps in it.' },
+        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. The safest setup is the mattress on the floor, away from the walls. If the bed stays raised, keep ' + pron('obj') + ' on the side away from the edge, keep the floor beside it clear and soft, and don\'t use bed rails before age 2: ' + pron('subj') + ' can get trapped between the rail and the mattress.' },
+        { icon:zi('eye'), title:'Naps on the big bed', text:'Don\'t leave ' + pron('obj') + ' alone on the adult bed for a nap. Put ' + pron('obj') + ' down on a floor mattress, or stay with ' + pron('obj') + '.' },
+        { icon:zi('baby'), title:'Who shares the bed', text:'Keep pets and other children out of the bed when ' + pron('subj') + ' sleeps in it.' },
         { icon:zi('no-entry'), title:'When not to share the bed', text:'Not next to an adult who has had alcohol, sedating medicine, or is a smoker, and never asleep together on a sofa or armchair.' },
-        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around her. Smoke on clothes and furnishings also harms her breathing and sleep.' },
+        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around ' + pron('obj') + '. Smoke on clothes and furnishings also harms ' + pron('poss') + ' breathing and sleep.' },
       ] : [
-        { icon:zi('baby'), title:'Always on the back', text:'Place her on her back for every sleep. Once she can roll both ways independently, she can find her own position — but always start on the back.' },
+        { icon:zi('baby'), title:'Always on the back', text:'Place ' + pron('obj') + ' on ' + pron('poss') + ' back for every sleep. Once ' + pron('subj') + ' can roll both ways independently, ' + pron('subj') + ' can find ' + pron('poss') + ' own position — but always start on the back.' },
         { icon:zi('warn'), title:'Nothing in the crib', text:'No pillows, blankets, bumpers, stuffed animals, or positioners. A fitted sheet on a firm mattress is all that\'s needed.' },
         { icon:zi('sprout'), title:'Air circulation', text:'A ceiling fan or gentle air circulation reduces SIDS risk. Keep the room ventilated but not drafty.' },
         { icon:zi('shield'), title:'Smoke-free environment', text:'No smoking in the house or around the baby. Secondhand and thirdhand smoke significantly increase SIDS risk.' },
@@ -10776,7 +10776,7 @@ function renderInfoGrowthVelocity() {
     if (data.weight) {
       var w2 = data.weight;
       if (w2.tooShort) {
-        iHtml += '<div class="si-insight si-insight-info">Her last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
+        iHtml += '<div class="si-insight si-insight-info">' + pron('poss', true) + ' last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
       } else if (w2.status === 'on-track') {
         iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + w2.expectedRange.label + '.</div>';
       } else if (w2.status === 'slow') {
