@@ -8679,10 +8679,17 @@ function computeBaselines() {
   b.wtGPerWeek = velocity.wtGPerWeek;
   b.wtInHealthyRange = false;
   if (velocity.wtGPerWeek != null) {
-    // Judged at the latest weigh-in's age, like the Growth tab (PC-1, bug #25).
-    b.wtInHealthyRange = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest)) === 'in';
-    // Check if healthy for 4+ weeks
-    b.growthConsistentWeeks = velocity.wtEntryCount >= 3 ? Math.min(Math.floor(velocity.wtSpanDays / 7), 8) : 0;
+    // The one verdict getGrowthVelocity made (band at the window midpoint, newborn window) — PC-1.
+    b.wtInHealthyRange = gvVelocityVerdict(velocity) === 'in';
+    // Weeks the JUDGED window spans — not the whole record's span, which let one good month claim
+    // "8+ weeks" over a record that began a year ago (Maren V-M-282b-5, Vela V-V-282b-5, V-CA-282b-3).
+    b.growthConsistentWeeks = Math.min(Math.floor((velocity.wtDays || 0) / 7), 8);
+    // Fresh and on track on the Growth tab too: computeGrowthVelocity's verdict and its stale rule
+    // (latest weigh-in at most 21 days old under 12 m, 35 from 12 m), so a months-old window can't
+    // read as current growth (V-V-282b-6). tooShort is "no verdict", not on track.
+    const cgv = computeGrowthVelocity();
+    const cw = cgv && !cgv.insufficient ? cgv.weight : null;
+    b.growthOnTrackFresh = !!(cw && cw.status === 'on-track' && !cw.stale && !cw.tooShort);
   }
 
   _cachedBaselines = b;
@@ -9420,12 +9427,12 @@ function computeAlerts() {
   }
 
   // ─── P6. GROWTH ON TRACK ───
-  if (bl.wtInHealthyRange && bl.growthConsistentWeeks >= 4) {
+  if (bl.wtInHealthyRange && bl.growthOnTrackFresh && bl.growthConsistentWeeks >= 4) {
     const key = 'positive-growth-' + todayStr.substring(0, 7);
     alerts.push({
       id: 'growth-on-track', key,
       severity: 'positive', icon: zi('chart'),
-      title: 'Growth on track for ' + bl.growthConsistentWeeks + '+ weeks',
+      title: 'Growth on track over the last ' + bl.growthConsistentWeeks + ' weeks',
       body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. ' + childNameCapHtml() + ' is growing beautifully.',
       tip: 'Consistent, healthy weight gain is more important than hitting a specific number. Keep up the balanced nutrition.',
       action: null, tab: 'growth'    });
@@ -10354,13 +10361,17 @@ function renderTrendChips() {
 
   const chips = [];
 
-  // Growth — judged at the latest weigh-in's age, like the Growth tab (PC-1, bug #25); in the
-  // first two weeks a dip is expected, so no "check" (_gvNewbornWindow).
+  // Growth — the one verdict getGrowthVelocity made (PC-1): band at the window midpoint, then the
+  // newborn window (gvNewbornCheck). The after-birth dip reads neutral, never "check"; a loss over
+  // 10%, not back to birth weight, or a recheck reads caution (V-V-282b-3).
   if (velocity.wtGPerWeek != null) {
-    const verdict = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest));
+    const verdict = gvVelocityVerdict(velocity);
+    const tone = gvVerdictTone(verdict, velocity.wtNewborn);
     const ok = verdict === 'in';
-    const delta = ok ? zi('check') + ' healthy' : verdict === 'newborn' ? 'early days' : zi('warn') + ' check';
-    chips.push({ icon:zi('chart'), label:'Growth', value: velocity.wtGPerWeek + 'g/wk', delta, cls: ok ? 'tc-good' : verdict === 'newborn' ? 'tc-neutral' : 'tc-warn', tab:'growth' });
+    const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained' || (verdict === 'newborn' && tone === 'caution');
+    const delta = ok ? zi('check') + ' healthy' : nbFlag ? zi('warn') + ' check weight' : verdict === 'newborn' ? 'early days' : zi('warn') + ' check';
+    const value = (verdict === 'newborn' || nbFlag) ? 'Early days' : velocity.wtGPerWeek + 'g/wk';
+    chips.push({ icon:zi('chart'), label:'Growth', value, delta, cls: tone === 'good' ? 'tc-good' : tone === 'neutral' && verdict === 'newborn' ? 'tc-neutral' : 'tc-warn', tab:'growth' });
   } else {
     chips.push({ icon:zi('chart'), label:'Growth', value:'Need 2+ measurements', delta:'—', cls:'tc-neutral', tab:'growth' });
   }
@@ -10499,10 +10510,12 @@ function renderInsightsStats() { /* v2.4: DORMANT — insights cards replaced by
 
   // Growth velocity pill
   const velVal = velocity.wtGPerWeek != null ? velocity.wtGPerWeek + 'g' : '—';
-  // At the latest weigh-in's age (PC-1, bug #25); a newborn dip reads neutral, not off-range.
-  const velVerdict = velocity.wtGPerWeek != null ? gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest)) : null;
+  // The one verdict (PC-1); a plain newborn dip takes no colour modifier — neutral, never sky,
+  // which means above range (V-V-282b-3); a newborn flag reads caution.
+  const velVerdict = gvVelocityVerdict(velocity);
+  const velTone = velVerdict == null ? null : gvVerdictTone(velVerdict, velocity.wtNewborn);
   const velInRange = velVerdict === 'in';
-  const velColor = velVerdict == null ? 'hsp-rose' : velInRange ? 'hsp-sage' : velVerdict === 'newborn' ? 'hsp-sky' : 'hsp-peach';
+  const velColor = velVerdict == null ? 'hsp-rose' : velInRange ? 'hsp-sage' : (velVerdict === 'newborn' && velTone === 'neutral') ? '' : 'hsp-peach';
 
   el.innerHTML = `
     <div class="home-stat-pill ${wtColor}" data-scroll-to="insightsGrowthCard" data-scroll-block="start">
@@ -10609,8 +10622,9 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
   if (prevEl) {
     let pills = '';
     if (velocity.wtGPerWeek != null) {
-      const verdict = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest));
-      const pillCls = verdict === 'in' ? 'ipp-good' : verdict === 'newborn' ? 'ipp-neutral' : 'ipp-warn';
+      const verdict = gvVelocityVerdict(velocity);
+      const tone = gvVerdictTone(verdict, velocity.wtNewborn);
+      const pillCls = tone === 'good' ? 'ipp-good' : (verdict === 'newborn' && tone === 'neutral') ? 'ipp-neutral' : 'ipp-warn';
       pills += `<span class="ins-preview-pill ${pillCls}">${zi('scale')} ${velocity.wtGPerWeek}g/wk</span>`;
     }
     const latestWt = getLatestWeight();
@@ -10627,10 +10641,11 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
 
   // Velocity rows — each judged at its own latest measurement's age (PC-1, bug #25)
   if (velocity.wtGPerWeek != null) {
-    const verdict = gvWeightVerdict(velocity.wtGPerWeek, gvAgeAt(velocity.wtLatest));
+    const verdict = gvVelocityVerdict(velocity);
     const inRange = verdict === 'in';
-    const cls = inRange ? 'trend-up' : verdict === 'below' ? 'trend-down' : 'trend-flat';
-    const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : verdict === 'newborn' ? 'early days' : '↑ above range';
+    const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained';
+    const cls = inRange ? 'trend-up' : (verdict === 'below' || nbFlag) ? 'trend-down' : 'trend-flat';
+    const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : nbFlag ? 'check weight' : verdict === 'newborn' ? 'early days' : '↑ above range';
     html += `<div class="insight-row">
       <div class="ir-icon">${zi('scale')}</div>
       <div class="ir-body">

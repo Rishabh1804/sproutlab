@@ -993,31 +993,48 @@ function qaAnswerWeightGain(intentId) {
   var headline = '';
 
   // Weight velocity
+  // Food advice only from 6 months at the weigh-in or once solids have started: under 6 months milk is
+  // the whole diet (WHO IYCF, cited at gvFoodAdviceOk in core.js — Maren V-M-282b-3, Kael V-K-282b-4).
+  var foodOk = gv.weight ? gvFoodAdviceOk(gv.weight.latest) : true;
   if (gv.weight) {
     var w = gv.weight;
+    var nbQ = w.nb;
     headline = w.latest.wt + ' kg — ';
-    if (w.status === 'on-track') {
+    if (nbQ && nbQ.status === 'regained') {
+      // Newborn window, back to birth weight (gvNewbornCheck): the regain is the verdict, not a rate.
+      headline += 'back to birth weight';
+      dataItems.push({ text: nbQ.text, signal: 'good' });
+    } else if (w.status === 'newborn-loss' || w.status === 'not-regained') {
+      // More than 10% of birth weight lost before day 21, or not back by day 14 (V-M-282b-2, -3).
+      headline += w.status === 'newborn-loss' ? 'down more than 10% from birth weight' : 'not back to birth weight yet';
+      dataItems.push({ text: nbQ.text, signal: 'warn' });
+      actionItems.push({ text: 'Contact your midwife, health visitor or doctor' + (w.status === 'newborn-loss' || nbQ.referral ? ' today' : ''), signal: 'action' });
+    } else if (w.status === 'on-track') {
       headline += 'gaining well (' + w.gPerDay + ' g/day)';
-      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — on track for ' + w.expectedRange.label, signal: 'good' });
+      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — on track for ' + gvBandPhrase(w.expectedRange), signal: 'good' });
     } else if (w.status === 'slow') {
-      headline += 'gaining slowly (' + w.gPerDay + ' g/day)';
-      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — below expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ' g/day', signal: 'warn' });
-      actionItems.push({ text: 'Add calorie-dense foods: ghee, banana, avocado, nut butters', signal: 'action' });
+      headline += (w.gPerDay < 0 ? 'down ' + Math.abs(w.gPerDay) + ' g/day' : 'gaining slowly (' + w.gPerDay + ' g/day)');
+      dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day — below expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ' g/day', signal: 'warn' });
+      actionItems.push({ text: foodOk ? 'Add calorie-dense foods: ghee, banana, avocado, nut butters' : GV_MILK_ONLY_NOTE, signal: 'action' });
     } else if (w.status === 'plateau') {
       headline += 'weight plateau detected';
-      dataItems.push({ text: 'Only ' + w.gainG + 'g gained in ' + w.daysBetween + ' days', signal: 'warn' });
-      actionItems.push({ text: 'Consider adding an extra meal or calorie-dense toppings', signal: 'action' });
+      dataItems.push({ text: w.gainG < 0 ? 'Weight down ' + Math.abs(w.gainG) + 'g in ' + w.daysBetween + ' days' : 'Only ' + w.gainG + 'g gained in ' + w.daysBetween + ' days', signal: 'warn' });
+      actionItems.push({ text: foodOk ? 'Consider adding an extra meal or calorie-dense toppings' : GV_MILK_ONLY_NOTE, signal: 'action' });
     } else if (w.status === 'fast') {
       headline += 'gaining quickly (' + w.gPerDay + ' g/day)';
       dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — above expected range', signal: 'info' });
     } else if (w.status === 'newborn') {
-      // First 14 days: the after-birth dip, not a growth rate (_gvNewbornWindow, PC-1 bug #27).
+      // The after-birth dip, not a growth rate (gvNewbornCheck, PC-1 bug #27); past day 14 with only
+      // an earlier weigh-in, the recheck line instead (V-M-282b-4).
       headline += 'early days';
-      dataItems.push({ text: 'Weight change: ' + w.gainG + ' g in ' + w.daysBetween + ' day' + (w.daysBetween === 1 ? '' : 's') + '. ' + GV_NEWBORN_NOTE, signal: 'info' });
+      var dirQ = w.gainG >= 0 ? 'up ' : 'down ';
+      dataItems.push({ text: 'Weight ' + dirQ + Math.abs(w.gainG) + ' g in ' + w.daysBetween + ' day' + (w.daysBetween === 1 ? '' : 's') + '. ' + (nbQ ? nbQ.text : GV_NEWBORN_NOTE), signal: nbQ && nbQ.tone === 'caution' ? 'warn' : 'info' });
+      if (nbQ && nbQ.recheck) actionItems.push({ text: 'Weigh ' + childNameHtml() + ' again to confirm the return to birth weight', signal: 'action' });
     }
 
     if (w.totalGainG) {
-      dataItems.push({ text: 'Total gain since birth: ' + Math.round(w.totalGainG) + 'g (' + (w.totalGainG / 1000).toFixed(1) + ' kg)', signal: 'info' });
+      // From the birth-weight row (V-M-282b-1); a negative change is a change, not a gain (V-M-282b-6).
+      dataItems.push({ text: (w.totalGainG < 0 ? 'Total change since birth: −' : 'Total gain since birth: ') + Math.abs(Math.round(w.totalGainG)) + 'g (' + (Math.abs(w.totalGainG) / 1000).toFixed(2) + ' kg)', signal: 'info' });
     }
 
     if (w.stale) {
@@ -1049,15 +1066,16 @@ function qaAnswerWeightGain(intentId) {
     }
   }
 
-  // Diet link
+  // Diet link — only where food is part of the diet (foodOk); never in the newborn window.
   try {
     var diet = calcDietScore();
-    if (diet.score < 60 && !(gv.weight && gv.weight.newborn) && (intentId === 'weight_gain' || (gv.weight && gv.weight.status === 'slow'))) {
+    var nbWindow = gv.weight && gv.weight.nb;
+    if (foodOk && !nbWindow && diet.score < 60 && (intentId === 'weight_gain' || (gv.weight && gv.weight.status === 'slow'))) {
       dataItems.push({ text: 'Diet score is ' + diet.score + '/100 — nutrition gaps may affect weight gain', signal: 'warn' });
       actionItems.push({ text: 'Focus on nutrient-dense meals (see Food tab)', signal: 'action' });
     }
     // Low intake + slow gain is the key insight
-    if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake < 60 && gv.weight && (gv.weight.status === 'slow' || gv.weight.status === 'plateau')) {
+    if (foodOk && diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake < 60 && gv.weight && (gv.weight.status === 'slow' || gv.weight.status === 'plateau')) {
       dataItems.push({ text: 'Low meal intake (' + diet.detail.effectiveIntake + '%) may explain slow weight gain', signal: 'warn' });
       actionItems.push({ text: 'Try smaller, more frequent meals with calorie-dense foods', signal: 'action' });
     }
@@ -1786,15 +1804,24 @@ function qaAnswerWeightConcern(intentId) {
 
   if (gv.weight) {
     var w = gv.weight;
-    headline = w.latest.wt + ' kg (gaining ' + w.gPerDay + ' g/day)';
-    if (w.status === 'fast') {
+    var nbC = w.nb;
+    // Headline: in the newborn window "early days" or the flag, never a rate; a negative rate says
+    // "down", never "gaining -15 g/day" (V-M-282b-6, V-K-282b-5, V-V-282b-2).
+    if (w.status === 'newborn-loss') headline = w.latest.wt + ' kg — down more than 10% from birth weight';
+    else if (w.status === 'not-regained') headline = w.latest.wt + ' kg — not back to birth weight yet';
+    else if (nbC && nbC.status === 'regained') headline = w.latest.wt + ' kg — back to birth weight';
+    else if (w.status === 'newborn') headline = w.latest.wt + ' kg — early days';
+    else headline = w.latest.wt + ' kg (' + (w.gPerDay < 0 ? 'down ' + Math.abs(w.gPerDay) : 'gaining ' + w.gPerDay) + ' g/day)';
+    if (nbC && nbC.status !== 'newborn') {
+      dataItems.push({ text: nbC.text, signal: nbC.tone === 'good' ? 'good' : 'warn' });
+    } else if (w.status === 'fast') {
       dataItems.push({ text: 'Weight gain is above typical range (' + w.gPerDay + ' g/day vs expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'warn' });
     } else if (w.status === 'on-track') {
       dataItems.push({ text: 'Weight gain is within normal range (' + w.gPerDay + ' g/day)', signal: 'good' });
     } else if (w.status === 'newborn') {
-      dataItems.push({ text: GV_NEWBORN_NOTE, signal: 'info' });
+      dataItems.push({ text: nbC ? nbC.text : GV_NEWBORN_NOTE, signal: nbC && nbC.tone === 'caution' ? 'warn' : 'info' });
     } else {
-      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'info' });
+      dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'info' });
     }
   }
 
@@ -1814,8 +1841,9 @@ function qaAnswerWeightConcern(intentId) {
   // At this age, rapid weight gain is rarely a concern
   var ageM = ageAt().months;
   if (ageM < 12) {
-    actionItems.push({ text: 'At ' + Math.floor(ageM) + ' months, being on a higher percentile is usually fine', signal: 'good' });
-    actionItems.push({ text: 'Focus on nutrient-dense foods, not calorie restriction', signal: 'action' });
+    actionItems.push({ text: (ageM === 0 ? 'In the first month' : 'At ' + fmtAgeMonths(ageM)) + ', being on a higher percentile is usually fine', signal: 'good' });
+    // Under 6 months milk is the whole diet (WHO IYCF; gvFoodAdviceOk) — no food advice (V-M-282b-3).
+    actionItems.push({ text: (gv.weight ? gvFoodAdviceOk(gv.weight.latest) : ageM >= 6) ? 'Focus on nutrient-dense foods, not calorie restriction' : GV_MILK_ONLY_NOTE, signal: 'action' });
   }
   actionItems.push({ text: 'Discuss any concerns with your pediatrician at the next visit', signal: 'action' });
   actionItems.push({ text: 'Encourage active play — motor activity supports healthy growth', signal: 'action' });
@@ -1855,9 +1883,14 @@ function qaAnswerGrowth(intentId) {
   if (gv.weight) {
     var w = gv.weight;
     dataItems.push({ text: 'Weight: ' + w.latest.wt + ' kg (' + (w.stale ? 'measured ' + w.daysSince + ' days ago' : 'recent'), signal: w.stale ? 'warn' : 'good' });
-    var wSignal = w.status === 'on-track' ? 'good' : w.status === 'slow' || w.status === 'plateau' ? 'warn' : 'info';
-    dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + (w.newborn ? 'early days' : w.status.replace('-', ' ')) + ')', signal: wSignal });
-    if (w.newborn) dataItems.push({ text: GV_NEWBORN_NOTE, signal: 'info' });
+    var wSignal = w.status === 'on-track' ? 'good' : (w.status === 'slow' || w.status === 'plateau' || (w.nb && w.nb.tone === 'caution')) ? 'warn' : 'info';
+    if (w.nb) {
+      // Newborn window (gvNewbornCheck): the line in place of a rate — the dip, back to birth weight,
+      // or a flag (V-M-282b-2..4).
+      dataItems.push({ text: 'Weight: ' + w.nb.text, signal: wSignal });
+    } else {
+      dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + w.status.replace('-', ' ') + ')', signal: wSignal });
+    }
   }
 
   // Height

@@ -2214,6 +2214,10 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 }
 .growth-fact.positive { background:var(--sage-light); border-color:var(--sage); }
 .growth-fact.info     { background:var(--sky-light); border-color:var(--sky); }
+/* Newborn window: neutral for the expected dip, caution for a flag (>10% loss, not back to birth
+   weight) or a below-band rate — never sky, which reads as "above" on the growth surfaces (V-V-282b-3). */
+.growth-fact.neutral  { background:var(--card-bg); border-color:var(--card-border); }
+.growth-fact.caution  { background:var(--amber-light); border-color:var(--amber); }
 /* One-time dismissible fact (the WHO-growth change note, 2026-09-24): room for the × (.ctx-alert-dismiss). */
 .growth-fact.has-dismiss { position:relative; padding-right:var(--sp-32); }
 .growth-fact-icon { font-size:var(--icon-md); flex-shrink:0; }

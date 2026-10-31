@@ -974,8 +974,15 @@ function renderInfoGrowthDiet() {
   var prev = gvW.prev;
   var daysBetweenMeasurements = gvW.daysBetween;
   var velocity = gvW.gPerDay;
+  // The period's weight change. #266 removed its declaration while the period grid still read it, so
+  // that block threw a ReferenceError and the card stopped rendering (found with V-V-282b-8).
+  var wtDiffG = gvW.gainG;
+  // Newborn window (gvNewbornCheck, core.js): no rate verdict. 'newborn' (the dip) reads neutral,
+  // a flag (more than 10% lost, not back to birth weight, weigh again) reads caution, back to birth
+  // weight reads good — never the "normal" check (Vela V-V-282b-8; PC-1 bug #27).
+  var gvNb = gvW.nb || null;
   var velLabel = gvW.tooShort ? 'normal'
-    : gvW.newborn ? 'newborn'   // first 14 days: no verdict (_gvNewbornWindow, PC-1 bug #27)
+    : gvNb ? (gvNb.tone === 'caution' ? 'newborn-flag' : gvNb.status === 'regained' ? 'regained' : 'newborn')
     : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
     : gvW.status === 'fast' ? 'rapid' : 'normal';
 
@@ -1020,7 +1027,9 @@ function renderInfoGrowthDiet() {
   var avgMeals = Math.round((totalMeals / feedingDays.length) * 10) / 10;
   var avgVariety = Math.round((totalFoods / feedingDays.length) * 10) / 10;
 
-  sumEl.innerHTML = '<div class="t-sm">Velocity <strong>' + velocity + ' g/day</strong> · <strong>' + avgMeals + '</strong> meals/day · diet ' + (velLabel === 'slow' ? zi('warn') : zi('check')) + '</div>';
+  var velIcon = (velLabel === 'slow' || velLabel === 'newborn-flag') ? zi('warn') : velLabel === 'newborn' ? zi('info') : zi('check');
+  var velText = gvNb ? escHtml(gvNb.short) : 'Velocity <strong>' + velocity + ' g/day</strong>';
+  sumEl.innerHTML = '<div class="t-sm">' + velText + ' · <strong>' + avgMeals + '</strong> meals/day · diet ' + velIcon + '</div>';
 
   // Period details
   if (perEl) {
@@ -1062,8 +1071,9 @@ function renderInfoGrowthDiet() {
       } else {
         iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day) — monitor at next weigh-in</div>';
       }
-    } else if (velLabel === 'newborn') {
-      iHtml += '<div class="si-insight si-insight-info">' + GV_NEWBORN_NOTE + '</div>';
+    } else if (gvNb) {
+      var nbInsCls = gvNb.tone === 'caution' ? 'si-insight-warn' : gvNb.tone === 'good' ? 'si-insight-good' : 'si-insight-info';
+      iHtml += '<div class="si-insight ' + nbInsCls + '">' + gvNb.text + '</div>';
     } else {
       iHtml += '<div class="si-insight si-insight-good">Growth velocity is ' + velLabel + ' at ' + velocity + ' g/day with ' + avgMeals + ' meals/day</div>';
     }
