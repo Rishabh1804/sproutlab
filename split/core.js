@@ -1742,6 +1742,7 @@ function init() {
   renderFoods();
   renderVacc();
   renderVaccCoverage();
+  renderBodyCare();   // child-sex S3 Body care card (medical.js)
   renderDoctorContact();
   renderNotes();
   // PR-ε.0 §1 — assign stable ids before first scrapbook render
@@ -2120,6 +2121,15 @@ function computeMedicalModifier() {
     else if (status === 'fast') gvVal = 70;
     else if (status === 'slow') gvVal = 50;
     else if (status === 'plateau') gvVal = 25;
+    // More than 10% of birth weight lost before day 21 (NICE NG75 1.1.2): as low as a plateau (V-M-282b-2).
+    else if (status === 'newborn-loss') gvVal = 25;
+    // Not back to birth weight from day 14 (AAP / NHS): like slow gain (gvNewbornCheck); from day 21,
+    // the NICE 1.1.4 referral point, as low as a plateau (V-M-282c-10).
+    else if (status === 'not-regained') gvVal = (gv.weight && gv.weight.nb && gv.weight.nb.referral) ? 25 : 50;
+    // A caution 'newborn' line (back but dropping again, or regain not confirmed with no birth row)
+    // is coloured amber by gvVerdictTone, so it scores like slow gain: score and colour agree.
+    else if (status === 'newborn' && gv.weight && gv.weight.nb && gv.weight.nb.recheck) gvVal = 50;
+    // Any other 'newborn' (the after-birth dip, gvNewbornCheck) keeps the neutral 70: no verdict either way.
   }
   factors.push({ name: 'Growth velocity', value: gvVal, weight: 0.30 });
 
@@ -2664,7 +2674,9 @@ function getSleepScore24h() {
   // Today's sleep score = yesterday's daily score (which includes last night + yesterday's naps).
   // If yesterday has no data, try today (in case sleep was logged under today's date).
   const todayStr = today();
-  const yesterday = new Date(todayStr);
+  // HR-12: a local calendar day. new Date('YYYY-MM-DD') is UTC midnight, so west of Greenwich the
+  // local parts read the day before and "yesterday" became the day before yesterday (V-CA-282c-2).
+  const yesterday = _parseLocalDate(todayStr) || new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = toDateStr(yesterday);
 
@@ -3092,7 +3104,7 @@ function renderScrapMilestoneChips() {
     // Maren v5 audit MINOR — empty-text legacy guard. addMilestone trims+rejects
     // empty text for new entries, but legacy data could contain whitespace-only
     // text. Fall back so the chip and aria-label stay readable.
-    const labelText = (m.text || '').trim() || '(unnamed milestone)';
+    const labelText = msLabel((m.text || '').trim()) || '(unnamed milestone)';
     return `<span class="chip chip-milestone" role="listitem">
       <span class="chip-label">${escHtml(labelText)}</span>
       <button type="button" class="chip-x"
@@ -3142,7 +3154,7 @@ function renderScrapMilestonePickerList() {
               aria-hidden="true">
           <svg class="zi"><use href="#zi-check"/></svg>
         </span>
-        <span class="picker-row-label">${escHtml(m.text || '')}</span>
+        <span class="picker-row-label">${escHtml(msLabel(m.text || ''))}</span>
       </button>`;
     }).join('');
     return `<div class="picker-cat-group">
@@ -4088,7 +4100,7 @@ function switchTrackSub(sub) {
   // renderTrackHero(); // removed in v2.5 Balance — Track score hero removed
 
   // Trigger sub-tab renders
-  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard(); /* T1-2: pattern card lacked a tab-switch render path */ }
+  if (sub === 'medical') { renderMedicalStats(); orderMedicalCards(); renderVaccPastList(); renderDoctorPrep(); initSymptomChips(); renderFeverEpisodeCard(); renderFeverHistory(); renderDiarrhoeaEpisodeCard(); renderDiarrhoeaHistory(); renderVomitingEpisodeCard(); renderVomitingHistory(); renderColdEpisodeCard(); renderColdHistory(); if (typeof renderMedD3PatternCard === 'function') renderMedD3PatternCard(); /* T1-2: pattern card lacked a tab-switch render path */ if (typeof renderBodyCare === 'function') renderBodyCare(); /* child-sex S3 */ }
   if (sub === 'diet') renderDietStats();
   if (sub === 'milestones') { renderMilestoneStats(); renderMilestoneHighlights(); }
   if (sub === 'sleep') { renderSleep(); setTimeout(drawSleepChart, 60); }
@@ -4423,6 +4435,23 @@ function _parseLocalDate(key) {
   if (!m) return null;
   const d = new Date(+m[1], +m[2] - 1, +m[3], 12);
   return toDateStr(d) === key ? d : null;
+}
+
+// Age in months (30.44-day months) on a date. A bare 'YYYY-MM-DD' — how every growth row, visit and
+// chart point is stored — is a LOCAL calendar day (HR-12): it counts whole calendar days from the
+// birth date, so the answer is the same in every timezone. It used new Date('YYYY-MM-DD'), which is
+// UTC midnight: 05:30 in IST and the previous evening west of Greenwich, so the age shifted by
+// hours with the phone's timezone — enough to cross a velocity-band or chart edge (PC-1, bug #55).
+// A full date-time string keeps its exact instant, measured from the birth moment.
+// Moved here from medical.js (Carina V-CA-282b-4): the Foundation's age helpers sit together.
+function ageMonthsAt(dateStr) {
+  const day = _parseLocalDate(dateStr);   // local noon, or null
+  if (day) {
+    const dobDay = new Date(DOB.getFullYear(), DOB.getMonth(), DOB.getDate(), 12);   // HR-12: local parts
+    return Math.round((day - dobDay) / 86400000) / 30.44;   // round: a DST day is 23 or 25 hours
+  }
+  const d = new Date(dateStr);   // HR-12: a full date-time (or Date) is an instant, not a calendar day
+  return (d - DOB) / (30.44 * 86400000);
 }
 
 // ─────────────────────────────────────────
@@ -6339,8 +6368,20 @@ function getGrowthVelocity() {
     const gainG = Math.round((latest.wt - best.wt) * 1000);
     result.wtGPerWeek = Math.floor((gainG / days) * 7);
     result.wtDays = days;
+    // Span of the whole weight record, read by Home's "healthy growth for N weeks" alert, which was
+    // never set (NaN), so that positive alert could never fire (PC-3, found with #25).
+    result.wtSpanDays = Math.max(0, Math.round((new Date(latest.date) - new Date(wtEntries[0].date)) / 86400000));
     result.wtLatest = latest;
     result.wtPrevious = best;
+    // One verdict, made here, that every Home reader takes (gvVelocityVerdict): the band at the window
+    // midpoint (V-CA-282b-1), then the newborn window (gvNewbornCheck — the same helper
+    // computeGrowthVelocity calls, given the first weight row, which is where this 28-day lookback
+    // starts until day 28: V-K-282b-3). It takes no rate, so the two engines cannot disagree on it
+    // (V-K-282c-6).
+    result.wtBandAge = gvBandAge(latest, best);
+    const rate = gvBandVerdict(result.wtGPerWeek, result.wtBandAge);
+    result.wtNewborn = gvNewbornCheck(latest, wtEntries[0]);
+    result.wtVerdict = result.wtNewborn ? (result.wtNewborn.status === 'regained' ? 'in' : result.wtNewborn.status) : rate;
   }
 
   if (htEntries.length >= 2) {
@@ -6357,6 +6398,10 @@ function getGrowthVelocity() {
     const gainCm = latest.ht - best.ht;
     result.htCmPerMonth = +((gainCm / days) * 30.44).toFixed(1);
     result.htDays = days;
+    // The rows each velocity ends on, so every reader judges it at the measurement's age (gvAgeAt) —
+    // weight at wtLatest.date, height at htLatest.date (PC-1, bug #25).
+    result.htLatest = latest;
+    result.htPrevious = best;
   }
 
   return result;
@@ -6368,42 +6413,462 @@ function getGrowthVelocity() {
 // 2026-10-30: 12–24 m boys P15 ≈ 133→53 g, P50 ≈ 437→376 g, P85 ≈ 766→713 g, so one band fits both):
 //   weight, 2-month increments 12–24 m: P15 ≈ 140→39 g, P50 ≈ 428→367 g, P85 ≈ 736→723 g
 //     → median ≈ 6–7 g/day; band 3–12 g/day (≈ P20–P85) = 20–85 g/week.
-//   length, 2-/3-month increments 12–24 m: P5 ≈ 0.6 cm/mo, P50 ≈ 1.2→0.9 cm/mo
-//     → band 0.6–1.6 cm/month, ≈ 0.15–0.35 cm/week.
+//   length, 2-month increments 12–24 m (ttt_length_{girls,boys}_2mon_p, fetched 2026-10-31):
+//     P15 1.6→0.9 cm (girls) / 1.5→0.9 cm (boys), P50 ≈ 1.2→0.9 cm/mo, P85 3.2→2.6 cm
+//     → band 0.45–1.6 cm/month (P15 at 22–24 m to P85 at 12–14 m), ≈ 0.1–0.35 cm/week.
+//     S4 (child-sex-v1 §5): the floor was 0.6 cm/mo (≈ P5 early in year 2), above P15 late in it,
+//     so a normal 22-month-old read "slower than typical"; it is now WHO's P15 floor.
 //   boys (ttt_length_boys_2mon_p / _3mon_p, fetched 2026-10-30): 2-month P5 1.0→0.4 cm, P50 2.3→1.7 cm,
 //     P85 3.1→2.6 cm (≈ 0.5→0.2 / 1.15→0.85 / 1.55→1.3 cm/mo), within ~0.05 cm/mo of the girls', so the
 //     length band fits both too (V-M-281-7).
 // Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
-// later ages — above the WHO median, so normal toddler gain read "slow". One source for every site;
-// the 0–12 m bands at each site are unchanged.
-const GROWTH_VELOCITY_12_24 = { wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
-  hCmMoMin: 0.6, hCmMoMax: 1.6, hCmWk: '0.15–0.35', label: '12–24 months' };
+// later ages — above the WHO median, so normal toddler gain read "slow".
+// Since S4 the toddler year is two rows by the same WHO rule as the infant rows (below); this
+// object stays for older readers and is no longer used to judge gain (V-M-282-8, V-CA-282-2).
+const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
+  hCmMoMin: 0.45, hCmMoMax: 1.6, hCmWk: '0.1–0.35', label: '12–24 months' };
+
+// ── Growth-velocity bands, 0–24 months, by sex (S4, child-sex-v1 §5) — the ONE source ──
+// WEIGHT, 0–12 months — WHO 1-month increments (Carina V-CA-282b-1). Each row is ONE month wide
+// and is WHO's 1-month interval for that month: row m–(m+1) = interval m–(m+1) mo; row 0–1 =
+// WHO's "0–4 wks" (28 days), row 1–2 = "4 wks–2 mo" (60.88 − 28 = 32.88 days), later rows 30.44 days.
+//   cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/
+//     weight-velocity/ttt-weight-girls-1mon-p.xlsx, ttt-weight-boys-1mon-p.xlsx
+//   (fetched 2026-10-31, parsed with openpyxl, columns 15th/50th/85th; grams per interval):
+//   girls P15/P50/P85: 0–4wk 602/879/1171 · 4wk–2 734/1011/1301 · 2–3 494/718/952 · 3–4 376/585/804
+//     4–5 286/489/703 · 5–6 203/401/611 · 6–7 146/344/555 · 7–8 109/311/526 · 8–9 70/273/489
+//     9–10 41/245/464 · 10–11 24/233/459 · 11–12 15/232/467
+//   boys  P15/P50/P85: 0–4wk 681/1023/1336 · 4wk–2 886/1196/1524 · 2–3 577/815/1071 · 3–4 403/617/845
+//     4–5 311/522/746 · 5–6 217/422/640 · 6–7 154/357/573 · 7–8 111/316/535 · 8–9 77/285/508
+//     9–10 48/259/486 · 10–11 27/243/478 · 11–12 15/239/484
+// g/week = g / (days/7), g/day = g / days. Why 1-month: PC-1 first built 0–6 m one-month rows from
+// WHO's 2-month tables, but 2-month gains regress toward the median, so for the ~4-week window the
+// engines use the floor sat near P25–P38 by the end of each row (a girl at 2.9 m gaining 130 g/week
+// ≈ the 1-month P25 read "below 150–250"; at 4.9 m, 80 g/week ≈ P25 read "below 85–165"). The old
+// 6–9 / 9–12 brackets showed the same end-of-row strictness against the 1-month tables (girls
+// 6–9 floor 35 g/week ≈ P28 of the 8–9 interval; 9–12 floor 20 g/week ≈ P25 of 11–12), so the same
+// method now runs to 12 months. Near the first birthday the 1-month P15 is almost zero (15 g a month),
+// so under 12 m a "below" verdict means little or no gain; centile crossing carries the rest.
+// The row is looked up by the WINDOW MIDPOINT (gvBandAge: latest weigh-in age − window/2), keyed per
+// month (midpoint in [m, m+1) → interval m–(m+1)); a reader with only one age passes that age.
+// Window assumption: a velocity window of about 4 weeks or longer whose midpoint falls in the month
+// it is judged in. Limits are rounded outward (g/week to 5, g/day to 0.1, cm/mo to 0.05), and a longer
+// window's spread is narrower than a 1-month one (WHO's 2-month P15 rate sits above, and its P85 rate
+// below, the 1-month ones), so for such a window a child at the WHO P15 of that interval reads at
+// worst about P14 for an exact 28-day window — a model estimate, not WHO data (Carina V-CA-282c-3).
+// A window shorter than ~4 weeks spreads wider and can read off at P15–P85; a ~4-week window that
+// straddles a month boundary mixes two intervals and its P15 can sit just under the floor of the
+// faster month (about P7–P10 there), never the P25–P38 of the 2-month rows. Median = P50, to 5 g/week.
+// ONE UNIT FOR VERDICTS: a weight verdict is always made in g/week (gvBandVerdict, and
+// computeGrowthVelocity's statuses on Math.floor(g / days × 7)), so Home and the Growth tab agree on
+// the same gain. The g/day columns are display copy only: rounded to 0.1 they can sit a little under
+// the g/week floor (girls 7–8 m 3.5 × 7 = 24.5 < 25; 10–11 m 0.7 × 7 = 4.9 < 5), which is why they no
+// longer judge anything (V-CA-282c-3).
+// LENGTH stays on WHO's 2-month tables, the finest WHO publishes for length (length velocity starts at
+// 2-month steps), so a ~4-week length gain is judged against a narrower spread than it really has:
+//   ttt_length_girls_2mon_p.xlsx?sfvrsn=a2308bcd_7, ttt_length_boys_2mon_p.xlsx?sfvrsn=809dc745_7
+//   (links on who.int/tools/child-growth-standards/standards/length-velocity, fetched 2026-10-31).
+//   Under 6 m each row uses the 2-month interval centred on its first month (row m–(m+1) ← interval
+//   (m−1)–(m+1); row 0–1 ← 0–2); 6–12 m rows keep the 6–9 / 9–12 brackets (intervals ending inside).
+//   girls cm/2mo P15–P85: 0–2 6.7–9.1 · 1–3 5.4–7.4 · 2–4 4.2–6.1 · 3–5 3.4–5.2 · 4–6 2.7–4.5
+//                         6–9 2.0–4.0 · 9–12 1.7–3.6
+//   boys  cm/2mo P15–P85: 0–2 7.3–9.7 · 1–3 6.0–8.0 · 2–4 4.6–6.6 · 3–5 3.5–5.5 · 4–6 2.8–4.7
+//                         6–9 2.0–4.1 · 9–12 1.7–3.5
+//   cm/mo = cm per 2 months / 2, kept to WHO's one decimal (the 6–12 m rows were once rounded to 0.1,
+//   one 0.05 step wider; recomputed by this rule: girls 9–12 0.85–1.8, boys 6–9 1.0–2.05,
+//   boys 9–12 0.85–1.75 — V-CA-282c-3). cm/week text = the cm/mo band / 4.348, rounded OUTWARD to 0.05
+//   (floor the low end, ceil the high end) so the text never sits inside the band (V-CA-282b-5).
+// Replaces the 0–12 m bands copied into ~9 sites (150–250 / 100–180 / 70–130 / 55–100 g/week),
+// which were narrower than WHO P15–P85: a normal 9–12 m infant read "slow", a 0–2 m boy at the
+// median read "above".
+// 12–24 m (unchanged weight; WHO publishes toddler velocity in 2-month steps): a bracket takes the
+// 2-month intervals that END inside it, band = lowest P15 to highest P85 (g / (61/7) per week).
+//   girls g/2mo P15–P85: 12–18 106–750 · 18–24 39–751   boys: 12–18 84–782 · 18–24 53–737
+//   girls cm/2mo P15–P85: 12–18 1.3–3.2 · 18–24 0.9–2.9  boys: 12–18 1.1–3.2 · 18–24 0.9–2.8
+// The toddler year follows the same rule (V-M-282-8, V-CA-282-2). Its P15 floor falls to 0–10 g/week,
+// so after 12 m a "slow" verdict means truly little gain; centile crossing (computeGrowthVelocity)
+// carries the rest. The old one-row 12–24 band (20–85 g/week) read a normal P15–P25 toddler "slow".
+const GROWTH_VELOCITY_BANDS = {
+  f: [
+    { fromMo: 0, toMo: 1, label: '0–1 months', wGWkMin: 150, wGWkMax: 295, wGWkMedian: 220, wGDayMin: 21.5, wGDayMax: 41.9, hCmMoMin: 3.35, hCmMoMax: 4.55, hCmWk: '0.75–1.05' },
+    { fromMo: 1, toMo: 2, label: '1–2 months', wGWkMin: 155, wGWkMax: 280, wGWkMedian: 215, wGDayMin: 22.3, wGDayMax: 39.6, hCmMoMin: 3.35, hCmMoMax: 4.55, hCmWk: '0.75–1.05' },
+    { fromMo: 2, toMo: 3, label: '2–3 months', wGWkMin: 110, wGWkMax: 220, wGWkMedian: 165, wGDayMin: 16.2, wGDayMax: 31.3, hCmMoMin: 2.7, hCmMoMax: 3.7, hCmWk: '0.6–0.9' },
+    { fromMo: 3, toMo: 4, label: '3–4 months', wGWkMin: 85, wGWkMax: 185, wGWkMedian: 135, wGDayMin: 12.3, wGDayMax: 26.5, hCmMoMin: 2.1, hCmMoMax: 3.05, hCmWk: '0.45–0.75' },
+    { fromMo: 4, toMo: 5, label: '4–5 months', wGWkMin: 65, wGWkMax: 165, wGWkMedian: 110, wGDayMin: 9.3, wGDayMax: 23.1, hCmMoMin: 1.7, hCmMoMax: 2.6, hCmWk: '0.35–0.6' },
+    { fromMo: 5, toMo: 6, label: '5–6 months', wGWkMin: 45, wGWkMax: 145, wGWkMedian: 90, wGDayMin: 6.6, wGDayMax: 20.1, hCmMoMin: 1.35, hCmMoMax: 2.25, hCmWk: '0.3–0.55' },
+    { fromMo: 6, toMo: 7, label: '6–7 months', wGWkMin: 30, wGWkMax: 130, wGWkMedian: 80, wGDayMin: 4.7, wGDayMax: 18.3, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.2–0.5' },
+    { fromMo: 7, toMo: 8, label: '7–8 months', wGWkMin: 25, wGWkMax: 125, wGWkMedian: 70, wGDayMin: 3.5, wGDayMax: 17.3, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.2–0.5' },
+    { fromMo: 8, toMo: 9, label: '8–9 months', wGWkMin: 15, wGWkMax: 115, wGWkMedian: 65, wGDayMin: 2.2, wGDayMax: 16.1, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.2–0.5' },
+    { fromMo: 9, toMo: 10, label: '9–10 months', wGWkMin: 5, wGWkMax: 110, wGWkMedian: 55, wGDayMin: 1.3, wGDayMax: 15.3, hCmMoMin: 0.85, hCmMoMax: 1.8, hCmWk: '0.15–0.45' },
+    { fromMo: 10, toMo: 11, label: '10–11 months', wGWkMin: 5, wGWkMax: 110, wGWkMedian: 55, wGDayMin: 0.7, wGDayMax: 15.1, hCmMoMin: 0.85, hCmMoMax: 1.8, hCmWk: '0.15–0.45' },
+    { fromMo: 11, toMo: 12, label: '11–12 months', wGWkMin: 0, wGWkMax: 110, wGWkMedian: 55, wGDayMin: 0.4, wGDayMax: 15.4, hCmMoMin: 0.85, hCmMoMax: 1.8, hCmWk: '0.15–0.45' },
+    { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 10, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.7, wGDayMax: 12.3, hCmMoMin: 0.65, hCmMoMax: 1.6, hCmWk: '0.1–0.4' },
+    { fromMo: 18, toMo: 24, label: '18–24 months', wGWkMin: 0, wGWkMax: 90, wGWkMedian: 45, wGDayMin: 0.6, wGDayMax: 12.4, hCmMoMin: 0.45, hCmMoMax: 1.45, hCmWk: '0.1–0.35' } ],
+  m: [
+    { fromMo: 0, toMo: 1, label: '0–1 months', wGWkMin: 170, wGWkMax: 335, wGWkMedian: 255, wGDayMin: 24.3, wGDayMax: 47.8, hCmMoMin: 3.65, hCmMoMax: 4.85, hCmWk: '0.8–1.15' },
+    { fromMo: 1, toMo: 2, label: '1–2 months', wGWkMin: 185, wGWkMax: 325, wGWkMedian: 255, wGDayMin: 26.9, wGDayMax: 46.4, hCmMoMin: 3.65, hCmMoMax: 4.85, hCmWk: '0.8–1.15' },
+    { fromMo: 2, toMo: 3, label: '2–3 months', wGWkMin: 130, wGWkMax: 250, wGWkMedian: 185, wGDayMin: 18.9, wGDayMax: 35.2, hCmMoMin: 3.0, hCmMoMax: 4.0, hCmWk: '0.65–0.95' },
+    { fromMo: 3, toMo: 4, label: '3–4 months', wGWkMin: 90, wGWkMax: 195, wGWkMedian: 140, wGDayMin: 13.2, wGDayMax: 27.8, hCmMoMin: 2.3, hCmMoMax: 3.3, hCmWk: '0.5–0.8' },
+    { fromMo: 4, toMo: 5, label: '4–5 months', wGWkMin: 70, wGWkMax: 175, wGWkMedian: 120, wGDayMin: 10.2, wGDayMax: 24.6, hCmMoMin: 1.75, hCmMoMax: 2.75, hCmWk: '0.4–0.65' },
+    { fromMo: 5, toMo: 6, label: '5–6 months', wGWkMin: 45, wGWkMax: 150, wGWkMedian: 95, wGDayMin: 7.1, wGDayMax: 21.1, hCmMoMin: 1.4, hCmMoMax: 2.35, hCmWk: '0.3–0.55' },
+    { fromMo: 6, toMo: 7, label: '6–7 months', wGWkMin: 35, wGWkMax: 135, wGWkMedian: 80, wGDayMin: 5, wGDayMax: 18.9, hCmMoMin: 1.0, hCmMoMax: 2.05, hCmWk: '0.2–0.5' },
+    { fromMo: 7, toMo: 8, label: '7–8 months', wGWkMin: 25, wGWkMax: 125, wGWkMedian: 75, wGDayMin: 3.6, wGDayMax: 17.6, hCmMoMin: 1.0, hCmMoMax: 2.05, hCmWk: '0.2–0.5' },
+    { fromMo: 8, toMo: 9, label: '8–9 months', wGWkMin: 15, wGWkMax: 120, wGWkMedian: 65, wGDayMin: 2.5, wGDayMax: 16.7, hCmMoMin: 1.0, hCmMoMax: 2.05, hCmWk: '0.2–0.5' },
+    { fromMo: 9, toMo: 10, label: '9–10 months', wGWkMin: 10, wGWkMax: 115, wGWkMedian: 60, wGDayMin: 1.5, wGDayMax: 16, hCmMoMin: 0.85, hCmMoMax: 1.75, hCmWk: '0.15–0.45' },
+    { fromMo: 10, toMo: 11, label: '10–11 months', wGWkMin: 5, wGWkMax: 110, wGWkMedian: 55, wGDayMin: 0.8, wGDayMax: 15.8, hCmMoMin: 0.85, hCmMoMax: 1.75, hCmWk: '0.15–0.45' },
+    { fromMo: 11, toMo: 12, label: '11–12 months', wGWkMin: 0, wGWkMax: 115, wGWkMedian: 55, wGDayMin: 0.4, wGDayMax: 16, hCmMoMin: 0.85, hCmMoMax: 1.75, hCmWk: '0.15–0.45' },
+    { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 5, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.3, wGDayMax: 12.9, hCmMoMin: 0.55, hCmMoMax: 1.6, hCmWk: '0.1–0.4' },
+    { fromMo: 18, toMo: 24, label: '18–24 months', wGWkMin: 5, wGWkMax: 85, wGWkMedian: 45, wGDayMin: 0.8, wGDayMax: 12.1, hCmMoMin: 0.45, hCmMoMax: 1.4, hCmWk: '0.1–0.35' } ]
+};
+// The band for an age in months. A fractional age is bracketed by completed months, except in the
+// half month before the first birthday, which takes the toddler row (the V-M-266-4 rounding, kept
+// at 12 m only) — so a 1.6-month baby is judged on the 1–2 row, never the gentler 2–3 one
+// (V-M-282-9, V-K-282-3). Past 24 m: the last row. Sex unknown → the girls' set as a stand-in, like
+// whoT(): only reachable behind the profile gate, where nothing renders it.
+// For a weight velocity pass the WINDOW MIDPOINT (gvBandAge); a single measurement passes its own
+// age (gvAgeAt) — never today's age: two cards reading one velocity must pick one band, even when a
+// month boundary has passed since the weigh-in (PC-1, bug #25; V-CA-282b-1).
+function growthVelocityBand(ageMonths) {
+  const rows = GROWTH_VELOCITY_BANDS[childSex() || 'f'];
+  const raw = Number(ageMonths) || 0;
+  const m = (raw >= 11.5 && raw < 12) ? 12 : Math.floor(raw);
+  for (let i = 0; i < rows.length - 1; i++) if (m < rows[i].toMo) return rows[i];
+  return rows[rows.length - 1];
+}
+
+// A band's age range as it reads in a sentence: "the first month", else its label ("2–3 months").
+// "On track for 0–1 months" read oddly (V-M-282b-7, V-V-282b-7).
+function gvBandPhrase(band) {
+  if (!band) return '';
+  return (band.fromMo === 0 && band.toMo === 1) ? 'the first month' : band.label;
+}
+
+// The age (fractional months) to judge a velocity at: the age on the date of the latest measurement
+// it ends on (a growthData row, or a bare date string). Today's age only when there is no date.
+// The fallback keeps calendar months (ageAt) and adds the days, so its whole part equals ageAt().months.
+function gvAgeAt(entryOrDate) {
+  const date = (entryOrDate && typeof entryOrDate === 'object') ? entryOrDate.date : entryOrDate;
+  if (date) {
+    const mo = ageMonthsAt(date);
+    if (isFinite(mo)) return Math.max(0, mo);
+  }
+  const a = ageAt();
+  return a.months + a.days / 30.44;
+}
+
+// The age a weight-velocity band is looked up at: the midpoint of the window it spans (latest
+// weigh-in age − window/2), so a 4-week gain ending early in a month is judged on the month it mostly
+// covers (V-CA-282b-1). With no start row, the latest measurement's age.
+function gvBandAge(latest, prev) {
+  const end = gvAgeAt(latest);
+  if (!prev || !prev.date || !latest || !latest.date) return end;
+  const start = ageMonthsAt(prev.date);
+  return isFinite(start) ? Math.max(0, (Math.max(0, start) + end) / 2) : end;
+}
+
+// Age at a weigh-in as words for copy: "in the first month", "at 3 months", "at 1 year 2 months".
+// Calendar months on the weigh-in's LOCAL date (HR-12: _parseLocalDate, never ageAt('YYYY-MM-DD'),
+// which reads a bare date as UTC). Bands still use gvAgeAt / gvBandAge (V-M-282b-7, V-V-282b-7).
+function gvAgePhrase(entryOrDate) {
+  const date = (entryOrDate && typeof entryOrDate === 'object') ? entryOrDate.date : entryOrDate;
+  const local = _parseLocalDate(date);
+  const months = ageAt(local || undefined).months;
+  return months === 0 ? 'in the first month' : 'at ' + fmtAgeMonths(months);
+}
+
+// ── Newborn window (PC-1, bug #27; Maren V-M-282b-1..4, Vela V-V-282b-1, Kael V-K-282b-3) ──
+// In the first weeks a weight change is not a growth rate: babies lose weight after birth and regain
+// it by about 2 weeks. Every weight verdict before day 28 goes through gvNewbornCheck(), the one helper
+// both engines (getGrowthVelocity here, computeGrowthVelocity in medical.js) call, so they agree.
+//   AAP / HealthyChildren.org, "Your Baby's First Month: Growth & Physical Appearance"
+//   (https://www.healthychildren.org/English/ages-stages/baby/Pages/First-Month-Physical-Appearance-and-Growth.aspx,
+//   read 2026-10-31): "All newborns lose weight during the first 7 days. Beginning once they are
+//   about 5 days old, they should start gaining weight steadily. Then, by about 2 weeks of age, they
+//   should be back at their original birth weight. Almost all babies will have regained their birth
+//   weight by 3 weeks of age."
+//   NHS, "Your baby's weight and height"
+//   (https://www.nhs.uk/baby/babys-development/height-weight-and-reviews/baby-height-and-weight/,
+//   read 2026-10-31): "It's normal for babies to lose some weight in the first few days after birth.
+//   Your baby will be weighed during their first 2 weeks to make sure they're regaining their
+//   birthweight. Most babies are at, or above, their birthweight by 3 weeks."
+//   NICE NG75, Faltering growth, Recommendations
+//   (https://www.nice.org.uk/guidance/ng75/chapter/Recommendations, verified by Maren 2026-10-31):
+//   1.1.1 "most infants have returned to their birth weight by 3 weeks of age";
+//   1.1.2 "If infants in the early days of life lose more than 10% of their birth weight: perform a
+//   clinical assessment, looking for evidence of dehydration…";
+//   1.1.4 "If infants lose more than 10% of their birth weight in the early days of life, or they
+//   have not returned to their birth weight by 3 weeks of age, consider: referral to paediatric
+//   services…".
+//   WHO, Infant and young child feeding fact sheet
+//   (https://www.who.int/news-room/fact-sheets/detail/infant-and-young-child-feeding): "breastfeed
+//   exclusively … for the first 6 months of life… complementary (solid) foods are introduced from six
+//   months" — so food advice for slow gain is held back under 6 months (gvFoodAdviceOk).
+// Rules (day = whole calendar days from the birth date to the latest weigh-in):
+//   1. 'newborn-loss' — a birth-weight row exists, day < 21 and the loss is MORE than 10% (strictly,
+//      in whole grams: (birthG − latestG) × 10 > birthG, so exactly 10% is not flagged — V-M-282c-4).
+//      Overrides every other verdict (NICE 1.1.2 / 1.1.4). No birth row → no %-loss flag.
+//   2. Regain, not rate — day < 28 and the velocity window starts before day 5 (AAP: steady gain
+//      from about day 5). getGrowthVelocity's 28-day lookback falls back to the FIRST weigh-in until
+//      day 28 (Kael V-K-282b-3), so the window start is the first weight row in both engines.
+//      With a birth row: at or above birth weight with no loss since the previous weigh-in →
+//      'regained'; at or above it but down since the previous weigh-in → a caution "weigh again"
+//      line, never green (V-M-282c-3, V-K-282c-2); below it from day 14 → 'not-regained' (from
+//      day 21 the NICE 1.1.4 referral framing); before day 14 → 'newborn'.
+//      Without one (V-M-282c-2, V-K-282c-1): a latest weigh-in from day 14 at or below the first
+//      weigh-in → 'not-regained' (referral from day 21); above it → a caution "not confirmed" line;
+//      before day 14 → 'newborn'. Never GV_NEWBORN_NOTE from day 14.
+//   3. Below birth weight from day 28 until about 3 months (a birth row exists) → 'not-regained'
+//      with the referral (NICE 1.1.4: not back by 3 weeks), before any rate (V-M-282c-5).
+//   4. Otherwise a latest weigh-in before day 14 → 'newborn': no rate verdict in the first two
+//      weeks. It takes no rate from the caller, so both engines (whose rate windows differ under
+//      12 m) get the same answer from the same rows (V-K-282c-6). Anything else → null: the rate stands.
+// 'newborn' carries a recheck (caution) once TODAY is day 14+ while the weigh-in was before day 14
+// (V-M-282b-4). The "down since the last weigh-in" and "not confirmed" lines are 'newborn' + recheck
+// too, so every reader that colours a recheck amber colours them amber.
+const GV_NEWBORN_DAYS = 14;
+const GV_NEWBORN_LOSS_FRACTION = 0.10;   // NICE NG75 1.1.2: "more than 10%" (checked in whole grams)
+const GV_NEWBORN_LOSS_DAYS = 21;         // "the early days of life" — before 3 weeks
+const GV_REGAIN_DAYS = 28;               // regain judged until the lookback leaves the first weigh-in
+const GV_REGAIN_START_DAY = 5;           // AAP: "about 5 days old … gaining weight steadily"
+const GV_REGAIN_REFER_DAY = 21;          // NICE 1.1.1 / 1.1.4: back by 3 weeks
+const GV_REGAIN_LATE_DAYS = 92;          // below birth weight past day 28 is flagged until ~3 months
+const GV_CENTILE_LINES = [3, 15, 50, 85, 97];   // the major WHO chart lines (computeGrowthVelocity's slide check)
+function _gvNewbornWindow(ageMonthsAtMeasurement) {
+  if (ageMonthsAtMeasurement == null || ageMonthsAtMeasurement === '') return false;   // Number(null) is 0, not "unknown"
+  const mo = Number(ageMonthsAtMeasurement);
+  return Number.isFinite(mo) && Math.round(mo * 30.44) < GV_NEWBORN_DAYS;
+}
+// The plain-words lines (Vela V-V-282b-4). Contact copy names the doctor first (the family is in India).
+const GV_NEWBORN_NOTE = 'Early days — most babies lose a little weight after birth and are back to birth weight by about 2 weeks. Your doctor or midwife checks this at the first weigh-ins.';
+const GV_NEWBORN_SHORT = 'Early days — most regain birth weight by 2 weeks';   // gauges and chips (no full stop: V-V-282c-8)
+const GV_REGAINED_NOTE = 'Back to birth weight — right on schedule';
+
+// Whole calendar days from the birth date to a date (HR-12: ageMonthsAt reads a local day).
+function gvDayOf(date) {
+  const mo = ageMonthsAt(date);
+  return isFinite(mo) ? Math.round(mo * 30.44) : NaN;
+}
+// The birth row: the growthData row dated on the birth date (the qaAnswerAge convention) that carries
+// the measure ('wt' by default, or 'ht') — never the first row, which may be days later and already
+// past the dip (V-M-282b-1), or may not carry that measure at all (V-M-282c-7, V-CA-282c-6).
+function gvBirthRow(measure) {
+  const key = toDateStr(DOB);
+  const m = measure || 'wt';
+  return (growthData || []).find(r => r && r.date === key && typeof r[m] === 'number' && r[m] > 0) || null;
+}
+// Solids have started: the profile's solids start date is today or earlier. The ONE check, read by
+// gvFoodAdviceOk and diet.js _libSuggestions (Ceres V-C-282c-1).
+function solidsStarted() {
+  return typeof SOLIDS_START === 'undefined' || toDateStr(SOLIDS_START) <= today();
+}
+// Food advice for slow gain only from 6 months at the weigh-in AND once solids have started — the
+// Library's gate too (Ceres V-C-282c-1; WHO IYCF quoted above). An early solids start at 4 months
+// does not make food the answer to slow gain: under 6 months milk is the diet.
+// latest: the latest weight row (null → today's age).
+function gvFoodAdviceOk(latest) {
+  return gvAgeAt(latest) >= 6 && solidsStarted();
+}
+const GV_MILK_ONLY_NOTE = 'Under 6 months, milk is the whole diet — talk to your doctor about feeding.';
+
+// The weight row just before a date (the previous weigh-in), from growthData.
+function _gvWeightRowBefore(date) {
+  let prev = null;
+  (growthData || []).forEach(r => {
+    if (r && typeof r.wt === 'number' && r.wt > 0 && r.date && r.date < date && (!prev || r.date > prev.date)) prev = r;
+  });
+  return prev;
+}
+
+// latest: the latest weight row; first: the first weight row (the window start through day 28).
+// The previous weigh-in is read from growthData. Returns null (the rate verdict stands) or
+// { status: 'newborn' | 'newborn-loss' | 'not-regained' | 'regained', day, birthWt, latestWt,
+//   lossPct, referral, recheck, dropping, birthUnknown, tone: 'neutral' | 'caution' | 'good',
+//   text, short, head (Q&A headline), chip (Home chip value), visit }.
+function gvNewbornCheck(latest, first) {
+  if (!latest || !latest.date || typeof latest.wt !== 'number') return null;
+  const day = gvDayOf(latest.date);
+  if (!isFinite(day) || day < 0) return null;
+  const birth = gvBirthRow();
+  const hasBirth = !!(birth && birth.date !== latest.date);
+  // Whole grams, so a 10.0% loss is never "more than 10%" by float error (V-M-282c-4).
+  const bG = hasBirth ? Math.round(birth.wt * 1000) : null;
+  const lG = Math.round(latest.wt * 1000);
+  const overLoss = hasBirth && (bG - lG) * 10 > bG;
+  const startDay = first && first.date ? gvDayOf(first.date) : day;
+  const fromBirthWindow = isFinite(startDay) && startDay < GV_REGAIN_START_DAY;
+  const prev = _gvWeightRowBefore(latest.date);
+  let status = null, dropping = false, birthUnknown = false, noBirthLower = false;
+  if (overLoss && day < GV_NEWBORN_LOSS_DAYS) status = 'newborn-loss';
+  else if (day < GV_REGAIN_DAYS && fromBirthWindow) {
+    if (hasBirth) {
+      if (lG >= bG) {
+        // Back to birth weight — 'regained' only with no loss since the previous weigh-in.
+        if (prev && prev.date !== birth.date && Math.round(prev.wt * 1000) > lG) { status = 'newborn'; dropping = true; }
+        else status = 'regained';
+      } else status = day >= GV_NEWBORN_DAYS ? 'not-regained' : 'newborn';
+    } else if (day >= GV_NEWBORN_DAYS) {
+      if (first && first.date !== latest.date && lG <= Math.round(first.wt * 1000)) { status = 'not-regained'; noBirthLower = true; }
+      else { status = 'newborn'; birthUnknown = true; }
+    } else status = 'newborn';
+  } else if (hasBirth && lG < bG && day >= GV_REGAIN_DAYS && day < GV_REGAIN_LATE_DAYS) status = 'not-regained';
+  else if (day < GV_NEWBORN_DAYS) status = 'newborn';
+  if (!status) return null;
+
+  const todayDay = gvDayOf(today());
+  const r = { status, day, birthWt: hasBirth ? birth.wt : null, latestWt: latest.wt,
+    lossPct: hasBirth ? (bG - lG) / bG * 100 : null,
+    referral: status === 'not-regained' && day >= GV_REGAIN_REFER_DAY,
+    dropping, birthUnknown,
+    recheck: status === 'newborn' && (dropping || birthUnknown || (day < GV_NEWBORN_DAYS && isFinite(todayDay) && todayDay >= GV_NEWBORN_DAYS)) };
+  const kg = w => (Math.round(w * 1000) / 1000) + ' kg';
+  if (status === 'newborn-loss') {
+    // To a tenth; a loss over 10% that rounds down to 10.0% still says it is over the line.
+    const shown = Math.round(r.lossPct * 10) / 10;
+    const pct = shown > 10 ? shown.toFixed(1).replace(/\.0$/, '') + '%' : 'just over 10%';
+    r.tone = 'caution';
+    r.text = 'Down ' + pct + ' from birth weight (' + kg(r.birthWt) + ' → ' + kg(r.latestWt) + '). A loss of more than 10% is when doctors and midwives check feeding — contact your doctor or midwife today.';
+    r.short = 'Down ' + pct + ' from birth weight — contact your doctor or midwife today';
+    r.head = 'down more than 10% from birth weight';
+    r.chip = 'Down >10%';
+    r.visit = 'Lost ' + pct + ' of birth weight by day ' + day + ' (' + kg(r.birthWt) + ' → ' + kg(r.latestWt) + ')';
+  } else if (status === 'not-regained') {
+    r.tone = 'caution';
+    const lead = noBirthLower
+      ? 'Lower than at day ' + startDay + ' — not back to birth weight yet' + (r.referral ? ' at ' + day + ' days' : '') + '.'
+      : 'Not back to birth weight yet at ' + day + ' days.';
+    r.text = r.referral
+      ? lead + ' Almost all babies are back by 3 weeks, and this is when doctors consider a referral to a children\'s doctor — contact your doctor or midwife today.'
+      : lead + ' Most babies are by about 2 weeks, almost all by 3 — tell your doctor or midwife.';
+    r.short = r.referral
+      ? (day < GV_REGAIN_DAYS ? 'Not back to birth weight at 3 weeks' : 'Still below birth weight at ' + Math.floor(day / 7) + ' weeks') + ' — contact your doctor or midwife today'
+      : 'Not back to birth weight yet — tell your doctor or midwife';
+    r.head = 'not back to birth weight yet';
+    r.chip = 'Not back yet';
+    r.visit = noBirthLower
+      ? 'Lower at day ' + day + ' than at day ' + startDay + ' (' + kg(first.wt) + ' → ' + kg(r.latestWt) + '); birth weight not recorded'
+      : 'Not back to birth weight at day ' + day + ' (' + kg(r.birthWt) + ' → ' + kg(r.latestWt) + ')';
+  } else if (status === 'regained') {
+    r.tone = 'good';
+    r.text = GV_REGAINED_NOTE + ' (' + kg(r.birthWt) + ' → ' + kg(r.latestWt) + ').';
+    r.short = 'Back to birth weight';
+    r.head = 'back to birth weight';
+    r.chip = 'Back to birth wt';
+    r.visit = 'Back to birth weight by day ' + day;
+  } else if (dropping) {
+    const downG = Math.round(prev.wt * 1000) - lG;
+    const prevDay = gvDayOf(prev.date);
+    r.tone = 'caution';
+    r.text = 'Back to birth weight, but down ' + downG + ' g since day ' + prevDay + ' — weigh again, and tell your doctor or midwife if it keeps dropping.';
+    r.short = 'Down ' + downG + ' g since day ' + prevDay + ' — weigh again';
+    r.head = 'down since the last weigh-in';
+    r.chip = 'Weigh again';
+    r.visit = 'Back to birth weight, then down ' + downG + ' g between day ' + prevDay + ' and day ' + day;
+  } else if (birthUnknown) {
+    r.tone = 'caution';
+    r.text = 'Back to birth weight not confirmed — add the birth weight, or ask your doctor or midwife.';
+    r.short = 'Back to birth weight not confirmed';
+    r.head = 'back to birth weight not confirmed';
+    r.chip = 'Not confirmed';
+    r.visit = 'Back to birth weight not confirmed (birth weight not recorded)';
+  } else if (r.recheck) {
+    r.tone = 'caution';
+    r.text = 'Last weighed at ' + day + ' days, during the after-birth dip — weigh again to check ' + childNameHtml() + ' is back to birth weight.';
+    r.short = 'Weigh again — back to birth weight not yet confirmed';
+    r.head = 'weigh again';
+    r.chip = 'Weigh again';
+    r.visit = 'Back to birth weight not yet confirmed (last weighed day ' + day + ')';
+  } else {
+    r.tone = 'neutral';
+    r.text = GV_NEWBORN_NOTE;
+    r.short = GV_NEWBORN_SHORT;
+    r.head = 'early days';
+    r.chip = 'Early days';
+    r.visit = 'Early-days weight dip (expected)';
+  }
+  return r;
+}
+// The one urgent action for a caution newborn line — the Q&A answers lead with it (V-M-282c-1,
+// V-K-282c-3, V-V-282c-3). null when the line is not a caution.
+function gvNewbornAction(nb) {
+  if (!nb || nb.tone !== 'caution') return null;
+  if (nb.status === 'newborn-loss' || nb.referral) return 'Contact your doctor or midwife today';
+  if (nb.status === 'not-regained') return 'Tell your doctor or midwife';
+  if (nb.dropping) return 'Weigh ' + childNameHtml() + ' again in a day or two, and tell your doctor or midwife if it keeps dropping';
+  if (nb.birthUnknown) return 'Add the birth weight, or ask your doctor or midwife';
+  return 'Weigh ' + childNameHtml() + ' again to confirm the return to birth weight';
+}
+// The "too soon to judge" line for a toddler whose two weigh-ins are under 28 days apart — one copy
+// for every reader (Info card, Q&A, Growth facts, the growth-diet card — Vela V-V-282c-6).
+function gvTooShortText(days) {
+  return pron('poss', true) + ' last two weigh-ins are only ' + days + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.';
+}
+
+// The band verdict alone for a gain (g/week) at a band age: 'in' | 'above' | 'below'.
+function gvBandVerdict(gPerWeek, bandAge) {
+  const band = growthVelocityBand(bandAge);
+  if (gPerWeek >= band.wGWkMin && gPerWeek <= band.wGWkMax) return 'in';
+  return gPerWeek > band.wGWkMax ? 'above' : 'below';
+}
+// The band verdict with the first-14-days carve-out, for a bare gain: 'in' | 'above' | 'below' |
+// 'newborn'. latestAge (default: ageMo) is the latest weigh-in's age, for the 14-day check.
+function gvWeightVerdict(gPerWeek, ageMo, latestAge) {
+  const v = gvBandVerdict(gPerWeek, ageMo);
+  return (v === 'below' && _gvNewbornWindow(latestAge != null ? latestAge : ageMo)) ? 'newborn' : v;
+}
+// The ONE weight verdict for a getGrowthVelocity() result — every Home reader uses this:
+// 'in' | 'above' | 'below' | 'newborn' | 'newborn-loss' | 'not-regained' (regained → 'in').
+function gvVelocityVerdict(velocity) {
+  if (!velocity || velocity.wtGPerWeek == null) return null;
+  if (velocity.wtVerdict) return velocity.wtVerdict;
+  return gvWeightVerdict(velocity.wtGPerWeek, gvBandAge(velocity.wtLatest, velocity.wtPrevious), gvAgeAt(velocity.wtLatest));
+}
+// Tone of a verdict, for colour: 'good' | 'neutral' | 'caution'. 'newborn' is neutral (never sky —
+// sky means above range on the gauges) unless it needs a recheck (V-V-282b-3).
+function gvVerdictTone(verdict, nb) {
+  if (verdict === 'in') return 'good';
+  if (verdict === 'newborn') return (nb && nb.recheck) ? 'caution' : 'neutral';
+  if (verdict === 'above') return 'neutral';
+  return 'caution';   // below, newborn-loss, not-regained
+}
+// The newborn line for a velocity's verdict ('newborn' / 'newborn-loss' / 'not-regained' / regained).
+function gvNewbornLine(velocity) {
+  const nb = velocity && velocity.wtNewborn;
+  return nb ? nb.text : GV_NEWBORN_NOTE;
+}
 
 function getGrowthNarrative(velocity) {
   const lines = [];
-  const ageM = ageAt().months;
 
   if (velocity.wtGPerWeek != null) {
     const gw = velocity.wtGPerWeek;
-    // WHO-based expected ranges by age (g/week; from 12 m one band fits girls and boys)
-    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMin : ageM <= 3 ? 150 : ageM <= 6 ? 100 : ageM <= 9 ? 70 : 55;
-    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.wGWkMax : ageM <= 3 ? 250 : ageM <= 6 ? 180 : ageM <= 9 ? 130 : 100;
-    let interp;
-    if (gw >= expectedMin && gw <= expectedMax) {
-      interp = `gaining ${gw}g/week — healthy pace for ${ageM} months`;
-    } else if (gw < expectedMin) {
-      interp = `gaining ${gw}g/week — below typical range (${expectedMin}–${expectedMax}g/week). Monitor closely`;
-    } else {
-      interp = `gaining ${gw}g/week — above typical range (${expectedMin}–${expectedMax}g/week). Likely a growth spurt`;
-    }
+    // WHO P15–P85 by age and sex (g/week; GROWTH_VELOCITY_BANDS), at the window midpoint (V-CA-282b-1)
+    const band = growthVelocityBand(gvBandAge(velocity.wtLatest, velocity.wtPrevious));
+    const expectedMin = band.wGWkMin;
+    const expectedMax = band.wGWkMax;
+    const verdict = gvVelocityVerdict(velocity);
+    const nb = velocity.wtNewborn;
     const windowText = velocity.wtDays >= 21 ? `over ${Math.round(velocity.wtDays / 7)} weeks` : `over ${velocity.wtDays} days`;
-    lines.push(`${zi('scale')} Weight: ${interp} (${windowText})`);
+    const change = `${gw >= 0 ? 'up' : 'down'} ${Math.abs(gw)}g/week`;
+    if (nb && nb.status === 'regained') {
+      lines.push(`${zi('scale')} Weight: ${nb.text}`);
+    } else if (verdict === 'newborn') {
+      lines.push(`${zi('scale')} Weight: ${change} (${windowText}). ${gvNewbornLine(velocity)}`);
+    } else if (verdict === 'newborn-loss' || verdict === 'not-regained') {
+      lines.push(`${zi('scale')} Weight: ${gvNewbornLine(velocity)}`);
+    } else if (verdict === 'in') {
+      lines.push(`${zi('scale')} Weight: gaining ${gw}g/week — healthy pace ${gvAgePhrase(velocity.wtLatest)} (${windowText})`);
+    } else if (verdict === 'below') {
+      lines.push(`${zi('scale')} Weight: ${gw >= 0 ? 'gaining ' + gw + 'g/week' : change} — below typical range (${expectedMin}–${expectedMax}g/week). Monitor closely (${windowText})`);
+    } else {
+      lines.push(`${zi('scale')} Weight: gaining ${gw}g/week — above typical range (${expectedMin}–${expectedMax}g/week). Likely a growth spurt (${windowText})`);
+    }
   }
 
   if (velocity.htCmPerMonth != null) {
     const cm = velocity.htCmPerMonth;
-    const expectedMin = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMin : ageM <= 3 ? 2.5 : ageM <= 6 ? 1.5 : ageM <= 9 ? 1.2 : 1.0;
-    const expectedMax = ageM >= 12 ? GROWTH_VELOCITY_12_24.hCmMoMax : ageM <= 3 ? 4.0 : ageM <= 6 ? 2.8 : ageM <= 9 ? 2.0 : 1.6;
+    const band = growthVelocityBand(gvAgeAt(velocity.htLatest));
+    const expectedMin = band.hCmMoMin;
+    const expectedMax = band.hCmMoMax;
     let interp;
     if (cm >= expectedMin && cm <= expectedMax) {
       interp = `growing ${cm} cm/month — on track`;
@@ -7419,6 +7884,59 @@ function _msStandardFor(standards, key) {
     Object.keys(f).forEach(function(k) { if (!(k in merged)) merged[k] = f[k]; });
   });
   return merged;
+}
+
+// msLabel — display title for a milestone (Carina, BUGS.md S2–S4 #5).
+// A MILESTONE_STANDARDS row's `text` is its record key (id = slugify(text)),
+// frozen because synced records store and match it; an optional `label` is
+// the pronoun-free title to SHOW. Pass the raw milestone text, get back
+// row.label || row.text. Exact lookup first, then lowercased/trimmed; unknown
+// text (custom milestones, legacy rows) falls back to the text itself.
+// DISPLAY ONLY — never slugify, store, compare or key on the result.
+// Safe before data loads: returns the text and retries the build next call.
+var _msLabelMap = null;
+function _msLabelBuild() {
+  if (_msLabelMap) return _msLabelMap;
+  if (typeof MILESTONE_STANDARDS !== 'object' || !MILESTONE_STANDARDS) return null;
+  const exact = {}, loose = {}, byId = {};
+  Object.keys(MILESTONE_STANDARDS).forEach(function(std) {
+    const spec = MILESTONE_STANDARDS[std];
+    if (!spec || typeof spec !== 'object') return;
+    Object.keys(spec).forEach(function(k) {
+      const rows = spec[k];
+      if (!Array.isArray(rows)) return;
+      rows.forEach(function(row) {
+        if (!row || typeof row.text !== 'string' || !row.text) return;
+        const shown = (typeof row.label === 'string' && row.label) ? row.label : row.text;
+        if (!(row.text in exact) || shown !== row.text) exact[row.text] = shown;
+        const lk = row.text.trim().toLowerCase();
+        if (!(lk in loose) || shown !== row.text) loose[lk] = shown;
+        const id = slugify(row.text);
+        if (!(id in byId) || shown !== row.text) byId[id] = shown;
+      });
+    });
+  });
+  _msLabelMap = { exact: exact, loose: loose, byId: byId };
+  return _msLabelMap;
+}
+function msLabel(text) {
+  if (typeof text !== 'string' || !text) return text;
+  const map = _msLabelBuild();
+  if (!map) return text;
+  if (Object.prototype.hasOwnProperty.call(map.exact, text)) return map.exact[text];
+  const lk = text.trim().toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(map.loose, lk)) return map.loose[lk];
+  return text;
+}
+// msLabelById — the same display title looked up by milestone id
+// (slugify(row.text)), for surfaces that only hold the id (e.g. tap-evidence
+// keyed by the slug fallback). Returns null when the id is not a
+// MILESTONE_STANDARDS row, so callers keep their own fallback. Display only.
+function msLabelById(id) {
+  if (typeof id !== 'string' || !id) return null;
+  const map = _msLabelBuild();
+  if (!map) return null;
+  return Object.prototype.hasOwnProperty.call(map.byId, id) ? map.byId[id] : null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────

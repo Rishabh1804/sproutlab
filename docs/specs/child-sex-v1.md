@@ -46,7 +46,7 @@
 - **The one-time note retired:** "Growth now uses the WHO charts" is gone (V-M-281-3). It meant something only to this family, a month ago.
 - **Chips:** both use the same sage. The choice picks a chart, not a colour.
 
-## 3. S2: pronoun pass (next)
+## 3. S2: pronoun pass (built 2026-10-31)
 - About 600 she/her sites: data.js 204, recipes.js 109, medical.js 107, diet.js 44, home.js 41, and the rest in the intelligence files.
 - Each site goes through `pron()`, or is rewritten to need no pronoun when that reads better. Load-time tables (data.js, recipes.js) are built before the profile loads, so they need render-time substitution or neutral wording.
 - **Owners:** Carina (data.js), Ceres (recipes, diet), Maren (home, medical), Kael and Vela (intelligence). This is a large sweep that changes no behaviour.
@@ -57,15 +57,15 @@
   - **The Q&A match vocabulary is not render copy.** That means the intent triggers, the classifier regexes, `excludeWords`, `qaWords` and the lookback strippers. These stay canonical she/her and go on the audit's allowlist. Running them through `pron()` at load time would read "they" and switch the intents off (V-K-281-2).
   - **Q&A input:** `_qaNameAsShe` also folds he/him/his/himself to the canonical subject when `childSex()==='m'`. Add he/him/his and they/them/their to `excludeWords` / `qaWords` (V-K-281-1, V-C-281-3).
   - **Q&A titles and chips** ("Can she eat …?", "How's her sleep?") go through `pron()` at render time (V-K-281-3).
-  - **Sex-keyed nutrition copy:** data.js's fish note says "for a girl, NHS caps oily fish at about 2 portions a week". NHS gives 4 for boys, so key it on `childSex()`, with Ceres (Cipher #281 nit 3).
+  - **Sex-keyed nutrition copy:** the oily-fish note in data.js now gives NHS's limit for both sexes (girls up to 2 portions a week, boys up to 4), cited, because the load-time table can't key on `childSex()` (Cipher #281 nit 3).
   - **Vela's order:** quicklog's nap verdict ("at her age" → "at this age"), home.js, Smart Q&A text, illness, then the load-time tables.
 
-## 4. S3: sex-specific care content (needs Maren, with cited sources)
+## 4. S3: sex-specific care content (built 2026-10-31; sources in `docs/specs/care-guidance-s3-sources.md`)
 These are topics that differ by sex in the 0–24 month range. Each needs a citation (IAP / AAP / NHS), the half-awake test, and Maren's sign-off.
 - **Boys:**
   - **Foreskin care.** Never pull back the foreskin of an uncircumcised boy; clean only the outside. It separates naturally, often not until 3–5 years or later. Ballooning when passing urine is normal. Redness, swelling or straining means see the doctor. Add care after circumcision too, since many boys in India are circumcised after the newborn period.
   - **Undescended testes.** Both testes should be felt in the scrotum by 6 months. If not, see the doctor, because surgery is advised by 6–18 months.
-  - **Hydrocele.** A soft, painless scrotal swelling that stays the same size usually settles by 1–2 years.
+  - **Hydrocele.** A soft, painless scrotal swelling usually settles by 1–2 years. It can change size (AAP), and so can a hernia, so size alone doesn't tell them apart.
   - **Testicular torsion.** Sudden scrotal pain or swelling is an emergency: time-critical, about 6 hours, and possible in infants and with an undescended testis.
   - **Nappy changes.** Point the penis down.
 - **Girls:**
@@ -82,7 +82,7 @@ These are topics that differ by sex in the 0–24 month range. Each needs a cita
 - **Sources** (each needed before Maren signs off): undescended testes, AUA 2014 (refer by 6 months corrected age, surgery by 18 months); IAP / AAP / NHS for the rest.
 - **Where it lives:** a small Medical → Body care card, keyed on `childSex()` and age, plus the fever triage hint. Content is Maren's; the render is Vela's.
 
-## 5. S4: infant velocity bands (found during S1)
+## 5. S4: infant velocity bands (built 2026-10-31: `GROWTH_VELOCITY_BANDS` in core.js)
 - The 0–12 month weight bands (150–250 / 100–180 / 70–130 / 55–100 g/week) are copied into about nine sites, and they are narrower than WHO's P15–P85.
   - 9–12 m: WHO is about 21–91 g/week, so a normal infant reads "slow".
   - 0–2 m: the boys' P50 (≈255 g/week) sits above the 250 maximum.

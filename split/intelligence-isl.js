@@ -19,23 +19,27 @@ function _qaHandleBlur() {
   }, 200);
 }
 
-var QA_PLACEHOLDERS = [
-  'How is she doing?',
+// Built at call time, not load time: the chips and placeholders carry the child's pronouns
+// (child-sex-v1 S2, V-K-281-3), and childSex() is only known once the profile has loaded.
+// A tapped or typed boy's phrasing folds back to the canonical she/her match vocabulary in
+// _qaNameAsShe, so the intents still fire.
+function qaPlaceholders() { return [
+  'How is ' + pron('subj') + ' doing?',
   'ragi, banana \u2014 best combos?',
   'Can I give honey?',
-  'She has a rash\u2026',
+  pron('subj', true) + ' has a rash\u2026',
   'Going out tomorrow',
-  'What nutrients is she missing?',
+  'What nutrients is ' + pron('subj') + ' missing?',
   'Which food helps sleep?',
   'carrot, dal, ghee \u2014 what to make?',
   'How do I improve sleep?'
-];
+]; }
 
 // ── TYPEAHEAD SUGGESTION POOL ──
 
-var QA_SUGGEST_POOL = [
+function qaSuggestPool() { return [
   // Sleep
-  { text: 'How is her sleep?', color: 'indigo' },
+  { text: 'How is ' + pron('poss') + ' sleep?', color: 'indigo' },
   { text: 'Why is sleep bad?', color: 'indigo' },
   { text: 'How to improve sleep?', color: 'indigo' },
   { text: 'Sleep yesterday', color: 'indigo' },
@@ -45,12 +49,12 @@ var QA_SUGGEST_POOL = [
   { text: 'Earlier bedtime tips', color: 'indigo' },
   // Diet
   { text: 'What should I feed today?', color: 'peach' },
-  { text: 'What did she eat yesterday?', color: 'peach' },
-  { text: 'What nutrients is she missing?', color: 'peach' },
+  { text: 'What did ' + pron('subj') + ' eat yesterday?', color: 'peach' },
+  { text: 'What nutrients is ' + pron('subj') + ' missing?', color: 'peach' },
   { text: 'Food variety tips', color: 'peach' },
   { text: 'Texture progression', color: 'peach' },
   { text: 'Can I give honey?', color: 'peach' },
-  { text: 'Can she eat egg?', color: 'peach' },
+  { text: 'Can ' + pron('subj') + ' eat egg?', color: 'peach' },
   { text: 'Iron-rich foods', color: 'peach' },
   // Poop
   { text: 'Poop update', color: 'amber' },
@@ -71,15 +75,15 @@ var QA_SUGGEST_POOL = [
   { text: 'Rash', color: 'sky' },
   { text: 'Teething', color: 'sky' },
   // Growth
-  { text: 'How is her growth?', color: 'rose' },
+  { text: 'How is ' + pron('poss') + ' growth?', color: 'rose' },
   { text: 'Weight gain tips', color: 'rose' },
   { text: 'Growth percentile', color: 'rose' },
   // Milestones
   { text: 'Milestone progress', color: 'lav' },
-  { text: 'Is she on track?', color: 'lav' },
+  { text: 'Is ' + pron('subj') + ' on track?', color: 'lav' },
   { text: 'Crawling progress', color: 'lav' },
   // Activities
-  { text: 'Best activities for her age?', color: 'sage' },
+  { text: 'Best activities for ' + pron('poss') + ' age?', color: 'sage' },
   { text: 'Activities for motor skills', color: 'sage' },
   { text: 'Tummy time tips', color: 'sage' },
   // Temporal
@@ -88,7 +92,7 @@ var QA_SUGGEST_POOL = [
   { text: 'Last week', color: 'indigo' },
   { text: 'This month', color: 'indigo' },
   // Overall
-  { text: 'How is she doing?', color: 'rose' },
+  { text: 'How is ' + pron('subj') + ' doing?', color: 'rose' },
   { text: 'Overall score', color: 'rose' },
   { text: 'Going out tomorrow', color: 'sage' },
   { text: 'Doctor visit prep', color: 'sky' },
@@ -96,21 +100,21 @@ var QA_SUGGEST_POOL = [
   // Session B: Lookback + Pattern + Planning
   { text: 'Last poop', color: 'amber' },
   { text: 'Last nap', color: 'lav' },
-  { text: 'When did she last eat ragi?', color: 'peach' },
-  { text: 'What is her routine?', color: 'indigo' },
-  { text: 'What does she like?', color: 'peach' },
-  { text: 'Foods she rejects', color: 'peach' },
+  { text: 'When did ' + pron('subj') + ' last eat ragi?', color: 'peach' },
+  { text: 'What is ' + pron('poss') + ' routine?', color: 'indigo' },
+  { text: 'What does ' + pron('subj') + ' like?', color: 'peach' },
+  { text: 'Foods ' + pron('subj') + ' rejects', color: 'peach' },
   { text: 'What is improving?', color: 'sage' },
   { text: 'Any concerns?', color: 'amber' },
   { text: 'This week vs last week', color: 'indigo' },
-  { text: 'How old is she?', color: 'rose' },
+  { text: 'How old is ' + pron('subj') + '?', color: 'rose' },
   { text: 'Logging streak', color: 'amber' },
   { text: 'Tomorrow plan', color: 'lav' },
   // Ingredient picker
   { text: 'What can I make?', color: 'peach' },
   { text: 'Ingredient picker', color: 'peach' },
   { text: 'Meal combo ideas', color: 'peach' }
-];
+]; }
 
 function _qaUpdateSuggestions(text) {
   var el = document.getElementById('qaSuggest');
@@ -126,16 +130,17 @@ function _qaUpdateSuggestions(text) {
 
   var lower = text.toLowerCase();
   var matches = [];
+  var pool = qaSuggestPool();
 
   // For short inputs (2-3 chars), match word boundaries only to avoid noise
   // For longer inputs (4+), allow full substring matching
   if (lower.length <= 3) {
     var wordStartRx = new RegExp('\\b' + lower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    matches = QA_SUGGEST_POOL.filter(function(s) {
+    matches = pool.filter(function(s) {
       return wordStartRx.test(s.text.toLowerCase());
     });
   } else {
-    matches = QA_SUGGEST_POOL.filter(function(s) {
+    matches = pool.filter(function(s) {
       return s.text.toLowerCase().indexOf(lower) !== -1;
     });
   }
@@ -143,7 +148,7 @@ function _qaUpdateSuggestions(text) {
   // Multi-token fallback for longer inputs
   if (matches.length < 3 && lower.length >= 3) {
     var tokens = lower.split(/\s+/);
-    QA_SUGGEST_POOL.forEach(function(s) {
+    pool.forEach(function(s) {
       if (matches.indexOf(s) !== -1) return;
       var sLower = s.text.toLowerCase();
       var allMatch = tokens.every(function(t) { return t.length >= 2 && sLower.indexOf(t) !== -1; });
@@ -502,12 +507,16 @@ function _anchorFindVaccineRecord(query) {
   return matches[0];
 }
 
-// Milestone lookup by keyword (case-insensitive substring on .text).
+// Milestone lookup by keyword (case-insensitive substring on .text, or on its
+// msLabel display title, so a word from the label still finds the row).
 function _anchorFindMilestoneByKeyword(kw) {
   if (typeof milestones !== 'object' || !Array.isArray(milestones)) return null;
   var q = kw.toLowerCase();
   return milestones.find(function(m) {
-    return m && typeof m.text === 'string' && m.text.toLowerCase().indexOf(q) !== -1;
+    if (!m || typeof m.text !== 'string') return false;
+    if (m.text.toLowerCase().indexOf(q) !== -1) return true;
+    var lbl = msLabel(m.text);
+    return typeof lbl === 'string' && lbl.toLowerCase().indexOf(q) !== -1;
   }) || null;
 }
 
@@ -985,7 +994,7 @@ function _islBuildDaySummary(dateStr) {
   // Activity summary string
   var activitySummary = 'No activities';
   if (ac.totalCount > 0) {
-    var actTexts = ac.entries.slice(0, 3).map(function(e) { return e.text; });
+    var actTexts = ac.entries.slice(0, 3).map(function(e) { return msLabel(e.text); });
     activitySummary = actTexts.join(', ');
     if (ac.totalCount > 3) activitySummary += ' +' + (ac.totalCount - 3) + ' more';
   }
@@ -1086,7 +1095,7 @@ function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
   // Milestone highlights
   if (ms.progressed.length > 0) {
     ms.progressed.forEach(function(p) {
-      highlights.push({ domain: 'milestones', text: p.text + ' — ' + p.status, signal: 'good' });
+      highlights.push({ domain: 'milestones', text: msLabel(p.text) + ' — ' + p.status, signal: 'good' });
     });
   }
 

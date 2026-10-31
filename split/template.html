@@ -898,6 +898,16 @@
         </div>
       </div>
 
+      <!-- BODY CARE (child-sex S3) — sex- and age-keyed care notes from config.js
+           BODY_CARE_GUIDANCE; body rendered by medical.js renderBodyCare(), placed under
+           Records by orderMedicalCards(). -->
+      <div class="card card-info col-full bc-card" id="medBodyCareCard">
+        <div class="card-header">
+          <div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-baby"/></svg></div> Body care</div>
+        </div>
+        <div id="medBodyCareBody"></div>
+      </div>
+
       <!-- SYMPTOM CHECKER -->
       <div class="card card-action col-full" id="symptomCheckerCard">
         <div class="card-header">
@@ -1535,7 +1545,7 @@
 
           <!-- NIGHT FORM -->
           <div id="sleepNightCard">
-            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. At 6–8 months, babies typically need 11–12 hours of night sleep plus 2–3 naps totalling 2–3 hours. Logging sleep helps spot patterns and ensure she's getting enough rest.</div>
+            <div class="help-tip d-none" id="help-sleep">Track <span data-child-name>your child</span>'s bedtime and wake time. How much sleep is typical changes with age; the sleep cards show the range for <span data-child-name>your child</span>'s age. Logging sleep helps spot patterns and make sure there's enough rest.</div>
             <div class="fx-col g12">
               <div>
                 <label class="micro-label">Date</label>

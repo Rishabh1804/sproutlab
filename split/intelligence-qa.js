@@ -196,7 +196,7 @@ function _isFoodName(token) {
   var t = token.toLowerCase().trim();
   if (t.length < 2) return false;
   // Exclude common non-food words that might match
-  var excludeWords = ['how','is','the','she','her','and','for','not','can','has','was','are','its','too','but','all','had','what','when','does','this','that','with','from','will','just','more','only','very','been','have','also','most','give','baby','safe','help'];
+  var excludeWords = ['how','is','the','she','her','he','him','his','himself','they','them','their','and','for','not','can','has','was','are','its','too','but','all','had','what','when','does','this','that','with','from','will','just','more','only','very','been','have','also','most','give','baby','safe','help'];
   if (excludeWords.indexOf(t) !== -1) return false;
   // Check NUTRITION keys
   if (NUTRITION[t]) return true;
@@ -219,15 +219,36 @@ function _isLikelyFoodList(tokens) {
 
 // The child's name is the family's own word, so it must never trip a keyword ("Sita" → sit,
 // "Rashi" → rash, "Agastya" → age). Before classifying, the profile name reads as "she" (V-K-280-5).
-function _qaNameAsShe(text) {
+// For a boy (child-sex-v1 S2, V-K-281-1) his pronouns fold the same way, so the canonical
+// she/her vocabulary below (triggers, classifier regexes, lookback strippers) matches "Can he
+// eat egg?" / "How's his sleep?" / "when did he last eat ragi". A girl's text is left as typed.
+var _QA_HE_AS_SHE = { he: 'she', him: 'her', his: 'her', himself: 'herself' };
+// nameOnly: fold the name but leave the parent's pronouns as typed (the step-4 question-word test
+// in qaClassifyInput reads that text so a boy's Hinglish "he" = "hai" is not a question; V-K-282b-1).
+function _qaNameAsShe(text, nameOnly) {
+  if (typeof text !== 'string') return text;
   var n = (typeof profile !== 'undefined' && profile && profile.child && profile.child.name) ? String(profile.child.name) : '';
-  if (!n || typeof text !== 'string') return text;
   // A name that is itself a food (Honey, Olive) stays as typed: the food reading is the safer one (Cipher #5).
-  if (typeof getNutrition === 'function' && typeof _baseFoodName === 'function' && getNutrition(_baseFoodName(n.toLowerCase()))) return text;
-  var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
-  return text.replace(new RegExp('(^|[^\\p{L}])' + esc + "(?:['’]s)?(?![\\p{L}])", 'giu'), '$1she');
+  if (n && !(typeof getNutrition === 'function' && typeof _baseFoodName === 'function' && getNutrition(_baseFoodName(n.toLowerCase())))) {
+    var esc = n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\u2019/g, "['\u2019]");
+    // A possessive name reads as "her" first ("Arjun's nap" → "her nap", not "she nap"; BUGS #4),
+    // straight or curly apostrophe; then the bare name reads as "she". Same Unicode word guards.
+    // A name ending in s also takes the bare-apostrophe possessive ("Shreyas' nap"; V-K-282b-2);
+    // only then, so a closing quote after any other name is not read as "her".
+    var poss = /s$/.test(n.toLowerCase()) ? "['\u2019]s?" : "['\u2019]s";
+    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + poss + '(?![\\p{L}])', 'giu'), '$1her');
+    text = text.replace(new RegExp('(^|[^\\p{L}])' + esc + '(?![\\p{L}])', 'giu'), '$1she');
+  }
+  if (!nameOnly && typeof childSex === 'function' && childSex() === 'm') {
+    text = text.replace(/(^|[^\p{L}])(he|him|his|himself)(?![\p{L}])/giu, function(m, pre, w) {
+      var c = _QA_HE_AS_SHE[w.toLowerCase()];
+      return pre + (w.charAt(0) === w.charAt(0).toUpperCase() ? c.charAt(0).toUpperCase() + c.slice(1) : c);
+    });
+  }
+  return text;
 }
 function qaClassifyInput(text) {
+  var typed = _qaNameAsShe(text, true);
   text = _qaNameAsShe(text);
   if (!text || typeof text !== 'string') return { mode: 'qa', raw: text || '' };
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').trim();
@@ -265,8 +286,12 @@ function qaClassifyInput(text) {
   // 4. Single food name without safety prefix → ingredient mode
   //    But not if remaining tokens look like a question (e.g. "how is ragi")
   if (foodMatches.length === 1 && tokens.length <= 3) {
-    var qaWords = ['how','is','what','why','when','does','should','can','will','do','are','was','her','she','about','much','many'];
-    var hasQAWord = tokens.some(function(t) { return qaWords.indexOf(t) !== -1; });
+    // No 'he' here: in Hinglish "ragi thik he" it is "hai" (BUGS #33). The list reads the text
+    // before a boy's pronouns fold, or his "he" would arrive as "she" and count (V-K-282b-1).
+    var qaWords = ['how','is','what','why','when','does','should','can','will','do','are','was','her','she','him','his','they','them','their','about','much','many'];
+    var typedTokens = (typeof typed === 'string' ? typed : '').toLowerCase().replace(/[?!.,]/g, '').trim()
+      .split(/[\s,+&]+/).filter(function(t) { return t.length > 0; });
+    var hasQAWord = typedTokens.some(function(t) { return qaWords.indexOf(t) !== -1; });
     if (!hasQAWord) {
       return { mode: 'ingredient', foods: foodMatches, raw: text };
     }
@@ -300,7 +325,9 @@ function qaClassifyInput(text) {
   if (/when.*last.*(?:eat|ate|had|gave)\b/.test(lower) ||
       /last\s+time.*(?:eat|ate|had)\b/.test(lower) ||
       /\blast\s+(?:eat|ate|had)\b/.test(lower)) {
-    var stripped = lower.replace(/when|did|she|last|eat|ate|had|gave|time|the|some|any/g, '').trim();
+    // Word-bounded, so food names keep their letters ("dates", "thepla", "sheera") and a folded
+    // possessive "her" is dropped (V-K-282-5).
+    var stripped = lower.replace(/\b(when|did|she|her|last|eat|ate|had|gave|time|the|some|any)\b/g, '').replace(/\s+/g, ' ').trim();
     var foodTokens = stripped.split(/\s+/).filter(function(t) { return t.length > 1; });
     return { mode: 'lookback', subtype: 'food', foodQuery: foodTokens.join(' '), raw: text };
   }
@@ -649,7 +676,7 @@ function _iqScoreCombo(combo, ctx) {
   if (combo.avgIntake !== null) {
     if (combo.avgIntake >= 0.8) {
       score += 15;
-      reasons.push('She finishes ' + Math.round(combo.avgIntake * 100) + '% \u2014 loves it');
+      reasons.push(pron('subj', true) + ' finishes ' + Math.round(combo.avgIntake * 100) + '% \u2014 loves it');
     } else if (combo.avgIntake >= 0.5) {
       score += 8;
     } else if (combo.avgIntake < 0.3 && combo.intakes.length >= 3) {
@@ -1024,7 +1051,9 @@ function qaHandleFoodSafety(classified) {
   var raw = classified.raw;
   // Extract food names from query
   var cleaned = raw.toLowerCase().replace(/^can (i|we) give\s*|^is\s+|^safe to give\s*|^can she (eat|have)\s*|^can baby (eat|have)\s*/i, '').replace(/\s*safe\s*$|\?/g, '').trim();
-  var rawFoods = cleaned.split(/[+,&]|with|and/).map(function(f) { return f.trim(); }).filter(function(f) { return f.length > 1; });
+  // A leading determiner is not part of the food: a boy's "his egg" folds to "her egg" and must
+  // not echo as "Can he eat her egg?" (V-K-282-1).
+  var rawFoods = cleaned.split(/[+,&]|with|and/).map(function(f) { return f.trim().replace(/^(her|their|my|our|the|some)\s+/, '').trim(); }).filter(function(f) { return f.length > 1; });
   if (rawFoods.length === 0) return null;
 
   var mo = getAgeInMonths();
@@ -1250,7 +1279,7 @@ function qaHandleFoodSafety(classified) {
   return {
     icon: 'shield',
     domain: 'peach',
-    title: rawFoods.length === 1 ? 'Can she eat ' + rawFoods[0] + '?' : 'Food safety check',
+    title: rawFoods.length === 1 ? 'Can ' + pron('subj') + ' eat ' + rawFoods[0] + '?' : 'Food safety check',
     recipeCard: _recipeCard,
     // headline from the record (food-effects v2 \u00a73.1/\u00a73.2, M-S-2): the hazard for
     // an acute-toxin, the encourage title for an age-appropriate allergen \u2014 never
@@ -1434,7 +1463,7 @@ function qaGetContextualQuickQuestions() {
   try {
     var sleepScore = getSleepScore24h();
     if (sleepScore && sleepScore.score < 70) {
-      questions.push({ text: 'How\'s her sleep?', intent: 'sleep_quality', context: true });
+      questions.push({ text: 'How\'s ' + pron('poss') + ' sleep?', intent: 'sleep_quality', context: true });
     }
   } catch(e) {}
 
@@ -1478,9 +1507,9 @@ function qaGetContextualQuickQuestions() {
   // Fill defaults if under 5
   var defaults = [
     { text: 'What can I make?', intent: '_uib_picker' },
-    { text: 'Her routine', intent: '_isl_routine' },
-    { text: 'What does she like?', intent: '_isl_likes' },
-    { text: 'Is she on track?', intent: 'milestone_general' }
+    { text: pron('poss', true) + ' routine', intent: '_isl_routine' },
+    { text: 'What does ' + pron('subj') + ' like?', intent: '_isl_likes' },
+    { text: 'Is ' + pron('subj') + ' on track?', intent: 'milestone_general' }
   ];
 
   defaults.forEach(function(d) {
@@ -1569,8 +1598,8 @@ function renderQABar() {
         '_isl_tomorrow': 'Tomorrow plan',
         '_isl_doctor': 'Doctor visit prep',
         '_isl_share': 'Share today',
-        '_isl_routine': 'What is her routine',
-        '_isl_likes': 'What does she like'
+        '_isl_routine': 'What is ' + pron('poss') + ' routine',
+        '_isl_likes': 'What does ' + pron('subj') + ' like'
       };
       if (islChipMap[intentId]) { text = islChipMap[intentId]; }
       input.value = text;
@@ -1666,12 +1695,13 @@ function _qaHandleClear() {
 function _qaStartPlaceholderRotation(input) {
   if (_qaPlaceholderTimer) clearInterval(_qaPlaceholderTimer);
   _qaPlaceholderIdx = 0;
-  input.placeholder = QA_PLACEHOLDERS[0];
+  var placeholders = qaPlaceholders();
+  input.placeholder = placeholders[0];
   _qaPlaceholderTimer = setInterval(function() {
     if (document.activeElement === input) return;
     if (input.value.length > 0) return;
-    _qaPlaceholderIdx = (_qaPlaceholderIdx + 1) % QA_PLACEHOLDERS.length;
-    input.placeholder = QA_PLACEHOLDERS[_qaPlaceholderIdx];
+    _qaPlaceholderIdx = (_qaPlaceholderIdx + 1) % placeholders.length;
+    input.placeholder = placeholders[_qaPlaceholderIdx];
   }, 5000);
 }
 
@@ -1679,7 +1709,7 @@ function _qaStartPlaceholderRotation(input) {
 
 function qaExecuteQuery(text) {
   _qaCache = {};
-  _qaCache._queryText = text.toLowerCase().replace(/[?!.,]/g, '').trim();
+  _qaCache._queryText = _qaNameAsShe(text).toLowerCase().replace(/[?!.,]/g, '').trim();
   var answerEl = document.getElementById('qaAnswerContainer');
   if (!answerEl) return;
 
@@ -2210,7 +2240,7 @@ function _qaRenderDomainTemporal(domain, tr) {
     }
     if (data.progressed.length > 0) {
       data.progressed.forEach(function(p) {
-        items.push({ text: p.text + ' — ' + p.status, signal: 'good' });
+        items.push({ text: msLabel(p.text) + ' — ' + p.status, signal: 'good' });
       });
     }
     if (data.active.length > 0) {
@@ -2229,7 +2259,7 @@ function _qaRenderDomainTemporal(domain, tr) {
     // Show recent activities
     var recent = data.entries.slice(0, 4);
     recent.forEach(function(e) {
-      items.push({ text: e.text + (e.duration ? ' (' + e.duration + ' min)' : ''), signal: 'neutral' });
+      items.push({ text: msLabel(e.text) + (e.duration ? ' (' + e.duration + ' min)' : ''), signal: 'neutral' });
     });
     if (data.totalCount > 4) items.push({ text: '+' + (data.totalCount - 4) + ' more activities', signal: 'neutral' });
   }

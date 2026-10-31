@@ -35,13 +35,30 @@ function milestoneKeywordScore(milestoneText, keyword) {
 }
 
 // ─── Classification Engine ───
+// EVIDENCE_PATTERNS keywords list both she- and he-forms ("when she does" / "when he does",
+// "put herself / himself to sleep"), and notes are matched as typed. On a girl's note "when he
+// does" is most likely her father, so a keyword in the other sex's pronouns is skipped; with
+// no sex set, every form matches (BUGS #38, V-CA-282-5). Keywords only: `require` context
+// ("when he saw" = a parent came into view) and `exclude` guards stay sex-blind on purpose.
+const _KW_OTHER_PRONOUNS = {
+  f: /(^|[^\p{L}])(he|him|his|himself)(?![\p{L}])/u,
+  m: /(^|[^\p{L}])(she|her|hers|herself)(?![\p{L}])/u
+};
+function kwFitsChildSex(kw, sex) {
+  const s = sex !== undefined ? sex : (typeof childSex === 'function' ? childSex() : null);
+  const re = s ? _KW_OTHER_PRONOUNS[s] : null;
+  return !re || !re.test(kw);
+}
+
 function classifyActivity(inputText) {
   const text = inputText.toLowerCase().trim();
   const tokens = text.split(/[\s,;.!?]+/).filter(Boolean);
   const matches = [];
+  const sex = typeof childSex === 'function' ? childSex() : null;
 
   for (const pattern of EVIDENCE_PATTERNS) {
     const hasKeyword = pattern.keywords.some(kw => {
+      if (!kwFitsChildSex(kw, sex)) return false;
       if (kw.includes(' ')) return text.includes(kw);
       return tokens.includes(kw) || tokens.some(t => t.startsWith(kw));
     });
@@ -548,7 +565,7 @@ function renderActiveMilestones() {
       const evList = getMilestoneEvidence(bestKw).slice(0, 5);
       let evItems = evList.map(ev => {
         const confDot = zi('dot-red');
-        return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
+        return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml(msLabel(ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
       }).join('');
       if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
       evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ' + zi('chevron-down') + '</button>' +
@@ -562,7 +579,7 @@ function renderActiveMilestones() {
       '<div class="ms-active-top">' +
         '<div class="ms-active-icon">' + icon + '</div>' +
         '<div class="ms-active-body">' +
-          '<div class="ms-active-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ms-active-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ms-active-stage" style="color:' + stageMeta.color + ';">' + stageMeta.icon + ' ' + stageMeta.label + ' · ' + m.evidenceCount + ' observations' + (confPct > 0 ? ' · ' + confPct + '% high-conf' : '') + '</div>' +
           (dateRange ? '<div class="ms-active-dates">' + dateRange + '</div>' : '') +
           _renderAttribution(m) +
@@ -740,11 +757,20 @@ function showFullDoctorSummary() {
   }
   if (lwDoc || lhDoc) {
     lines.push('  Last measured: ' + formatDate((lwDoc || lhDoc).date));
-    const birth = growthData[0];
-    const birthHt = birth.ht ?? 0;
-    const birthWt = birth.wt ?? 0;
-    if (lwDoc) lines.push('  Weight gain since birth: ' + (lwDoc.wt - birthWt).toFixed(2) + ' kg');
-    if (lhDoc) lines.push('  Height gain since birth: ' + (lhDoc.ht - birthHt) + ' cm');
+    // From the rows dated on the birth date that carry each measure (gvBirthRow) — never growthData[0],
+    // which may be a later weigh-in or have no height, and never a 0 stand-in (?? 0 made "since birth"
+    // the whole weight). No birth measure → no line; a loss is a change, not a gain (V-M-282c-7,
+    // V-CA-282c-6).
+    const birthWtRow = gvBirthRow('wt');
+    const birthHtRow = gvBirthRow('ht');
+    if (lwDoc && birthWtRow && birthWtRow.date !== lwDoc.date) {
+      const dWt = lwDoc.wt - birthWtRow.wt;
+      lines.push('  Weight ' + (dWt < 0 ? 'change' : 'gain') + ' since birth: ' + (dWt < 0 ? '−' : '') + Math.abs(dWt).toFixed(2) + ' kg');
+    }
+    if (lhDoc && birthHtRow && birthHtRow.date !== lhDoc.date) {
+      const dHt = Math.round((lhDoc.ht - birthHtRow.ht) * 10) / 10;
+      lines.push('  Height ' + (dHt < 0 ? 'change' : 'gain') + ' since birth: ' + (dHt < 0 ? '−' : '') + Math.abs(dHt) + ' cm');
+    }
   }
 
   // Vaccinations
@@ -760,13 +786,13 @@ function showFullDoctorSummary() {
   lines.push('');
   lines.push('SECTION_MS MILESTONES ACHIEVED');
   milestones.filter(m => isMsDone(m)).forEach(m => {
-    lines.push('  OK ' + m.text + (m.doneAt ? ' (at ' + ageAtDate(m.doneAt) + ')' : '') + (m.advanced ? ' [Advanced]' : ''));
+    lines.push('  OK ' + msLabel(m.text) + (m.doneAt ? ' (at ' + ageAtDate(m.doneAt) + ')' : '') + (m.advanced ? ' [Advanced]' : ''));
   });
   const ip = milestones.filter(m => isMsActive(m));
   if (ip.length) {
     lines.push('');
     lines.push('SECTION_IP IN PROGRESS');
-    ip.forEach(m => { lines.push('  IP ' + m.text + (m.inProgressAt ? ' (since ' + ageAtDate(m.inProgressAt) + ')' : '')); });
+    ip.forEach(m => { lines.push('  IP ' + msLabel(m.text) + (m.inProgressAt ? ' (since ' + ageAtDate(m.inProgressAt) + ')' : '')); });
   }
 
   // Medications
@@ -863,12 +889,11 @@ function renderGrowthFacts() {
   const el = document.getElementById('growthFacts');
   if (!el) return;
   const facts = [];
-  const mo   = Math.round(getAgeInMonths());
   const lh   = getLatestHeight();
   const lwFact = getLatestWeight();
 
   // Weight velocity — compare two most recent entries with weight
-  const wtEntries = growthData.filter(r => r.wt != null);
+  const wtEntries = growthData.filter(r => r.wt != null).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   if (wtEntries.length >= 2) {
     const wtLast = wtEntries[wtEntries.length - 1];
     const wtPrev = wtEntries[wtEntries.length - 2];
@@ -876,16 +901,44 @@ function renderGrowthFacts() {
     const daysDiff = Math.max(1, Math.round((new Date(wtLast.date) - new Date(wtPrev.date)) / 86400000));
     const gPerDay = Math.round(wtGain / daysDiff);
     // From 1 year the WHO band is ~3–12 g/day (GROWTH_VELOCITY_12_24); the 15–30 g/day line
-    // is the early-infancy rate and must not be quoted to a toddler (12-month audit).
-    const vb = GROWTH_VELOCITY_12_24;
-    if (mo >= 12) {
-      if (gPerDay >= vb.wGDayMin && gPerDay <= vb.wGDayMax) {
-        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${vb.wGDayMin}–${vb.wGDayMax}g/day is typical at ${mo} months. ${childNameCapHtml()} is growing steadily.` });
+    // is the early-infancy rate and must not be quoted to a toddler (12-month audit). Under 12 m
+    // the band is WHO P15–P85 for the age and sex too (S4) — 15–30 g/day was wrong after ~4 m.
+    // The band is looked up at the window midpoint (gvBandAge, V-CA-282b-1) — never today's age
+    // (PC-1, bug #25); the age in the copy is calendar months on the weigh-in date (gvAgePhrase).
+    const vb = growthVelocityBand(gvBandAge(wtLast, wtPrev));
+    const agePhrase = gvAgePhrase(wtLast);
+    const nbF = gvNewbornCheck(wtLast, wtEntries[0]);
+    if (nbF) {
+      // Newborn window (gvNewbornCheck): the dip (info), back to birth weight (positive), or a flag —
+      // more than 10% lost, not back by day 14, weigh again — in the alert style (V-M-282b-2..4).
+      const dir = wtGain >= 0 ? 'up' : 'down';
+      const title = nbF.status === 'newborn' && !nbF.recheck ? `Weight ${dir} ${Math.abs(wtGain)}g in ${daysDiff} day${daysDiff === 1 ? '' : 's'}` : nbF.short;
+      facts.push({ type: nbF.tone === 'good' ? 'positive' : nbF.tone === 'caution' ? 'caution' : 'neutral', icon:zi('scale'), title, body:nbF.text });
+    } else if (ageMonthsAt(wtLast.date) >= 12) {
+      // From 12 months, the Growth tab's own verdict (computeGrowthVelocity: a window of 28+ days,
+      // tooShort, status) — never a 7-day pair, which at a toddler's pace is home-scale noise
+      // (Maren V-M-282c-8). The same lines as under 12 months for slow / plateau.
+      const cw = computeGrowthVelocity().weight;
+      if (cw && cw.tooShort) {
+        facts.push({ type:'info', icon:zi('clock'), title:'Too soon to judge — weigh again in a few weeks', body:gvTooShortText(cw.daysBetween) });
+      } else if (cw && cw.status === 'on-track') {
+        facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${cw.gPerDay}g/day — right on track!`, body:`After the first birthday growth naturally slows — about ${cw.expectedRange.min}–${cw.expectedRange.max}g/day is typical ${agePhrase}. ${childNameCapHtml()} is growing steadily.` });
+      } else if (cw && (cw.status === 'slow' || cw.status === 'plateau')) {
+        const rateT = cw.gPerDay >= 0 ? `Gaining ${cw.gPerDay}g/day` : `Down ${Math.abs(cw.gPerDay)}g/day`;
+        facts.push({ type:'caution', icon:zi('scale'), title:`${rateT} — below the usual ${cw.expectedRange.min}–${cw.expectedRange.max} for this age`, body:`Over the last ${cw.daysBetween} days. Mention it at the next weigh-in — ${pron('poss')} doctor can look at the whole curve.` });
+      } else if (cw && cw.status === 'fast') {
+        facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${cw.gPerDay}g/day — healthy appetite!`, body:`Above average gain, which is usually fine while a child finds ${pron('poss')} own growth curve. Watch the trend across visits.` });
       }
-    } else if (gPerDay >= 15 && gPerDay <= 40) {
-      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate at ${mo} months is 15–30g/day. ${childNameCapHtml()} is growing beautifully.` });
-    } else if (gPerDay > 40) {
-      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain — completely fine at this stage, while the growth curve settles on solids.` });
+    } else if (gvBandVerdict(Math.floor(wtGain / daysDiff * 7), gvBandAge(wtLast, wtPrev)) === 'in') {
+      // The verdict in g/week (gvBandVerdict), the one unit every surface judges in (V-CA-282c-3).
+      facts.push({ type:'positive', icon:zi('party'), title:`Gaining ${gPerDay}g/day — right on track!`, body:`The expected rate ${agePhrase} is ${vb.wGDayMin}–${vb.wGDayMax}g/day. ${childNameCapHtml()} is growing beautifully.` });
+    } else if (gvBandVerdict(Math.floor(wtGain / daysDiff * 7), gvBandAge(wtLast, wtPrev)) === 'above') {
+      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${gPerDay}g/day — healthy appetite!`, body:`Above average gain, which is usually fine while a baby finds their own growth curve. Watch the trend across visits.` });
+    } else {
+      // Under 12 m, past the newborn window, below the band: say so plainly here too, so the Growth
+      // facts don't fall silent while the Info card flags it (Maren V-M-282b-8).
+      const rate = gPerDay >= 0 ? `Gaining ${gPerDay}g/day` : `Down ${Math.abs(gPerDay)}g/day`;
+      facts.push({ type:'caution', icon:zi('scale'), title:`${rate} — below the usual ${vb.wGDayMin}–${vb.wGDayMax} for this age`, body:`Mention it at the next weigh-in — ${pron('poss')} doctor can look at the whole curve.` });
     }
   }
 
@@ -909,8 +962,11 @@ function renderGrowthFacts() {
     const pctH = calcPercentile(lh.ht, htWho.h3, htWho.h50, htWho.h97, htWho.h15, htWho.h85);
     facts.push({ type:'info', icon:zi('ruler'), title:`Height at ${pctH.text} percentile`, body:`Consistent height percentile over time matters more than the exact number. Watch the trend across visits.` });
   }
-  if (lwFact) {
-    const birth = growthData.find(r => r.wt != null);
+  // From the row dated on the birth date (gvBirthRow, V-M-282b-1), not the first weigh-in; a change
+  // below birth weight is the newborn fact's to explain, not a "gain".
+  const birthF = gvBirthRow();
+  if (lwFact && birthF && birthF.date !== lwFact.date && lwFact.wt >= birthF.wt) {
+    const birth = birthF;
     const totalGain = (lwFact.wt - birth.wt).toFixed(2);
     // The multiple is computed, not asserted (Vela V-V-266-12): babies roughly triple birth weight by 1 year.
     const mult = birth.wt > 0 ? lwFact.wt / birth.wt : 0;
@@ -1129,10 +1185,7 @@ function getLatestHeight() {
   return null;
 }
 
-function ageMonthsAt(dateStr) {
-  const d = new Date(dateStr);
-  return (d - DOB) / (30.44 * 86400000);
-}
+// ageMonthsAt() lives in core.js beside ageAt() / _parseLocalDate() (V-CA-282b-4).
 
 // Normal CDF using Abramowitz & Stegun approximation
 function normalCDF(z) {
@@ -1204,10 +1257,16 @@ function renderGrowthInsightsPreview() {
 
   // Count facts by category
   const facts = factsEl.querySelectorAll('.growth-fact');
-  let positive = 0, info = 0;
+  // A caution fact (a newborn flag, slow gain) leads the preview with its own tile, and its title shows
+  // under the tiles, so a collapsed card never hides it behind "Positive" / "Info" (Vela V-V-282c-1).
+  let positive = 0, info = 0, caution = 0, cautionTitle = '';
   facts.forEach(f => {
     if (f.classList.contains('positive')) positive++;
     else if (f.classList.contains('info')) info++;
+    else if (f.classList.contains('caution')) {
+      caution++;
+      if (!cautionTitle) { const t = f.querySelector('strong'); cautionTitle = t ? t.textContent : ''; }
+    }
   });
 
   if (facts.length === 0) {
@@ -1217,6 +1276,11 @@ function renderGrowthInsightsPreview() {
 
   el.innerHTML = `
     <div class="fx-wrap g8">
+      ${caution > 0 ? `<div class="diet-stat ds-amber flex-1" data-collapse-target="growthInsightsBody" data-collapse-chevron="growthInsightsChevron" >
+        <div class="diet-stat-icon">${zi('warn')}</div>
+        <div class="diet-stat-val">${caution}</div>
+        <div class="diet-stat-label">Check</div>
+      </div>` : ''}
       ${positive > 0 ? `<div class="diet-stat ds-sage flex-1" data-collapse-target="growthInsightsBody" data-collapse-chevron="growthInsightsChevron" >
         <div class="diet-stat-icon"><svg class="zi"><use href="#zi-party"/></svg></div>
         <div class="diet-stat-val">${positive}</div>
@@ -1232,7 +1296,7 @@ function renderGrowthInsightsPreview() {
         <div class="diet-stat-val">${facts.length}</div>
         <div class="diet-stat-label">Total insights</div>
       </div>
-    </div>`;
+    </div>${cautionTitle ? `<div class="si-insight si-insight-warn mt-8">${escHtml(cautionTitle)}</div>` : ''}`;
 }
 
 // Growth history for the History tab
@@ -1634,7 +1698,7 @@ function renderVelocity() {
   const el = document.getElementById('velocityContent');
 
   // Need at least 2 weight entries for velocity
-  const wtEntries = growthData.filter(r => r.wt != null);
+  const wtEntries = growthData.filter(r => r.wt != null).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   if (wtEntries.length < 2) {
     el.innerHTML = '<div class="t-sub-light">Need at least 2 weight measurements to calculate velocity.</div>';
     return;
@@ -1643,7 +1707,6 @@ function renderVelocity() {
   const lastWt = wtEntries[wtEntries.length - 1];
   const prevWt = wtEntries[wtEntries.length - 2];
   const days = Math.max(1, Math.round((new Date(lastWt.date) - new Date(prevWt.date)) / 86400000));
-  const mo = Math.round(getAgeInMonths());
   const moExact = ageMonthsAt(lastWt.date);
   const ref = getGrowthRef(moExact);
   const refLabel = 'WHO';
@@ -1651,10 +1714,22 @@ function renderVelocity() {
   // Weight velocity
   const wtGainG = Math.round((lastWt.wt - prevWt.wt) * 1000);
   const gPerDay = Math.round(wtGainG / days);
-  const expectedMin = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMin : mo <= 3 ? 25 : mo <= 6 ? 15 : mo <= 9 ? 10 : 8;
-  const expectedMax = mo >= 12 ? GROWTH_VELOCITY_12_24.wGDayMax : mo <= 3 ? 35 : mo <= 6 ? 25 : mo <= 9 ? 18 : 14;
-  const wtPctFill = Math.min(100, Math.max(5, ((gPerDay - 0) / (expectedMax * 1.5)) * 100));
-  const wtColor = (gPerDay >= expectedMin && gPerDay <= expectedMax * 1.3) ? 'var(--tc-sage)' : gPerDay < expectedMin ? 'var(--tc-caution)' : 'var(--tc-sky)';
+  // WHO P15–P85 by age and sex, at the window midpoint (gvBandAge, V-CA-282b-1) — never today's
+  // age, which could sit in the next band and disagree with the velocity cards (PC-1, bug #25).
+  const wBandV = growthVelocityBand(gvBandAge(lastWt, prevWt));
+  const expectedMin = wBandV.wGDayMin;
+  const expectedMax = wBandV.wGDayMax;
+  // Newborn window (gvNewbornCheck): no rate verdict; neutral (--mid) for the plain dip — never sky,
+  // which means above range here — and caution for a flag (V-V-282b-3).
+  const wtNb = gvNewbornCheck(lastWt, wtEntries[0]);
+  const wtColor = wtNb ? (wtNb.tone === 'good' ? 'var(--tc-sage)' : wtNb.tone === 'caution' ? 'var(--tc-caution)' : 'var(--mid)')
+    : _velGaugeColor(Math.floor(wtGainG / days * 7), wBandV);
+  // Judged in g/week, the one verdict unit (V-CA-282c-3): sage in band (up to 1.3× the top, like the
+  // Growth tab's 'fast' line), caution below, sky above that.
+  function _velGaugeColor(gWk, band) {
+    if (gWk < band.wGWkMin) return 'var(--tc-caution)';
+    return gWk <= band.wGWkMax * 1.3 ? 'var(--tc-sage)' : 'var(--tc-sky)';
+  }
 
   // Position relative to reference 50th
   const wtPct = calcPercentile(lastWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85); // 5-point, matches the badge (V-M-266-16)
@@ -1667,7 +1742,7 @@ function renderVelocity() {
       <div class="vg-info">
         <div><span class="vg-value" style="color:${wtColor};">${gPerDay}</span><span class="vg-unit">g/day</span></div>
         <div class="vg-label">Gain rate</div>
-        <div class="vg-context">Expected: ${expectedMin}–${expectedMax} g/day</div>
+        <div class="vg-context">${wtNb ? wtNb.short : `Expected: ${expectedMin}–${expectedMax} g/day`}</div>
       </div>
     </div>`;
 
@@ -1675,7 +1750,7 @@ function renderVelocity() {
     <div class="velocity-gauge vg-rose">
       <div class="vg-icon">${zi('chart')}</div>
       <div class="vg-info">
-        <div><span class="vg-value tc-rose">+${wtGainG}</span><span class="vg-unit">g</span></div>
+        <div><span class="vg-value ${wtGainG < 0 && wtNb && wtNb.tone === 'neutral' ? 'tc-mid' : 'tc-rose'}">${wtGainG >= 0 ? '+' : '−'}${Math.abs(wtGainG)}</span><span class="vg-unit">g</span></div>
         <div class="vg-label">In ${days} days</div>
         <div class="vg-context">${formatDate(prevWt.date)} → ${formatDate(lastWt.date)}</div>
       </div>
@@ -1689,7 +1764,7 @@ function renderVelocity() {
     const htDays = Math.max(1, Math.round((new Date(htLast.date) - new Date(htPrev.date)) / 86400000));
     const htGainCm = (htLast.ht - htPrev.ht).toFixed(1);
     const cmPerWeek = ((htLast.ht - htPrev.ht) / (htDays / 7)).toFixed(1);
-    const expCmWk = mo >= 12 ? GROWTH_VELOCITY_12_24.hCmWk : mo <= 6 ? '0.4–0.6' : '0.2–0.4';
+    const expCmWk = growthVelocityBand(gvAgeAt(htLast)).hCmWk;   // at the latest height's age (bug #25)
     const htColor = parseFloat(cmPerWeek) > 0 ? 'var(--tc-sky)' : 'var(--tc-caution)';
     html += `
       <div class="velocity-gauge vg-sky">
@@ -1702,15 +1777,24 @@ function renderVelocity() {
       </div>`;
   }
 
-  const birth = growthData.find(r => r.wt != null);
-  const ratio = (lastWt.wt / birth.wt).toFixed(1);
-  const doubled = lastWt.wt >= birth.wt * 2;
-  html += `
+  // Birth weight from the row dated on the birth date (gvBirthRow, V-M-282b-1); none → no gauge.
+  const birth = gvBirthRow();
+  const ratio = birth ? (lastWt.wt / birth.wt).toFixed(1) : null;
+  const doubled = birth ? lastWt.wt >= birth.wt * 2 : false;
+  // In the newborn window, or below birth weight at any age, the gauge says where the baby stands
+  // against birth weight, coloured by the newborn line's tone — never "Approaching 2×" (V-V-282c-4).
+  const belowBirth = birth ? Math.round(lastWt.wt * 1000) < Math.round(birth.wt * 1000) : false;
+  const vsBirth = !!(birth && (wtNb || belowBirth));
+  const ratioLabel = vsBirth ? (belowBirth ? 'Below birth weight' : 'Back to birth weight') : doubled ? 'Doubled!' : 'Approaching 2×';
+  const ratioClass = vsBirth
+    ? (wtNb ? (wtNb.tone === 'good' ? 't-sage' : wtNb.tone === 'caution' ? 't-caution' : 't-mid') : 't-caution')
+    : doubled ? 't-sage' : 't-lav';   // HR-2: utility classes, not an inline colour
+  if (birth) html += `
     <div class="velocity-gauge vg-lav">
       <div class="vg-icon">${zi('sparkle')}</div>
       <div class="vg-info">
-        <div><span class="vg-value" style="color:${doubled ? 'var(--tc-sage)' : 'var(--tc-lav)'};">${ratio}×</span><span class="vg-unit">birth wt</span></div>
-        <div class="vg-label">${doubled ? 'Doubled!' : 'Approaching 2×'}</div>
+        <div><span class="vg-value ${ratioClass}">${ratio}×</span><span class="vg-unit">birth wt</span></div>
+        <div class="vg-label">${ratioLabel}</div>
         <div class="vg-context">${refLabel}: ${wtPct.text} · ${birth.wt}→${lastWt.wt} kg</div>
       </div>
     </div>`;
@@ -1728,6 +1812,7 @@ function renderSizeComparison() {
 
   const wt = lwSize ? lwSize.wt : null;
   const ht = lhSize ? lhSize.ht : null;
+  const birthHtSize = gvBirthRow('ht');
 
   // Weight tidbits — multiple per range, randomly picked
   const wtTidbits = [
@@ -1790,7 +1875,7 @@ function renderSizeComparison() {
     { max:60, pool:[
       { icon:zi('star'), text:'About as tall as a large teddy bear', sub:'The most huggable height' },
       { icon:zi('target'), text:'As long as an archery arrow', sub:'Always hitting the target' },
-      { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior princess' },
+      { icon:zi('run'), text:'About the length of a traditional sword', sub:'A little warrior ' + (childSex() === 'm' ? 'prince' : 'princess') },
     ]},
     { max:64, pool:[
       { icon:zi('run'), text:'About the length of a full cricket stump', sub:'Stumped by that cuteness' },
@@ -1802,7 +1887,9 @@ function renderSizeComparison() {
       { icon:zi('run'), text:'Almost as long as a skateboard', sub:'Rolling through life' },
       { icon:zi('baby'), text:'About the same length as a golden retriever puppy', sub:'Same level of adorable' },
       { icon:zi('bowl'), text:'As tall as a mature wheat stalk', sub:'Growing strong in the fields of love' },
-      { icon:zi('ruler'), text:'Grown ' + (ht ? (ht - growthData[0].ht).toFixed(0) : '—') + ' cm since birth!', sub:'That\'s like adding a whole ruler length' },
+      // "Since birth" from the birth-date row that carries a height (gvBirthRow('ht')); none, or no
+      // gain, → the tidbit is left out rather than built on growthData[0] (V-M-282c-7, V-CA-282c-6).
+      ...(birthHtSize && ht && ht > birthHtSize.ht ? [{ icon:zi('ruler'), text:'Grown ' + (ht - birthHtSize.ht).toFixed(0) + ' cm since birth!', sub:'That\'s like adding a whole ruler length' }] : []),
     ]},
     { max:72, pool:[
       { icon:zi('run'), text:'About as long as a skateboard', sub:'Cruising through milestones' },
@@ -2247,6 +2334,79 @@ function renderMedicalStats() {
 // ─────────────────────────────────────────
 // MEDICAL TAB — DYNAMIC CARD ORDERING & COLOUR
 // ─────────────────────────────────────────
+// ── Body care (child-sex S3, docs/specs/child-sex-v1.md §4) ─────────────────────────
+// Renders config.js BODY_CARE_GUIDANCE for childSex() and the current age. Content is
+// Maren's and every line is cited (docs/specs/care-guidance-s3-sources.md); this is only
+// the render. An entry without sources never renders (canon-cc-013). Each entry is a
+// <details> disclosure (native, keyboard-accessible, no handler needed): title + an
+// "emergency signs inside" tag on the summary; points / see-the-doctor / emergency /
+// sources in the body. Source links open the cited page in the browser.
+function bodyCareEntriesFor(sex, months) {
+  const reg = (typeof BODY_CARE_GUIDANCE !== 'undefined') ? BODY_CARE_GUIDANCE : [];
+  return reg.filter(e => e
+    && (e.sex === 'both' || (sex && e.sex === sex))
+    && months >= e.ageMinMo && months <= e.ageMaxMo
+    && Array.isArray(e.sources) && e.sources.some(s => s && s.org && s.url));
+}
+
+function _bcList(items, cls) {
+  if (!items || !items.length) return '';
+  return '<ul class="bc-list ' + cls + '">' + items.map(t => '<li>' + escHtml(t) + '</li>').join('') + '</ul>';
+}
+
+function _bcSources(sources) {
+  const rows = sources.filter(s => s && s.org && s.url).map(s => {
+    const safe = /^https:\/\//.test(s.url);   // registry is static, but never emit a non-https href
+    const label = escHtml(s.org) + (s.title ? ' — ' + escHtml(s.title) : '');
+    return '<li>' + (safe
+      ? '<a class="bc-src-link" href="' + escAttr(s.url) + '" target="_blank" rel="noopener noreferrer">' + label + '</a>'
+      : label) + '</li>';
+  }).join('');
+  return '<div class="bc-src"><div class="bc-src-h">Sources</div><ul class="bc-src-list">' + rows + '</ul></div>';
+}
+
+// Body-care topics that have their own Emergency Room card (GENERAL_EMERGENCIES): the summary
+// carries the emergency tag and the emergency block links to the steps (V-V-282-2, -10). Other
+// topics list their emergency signs inside, untagged, so the tag keeps its meaning.
+const _BC_EM_CARD = { 'testicular-torsion': 'testicular-torsion', 'inguinal-hernia': 'stuck-hernia' };
+function _bcEntryHtml(e) {
+  const hasEm = e.emergencyIf && e.emergencyIf.length > 0;
+  const emCard = _BC_EM_CARD[e.id] || null;
+  let body = _bcList(e.points, 'bc-points');
+  if (e.seeDoctorIf && e.seeDoctorIf.length) {
+    body += '<div class="bc-sec bc-sec-doc"><div class="bc-sec-h">' + zi('steth') + '<span>See the doctor if</span></div>'
+      + _bcList(e.seeDoctorIf, 'bc-doc') + '</div>';
+  }
+  if (hasEm) {
+    body += '<div class="bc-sec bc-sec-em"><div class="bc-sec-h">' + zi('siren') + '<span>Go to the emergency department now if</span></div>'
+      + _bcList(e.emergencyIf, 'bc-em')
+      + (emCard ? '<button class="btn btn-soft bc-em-open" data-action="geOpenCard" data-arg="' + escAttr(emCard) + '">' + zi('siren') + '<span>Open the emergency steps</span></button>' : '')
+      + '</div>';
+  }
+  body += _bcSources(e.sources);
+  return '<details class="bc-entry" data-bc-id="' + escAttr(e.id) + '">'
+    + '<summary class="bc-summary"><span class="bc-title">' + escHtml(e.title) + '</span>'
+    + (emCard && e.id === 'testicular-torsion' ? '<span class="bc-em-tag">' + zi('siren') + '<span>Emergency</span></span>' : '')
+    + '<span class="bc-toggle" aria-hidden="true">' + zi('chevron-down') + '</span></summary>'
+    + '<div class="bc-body">' + body + '</div></details>';
+}
+
+function renderBodyCare() {
+  const card = document.getElementById('medBodyCareCard');
+  const el = document.getElementById('medBodyCareBody');
+  if (!card || !el) return;
+  const sex = (typeof childSex === 'function') ? childSex() : null;
+  const months = ageAt().months;
+  const entries = bodyCareEntriesFor(sex, months);
+  card.classList.toggle('fc-hidden', entries.length === 0);
+  if (!entries.length) { el.innerHTML = ''; return; }
+  // Render-time copy may follow the sex (load-time registry copy stays neutral).
+  const who = sex ? childKinWord() : 'children';
+  el.innerHTML = '<p class="bc-intro">' + escHtml('Everyday care for ' + who + ' in the first two years, and the signs that need a doctor. Tap a topic to read more.') + '</p>'
+    + '<div class="bc-entries">' + entries.map(_bcEntryHtml).join('') + '</div>'
+    + '<div class="source-attribution">Guidance only — not medical advice. When in doubt, call your paediatrician.</div>';
+}
+
 function orderMedicalCards() {
   const grid = document.getElementById('medicalGrid');
   if (!grid) return;
@@ -2298,6 +2458,8 @@ function orderMedicalCards() {
   cards.push({ el: medsCard, score: medsScore, id: 'meds' });
   cards.push({ el: coverageCard, score: 15, id: 'coverage' });
   cards.push({ el: visitsCard, score: visitsScore, id: 'visits' });
+  // child-sex S3: Body care is reference guidance — always last under Records.
+  cards.push({ el: document.getElementById('medBodyCareCard'), score: 20, id: 'bodycare' });
 
   // Sort by score (lowest first = highest priority)
   cards.sort((a, b) => a.score - b.score);
@@ -3641,7 +3803,7 @@ function renderVaccInfoPanel(vaccName) {
   } else if (VACC_RETIRED.some(n => normVacc(n) === normVacc(vaccName))) {
     // Only doses this schedule actually retired — a parent's own wording ("Flu
     // vaccine", "Hep A") must never read as "may not be needed" (Cipher E-V 1).
-    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask her doctor whether it is still needed.</div></div></div>`;
+    html += `<div class="fx-start g8 mb-8"><span class="t-icon shrink-0">${zi('info')}</span><div><div class="t-title">Not on the current IAP schedule</div><div class="t-sub">IAP 2023 no longer lists this dose. Ask ${pron('poss')} doctor whether it is still needed.</div></div></div>`;
   }
 
   // Note
@@ -4243,8 +4405,8 @@ function renderVaccCoverage() {
   // A family that has logged no doses yet has not told us her history: no red "Missing" list,
   // just an invitation to add the doses on her card (V-M-280-4).
   if (pastCount === 0) {
-    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on her vaccination card to see what is due.</span></div>`;
-    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once her past doses are logged, this card checks them against the full IAP schedule.</span></div>`
+    previewEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>No doses logged yet. Add the ones on ${pron('poss')} vaccination card to see what is due.</span></div>`;
+    contentEl.innerHTML = `<div class="vacc-empty-note">${zi('syringe')} <span>Once ${pron('poss')} past doses are logged, this card checks them against the full IAP schedule.</span></div>`
       + `<button class="btn btn-soft btn-compact" data-action="openVaccModal">${zi('plus')} Add a dose</button>`;
     return;
   }
@@ -4321,7 +4483,7 @@ function renderVaccCoverage() {
 
   // Conditional doses — not for every child; never counted as missing.
   if (checkList.length > 0) {
-    html += `<div class="section-label-check">${zi('steth')} Check with her doctor</div>`;
+    html += `<div class="section-label-check">${zi('steth')} Check with ${pron('poss')} doctor</div>`;
     checkList.forEach(v => { html += renderVaccItem(v, 'check'); });
   }
 
@@ -4341,7 +4503,7 @@ function renderVaccCoverage() {
   const otherGiven = givenList.filter(e => e && e.name && !_schedNorm.has(normVacc(e.name))
     && !(/influenza|flu/i.test(e.name) && given.some(g => g.seasonal)));
   if (otherGiven.length > 0) {
-    html += `<div class="section-label-light vacc-other-label">Other doses on her record (${otherGiven.length})</div><div class="vacc-chip-row">`;
+    html += `<div class="section-label-light vacc-other-label">Other doses on ${pron('poss')} record (${otherGiven.length})</div><div class="vacc-chip-row">`;
     otherGiven.forEach(e => { html += `<span class="vacc-chip-other">${escHtml(e.name)}</span>`; });
     html += `</div>`;
   }
@@ -4642,7 +4804,7 @@ function saveMed() {
   renderMeds();
   if (oldVd.length) {
     // confirmAction renders msg as HTML — escape the parent-typed names (HR-4).
-    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if her doctor asked for both.', () => {
+    confirmAction('Stop ' + escHtml(oldVd.map(m => m.name).join(', ')) + '? ' + escHtml(name) + ' also contains Vitamin D — keep both only if ' + pron('poss') + ' doctor asked for both.', () => {
       oldVd.forEach(m => { m.active = false; });
       renderMeds();
     }, 'Stop');
@@ -4688,7 +4850,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo <= 8 && msStatus('crawl') !== 'done' },
 
   { type:'motor', icon:zi('baby'), title:'Supported sitting practice',
-    desc:'Sit her with pillows around for safety and let her balance. Reaching for toys while sitting builds core stability.',
+    desc:'Sit your baby up with pillows around for safety and practise balancing. Reaching for toys while sitting builds core stability.',
     condition: (mo) => msStatus('sit') !== 'done' && mo >= 5 && mo <= 9 },
 
   { type:'motor', icon:zi('baby'), title:'Object transfer hand to hand',
@@ -4700,7 +4862,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo < 12 && (msStatus('crawl') === 'in_progress' || (msStatus('crawl') !== 'done' && mo >= 6)) },
 
   { type:'motor', icon:zi('run'), title:'Supported standing',
-    desc:'She\'s already pulling to stand — encourage brief standing at a stable surface. Builds leg strength and balance for cruising.',
+    desc:'Already pulling to stand — encourage brief standing at a stable surface. Builds leg strength and balance for cruising.',
     condition: (mo) => msStatus('pull') === 'done' && msStatus('cruis') !== 'done' && mo < 15 },
 
   { type:'motor', icon:zi('run'), title:'Cruising practice',
@@ -4708,15 +4870,15 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo < 15 && (msStatus('cruis') === 'in_progress' || (msStatus('pull') === 'done' && msStatus('walks independently') !== 'done' && mo >= 7)) },
 
   { type:'motor', icon:zi('run'), title:'Supported walking',
-    desc:'Hold both hands and let her step forward. Gradually shift to one hand as confidence builds.',
+    desc:'Hold both hands and let your baby step forward. Gradually shift to one hand as confidence builds.',
     condition: (mo) => msStatus('cruis') === 'done' && msStatus('walks independently') !== 'done' && mo < 18 },
 
   { type:'motor', icon:zi('baby'), title:'Stack & knock blocks',
-    desc:'Stack 2–3 soft blocks and let her knock them down. Builds spatial understanding and cause-effect learning.',
+    desc:'Stack 2–3 soft blocks and let your baby knock them down. Builds spatial understanding and cause-effect learning.',
     condition: (mo) => msStatus('stack') !== 'done' && mo >= 7 && mo < 12 },
 
   { type:'motor', icon:zi('note'), title:'Banging & dropping toys',
-    desc:'Let her bang safe objects together or drop them from the highchair. She is learning cause-and-effect.',
+    desc:'Let your baby bang safe objects together or drop them from the highchair. This is how cause-and-effect is learned.',
     condition: (mo) => mo >= 6 && mo <= 10 && msStatus('bang') !== 'done' },
 
   // ── MOTOR: Fine motor ──
@@ -4725,11 +4887,11 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => msStatus('pincer') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'motor', icon:zi('spoon'), title:'Self-feeding with spoon',
-    desc:'Let her hold a pre-loaded spoon during meals. It will be messy but builds oral motor skills and independence.',
+    desc:'Let your baby hold a pre-loaded spoon during meals. It will be messy but builds oral motor skills and independence.',
     condition: (mo) => mo >= 7 && mo < 12 && msStatus('finger feed') !== 'done' },
 
   { type:'motor', icon:zi('spoon'), title:'Finger food practice',
-    desc:'Offer soft finger foods she can grasp. Builds pincer grasp, hand-to-mouth coordination, and chewing skills.',
+    desc:'Offer soft finger foods that are easy to grasp. Builds pincer grasp, hand-to-mouth coordination, and chewing skills.',
     condition: (mo) => mo < 12 && (msStatus('finger feed') === 'in_progress' || (msStatus('finger feed') !== 'done' && mo >= 6)) },
 
   // ── LANGUAGE ──
@@ -4742,19 +4904,19 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 12 },
 
   { type:'language', icon:zi('chat'), title:'Name body parts',
-    desc:'Touch her nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
+    desc:'Touch your baby\'s nose, ears, toes while saying the name clearly. Repetition builds word-object associations.',
     condition: (mo) => mo >= 6 && mo < 18 && msStatus('body part') !== 'done' },
 
-  { type:'language', icon:zi('chat'), title:'Imitation games — copy her sounds',
-    desc:'Repeat her babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
+  { type:'language', icon:zi('chat'), title:'Imitation games — copy baby sounds',
+    desc:'Repeat the babbles back, then add new sounds. Turn-taking in vocalisation is the root of conversation.',
     condition: (mo) => mo < 15 && (msStatus('babbl') === 'done' || msStatus('babbl') === 'in_progress') },
 
   { type:'language', icon:zi('target'), title:'Respond to name — reinforce it',
-    desc:'Call her name from different positions and reward with a smile when she turns. Strengthens name recognition.',
+    desc:'Call your baby\'s name from different positions and reward each head-turn with a smile. Strengthens name recognition.',
     condition: (mo) => msStatus('respond') === 'in_progress' },
 
   { type:'language', icon:zi('list'), title:'Simple instructions practice',
-    desc:'"Give me the ball", "clap your hands" — one-step commands with gestures help her link words to actions.',
+    desc:'"Give me the ball", "clap your hands" — one-step commands with gestures help link words to actions.',
     condition: (mo) => mo >= 8 && msStatus('follow') !== 'done' },
 
   // ── SENSORY ──
@@ -4763,7 +4925,7 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo <= 24 },
 
   { type:'sensory', icon:zi('sprout'), title:'Texture exploration',
-    desc:'Let her touch different safe textures — soft cloth, smooth spoon, cool bowl, bumpy ball. Sensory variety accelerates brain development.',
+    desc:'Offer different safe textures to touch — soft cloth, smooth spoon, cool bowl, bumpy ball. Sensory variety accelerates brain development.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'sensory', icon:zi('drop'), title:'Water play',
@@ -4771,16 +4933,16 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 15 },
 
   { type:'sensory', icon:zi('star'), title:'Instrument exploration',
-    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let her make noise — it builds cause-and-effect understanding and auditory processing.',
+    desc:'Simple shakers, soft drums, or large bells (not small jingle bells). Let your baby make noise — it builds cause-and-effect understanding and auditory processing.',
     condition: (mo) => mo >= 6 },
 
   { type:'sensory', icon:zi('palette'), title:'Food-safe finger painting',
-    desc:'Smear a little puree on a tray and let her explore with fingers. Rich tactile experience — great for sensory-averse babies too.',
+    desc:'Smear a little puree on a tray and let little fingers explore. Rich tactile experience — great for sensory-averse babies too.',
     condition: (mo) => mo >= 7 },
 
   // ── SOCIAL ──
   { type:'social', icon:zi('mirror'), title:'Mirror play',
-    desc:'Hold her in front of a mirror. She\'ll study her face and expressions — builds self-awareness and social cognition.',
+    desc:'Hold your baby up to a mirror. Babies love to study faces and expressions — builds self-awareness and social cognition.',
     condition: (mo) => mo >= 5 && mo <= 10 },
 
   { type:'social', icon:zi('baby'), title:'Peek-a-boo',
@@ -4788,19 +4950,19 @@ const DYNAMIC_ACTIVITIES = [
     condition: (mo) => mo >= 5 && mo < 12 && msStatus('object perm') !== 'done' },
 
   { type:'social', icon:zi('baby'), title:'Practise waving bye-bye',
-    desc:'Model waving every time someone leaves. She\'ll start imitating — a key social communication milestone.',
+    desc:'Model waving every time someone leaves. Imitation follows — a key social communication milestone.',
     condition: (mo) => msStatus('wave') !== 'done' && mo >= 6 && mo < 15 },
 
   { type:'social', icon:zi('baby'), title:'Clapping games',
-    desc:'Clap your hands and encourage her to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
+    desc:'Clap your hands and encourage your baby to copy. "Pat-a-cake" is perfect. Builds motor planning and social imitation.',
     condition: (mo) => msStatus('clap') !== 'done' && mo >= 7 && mo < 15 },
 
   { type:'social', icon:zi('shy'), title:'Manage stranger anxiety gently',
-    desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — let her warm up at her own pace.',
+    desc:'Separation anxiety is normal at 8–10 months. Don\'t force interactions — give your baby time to warm up.',
     condition: (mo) => msStatus('separation') === 'in_progress' || (mo >= 8 && mo <= 11) },
 
   { type:'social', icon:zi('baby'), title:'Pointing practice',
-    desc:'Point at objects and name them. Encourage her to point too — "Where\'s the dog?" Pointing is a major communication milestone.',
+    desc:'Point at objects and name them. Encourage your baby to point too — "Where\'s the dog?" Pointing is a major communication milestone.',
     condition: (mo) => msStatus('point') !== 'done' && mo >= 8 && mo < 18 },
   // ═══ TODDLER, 12–24 months (2026-09-24) ═══
   // Sources (fetched 2026-09-24): CDC "What You Can Do" tips at
@@ -4810,12 +4972,12 @@ const DYNAMIC_ACTIVITIES = [
   // pages; WHO 2019 physical-activity guideline (1–2 y). Keys in // src: lines.
   // ── MOTOR: Toddler gross motor ──
   { type:'motor', icon:zi('run'), title:'Push and pull toys',
-    desc:'Give her a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
+    desc:'Offer a sturdy push toy, an empty box to push, or a shoebox "wagon" on a string to pull. Keep the string short (under about 30 cm) and put the wagon away after play. Skip baby walkers — they are not recommended.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-1Y (push boxes / "kiddie chair" / push toys; "Baby walkers are not recommended"); CDC-18M ("Give toys that your child can push or pull safely"); ZTT-PA ("Make a Homemade 'Wagon'"); cord guard: ASTM F963 (cords under 30 cm on toys for under-18-month-olds)
 
   { type:'motor', icon:zi('leaf'), title:'Child-led walks outside',
-    desc:'Let her lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
+    desc:'Let your toddler lead the walk — stop for bugs, leaves and puddles. Stay close. Toddlers need lots of active time spread through the day, and not more than an hour at a stretch in a pram or high chair.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: AAP-ACT ("Child-led walks ... let your toddler lead the way ... stay close"); WHO-PA (1–2 y: at least 180 min of varied physical activity; not restrained for more than 1 hour at a time)
 
@@ -4825,96 +4987,96 @@ const DYNAMIC_ACTIVITIES = [
     // src: CDC-18M ("rolling balls back and forth"); ZTT-SP ("roll the ball back-and-forth ... a game that builds social skills like turn-taking")
 
   { type:'motor', icon:zi('goal'), title:'Kick and throw',
-    desc:'Give her a soft ball to kick, throw and chase. Show her how to swing a leg to kick while you hold her hand for balance at first.',
+    desc:'Give your toddler a soft ball to kick, throw and chase. Show how to swing a leg to kick while you hold hands for balance at first.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-2Y ("Give your child balls to kick, roll, and throw"); AAP-ACT 19–24 m (throwing and kicking a ball); ZTT-SP (balls of different sizes to roll, throw, and chase)
 
   { type:'motor', icon:zi('run'), title:'Cushion obstacle course',
-    desc:'Make a soft course: crawl through a big box, climb over a cushion, bounce on folded blankets, then come to you for a hug. Stay beside her the whole time.',
+    desc:'Make a soft course: crawl through a big box, climb over a cushion, bounce on folded blankets, then come to you for a hug. Stay beside your toddler the whole time.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: ZTT-SP ("Create a toddler obstacle course where your child has a chance to crawl (through a moving box), climb (over a cushion), bounce (on a pile of blankets)"; stool climbing "with supervision"); ZTT-LP ("On a rainy day, try creating an obstacle course indoors")
 
   { type:'motor', icon:zi('run'), title:'Stairs with a hand to hold',
-    desc:'Put a toy a few steps up. Hold her hand going up and down, singing "up, up, up" and "down, down, down". Keep stair gates closed at all other times.',
+    desc:'Put a toy a few steps up. Hold your toddler\'s hand going up and down, singing "up, up, up" and "down, down, down". Keep stair gates closed at all other times.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: AAP-ACT 19–24 m ("Climbing stairs. Place a toy up a few steps ... hold their hand as they walk up and down ... sing 'up, up, up'"); AAP-MOV ("keep the stairs gated at all times")
 
   // ── MOTOR: Fine motor & self-help ──
   { type:'motor', icon:zi('target'), title:'Block towers',
-    desc:'Stack blocks together and let her knock them down, then take turns building. Towers of 3–4 blocks are a typical early-toddler goal.',
+    desc:'Stack blocks together and let your toddler knock them down, then take turns building. Towers of 3–4 blocks are a typical early-toddler goal.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("You can stack the blocks and she can knock them down"); CDC-2Y ("Take turns building towers and knocking them down"); AAP-ACT 12–18 m ("may be able to make a tower of 3 or 4 blocks")
 
   { type:'motor', icon:zi('palette'), title:'First scribbles',
-    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside her, as crayons get bitten. Talk about the colours, then put her art on the wall.',
+    desc:'Tape paper to the table and offer chunky non-toxic, washable crayons, or a little finger paint to spread and dot. Stay beside your toddler, as crayons get bitten. Talk about the colours, then put the artwork on the wall.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-2Y ("Give your child crayons or put some finger paint on paper ... Hang it on the wall or refrigerator"); AAP-ACT 12–18 m ("scribble on paper"); NHS-BSIL ("Draw simple pictures and encourage your child to add marks and colours")
 
   { type:'motor', icon:zi('star'), title:'Fill and dump',
-    desc:'Give her a basket of soft balls or blocks too big to fit in her mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so she walks between them.',
+    desc:'Give your toddler a basket of soft balls or blocks too big to fit in a toddler\'s mouth and an empty box to move them into — then tip them out and start again. Put the boxes a few steps apart so each trip is a little walk.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: ZTT-PA ("Fill and Dump ... If the child is walking, place the baskets a few steps apart"); CDC-18M ("putting blocks or other items in and out of containers")
 
   { type:'motor', icon:zi('bulb'), title:'Shape sorters and chunky puzzles',
-    desc:'Try a shape sorter or a chunky wooden puzzle together. Name each piece — shape, colour or animal — as she fits it in.',
+    desc:'Try a shape sorter or a chunky wooden puzzle together. Name each piece — shape, colour or animal — as each one goes in.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-2Y ("Help your child do simple puzzles with shapes, colors, or animals. Name each piece"); ZTT-SP (nesting cups, shape-sorters, chunky wooden puzzles)
 
   { type:'motor', icon:zi('spoon'), title:'Open cup and spoon practice',
-    desc:'Let her drink from a small open cup (no lid) and scoop with her own spoon at every meal. Sit with her and expect spills — messy is how she learns.',
+    desc:'Let your toddler drink from a small open cup (no lid) and scoop with a spoon at every meal. Sit together and expect spills — messy is how toddlers learn.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M + CDC-18M ("Let your child use a cup without a lid for drinking and practice eating with a spoon. Learning to eat and drink is messy but fun!"); CDC-18M ("sit at the table with your child when she's eating")
 
   { type:'motor', icon:zi('sparkle'), title:'Toothbrushing together',
-    desc:'Twice a day, brush her teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Let her have a turn holding the brush while she sits or stands still, never walking about with it in her mouth. Brushing in front of a mirror makes it a game.',
+    desc:'Twice a day, brush your toddler\'s teeth with a smear of fluoride toothpaste, about the size of a grain of rice. Give a turn holding the brush while sitting or standing still, never walking about with it in the mouth. Brushing in front of a mirror makes it a game.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M ("Create a calm, quiet bedtime ... brush his teeth, and read 1 or 2 books"); ZTT-TS ("Encourage your child to take on some self-care activities — combing hair, brushing teeth"); NHS-TEETH ("Start brushing your baby's teeth with fluoride toothpaste as soon as their first milk tooth breaks through")
     // src (amount + frequency, Maren/Ceres fold): NHS "Children's teeth" (under 3: a smear, >=1,000 ppm, twice daily); AAP clinical report "Fluoride Use in Caries Prevention in the Primary Care Setting", Pediatrics 2014;134:626 (smear / rice-grain under 3, twice daily); ADA Council on Scientific Affairs, JADA 2014;145:190.
 
   // ── LANGUAGE ──
-  { type:'language', icon:zi('chat'), title:'Build on her words',
-    desc:'When she says part of a word, say the whole thing back and add a little: "Ba" — "Ball! Yes, a big red ball." Early words are not complete, and that is fine.',
+  { type:'language', icon:zi('chat'), title:'Build on first words',
+    desc:'When your toddler says part of a word, say the whole thing back and add a little: "Ba" — "Ball! Yes, a big red ball." Early words are not complete, and that is fine.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-1Y ("Build on what your baby tries to say ... 'Yes, that's a big, blue truck'"); CDC-15M ("A child's early words are not complete. Repeat and add to what he says"); CDC-18M ("Teach your child more words by adding to the words she says")
 
   { type:'language', icon:zi('target'), title:'Name it, then pause',
-    desc:'When she points at something, name it and wait a few seconds before handing it over. If she makes a sound, cheer and say the word again: "Yes! Cup."',
+    desc:'When your toddler points at something, name it and wait a few seconds before handing it over. If a sound comes, cheer and say the word again: "Yes! Cup."',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Tell your child the names of objects when he points to them and wait a few seconds to see if he makes any sounds ... 'Yes! Cup.'"); CDC-1Y ("Respond with words when your baby points")
 
   { type:'language', icon:zi('book'), title:'Toddler book time',
-    desc:'Let her pick the book and turn the pages. Point to pictures and ask "What\'s that?", giving her time to point or answer. Try a new book right after her favourite.',
+    desc:'Let your toddler pick the book and turn the pages. Point to pictures and ask "What\'s that?", giving time to point or answer. Try a new book right after a favourite.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-1Y ("books with things they can feel or flaps they can lift"); CDC-15M ("Read a new book after a favorite one"); CDC-18M ("Ask ... 'What is that?'"; "Read books and talk about the pictures using simple words"); NHS-BSIL ("give your child time to point things out"); WHO-PA ("When sedentary, engaging in reading and storytelling with a caregiver is encouraged")
 
   { type:'language', icon:zi('camera'), title:'Family photo book',
-    desc:'Make a little book of photos of family, pets and her. Look through it together and name each person — she will start to point and say names.',
+    desc:'Make a little book of photos of family, pets and your child too. Look through it together and name each person — pointing and names will follow.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Make a 'book' with pictures of people and pets in your child's life. Name them ... Include a picture of your child")
 
   { type:'language', icon:zi('baby'), title:'Body-part song',
-    desc:'Sing "Head, Shoulders, Knees and Toes" and touch each part. Point to her nose and yours: "Here\'s your nose, here\'s my nose." After a few rounds, pause and see if she sings a word.',
+    desc:'Sing "Head, Shoulders, Knees and Toes" and touch each part. Point to your toddler\'s nose and yours: "Here\'s your nose, here\'s my nose." After a few rounds, pause and listen for a sung word.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-18M ("teach your child the names for body parts ... 'Here's your nose, here's my nose'"); CDC-2Y ("Sing songs, such as 'Head, Shoulders, Knees, and Toes' ... see if your child sings some of the words")
 
   { type:'language', icon:zi('list'), title:'Offer simple choices',
-    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so she can point or say which. Choices grow words and independence.',
+    desc:'Hold up two options — "Red shirt or blue shirt?", "Mango or banana?" — so your toddler can point or say which. Choices grow words and independence.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-18M ("Give simple choices ... red or blue shirt"); NHS-BSIL ("Name objects and offer your child choices, for example, 'Do you want an apple or an orange?'")
 
   { type:'language', icon:zi('sun'), title:'Sound walk',
-    desc:'Out and about, stop and listen: the car goes "vroom", the bird goes "cheep", the shop till goes "beep". Make the sound and see if she joins in.',
+    desc:'Out and about, stop and listen: the car goes "vroom", the bird goes "cheep", the shop till goes "beep". Make the sound and see if your toddler joins in.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL ("Out and about ... a car go 'vroom vroom' ... the till go 'beep beep' ... birds singing 'cheep cheep'. Make the sounds and see if your child joins in")
 
   { type:'language', icon:zi('chat'), title:'Mealtime and dressing chat',
-    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help her match words to things and actions.',
+    desc:'Describe as you go: "soft banana", "warm dal", "squishy idli", "one arm in, two arms in". The same words every day help match words to things and actions.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: NHS-BSIL (senses at mealtimes — "This yoghurt is sweet"; getting dressed — "1 arm in, 2 arms in"; "hear the same words every day ... matching words ... to things and actions")
 
   // ── SENSORY ──
   { type:'sensory', icon:zi('drop'), title:'Sand, scoop and pour',
-    desc:'Give her cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave her alone near water, and tip the tub out afterwards.',
+    desc:'Offer cups, spoons and a funnel in the bath, a sandbox, or a tub of water outside. Squeezing a wet sponge works little hands. Never leave your toddler alone near water, and tip the tub out afterwards.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-2Y ("Let your child play with sand toys or plastic containers, spoons, or a funnel in the tub or in a sandbox"); ZTT-PA ("Squishy Sponges ... it is critical to supervise children carefully as they play" with water)
 
@@ -4926,42 +5088,42 @@ const DYNAMIC_ACTIVITIES = [
 
   // ── SOCIAL ──
   { type:'social', icon:zi('bubble'), title:'Bubble pop',
-    desc:'Blow bubbles and let her point, chase and pop them. Say "pop, pop!" each time — a simple game where you both have a part.',
+    desc:'Blow bubbles and let your toddler point, chase and pop them. Say "pop, pop!" each time — a simple game where you both have a part.',
     condition: (mo) => mo >= 12 && mo <= 24 },
     // src: CDC-15M + CDC-18M ("Blow bubbles and let your child pop them. Say things as she pops them, such as 'Pop, pop'"); AAP-ACT ("Bubble play ... practice pointing at the bubbles ... chase the bubbles to pop them")
 
   { type:'social', icon:zi('mirror'), title:'Copy me',
-    desc:'Show her a hat: "What do you do with a hat? It goes on your head!" Put it on, then hand it to her. Try it with a cup, a comb, a book.',
+    desc:'Show your toddler a hat: "What do you do with a hat? It goes on your head!" Put it on, then hand it over. Try it with a cup, a comb, a book.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Show your child different things, such as a hat ... Put it on your head and then give it to him to see if he copies you. Do this with other objects, such as a book or a cup")
 
   { type:'social', icon:zi('baby'), title:'Hide-and-find',
-    desc:'Let her watch you hide behind a chair, then wait for her to find you. Or hide a toy under a cup while she watches — then try two cups.',
+    desc:'Let your toddler watch you hide behind a chair, then wait to be found. Or hide a toy under a cup in plain view — then try two cups.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("Play simple games, such as hide and seek. Let your child watch you hide behind a chair"); ZTT-PA ("Try the Classic Shell Game ... try it with two cups"); AAP-ACT 12–18 m ("Scavenger hunt. Hide a toy with one part sticking out")
 
   { type:'social', icon:zi('heart'), title:'Teddy talks',
-    desc:'Make a soft toy "talk" to her, and see if she copies you or makes her own toy talk back. Early pretend play starts here.',
+    desc:'Make a soft toy "talk" to your toddler, and see if you get copied or another toy talks back. Early pretend play starts here.',
     condition: (mo) => mo >= 12 && mo < 18 },
     // src: CDC-15M ("'Pretend talk' to your child with a stuffed animal. See if your child tries to copy you or if he uses another stuffed animal to 'talk' with the one you are holding")
 
   { type:'social', icon:zi('heart'), title:'Pretend play: feed the teddy',
-    desc:'Give her a spoon, cup and blanket and take turns feeding teddy, giving dolly a bath, or tucking teddy in to sleep. Talk about each step.',
+    desc:'Offer a spoon, cup and blanket and take turns feeding teddy, giving dolly a bath, or tucking teddy in to sleep. Talk about each step.',
     condition: (mo) => mo >= 18 && mo <= 24 },
     // src: CDC-18M ("Encourage 'pretend' play. Give your child a spoon so she can pretend to feed her stuffed animal. Take turns pretending"; "a doll and a baby blanket"); ZTT-PA ("Starting at about 18 months, children are just beginning to play pretend ... 'give Teddy a drink' or 'put Teddy to sleep'"); NHS-BSIL ("giving dolly a bath")
 
   { type:'social', icon:zi('handshake'), title:'Little helper jobs',
-    desc:'Give her small real jobs: fetch her shoes, put socks in the basket, carry a cup to the table, tidy toys to a clean-up song. Thank her every time.',
+    desc:'Give your toddler small real jobs: fetch the shoes, put socks in the basket, carry a cup to the table, tidy toys to a clean-up song. Say thank you every time.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-15M ("Let her get her shoes ... put the socks in the basket"; "Make up a simple 'cleanup song'"); CDC-2Y ("letting him carry things to the table, such as plastic cups or napkins. Thank your child for helping"; "putting toys or laundry in a basket"); ZTT-TS ("Give your child the chance to help around the house")
 
   { type:'social', icon:zi('heart'), title:'Name the feeling',
-    desc:'Say what you think she feels: "You\'re frustrated — the tower fell." Point out feelings in others too: "He looks sad." Tantrums are normal at this age.',
+    desc:'Say what you think your toddler feels: "You\'re frustrated — the tower fell." Point out feelings in others too: "He looks sad." Tantrums are normal at this age.',
     condition: (mo) => mo >= 15 && mo <= 24 },
     // src: CDC-15M ("Say what you think your child is feeling (for example, sad, mad, frustrated, happy)"; "Expect tantrums. They are normal at this age"); CDC-18M ("when he sees a child who is sad, say 'He looks sad'")
 
   { type:'social', icon:zi('phone'), title:'Video calls with family',
-    desc:'Video calls with grandparents and family are the one screen use advised under 2. Let her wave, show toys and hear familiar voices.',
+    desc:'Video calls with grandparents and family are the one screen use advised under 2. Let your toddler wave, show toys and hear familiar voices.',
     condition: (mo) => mo >= 12 && mo < 24 },
     // src: CDC-1Y / CDC-15M / CDC-18M ("Limit screen time (TV, tablets, phones, etc.) to video calling with loved ones. Screen time is not recommended for children younger than 2 years of age"); WHO-PA ("For 1-year-olds, sedentary screen time ... is not recommended")
     // NOTE: at 24 m CDC-2Y shifts to "no more than 1 hour a day of a children's program with an adult present" — hence `mo < 24`.
@@ -5211,7 +5373,7 @@ function renderUpcomingItem(item) {
     <div class="upcoming-item ${itemClass}">
       <div class="upcoming-icon">${item.icon}</div>
       <div class="upcoming-body">
-        <strong>${escHtml(item.text)}</strong>
+        <strong>${escHtml(msLabel(item.text))}</strong>
         <span>${escHtml(item.desc)}</span>
         <div style="display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:5px;align-items:center;">
           <span class="upcoming-badge age-badge">${item.month}+ months</span>
@@ -6198,7 +6360,7 @@ function drawSleepChart() {
       const target = getSleepTargets(ageAt().months).totalTarget; // age-aware (was a fixed 14 h)
       const pct = Math.round((avg / target) * 100);
       const tH = Math.floor(target / 60), tM = target % 60;
-      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for her age)`;
+      insightEl.textContent = `7-day average: ${h}h ${m}m (${pct}% of the ~${tH}h${tM ? ' ' + tM + 'm' : ''} total suggested for ${pron('poss')} age)`;
     }
   }
 }
@@ -6220,12 +6382,12 @@ function renderSleepTips() {
         { icon:zi('star'), title:'Consistent sleep cue', text:'A specific lullaby, white noise pattern, or phrase ("time to sleep") used every night builds a strong association over time.' },
       ] : ageM < 12 ? [
         { icon:zi('moon'), title:'Keep the routine consistent', text:'At 9–12 months, separation anxiety peaks. A strong, predictable routine provides security — same time ±15 minutes, same sequence.' },
-        { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if she gets past her sleep window, cortisol spikes make falling asleep harder.' },
+        { icon:zi('clock'), title:'Ideal bedtime: 7:00–8:00 PM', text:'Slightly later than younger months. Watch for the second wind — if ' + pron('subj') + ' gets past ' + pron('poss') + ' sleep window, cortisol spikes make falling asleep harder.' },
         { icon:zi('book'), title:'Add a short book', text:'Board books before bed build both sleep associations and early literacy. 1–2 short books is perfect.' },
         { icon:zi('baby'), title:'Goodbye ritual', text:'A brief, warm goodbye ritual ("goodnight, I love you, see you in the morning") helps with separation anxiety at this age.' },
       ] : [
         { icon:zi('moon'), title:'Same wind-down, same time', text:'Toddlers thrive on a predictable routine: bath, teeth, one or two books, lights out. Regular sleep and wake times matter more than the exact hour (WHO 2019).' },
-        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If she fights sleep, a slightly earlier bedtime often helps more than a later one.' },
+        { icon:zi('clock'), title:'A steady bedtime', text:'Pick a bedtime that fits your family and keep it within about 15 minutes each night. If ' + pron('subj') + ' fights sleep, a slightly earlier bedtime often helps more than a later one.' },
         { icon:zi('no-entry'), title:'Screens off', text:'No screen time under 2 years (WHO; IAP 2022), and none in the hour before bed. Video calls with family are fine, says the AAP.' },
         { icon:zi('baby'), title:'Short, warm goodnight', text:'A brief goodnight ritual helps with separation worries, which often flare again around 18 months.' },
       ]
@@ -6233,7 +6395,7 @@ function renderSleepTips() {
     {
       id: 'environment', icon: zi('flame'), label: 'Sleep Environment', color: 'sky',
       tips: [
-        { icon:zi('flame'), title:'Room temp: 20–22°C', text:'Overheating is a bigger risk than being cold. Dress in one more layer than you\'d wear. Feel the back of her neck — it should be warm, not sweaty.' },
+        { icon:zi('flame'), title:'Room temp: 20–22°C', text:'Overheating is a bigger risk than being cold. Dress in one more layer than you\'d wear. Feel the back of ' + pron('poss') + ' neck — it should be warm, not sweaty.' },
         { icon:zi('moon'), title:'Darkness matters', text:'Use blackout curtains. Even small light leaks can disrupt melatonin. A dim red/orange night light is OK if needed for feeds — avoid white/blue light.' },
         { icon:zi('bell'), title:'White noise', text:'Consistent white noise (not music) at 50–65 dB helps mask household sounds. Place the machine across the room, not right next to the crib.' },
         { icon:zi('moon'), title:'Safe sleep surface', text:'Firm, flat mattress. No pillows, loose blankets, bumpers, or soft toys in the crib. Back sleeping position.' },
@@ -6243,43 +6405,43 @@ function renderSleepTips() {
     {
       id: 'naps', icon: zi('zzz'), label: 'Nap Guide', color: 'sage',
       tips: ageM <= 8 ? [
-        { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, she can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
+        { icon:zi('timer'), title:'Wake windows: 2–3 hours', text:'At 6–8 months, ' + pron('subj') + ' can handle 2–3 hours of awake time between naps. First wake window is usually shortest (2h), last is longest (2.5–3h).' },
         { icon:zi('list'), title:'2–3 naps per day', text:'The third nap typically drops around 7–8 months. It\'s usually a short catnap (20–30 min) in the late afternoon.' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning nap: 1–1.5h. Afternoon nap: 1–2h. Third nap (if taken): 20–30 min. Short naps (<30 min) are common and not a problem if night sleep is solid.' },
-        { icon:zi('warn'), title:'Don\'t force naps', text:'If she\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
+        { icon:zi('warn'), title:'Don\'t force naps', text:'If ' + pron('subj') + '\'s not tired, 10–15 min of quiet time in the crib is fine. Forced naps create negative sleep associations.' },
       ] : ageM < 12 ? [
         { icon:zi('timer'), title:'Wake windows: 3–4 hours', text:'At 9–12 months, awake windows stretch. First: 3h, second: 3.5h, before bed: 3.5–4h.' },
-        { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, she may be ready for the 2-to-1 transition (usually around 12–15 months).' },
+        { icon:zi('list'), title:'2 naps per day', text:'Most babies drop to 2 naps by 9 months. If the second nap is consistently refused, ' + pron('subj') + ' may be ready for the 2-to-1 transition (usually around 12–15 months).' },
         { icon:zi('timer'), title:'Ideal nap lengths', text:'Morning: 1–1.5h. Afternoon: 1–2h. Total daytime sleep: 2–3 hours. More than 3.5h of daytime sleep may steal from night sleep.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ] : [
         { icon:zi('list'), title:'One or two naps are both normal', text:'Between 12 and 18 months most toddlers move from two naps to one, and by about 18 months most take one midday nap. Some keep two until nearer 2 years.' },
-        { icon:zi('eye'), title:'Signs she is ready for one nap', text:'Refusing one of her naps most days for a week or two, or the second nap pushing bedtime late.' },
-        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while she adjusts.' },
+        { icon:zi('eye'), title:'Signs ' + pron('subj') + ' is ready for one nap', text:'Refusing one of ' + pron('poss') + ' naps most days for a week or two, or the second nap pushing bedtime late.' },
+        { icon:zi('timer'), title:'Making the switch', text:'Move the morning nap 15–30 minutes later every few days until it lands after lunch. An earlier bedtime helps while ' + pron('subj') + ' adjusts.' },
         { icon:zi('sun'), title:'Cap late naps', text:'End the last nap by 3:30–4:00 PM to protect bedtime. A nap that runs too late pushes bedtime and fragments the night.' },
       ]
     },
     {
       id: 'night', icon: zi('moon'), label: 'Night Sleep', color: 'indigo',
       tips: ageM <= 8 ? [
-        { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — she feeds and goes back to sleep easily.' },
+        { icon:zi('drop'), title:'Night feeds: 1–2 normal', text:'At 6–8 months, 1–2 feeds per night is developmentally normal. True hunger feeds are quick and business-like — ' + pron('subj') + ' feeds and goes back to sleep easily.' },
         { icon:zi('hourglass'), title:'Pause before responding', text:'Wait 2–3 minutes before going in. Babies cycle through light sleep every 45–60 min and often self-settle with brief fussing.' },
-        { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If she\'s consistently getting less than 10h, the schedule may need adjusting.' },
-        { icon:zi('hourglass'), title:'Split nights', text:'If she wakes for 1+ hour in the middle of the night, she may be getting too much daytime sleep or have too early a bedtime.' },
+        { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep should be 11–12 hours including wake-ups. If ' + pron('subj') + '\'s consistently getting less than 10h, the schedule may need adjusting.' },
+        { icon:zi('hourglass'), title:'Split nights', text:'If ' + pron('subj') + ' wakes for 1+ hour in the middle of the night, ' + pron('subj') + ' may be getting too much daytime sleep or have too early a bedtime.' },
       ] : ageM < 12 ? [
-        { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If she still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
+        { icon:zi('drop'), title:'Night weaning readiness', text:'By 9–12 months, most babies can sleep through without a feed. If ' + pron('subj') + ' still wakes, it may be habit rather than hunger. Consult your pediatrician.' },
         { icon:zi('bars'), title:'Target: 11–12h night', text:'Total night sleep of 11–12 hours. Early morning waking (before 6 AM) often means bedtime is too late or too early — experiment in 15-min increments.' },
         { icon:zi('hourglass'), title:'Sleep regressions', text:'The 8–10 month regression is real — linked to crawling, pulling up, separation anxiety. It\'s temporary (2–4 weeks). Stay consistent with the routine.' },
-        { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If she needs rocking/feeding to sleep, she\'ll need it at every wake-up.' },
+        { icon:zi('moon'), title:'Self-settling', text:'The ability to fall asleep independently is the single biggest predictor of sleeping through the night. If ' + pron('subj') + ' needs rocking/feeding to sleep, ' + pron('subj') + '\'ll need it at every wake-up.' },
       ] : [
         { icon:zi('bars'), title:'About 11–14 hours a day', text:'Across 24 hours, including naps, 1–2 year olds need about 11–14 hours (AASM, WHO). Night sleep is usually 10–12 hours.' },
         // src: AAPD policy on early childhood caries (no bottle in bed; milk before brushing);
         // Diet tab milk guide (diet.js: open cup, ~500 ml/day cap from 12 m; breastfeeding to 2 y).
-        { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on her teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
+        { icon:zi('drop'), title:'Milk at night', text:'Breastfeeding at night can carry on. Give any bedtime milk before brushing, and no bottle in bed: milk left on ' + pron('poss') + ' teeth causes decay. Cow\'s milk at night counts toward the ~500 ml a day limit.' },
         { icon:zi('hourglass'), title:'Some night waking is normal', text:'A brief waking or two is still common at 1–2 years. Keep your response calm, quiet and boring so night-time stays for sleeping.' },
         { icon:zi('chart'), title:'Wobbles around 18 months and 2 years', text:'New skills, independence and separation worries can unsettle sleep for a few weeks. Stay consistent with the routine; it usually passes.' },
         // src: AAP 2012 OSA clinical practice guideline (symptoms incl. cyanosis); Sheffield Children's NHS (film her sleeping).
-        { icon:zi('steth'), title:'When to mention it to her doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with her neck stretched back. If you see gasps or pauses in her breathing, call her doctor this week and take a short phone video of her sleeping.' },
+        { icon:zi('steth'), title:'When to mention it to ' + pron('poss') + ' doctor', text:'Loud snoring 3 or more nights a week, mouth breathing, restless sleep, or sleeping with ' + pron('poss') + ' neck stretched back. If you see gasps or pauses in ' + pron('poss') + ' breathing, call ' + pron('poss') + ' doctor this week and take a short phone video of ' + pron('obj') + ' sleeping.' },
         { icon:zi('siren'), title:'Get help now', text:'Blue or grey lips or face, or struggling to breathe: seek medical care straight away.' },
       ]
     },
@@ -6289,8 +6451,8 @@ function renderSleepTips() {
         { icon:zi('brain'), title:'Sleep fuels growth', text:'Growth hormone is primarily released during deep sleep. Consistent, adequate sleep directly supports physical growth, brain development, and immune function.' },
         { icon:zi('warn'), title:'Overtiredness spiral', text:'An overtired baby produces cortisol and adrenaline, making it harder to fall asleep and stay asleep. Catch sleepy cues early — prevention is easier than correction.' },
         { icon:zi('baby'), title:'Teething and sleep', text:'Teething can unsettle sleep for a few nights as a tooth comes through. Offer a chilled (not frozen) teether before bed. Pain relief (consult doctor) may help on rough nights — but don\'t blame every bad night on teething.' },
-        { icon:zi('chart'), title:'Developmental leaps', text:'Major motor milestones (crawling, standing, walking) temporarily disrupt sleep. She may practice new skills in her sleep. This is normal and passes in 1–2 weeks.' },
-        { icon:zi('flame'), title:'Illness recovery', text:'After illness, sleep patterns may take 1–2 weeks to normalise. Return to the pre-illness routine as soon as she\'s recovered — don\'t create new habits during sick days.' },
+        { icon:zi('chart'), title:'Developmental leaps', text:'Major motor milestones (crawling, standing, walking) temporarily disrupt sleep. ' + pron('subj', true) + ' may practice new skills in ' + pron('poss') + ' sleep. This is normal and passes in 1–2 weeks.' },
+        { icon:zi('flame'), title:'Illness recovery', text:'After illness, sleep patterns may take 1–2 weeks to normalise. Return to the pre-illness routine as soon as ' + pron('subj') + '\'s recovered — don\'t create new habits during sick days.' },
       ]
     },
     {
@@ -6300,18 +6462,18 @@ function renderSleepTips() {
       // bed rails, falls); NHS and The Lullaby Trust (light blanket from 1 y; when not to share
       // a bed: alcohol, sedating medicine, smoking, sofas).
       tips: ageM >= 12 ? [
-        { icon:zi('baby'), title:'Her own sleep position', text:'Now that she rolls and moves freely, she can settle in whatever position she likes. There is no need to turn her back.' },
-        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap she can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
-        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from her face. A light blanket of her own is fine from about 1 year.' },
+        { icon:zi('baby'), title:'' + pron('poss', true) + ' own sleep position', text:'Now that ' + pron('subj') + ' rolls and moves freely, ' + pron('subj') + ' can settle in whatever position ' + pron('subj') + ' likes. There is no need to turn ' + pron('obj') + ' onto ' + pron('poss') + ' back.' },
+        { icon:zi('moon'), title:'Sharing your bed: no gaps', text:'Use a firm mattress. Push it flush against the wall, or pull it well away, so there is no gap ' + pron('subj') + ' can slip into, and none at the headboard or footboard. Check now and then that the gap stays closed; mattresses creep.' },
+        { icon:zi('warn'), title:'Pillows and heavy quilts', text:'Keep adult pillows and heavy quilts or razais away from ' + pron('poss') + ' face. A light blanket of ' + pron('poss') + ' own is fine from about 1 year.' },
         // No bed rails under 2 y: a toddler can be trapped between rail and mattress (CPSC 16 CFR
         // 1224; AAP HealthyChildren) — Maren B-2 on #273.
-        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. The safest setup is the mattress on the floor, away from the walls. If the bed stays raised, keep her on the side away from the edge, keep the floor beside it clear and soft, and don\'t use bed rails before age 2: she can get trapped between the rail and the mattress.' },
-        { icon:zi('eye'), title:'Naps on the big bed', text:'Don\'t leave her alone on the adult bed for a nap. Put her down on a floor mattress, or stay with her.' },
-        { icon:zi('baby'), title:'Who shares the bed', text:'Keep pets and other children out of the bed when she sleeps in it.' },
+        { icon:zi('shield'), title:'Falls from a high bed', text:'An adult bed is a long way down for a walker. The safest setup is the mattress on the floor, away from the walls. If the bed stays raised, keep ' + pron('obj') + ' on the side away from the edge, keep the floor beside it clear and soft, and don\'t use bed rails before age 2: ' + pron('subj') + ' can get trapped between the rail and the mattress.' },
+        { icon:zi('eye'), title:'Naps on the big bed', text:'Don\'t leave ' + pron('obj') + ' alone on the adult bed for a nap. Put ' + pron('obj') + ' down on a floor mattress, or stay with ' + pron('obj') + '.' },
+        { icon:zi('baby'), title:'Who shares the bed', text:'Keep pets and other children out of the bed when ' + pron('subj') + ' sleeps in it.' },
         { icon:zi('no-entry'), title:'When not to share the bed', text:'Not next to an adult who has had alcohol, sedating medicine, or is a smoker, and never asleep together on a sofa or armchair.' },
-        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around her. Smoke on clothes and furnishings also harms her breathing and sleep.' },
+        { icon:zi('shield'), title:'Smoke-free home', text:'No smoking in the house or around ' + pron('obj') + '. Smoke on clothes and furnishings also harms ' + pron('poss') + ' breathing and sleep.' },
       ] : [
-        { icon:zi('baby'), title:'Always on the back', text:'Place her on her back for every sleep. Once she can roll both ways independently, she can find her own position — but always start on the back.' },
+        { icon:zi('baby'), title:'Always on the back', text:'Place ' + pron('obj') + ' on ' + pron('poss') + ' back for every sleep. Once ' + pron('subj') + ' can roll both ways independently, ' + pron('subj') + ' can find ' + pron('poss') + ' own position — but always start on the back.' },
         { icon:zi('warn'), title:'Nothing in the crib', text:'No pillows, blankets, bumpers, stuffed animals, or positioners. A fitted sheet on a firm mattress is all that\'s needed.' },
         { icon:zi('sprout'), title:'Air circulation', text:'A ceiling fan or gentle air circulation reduces SIDS risk. Keep the room ventilated but not drafty.' },
         { icon:zi('shield'), title:'Smoke-free environment', text:'No smoking in the house or around the baby. Secondhand and thirdhand smoke significantly increase SIDS risk.' },
@@ -8131,7 +8293,7 @@ function renderInfoMilestoneVelocity() {
           projStr = ' · → ' + m.nextStage + ' in ~' + m.projectedDays + 'd';
         }
         html += '<div class="ai-velocity-item">' +
-          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ai-velocity-rate">' + rateStr + projStr + '</div>' +
         '</div>';
       });
@@ -8140,7 +8302,7 @@ function renderInfoMilestoneVelocity() {
       html += '<div class="si-sub-label fe-section-gap" >Stalled</div>';
       stalled.forEach(m => {
         html += '<div class="ai-velocity-item">' +
-          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ai-velocity-rate ai-velocity-stale">No evidence for ' + m.daysSinceLast + 'd</div>' +
         '</div>';
       });
@@ -8152,10 +8314,10 @@ function renderInfoMilestoneVelocity() {
     let iHtml = '';
     if (progressing.length > 0) {
       const fastest = progressing[0];
-      iHtml += '<div class="si-insight si-insight-good">Fastest progress: "' + escHtml(fastest.text) + '" at ' + (fastest.rate >= 1 ? fastest.rate.toFixed(1) + ' ev/day' : (fastest.rate * 7).toFixed(1) + ' ev/week') + '</div>';
+      iHtml += '<div class="si-insight si-insight-good">Fastest progress: "' + escHtml(msLabel(fastest.text)) + '" at ' + (fastest.rate >= 1 ? fastest.rate.toFixed(1) + ' ev/day' : (fastest.rate * 7).toFixed(1) + ' ev/week') + '</div>';
     }
     if (stalled.length > 0) {
-      iHtml += '<div class="si-insight si-insight-warn">' + stalled.length + ' milestone' + (stalled.length > 1 ? 's' : '') + ' stalled — consider targeted activities for ' + escHtml(stalled[0].text) + '</div>';
+      iHtml += '<div class="si-insight si-insight-warn">' + stalled.length + ' milestone' + (stalled.length > 1 ? 's' : '') + ' stalled — consider targeted activities for ' + escHtml(msLabel(stalled[0].text)) + '</div>';
     }
     insightsEl.innerHTML = iHtml;
   }
@@ -10535,7 +10697,7 @@ function computeGrowthVelocity() {
     // Band age = the measurement's age, rounded — so a weigh-in on (or just before) her birthday
     // takes the same 12–24 m band the Growth gauge uses (Maren V-M-266-4).
     var ageMo = ageMonthsAt(wLatest.date);
-    var bandMo = Math.round(ageMo);
+    var bandMo = ageMo;   // growthVelocityBand brackets it (completed months; 12 m from 11.5) — V-M-282-9
     // From 12 m, judge velocity over >= 28 days (Maren V-M-266-3 / Kael V-K-266-7): a toddler's
     // two-week gain (~90 g at the median) is the size of home-scale noise, and WHO publishes
     // 12–24 m velocity only in 2-month steps. Use the latest weigh-in at least 28 days back.
@@ -10549,47 +10711,68 @@ function computeGrowthVelocity() {
     var wGainG = Math.round((wLatest.wt - wPrev.wt) * 1000);
     var gPerDay = Math.round(wGainG / wDaysBetween * 10) / 10;
 
-    // Expected velocity by age
-    var expectedRange;
-    if (bandMo < 3) expectedRange = { min: 25, max: 35, label: '0–3 months' };
-    else if (bandMo < 6) expectedRange = { min: 15, max: 25, label: '3–6 months' };
-    else if (bandMo < 9) expectedRange = { min: 10, max: 18, label: '6–9 months' };
-    else if (bandMo < 12) expectedRange = { min: 8, max: 13, label: '9–12 months' };
-    else expectedRange = { min: GROWTH_VELOCITY_12_24.wGDayMin, max: GROWTH_VELOCITY_12_24.wGDayMax, label: GROWTH_VELOCITY_12_24.label };
+    // Expected velocity by age and sex (WHO P15–P85, g/day; GROWTH_VELOCITY_BANDS), looked up at the
+    // window midpoint (gvBandAge — V-CA-282b-1). ageMo / bandMo (the latest weigh-in's age) still
+    // drive the toddler lookback, tooShort and the stale rule.
+    var wBandAge = gvBandAge(wLatest, wPrev);
+    var wBand = growthVelocityBand(wBandAge);
+    var expectedRange = { min: wBand.wGDayMin, max: wBand.wGDayMax, label: wBand.label, fromMo: wBand.fromMo, toMo: wBand.toMo };
 
+    // Judged in g/week, the unit and formula getGrowthVelocity uses (Math.floor(g / days × 7)) against
+    // the band's g/week limits — the g/day columns are display copy, rounded so they can sit just under
+    // the g/week floor, and judging on them let Home say "below" while this said "on track" for the
+    // same gain (Carina V-CA-282c-3). gPerDay stays for display.
+    var gPerWeek = Math.floor((wGainG / wDaysBetween) * 7);
     var wStatus;
-    if (gPerDay < expectedRange.min * 0.5) wStatus = 'plateau';
-    else if (gPerDay < expectedRange.min) wStatus = 'slow';
-    else if (gPerDay > expectedRange.max * 1.3) wStatus = 'fast';
+    if (gPerWeek < wBand.wGWkMin * 0.5) wStatus = 'plateau';
+    else if (gPerWeek < wBand.wGWkMin) wStatus = 'slow';
+    else if (gPerWeek > wBand.wGWkMax * 1.3) wStatus = 'fast';
     else wStatus = 'on-track';
 
     // Plateau detection — scaled to the age band (was a fixed infant-era 50 g / 14 d floor that
-    // overrode the toddler band: 45 g over 15 d is on track at 12 m+, not a plateau).
-    var isPlateau = wDaysBetween >= 14 && wGainG < expectedRange.min * 0.5 * wDaysBetween;
+    // overrode the toddler band: 45 g over 15 d is on track at 12 m+, not a plateau). In g/week too.
+    var isPlateau = wDaysBetween >= 14 && wGainG * 7 < wBand.wGWkMin * 0.5 * wDaysBetween;
     if (isPlateau) wStatus = 'plateau';
 
     // Too short an interval to judge a toddler: no verdict either way (tooShort lets renderers say so).
     var wTooShort = bandMo >= 12 && wDaysBetween < 28;
     if (wTooShort) { wStatus = 'on-track'; isPlateau = false; }
 
+    // Newborn window (gvNewbornCheck, core.js — AAP / NHS / NICE NG75 cited there), the same helper
+    // getGrowthVelocity calls, given the first weight row so both engines judge the same window
+    // (Kael V-K-282b-3): more than 10% of birth weight lost before day 21 → 'newborn-loss'; until
+    // day 28 a window starting before day 5 is judged against birth weight, not as a rate →
+    // 'on-track' when regained cleanly, 'not-regained' from day 14, 'newborn' before; below birth
+    // weight from day 28 to ~3 months → 'not-regained'; any weigh-in before day 14 → 'newborn'. It
+    // takes no rate from this engine (V-K-282c-6). Readers take the copy from weight.nb (PC-1, bug #27).
+    var wNb = gvNewbornCheck(wLatest, weightEntries[0]);
+    if (wNb) { wStatus = wNb.status === 'regained' ? 'on-track' : wNb.status; isPlateau = false; wTooShort = false; }
+    var wNewborn = wStatus === 'newborn';
+
     // Freshness — toddlers are weighed about monthly, so "stale" moves from 3 to 5 weeks at 12 m+.
     var daysSinceWeight = Math.round((new Date(todayStr) - new Date(wLatest.date)) / 86400000);
     var weightStale = daysSinceWeight > (bandMo >= 12 ? 35 : 21);
 
-    // Total gain since birth
-    var birthWeight = weightEntries[0].wt;
-    var totalGainG = Math.round((wLatest.wt - birthWeight) * 1000);
+    // Total change since birth — from the row dated on the birth date (gvBirthRow), never the first
+    // weigh-in, which may be days later (V-M-282b-1). No birth row → null (readers show '—').
+    var birthRow = gvBirthRow();
+    var totalGainG = (birthRow && birthRow.date !== wLatest.date) ? Math.round((wLatest.wt - birthRow.wt) * 1000) : null;
 
     weightResult = {
       latest: wLatest,
       prev: wPrev,
       gPerDay: gPerDay,
+      gPerWeek: gPerWeek,
       gainG: wGainG,
       daysBetween: wDaysBetween,
       expectedRange: expectedRange,
       status: wStatus,
       isPlateau: isPlateau,
       tooShort: wTooShort,
+      newborn: wNewborn,
+      nb: wNb,
+      regained: !!(wNb && wNb.status === 'regained'),
+      bandAge: wBandAge,
       daysSince: daysSinceWeight,
       stale: weightStale,
       totalGainG: totalGainG
@@ -10601,7 +10784,7 @@ function computeGrowthVelocity() {
   var heightResult = null;
   if (heightEntries.length >= 2) {
     var hLatest = heightEntries[heightEntries.length - 1];
-    var hBandMo = Math.round(ageMonthsAt(hLatest.date));
+    var hBandMo = ageMonthsAt(hLatest.date);
     var hPrev = heightEntries[heightEntries.length - 2];
     if (hBandMo >= 12) { // same >= 28-day lookback as weight
       for (var hi = heightEntries.length - 2; hi >= 0; hi--) {
@@ -10612,9 +10795,9 @@ function computeGrowthVelocity() {
     var cmGain = Math.round((hLatest.ht - hPrev.ht) * 10) / 10;
     var cmPerMonth = Math.round(cmGain / hDaysBetween * 30.44 * 10) / 10;
 
-    // 12–24 m band from the shared WHO constant (Maren V-M-266-2 — this site was missed).
-    var hExpected = hBandMo >= 12 ? { min: GROWTH_VELOCITY_12_24.hCmMoMin, max: GROWTH_VELOCITY_12_24.hCmMoMax }
-      : (hBandMo < 6) ? { min: 2.0, max: 3.5 } : { min: 1.0, max: 2.5 };
+    // Band from the shared WHO source, by age and sex (Maren V-M-266-2; S4 for 0–12 m).
+    var hBand = growthVelocityBand(hBandMo);
+    var hExpected = { min: hBand.hCmMoMin, max: hBand.hCmMoMax };
     var hStatus = cmPerMonth < hExpected.min ? 'slow' : (cmPerMonth > hExpected.max ? 'fast' : 'on-track');
     if (hBandMo >= 12 && hDaysBetween < 28) hStatus = 'on-track';
 
@@ -10646,9 +10829,13 @@ function computeGrowthVelocity() {
     }
   });
 
-  // Crossing detection
+  // Crossing detection. Not while the newborn model is judging (weight.nb) and never for a pair whose
+  // later point is before day 28: the after-birth dip moves the percentile by design, and the newborn
+  // line already says what it means (Vela V-V-282c-2).
   var crossings = [];
+  var nbJudging = !!(weightResult && weightResult.nb);
   for (var i = 1; i < percentiles.length; i++) {
+    if (nbJudging || gvDayOf(percentiles[i].date) < GV_REGAIN_DAYS) continue;
     var diff = percentiles[i].percentile - percentiles[i - 1].percentile;
     if (Math.abs(diff) > 15) {
       crossings.push({
@@ -10661,6 +10848,28 @@ function computeGrowthVelocity() {
   }
 
   var latestPercentile = percentiles.length > 0 ? percentiles[percentiles.length - 1].percentile : null;
+
+  // Gradual centile slide (Maren V-M-282c-11). Pairwise crossings (above) miss a slow fall spread over
+  // several weigh-ins. Flag a fall across 2 or more of the major WHO centile lines (3rd, 15th, 50th,
+  // 85th, 97th) from the highest weight percentile in the last 6 months to the latest one. Points
+  // before day 28 are left out, as the after-birth dip moves the percentile by design.
+  var centileSlide = null;
+  var lastP = percentiles.length > 0 ? percentiles[percentiles.length - 1] : null;
+  if (lastP && !nbJudging && gvDayOf(lastP.date) >= GV_REGAIN_DAYS) {
+    var slideAnchor = _parseLocalDate(lastP.date);   // HR-12: a local calendar day
+    if (slideAnchor) slideAnchor.setDate(slideAnchor.getDate() - 183);
+    var slideFrom = slideAnchor ? toDateStr(slideAnchor) : '';
+    var topP = null;
+    percentiles.forEach(function(p) {
+      if (p.date >= slideFrom && gvDayOf(p.date) >= GV_REGAIN_DAYS && (!topP || p.percentile > topP.percentile)) topP = p;
+    });
+    var linesCrossed = topP ? GV_CENTILE_LINES.filter(function(L) { return lastP.percentile < L && L <= topP.percentile; }).length : 0;
+    if (linesCrossed >= 2) {
+      var nWord = ['', 'one', 'two', 'three', 'four', 'five'][linesCrossed] || String(linesCrossed);
+      centileSlide = { from: topP.percentile, to: lastP.percentile, fromDate: topP.date, date: lastP.date, lines: linesCrossed,
+        text: 'Weight has moved down ' + nWord + ' centile lines since ' + formatDate(_parseLocalDate(topP.date) || topP.date) + ' — mention it to your doctor' };
+    }
+  }
 
   // Weight-for-height check
   var proportionFlag = null;
@@ -10683,6 +10892,7 @@ function computeGrowthVelocity() {
     percentiles: percentiles,
     latestPercentile: latestPercentile,
     crossings: crossings,
+    centileSlide: centileSlide,
     proportionFlag: proportionFlag
   };
 }
@@ -10706,7 +10916,11 @@ function renderInfoGrowthVelocity() {
   }
 
   // Summary line
-  var wStr = data.weight ? data.weight.gPerDay + 'g/day (' + data.weight.status + ')' : '—';
+  // Newborn window: no rate, a plain word (gvNewbornCheck); otherwise the rate and its status.
+  var wNbS = data.weight && data.weight.nb;
+  var wStr = !data.weight ? '—'
+    : wNbS ? wNbS.head
+    : data.weight.gPerDay + 'g/day (' + (data.weight.tooShort ? 'too soon to judge' : data.weight.status) + ')';
   var hStr = data.height ? data.height.cmPerMonth + 'cm/mo (' + data.height.status + ')' : '—';
   var pStr = data.latestPercentile !== null ? Math.round(data.latestPercentile) + 'th' : '—';
   summaryEl.innerHTML = '<span class="t-sm t-mid" >Weight: ' + wStr + ' · Height: ' + hStr + ' · ' + pStr + ' percentile</span>';
@@ -10720,14 +10934,29 @@ function renderInfoGrowthVelocity() {
     var expLeftPct = Math.round(((w.expectedRange.min - rangeMin) / totalRange) * 100);
     var expWidthPct = Math.round(((w.expectedRange.max - w.expectedRange.min) / totalRange) * 100);
     var markerPct = Math.max(0, Math.min(100, Math.round(((w.gPerDay - rangeMin) / totalRange) * 100)));
-    var markerColor = w.status === 'on-track' ? 'var(--tc-sage)' : (w.status === 'slow' || w.status === 'plateau' ? 'var(--tc-amber)' : 'var(--tc-sky)');
+    // Colour: sage on track, amber slow / plateau / a newborn flag, neutral (--mid) for the plain
+    // after-birth dip — never sky, which is "above range" on this bar (Vela V-V-282b-3).
+    var wNbB = w.nb;
+    var nbTone = wNbB ? wNbB.tone : null;
+    var markerColor = w.status === 'on-track' ? 'var(--tc-sage)'
+      : (w.status === 'slow' || w.status === 'plateau' || nbTone === 'caution') ? 'var(--tc-amber)'
+      : w.status === 'newborn' ? 'var(--mid)' : 'var(--tc-sky)';
 
-    var bHtml = '<div class="si-sub-label">Weight Velocity (' + w.expectedRange.label + ' expected: ' + w.expectedRange.min + '–' + w.expectedRange.max + ' g/day)</div>';
-    bHtml += '<div class="mi-velocity-range">';
-    bHtml += '<div class="mi-velocity-expected" style="left:' + expLeftPct + '%;width:' + expWidthPct + '%;"></div>';
-    bHtml += '<div class="mi-velocity-marker" style="left:' + markerPct + '%;background:' + markerColor + ';"></div>';
-    bHtml += '</div>';
-    bHtml += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--light);"><span>' + rangeMin + '</span><span style="color:var(--text);font-weight:600;">' + w.gPerDay + ' g/day</span><span>' + rangeMax + '</span></div>';
+    // In the newborn window the rate isn't judged against the band, so the sub-label says why and no
+    // bar is drawn at all — a marker on an empty track still reads as a position on a scale (Vela
+    // V-V-282b-3, V-V-282c-5). The sub-label and the number stay.
+    var bHtml;
+    if (wNbB) {
+      bHtml = '<div class="si-sub-label">Weight change · ' + escHtml(wNbB.short) + '</div>';
+      bHtml += '<div class="t-sm t-mid">' + w.gPerDay + ' g/day</div>';
+    } else {
+      bHtml = '<div class="si-sub-label">Weight Velocity (expected for ' + gvBandPhrase(w.expectedRange) + ': ' + w.expectedRange.min + '–' + w.expectedRange.max + ' g/day)</div>';
+      bHtml += '<div class="mi-velocity-range">';
+      bHtml += '<div class="mi-velocity-expected" style="left:' + expLeftPct + '%;width:' + expWidthPct + '%;"></div>';
+      bHtml += '<div class="mi-velocity-marker" style="left:' + markerPct + '%;background:' + markerColor + ';"></div>';
+      bHtml += '</div>';
+      bHtml += '<div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);color:var(--light);"><span>' + rangeMin + '</span><span style="color:var(--text);font-weight:600;">' + w.gPerDay + ' g/day</span><span>' + rangeMax + '</span></div>';
+    }
     barEl.innerHTML = bHtml;
   } else if (barEl) {
     barEl.innerHTML = '';
@@ -10751,6 +10980,8 @@ function renderInfoGrowthVelocity() {
       var crossColor = latest.direction === 'climbing' ? 'si-insight-good' : 'si-insight-warn';
       html += '<div class="si-insight ' + crossColor + '">Crossed from ' + Math.round(latest.from) + 'th to ' + Math.round(latest.to) + 'th percentile — ' + latest.direction + '.</div>';
     }
+    // A slow fall across two major centile lines, which the pairwise check above misses (V-M-282c-11).
+    if (data.centileSlide) html += '<div class="si-insight si-insight-warn">' + escHtml(data.centileSlide.text) + '.</div>';
     pctEl.innerHTML = html;
   } else if (pctEl) {
     pctEl.innerHTML = '';
@@ -10761,12 +10992,15 @@ function renderInfoGrowthVelocity() {
     var latestWt = data.weight ? data.weight.latest.wt + ' kg' : '—';
     var latestHt = data.height ? data.height.latest.ht + ' cm' : '—';
     var daysSince = data.weight ? data.weight.daysSince + 'd ago' : '—';
-    var totalGain = data.weight ? (data.weight.totalGainG / 1000).toFixed(1) + ' kg' : '—';
+    // Change since the birth-weight row (V-M-282b-1); a negative change is a change, not a gain.
+    var tg = data.weight ? data.weight.totalGainG : null;
+    var totalGain = tg != null ? (tg < 0 ? '−' : '') + (Math.abs(tg) / 1000).toFixed(2) + ' kg' : '—';
+    var totalLabel = tg != null && tg < 0 ? 'Change since birth' : 'Total gain';
     gridEl.innerHTML = '<div class="si-stat-grid">' +
       '<div class="si-stat"><div class="si-stat-val">' + latestWt + '</div><div class="si-stat-label">Latest weight</div></div>' +
       '<div class="si-stat"><div class="si-stat-val">' + latestHt + '</div><div class="si-stat-label">Latest height</div></div>' +
       '<div class="si-stat"><div class="si-stat-val">' + daysSince + '</div><div class="si-stat-label">Since measurement</div></div>' +
-      '<div class="si-stat"><div class="si-stat-val t-sage" >' + totalGain + '</div><div class="si-stat-label">Total gain</div></div>' +
+      '<div class="si-stat"><div class="si-stat-val' + (tg != null && tg < 0 ? '' : ' t-sage') + '" >' + totalGain + '</div><div class="si-stat-label">' + totalLabel + '</div></div>' +
       '</div>';
   }
 
@@ -10775,14 +11009,24 @@ function renderInfoGrowthVelocity() {
     var iHtml = '';
     if (data.weight) {
       var w2 = data.weight;
-      if (w2.tooShort) {
-        iHtml += '<div class="si-insight si-insight-info">Her last two weigh-ins are only ' + w2.daysBetween + ' days apart — too soon to judge. Toddlers gain slowly, so weigh about once a month.</div>';
+      if (w2.nb) {
+        // Newborn window (gvNewbornCheck): the after-birth dip (info), back to birth weight (good), or a
+        // flag — more than 10% lost, not back by day 14, or weigh again (caution) — V-M-282b-2..4.
+        var nbCls = w2.nb.tone === 'good' ? 'si-insight-good' : w2.nb.tone === 'caution' ? 'si-insight-warn' : 'si-insight-info';
+        iHtml += '<div class="si-insight ' + nbCls + '">' + w2.nb.text + '</div>';
+      } else if (w2.tooShort) {
+        iHtml += '<div class="si-insight si-insight-info">' + gvTooShortText(w2.daysBetween) + '</div>';
       } else if (w2.status === 'on-track') {
-        iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + w2.expectedRange.label + '.</div>';
+        iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + gvBandPhrase(w2.expectedRange) + '.</div>';
       } else if (w2.status === 'slow') {
-        iHtml += '<div class="si-insight si-insight-warn">Weight gain has slowed to ' + w2.gPerDay + 'g/day — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. Review caloric intake.</div>';
+        // Under 6 months milk is the whole diet: no food advice (WHO IYCF; V-M-282b-3, gvFoodAdviceOk).
+        var slowLead = w2.gPerDay < 0 ? 'Weight down ' + Math.abs(w2.gPerDay) + 'g/day' : 'Weight gain has slowed to ' + w2.gPerDay + 'g/day';
+        iHtml += '<div class="si-insight si-insight-warn">' + slowLead + ' — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. ' + (gvFoodAdviceOk(w2.latest) ? 'Review caloric intake.' : GV_MILK_ONLY_NOTE) + '</div>';
       } else if (w2.status === 'plateau') {
-        iHtml += '<div class="si-insight si-insight-warn">Only ' + w2.gainG + 'g gained in the last ' + w2.daysBetween + ' days. This could be normal after illness or a dietary gap.</div>';
+        // A loss reads "down", never "only -40g gained"; under the food gate no "dietary gap" — milk
+        // is the whole diet (Ceres V-C-282c-5, Maren V-M-282c-9).
+        var platLead = w2.gainG < 0 ? 'Weight down ' + Math.abs(w2.gainG) + 'g in ' + w2.daysBetween + ' days.' : 'Only ' + w2.gainG + 'g gained in the last ' + w2.daysBetween + ' days.';
+        iHtml += '<div class="si-insight si-insight-warn">' + platLead + (gvFoodAdviceOk(w2.latest) ? ' This could be normal after illness or a dietary gap.' : ' This can happen after illness or a feeding change. ' + GV_MILK_ONLY_NOTE) + '</div>';
       } else if (w2.status === 'fast') {
         iHtml += '<div class="si-insight si-insight-info">Weight gain at ' + w2.gPerDay + 'g/day is above the expected range. Monitor proportionality.</div>';
       }
@@ -10848,10 +11092,13 @@ function computeVisitPrep() {
     items: [],
     hasData: weightGrowth.length > 0 || heightGrowth.length > 0
   };
-  if (weightDelta !== null) { sections.growth.items.push('Gained ' + weightDelta + 'g'); changes++; }
+  if (weightDelta !== null) { sections.growth.items.push(weightDelta < 0 ? 'Weight down ' + Math.abs(weightDelta) + 'g' : 'Gained ' + weightDelta + 'g'); changes++; }
   if (heightDelta !== null) { sections.growth.items.push('Grew ' + heightDelta + 'cm'); changes++; }
   if (latestPct !== null) sections.growth.items.push(Math.round(latestPct) + 'th percentile');
-  if (gvData && !gvData.insufficient && gvData.weight) sections.growth.items.push(gvData.weight.status + ' velocity');
+  // Newborn window: the line from gvNewbornCheck — the expected dip, back to birth weight, a loss
+  // over 10%, not back by day 14, or "Back to birth weight not yet confirmed (last weighed day N)"
+  // once she is past day 14 with only an earlier weigh-in (V-M-282b-4).
+  if (gvData && !gvData.insufficient && gvData.weight) sections.growth.items.push(gvData.weight.nb ? gvData.weight.nb.visit : gvData.weight.tooShort ? 'Velocity: too soon to judge (weigh-ins under 4 weeks apart)' : gvData.weight.status + ' velocity');
 
   // 2. Milestone changes
   var newMilestones = (milestones || []).filter(function(m) {
@@ -10865,7 +11112,7 @@ function computeVisitPrep() {
     hasData: newMilestones.length > 0 || inProgressMs.length > 0
   };
   if (newMilestones.length > 0) {
-    var topMs = newMilestones.slice(-3).map(function(m) { return m.text; });
+    var topMs = newMilestones.slice(-3).map(function(m) { return msLabel(m.text); });
     sections.milestones.items.push(newMilestones.length + ' new: ' + topMs.join(', '));
     changes += newMilestones.length;
   }
@@ -10979,6 +11226,14 @@ function computeVisitPrep() {
   if (gvData && !gvData.insufficient) {
     if (gvData.weight && (gvData.weight.status === 'slow' || gvData.weight.status === 'plateau')) {
       concerns.push({ type: 'warn', text: 'Weight gain is ' + gvData.weight.status + ' (' + gvData.weight.gPerDay + 'g/day)' });
+    }
+    // A newborn flag — more than 10% lost, not back to birth weight, down since the last weigh-in or
+    // not yet confirmed — is an active concern, not only a growth line (Maren V-M-282c-1).
+    if (gvData.weight && gvData.weight.nb && gvData.weight.nb.tone === 'caution') {
+      concerns.push({ type: 'warn', text: gvData.weight.nb.visit });
+    }
+    if (gvData.centileSlide) {
+      concerns.push({ type: 'warn', text: gvData.centileSlide.text });
     }
     if (gvData.weight && gvData.weight.stale) {
       concerns.push({ type: 'info', text: 'Weight measurement is ' + gvData.weight.daysSince + ' days old' });

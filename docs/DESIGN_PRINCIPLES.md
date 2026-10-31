@@ -463,6 +463,7 @@ See ARCHITECTURE_PATTERNS.md §7.1 for the full convention: `{module}{Verb}{Targ
 | `fp-*` | Food Pop-up | Food info pop-up — header, verdict band (`fp-verdict-*`), disclosure rows (`lib-prow-*`), 3D flip (diet.js) |
 | `ec-*` | Emergency Card | Deep-linked per-hazard emergency protocol cards — Do-now steps, recognise, after, doc-prep (diet.js). Reserved at design stage (`docs/design/emergency-card/`); wires under emergency-protocol-v1. |
 | `ld-*` | Landing | Lean app-open surface — greeting + glance + doors (intelligence-cards.js) |
+| `bc-*` | Body Care | Medical → Body care card: sex- and age-keyed care notes from config.js `BODY_CARE_GUIDANCE`, one `<details>` disclosure per topic, with see-the-doctor / emergency blocks and a cited Sources list (medical.js `renderBodyCare`; spec `docs/specs/child-sex-v1.md` §4, child-sex S3). |
 | `mp-*` | Meal Planner | Diet→Recipes "This week's plan" — week strip, day card, slot rows, Pack for today, picker, confirms (diet.js; spec `docs/specs/meal-planner-v1.md`). Data-actions matching `/^mp[A-Z]/` are reserved: core.js routes them all to `mpDispatch`, so no other surface may name an action that way. Distinct from home.js `tp-*` (Today's Plan) (V-V-275-20). |
 
 **Rule:** New features pick a 2–3 letter prefix and use it consistently for all CSS classes and data-action values in that feature. The prefix is registered in this table before writing code.

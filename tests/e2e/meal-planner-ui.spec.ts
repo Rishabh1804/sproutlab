@@ -215,6 +215,22 @@ test.describe('meal planner UI', () => {
     expect(r.react[1]).toMatch(/^You marked egg to watch\. Talk to her doctor before offering it again\. Grapes: QUARTER/);
   });
 
+  test('the safety lead reads right for a boy: new for him, his doctor, not for him (child-sex S2, V-C-282-5)', async ({ page }) => {
+    const d = await day(page, 1);
+    const r = await page.evaluate((k) => {
+      const w = window as any;
+      w._profSave(Object.assign({}, (window as any).eval('profile').child, { sex: 'm' }), (window as any).eval('profile').place);
+      const egg = w._mpSlotLead([{ kind: 'food', name: 'egg' }], k);
+      foods.push({ name: 'Egg', reaction: 'bad', date: w._mpAddDays(w.today(), -3) });
+      const react = w._mpSlotLead([{ kind: 'food', name: 'egg' }], k);
+      return { egg: egg[1], react: react[1], mercury: w._mpMercuryFlag('surmai') };
+    }, d);
+    expect(r.egg).toContain('Egg is a common allergen and new for him');
+    expect(r.react).toContain('Talk to his doctor before offering it again');
+    expect(r.mercury).toMatch(/^Not for him: high-mercury fish/);
+    for (const s of [r.egg, r.react, r.mercury]) expect(s).not.toMatch(/\b(she|her)\b/i);
+  });
+
   test('travel day: a non-packing recipe is named in its note, and a packed free food carries none (V-V-279-7)', async ({ page }) => {
     const d = await day(page, 1);
     await page.evaluate((k) => {

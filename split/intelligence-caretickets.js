@@ -34,7 +34,7 @@ var CT_TEMPLATES = {
       { id: 'drowsiness', type: 'bool', label: 'Any unusual drowsiness?' },
       { id: 'mobility', type: 'select', label: 'Moving normally?',
         options: ['Yes', 'Favoring one side', 'Not moving much'], clearValue: 'Yes' },
-      { id: 'crying', type: 'select', label: 'Is she still crying?',
+      { id: 'crying', type: 'select', label: 'Still crying?',
         options: ['Yes, inconsolable', 'Whimpering', 'Stopped'], clearValue: 'Stopped' },
       { id: 'swelling', type: 'bool', label: 'Swelling or bruise visible?',
         resolutionBlocking: false }
@@ -59,7 +59,7 @@ var CT_TEMPLATES = {
       { id: 'drowsiness', type: 'bool', label: 'Any unusual drowsiness or confusion?' },
       { id: 'pupils', type: 'select', label: 'Pupils look normal?',
         options: ['Yes, equal size', 'Unequal', 'Not sure'], clearValue: 'Yes, equal size' },
-      { id: 'crying', type: 'select', label: 'Is she still crying?',
+      { id: 'crying', type: 'select', label: 'Still crying?',
         options: ['Yes, inconsolable', 'Whimpering', 'Stopped'], clearValue: 'Stopped' },
       { id: 'swelling', type: 'bool', label: 'Bump or swelling on head?',
         resolutionBlocking: false }
@@ -78,7 +78,7 @@ var CT_TEMPLATES = {
     type: 'incident', title: 'Ate something concerning', icon: 'alert-circle', domainColor: 'rose',
     followUps: [15, 30, 60, 120, 240],
     questions: [
-      { id: 'substance', type: 'text', label: 'What did she eat/drink?', onceOnly: true },
+      { id: 'substance', type: 'text', label: 'What did your child eat or drink?', onceOnly: true },
       { id: 'quantity', type: 'text', label: 'How much (estimate)?', onceOnly: true },
       { id: 'breathing', type: 'select', label: 'Breathing normally?',
         options: ['Yes', 'Wheezing', 'Labored'], clearValue: 'Yes' },
@@ -133,15 +133,29 @@ var CT_TEMPLATES = {
       // not on the bottom edge of normal.
       type: 'threshold_met', metric: 'wtGPerWeek',
       operator: '>=', confirmAfterDays: 14,
+      // Under 12 m it resolves at the WHO median for the child's age and sex too (child-sex S4):
+      // a fixed 80 g/week sat far below the 0–4 m median and above the 9–12 m one.
       value: function() {
-        return (typeof ageAt === 'function' && ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined')
-          ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
+        if (typeof ageAt !== 'function') return 80;
+        // Judged at the age of the latest weigh-in, so crossing an age band with no new
+        // measurement can't flip the goal to met (V-K-282-2).
+        var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
+        if (typeof growthVelocityBand === 'function' && gv && gv.wtLatest) {
+          // The same row as the verdict: the window midpoint (gv.wtBandAge), else the latest
+          // weigh-in's age (Kael V-K-282c-7, Carina V-CA-282c-5). gvAgeAt guards a malformed stored
+          // date, so a bad date can't give NaN → the 0–1 m row → an unresolvable goal (V-K-282b-6).
+          // No weigh-in → no measurement age, so today's age never reaches the band lookup: the
+          // fallback below (the goal metric is null then anyway).
+          var mo = Number.isFinite(gv.wtBandAge) ? gv.wtBandAge : gvAgeAt(gv.wtLatest);
+          const b = growthVelocityBand(mo); if (b && b.wGWkMedian) return b.wGWkMedian;
+        }
+        return (ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined') ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
       }
     },
     escalationTriggers: [],
     autoDataSources: ['growth'],
     pivotStrategies: [
-      'Add calorie-dense foods (ghee, avocado, nut butters)',
+      'Add calorie-dense foods (ghee, avocado, smooth nut butter thinned with milk or water)',
       'Increase meal frequency',
       'Check for underlying illness suppressing appetite',
       'Schedule weight check with pediatrician'
@@ -200,7 +214,16 @@ function ctEscalationTriggers(ticket) {
 
 function ctPivotStrategies(ticket) {
   var tpl = CT_TEMPLATES[ticket.category];
-  return (tpl && tpl.pivotStrategies) ? tpl.pivotStrategies : [];
+  var list = (tpl && tpl.pivotStrategies) ? tpl.pivotStrategies : [];
+  // Food pivots only where food is part of the diet: under 6 months, or before solids, milk is the
+  // whole diet (gvFoodAdviceOk, core.js — Ceres V-C-282c-4).
+  if (ticket.category === 'weight_gain' && typeof gvFoodAdviceOk === 'function') {
+    var gvP = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
+    if (!gvFoodAdviceOk(gvP && gvP.wtLatest ? gvP.wtLatest : null)) {
+      return list.map(function(s) { return /^Add calorie-dense foods/.test(s) ? GV_MILK_ONLY_NOTE : s; });
+    }
+  }
+  return list;
 }
 
 // ── Core Utility Functions ──
@@ -1126,7 +1149,7 @@ function _ctRenderCheckIn(t, tpl) {
   }
 
   // Preamble
-  html += '<div class="ct-preamble">' + (isIncident ? 'How is she right now?' : 'Quick update') + '</div>';
+  html += '<div class="ct-preamble">' + (isIncident ? 'How is ' + pron('subj') + ' right now?' : 'Quick update') + '</div>';
 
   // Quick-clear button
   if (ctCanQuickClear(t)) {
@@ -1616,7 +1639,8 @@ function ctForceResolve(ticketId) {
   html += '<div class="ct-overlay-title">Why are you resolving this?</div>';
   html += '<div class="ct-divider"></div>';
   html += '<div class="ct-chips-row" id="ctForceReasons">';
-  var reasons = ['Doctor confirmed she\'s okay', 'I\'m confident she\'s fine', 'Other'];
+  // Stored in resolvedNotes, so worded without a pronoun (V-K-282-7).
+  var reasons = ['Doctor confirmed all is well', 'I\'m confident all is fine', 'Other'];
   reasons.forEach(function(r) {
     html += '<span class="chip ct-reason-chip" data-action="ctForceResolveReason" data-id="' + escAttr(ticketId) + '" data-arg="' + escAttr(r) + '">' + escHtml(r) + '</span>';
   });
@@ -2137,26 +2161,9 @@ function ctGetTSFEvents() {
 }
 
 // ── 10. QA Intent — CareTickets ──
-
-function ctShouldTriggerCreate(text) {
-  var lower = text.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
-  var strongSignals = ['track', 'tracking', 'monitor', 'monitor this', 'start watching', 'raise concern'];
-  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'ate something'];
-  var negativeSignals = ['asleep', 'sleep', 'behind', 'apart', 'fall asleep', 'fell asleep', 'sleep track'];
-
-  // Check negative signals
-  var hasNegative = negativeSignals.some(function(neg) { return lower.indexOf(neg) !== -1; });
-
-  // Strong signals trigger immediately
-  var hasStrong = strongSignals.some(function(sig) { return lower.indexOf(sig) !== -1; });
-  if (hasStrong && !hasNegative) return true;
-
-  // Weak signals only if no negative and no other classifier matched
-  var hasWeak = weakSignals.some(function(sig) { return lower.indexOf(sig) !== -1; });
-  if (hasWeak && !hasNegative) return 'weak';
-
-  return false;
-}
+// The create intent is the `ct_create` row in QA_INTENTS (intelligence-qa.js), with its
+// triggers and exclude list inline. The old ctShouldTriggerCreate(text) duplicate had no
+// callers and its lists had drifted from the live ones; removed (BUGS #30).
 
 // ── 11. Share Notify (creation message) ──
 

@@ -971,7 +971,7 @@ function _recipeDetailHtml(r, ageMonths, opts) {
     const label = gated ? `Serving from ${effMin} months` : `Serving for ${childNameHtml()} (${ageNow} mo)`;
     // M-1 (Maren): anchor the amount's OWN source on the line, independent of r.source.
     const src = own ? 'ICMR-NIN · WHO/PAHO · IAP' : 'WHO/PAHO · IAP';
-    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let her appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
+    h += `<div class="rcp-serving">${zi('bowl')} <span><strong>${escHtml(label)}:</strong> ${escHtml(serving)} — a guide, not a target; let ${pron('poss')} appetite lead. <span class="rcp-serving-src">${src}</span></span></div>`;
   }
   // (c) Progressive-disclosure rows — collapsed; the teaser says what's inside.
   let rows = '';
@@ -1672,7 +1672,7 @@ function _libBookHtml(key, eff, pol) {
     } else if (j.reaction === 'watch') {
       journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
     } else {
-      journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+      journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with ' + pron('obj') + '</span>';
     }
   }
   var body = '<span class="lib-book-body"><span class="lib-book-title">' + titleHtml + '</span>' +
@@ -1695,7 +1695,8 @@ function _libSuggestions() {
   // Never before solids: under 6 months, or before her solids start (V-C-280-1). And never a food
   // AGE_RULES gates above her age (egg at 7 months), the same check getUntriedSuggestions makes.
   var mo = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
-  if (mo < 6 || (typeof SOLIDS_START !== 'undefined' && toDateStr(SOLIDS_START) > today())) return [];
+  // solidsStarted() (core.js) is the one solids check, shared with gvFoodAdviceOk (V-C-282c-1).
+  if (mo < 6 || !solidsStarted()) return [];
   var out = [];
   Object.keys(FE).forEach(function(k) {
     if (out.length >= 3) return;
@@ -1774,7 +1775,7 @@ function _libJourneyChip(pol, j) {
   if (!j.tried) return '<span class="fp-journey fp-journey--untried"><span class="fp-dot"></span>Not tried yet</span>';
   if (j.established) return '<span class="fp-journey fp-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   if (j.reaction === 'watch') return '<span class="fp-journey fp-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
-  return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+  return '<span class="fp-journey fp-journey--settled">' + zi('check') + 'Tried · agreed with ' + pron('obj') + '</span>';
 }
 
 // ── 6-second card primitives (S11, Architect-ratified). A verdict band LEADS (the 6-sec
@@ -1904,7 +1905,7 @@ function _libPopHtml(key, eff, pol, j) {
   // (V-M-224 — choking is mechanical/conditional system-wide, not the anaphylaxis red).
   var floorCaution = isChoke || !acute;
   var floorVariant = 'floor' + (floorCaution ? ' lib-prow--caution' : '');
-  var floorTitle = isChoke ? 'If she is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
+  var floorTitle = isChoke ? 'If ' + pron('subj') + ' is choking' : (acute ? 'If a reaction happens' : 'What to watch for');
   var floorTeaser = isChoke ? 'the choking signs' : (acute ? 'rare, but know the signs' : 'over the next days');
   var _emHz = _emHazardForEff(eff);   // hazard this food deep-links to (anaphylaxis/choking/botulism)
   var rows =
@@ -1943,17 +1944,17 @@ function _libPopBackHtml(key, eff, pol, j) {
       '<p>This one waits until the age limit — there&rsquo;s no history to show yet, and that&rsquo;s as it should be.</p></div>';
   } else if (!j.tried) {
     inner = '<div class="fp-empty">' + zi('eye') +
-      '<p>Not tried yet. Once you log ' + escHtml(name) + ', her servings and any patterns will appear here.</p></div>';
+      '<p>Not tried yet. Once you log ' + escHtml(name) + ', ' + pron('poss') + ' servings and any patterns will appear here.</p></div>';
   } else {
     var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
     var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
     var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + (j.established ? ' · well established' : '') + '.';
     var insight = j.established
-      ? 'Well established — no patterns of concern across her logs so far.'
+      ? 'Well established — no patterns of concern across ' + pron('poss') + ' logs so far.'
       : (j.reaction === 'watch'
         ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
         : 'Settling in — not enough logged yet to show a clear pattern.');
-    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+    inner = '<div><div class="fp-sec-h">' + pron('poss', true) + ' log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
       '<div><div class="fp-sec-h">What the patterns say</div>' +
       '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
   }
@@ -2094,7 +2095,7 @@ function _libLookupRow(name) {
   if (!j.tried) journeyHtml = '<span class="lib-untried"><span class="lib-dot"></span>Not tried yet</span>';
   else if (j.established) journeyHtml = '<span class="lib-journey lib-journey--regular">' + zi('star') + 'A regular for ' + childNameHtml() + '</span>';
   else if (j.reaction === 'watch') journeyHtml = '<span class="lib-journey lib-journey--watching">' + zi('eye') + 'Tried · keeping an eye on it</span>';
-  else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with her</span>';
+  else journeyHtml = '<span class="lib-journey lib-journey--settled">' + zi('check') + 'Tried · agreed with ' + pron('obj') + '</span>';
   return '<button class="lib-book lib-book--lookup' + dt + '" data-action="' + action + '" data-arg="' + escHtml(arg) + '">' +
     '<span class="lib-book-body"><span class="lib-book-title">' + escHtml(disp) + '</span>' + journeyHtml + '</span>' +
     '<span class="lib-book-go">' + zi('arrow-right') + '</span></button>';
@@ -2190,15 +2191,15 @@ function _libCorpusBackHtml(name, dt, j) {
   var inner;
   if (!j.tried) {
     inner = '<div class="fp-empty">' + zi('eye') +
-      '<p>Not tried yet. Once you log ' + escHtml(disp) + ', her servings and any patterns will appear here.</p></div>';
+      '<p>Not tried yet. Once you log ' + escHtml(disp) + ', ' + pron('poss') + ' servings and any patterns will appear here.</p></div>';
   } else {
     var when = j.date ? ('First given ' + escHtml(j.date)) : 'Logged';
     var note = (j.reaction === 'watch') ? 'a watch flag on file' : 'settled fine';
     var log = when + ' · ' + note + (j.favorite ? ' · a favourite' : '') + '.';
     var insight = (j.reaction === 'watch')
       ? 'A watch flag is on file — worth keeping an eye on; not a clear pattern yet.'
-      : 'Settling into her diet — no patterns of concern logged so far.';
-    inner = '<div><div class="fp-sec-h">Her log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
+      : 'Settling into ' + pron('poss') + ' diet — no patterns of concern logged so far.';
+    inner = '<div><div class="fp-sec-h">' + pron('poss', true) + ' log</div><p class="lib-why">' + escHtml(log) + '</p></div>' +
       '<div><div class="fp-sec-h">What the patterns say</div>' +
       '<div class="fp-insight">' + zi('info') + '<span>' + escHtml(insight) + '</span></div></div>';
   }
@@ -2853,7 +2854,7 @@ function renderDietChokingIntro() {
   // Shared strip helper; the scope header marks this as the CHOKING floor (mechanical airway
   // rescue), never an allergic-reaction floor — the seekCare line carries back-blows/abdominal-
   // thrusts (child 1y+ technique) + "NO adrenaline".
-  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If she is choking, it\'s an emergency');
+  pinned += _libBuildGuide(chk.severeSigns, chk.seekCare, 'If ' + pron('subj') + ' is choking, it\'s an emergency');
 
   // ── BODY (collapsible) ──
   // How to keep it safe (seated upright, supervised, fingernail-sized).
@@ -3026,7 +3027,7 @@ const ALL_TIPS = [
   {
     type:'avoid', icon:zi('warn'),
     title:'Keep salt light — still no added sugar',
-    body:'Family food is fine now, but cook hers lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery, honey or sweets until 2 years; fruit is her sweetener.',
+    body:'Family food is fine now, but cook the toddler portion lightly salted — no more than 2 g of salt a day from 1 to 3 years, so skip pickles, papad and namkeen. No added sugar, jaggery, honey or sweets until 2 years; fruit is the sweetener.',
     condition: () => getAgeInMonths() >= 12,
   },
   {
@@ -3047,7 +3048,7 @@ const ALL_TIPS = [
     // infant-safety.md Axis 3 — AAP ~2 cups, ESPGHAN <500 ml) — Ceres V-C-266-6.
     type:'info', icon:zi('drop'),
     title:'Whole milk — from a cup, not too much',
-    body:'From 1 year, full-cream cow\'s milk can be a main drink — in an open cup, with or after meals, not a bottle. About 500 ml (2 cups) a day at most: more fills her up and is linked to iron deficiency. Use full-cream, not toned, double-toned or skimmed.',
+    body:'From 1 year, full-cream cow\'s milk can be a main drink — in an open cup, with or after meals, not a bottle. About 500 ml (2 cups) a day at most: more fills a toddler up and is linked to iron deficiency. Use full-cream, not toned, double-toned or skimmed.',
     condition: () => getAgeInMonths() >= 12,
   },
   {
@@ -3079,13 +3080,13 @@ const ALL_TIPS = [
   {
     type:'info', icon:zi('spoon'),
     title:'Family food, adapted',
-    body:'From 1 year she can eat what the family eats, in small soft pieces she can squash between finger and thumb — she has no grinding molars yet. Take her portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
+    body:'From 1 year a toddler can eat what the family eats, in small soft pieces that squash between finger and thumb, until the grinding molars come in. Take the toddler portion out before adding salt, chilli or sugar; remove whole spices and curry leaves; quarter grapes; mash whole pulses; nuts only ground.',
     condition: () => getAgeInMonths() >= 12,
   },
   {
     type:'info', icon:zi('bowl'),
     title:'3–4 meals and 1–2 snacks',
-    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 cup (a big katori, 190–250 ml) a meal. Offer, then let her appetite decide — no forcing (WHO, IAP).',
+    body:'At 1–2 years: 3–4 meals of family food plus 1–2 small snacks, about ¾–1 cup (a big katori, 190–250 ml) a meal. Offer, then let appetite decide — no forcing (WHO, IAP).',
     condition: () => getAgeInMonths() >= 12,
   },
   {
@@ -3490,7 +3491,7 @@ function checkFoodCombo() {
   const hasIron = tags.includes('iron-rich');
   const _calcFoods = rawFoods.filter(f => ['paneer','cheese','curd','yogurt','dahi','milk'].includes(f));
   if (_ironFoods.some(f => _calcFoods.indexOf(f) === -1) && _calcFoods.some(f => _ironFoods.indexOf(f) === -1)) {
-    warnings.push('For her main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
+    warnings.push('For ' + pron('poss') + ' main iron meal, keep big dairy portions (and any calcium supplement dose) apart; a little curd with dal is fine.');
   }
   // Brain health combo
   if (tags.includes('brain-health') || tags.includes('omega-3')) {
@@ -3844,7 +3845,7 @@ function generateDonts(foodList, tags, mo) {
   if (foodStr.includes('beetroot')) donts.push('Red/pink stool after beetroot is normal — not blood');
   if (foodStr.includes('potato')) donts.push('Don\'t fry for babies — steam, boil, or bake only');
 
-  donts.push('Don\'t force feed — let baby set the pace and stop when she turns away');
+  donts.push('Don\'t force feed — let baby set the pace and stop when ' + pron('subj') + ' turns away');
   return donts.slice(0, 5);
 }
 
@@ -4598,7 +4599,7 @@ function _tpScoreFood(foodName, ctx) {
   var acceptance = getFoodAcceptanceRate(base);
   if (acceptance !== null && freq >= 2) {
     var pct = Math.round(acceptance * 100);
-    if (acceptance >= 0.8) { score += 10; reasons.push('She finishes ' + pct + '% \u2014 ' + getAcceptanceLabel(acceptance)); }
+    if (acceptance >= 0.8) { score += 10; reasons.push(pron('subj', true) + ' finishes ' + pct + '% \u2014 ' + getAcceptanceLabel(acceptance)); }
     else if (acceptance >= 0.5) { score += 5; }
     else { score -= 5; reasons.push('Avg intake only ' + pct + '% \u2014 ' + getAcceptanceLabel(acceptance)); }
   }
@@ -4690,7 +4691,7 @@ function _tpBuildCombos(meal, ctx) {
       // Acceptance bonus
       if (hc.count >= 3 && hc.avgIntake >= 0.7) {
         totalScore += 15;
-        allReasons.push('She eats ' + Math.round(hc.avgIntake * 100) + '% of this combo (' + hc.count + ' times)');
+        allReasons.push(pron('subj', true) + ' eats ' + Math.round(hc.avgIntake * 100) + '% of this combo (' + hc.count + ' times)');
       }
 
       // Synergy bonus within combo (max +8)
@@ -5609,8 +5610,8 @@ function _miShowPostSavePrompt(dateStr) {
   promptDiv.className = 'mi-prompt';
 
   var label = mealsToPrompt.length === 1
-    ? 'How much ' + mealsToPrompt[0] + ' did she eat?'
-    : 'How much did she eat?';
+    ? 'How much ' + mealsToPrompt[0] + ' did ' + pron('subj') + ' eat?'
+    : 'How much did ' + pron('subj') + ' eat?';
   var html = '<div class="mi-prompt-label">' + escHtml(label) + '</div>';
   html += '<div class="mi-buttons">';
   MI_LEVELS.forEach(function(lv) {
@@ -6027,7 +6028,7 @@ function _fcRenderPlannedRail(inst) {
   if (!p) return '';
   const flagged = p.lead && p.lead[0] === 'flag';
   const sub = p.foods.length ? 'Tap to add: ' + p.foods.map(f => f.name).join(', ') : 'Nothing to add with one tap';
-  const leftLine = p.left.length ? '<div class="fc-repeat-sub">Not added with the tap: ' + escHtml(p.left.join(', ')) + '. Add it yourself only if she had it.</div>' : '';
+  const leftLine = p.left.length ? '<div class="fc-repeat-sub">Not added with the tap: ' + escHtml(p.left.join(', ')) + '. Add it yourself only if ' + pron('subj') + ' had it.</div>' : '';
   const chip = p.foods.length
     ? '<div class="fc-repeat-chip' + (flagged ? '' : ' primary') + ' fc-planned-chip" role="button" tabindex="0" data-action="mpApplyPlan" data-arg="' + escAttr(dateStr + '|' + inst.slot) + '">'
     : '<div class="fc-repeat-chip fc-planned-chip" aria-disabled="true">';
@@ -6981,7 +6982,7 @@ function _spGetDomainDefs(zs) {
     },
     {
       key: 'medical', icon: zi('medical'), name: 'Medical', tab: 'medical',
-      tip: 'Keep vaccinations on schedule and log her Vitamin D supplement doses for best scores.',
+      tip: 'Keep vaccinations on schedule and log ' + pron('poss') + ' Vitamin D supplement doses for best scores.',
       components: () => {
         const r = zs.domains.medical.result;
         if (!r) return [];
@@ -8178,7 +8179,7 @@ function _mpFormLine(eff, name) {
 // were ever reworded (V-M-279-2).
 function _mpMercuryFlag(name) {
   const line = _mpHighMercuryLine();
-  return line ? `Not for her: ${line}.` : `${_mpCap(name)} is a high-mercury fish — not for her.`;
+  return line ? `Not for ${pron('obj')}: ${line}.` : `${_mpCap(name)} is a high-mercury fish — not for ${pron('obj')}.`;
 }
 // The slot's safety lead. Flags (a reaction she had, then high-mercury fish, then age on the planned
 // date) outrank cautions (a new common allergen, a form-sensitive free food); a form note is never
@@ -8190,14 +8191,14 @@ function _mpSlotLead(items, key) {
   for (const it of items) {
     if (it.kind === 'recipe') {
       const r = _mpRecipe(it.id);
-      if (r && _recipeEffectiveMinAge(r) > age) aged.push(`${r.title} is for ${_recipeEffectiveMinAge(r)} months and up; she'll be ${age} months then.`);
+      if (r && _recipeEffectiveMinAge(r) > age) aged.push(`${r.title} is for ${_recipeEffectiveMinAge(r)} months and up; ${pron('subj')}'ll be ${age} months then.`);
     }
     for (const name of _mpItemNames(it)) {
       const lower = String(name).toLowerCase().trim();
       const rule = _fdAgeRule(lower);
       if (it.kind === 'food' && rule && rule.minMonth > age) aged.push(`${_mpCap(name)}: not before ${rule.minMonth} months. ${rule.reason || ''}`.trim());
       const react = _mpReactionTo(name);
-      if (react) reactions.push(`You marked ${react.name.toLowerCase()} to watch. Talk to her doctor before offering it again.`);
+      if (react) reactions.push(`You marked ${react.name.toLowerCase()} to watch. Talk to ${pron('poss')} doctor before offering it again.`);
       if (_isHighMercuryFishHost(lower)) mercury.push(_mpMercuryFlag(name));
       if (!react && _mpIsCommonAllergen(lower, age) && !_mpHadBefore(lower, key)) (it.kind === 'food' ? newFood : newInRecipe).push(lower);
       if (it.kind === 'food') {
@@ -8212,9 +8213,9 @@ function _mpSlotLead(items, key) {
   if (key < today()) return null;
   const fresh = [...new Set(newFood.concat(newInRecipe))];
   const caution = [];
-  if (fresh.length > 1) caution.push(`${fresh.map(_mpCap).join(' and ')} are common allergens new for her, in the same meal. If she reacts, it will be hard to tell which caused it. Give new foods one at a time, a few days apart.`);
-  else if (newFood.length) caution.push(`${_mpCap(newFood[0])} is a common allergen and new for her: give it on its own and watch her closely.`);
-  else if (newInRecipe.length) caution.push(`${_mpCap(newInRecipe[0])} is a common allergen and new for her. Plan this on a day with nothing else new, and watch her closely.`);
+  if (fresh.length > 1) caution.push(`${fresh.map(_mpCap).join(' and ')} are common allergens new for ${pron('obj')}, in the same meal. If ${pron('subj')} reacts, it will be hard to tell which caused it. Give new foods one at a time, a few days apart.`);
+  else if (newFood.length) caution.push(`${_mpCap(newFood[0])} is a common allergen and new for ${pron('obj')}: give it on its own and watch ${pron('obj')} closely.`);
+  else if (newInRecipe.length) caution.push(`${_mpCap(newInRecipe[0])} is a common allergen and new for ${pron('obj')}. Plan this on a day with nothing else new, and watch ${pron('obj')} closely.`);
   caution.push(...forms);
   return caution.length ? ['caution', caution.join(' ')] : null;
 }
@@ -8517,7 +8518,7 @@ function _mpSuggestions(key, slot) {
   if (!_mpDayHasIron(key)) all.sort((a, b) => ((b.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0) - ((a.r.ingredients || []).some(i => _mpIsIron(i.name)) ? 1 : 0));
   return all.slice(0, 5).map(s => {
     const fresh = (s.r.ingredients || []).find(i => _mpIsCommonAllergen(i.name, age) && !_mpHadBefore(i.name, key));
-    const why = fresh ? `New for her: ${String(fresh.name).toLowerCase()}`
+    const why = fresh ? `New for ${pron('obj')}: ${String(fresh.name).toLowerCase()}`
       : (!_mpDayHasIron(key) && (s.r.ingredients || []).some(i => _mpIsIron(i.name))) ? 'Adds iron' : (s.why || _recipeRelevanceTag(s.r));
     return { r: s.r, why };
   });
@@ -8644,7 +8645,7 @@ function _mpApplyPlanToComposer(btn, arg) {
     const d = (/\b(oil|ghee|butter)\b/i.test(f.name) && cat['fat-cooking']) || (f.g != null && f.g <= 3 && cat.spice) || window._fdResolveQtyDefaults(f.name);
     return { name: _fcCapFirst(f.name), qty: d.qty, unit: d.unit, nutritionRef: window._fdNutritionRef(f.name), source: 'plan' };
   });
-  if (p.left.length) showQLToast(`Left out ${escHtml(p.left.join(', '))}: add it yourself only if she had it`, 5000);
+  if (p.left.length) showQLToast(`Left out ${escHtml(p.left.join(', '))}: add it yourself only if ${pron('subj')} had it`, 5000);
   inst.sourceFlow = (inst.variant === 'card') ? 'diet-tab' : 'fob-plan';
   _fcAfterItemChange(inst);
 }
@@ -8755,7 +8756,7 @@ function mpDispatch(action, arg, btn) {
       const name = String(arg || '').trim().slice(0, MP_NAME_MAX);
       if (!st || !name || !_dietAllowsFood(name)) return;
       const rule = _fdAgeRule(name.toLowerCase());
-      if (rule && rule.minMonth > _mpAgeMonthsOn(st.key)) { showQLToast(`${escHtml(_mpCap(name))} isn't for her age yet`, 2500); return; }
+      if (rule && rule.minMonth > _mpAgeMonthsOn(st.key)) { showQLToast(`${escHtml(_mpCap(name))} isn't for ${pron('poss')} age yet`, 2500); return; }
       st.q = '';
       if (_mpAddItem(st.key, st.slot, { kind: 'food', name: name.toLowerCase() })) { _mpRefreshPicker(); _mpSheetTop(); }
       break;
@@ -8804,13 +8805,13 @@ function mpDispatch(action, arg, btn) {
         (it.kind === 'recipe' && _mpRecipe(it.id) && _recipeEffectiveMinAge(_mpRecipe(it.id)) > age)
         || (it.kind === 'food' && typeof it.name === 'string' && (_fdAgeRule(it.name.toLowerCase()) || { minMonth: 0 }).minMonth > age)).map(_mpItemLabel);
       const from = st.key;
-      if (gated.length) { _mpCloseSheet(true); confirmAction(`${escHtml(gated.join(', '))} ${gated.length > 1 ? 'aren\'t' : 'isn\'t'} for her age on ${escHtml(_mpShortDay(arg))} yet. Copy anyway? ${gated.length > 1 ? 'They' : 'It'} will show a flag on that day.`, () => _mpDoCopy(from, arg), 'Copy anyway', { cls: 'mp-confirm', onCancel: renderMealPlanSection }); }
+      if (gated.length) { _mpCloseSheet(true); confirmAction(`${escHtml(gated.join(', '))} ${gated.length > 1 ? 'aren\'t' : 'isn\'t'} for ${pron('poss')} age on ${escHtml(_mpShortDay(arg))} yet. Copy anyway? ${gated.length > 1 ? 'They' : 'It'} will show a flag on that day.`, () => _mpDoCopy(from, arg), 'Copy anyway', { cls: 'mp-confirm', onCancel: renderMealPlanSection }); }
       else _mpDoCopy(from, arg);
       break;
     }
     case 'mpClearDay': {
       const key = arg;
-      confirmAction(`<strong>Clear ${escHtml(_mpDayTitle(key))}'s plan?</strong><br>This removes the planned meals for the day. Meals you've logged stay in her diary.`, () => {
+      confirmAction(`<strong>Clear ${escHtml(_mpDayTitle(key))}'s plan?</strong><br>This removes the planned meals for the day. Meals you've logged stay in ${pron('poss')} diary.`, () => {
         const snap = _mpSnapshotDay(key);
         if (!_mpClearDay(key)) return;
         _mpOpenEntry = null;

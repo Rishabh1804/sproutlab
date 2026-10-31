@@ -156,6 +156,25 @@ if ! bash audit-shelf-totality-v1.sh >&2; then
   echo "BUILD ABORTED: shelf-totality audit failed. A FOOD_EFFECTS record would land on the default shelf unchosen (see above)." >&2
   exit 1
 fi
+# audit-pronouns-v1.sh — child-sex S2 ship-gate (docs/specs/child-sex-v1.md §3): no bare
+# she/her in copy; render-time strings use pron(), load-time tables neutral wording. Match
+# vocabulary and record keys are listed in audit-pronouns-allow.txt; a stale entry fails too.
+if ! bash audit-pronouns-v1.sh >&2; then
+  echo "BUILD ABORTED: pronoun audit failed. Copy would say she/her to a boy's family (see above)." >&2
+  exit 1
+fi
+# audit-growth-age-v1.sh — PC-1 ship-gate (docs/PATCH_CLASSES.md, BUGS #25): every growth-velocity
+# verdict is judged at its measurement's age, never today's.
+if ! bash audit-growth-age-v1.sh >&2; then
+  echo "BUILD ABORTED: growth-age audit failed. A growth verdict would be judged at today's age (see above)." >&2
+  exit 1
+fi
+# audit-hr12-dateonly-v1.sh — PC-1 ratchet (BUGS #55): date-only strings parsed with new Date()
+# may only decrease across split/*.js; a new one needs _parseLocalDate or an '// HR-12' marker.
+if ! bash audit-hr12-dateonly-v1.sh >&2; then
+  echo "BUILD ABORTED: HR-12 date-only ratchet failed. A new UTC-parsed date-only string (see above)." >&2
+  exit 1
+fi
 # Emergency-floor never-cross ship-gate (15th audit gate, emergency-protocol-v1):
 # audit-emergency-floor-v1.sh — locks the AUTHORED EMERGENCY_PROTOCOL.steps the Emergency
 # Cards render (anaphylaxis adrenaline-only, choking mechanical-only, botulism doctor-routed

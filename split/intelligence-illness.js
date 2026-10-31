@@ -350,10 +350,25 @@ function renderFeverEpisodeCard() {
   html += '<li>Keep ' + childNameHtml() + ' lightly dressed — do not over-bundle</li>';
   html += '<li>Offer breast milk or fluids frequently</li>';
   html += '<li>Sponge with lukewarm water (never cold)</li>';
-  if (sev.tier === 'high' || sev.tier === 'critical') {
+  // Under 3 months any temperature of 38°C (100.4°F) or more needs a doctor the same day (NHS
+  // 'High temperature (fever) in children': "Call 111 if your child is under 3 months old and has
+  // a temperature of 38C or higher"; V-M-282-2). The 102°F / 48 h line is for older babies.
+  if (ageAt().months < 3 && lastReading.temp >= 100.4) {
+    html += '<li class="status-action">'+zi('siren')+' Under 3 months: call the doctor now, the same day — temperature is ' + lastReading.temp.toFixed(1) + '°F</li>';
+  } else if (sev.tier === 'high' || sev.tier === 'critical') {
     html += '<li class="status-action">'+zi('siren')+' Call doctor — temperature is ' + lastReading.temp.toFixed(1) + '°F</li>';
+  } else if (ageAt().months < 3) {
+    html += '<li>Under 3 months: call the doctor the same day for any temperature of 100.4°F (38°C) or more</li>';
   } else {
     html += '<li>Call doctor if fever exceeds 102°F or lasts > 48 hours</li>';
+  }
+  // child-sex S3 fever-triage hint (Kael + Maren co-own). Under 2, a UTI is "an important cause
+  // for fever without a focus" (ISPN, Indian Pediatr 2011;48:709) and may be the only sign
+  // (AAP HealthyChildren 'Detecting UTIs'); only a urine test tells (RCH Melbourne UTI CPG);
+  // ISPN 2023 starts its urine pathway at fever > 48 h without focus under 24 months.
+  // Sources + quotes: docs/specs/care-guidance-s3-sources.md §X3.
+  if (ageAt().months < 24) {
+    html += '<li>No clear cause, like a cold or tummy bug? Ask the doctor whether a urine test is needed — under 2, a urine infection can show only as fever.</li>';
   }
   html += '</ul></div>';
 
@@ -619,8 +634,8 @@ function epEditResolved(kind, id) {
     .map(e => new Date(e.startedAt).getTime()).reduce((a, b) => Math.min(a, b), Infinity);
   const when = t => formatDate(_epLocalDateStr(new Date(t).toISOString())) + ', ' + _feverTimeShort(new Date(t).toISOString());
   let hint = kind === 'fever'
-    ? 'Set the time her temperature was back to normal (below 99°F).'
-    : 'Set the time she was well again.';
+    ? 'Set the time ' + pron('poss') + ' temperature was back to normal (below 99°F).'
+    : 'Set the time ' + pron('subj') + ' was well again.';
   hint += ' Started ' + when(started) + '.';
   if (last) hint += ' Last ' + cfg.what + ': ' + (kind === 'fever' && typeof last.entry.temp === 'number' ? last.entry.temp.toFixed(1) + '°F, ' : '') + when(last.t) + '.';
   let confirmLongerFor = null;

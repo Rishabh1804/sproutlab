@@ -29,7 +29,7 @@ function _qaHandleLookback(classified) {
 
 function _qaFoodLookback(foodQuery) {
   if (!foodQuery || foodQuery.trim().length === 0) {
-    return { title: 'Food Lookback', headline: 'What food are you looking for?', icon: 'scope', domain: 'peach', sections: [], dataGap: 'Try: "When did she last eat ragi?" or "Last time she had dal rice"' };
+    return { title: 'Food Lookback', headline: 'What food are you looking for?', icon: 'scope', domain: 'peach', sections: [], dataGap: 'Try: "When did ' + pron('subj') + ' last eat ragi?" or "Last time ' + pron('subj') + ' had dal rice"' };
   }
 
   var query = foodQuery.trim().toLowerCase();
@@ -105,7 +105,7 @@ function _qaFoodLookback(foodQuery) {
   }
 
   return {
-    title: 'Last time she had ' + bestMatch,
+    title: 'Last time ' + pron('subj') + ' had ' + bestMatch,
     headline: daysAgoText,
     icon: 'scope',
     domain: 'peach',
@@ -353,7 +353,7 @@ function _qaFoodLikes() {
   });
 
   return {
-    title: 'Foods She Likes',
+    title: 'Foods ' + pron('subj', true) + ' Likes',
     headline: liked.length + ' favorites in last 30 days',
     icon: 'star',
     domain: 'peach',
@@ -364,12 +364,12 @@ function _qaFoodLikes() {
 function _qaFoodDislikes() {
   var acceptance = computeFoodAcceptance(30);
   if (acceptance.length === 0) {
-    return { title: 'Foods She Rejects', headline: 'No food data yet', icon: 'warn', domain: 'peach', sections: [], dataGap: 'Log meals to track food preferences.' };
+    return { title: 'Foods ' + pron('subj', true) + ' Rejects', headline: 'No food data yet', icon: 'warn', domain: 'peach', sections: [], dataGap: 'Log meals to track food preferences.' };
   }
 
   var disliked = acceptance.filter(function(f) { return f.avgIntake < 0.4 && f.timesServed >= 2; }).slice(0, 6);
   if (disliked.length === 0) {
-    return { title: 'Foods She Rejects', headline: 'No consistently rejected foods found', icon: 'check', domain: 'peach', sections: [] };
+    return { title: 'Foods ' + pron('subj', true) + ' Rejects', headline: 'No consistently rejected foods found', icon: 'check', domain: 'peach', sections: [] };
   }
 
   var items = disliked.map(function(f) {
@@ -378,7 +378,7 @@ function _qaFoodDislikes() {
   });
 
   return {
-    title: 'Foods She Rejects',
+    title: 'Foods ' + pron('subj', true) + ' Rejects',
     headline: disliked.length + ' low-acceptance foods',
     icon: 'warn',
     domain: 'peach',
@@ -425,7 +425,7 @@ function _qaTrends(mode) {
   if (mode === 'improving') {
     var ms = getDomainData('milestones', curStart, curEnd);
     ms.progressed.forEach(function(p) {
-      items.push({ text: p.text + ' \u2192 ' + p.status, signal: 'good' });
+      items.push({ text: msLabel(p.text) + ' \u2192 ' + p.status, signal: 'good' });
     });
   }
 
@@ -577,7 +577,7 @@ function _qaDoctorPrep() {
   var ms = getDomainData('milestones', _offsetDateStr(today(), -30), today());
   if (ms.progressed.length > 0) {
     ms.progressed.slice(0, 3).forEach(function(p) {
-      items.push({ text: 'Milestone: ' + p.text + ' \u2192 ' + p.status, signal: 'good' });
+      items.push({ text: 'Milestone: ' + msLabel(p.text) + ' \u2192 ' + p.status, signal: 'good' });
     });
   }
 
@@ -993,32 +993,65 @@ function qaAnswerWeightGain(intentId) {
   var headline = '';
 
   // Weight velocity
+  // Food advice only from 6 months at the weigh-in or once solids have started: under 6 months milk is
+  // the whole diet (WHO IYCF, cited at gvFoodAdviceOk in core.js — Maren V-M-282b-3, Kael V-K-282b-4).
+  // gvFoodAdviceOk(null) judges by today's age, so no weight row never means "food is fine" (V-K-282c-5,
+  // V-C-282c-2).
+  var foodOk = gvFoodAdviceOk(gv.weight ? gv.weight.latest : null);
+  // A caution newborn line (more than 10% lost, not back to birth weight, down since the last weigh-in,
+  // weigh again): its urgent action leads, and nothing below reassures or defers it to "the next
+  // visit" (Maren V-M-282c-1, Kael V-K-282c-3, Vela V-V-282c-3).
+  var nbCaution = !!(gv.weight && gv.weight.nb && gv.weight.nb.tone === 'caution');
   if (gv.weight) {
     var w = gv.weight;
+    var nbQ = w.nb;
     headline = w.latest.wt + ' kg — ';
-    if (w.status === 'on-track') {
+    if (nbQ && nbQ.status === 'regained') {
+      // Newborn window, back to birth weight (gvNewbornCheck): the regain is the verdict, not a rate.
+      headline += 'back to birth weight';
+      dataItems.push({ text: nbQ.text, signal: 'good' });
+    } else if (w.status === 'newborn-loss' || w.status === 'not-regained') {
+      // More than 10% of birth weight lost before day 21, or not back by day 14 (V-M-282b-2, -3).
+      headline += nbQ.head;
+      dataItems.push({ text: nbQ.text, signal: 'warn' });
+      actionItems.push({ text: gvNewbornAction(nbQ), signal: 'action' });
+    } else if (w.tooShort) {
+      // Too short an interval to judge a toddler — never "gaining well" for a 10-day pair, whichever
+      // way it moved (Vela V-V-282c-6). The Info card's line.
+      headline += 'too soon to judge';
+      dataItems.push({ text: gvTooShortText(w.daysBetween), signal: 'info' });
+      actionItems.push({ text: 'Weigh again in a few weeks', signal: 'action' });
+    } else if (w.status === 'on-track') {
       headline += 'gaining well (' + w.gPerDay + ' g/day)';
-      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — on track for ' + w.expectedRange.label, signal: 'good' });
+      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — on track for ' + gvBandPhrase(w.expectedRange), signal: 'good' });
     } else if (w.status === 'slow') {
-      headline += 'gaining slowly (' + w.gPerDay + ' g/day)';
-      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — below expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ' g/day', signal: 'warn' });
-      actionItems.push({ text: 'Add calorie-dense foods: ghee, banana, avocado, nut butters', signal: 'action' });
+      headline += (w.gPerDay < 0 ? 'down ' + Math.abs(w.gPerDay) + ' g/day' : 'gaining slowly (' + w.gPerDay + ' g/day)');
+      dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day — below expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ' g/day', signal: 'warn' });
+      actionItems.push({ text: foodOk ? 'Add calorie-dense foods: ghee, banana, avocado, smooth nut butter thinned with milk or water' : GV_MILK_ONLY_NOTE, signal: 'action' });
     } else if (w.status === 'plateau') {
-      headline += 'weight plateau detected';
-      dataItems.push({ text: 'Only ' + w.gainG + 'g gained in ' + w.daysBetween + ' days', signal: 'warn' });
-      actionItems.push({ text: 'Consider adding an extra meal or calorie-dense toppings', signal: 'action' });
+      headline += w.gainG < 0 ? 'weight down ' + Math.abs(w.gainG) + ' g in ' + w.daysBetween + ' days' : 'weight plateau detected';
+      dataItems.push({ text: w.gainG < 0 ? 'Weight down ' + Math.abs(w.gainG) + 'g in ' + w.daysBetween + ' days' : 'Only ' + w.gainG + 'g gained in ' + w.daysBetween + ' days', signal: 'warn' });
+      actionItems.push({ text: foodOk ? 'Consider adding an extra meal or calorie-dense toppings' : GV_MILK_ONLY_NOTE, signal: 'action' });
     } else if (w.status === 'fast') {
       headline += 'gaining quickly (' + w.gPerDay + ' g/day)';
       dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day — above expected range', signal: 'info' });
+    } else if (w.status === 'newborn') {
+      // The after-birth dip, not a growth rate (gvNewbornCheck, PC-1 bug #27); past day 14 with only
+      // an earlier weigh-in, the recheck line instead (V-M-282b-4).
+      headline += nbQ ? nbQ.head : 'early days';
+      var dirQ = w.gainG >= 0 ? 'up ' : 'down ';
+      dataItems.push({ text: 'Weight ' + dirQ + Math.abs(w.gainG) + ' g in ' + w.daysBetween + ' day' + (w.daysBetween === 1 ? '' : 's') + '. ' + (nbQ ? nbQ.text : GV_NEWBORN_NOTE), signal: nbCaution ? 'warn' : 'info' });
+      if (nbCaution) actionItems.push({ text: gvNewbornAction(nbQ), signal: 'action' });
     }
 
     if (w.totalGainG) {
-      dataItems.push({ text: 'Total gain since birth: ' + Math.round(w.totalGainG) + 'g (' + (w.totalGainG / 1000).toFixed(1) + ' kg)', signal: 'info' });
+      // From the birth-weight row (V-M-282b-1); a negative change is a change, not a gain (V-M-282b-6).
+      dataItems.push({ text: (w.totalGainG < 0 ? 'Total change since birth: −' : 'Total gain since birth: ') + Math.abs(Math.round(w.totalGainG)) + 'g (' + (Math.abs(w.totalGainG) / 1000).toFixed(2) + ' kg)', signal: 'info' });
     }
 
     if (w.stale) {
       dataItems.push({ text: 'Last weighed ' + w.daysSince + ' days ago — consider a new measurement', signal: 'warn' });
-      actionItems.push({ text: 'Weigh ' + childNameHtml() + ' to update growth tracking', signal: 'action' });
+      if (!nbCaution) actionItems.push({ text: 'Weigh ' + childNameHtml() + ' to update growth tracking', signal: 'action' });
     }
   }
 
@@ -1044,16 +1077,22 @@ function qaAnswerWeightGain(intentId) {
       dataItems.push({ text: 'Percentile climbed from ' + Math.round(lastCross.from) + 'th to ' + Math.round(lastCross.to) + 'th', signal: 'good' });
     }
   }
+  // A slow fall across two major centile lines (computeGrowthVelocity, V-M-282c-11).
+  if (gv.centileSlide) {
+    dataItems.push({ text: gv.centileSlide.text, signal: 'warn' });
+    actionItems.push({ text: 'Mention the centile change to your doctor', signal: 'action' });
+  }
 
-  // Diet link
+  // Diet link — only where food is part of the diet (foodOk); never in the newborn window.
   try {
     var diet = calcDietScore();
-    if (diet.score < 60 && (intentId === 'weight_gain' || (gv.weight && gv.weight.status === 'slow'))) {
+    var nbWindow = gv.weight && gv.weight.nb;
+    if (foodOk && !nbWindow && diet.score < 60 && (intentId === 'weight_gain' || (gv.weight && gv.weight.status === 'slow'))) {
       dataItems.push({ text: 'Diet score is ' + diet.score + '/100 — nutrition gaps may affect weight gain', signal: 'warn' });
       actionItems.push({ text: 'Focus on nutrient-dense meals (see Food tab)', signal: 'action' });
     }
     // Low intake + slow gain is the key insight
-    if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake < 60 && gv.weight && gv.weight.status !== 'on-track') {
+    if (foodOk && diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake < 60 && gv.weight && (gv.weight.status === 'slow' || gv.weight.status === 'plateau')) {
       dataItems.push({ text: 'Low meal intake (' + diet.detail.effectiveIntake + '%) may explain slow weight gain', signal: 'warn' });
       actionItems.push({ text: 'Try smaller, more frequent meals with calorie-dense foods', signal: 'action' });
     }
@@ -1099,7 +1138,7 @@ function qaAnswerFoodGeneral(intentId) {
     // Effective intake
     if (diet.detail.effectiveIntake !== null && diet.detail.effectiveIntake !== undefined) {
       if (diet.detail.effectiveIntake < 50) {
-        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% — she\'s eating less than half of served portions', signal: 'warn' });
+        dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% — ' + pron('subj') + '\'s eating less than half of served portions', signal: 'warn' });
       } else if (diet.detail.effectiveIntake < 75) {
         dataItems.push({ text: 'Average intake: ' + diet.detail.effectiveIntake + '% of served portions', signal: 'info' });
       }
@@ -1741,7 +1780,7 @@ function qaAnswerNaps(intentId) {
   if (ageMo >= 7 && ageMo <= 9) {
     actionItems.push({ text: 'Approaching 3-to-2 nap transition — watch for longer wake windows', signal: 'info' });
   } else if (ageMo >= 12 && ageMo < 18) {
-    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if she resists the second nap, try one longer midday nap', signal: 'info' });
+    actionItems.push({ text: 'The 2-to-1 nap shift usually happens between 12 and 18 months — if ' + pron('subj') + ' resists the second nap, try one longer midday nap', signal: 'info' });
   }
 
   actionItems.push({ text: 'Keep nap environment dark and consistent', signal: 'action' });
@@ -1779,20 +1818,38 @@ function qaAnswerWeightConcern(intentId) {
   var dataItems = [];
   var actionItems = [];
   var headline = 'Weight Analysis';
+  // The newborn window: a caution line leads with its urgent action, and the "higher percentile is
+  // fine" / "next visit" / "active play" lines go — they answer a different question (Maren
+  // V-M-282c-1, Kael V-K-282c-3, Vela V-V-282c-3). In the plain dip the percentile and play lines go too.
+  var nbWin = gv.weight && gv.weight.nb && gv.weight.nb.tone !== 'good' ? gv.weight.nb : null;
+  var nbCautionC = !!(nbWin && nbWin.tone === 'caution');
 
   if (gv.weight) {
     var w = gv.weight;
-    headline = w.latest.wt + ' kg (gaining ' + w.gPerDay + ' g/day)';
-    if (w.status === 'fast') {
+    var nbC = w.nb;
+    // Headline: in the newborn window "early days" or the flag, never a rate; a negative rate says
+    // "down", never "gaining -15 g/day" (V-M-282b-6, V-K-282b-5, V-V-282b-2).
+    if (nbC) headline = w.latest.wt + ' kg — ' + nbC.head;
+    else if (w.tooShort) headline = w.latest.wt + ' kg — too soon to judge';
+    else headline = w.latest.wt + ' kg (' + (w.gPerDay < 0 ? 'down ' + Math.abs(w.gPerDay) : 'gaining ' + w.gPerDay) + ' g/day)';
+    if (nbCautionC) actionItems.push({ text: gvNewbornAction(nbC), signal: 'action' });
+    if (nbC && nbC.status !== 'newborn') {
+      dataItems.push({ text: nbC.text, signal: nbC.tone === 'good' ? 'good' : 'warn' });
+    } else if (w.status === 'newborn') {
+      dataItems.push({ text: nbC ? nbC.text : GV_NEWBORN_NOTE, signal: nbCautionC ? 'warn' : 'info' });
+    } else if (w.tooShort) {
+      // Checked before on-track: a 10-day toddler pair is not "within normal range" (V-V-282c-6).
+      dataItems.push({ text: gvTooShortText(w.daysBetween), signal: 'info' });
+    } else if (w.status === 'fast') {
       dataItems.push({ text: 'Weight gain is above typical range (' + w.gPerDay + ' g/day vs expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'warn' });
     } else if (w.status === 'on-track') {
       dataItems.push({ text: 'Weight gain is within normal range (' + w.gPerDay + ' g/day)', signal: 'good' });
     } else {
-      dataItems.push({ text: 'Weight gain: ' + w.gPerDay + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'info' });
+      dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'info' });
     }
   }
 
-  if (gv.latestPercentile !== null) {
+  if (gv.latestPercentile !== null && !nbWin) {
     if (gv.latestPercentile > 85) {
       dataItems.push({ text: 'Weight at ' + gv.latestPercentile + 'th percentile — above average', signal: 'info' });
     } else {
@@ -1808,11 +1865,13 @@ function qaAnswerWeightConcern(intentId) {
   // At this age, rapid weight gain is rarely a concern
   var ageM = ageAt().months;
   if (ageM < 12) {
-    actionItems.push({ text: 'At ' + Math.floor(ageM) + ' months, being on a higher percentile is usually fine', signal: 'good' });
-    actionItems.push({ text: 'Focus on nutrient-dense foods, not calorie restriction', signal: 'action' });
+    if (!nbWin) actionItems.push({ text: (ageM === 0 ? 'In the first month' : 'At ' + fmtAgeMonths(ageM)) + ', being on a higher percentile is usually fine', signal: 'good' });
+    // Under 6 months milk is the whole diet (WHO IYCF; gvFoodAdviceOk) — no food advice (V-M-282b-3).
+    // gvFoodAdviceOk(null) judges by today's age (V-K-282c-5, V-C-282c-2).
+    actionItems.push({ text: gvFoodAdviceOk(gv.weight ? gv.weight.latest : null) ? 'Focus on nutrient-dense foods, not calorie restriction' : GV_MILK_ONLY_NOTE, signal: 'action' });
   }
-  actionItems.push({ text: 'Discuss any concerns with your pediatrician at the next visit', signal: 'action' });
-  actionItems.push({ text: 'Encourage active play — motor activity supports healthy growth', signal: 'action' });
+  if (!nbCautionC) actionItems.push({ text: 'Discuss any concerns with your pediatrician at the next visit', signal: 'action' });
+  if (!nbWin) actionItems.push({ text: 'Encourage active play — motor activity supports healthy growth', signal: 'action' });
 
   var sections = [];
   if (dataItems.length > 0) sections.push({ label: 'WHAT THE DATA SHOWS', icon: zi('chart'), items: dataItems.slice(0, 5) });
@@ -1848,9 +1907,22 @@ function qaAnswerGrowth(intentId) {
   // Weight
   if (gv.weight) {
     var w = gv.weight;
-    dataItems.push({ text: 'Weight: ' + w.latest.wt + ' kg (' + (w.stale ? 'measured ' + w.daysSince + ' days ago' : 'recent'), signal: w.stale ? 'warn' : 'good' });
-    var wSignal = w.status === 'on-track' ? 'good' : w.status === 'slow' || w.status === 'plateau' ? 'warn' : 'info';
-    dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + w.status.replace('-', ' ') + ')', signal: wSignal });
+    dataItems.push({ text: 'Weight: ' + w.latest.wt + ' kg (' + (w.stale ? 'measured ' + w.daysSince + ' days ago' : 'recent') + ')', signal: w.stale ? 'warn' : 'good' });
+    var wSignal = w.nb ? (w.nb.tone === 'good' ? 'good' : w.nb.tone === 'caution' ? 'warn' : 'info')
+      : w.tooShort ? 'info'
+      : w.status === 'on-track' ? 'good' : (w.status === 'slow' || w.status === 'plateau') ? 'warn' : 'info';
+    if (w.nb) {
+      // Newborn window (gvNewbornCheck): the line in place of a rate — the dip, back to birth weight,
+      // or a flag (V-M-282b-2..4). A flag's urgent action leads the actions (V-M-282c-1).
+      dataItems.push({ text: 'Weight: ' + w.nb.text, signal: wSignal });
+      var nbAct = gvNewbornAction(w.nb);
+      if (nbAct) actionItems.push({ text: nbAct, signal: 'action' });
+    } else if (w.tooShort) {
+      // Checked before on-track: "(on track)" for a 10-day toddler pair claimed a verdict (V-V-282c-6).
+      dataItems.push({ text: 'Weight: ' + gvTooShortText(w.daysBetween), signal: wSignal });
+    } else {
+      dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + w.status.replace('-', ' ') + ')', signal: wSignal });
+    }
   }
 
   // Height
@@ -1871,6 +1943,11 @@ function qaAnswerGrowth(intentId) {
     dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + lastCross.from + 'th to ' + lastCross.to + 'th', signal: 'warn' });
     actionItems.push({ text: 'Discuss percentile crossing with pediatrician', signal: 'action' });
   }
+  // A slow fall across two major centile lines (computeGrowthVelocity, V-M-282c-11).
+  if (gv.centileSlide) {
+    dataItems.push({ text: gv.centileSlide.text, signal: 'warn' });
+    actionItems.push({ text: 'Mention the centile change to your doctor', signal: 'action' });
+  }
 
   // Proportionality
   if (gv.proportionFlag) {
@@ -1886,7 +1963,15 @@ function qaAnswerGrowth(intentId) {
   }
 
   if (actionItems.length === 0) {
-    actionItems.push({ text: 'Growth is on track — next measurement in 2-4 weeks', signal: 'good' });
+    // "On track" only when the weight verdict is on track (not tooShort) or a clean return to birth
+    // weight — never for slow gain, the after-birth dip or "too soon to judge" (V-M-282c-1, V-K-282c-3).
+    var wOk = gv.weight && ((gv.weight.nb && gv.weight.nb.status === 'regained') || (!gv.weight.nb && !gv.weight.tooShort && gv.weight.status === 'on-track'));
+    var wSlow = gv.weight && !gv.weight.nb && !gv.weight.tooShort && (gv.weight.status === 'slow' || gv.weight.status === 'plateau');
+    actionItems.push(wOk ? { text: 'Growth is on track — next measurement in 2-4 weeks', signal: 'good' }
+      : wSlow ? { text: 'Mention the slower weight gain to your doctor at the next weigh-in', signal: 'action' }
+      : gv.weight && gv.weight.tooShort ? { text: 'Weigh again in a few weeks', signal: 'action' }
+      : gv.weight && gv.weight.nb ? { text: 'Keep to the weigh-ins your doctor or midwife suggests', signal: 'action' }
+      : { text: 'Next measurement in 2-4 weeks', signal: 'action' });
   }
 
   var sections = [];
@@ -2007,7 +2092,7 @@ function _qaDeepNutrientCard(nutrient) {
       richFoodItems.push({ text: s.food + ' \u2014 ' + intakePct + '% intake (' + accLabel + ', served ' + s.acc.timesServed + 'x)', signal: signal });
     });
   }
-  if (richFoodItems.length > 0) sections.push({ label: 'HER ' + nutrientLabel.toUpperCase() + '-RICH FOODS', icon: zi('bowl'), items: richFoodItems });
+  if (richFoodItems.length > 0) sections.push({ label: pron('poss').toUpperCase() + ' ' + nutrientLabel.toUpperCase() + '-RICH FOODS', icon: zi('bowl'), items: richFoodItems });
 
   // 3. TRY NEXT: Foods she hasn't had or hasn't had recently
   var tryItems = [];
@@ -2023,7 +2108,7 @@ function _qaDeepNutrientCard(nutrient) {
   // Foods she likes that are iron-rich — serve more often
   var liked = served.filter(function(s) { return s.acc.avgIntake >= 0.7 && s.acc.timesServed < 5; });
   if (liked.length > 0) {
-    tryItems.push({ text: 'Serve more often (she likes these): ' + liked.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'good' });
+    tryItems.push({ text: 'Serve more often (' + pron('subj') + ' likes these): ' + liked.slice(0, 3).map(function(s) { return s.food; }).join(', '), signal: 'good' });
   }
 
   // 4. TIPS: Nutrient-specific absorption and pairing advice
@@ -2066,7 +2151,7 @@ function _qaNutrientTips(nutrient) {
       { text: 'Best time: breakfast or lunch when absorption is highest', signal: 'info' }
     ],
     'calcium': [
-      { text: 'Vitamin D helps her absorb calcium \u2014 keep her Vitamin D supplement as prescribed', signal: 'info' },
+      { text: 'Vitamin D helps ' + pron('obj') + ' absorb calcium \u2014 keep ' + pron('poss') + ' Vitamin D supplement as prescribed', signal: 'info' },
       { text: 'Don\'t pair calcium-rich foods with iron-rich foods in the same meal', signal: 'info' }
     ],
     'protein': [
@@ -2680,7 +2765,7 @@ function qaAnswerMilestoneGeneral(intentId) {
     });
     if (stalled.length > 0) {
       stalled.forEach(function(m) {
-        actionItems.push({ text: m.text + ' appears stalled — try targeted activities', signal: 'warn' });
+        actionItems.push({ text: msLabel(m.text) + ' appears stalled — try targeted activities', signal: 'warn' });
       });
     }
 
@@ -2757,8 +2842,8 @@ function qaAnswerMilestoneSpecific(intentId) {
     var tHead = ts.count ? ts.count + ' of 20 baby teeth recorded' : 'No teeth recorded yet';
     if (ts.latest) dataItems.push({ text: 'Latest: ' + ts.latest.name + ' (' + ts.latest.date + ')', signal: 'good' });
     ts.next.forEach(function(r) { dataItems.push({ text: 'Coming next: ' + r, signal: 'info' }); });
-    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth she has on the Teeth chart (Milestones, Library)', signal: 'action' });
-    actionItems.push({ text: 'Teething does not cause fever. If she has a temperature, look for another cause.', signal: 'info' });
+    actionItems.push({ text: ts.count ? 'Record each new tooth on the Teeth chart (Milestones, Library)' : 'Tap the teeth ' + pron('subj') + ' has on the Teeth chart (Milestones, Library)', signal: 'action' });
+    actionItems.push({ text: 'Teething does not cause fever. If ' + pron('subj') + ' has a temperature, look for another cause.', signal: 'info' });
     var tSections = [];
     if (dataItems.length) tSections.push({ label: 'TEETH', icon: zi('tooth'), items: dataItems });
     tSections.push({ label: 'WHAT TO DO', icon: zi('bulb'), items: actionItems });
@@ -2805,7 +2890,7 @@ function qaAnswerMilestoneSpecific(intentId) {
   if (matched.length > 0) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var m = matched[0];
     var statusLabels = { mastered: 'Mastered', consistent: 'Consistent', practicing: 'Practicing', emerging: 'Emerging', 'not-started': 'Not started' };
-    var headline = m.text + ' — ' + (statusLabels[m.status] || m.status);
+    var headline = msLabel(m.text) + ' — ' + (statusLabels[m.status] || m.status);
 
     var signal = m.status === 'mastered' ? 'good' : m.status === 'consistent' || m.status === 'practicing' ? 'info' : 'warn';
     dataItems.push({ text: 'Status: ' + (statusLabels[m.status] || m.status), signal: signal });
@@ -2820,7 +2905,7 @@ function qaAnswerMilestoneSpecific(intentId) {
       var daysSince = Math.round((new Date() - new Date(m.lastSeen)) / 86400000);
       if (daysSince > 7) {
         dataItems.push({ text: 'Last seen ' + daysSince + ' days ago — may need more practice', signal: 'warn' });
-        actionItems.push({ text: 'Create opportunities for ' + m.text.toLowerCase() + ' in daily play', signal: 'action' });
+        actionItems.push({ text: 'Create opportunities for ' + msLabel(m.text).toLowerCase() + ' in daily play', signal: 'action' });
       } else {
         dataItems.push({ text: 'Last observed ' + daysSince + ' day(s) ago', signal: 'good' });
       }
@@ -2850,7 +2935,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 3) });
 
     return {
-      icon: 'target', domain: 'lav', title: m.text, headline: headline,
+      icon: 'target', domain: 'lav', title: msLabel(m.text), headline: headline,
       sections: sections,
       confidence: m.evidenceCount > 0 ? 'Based on ' + m.evidenceCount + ' observations' : null,
       dataGap: null

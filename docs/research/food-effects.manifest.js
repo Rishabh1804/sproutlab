@@ -393,7 +393,7 @@ window.FOOD_EFFECTS_MANIFEST = [
                          paradigm:'Don\'t delay — but no proven fish-specific prevention claim.' },
     safeForm:      { ok:['LOW-mercury fish — salmon, sardine, Indian mackerel (bangda), rohu, catla, pomfret, trout — thoroughly cooked, all bones removed, flaked small','canned LIGHT tuna (not albacore / white)'],
                      never:['HIGH-mercury fish — shark (sura), swordfish, king mackerel (surmai / seer), marlin, bigeye tuna','raw or undercooked fish / sushi, and raw or lightly-cooked shellfish (food poisoning)','fish with bones left in or not hand-checked for pin bones (rohu & catla are very bony — a choking risk)','dried or salted fish (Bombay duck / bombil) — too much salt for a baby'],
-                     note:'Choose low-mercury fish, cook through, and debone meticulously. Finfish is a SEPARATE allergen from shellfish. Oily fish is great — for a girl, NHS caps oily fish at ~2 portions/week (pollutants).' },
+                     note:'Choose low-mercury fish, cook through, and debone meticulously. Finfish is a SEPARATE allergen from shellfish. Oily fish is great — NHS advises no more than 2 portions of oily fish a week for girls, and up to 4 for boys (because of pollutants; nhs.uk fish-and-shellfish-nutrition, checked 2026-10-31).' },
     howToIntroduce:{ amount:'A small amount of well-cooked, deboned, flaked low-mercury fish; for ages 1–3, ~1 oz (28 g) per serving (no official figure under 1).',
                      when:'Around 6 months, after a few first foods are tolerated; offer at home, daytime, and watch ~2 hours.',
                      watch:'Watch ~2 hours for a reaction. Fish allergy tends to be LIFELONG (unlike egg / milk) — treat first exposures carefully.',
