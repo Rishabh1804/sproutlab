@@ -46,7 +46,7 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 
 **Guards:**
 - **Guarded:**
-  - `audit-growth-age-v1`: no `growthVelocityBand()` call takes today's age, directly or through a variable. Self-tested; it flags 17 sites in the pre-#25 code.
+  - `audit-growth-age-v1`: no band or verdict helper (`growthVelocityBand`, `gvBandVerdict`, `gvWeightVerdict`, `_gvNewbornWindow`) takes today's age: not `ageAt(` / `getAgeInMonths(` / `today()` / `new Date()` anywhere in the argument, not a no-argument `gvAgeAt()`, and not a variable (or its `.months` / `.days`) assigned from one of those. Calls may span lines. 15 self-test fixtures, six of them the bypasses Kael found (V-K-282c-4); it flags 17 sites in the pre-#25 code.
   - `audit-hr12-dateonly-v1`: a per-file ratchet on `new Date(<date-ish>)` parses, which may only fall; a benign site carries `// HR-12`.
 - **Design:** `growthVelocityBand()`, `gvAgeAt()` and `ageMonthsAt()` (core.js) are the single band, age and month sources; `_syncNow()` orders all sync-ledger events.
 - **Tests:** growth-velocity-bands.spec (bracket edges, age rule, newborn cases), sync-unsynced-ledger F17 (run repeated).
