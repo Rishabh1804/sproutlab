@@ -548,7 +548,7 @@ function renderActiveMilestones() {
       const evList = getMilestoneEvidence(bestKw).slice(0, 5);
       let evItems = evList.map(ev => {
         const confDot = zi('dot-red');
-        return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml((ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
+        return '<div class="al-evid-item">' + ev.date + ' — "' + escHtml(msLabel(ev.text || '').substring(0, 40)) + '" ' + confDot + ' ' + ev.confidence + '</div>';
       }).join('');
       if (m.evidenceCount > 5) evItems += '<div class="al-evid-more">+' + (m.evidenceCount - 5) + ' more</div>';
       evidHtml = '<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="' + evidId + '" data-stop="1">' + zi('chart') + ' View evidence ' + zi('chevron-down') + '</button>' +
@@ -562,7 +562,7 @@ function renderActiveMilestones() {
       '<div class="ms-active-top">' +
         '<div class="ms-active-icon">' + icon + '</div>' +
         '<div class="ms-active-body">' +
-          '<div class="ms-active-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ms-active-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ms-active-stage" style="color:' + stageMeta.color + ';">' + stageMeta.icon + ' ' + stageMeta.label + ' · ' + m.evidenceCount + ' observations' + (confPct > 0 ? ' · ' + confPct + '% high-conf' : '') + '</div>' +
           (dateRange ? '<div class="ms-active-dates">' + dateRange + '</div>' : '') +
           _renderAttribution(m) +
@@ -760,13 +760,13 @@ function showFullDoctorSummary() {
   lines.push('');
   lines.push('SECTION_MS MILESTONES ACHIEVED');
   milestones.filter(m => isMsDone(m)).forEach(m => {
-    lines.push('  OK ' + m.text + (m.doneAt ? ' (at ' + ageAtDate(m.doneAt) + ')' : '') + (m.advanced ? ' [Advanced]' : ''));
+    lines.push('  OK ' + msLabel(m.text) + (m.doneAt ? ' (at ' + ageAtDate(m.doneAt) + ')' : '') + (m.advanced ? ' [Advanced]' : ''));
   });
   const ip = milestones.filter(m => isMsActive(m));
   if (ip.length) {
     lines.push('');
     lines.push('SECTION_IP IN PROGRESS');
-    ip.forEach(m => { lines.push('  IP ' + m.text + (m.inProgressAt ? ' (since ' + ageAtDate(m.inProgressAt) + ')' : '')); });
+    ip.forEach(m => { lines.push('  IP ' + msLabel(m.text) + (m.inProgressAt ? ' (since ' + ageAtDate(m.inProgressAt) + ')' : '')); });
   }
 
   // Medications
@@ -5287,7 +5287,7 @@ function renderUpcomingItem(item) {
     <div class="upcoming-item ${itemClass}">
       <div class="upcoming-icon">${item.icon}</div>
       <div class="upcoming-body">
-        <strong>${escHtml(item.text)}</strong>
+        <strong>${escHtml(msLabel(item.text))}</strong>
         <span>${escHtml(item.desc)}</span>
         <div style="display:flex;gap:var(--sp-4);flex-wrap:wrap;margin-top:5px;align-items:center;">
           <span class="upcoming-badge age-badge">${item.month}+ months</span>
@@ -8207,7 +8207,7 @@ function renderInfoMilestoneVelocity() {
           projStr = ' · → ' + m.nextStage + ' in ~' + m.projectedDays + 'd';
         }
         html += '<div class="ai-velocity-item">' +
-          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ai-velocity-rate">' + rateStr + projStr + '</div>' +
         '</div>';
       });
@@ -8216,7 +8216,7 @@ function renderInfoMilestoneVelocity() {
       html += '<div class="si-sub-label fe-section-gap" >Stalled</div>';
       stalled.forEach(m => {
         html += '<div class="ai-velocity-item">' +
-          '<div class="ai-velocity-name">' + escHtml(m.text) + '</div>' +
+          '<div class="ai-velocity-name">' + escHtml(msLabel(m.text)) + '</div>' +
           '<div class="ai-velocity-rate ai-velocity-stale">No evidence for ' + m.daysSinceLast + 'd</div>' +
         '</div>';
       });
@@ -8228,10 +8228,10 @@ function renderInfoMilestoneVelocity() {
     let iHtml = '';
     if (progressing.length > 0) {
       const fastest = progressing[0];
-      iHtml += '<div class="si-insight si-insight-good">Fastest progress: "' + escHtml(fastest.text) + '" at ' + (fastest.rate >= 1 ? fastest.rate.toFixed(1) + ' ev/day' : (fastest.rate * 7).toFixed(1) + ' ev/week') + '</div>';
+      iHtml += '<div class="si-insight si-insight-good">Fastest progress: "' + escHtml(msLabel(fastest.text)) + '" at ' + (fastest.rate >= 1 ? fastest.rate.toFixed(1) + ' ev/day' : (fastest.rate * 7).toFixed(1) + ' ev/week') + '</div>';
     }
     if (stalled.length > 0) {
-      iHtml += '<div class="si-insight si-insight-warn">' + stalled.length + ' milestone' + (stalled.length > 1 ? 's' : '') + ' stalled — consider targeted activities for ' + escHtml(stalled[0].text) + '</div>';
+      iHtml += '<div class="si-insight si-insight-warn">' + stalled.length + ' milestone' + (stalled.length > 1 ? 's' : '') + ' stalled — consider targeted activities for ' + escHtml(msLabel(stalled[0].text)) + '</div>';
     }
     insightsEl.innerHTML = iHtml;
   }
@@ -10937,7 +10937,7 @@ function computeVisitPrep() {
     hasData: newMilestones.length > 0 || inProgressMs.length > 0
   };
   if (newMilestones.length > 0) {
-    var topMs = newMilestones.slice(-3).map(function(m) { return m.text; });
+    var topMs = newMilestones.slice(-3).map(function(m) { return msLabel(m.text); });
     sections.milestones.items.push(newMilestones.length + ' new: ' + topMs.join(', '));
     changes += newMilestones.length;
   }

@@ -507,12 +507,16 @@ function _anchorFindVaccineRecord(query) {
   return matches[0];
 }
 
-// Milestone lookup by keyword (case-insensitive substring on .text).
+// Milestone lookup by keyword (case-insensitive substring on .text, or on its
+// msLabel display title, so a word from the label still finds the row).
 function _anchorFindMilestoneByKeyword(kw) {
   if (typeof milestones !== 'object' || !Array.isArray(milestones)) return null;
   var q = kw.toLowerCase();
   return milestones.find(function(m) {
-    return m && typeof m.text === 'string' && m.text.toLowerCase().indexOf(q) !== -1;
+    if (!m || typeof m.text !== 'string') return false;
+    if (m.text.toLowerCase().indexOf(q) !== -1) return true;
+    var lbl = msLabel(m.text);
+    return typeof lbl === 'string' && lbl.toLowerCase().indexOf(q) !== -1;
   }) || null;
 }
 
@@ -990,7 +994,7 @@ function _islBuildDaySummary(dateStr) {
   // Activity summary string
   var activitySummary = 'No activities';
   if (ac.totalCount > 0) {
-    var actTexts = ac.entries.slice(0, 3).map(function(e) { return e.text; });
+    var actTexts = ac.entries.slice(0, 3).map(function(e) { return msLabel(e.text); });
     activitySummary = actTexts.join(', ');
     if (ac.totalCount > 3) activitySummary += ' +' + (ac.totalCount - 3) + ' more';
   }
@@ -1091,7 +1095,7 @@ function _islGenerateHighlights(sl, dt, pp, md, ms, ac, dateStr) {
   // Milestone highlights
   if (ms.progressed.length > 0) {
     ms.progressed.forEach(function(p) {
-      highlights.push({ domain: 'milestones', text: p.text + ' — ' + p.status, signal: 'good' });
+      highlights.push({ domain: 'milestones', text: msLabel(p.text) + ' — ' + p.status, signal: 'good' });
     });
   }
 

@@ -11,7 +11,10 @@
 #   - Q&A match vocabulary (intent triggers, word lists, strippers) — canonical she/her, which
 #     _qaNameAsShe folds a boy's he/him/his onto (V-K-281-1, V-K-281-2);
 #   - activity keyword tables (match vocabulary for parents' notes, both forms listed);
-#   - milestone text: fields, which are record keys (BUGS.md S2–S4 #5) until Carina's fix lands;
+#   - milestone text: fields, which are record keys (id = slugify(text); BUGS.md S2–S4 #5) and
+#     frozen. Each such row MUST carry a pronoun-free `label:` on the same line (the display
+#     title, shown via core.js msLabel()); an allowlisted string inside MILESTONE_STANDARDS whose
+#     row has no label, or whose label has a pronoun, fails the gate;
 #   - the _PRON table itself.
 # A fragment starting with '=' must equal the whole string (for one-word list entries).
 # An allowlist fragment that no longer matches anything fails the gate too, so the list can't rot.
@@ -71,12 +74,33 @@ function htmlTexts(src) {
   noScript.split('\n').forEach((l, k) => { const t = l.replace(/<[^>]*>/g, ' '); if (RX.test(t)) out.push({ line: k + 1, s: t.trim() }); });
   return out;
 }
+// MILESTONE_STANDARDS line range in data.js: an allowlisted pronoun string there is a frozen
+// record-key `text:` and is exempt only while its row carries a pronoun-free display `label:`.
+function msBlockRange(src) {
+  const lines = src.split('\n'); let start = -1;
+  for (let k = 0; k < lines.length; k++) {
+    if (start < 0 && /^const MILESTONE_STANDARDS = \{/.test(lines[k])) start = k + 1;
+    else if (start > 0 && /^\};/.test(lines[k])) return { start, end: k + 1, lines };
+  }
+  return null;
+}
 let bad = 0;
 for (const f of files) {
   const src = fs.readFileSync(f, 'utf8');
+  const msr = f === 'data.js' ? msBlockRange(src) : null;
   const hits = (f.endsWith('.html') ? htmlTexts(src) : jsStrings(src)).filter(h => RX.test(h.s));
   for (const h of hits) {
     const a = allow.find(a => a.file === f && (a.frag.startsWith('=') ? h.s === a.frag.slice(1) : h.s.includes(a.frag)));
+    if (a && msr && h.line >= msr.start && h.line <= msr.end) {
+      a.used = true;
+      const ln = msr.lines[h.line - 1] || '';
+      const isText = ln.includes("text:'" + h.s + "'") || ln.includes('text:"' + h.s + '"');
+      const lm = ln.match(/\blabel:\s*(['"])((?:\\.|(?!\1).)*)\1/);
+      if (!isText || !lm || !lm[2].trim() || RX.test(lm[2])) {
+        bad++; console.error(`audit-pronouns: ${f}:${h.line} milestone text "${h.s.slice(0, 80)}" is a frozen record key and needs a pronoun-free label: on its row (display title via msLabel)`);
+      }
+      continue;
+    }
     if (a) { a.used = true; continue; }
     bad++; console.error(`audit-pronouns: ${f}:${h.line} bare pronoun in copy: ${h.s.slice(0, 120)}`);
   }

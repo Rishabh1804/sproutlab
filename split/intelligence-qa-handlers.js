@@ -425,7 +425,7 @@ function _qaTrends(mode) {
   if (mode === 'improving') {
     var ms = getDomainData('milestones', curStart, curEnd);
     ms.progressed.forEach(function(p) {
-      items.push({ text: p.text + ' \u2192 ' + p.status, signal: 'good' });
+      items.push({ text: msLabel(p.text) + ' \u2192 ' + p.status, signal: 'good' });
     });
   }
 
@@ -577,7 +577,7 @@ function _qaDoctorPrep() {
   var ms = getDomainData('milestones', _offsetDateStr(today(), -30), today());
   if (ms.progressed.length > 0) {
     ms.progressed.slice(0, 3).forEach(function(p) {
-      items.push({ text: 'Milestone: ' + p.text + ' \u2192 ' + p.status, signal: 'good' });
+      items.push({ text: 'Milestone: ' + msLabel(p.text) + ' \u2192 ' + p.status, signal: 'good' });
     });
   }
 
@@ -2680,7 +2680,7 @@ function qaAnswerMilestoneGeneral(intentId) {
     });
     if (stalled.length > 0) {
       stalled.forEach(function(m) {
-        actionItems.push({ text: m.text + ' appears stalled — try targeted activities', signal: 'warn' });
+        actionItems.push({ text: msLabel(m.text) + ' appears stalled — try targeted activities', signal: 'warn' });
       });
     }
 
@@ -2805,7 +2805,7 @@ function qaAnswerMilestoneSpecific(intentId) {
   if (matched.length > 0) {  // activity-categories-ok: pre-existing parallel-table; deprecation-cycle follow-up (multi-line; brace-tracked gate)
     var m = matched[0];
     var statusLabels = { mastered: 'Mastered', consistent: 'Consistent', practicing: 'Practicing', emerging: 'Emerging', 'not-started': 'Not started' };
-    var headline = m.text + ' — ' + (statusLabels[m.status] || m.status);
+    var headline = msLabel(m.text) + ' — ' + (statusLabels[m.status] || m.status);
 
     var signal = m.status === 'mastered' ? 'good' : m.status === 'consistent' || m.status === 'practicing' ? 'info' : 'warn';
     dataItems.push({ text: 'Status: ' + (statusLabels[m.status] || m.status), signal: signal });
@@ -2820,7 +2820,7 @@ function qaAnswerMilestoneSpecific(intentId) {
       var daysSince = Math.round((new Date() - new Date(m.lastSeen)) / 86400000);
       if (daysSince > 7) {
         dataItems.push({ text: 'Last seen ' + daysSince + ' days ago — may need more practice', signal: 'warn' });
-        actionItems.push({ text: 'Create opportunities for ' + m.text.toLowerCase() + ' in daily play', signal: 'action' });
+        actionItems.push({ text: 'Create opportunities for ' + msLabel(m.text).toLowerCase() + ' in daily play', signal: 'action' });
       } else {
         dataItems.push({ text: 'Last observed ' + daysSince + ' day(s) ago', signal: 'good' });
       }
@@ -2850,7 +2850,7 @@ function qaAnswerMilestoneSpecific(intentId) {
     if (actionItems.length > 0) sections.push({ label: 'WHAT TO TRY', icon: zi('bulb'), items: actionItems.slice(0, 3) });
 
     return {
-      icon: 'target', domain: 'lav', title: m.text, headline: headline,
+      icon: 'target', domain: 'lav', title: msLabel(m.text), headline: headline,
       sections: sections,
       confidence: m.evidenceCount > 0 ? 'Based on ' + m.evidenceCount + ' observations' : null,
       dataGap: null

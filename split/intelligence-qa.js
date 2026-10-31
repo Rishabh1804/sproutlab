@@ -2227,7 +2227,7 @@ function _qaRenderDomainTemporal(domain, tr) {
     }
     if (data.progressed.length > 0) {
       data.progressed.forEach(function(p) {
-        items.push({ text: p.text + ' — ' + p.status, signal: 'good' });
+        items.push({ text: msLabel(p.text) + ' — ' + p.status, signal: 'good' });
       });
     }
     if (data.active.length > 0) {
@@ -2246,7 +2246,7 @@ function _qaRenderDomainTemporal(domain, tr) {
     // Show recent activities
     var recent = data.entries.slice(0, 4);
     recent.forEach(function(e) {
-      items.push({ text: e.text + (e.duration ? ' (' + e.duration + ' min)' : ''), signal: 'neutral' });
+      items.push({ text: msLabel(e.text) + (e.duration ? ' (' + e.duration + ' min)' : ''), signal: 'neutral' });
     });
     if (data.totalCount > 4) items.push({ text: '+' + (data.totalCount - 4) + ' more activities', signal: 'neutral' });
   }

@@ -3875,6 +3875,14 @@ window.MS_ACTIVITY_LEVEL_NARRATIONS = {
   4: 'Big-energy days mean your child\'s stretching new edges. Naps and meals tend to want extra love after a Peak day.',
 };
 
+// Row schema — `text` vs `label` (Carina, BUGS.md S2–S4 #5):
+//   • `text` is the RECORD KEY. A milestone's id is slugify(row.text), and the raw
+//     text is stored and matched in synced records (milestones[].text, activityLog
+//     milestone-tap entries, milestoneSuppress keys, logMilestoneEvent). It is
+//     FROZEN — never reword an existing row's text without a migration.
+//   • `label` (optional) is DISPLAY-ONLY: a pronoun-free title shown in place of
+//     `text` wherever the milestone is rendered (core.js msLabel()). Never slugify,
+//     store or match on a label.
 // WHO Motor Development Study + WHO developmental milestones
 const MILESTONE_STANDARDS = {
   who: {
@@ -3983,7 +3991,7 @@ const MILESTONE_STANDARDS = {
   //   that starts at N.
   13: [
     { text:'Carries a book to you to read', icon:zi('book'), desc:'Brings a favourite board book and hands it over — a lovely early sign of shared attention and a love of stories.', advanced:false, domain:'social', source:'AAP', endMonth:18 }, // AAP-LIT 12–18 m
-    { text:'Understands far more words than she can say', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
+    { text:'Understands far more words than she can say', label:'Understands far more words than can be said', icon:zi('chat'), desc:'Waits by the high chair when you say lunch, finds the shoe you mention. Understanding races ahead of talking.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-LANG1 "early in the second year"
     { text:'Squats to pick up a toy and stands back up', icon:zi('run'), desc:'Bends down mid-play, grabs the toy, rises without holding on — balance and leg strength working together.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Climbs stairs on hands and knees', icon:zi('run'), desc:'Crawls up a few steps with you right behind. A gate at the top and bottom keeps practice safe.', advanced:false, domain:'motor', source:'unverified' },
     { text:'Enjoys simple songs with actions', icon:zi('sparkle'), desc:'Joins in with a clap or a wave during action songs — rhythm, listening and imitation all at once.', advanced:false, domain:'sensory', source:'unverified' },
@@ -4000,7 +4008,7 @@ const MILESTONE_STANDARDS = {
   15: [
     // CDC "Milestones by 15 Months" — Social/Emotional
     { text:'Copies other children while playing', icon:zi('mirror'), desc:'Takes toys out of a box when another child does — learning by watching other little ones.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
-    { text:'Shows you an object she likes', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
+    { text:'Shows you an object she likes', label:'Shows you a favourite object', icon:zi('heart'), desc:'Holds up a favourite toy for you to see — sharing interest, not just asking for help.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Claps when excited', icon:zi('party'), desc:'Claps in self-applause, or along with you, at something delightful.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Hugs a soft toy or doll', icon:zi('heart'), desc:'Cuddles a teddy or doll — early caring play.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
     { text:'Shows you affection with hugs, cuddles or kisses', icon:zi('heart'), desc:'Offers hugs and kisses unprompted — warmth flowing both ways.', advanced:false, domain:'social', source:'CDC', checkpoint:15 },
@@ -4013,8 +4021,8 @@ const MILESTONE_STANDARDS = {
     { text:'Uses everyday things the right way, like a phone or a book', icon:zi('phone'), desc:'Holds a phone to an ear, lifts a cup to drink, opens a book — knows what everyday things are for.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     { text:'Stacks at least two small objects', icon:zi('star'), desc:'Balances one block on another — steady hands and spatial sense.', advanced:false, domain:'cognitive', source:'CDC', checkpoint:15 },
     // CDC 15 m — Movement/Physical
-    { text:'Takes a few steps on her own', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
-    { text:'Uses fingers to feed herself some food', icon:zi('bowl'), desc:'Picks up soft pieces and self-feeds. Offer soft, bite-sized food and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
+    { text:'Takes a few steps on her own', label:'Takes a few steps alone', icon:zi('run'), desc:'A few steps without holding on. WHO\'s motor study found the healthy range for walking alone spans roughly 8 to 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:15 }, // desc context: WHO-MGRS 8.2–17.6 m
+    { text:'Uses fingers to feed herself some food', label:'Uses fingers to self-feed some food', icon:zi('bowl'), desc:'Picks up soft pieces and self-feeds. Offer soft, bite-sized food and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:15, safetyTier:true },
     // AAP — explicit 15–18 m timing
     { text:'Says several single words', icon:zi('chat'), desc:'A small handful of real words used on purpose. The pace varies a lot from child to child.', advanced:false, domain:'language', source:'AAP', endMonth:18 }, // AAP-2Y "by fifteen to eighteen months"
     { text:'Uses a few simple signs or gestures (more, all done)', icon:zi('handshake'), desc:'Taps fingers for "more" or waves hands for "all done" — gestures bridge the gap before words.', advanced:true, domain:'language', source:'unverified' },
@@ -4032,8 +4040,8 @@ const MILESTONE_STANDARDS = {
     { text:'Pretends to feed a doll or teddy', icon:zi('spoon'), desc:'Offers a spoon to a teddy — the first seeds of pretend play.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins make-believe"
     { text:'Takes toys apart and puts them back together', icon:zi('bulb'), desc:'Pulls apart stacking cups or pop-beads and tries to fit them again — little problem-solving at work.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-HAND1
     { text:'Uses a word to ask for help or "more"', icon:zi('chat'), desc:'Says "more" at snack time or "help" with a stuck lid — words starting to do real work.', advanced:false, domain:'language', source:'unverified' },
-    { text:'Wants to do things herself', icon:zi('sprout'), desc:'Says "no" and reaches to do it alone — healthy independence, even when it tests your patience.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
-    { text:'Tries to take off her shoes or socks', icon:zi('baby'), desc:'Tugs socks off at every chance — early self-care and body awareness.', advanced:true, domain:'motor', source:'unverified' },
+    { text:'Wants to do things herself', label:'Wants to do things alone', icon:zi('sprout'), desc:'Says "no" and reaches to do it alone — healthy independence, even when it tests your patience.', advanced:false, domain:'social', source:'unverified' }, // content: AAP-2Y
+    { text:'Tries to take off her shoes or socks', label:'Tries to take off shoes or socks', icon:zi('baby'), desc:'Tugs socks off at every chance — early self-care and body awareness.', advanced:true, domain:'motor', source:'unverified' },
   ],
   18: [
     // CDC "Milestones by 18 Months" — Social/Emotional
@@ -4052,7 +4060,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks without holding on to anyone or anything', icon:zi('run'), desc:'Walks alone around the room. WHO\'s motor study found the healthy range for walking alone ends near 18 months. If not walking alone by 18 months, mention it to the doctor.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 }, // desc context: WHO-MGRS 99th pct 17.6 m
     { text:'Scribbles on paper', icon:zi('palette'), desc:'Makes marks with a chunky crayon — early drawing and hand control.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     { text:'Drinks from an open cup, with some spills', icon:zi('drop'), desc:'Sips from a cup without a lid — spills are part of learning. Seated drinking is safest.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
-    { text:'Feeds herself with her fingers', icon:zi('bowl'), desc:'Finger-feeds through meals. Keep offering soft, bite-sized pieces and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
+    { text:'Feeds herself with her fingers', label:'Self-feeds with fingers', icon:zi('bowl'), desc:'Finger-feeds through meals. Keep offering soft, bite-sized pieces and stay close during meals.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
     { text:'Tries to use a spoon', icon:zi('spoon'), desc:'Scoops and aims for the mouth — messy, and exactly how the skill is learned.', advanced:false, domain:'motor', source:'CDC', checkpoint:18, safetyTier:true },
     { text:'Climbs on and off a couch or chair without help', icon:zi('run'), desc:'Clambers up and slides down unaided. Anchor tall furniture and keep climbable things away from windows.', advanced:false, domain:'motor', source:'CDC', checkpoint:18 },
     // AAP — explicit timing
@@ -4064,7 +4072,7 @@ const MILESTONE_STANDARDS = {
     { text:'Walks up steps with a hand held', icon:zi('handshake'), desc:'Steps up the stairs holding your hand or a rail. Gates stay up for unsupervised moments.', advanced:false, domain:'motor', source:'unverified' }, // content: AAP-2Y stairs holding support
     { text:'Fits simple shapes into a shape sorter', icon:zi('star'), desc:'Matches a few shapes to their holes — trial and error turning into planning.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y "begins to sort by shapes"
     { text:'Picks up new words almost every week', icon:zi('chat'), desc:'New words keep arriving — names of foods, animals and people seen every day.', advanced:false, domain:'language', source:'unverified' },
-    { text:'Shows pride when she does something new', icon:zi('trophy'), desc:'Claps in self-applause or looks to you beaming after a new feat — confidence growing.', advanced:false, domain:'social', source:'unverified' },
+    { text:'Shows pride when she does something new', label:'Shows pride in doing something new', icon:zi('trophy'), desc:'Claps in self-applause or looks to you beaming after a new feat — confidence growing.', advanced:false, domain:'social', source:'unverified' },
     { text:'Points out everyday sounds (dog, plane, bell)', icon:zi('bell'), desc:'Stops and points at the sound of a dog or a plane — listening closely to the world around.', advanced:false, domain:'sensory', source:'unverified' },
     { text:'Turns a knob or unscrews a loose lid', icon:zi('bulb'), desc:'Twists a knob or a loose lid with a turn of the wrist — fine motor control getting precise.', advanced:true, domain:'motor', source:'unverified' }, // content: AAP-HAND1 turning knobs
   ],
@@ -4085,7 +4093,7 @@ const MILESTONE_STANDARDS = {
   ],
   22: [
     { text:'Begins sorting by shape or colour', icon:zi('palette'), desc:'Groups the red blocks or the round ones — early sorting and matching.', advanced:false, domain:'cognitive', source:'unverified' }, // content: AAP-2Y
-    { text:'Repeats words she overhears', icon:zi('chat'), desc:'Echoes words from your conversations — sometimes at surprising moments.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
+    { text:'Repeats words she overhears', label:'Repeats overheard words', icon:zi('chat'), desc:'Echoes words from your conversations — sometimes at surprising moments.', advanced:false, domain:'language', source:'unverified' }, // content: AAP-2Y
     { text:'Uses a spoon with less spilling', icon:zi('spoon'), desc:'More food reaches the mouth than the floor. Keep meals seated and supervised.', advanced:false, domain:'motor', source:'unverified', safetyTier:true },
     { text:'Shows a wider range of feelings', icon:zi('heart'), desc:'Joy, frustration, pride and shyness all show clearly now. Short tantrums are a normal part of this age.', advanced:false, domain:'social', source:'unverified' },
     { text:'Enjoys dancing and moving to music', icon:zi('sparkle'), desc:'Bounces, sways and spins when music plays — rhythm and body awareness.', advanced:false, domain:'sensory', source:'unverified' },

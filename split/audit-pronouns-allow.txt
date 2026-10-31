@@ -13,6 +13,11 @@ intelligence-qa.js|=her
 intelligence-qa.js|=herself
 # CareTicket weak-signal match words (both forms listed).
 intelligence-caretickets.js|hit her head
+# Emergency-guide keyword match vocabulary (head-injury keywords): canonical she/her match words,
+# which _qaNameAsShe folds a boy's he/him/his onto. Not copy.
+data.js|=hit her head
+data.js|=banged her head
+data.js|=bumped her head
 # Activity keyword tables: match vocabulary for parents' notes, both forms listed.
 data.js|=fed herself
 data.js|=ate by herself
@@ -24,7 +29,8 @@ data.js|=knows she is funny
 data.js|=played by herself
 data.js|=dragged herself
 data.js|=clapped herself
-# Milestone text: fields are record keys (id = slugify(text)); reworded only with Carina's migration (BUGS.md S2–S4 #5).
+# Milestone text: fields are frozen record keys (id = slugify(text); BUGS.md S2–S4 #5). Exempt because each
+# row carries a pronoun-free display label: (shown via core.js msLabel); the audit fails if a row loses it.
 data.js|=Understands far more words than she can say
 data.js|=Shows you an object she likes
 data.js|=Takes a few steps on her own

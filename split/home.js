@@ -2229,12 +2229,12 @@ function renderMsTodayHeader() {
   // Variable substitution — escHtml at all interpolation boundaries (HR-4).
   // Single-regex callback replaces ALL occurrences of each placeholder; a
   // template author who reuses a placeholder twice no longer leaks the literal.
-  const inWindowList = inWindow.map(it => escHtml(it.text || '')).join(', ');
+  const inWindowList = inWindow.map(it => escHtml(msLabel(it.text || ''))).join(', ');
   const recentConfirmedText = mostRecentConfirmedMs
-    ? escHtml(mostRecentConfirmedMs.text || 'a milestone')
+    ? escHtml(msLabel(mostRecentConfirmedMs.text || '') || 'a milestone')
     : 'A recent milestone';
   const lastEvidenceText = mostRecentConfirmedMs
-    ? escHtml(mostRecentConfirmedMs.text || '')
+    ? escHtml(msLabel(mostRecentConfirmedMs.text || ''))
     : '';
   // Use mostRecentConfirmedTime for the betweenWindow template — that's the
   // template's contract ({recentConfirmedMilestone} confirmed {lastEvidenceRelative}).
@@ -2429,7 +2429,7 @@ function renderMsInWindowProposals() {
 function _renderMsInWindowCard(item, opts) {
   const deprioritized = !!(opts && opts.deprioritized);
   const win = item.window || {};
-  const text = escHtml(item.text || '');
+  const text = escHtml(msLabel(item.text || ''));
   const icon = item.icon || '';
   const safetyTier = item.safetyTier === true;
   const evidenceStatus = item.evidenceStatus || 'not-yet';
@@ -2848,7 +2848,7 @@ function renderMsBulkGrid() {
     const group = byDomain[c.key] || [];
     if (group.length === 0) return '';
     const chips = group.map(it => {
-      const text = escHtml(it.text || '');
+      const text = escHtml(msLabel(it.text || ''));
       const idEsc = escHtml(it.milestoneId || '');
       const domainEsc = escHtml(it.domain || c.key);
       const textEsc = escHtml(it.text || '');
@@ -3145,7 +3145,7 @@ function renderMsTrajectoryRibbon() {
     const msId = m.ms && m.ms.id ? m.ms.id : '';
     const msText = m.ms && m.ms.text ? m.ms.text : '';
     const tappable = msId ? ' data-action="gotoMsRow" data-ms-id="' + escHtml(msId) + '"' : '';
-    const titleEl = msText ? '<title>' + escHtml(msText) + '</title>' : '';
+    const titleEl = msText ? '<title>' + escHtml(msLabel(msText)) + '</title>' : '';
     if (m.state === 'celebrated') {
       return '<circle class="ms-trajectory-marker" data-state="celebrated"'
         + tappable + ' cx="' + cx + '" cy="' + cy + '" r="' + G.markerR + '">'
@@ -3483,7 +3483,7 @@ function renderMsPediatricPrep() {
     parts.push('<div class="ms-pediatric-prep-section-label">Confirmed recently</div>');
     parts.push('<ul>');
     confirmedItems.forEach(it => {
-      parts.push('<li>' + escHtml(it.text || '') + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
+      parts.push('<li>' + escHtml(msLabel(it.text || '')) + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
     });
     parts.push('</ul></div>');
   }
@@ -3492,7 +3492,7 @@ function renderMsPediatricPrep() {
     parts.push('<div class="ms-pediatric-prep-section-label">Practicing</div>');
     parts.push('<ul>');
     practicingItems.forEach(it => {
-      parts.push('<li>' + escHtml(it.text || '') + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
+      parts.push('<li>' + escHtml(msLabel(it.text || '')) + (it.count > 0 ? (' (' + it.count + ' observation' + (it.count > 1 ? 's' : '') + ')') : '') + '</li>');
     });
     parts.push('</ul></div>');
   }
@@ -3503,7 +3503,7 @@ function renderMsPediatricPrep() {
     regressions.forEach(m => {
       const t = m.consistentAt || m.masteredAt;
       const daysSince = Math.floor((now - new Date(t).getTime()) / 86400000);
-      parts.push('<li>' + escHtml(m.text || '') + ' — no evidence in ' + daysSince + ' days</li>');
+      parts.push('<li>' + escHtml(msLabel(m.text || '')) + ' — no evidence in ' + daysSince + ' days</li>');
     });
     parts.push('</ul></div>');
   }
@@ -3683,7 +3683,7 @@ function renderMilestoneList() {
           const evList = getMilestoneEvidence(bestKw).slice(0, 5);
           let evItems = evList.map(ev => {
             const confDot = zi('dot-red');
-            return `<div class="al-evid-item">${ev.date} — "${escHtml((ev.text||'').substring(0, 40))}" ${confDot} ${ev.confidence}</div>`;
+            return `<div class="al-evid-item">${ev.date} — "${escHtml(msLabel(ev.text || '').substring(0, 40))}" ${confDot} ${ev.confidence}</div>`;
           }).join('');
           if (m.evidenceCount > 5) evItems += `<div class="al-evid-more">+${m.evidenceCount - 5} more</div>`;
           evidHtml = `<button class="ms-tidbit-toggle" data-action="toggleDisplayBlock" data-arg="${evidId}" data-stop="1">${zi('chart')} View evidence ${zi('chevron-down')}</button>
@@ -3701,7 +3701,7 @@ function renderMilestoneList() {
             <div class="ms-top-row">
               <div class="milestone-check">${stageMeta.icon}</div>
               <div class="milestone-text">
-                <strong>${escHtml(m.text)}</strong>
+                <strong>${escHtml(msLabel(m.text))}</strong>
                 ${metaHtml}
                 ${evidHtml}
                 ${tidbitData ? `<button class="ms-tidbit-toggle" data-action="toggleDisplayFlex" data-arg="${tidbitId}" data-stop="1"><svg class="zi"><use href="#zi-bulb"/></svg> Learn more ${zi('chevron-down')}</button>` : ''}
@@ -3835,13 +3835,17 @@ function expandUpcomingItem(text) {
   document.querySelectorAll('.upcoming-cat-card').forEach(el => el.classList.remove('expanded'));
   document.querySelectorAll('.upc-subcat').forEach(el => el.classList.remove('expanded'));
 
-  // Find the matching item by text
+  // Find the matching item by text. The row shows msLabel(text) (display
+  // title), so match the label as well as the raw record-key text.
   const allItems = container.querySelectorAll('.upcoming-item');
+  const needleText = String(text || '').toLowerCase().substring(0, 20);
+  const needleLabel = String(msLabel(text) || '').toLowerCase().substring(0, 20);
   let matched = false;
   allItems.forEach(item => {
     const strong = item.querySelector('strong');
     if (!strong || matched) return;
-    if (strong.textContent.trim().toLowerCase().includes(text.toLowerCase().substring(0, 20))) {
+    const shown = strong.textContent.trim().toLowerCase();
+    if (shown.includes(needleLabel) || shown.includes(needleText)) {
       matched = true;
       item.classList.add('ms-pill-highlight');
 
@@ -4160,7 +4164,7 @@ function renderRegressionAlerts() {
     html += '<div class="ms-regression-alert" data-action="confirmRegressionCheck" data-arg="' + r.idx + '">' +
       '<span class="ms-regr-icon">' + zi('hourglass') + '</span>' +
       '<div class="ms-regr-body">' +
-        '<div class="ms-regr-title">Still ' + stageMeta.label.toLowerCase() + '? "' + escHtml(r.text) + '"</div>' +
+        '<div class="ms-regr-title">Still ' + stageMeta.label.toLowerCase() + '? "' + escHtml(msLabel(r.text)) + '"</div>' +
         '<div class="ms-regr-meta">' + sourceLabel + ' · Tap to confirm or adjust</div>' +
       '</div>' +
       '<span class="collapse-chevron">›</span>' +
@@ -4182,7 +4186,7 @@ function confirmRegressionCheck(idx) {
   overlay.className = 'confirm-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
   overlay.innerHTML = `<div class="modal" style="max-width:360px;">
-    <h3>Update: ${escHtml(m.text)}</h3>
+    <h3>Update: ${escHtml(msLabel(m.text))}</h3>
     <p style="font-size:var(--fs-sm);color:var(--mid);margin-bottom:12px;">Currently ${stageMeta.icon} ${stageMeta.label}. Where is ${childNameHtml()} now?</p>
     <div style="display:flex;gap:var(--sp-8);flex-wrap:wrap;">${options}</div>
     <div class="modal-btns" style="margin-top:12px;">
@@ -4228,7 +4232,7 @@ function renderMilestoneTimeline() {
     html += `<div class="ms-tl-item">
       <div class="ms-tl-dot" style="background:${sm.color};color:white;">${sm.icon}</div>
       <div class="ms-tl-body">
-        <div class="ms-tl-text">${escHtml(ev.text)} → ${sm.label}</div>
+        <div class="ms-tl-text">${escHtml(msLabel(ev.text))} → ${sm.label}</div>
         <div class="ms-tl-meta">${dateStr} · ${ageStr}</div>
       </div>
     </div>`;
@@ -4341,7 +4345,10 @@ function renderRecentEvidence() {
   if (rollups.length > 0) {
     html += '<div class="al-feed-rollups-label">Frequent observations · last ' + ROLLUP_WINDOW_DAYS + ' days</div>';
     rollups.forEach((r, ri) => {
-      const label = (typeof createMilestoneLabel === 'function') ? createMilestoneLabel(r.milestone) : r.milestone.replace(/_/g, ' ');
+      // Tap evidence falls back to the slug id (_msRecordEvidence); show that
+      // row's display label (msLabelById), never the raw slug.
+      const label = msLabelById(r.milestone)
+        || ((typeof createMilestoneLabel === 'function') ? createMilestoneLabel(r.milestone) : r.milestone.replace(/_/g, ' '));
       const latestEntry = r.latest.entry;
       const latestDate = r.latest.dateStr;
       const latestLabel = latestDate === todayStr ? 'today' : latestDate === yesterdayStr ? 'yesterday' : formatDate(latestDate);
@@ -4368,7 +4375,7 @@ function renderRecentEvidence() {
           '</div>' : '';
         html += '<div class="al-feed-rollup-entry">' +
           '<div class="al-feed-rollup-when">' + dLabel + (tStr ? ' · ' + tStr : '') + '</div>' +
-          '<div class="al-feed-rollup-text">' + escHtml(e.text) + '</div>' +
+          '<div class="al-feed-rollup-text">' + escHtml(msLabel(e.text)) + '</div>' +
           _renderAttribution(e) +
           actBtns +
           '</div>';
@@ -4426,7 +4433,7 @@ function renderRecentEvidence() {
       html += '<div class="al-feed-entry">' +
         '<div class="al-feed-time">' + timeStr + '</div>' +
         '<div class="al-feed-body">' +
-          '<div class="al-feed-text">' + escHtml(e.text) + '</div>' +
+          '<div class="al-feed-text">' + escHtml(msLabel(e.text)) + '</div>' +
           '<div class="al-feed-chips">' + domainChips + '</div>' +
           _renderAttribution(e) +
           actBtns +
@@ -5335,7 +5342,7 @@ function renderMilestoneHighlights() {
         <span class="info-strip-icon">${ci}</span>
         <div class="flex-1-min">
           <div class="micro-label">Latest achieved</div>
-          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-sage);">${escHtml(latestMs.text)}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
+          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-sage);">${escHtml(msLabel(latestMs.text))}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
           ${dateInfo ? `<div class="t-sub mt-2">${dateInfo}</div>` : ''}
         </div>
       </div>`;
@@ -5347,7 +5354,7 @@ function renderMilestoneHighlights() {
         <span class="info-strip-icon">${nextMilestone.icon}</span>
         <div class="flex-1-min">
           <div class="micro-label">Coming up next</div>
-          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-lav);">${escHtml(nextMilestone.text)}</div>
+          <div style="font-weight:600;font-size:var(--fs-base);color:var(--tc-lav);">${escHtml(msLabel(nextMilestone.text))}</div>
           <div class="t-sub mt-2">Expected around ${nextMonth} months</div>
         </div>
       </div>`;
@@ -7268,7 +7275,7 @@ function renderMilestoneHistory() {
         <div style="font-size:var(--icon-lg);">${cm.icon}</div>
         <div class="flex-1">
           <div style="font-size:var(--fs-sm);font-weight:600;text-transform:uppercase;letter-spacing:var(--ls-wide);color:var(--light);margin-bottom:2px;">Latest milestone</div>
-          <div class="t-title" style="font-size:var(--fs-md);">${escHtml(latestMs.text)}</div>
+          <div class="t-title" style="font-size:var(--fs-md);">${escHtml(msLabel(latestMs.text))}</div>
           <div style="font-size:var(--fs-sm);color:${cm.textColor};margin-top:2px;">
             ${latestMs.doneAt ? zi('check') + ' Achieved ' + formatDate(latestMs.doneAt.split('T')[0]) + ' · ' + ageAtDate(latestMs.doneAt) : zi('check') + ' Achieved'}
             ${latestMs.advanced ? ' · <svg class="zi"><use href="#zi-star"/></svg> Advanced' : ''}
@@ -7309,7 +7316,7 @@ function renderMilestoneHistory() {
         <span class="t-sm">${statusIcon}</span>
         <span class="t-sm">${cm.icon}</span>
         <div class="flex-1-min">
-          <div class="t-title fw-600">${escHtml(m.text)}${m.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
+          <div class="t-title fw-600">${escHtml(msLabel(m.text))}${m.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</div>
           <div style="font-size:var(--fs-sm);color:${cm.textColor};">${statusText}</div>
           ${_renderAttribution(m)}
         </div>
@@ -8083,7 +8090,7 @@ function renderHistoryPreviews() {
       const catIcon = catMeta[latestMs.domain || latestMs.cat] || zi('star');
       msPrev.innerHTML = `<div class="info-strip is-sage">
         <span>${catIcon}</span>
-        <div><strong class="tc-sage">Latest: ${escHtml(latestMs.text)}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</strong>
+        <div><strong class="tc-sage">Latest: ${escHtml(msLabel(latestMs.text))}${latestMs.advanced ? ' <svg class="zi"><use href="#zi-star"/></svg>' : ''}</strong>
         <div class="t-sub">${latestMs.doneAt ? formatDate(latestMs.doneAt.split('T')[0]) + ' · ' + ageAtDate(latestMs.doneAt) : 'Achieved'} · ${done.length} total</div></div>
       </div>`;
     } else {
@@ -10222,7 +10229,7 @@ function renderTodayPlan() {
     const oldest = inProgressMs.sort((a, b) => (a.inProgressAt || '').localeCompare(b.inProgressAt || ''))[0];
     const daysIP = oldest.inProgressAt ? Math.floor((new Date() - new Date(oldest.inProgressAt)) / 86400000) : null;
     if (daysIP && daysIP >= 7) {
-      lookouts.push({ icon: zi('trophy'), text: '"' + oldest.text + '" has been in-progress for ' + daysIP + ' days. Try focused practice today.', tag: 'milestone' });
+      lookouts.push({ icon: zi('trophy'), text: '"' + msLabel(oldest.text) + '" has been in-progress for ' + daysIP + ' days. Try focused practice today.', tag: 'milestone' });
     }
   }
   // Next expected milestones not yet started
@@ -10237,7 +10244,7 @@ function renderTodayPlan() {
   });
   if (notStarted.length > 0) {
     const next = notStarted[0];
-    lookouts.push({ icon: zi('target'), text: 'Around ' + currentBracket + ' months: "' + next.text + '" — ' + next.desc, tag: 'milestone' });
+    lookouts.push({ icon: zi('target'), text: 'Around ' + currentBracket + ' months: "' + msLabel(next.text) + '" — ' + next.desc, tag: 'milestone' });
   }
 
   // ═══ RENDER ═══

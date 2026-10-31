@@ -3093,7 +3093,7 @@ function renderScrapMilestoneChips() {
     // Maren v5 audit MINOR — empty-text legacy guard. addMilestone trims+rejects
     // empty text for new entries, but legacy data could contain whitespace-only
     // text. Fall back so the chip and aria-label stay readable.
-    const labelText = (m.text || '').trim() || '(unnamed milestone)';
+    const labelText = msLabel((m.text || '').trim()) || '(unnamed milestone)';
     return `<span class="chip chip-milestone" role="listitem">
       <span class="chip-label">${escHtml(labelText)}</span>
       <button type="button" class="chip-x"
@@ -3143,7 +3143,7 @@ function renderScrapMilestonePickerList() {
               aria-hidden="true">
           <svg class="zi"><use href="#zi-check"/></svg>
         </span>
-        <span class="picker-row-label">${escHtml(m.text || '')}</span>
+        <span class="picker-row-label">${escHtml(msLabel(m.text || ''))}</span>
       </button>`;
     }).join('');
     return `<div class="picker-cat-group">
@@ -7481,6 +7481,59 @@ function _msStandardFor(standards, key) {
     Object.keys(f).forEach(function(k) { if (!(k in merged)) merged[k] = f[k]; });
   });
   return merged;
+}
+
+// msLabel — display title for a milestone (Carina, BUGS.md S2–S4 #5).
+// A MILESTONE_STANDARDS row's `text` is its record key (id = slugify(text)),
+// frozen because synced records store and match it; an optional `label` is
+// the pronoun-free title to SHOW. Pass the raw milestone text, get back
+// row.label || row.text. Exact lookup first, then lowercased/trimmed; unknown
+// text (custom milestones, legacy rows) falls back to the text itself.
+// DISPLAY ONLY — never slugify, store, compare or key on the result.
+// Safe before data loads: returns the text and retries the build next call.
+var _msLabelMap = null;
+function _msLabelBuild() {
+  if (_msLabelMap) return _msLabelMap;
+  if (typeof MILESTONE_STANDARDS !== 'object' || !MILESTONE_STANDARDS) return null;
+  const exact = {}, loose = {}, byId = {};
+  Object.keys(MILESTONE_STANDARDS).forEach(function(std) {
+    const spec = MILESTONE_STANDARDS[std];
+    if (!spec || typeof spec !== 'object') return;
+    Object.keys(spec).forEach(function(k) {
+      const rows = spec[k];
+      if (!Array.isArray(rows)) return;
+      rows.forEach(function(row) {
+        if (!row || typeof row.text !== 'string' || !row.text) return;
+        const shown = (typeof row.label === 'string' && row.label) ? row.label : row.text;
+        if (!(row.text in exact) || shown !== row.text) exact[row.text] = shown;
+        const lk = row.text.trim().toLowerCase();
+        if (!(lk in loose) || shown !== row.text) loose[lk] = shown;
+        const id = slugify(row.text);
+        if (!(id in byId) || shown !== row.text) byId[id] = shown;
+      });
+    });
+  });
+  _msLabelMap = { exact: exact, loose: loose, byId: byId };
+  return _msLabelMap;
+}
+function msLabel(text) {
+  if (typeof text !== 'string' || !text) return text;
+  const map = _msLabelBuild();
+  if (!map) return text;
+  if (Object.prototype.hasOwnProperty.call(map.exact, text)) return map.exact[text];
+  const lk = text.trim().toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(map.loose, lk)) return map.loose[lk];
+  return text;
+}
+// msLabelById — the same display title looked up by milestone id
+// (slugify(row.text)), for surfaces that only hold the id (e.g. tap-evidence
+// keyed by the slug fallback). Returns null when the id is not a
+// MILESTONE_STANDARDS row, so callers keep their own fallback. Display only.
+function msLabelById(id) {
+  if (typeof id !== 'string' || !id) return null;
+  const map = _msLabelBuild();
+  if (!map) return null;
+  return Object.prototype.hasOwnProperty.call(map.byId, id) ? map.byId[id] : null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
