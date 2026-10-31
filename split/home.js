@@ -10370,7 +10370,10 @@ function renderTrendChips() {
     const ok = verdict === 'in';
     const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained' || (verdict === 'newborn' && tone === 'caution');
     const delta = ok ? zi('check') + ' healthy' : nbFlag ? zi('warn') + ' check weight' : verdict === 'newborn' ? 'early days' : zi('warn') + ' check';
-    const value = (verdict === 'newborn' || nbFlag) ? 'Early days' : velocity.wtGPerWeek + 'g/wk';
+    // The newborn line's own chip word — "Down >10%", "Not back yet", "Weigh again" — never "Early
+    // days" on a flag (Maren V-M-282c-6).
+    const nbChip = velocity.wtNewborn && velocity.wtNewborn.chip;
+    const value = (verdict === 'newborn' || nbFlag) ? (nbChip || 'Early days') : velocity.wtGPerWeek + 'g/wk';
     chips.push({ icon:zi('chart'), label:'Growth', value, delta, cls: tone === 'good' ? 'tc-good' : tone === 'neutral' && verdict === 'newborn' ? 'tc-neutral' : 'tc-warn', tab:'growth' });
   } else {
     chips.push({ icon:zi('chart'), label:'Growth', value:'Need 2+ measurements', delta:'—', cls:'tc-neutral', tab:'growth' });
@@ -10643,7 +10646,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
   if (velocity.wtGPerWeek != null) {
     const verdict = gvVelocityVerdict(velocity);
     const inRange = verdict === 'in';
-    const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained';
+    // A recheck / "down since the last weigh-in" newborn line is a flag too (its tone is caution).
+    const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained' || (verdict === 'newborn' && gvVerdictTone(verdict, velocity.wtNewborn) === 'caution');
     const cls = inRange ? 'trend-up' : (verdict === 'below' || nbFlag) ? 'trend-down' : 'trend-flat';
     const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : nbFlag ? 'check weight' : verdict === 'newborn' ? 'early days' : '↑ above range';
     html += `<div class="insight-row">

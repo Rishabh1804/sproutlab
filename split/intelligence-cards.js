@@ -981,8 +981,10 @@ function renderInfoGrowthDiet() {
   // a flag (more than 10% lost, not back to birth weight, weigh again) reads caution, back to birth
   // weight reads good — never the "normal" check (Vela V-V-282b-8; PC-1 bug #27).
   var gvNb = gvW.nb || null;
-  var velLabel = gvW.tooShort ? 'normal'
-    : gvNb ? (gvNb.tone === 'caution' ? 'newborn-flag' : gvNb.status === 'regained' ? 'regained' : 'newborn')
+  // tooShort is "no verdict", never "normal" — a falling 10-day pair read "Growth velocity is normal"
+  // (Vela V-V-282c-6).
+  var velLabel = gvNb ? (gvNb.tone === 'caution' ? 'newborn-flag' : gvNb.status === 'regained' ? 'regained' : 'newborn')
+    : gvW.tooShort ? 'too-short'
     : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
     : gvW.status === 'fast' ? 'rapid' : 'normal';
 
@@ -1027,7 +1029,7 @@ function renderInfoGrowthDiet() {
   var avgMeals = Math.round((totalMeals / feedingDays.length) * 10) / 10;
   var avgVariety = Math.round((totalFoods / feedingDays.length) * 10) / 10;
 
-  var velIcon = (velLabel === 'slow' || velLabel === 'newborn-flag') ? zi('warn') : velLabel === 'newborn' ? zi('info') : zi('check');
+  var velIcon = (velLabel === 'slow' || velLabel === 'newborn-flag') ? zi('warn') : (velLabel === 'newborn' || velLabel === 'too-short') ? zi('info') : zi('check');
   var velText = gvNb ? escHtml(gvNb.short) : 'Velocity <strong>' + velocity + ' g/day</strong>';
   sumEl.innerHTML = '<div class="t-sm">' + velText + ' · <strong>' + avgMeals + '</strong> meals/day · diet ' + velIcon + '</div>';
 
@@ -1062,7 +1064,13 @@ function renderInfoGrowthDiet() {
   // Insights
   if (insEl) {
     var iHtml = '';
-    if (velLabel === 'slow') {
+    // Food lines only where food is part of the diet (gvFoodAdviceOk: 6 months at the weigh-in AND
+    // solids started). Otherwise slow gain gets the below-range line and the milk note, and no
+    // "nutrient gaps" — milk is the whole diet (Ceres V-C-282c-3).
+    var foodOkCard = gvFoodAdviceOk(last);
+    if (velLabel === 'slow' && !foodOkCard) {
+      iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day). ' + GV_MILK_ONLY_NOTE + '</div>';
+    } else if (velLabel === 'slow') {
       var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
         return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;
       });
@@ -1074,11 +1082,13 @@ function renderInfoGrowthDiet() {
     } else if (gvNb) {
       var nbInsCls = gvNb.tone === 'caution' ? 'si-insight-warn' : gvNb.tone === 'good' ? 'si-insight-good' : 'si-insight-info';
       iHtml += '<div class="si-insight ' + nbInsCls + '">' + gvNb.text + '</div>';
+    } else if (velLabel === 'too-short') {
+      iHtml += '<div class="si-insight si-insight-info">' + gvTooShortText(daysBetweenMeasurements) + '</div>';
     } else {
       iHtml += '<div class="si-insight si-insight-good">Growth velocity is ' + velLabel + ' at ' + velocity + ' g/day with ' + avgMeals + ' meals/day</div>';
     }
     var covered = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) >= 0.5; });
-    if (covered.length < KEY_NUTRIENTS.length) {
+    if (foodOkCard && covered.length < KEY_NUTRIENTS.length) {
       var gaps = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
       iHtml += '<div class="si-insight si-insight-info">Nutrient gaps during this period: ' + gaps.join(', ') + '</div>';
     }

@@ -139,13 +139,15 @@ var CT_TEMPLATES = {
         if (typeof ageAt !== 'function') return 80;
         // Judged at the age of the latest weigh-in, so crossing an age band with no new
         // measurement can't flip the goal to met (V-K-282-2).
-        if (typeof growthVelocityBand === 'function') {
-          var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
-          // gvAgeAt guards a malformed stored date (non-finite → today's age), so a bad date can't
-          // give NaN → the 0–1 m row → an unresolvable goal (V-K-282b-6).
-          var mo = (gv && gv.wtLatest && typeof gvAgeAt === 'function') ? gvAgeAt(gv.wtLatest)
-            : (gv && gv.wtLatest && gv.wtLatest.date && typeof ageMonthsAt === 'function') ? ageMonthsAt(gv.wtLatest.date) : ageAt().months;
-          const b = growthVelocityBand(mo); if (b && b.wGWkMedian) return b.wGWkMedian; // growth-age-ok: no weigh-in yet, so there is no measurement age
+        var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
+        if (typeof growthVelocityBand === 'function' && gv && gv.wtLatest) {
+          // The same row as the verdict: the window midpoint (gv.wtBandAge), else the latest
+          // weigh-in's age (Kael V-K-282c-7, Carina V-CA-282c-5). gvAgeAt guards a malformed stored
+          // date, so a bad date can't give NaN → the 0–1 m row → an unresolvable goal (V-K-282b-6).
+          // No weigh-in → no measurement age, so today's age never reaches the band lookup: the
+          // fallback below (the goal metric is null then anyway).
+          var mo = Number.isFinite(gv.wtBandAge) ? gv.wtBandAge : gvAgeAt(gv.wtLatest);
+          const b = growthVelocityBand(mo); if (b && b.wGWkMedian) return b.wGWkMedian;
         }
         return (ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined') ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
       }
@@ -153,7 +155,7 @@ var CT_TEMPLATES = {
     escalationTriggers: [],
     autoDataSources: ['growth'],
     pivotStrategies: [
-      'Add calorie-dense foods (ghee, avocado, nut butters)',
+      'Add calorie-dense foods (ghee, avocado, smooth nut butter thinned with milk or water)',
       'Increase meal frequency',
       'Check for underlying illness suppressing appetite',
       'Schedule weight check with pediatrician'
@@ -212,7 +214,16 @@ function ctEscalationTriggers(ticket) {
 
 function ctPivotStrategies(ticket) {
   var tpl = CT_TEMPLATES[ticket.category];
-  return (tpl && tpl.pivotStrategies) ? tpl.pivotStrategies : [];
+  var list = (tpl && tpl.pivotStrategies) ? tpl.pivotStrategies : [];
+  // Food pivots only where food is part of the diet: under 6 months, or before solids, milk is the
+  // whole diet (gvFoodAdviceOk, core.js — Ceres V-C-282c-4).
+  if (ticket.category === 'weight_gain' && typeof gvFoodAdviceOk === 'function') {
+    var gvP = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
+    if (!gvFoodAdviceOk(gvP && gvP.wtLatest ? gvP.wtLatest : null)) {
+      return list.map(function(s) { return /^Add calorie-dense foods/.test(s) ? GV_MILK_ONLY_NOTE : s; });
+    }
+  }
+  return list;
 }
 
 // ── Core Utility Functions ──

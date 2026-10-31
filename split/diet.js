@@ -1695,7 +1695,8 @@ function _libSuggestions() {
   // Never before solids: under 6 months, or before her solids start (V-C-280-1). And never a food
   // AGE_RULES gates above her age (egg at 7 months), the same check getUntriedSuggestions makes.
   var mo = (typeof getAgeInMonths === 'function') ? getAgeInMonths() : 0;
-  if (mo < 6 || (typeof SOLIDS_START !== 'undefined' && toDateStr(SOLIDS_START) > today())) return [];
+  // solidsStarted() (core.js) is the one solids check, shared with gvFoodAdviceOk (V-C-282c-1).
+  if (mo < 6 || !solidsStarted()) return [];
   var out = [];
   Object.keys(FE).forEach(function(k) {
     if (out.length >= 3) return;
