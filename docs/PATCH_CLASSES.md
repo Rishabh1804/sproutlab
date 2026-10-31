@@ -30,8 +30,8 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 
 | # | Item | Patch |
 |---|---|---|
-| 25 | Band picked by today's age in some callers, measurement age in others | Every velocity is judged at the age of its own latest measurement |
-| 27 | Infant bracket floors near P3–P5 at the start of a bracket; no newborn weight-loss window | One-month weight rows from WHO's 1-month tables, looked up at the window midpoint; newborn model with three cited checks: the 14-day window is kept (AAP, Maren); more than 10% loss is flagged (NICE NG75); "back to birth weight?" is judged instead of a rate up to day 21 |
+| 25 | Band picked by today's age in some callers, measurement age in others | Weight is judged at the midpoint of its measurement window (`gvBandAge`), length at its latest measurement; never today's age |
+| 27 | Infant bracket floors near P3–P5 at the start of a bracket; no newborn weight-loss window | One-month weight rows from WHO's 1-month tables, looked up at the window midpoint; newborn model with three cited checks: the 14-day window is kept (AAP, Maren); more than 10% loss is flagged (NICE NG75); "back to birth weight?" is judged instead of a rate before day 28 (`GV_REGAIN_DAYS`) |
 | 55 | `ageMonthsAt('YYYY-MM-DD')` parsed as UTC (HR-12) | Local calendar parse |
 | 56 | CareTicket weight goal at weigh-in age untested | e2e pins it |
 
@@ -46,8 +46,8 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 
 **Guards:**
 - **Guarded:**
-  - `audit-growth-age-v1`: no band or verdict helper (`growthVelocityBand`, `gvBandVerdict`, `gvWeightVerdict`, `_gvNewbornWindow`) takes today's age: not `ageAt(` / `getAgeInMonths(` / `today()` / `new Date()` anywhere in the argument, not a no-argument `gvAgeAt()`, and not a variable (or its `.months` / `.days`) assigned from one of those. Calls may span lines. 15 self-test fixtures, six of them the bypasses Kael found (V-K-282c-4); it flags 17 sites in the pre-#25 code.
-  - `audit-hr12-dateonly-v1`: a per-file ratchet on `new Date(<date-ish>)` parses, which may only fall; a benign site carries `// HR-12`.
+  - `audit-growth-age-v1`: no band or verdict helper (`growthVelocityBand`, `gvBandVerdict`, `gvWeightVerdict`, `_gvNewbornWindow`) takes today's age: not `ageAt(` / `getAgeInMonths(` / `today()` / `new Date()` anywhere in the argument, not a no-argument `gvAgeAt()`, and not any identifier in the argument whose assignment (joined across lines up to `;`) uses one of those, including a ternary fallback. Calls may span lines. 20 self-test fixtures: six are the bypasses Kael found (V-K-282c-4) and five are Carina's (V-CA-282c-1). It flags 17 sites in the pre-#25 code.
+  - `audit-hr12-dateonly-v1`: a per-file ratchet on `new Date(x)` where `x` ends in date / Date / key / Key / Str, or is `today()`. Counts may only fall; a benign site carries `// HR-12`. A missing baseline fails, and `--update` refuses to raise a count without `--allow-raise` (V-CA-282c-2).
 - **Design:** `growthVelocityBand()`, `gvAgeAt()` and `ageMonthsAt()` (core.js) are the single band, age and month sources; `_syncNow()` orders all sync-ledger events.
 - **Tests:** growth-velocity-bands.spec (bracket edges, age rule, newborn cases), sync-unsynced-ledger F17 (run repeated).
 - **Rule:** "one helper, one clock". A new time-derived value goes through the existing helper, never a local copy.

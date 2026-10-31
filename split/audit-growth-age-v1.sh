@@ -7,11 +7,12 @@
 #   growthVelocityBand(age), gvBandVerdict(gain, age), gvWeightVerdict(gain, age, latestAge),
 #   _gvNewbornWindow(age)
 # — and fails when it is today's age: ageAt( / getAgeInMonths( / today() / new Date() anywhere
-# in the argument, a no-argument gvAgeAt() (which falls back to today), or a variable (or its
-# .months / .days) assigned from any of those in the lines above. Calls may span lines. A
-# deliberate exception carries `// growth-age-ok: <reason>` on the call's first line. Self-tests
-# run first (including the six bypasses Kael found, V-K-282c-4), so a scanner regression fails
-# the build (PC-5).
+# in the argument, a no-argument gvAgeAt() (which falls back to today), or any identifier in the
+# argument whose assignment in the 40 lines above (joined across lines up to `;`) uses one of
+# those, including a ternary fallback. Calls may span lines. A deliberate exception carries
+# `// growth-age-ok: <reason>` on the call's first line. Self-tests run first (including the
+# bypasses Kael and Carina found, V-K-282c-4 / V-CA-282c-1), so a scanner regression fails the
+# build (PC-5).
 set -euo pipefail
 cd "$(dirname "$0")"
 node - <<'NODE'
@@ -43,14 +44,18 @@ function scan(name, src, log) {
     for (const k of WATCH[m[1]]) {
       const arg = a[k]; if (!arg) continue;
       if (TODAY.test(arg)) { bad++; log(`audit-growth-age: ${name}:${ln} ${m[1]} is given today's age: ${arg.replace(/\s+/g, ' ').slice(0, 80)}`); continue; }
-      const idm = /^([A-Za-z_$][\w$]*)(?:\.(?:months|days))?$/.exec(arg);
-      if (!idm) continue;
-      const id = idm[1];
-      for (let j = ln - 1; j >= Math.max(0, ln - 41); j--) {
-        const am = new RegExp('(?:\\b(?:const|let|var)\\s+|^\\s*|[;,{]\\s*)' + id.replace(/\$/g, '\\$') + '\\s*=(?!=)\\s*(.*)').exec(lines[j]);
-        if (!am) continue;
-        if (TODAY.test(am[1])) { bad++; log(`audit-growth-age: ${name}:${ln} ${m[1]}(${arg}) where ${id} is today's age (line ${j + 1}: ${am[1].trim().slice(0, 80)})`); }
-        break;
+      // Trace every identifier head in the argument (not property names, not callees).
+      const ids = new Set();
+      arg.replace(/(^|[^.\w$])([A-Za-z_$][\w$]*)(?!\s*\()/g, (_, p, id) => { if (!/^(Math|Number|null|undefined|true|false|NaN)$/.test(id)) ids.add(id); return _; });
+      for (const id of ids) {
+        for (let j = ln - 1; j >= Math.max(0, ln - 41); j--) {
+          const am = new RegExp('(?:\\b(?:const|let|var)\\s+|^\\s*|[;,{(]\\s*)' + id.replace(/\$/g, '\\$') + '\\s*=(?![=>])\\s*(.*)').exec(lines[j]);
+          if (!am) continue;
+          let rhs = am[1];                                             // join continuation lines up to ';'
+          for (let k = j + 1; k < Math.min(lines.length, j + 8) && !/;\s*(\/\/.*)?$/.test(rhs); k++) rhs += ' ' + lines[k].trim();
+          if (TODAY.test(rhs)) { bad++; log(`audit-growth-age: ${name}:${ln} ${m[1]}(${arg.replace(/\s+/g, ' ').slice(0, 40)}) where ${id} is today's age (line ${j + 1}: ${rhs.trim().slice(0, 80)})`); }
+          break;
+        }
       }
     }
   }
@@ -74,6 +79,12 @@ const T = [
   { src: 'const mo = ageAt().months || gvAgeAt(x);\ngrowthVelocityBand(mo);', bad: 1 },
   { src: 'growthVelocityBand(\n  ageAt().months\n);', bad: 1 },
   { src: 'gvWeightVerdict(v.g, gvBandAge(v.a, v.b), gvAgeAt(v.a));', bad: 0 },
+  // Carina's bypasses (V-CA-282c-1):
+  { src: 'growthVelocityBand(x ? gvAgeAt(e) : ageAt().months);', bad: 1 },
+  { src: 'const mo = ageAt().months;\ngrowthVelocityBand(Math.floor(mo));', bad: 1 },
+  { src: 'const ctx = { mo: ageAt().months };\ngrowthVelocityBand(ctx.mo);', bad: 1 },
+  { src: 'const mo = latest\n  ? gvAgeAt(latest)\n  : ageAt().months;\ngrowthVelocityBand(mo);', bad: 1 },
+  { src: 'const v = getGrowthVelocity();\ngvBandVerdict(v.g, Math.floor(v.wtBandAge));', bad: 0 },
 ];
 let fails = 0;
 T.forEach((t, i) => { const n = scan('fixture' + i, t.src, () => {}); if (n !== t.bad) { fails++; console.error(`audit-growth-age: SELF-TEST FAIL fixture ${i}: ${n} (want ${t.bad})`); } });
