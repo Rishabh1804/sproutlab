@@ -312,7 +312,9 @@ function qaClassifyInput(text) {
   if (/when.*last.*(?:eat|ate|had|gave)\b/.test(lower) ||
       /last\s+time.*(?:eat|ate|had)\b/.test(lower) ||
       /\blast\s+(?:eat|ate|had)\b/.test(lower)) {
-    var stripped = lower.replace(/when|did|she|last|eat|ate|had|gave|time|the|some|any/g, '').trim();
+    // Word-bounded, so food names keep their letters ("dates", "thepla", "sheera") and a folded
+    // possessive "her" is dropped (V-K-282-5).
+    var stripped = lower.replace(/\b(when|did|she|her|last|eat|ate|had|gave|time|the|some|any)\b/g, '').replace(/\s+/g, ' ').trim();
     var foodTokens = stripped.split(/\s+/).filter(function(t) { return t.length > 1; });
     return { mode: 'lookback', subtype: 'food', foodQuery: foodTokens.join(' '), raw: text };
   }
@@ -1036,7 +1038,9 @@ function qaHandleFoodSafety(classified) {
   var raw = classified.raw;
   // Extract food names from query
   var cleaned = raw.toLowerCase().replace(/^can (i|we) give\s*|^is\s+|^safe to give\s*|^can she (eat|have)\s*|^can baby (eat|have)\s*/i, '').replace(/\s*safe\s*$|\?/g, '').trim();
-  var rawFoods = cleaned.split(/[+,&]|with|and/).map(function(f) { return f.trim(); }).filter(function(f) { return f.length > 1; });
+  // A leading determiner is not part of the food: a boy's "his egg" folds to "her egg" and must
+  // not echo as "Can he eat her egg?" (V-K-282-1).
+  var rawFoods = cleaned.split(/[+,&]|with|and/).map(function(f) { return f.trim().replace(/^(her|their|my|our|the|some)\s+/, '').trim(); }).filter(function(f) { return f.length > 1; });
   if (rawFoods.length === 0) return null;
 
   var mo = getAgeInMonths();

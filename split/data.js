@@ -5364,7 +5364,7 @@ const SYMPTOM_DB = [
   },
   {
     id: 'head-injury',
-    keywords: ['head injury','head-injury','skull','head trauma','head hit','bumped head','head bleed','head bump'],
+    keywords: ['head injury','head-injury','skull','head trauma','head hit','bumped head','head bleed','head bump','hit her head','banged her head','bumped her head'],
     severity: 'emergency',
     title: 'Head Injury',
     summary: 'Stabilize and observe, apply cold compress to bumps, wake every 2h for 24h',

@@ -10611,7 +10611,7 @@ function computeGrowthVelocity() {
     // Band age = the measurement's age, rounded — so a weigh-in on (or just before) her birthday
     // takes the same 12–24 m band the Growth gauge uses (Maren V-M-266-4).
     var ageMo = ageMonthsAt(wLatest.date);
-    var bandMo = Math.round(ageMo);
+    var bandMo = ageMo;   // growthVelocityBand brackets it (completed months; 12 m from 11.5) — V-M-282-9
     // From 12 m, judge velocity over >= 28 days (Maren V-M-266-3 / Kael V-K-266-7): a toddler's
     // two-week gain (~90 g at the median) is the size of home-scale noise, and WHO publishes
     // 12–24 m velocity only in 2-month steps. Use the latest weigh-in at least 28 days back.
@@ -10673,7 +10673,7 @@ function computeGrowthVelocity() {
   var heightResult = null;
   if (heightEntries.length >= 2) {
     var hLatest = heightEntries[heightEntries.length - 1];
-    var hBandMo = Math.round(ageMonthsAt(hLatest.date));
+    var hBandMo = ageMonthsAt(hLatest.date);
     var hPrev = heightEntries[heightEntries.length - 2];
     if (hBandMo >= 12) { // same >= 28-day lookback as weight
       for (var hi = heightEntries.length - 2; hi >= 0; hi--) {

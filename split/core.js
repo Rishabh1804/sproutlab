@@ -6379,6 +6379,8 @@ function getGrowthVelocity() {
 //     length band fits both too (V-M-281-7).
 // Before the 12-month audit every site held its 9–12 m band (8–13 g/day, 55–100 g/week) for all
 // later ages — above the WHO median, so normal toddler gain read "slow".
+// Since S4 the toddler year is two rows by the same WHO rule as the infant rows (below); this
+// object stays for older readers and is no longer used to judge gain (V-M-282-8, V-CA-282-2).
 const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12, wGWkMin: 20, wGWkMax: 85, wGWkMedian: 45, // P50 ≈ 6–7 g/day
   hCmMoMin: 0.45, hCmMoMax: 1.6, hCmWk: '0.1–0.35', label: '12–24 months' };
 
@@ -6391,7 +6393,8 @@ const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12,
 // A bracket [fromMo, toMo) takes the 2-month intervals that END inside it (the window a recent gain
 // at that age spans: 9–12 m = 8–10, 9–11, 10–12 mo). Band = lowest P15 to highest P85 of those
 // intervals (grams per 61 days → g/week = g / (61/7), g/day = g / 61; cm per 2 months / 2 → cm/mo),
-// rounded outward (g/week to 5, g/day to 1, cm/mo to 0.1) so a child at P15–P85 never reads off.
+// rounded outward (g/week to 5, g/day to 0.1, cm/mo to 0.05) so a child at P15–P85 never reads off;
+// g/day keeps a decimal so it never sits below the g/week floor (V-M-282-11).
 // Median = mean P50, to 5 g/week. cm/week text = the cm/mo band / 4.348, to 0.05.
 //   girls g/2mo P15–P85: 0–2 1455–2386 · 2–4 978–2163 · 4–6 600–1413 · 6–9 306–1048 · 9–12 179–814
 //   boys  g/2mo P15–P85: 0–2 1720–2737 · 2–4 1081–2463 · 4–6 634–1496 · 6–9 323–1096 · 9–12 187–848
@@ -6400,29 +6403,38 @@ const GROWTH_VELOCITY_12_24 = { fromMo: 12, toMo: 24, wGDayMin: 3, wGDayMax: 12,
 // Replaces the 0–12 m bands copied into ~9 sites (150–250 / 100–180 / 70–130 / 55–100 g/week),
 // which were narrower than WHO P15–P85: a normal 9–12 m infant read "slow", a 0–2 m boy at the
 // median read "above".
-// From 12 m one band fits both sexes (above), so both lists end in the same row.
+//   girls g/2mo P15–P85: 12–18 106–750 · 18–24 39–751   boys: 12–18 84–782 · 18–24 53–737
+//   girls cm/2mo P15–P85: 12–18 1.3–3.2 · 18–24 0.9–2.9  boys: 12–18 1.1–3.2 · 18–24 0.9–2.8
+// The toddler year follows the same rule (V-M-282-8, V-CA-282-2). Its P15 floor falls to 0–10 g/week,
+// so after 12 m a "slow" verdict means truly little gain; centile crossing (computeGrowthVelocity)
+// carries the rest. The old one-row 12–24 band (20–85 g/week) read a normal P15–P25 toddler "slow".
 const GROWTH_VELOCITY_BANDS = {
   f: [
-    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23, wGDayMax: 40, hCmMoMin: 3.3, hCmMoMax: 4.6, hCmWk: '0.75–1.05' },
-    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 110, wGWkMax: 250, wGWkMedian: 175, wGDayMin: 16, wGDayMax: 36, hCmMoMin: 2.1, hCmMoMax: 3.7, hCmWk: '0.5–0.85' },
-    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 65, wGWkMax: 165, wGWkMedian: 110, wGDayMin: 9, wGDayMax: 24, hCmMoMin: 1.3, hCmMoMax: 2.6, hCmWk: '0.3–0.6' },
-    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 125, wGWkMedian: 75, wGDayMin: 5, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.25–0.45' },
-    { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 95, wGWkMedian: 55, wGDayMin: 2, wGDayMax: 14, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
-    GROWTH_VELOCITY_12_24 ],
+    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 165, wGWkMax: 275, wGWkMedian: 220, wGDayMin: 23.8, wGDayMax: 39.2, hCmMoMin: 3.3, hCmMoMax: 4.6, hCmWk: '0.75–1.05' },
+    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 110, wGWkMax: 250, wGWkMedian: 175, wGDayMin: 16, wGDayMax: 35.5, hCmMoMin: 2.1, hCmMoMax: 3.7, hCmWk: '0.5–0.85' },
+    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 65, wGWkMax: 165, wGWkMedian: 110, wGDayMin: 9.8, wGDayMax: 23.2, hCmMoMin: 1.3, hCmMoMax: 2.6, hCmWk: '0.3–0.6' },
+    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 125, wGWkMedian: 75, wGDayMin: 5, wGDayMax: 17.2, hCmMoMin: 1.0, hCmMoMax: 2.0, hCmWk: '0.25–0.45' },
+    { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 95, wGWkMedian: 55, wGDayMin: 2.9, wGDayMax: 13.4, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
+    { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 10, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.7, wGDayMax: 12.3, hCmMoMin: 0.65, hCmMoMax: 1.6, hCmWk: '0.15–0.35' },
+    { fromMo: 18, toMo: 24, label: '18–24 months', wGWkMin: 0, wGWkMax: 90, wGWkMedian: 45, wGDayMin: 0.6, wGDayMax: 12.4, hCmMoMin: 0.45, hCmMoMax: 1.45, hCmWk: '0.1–0.35' } ],
   m: [
-    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28, wGDayMax: 45, hCmMoMin: 3.6, hCmMoMax: 4.9, hCmWk: '0.85–1.15' },
-    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 120, wGWkMax: 285, wGWkMedian: 195, wGDayMin: 17, wGDayMax: 41, hCmMoMin: 2.3, hCmMoMax: 4.0, hCmWk: '0.55–0.9' },
-    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 70, wGWkMax: 175, wGWkMedian: 120, wGDayMin: 10, wGDayMax: 25, hCmMoMin: 1.4, hCmMoMax: 2.8, hCmWk: '0.3–0.65' },
-    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 130, wGWkMedian: 80, wGDayMin: 5, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.1, hCmWk: '0.25–0.5' },
+    { fromMo: 0, toMo: 2, label: '0–2 months', wGWkMin: 195, wGWkMax: 315, wGWkMedian: 255, wGDayMin: 28.1, wGDayMax: 44.9, hCmMoMin: 3.6, hCmMoMax: 4.9, hCmWk: '0.85–1.15' },
+    { fromMo: 2, toMo: 4, label: '2–4 months', wGWkMin: 120, wGWkMax: 285, wGWkMedian: 195, wGDayMin: 17.7, wGDayMax: 40.4, hCmMoMin: 2.3, hCmMoMax: 4.0, hCmWk: '0.55–0.9' },
+    { fromMo: 4, toMo: 6, label: '4–6 months', wGWkMin: 70, wGWkMax: 175, wGWkMedian: 120, wGDayMin: 10.3, wGDayMax: 24.6, hCmMoMin: 1.4, hCmMoMax: 2.8, hCmWk: '0.3–0.65' },
+    { fromMo: 6, toMo: 9, label: '6–9 months', wGWkMin: 35, wGWkMax: 130, wGWkMedian: 80, wGDayMin: 5.2, wGDayMax: 18, hCmMoMin: 1.0, hCmMoMax: 2.1, hCmWk: '0.25–0.5' },
     { fromMo: 9, toMo: 12, label: '9–12 months', wGWkMin: 20, wGWkMax: 100, wGWkMedian: 60, wGDayMin: 3, wGDayMax: 14, hCmMoMin: 0.8, hCmMoMax: 1.8, hCmWk: '0.2–0.4' },
-    GROWTH_VELOCITY_12_24 ]
+    { fromMo: 12, toMo: 18, label: '12–18 months', wGWkMin: 5, wGWkMax: 90, wGWkMedian: 50, wGDayMin: 1.3, wGDayMax: 12.9, hCmMoMin: 0.55, hCmMoMax: 1.6, hCmWk: '0.1–0.35' },
+    { fromMo: 18, toMo: 24, label: '18–24 months', wGWkMin: 5, wGWkMax: 85, wGWkMedian: 45, wGDayMin: 0.8, wGDayMax: 12.1, hCmMoMin: 0.45, hCmMoMax: 1.4, hCmWk: '0.1–0.35' } ]
 };
-// The band for an age in months (callers pass the age they already bracket by). 12 m and over →
-// the 12–24 row (also past 24 m, as before). Sex unknown → the girls' set as a stand-in, like
+// The band for an age in months. A fractional age is bracketed by completed months, except in the
+// half month before the first birthday, which takes the toddler row (the V-M-266-4 rounding, kept
+// at 12 m only) — so a 1.6-month baby is judged on the 0–2 row, never the gentler 2–4 one
+// (V-M-282-9, V-K-282-3). Past 24 m: the last row. Sex unknown → the girls' set as a stand-in, like
 // whoT(): only reachable behind the profile gate, where nothing renders it.
 function growthVelocityBand(ageMonths) {
   const rows = GROWTH_VELOCITY_BANDS[childSex() || 'f'];
-  const m = Number(ageMonths) || 0;
+  const raw = Number(ageMonths) || 0;
+  const m = (raw >= 11.5 && raw < 12) ? 12 : Math.floor(raw);
   for (let i = 0; i < rows.length - 1; i++) if (m < rows[i].toMo) return rows[i];
   return rows[rows.length - 1];
 }

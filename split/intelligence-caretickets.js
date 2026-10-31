@@ -137,7 +137,13 @@ var CT_TEMPLATES = {
       // a fixed 80 g/week sat far below the 0–4 m median and above the 9–12 m one.
       value: function() {
         if (typeof ageAt !== 'function') return 80;
-        if (typeof growthVelocityBand === 'function') { const b = growthVelocityBand(ageAt().months); if (b && b.wGWkMedian) return b.wGWkMedian; }
+        // Judged at the age of the latest weigh-in, so crossing an age band with no new
+        // measurement can't flip the goal to met (V-K-282-2).
+        if (typeof growthVelocityBand === 'function') {
+          var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
+          var mo = (gv && gv.wtLatest && gv.wtLatest.date && typeof ageMonthsAt === 'function') ? ageMonthsAt(gv.wtLatest.date) : ageAt().months;
+          const b = growthVelocityBand(mo); if (b && b.wGWkMedian) return b.wGWkMedian;
+        }
         return (ageAt().months >= 12 && typeof GROWTH_VELOCITY_12_24 !== 'undefined') ? GROWTH_VELOCITY_12_24.wGWkMedian : 80;
       }
     },
@@ -1619,7 +1625,8 @@ function ctForceResolve(ticketId) {
   html += '<div class="ct-overlay-title">Why are you resolving this?</div>';
   html += '<div class="ct-divider"></div>';
   html += '<div class="ct-chips-row" id="ctForceReasons">';
-  var reasons = ['Doctor confirmed ' + pron('subj') + '\'s okay', 'I\'m confident ' + pron('subj') + '\'s fine', 'Other'];
+  // Stored in resolvedNotes, so worded without a pronoun (V-K-282-7).
+  var reasons = ['Doctor confirmed all is well', 'I\'m confident all is fine', 'Other'];
   reasons.forEach(function(r) {
     html += '<span class="chip ct-reason-chip" data-action="ctForceResolveReason" data-id="' + escAttr(ticketId) + '" data-arg="' + escAttr(r) + '">' + escHtml(r) + '</span>';
   });
@@ -2144,7 +2151,7 @@ function ctGetTSFEvents() {
 function ctShouldTriggerCreate(text) {
   var lower = text.toLowerCase().replace(/[?!.,]/g, '').replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
   var strongSignals = ['track', 'tracking', 'monitor', 'monitor this', 'start watching', 'raise concern'];
-  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'hit his head', 'ate something'];
+  var weakSignals = ['fell', 'fall', 'bump', 'hit head', 'hit her head', 'ate something'];
   var negativeSignals = ['asleep', 'sleep', 'behind', 'apart', 'fall asleep', 'fell asleep', 'sleep track'];
 
   // Check negative signals
