@@ -13,13 +13,16 @@
 # `// growth-age-ok: <reason>` on the call's first line. Self-tests run first (including the
 # bypasses Kael and Carina found, V-K-282c-4 / V-CA-282c-1 / V-CA-282d-2), so a scanner
 # regression fails the build (PC-5). Tracing follows destructuring, obj.prop assignments and up
-# to three hops; string literals inside the arguments are skipped.
+# to three hops; string literals inside the arguments are skipped (names in a template literal's
+# ${…} are read). Known structural limits, by design (V-CA-282e-2): a today helper hidden behind
+# another function name, a parameter passed through from a caller, an assignment more than 40
+# lines up, and chains of four or more hops. Review those by hand (PATCH_CLASSES PC-1).
 set -euo pipefail
 cd "$(dirname "$0")"
 node - <<'NODE'
 const fs = require('fs');
 const WATCH = { growthVelocityBand: [0], gvBandVerdict: [1], gvWeightVerdict: [1, 2], gvRateStatus: [1], _gvNewbornWindow: [0] };
-const TODAY = /\bageAt\s*\(|\bageAt\w*\s*\(\s*\)|\bpreciseAge\s*\(|\bgetAgeInMonths\s*\(|\btoday\s*\(\s*\)|new\s+Date\s*\(\s*\)|\bDate\.now\s*\(|\bgvAgeAt\s*\(\s*(?:null|undefined)?\s*\)|\bgvBandAge\s*\(\s*(?:null|undefined)?\s*[,)]/;
+const TODAY = /\bageAt\s*\(|\bageAt\w*\s*\(\s*(?:null|undefined|''|\"\"|0|false)?\s*\)|\bpreciseAge\s*\(|\bgetAgeInMonths\s*\(|\btoday\s*\(\s*\)|new\s+Date\s*\(\s*\)|new\s+Date\b(?!\s*\()|(?<![\w.$])Date\s*\(\s*\)|\bDate\.now\s*\(|\b_offsetDateStr\s*\(\s*0?\s*\)|\bgvAgeAt\s*\(\s*(?:null|undefined|''|\"\"|0|false)?\s*\)|\bgvBandAge\s*\(\s*(?:null|undefined)?\s*[,)]/;
 function args(src, open) {            // top-level args of the call whose '(' is at `open`
   let depth = 0, cur = '', out = [], q = null;
   for (let i = open; i < src.length; i++) {
@@ -36,7 +39,10 @@ function args(src, open) {            // top-level args of the call whose '(' is
 const esc = x => x.replace(/[$.]/g, '\\$&');
 // Names an expression reads: identifier heads and member paths (a.b, a.b.c), never callees.
 function namesIn(expr) {
-  const out = new Set(), noStr = expr.replace(/(['"`])(?:\\.|(?!\1).)*\1/g, '""');
+  const out = new Set();
+  // Names inside a template literal's ${…} are read; the literal text is not (V-CA-282e-2).
+  const noStr = expr.replace(/`(?:\\.|[^`])*`/g, t => ' ' + (t.match(/\$\{[^}]*\}/g) || []).map(x => x.slice(2, -1)).join(' ') + ' ')
+    .replace(/(['"])(?:\\.|(?!\1).)*\1/g, '""');
   noStr.replace(/(^|[^.\w$])([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)(?!\s*\()/g, (_, p, path) => {
     const parts = path.split('.');
     if (/^(Math|Number|null|undefined|true|false|NaN|this)$/.test(parts[0])) return _;
@@ -49,14 +55,15 @@ function namesIn(expr) {
 // covering `const x =`, `x =`, `obj.p =` and destructuring `const { p } =` / `const { p: x } =`.
 function rhsOf(lines, name, ln, upto) {
   const n = esc(name);
-  const plain = new RegExp('(?:\\b(?:const|let|var)\\s+|^\\s*|[;,{(]\\s*)' + n + '\\s*=(?![=>])\\s*(.*)');
+  const plain = new RegExp('(?:\\b(?:const|let|var)\\s+|^\\s*|[;,{(]\\s*)' + n + '\\s*(?:\\?\\?|\\|\\||&&)?=(?![=>])\\s*(.*)');   // =, ??=, ||=, &&= (V-CA-282e-2)
+  const arr = name.includes('.') ? null : new RegExp('\\b(?:const|let|var)\\s*\\[[^\\]]*\\b' + n + '\\b[^\\]]*\\]\\s*=\\s*(.*)');
   const destr = name.includes('.') ? null : new RegExp('\\b(?:const|let|var)\\s*\\{[^}]*?(?:\\b' + n + '\\s*(?=[,}=])|:\\s*' + n + '\\b)[^}]*\\}\\s*=\\s*(.*)');
   const out = [];
   // Every assignment in the window counts, not only the nearest (a clean reassignment can sit in
   // front of a today default: V-K-282d-3). The call's own line counts too, up to the call (V-K-282d-4).
   for (let j = ln; j >= Math.max(0, ln - 40); j--) {
     const text = (j === ln && upto != null) ? lines[j].slice(0, upto) : lines[j];
-    const am = plain.exec(text) || (destr && destr.exec(text));
+    const am = plain.exec(text) || (destr && destr.exec(text)) || (arr && arr.exec(text));
     if (!am) continue;
     let rhs = am[1];
     for (let k = j + 1; k < Math.min(lines.length, j + 30) && !/;\s*(\/\/.*)?$/.test(rhs); k++) rhs += ' ' + lines[k].trim();
@@ -142,6 +149,18 @@ const T = [
   { src: 'const mo = gvAgeAt(e); growthVelocityBand(mo); const later = ageAt().months;', bad: 0 },
   { src: 'gvRateStatus(gw, ageAt().months);', bad: 1 },
   { src: 'gvRateStatus(gw, gvBandAge(v.a, v.b));', bad: 0 },
+  // Carina's round-4 bypasses (V-CA-282e-2):
+  { src: 'growthVelocityBand(ageAtScrapDate(null)); growthVelocityBand(ageAtScrapDate(undefined));', bad: 2 },
+  { src: "growthVelocityBand(gvAgeAt('')); growthVelocityBand(gvAgeAt(0)); growthVelocityBand(gvAgeAt(false));", bad: 3 },
+  { src: 'const d = new Date;\ngrowthVelocityBand(ageMonthsAt(d));', bad: 1 },
+  { src: 'growthVelocityBand(ageMonthsAt(Date()));', bad: 1 },
+  { src: 'growthVelocityBand(ageMonthsAt(_offsetDateStr(0))); growthVelocityBand(ageMonthsAt(_offsetDateStr()));', bad: 2 },
+  { src: 'let mo;\nmo ??= ageAt().months;\ngrowthVelocityBand(mo);', bad: 1 },
+  { src: 'let mo = x;\nmo ||= ageAt().months;\ngrowthVelocityBand(mo);', bad: 1 },
+  { src: 'const [mo] = [ageAt().months];\ngrowthVelocityBand(mo);', bad: 1 },
+  { src: 'const mo = ageAt().months;\ngrowthVelocityBand(Number(`${mo}`));', bad: 1 },
+  { src: 'growthVelocityBand(ageMonthsAt(_offsetDateStr(-28)));', bad: 0 },
+  { src: 'growthVelocityBand(gvAgeAt(latest.date));', bad: 0 },
 ];
 let fails = 0;
 T.forEach((t, i) => { const n = scan('fixture' + i, t.src, () => {}); if (n !== t.bad) { fails++; console.error(`audit-growth-age: SELF-TEST FAIL fixture ${i}: ${n} (want ${t.bad})`); } });

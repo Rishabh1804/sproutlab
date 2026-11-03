@@ -48,7 +48,7 @@ if (process.argv.includes('--update')) {
   fs.writeFileSync(BASE, '# file count — HR-12 date-only ratchet baseline (audit-hr12-dateonly-v1.sh). Only ever lower these.\n' + Object.entries(now).map(([f, n]) => f + ' ' + n).join('\n') + '\n');
   console.error('audit-hr12-dateonly: baseline written (' + total(now) + ' sites)'); process.exit(0);
 }
-if (!fs.existsSync(BASE)) { console.error('audit-hr12-dateonly: FAIL (' + BASE + ' missing; a ratchet with no baseline cannot pass. Restore it from git, or run --update)'); process.exit(1); }
+if (!fs.existsSync(BASE)) { console.error('audit-hr12-dateonly: FAIL (' + BASE + ' missing; a ratchet with no baseline cannot pass. Restore it from git, or run --update --allow-raise)'); process.exit(1); }
 const base = readBase();
 let bad = 0, lower = [];
 Object.entries(now).forEach(([f, n]) => { const b = base[f] || 0; if (n > b) { bad++; console.error(`audit-hr12-dateonly: ${f} has ${n} date-only new Date() parses (baseline ${b}); use _parseLocalDate, or mark a benign one '// HR-12: <reason>'`); } else if (n < b) lower.push(f + ' ' + b + '→' + n); });
