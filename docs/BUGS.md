@@ -21,6 +21,7 @@ Entries 1–4 were found by the S2 render-time pronoun builder while working and
 - **Fix:** `_queryText = _qaNameAsShe(text)`.
 - **Where:** intelligence-qa.js `qaExecuteQuery`.
 - **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed** (S2 render patch).
 
 #### P0 — Nutrient section header hard-coded for a girl (2)
@@ -29,6 +30,7 @@ Entries 1–4 were found by the S2 render-time pronoun builder while working and
 - **Fix:** `pron('poss').toUpperCase()` in place of the literal `'HER '`.
 - **Where:** intelligence-qa-handlers.js ~:2010.
 - **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Patch class:** PC-2 (sex hard-coded in copy) (assigned at close)
 - **Status:** **Fixed**.
 
 #### P0 — Growth fun-fact is girl-specific (3)
@@ -37,6 +39,7 @@ Entries 1–4 were found by the S2 render-time pronoun builder while working and
 - **Fix:** "prince" when `childSex()==='m'`.
 - **Where:** medical.js ~:1793.
 - **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Patch class:** PC-2 (sex hard-coded in copy) (assigned at close)
 - **Status:** **Fixed**.
 
 #### P2 — `_qaNameAsShe` turns a possessive name into "she" (4)
@@ -56,6 +59,7 @@ Entries 5–6 were found by the S2 load-time-tables builder and caught in code r
 - **Fix (this build):** only `desc:` was reworded. The 9 `text:` fields containing she/her (data.js 3986, 4003, 4016, 4017, 4035, 4036, 4055, 4067, 4088) are left as they are.
 - **Where:** data.js `MILESTONE_STANDARDS`; core.js ~7446–7460; home.js ~4466.
 - **Caught by:** code review (S2 load-time-tables builder); no test.
+- **Patch class:** PC-8 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.** Carina chose the render-time display label (see #34). `MILESTONE_STANDARDS` `text:` is frozen as the record key. The 9 rows gain a neutral `label:`, and `msLabel(text)` / `msLabelById(id)` in core.js are used at every render site. Keys, slugs and stored records stay raw. `audit-pronouns-v1` exempts a milestone text only when its row has a pronoun-free label. Test `milestone-labels.spec.ts` passes.
 
 #### P1 — Activity keyword rows had girls' forms only (6)
@@ -64,6 +68,7 @@ Entries 5–6 were found by the S2 load-time-tables builder and caught in code r
 - **Fix:** added the he/himself variants alongside the existing phrases.
 - **Where:** data.js activity keyword tables.
 - **Caught by:** code review (S2 load-time-tables builder); no test.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder, caught in code review or by their new specs.
@@ -74,6 +79,7 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Fix:** core.js `GROWTH_VELOCITY_BANDS` `{f,m}` from the WHO 2-month velocity tables (P15–P85, cited), plus `growthVelocityBand(age)`. Every site reads it.
 - **Where:** core.js `getGrowthNarrative`; home.js `computeBaselines`, `renderTrendChips`, `_orig_renderInsights*`; medical.js `renderVelocity`, `computeGrowthVelocity`.
 - **Caught by:** spec §5 / V-M-281-8; test `growth-velocity-bands.spec.ts`.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — The growth-velocity band copies had drifted apart (8)
@@ -82,6 +88,7 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Fix:** the same single source as #7.
 - **Where:** `computeGrowthVelocity`, `renderVelocity` (medical.js) and the height-band copies in the other files (as in #7).
 - **Caught by:** code review / S4 spec.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — `renderGrowthFacts` told every infant the same 15–30 g/day norm (9)
@@ -90,6 +97,7 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Fix:** an age- and sex-specific g/day band. Above the max it falls through to the "healthy appetite" card, whose copy no longer assumes solids (that was wrong before ~6 months).
 - **Where:** medical.js `renderGrowthFacts`.
 - **Caught by:** code review / S4 spec.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — CareTicket weight goal fixed at 80 g/week under 12 m (10)
@@ -98,6 +106,7 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Fix:** resolves at `growthVelocityBand(age).wGWkMedian`.
 - **Where:** intelligence-caretickets.js `resolutionCriteria`.
 - **Caught by:** code review / S4 spec.
+- **Patch class:** PC-9 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — 12–24 m length floor near WHO P10 late in year 2 (11)
@@ -106,6 +115,7 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Fix:** WHO P15 for 22–24 m, 0.45 cm/month (both sexes).
 - **Where:** growth-velocity bands (core.js `GROWTH_VELOCITY_BANDS`).
 - **Caught by:** code review / S4 spec.
+- **Patch class:** PC-9 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 (test infrastructure) — e2e fixtures hard-code origin 127.0.0.1:5173 (12)
@@ -123,6 +133,7 @@ Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder,
 - **Fix:** spec corrected at assembly.
 - **Where:** docs/specs/child-sex-v1.md §4.
 - **Caught by:** S3 care builder, checking the spec against AAP.
+- **Patch class:** PC-7 (assigned at close)
 - **Status:** **Fixed** (spec).
 
 Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 were introduced by the S2 load-time rewording.
@@ -133,6 +144,7 @@ Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 w
 - **Fix:** "Serve only after the child has eaten a meal."
 - **Where:** recipes.js:1744.
 - **Caught by:** Ceres V-C-282-1.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — Oily-fish limit softened (15)
@@ -141,6 +153,7 @@ Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 w
 - **Fix:** "NHS advises no more than 2 portions of oily fish a week for girls, and up to 4 for boys (because of pollutants)."
 - **Where:** data.js:2750.
 - **Caught by:** Ceres V-C-282-2.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Egg/fish allergen ladders lost "to whom" (16)
@@ -149,6 +162,7 @@ Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 w
 - **Fix:** "new to the child" and "watch the child closely".
 - **Where:** recipes.js 549, 763, 681.
 - **Caught by:** Ceres V-C-282-3.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Family-food tip said the grinding molars are not in yet, with no upper age (17)
@@ -157,6 +171,7 @@ Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 w
 - **Fix:** "…until the grinding molars come in."
 - **Where:** diet.js `ALL_TIPS` ~3082.
 - **Caught by:** Ceres V-C-282-4.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — No e2e test renders the Nutrition safety copy for a boy (18)
@@ -165,6 +180,7 @@ Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 w
 - **Fix:** e2e added: meal-planner-ui.spec "the safety lead reads right for a boy" (see #43).
 - **Where:** tests/e2e (Nutrition surfaces: meal planner, Library, mercury flag).
 - **Caught by:** Ceres V-C-282-5.
+- **Patch class:** PC-6 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by" is the Governor tag. Entries are all Fixed unless marked.
@@ -175,6 +191,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** "Neither testis can be felt, especially in a newborn: tell the doctor straight away" (AUA guideline Statement 5, verified 2026-10-31), plus "You think a testis is not in the scrotum: tell the doctor" (NHS).
 - **Where:** config.js `BODY_CARE_GUIDANCE` undescended-testes.
 - **Caught by:** V-M-282-1.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P0 (safety) — Fever guidance told parents of a baby under 3 months to wait (20)
@@ -183,6 +200,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** new Body care entry `fever-young-baby` (0–2 m): any 38°C/100.4°F or more means the doctor the same day (NHS fever-in-children, quoted). The urine-test entry now starts at 3 months. The fever card shows the under-3-months line.
 - **Where:** config.js `BODY_CARE_GUIDANCE`; intelligence-illness.js fever card.
 - **Caught by:** V-M-282-2.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — Newborn discharge / breast-swelling entries showed until about day 60 (21)
@@ -191,6 +209,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** `ageMaxMo 0`.
 - **Where:** config.js `BODY_CARE_GUIDANCE` (newborn discharge and breast-swelling entries).
 - **Caught by:** V-M-282-3.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — Torsion card: "Call 112 now" button contradicted step 1 (22)
@@ -199,6 +218,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** `callLead` false (drive; call if you can't get there fast). "Every hour counts" replaces "4 to 6 hours". "Can happen in a testis that has not come down" (source wording).
 - **Where:** Body care torsion card (config.js `BODY_CARE_GUIDANCE` and its render).
 - **Caught by:** V-M-282-4..6, V-V-282-4.
+- **Patch class:** PC-7 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P1 — Hydrocele entry reassured before telling parents to have it checked (23)
@@ -207,6 +227,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** the check-first point now leads. "A swelling that comes and goes with crying may be a hernia: see the doctor soon."
 - **Where:** Body care hydrocele entry.
 - **Caught by:** V-M-282-7.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — The single 12–24 m weight band read normal toddlers as "slow" (24)
@@ -215,6 +236,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** separate 12–18 and 18–24 rows by the same WHO P15–P85 rule (floors 0–10 g/wk).
 - **Where:** core.js `GROWTH_VELOCITY_BANDS`.
 - **Caught by:** V-M-282-8, V-CA-282-2.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — Band age rule differed by caller (25)
@@ -232,6 +254,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** g/day to 0.1.
 - **Where:** core.js `GROWTH_VELOCITY_BANDS`.
 - **Caught by:** V-M-282-11.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Infant bracket floors sit near P3–P5 at the start of each bracket (27)
@@ -249,6 +272,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** strip leading determiners from food tokens.
 - **Where:** intelligence-qa.js `qaHandleFoodSafety`.
 - **Caught by:** V-K-282-1.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — CareTicket weight goal flipped to "met" on a stale weigh-in (29)
@@ -257,6 +281,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** band by the latest weigh-in's age.
 - **Where:** intelligence-caretickets.js (weight goal / `resolutionCriteria`).
 - **Caught by:** V-K-282-2.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — Head-injury questions matched no SYMPTOM_DB row (30)
@@ -274,6 +299,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** `\b`-bounded, and drops a folded "her".
 - **Where:** food-lookback stripper in intelligence-qa*.js.
 - **Caught by:** V-K-282-5.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — CareTicket force-resolve reasons stored a pronoun (32)
@@ -282,6 +308,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** neutral "Doctor confirmed all is well" / "I'm confident all is fine".
 - **Where:** intelligence-caretickets.js force-resolve reasons.
 - **Caught by:** V-K-282-7.
+- **Patch class:** PC-8 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — `qaWords` gained he/him/his for every sex (33)
@@ -299,6 +326,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** Carina's decision, a render-time display label, never changing `text`. `MILESTONE_STANDARDS` `text:` is frozen as the record key. The 9 rows gain a neutral `label:`, and `msLabel(text)` / `msLabelById(id)` in core.js are used at every render site. Keys, slugs and stored records stay raw. `audit-pronouns-v1` exempts a milestone text only when its row has a pronoun-free label.
 - **Where:** data.js `MILESTONE_STANDARDS`; core.js `msLabel` / `msLabelById`.
 - **Caught by:** V-CA-282-1 / #5. Test: `milestone-labels.spec.ts` passes.
+- **Patch class:** PC-8 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.** Resolves #5.
 
 #### P2 — Food-effects manifest still had the girls-only oily-fish note (35)
@@ -307,6 +335,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** both-sexes wording.
 - **Where:** food-effects manifest (data.js `FOOD_EFFECTS`).
 - **Caught by:** V-CA-282-3.
+- **Patch class:** PC-9 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — `GENERAL_EMERGENCIES` sex filter hid an entry on a typo (36)
@@ -315,6 +344,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** only 'f'/'m' filter; anything else shows.
 - **Where:** config.js `GENERAL_EMERGENCIES` sex filter.
 - **Caught by:** V-CA-282-4.
+- **Patch class:** PC-3 (an entry made unreachable by a filter) (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — AAP 2011 UTI guideline missing from the fever entry's sources (37)
@@ -323,6 +353,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** added.
 - **Where:** config.js `BODY_CARE_GUIDANCE` fever entry sources.
 - **Caught by:** V-CA-282-6.
+- **Patch class:** PC-9 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — He-forms in activity keyword tables can fire on a girl's note about her father (38)
@@ -340,6 +371,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** emergency block gets a rose fill and a thick danger rail; the doctor block gets a rail only. The tag shows only on torsion. Topics with an Emergency Room card get an "Open the emergency steps" button. The chevron is fixed top-right. Source links are 32px.
 - **Where:** Body care render and styles.css.
 - **Caught by:** V-V-282-1/2/3/9/10.
+- **Patch class:** PC-7 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — Every General-room doctor summary said "Known allergies: none recorded yet" (40)
@@ -348,6 +380,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** shown only on allergic-reaction.
 - **Where:** config.js `GENERAL_EMERGENCIES` doctor summary (General room).
 - **Caught by:** V-V-282-5.
+- **Patch class:** PC-7 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — Body care and Emergency Room copy and icon nits (41)
@@ -356,6 +389,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** all corrected.
 - **Where:** Body care / Emergency Room cards and the sleep tip.
 - **Caught by:** V-V-282-6/7/8/12/13/14.
+- **Patch class:** PC-7 (assigned at close)
 - **Status:** **Fixed.**
 
 #### P2 — Safe-sleep and Body care copy fixes (42)
@@ -364,6 +398,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** "turn him onto his back"; "Can your child cough or cry?"; "draws the legs up"; "ask the doctor".
 - **Where:** Body care / safe-sleep copy.
 - **Caught by:** V-M-282-12/13.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P1 — Ceres: no e2e for a boy's Nutrition safety copy (43)
@@ -371,6 +406,7 @@ Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by"
 - **Fix:** e2e added: meal-planner-ui.spec "the safety lead reads right for a boy". #18 is marked Fixed.
 - **Where:** tests/e2e meal-planner-ui.spec.
 - **Caught by:** Ceres (V-C-282-5).
+- **Patch class:** PC-6 (assigned at close)
 - **Status:** **Fixed.**
 
 Entry 44 was caught by the full e2e run on the assembled build.
@@ -382,6 +418,7 @@ Entry 44 was caught by the full e2e run on the assembled build.
 - **Root fix:** `_syncNow()` in sync.js returns strictly increasing ms for every ledger stamp, push start (`_syncFlushDirty` and the two diff-push paths) and the session-attach mark.
 - **Where:** split/sync.js `_syncNow` / `_syncMarkDirty` / `_syncFlushDirty` (plus the two diff-push paths).
 - **Caught by:** full e2e run on the assembled build (`sync-unsynced-ledger.spec.ts:388`, F17).
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.** Verified: F17 passes 15/15; the whole sync-unsynced-ledger spec passes.
 
 Entries 45–48 were found by the label builder (the #5 / #34 work).
@@ -392,6 +429,7 @@ Entries 45–48 were found by the label builder (the #5 / #34 work).
 - **Fix:** `msLabelById(slug)` in `renderRecentEvidence`.
 - **Where:** home.js `renderRecentEvidence`.
 - **Caught by:** the label builder.
+- **Patch class:** PC-8 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Pronoun build gate failed on the head-injury match keywords (46)
@@ -400,6 +438,7 @@ Entries 45–48 were found by the label builder (the #5 / #34 work).
 - **Fix:** allowlisted as match vocabulary (folded for boys).
 - **Where:** `audit-pronouns-v1.sh` allowlist.
 - **Caught by:** the label builder running the gate.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 (test) — qa-boy.spec first draft used phrasings an earlier classifier branch catches (47)
@@ -408,6 +447,7 @@ Entries 45–48 were found by the label builder (the #5 / #34 work).
 - **Fix:** phrasings changed in the spec.
 - **Where:** tests/e2e qa-boy.spec.
 - **Caught by:** the label builder (spec run).
+- **Patch class:** PC-6 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Sleep-regression cause text inserted without escHtml (48)
@@ -427,6 +467,7 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** both use `_syncNow()`.
 - **Where:** sync.js `_syncMarkNeedsFull`, `syncMarkUnsynced`.
 - **Caught by:** Cipher A1.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Pronoun gate allow entries matched by substring (50)
@@ -435,6 +476,7 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** exact-match (`=`) entries.
 - **Where:** `audit-pronouns-v1.sh` allowlist.
 - **Caught by:** Cipher N1.
+- **Patch class:** PC-5 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Pronoun gate ignores template.html attribute copy (51)
@@ -452,6 +494,7 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** a missing anchor fails the gate.
 - **Where:** `audit-pronouns-v1.sh`.
 - **Caught by:** Cipher N3.
+- **Patch class:** PC-5 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Head-injury keywords had only her-forms (53)
@@ -460,6 +503,7 @@ Entries 49–56 are Cipher's Edict V findings on #282.
 - **Fix:** his-forms added; allowlist comment corrected.
 - **Where:** SYMPTOM_DB head-injury keywords; `audit-pronouns-v1.sh` allowlist comment.
 - **Caught by:** Cipher N4.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
 - **Status:** **Fixed.**
 
 #### P2 — Pronoun gate has no adversarial self-test fixtures (54)
