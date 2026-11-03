@@ -96,6 +96,10 @@ test('the logged dose records the picked bottle, amount first in history', async
 test('a dose from a just-resolved episode still holds the 4 h gap in a new, empty episode', async ({ page }) => {
   const card = await seed(page, { rows: [{ date: '-3', wt: 9.5 }], earlier: 'drops100', earlierHoursAgo: 1 });
   await expect(card.locator('.fe-dose-next')).toContainText('4 h gap');
+  await expect(card.locator('.fe-dose-next')).toContainText('earlier fever');
+  const lastAt = await page.evaluate(() => _feverTimeShort(new Date(getFeverDoseCountdown().lastTime).toISOString()));
+  await expect(card.locator('.fe-dose-next')).toContainText('Last paracetamol at ' + lastAt);
+  await expect(card.locator('.fe-dose-empty')).toHaveText('No medicine logged since this fever started');
   const cd = await page.evaluate(() => getFeverDoseCountdown());
   expect(cd.available).toBe(false);
   expect(cd.reason).toBe('gap');

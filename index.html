@@ -73391,19 +73391,24 @@ function renderFeverEpisodeCard() {
     });
   }
   if (doseCD) {
+      // In a new episode the countdown counts from a dose this card doesn't list: name it, or the
+      // line reads as a glitch beside "No medicine logged" (Maren V-M-284-11).
+      const from = ep.doses.length === 0
+        ? 'Last paracetamol at ' + _feverTimeShort(new Date(doseCD.lastTime).toISOString()) + ', in ' + pron('poss') + ' earlier fever. '
+        : '';
       if (doseCD.available) {
-        html += '<div class="fe-dose-next">Next dose available now (if needed, as advised by doctor)</div>';
+        html += '<div class="fe-dose-next">' + from + 'Next dose can be given now, if needed, as your doctor advised.</div>';
       } else {
         const dh = Math.floor(doseCD.remaining / 60);
         const dm = doseCD.remaining % 60;
         const at = _feverTimeShort(new Date(doseCD.nextAt).toISOString());
-        html += '<div class="fe-dose-next t-light">' + (doseCD.reason === 'daily-max'
+        html += '<div class="fe-dose-next t-light">' + from + (doseCD.reason === 'daily-max'
           ? PARA_MAX_PER_24H + ' doses in the last 24 h, the most allowed. Next dose not before ' + at + ' (in ' + (dh > 0 ? dh + 'h ' : '') + dm + 'm).'
           : 'Next dose not before ' + at + ' (in ' + (dh > 0 ? dh + 'h ' : '') + dm + 'm, 4 h gap).') + '</div>';
       }
   }
   if (ep.doses.length === 0) {
-    html += '<div class="fe-dose-row fe-dose-empty">No medicine logged in this episode yet</div>';
+    html += '<div class="fe-dose-row fe-dose-empty">No medicine logged since this fever started</div>';
   }
   // Paracetamol: which bottle, then the dose for HER weight — named, dated, sanity-checked (Maren V-M-282g-6).
   html += '<div class="fe-para-q">Which paracetamol bottle do you have?</div>';
@@ -73944,8 +73949,9 @@ function computeFeverAlerts() {
 
   // Dose available
   const doseCD = getFeverDoseCountdown();
-  if (doseCD && doseCD.available && ep.readings[ep.readings.length - 1].temp >= 100) {
-    const key = 'fever-dose-avail-' + todayStr + '-' + ep.doses.length;
+  if (doseCD && doseCD.available && ep.readings.length && ep.readings[ep.readings.length - 1].temp >= 100) {
+    // Keyed on the dose the wait counts from: the count now spans episodes (V-K-284-11).
+    const key = 'fever-dose-avail-' + doseCD.lastTime;
     if (!isDismissed(key)) {
       alerts.push({
         id: 'fever-dose-available', key,
