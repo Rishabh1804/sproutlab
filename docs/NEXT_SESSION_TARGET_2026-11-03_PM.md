@@ -11,7 +11,8 @@
 - **Routing:** Kael owns intelligence-illness.js and Maren owns the dosing consequence. Carina reviews only if the weight read changes.
 
 ## Priority ladder
-- **P0: paracetamol chip.** As above. Spec it briefly first (dose table source, formulations, plausibility bounds) and cite every number (canon-cc-013).
+- **P0: paracetamol chip. Done: #284 merged 2026-11-03** (BUGS #160). Its remaining dosing gap is **BUGS #161**, a believable mistyped weight still getting a dose (an own-history weight-jump check). Do it before or alongside P1. The other deferrals are in **BUGS #162**.
+- *(original P0 text, kept for the record:)* As above. Spec it briefly first (dose table source, formulations, plausibility bounds) and cite every number (canon-cc-013).
 - **P1: the #282 follow-up PR (BUGS #159, by owner).** Do the PC-7/PC-10 edge items first:
   - Vela g-7: a stale reading's percentile is shown as if current, with no date. Date it or hide it.
   - Maren g-4 / Kael g-5: an infant weighed less than 28 days apart can never auto-resolve the CareTicket weight goal. Use a 28-day look-back for that metric only.
