@@ -139,6 +139,13 @@ var CT_TEMPLATES = {
         if (typeof ageAt !== 'function') return 80;
         // Judged at the age of the latest weigh-in, so crossing an age band with no new
         // measurement can't flip the goal to met (V-K-282-2).
+        // The goal's own window first (gvWeightGoalWindow): the threshold is read at the midpoint of
+        // the same 28+ day window the metric measures (V-M-282g-4 / V-K-282g-5), so value and metric
+        // describe one span.
+        var gw = (typeof gvWeightGoalWindow === 'function') ? gvWeightGoalWindow() : null;
+        if (gw && typeof growthVelocityBand === 'function') {
+          const bw = growthVelocityBand(gvBandAge(gw.latest, gw.previous)); if (bw && bw.wGWkMedian) return bw.wGWkMedian;
+        }
         var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
         if (typeof growthVelocityBand === 'function' && gv && gv.wtLatest) {
           // The same row as the verdict: the window midpoint (gv.wtBandAge), else the latest
@@ -269,9 +276,11 @@ function ctGetMetricValue(metric, dateStr) {
       // (gvWeightWindow) an infant's velocity is the last two weigh-ins, so one 7-day pair above the
       // median, held through confirmAfterDays (14) with no new weigh-in, met the weight goal. A shorter
       // window is not a measure of sustained gain: the metric is null (not met, never "not passing").
-      var gv = getGrowthVelocity();
-      if (!gv || gv.wtGPerWeek == null || !(gv.wtDays >= GV_TODDLER_WINDOW_DAYS)) return null;
-      return gv.wtGPerWeek;
+      // Its own 28-day look-back at every age (gvWeightGoalWindow — Maren V-M-282g-4 / Kael V-K-282g-5):
+      // the shared window is the last two weigh-ins under 12 m, so an infant weighed weekly never had a
+      // 28-day pair and the goal could never resolve. Still null with no weigh-in 28+ days back.
+      var gw = (typeof gvWeightGoalWindow === 'function') ? gvWeightGoalWindow() : null;
+      return gw ? gw.gPerWeek : null;
     case 'uniqueFoods7d':
       return ctUniqueFoods7d();
     default:

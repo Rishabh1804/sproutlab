@@ -2000,18 +2000,18 @@ function qaAnswerWeightConcern(intentId) {
   var nbLow = gvPctLow(pctC) && gv.weight && gv.weight.nb;
   if (pctC !== null && !nbWin) {
     if (nbLow) {
-      dataItems.push({ text: GV_LOW_CENTILE_LINE + ' (newborn weeks)', signal: 'info' });
+      dataItems.push({ text: GV_LOW_CENTILE_LINE + ' (newborn weeks)' + gvPctAsOf(gv), signal: 'info' });
     } else if (lowPct) {
       // At or below the 3rd centile line: no placeholder number, never "within normal range"
       // (Maren V-M-282d-1, V-M-282e-1).
-      dataItems.push({ text: GV_LOW_CENTILE_LINE, signal: 'warn' });
+      dataItems.push({ text: GV_LOW_CENTILE_LINE + gvPctAsOf(gv), signal: 'warn' });
       actionItems.push({ text: GV_ACT_WEIGHT_CHECK, signal: 'action' });
     } else if (pctC > 85) {
-      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile — above average', signal: 'info' });
+      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile' + gvPctAsOf(gv) + ' — above average', signal: 'info' });
     } else if (concern) {
-      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile', signal: 'info' });
+      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile' + gvPctAsOf(gv), signal: 'info' });
     } else {
-      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile — within normal range', signal: 'good' });
+      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile' + gvPctAsOf(gv) + ' — within normal range', signal: 'good' });
     }
   }
 
@@ -2110,8 +2110,13 @@ function qaAnswerGrowth(intentId) {
   var lowG = gv.latestPercentile !== null && gvPctLow(gv.latestPercentile) && !(gv.weight && gv.weight.nb);
   if (gv.latestPercentile !== null) {
     // In the newborn window the percentile is not judged: info, never a green "below 3rd" (Kael V-K-282f-4).
-    var pctSignal = (gv.weight && gv.weight.nb) ? 'info' : (lowG || gv.latestPercentile > 97) ? 'warn' : 'good';
-    dataItems.push({ text: lowG ? GV_LOW_CENTILE_LINE : 'Weight percentile: ' + pctOrdinal(gv.latestPercentile), signal: pctSignal });
+    // Never green beside a dropping crossing or a centile slide (Vela V-V-282g-8): the percentile is
+    // neutral then, and the crossing line below carries the warning.
+    var lastCrossG = gv.crossings && gv.crossings.length > 0 ? gv.crossings[gv.crossings.length - 1] : null;
+    var fallingG = !!gv.centileSlide || !!(lastCrossG && lastCrossG.direction === 'dropping');
+    var pctSignal = (gv.weight && gv.weight.nb) ? 'info' : (lowG || gv.latestPercentile > 97) ? 'warn' : fallingG ? 'info' : 'good';
+    // Dated once the weigh-in is stale, so an old percentile never reads as today's (Vela V-V-282g-7).
+    dataItems.push({ text: (lowG ? GV_LOW_CENTILE_LINE : 'Weight percentile: ' + pctOrdinal(gv.latestPercentile)) + gvPctAsOf(gv), signal: pctSignal });
   }
 
   // Crossings — the same tiers as the other weight answers (V-M-282e-4): ending at or below P3 the
