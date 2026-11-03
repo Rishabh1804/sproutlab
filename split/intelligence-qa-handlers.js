@@ -1927,7 +1927,10 @@ function qaAnswerWeightConcern(intentId) {
     if (!nbWin && !concern) actionItems.push({ text: (ageM === 0 ? 'In the first month' : 'At ' + fmtAgeMonths(ageM)) + ', being on a higher percentile is usually fine', signal: 'good' });
     // Food closed (under 6 months, or solids not started): the gate note chosen by today's age
     // (gvGateNote — Ceres V-C-282d-1); open: no calorie restriction.
-    actionItems.push({ text: gvFoodAdviceOk() ? 'Focus on nutrient-dense foods, not calorie restriction' : gvGateNote(), signal: 'action' });
+    // "Not calorie restriction" is written for a high-centile child; with a concern (loss, slow gain,
+    // a slide, under P3) the doctor action leads and no food line follows it (Ceres V-C-282e-2).
+    if (!concern) actionItems.push({ text: gvFoodAdviceOk() ? 'Focus on nutrient-dense foods, not calorie restriction' : gvGateNote(), signal: 'action' });
+    else if (!gvFoodAdviceOk()) actionItems.push({ text: gvGateNote(), signal: 'action' });
   }
   if (!nbCautionC && !concern) actionItems.push({ text: 'Discuss any concerns with your pediatrician at the next visit', signal: 'action' });
   if (!nbWin && !concern) actionItems.push({ text: 'Encourage active play — motor activity supports healthy growth', signal: 'action' });

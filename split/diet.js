@@ -7772,7 +7772,9 @@ function renderInsightsCross() {
   }
 
   // ── Growth vs Feeding correlation ──
-  const wtEntries = growthData.filter(r => r.wt != null).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  // The shared weight-row filter, so a synced wt:0 or undated row can't skew it (Ceres V-C-282e-4,
+  // Kael V-K-282d-5).
+  const wtEntries = gvWeightRows();
   if (wtEntries.length >= 3) {
     // For each weight measurement gap, calculate meals logged per day in that period
     const periods = [];
@@ -7814,7 +7816,9 @@ function renderInsightsCross() {
         </div>
       </div>`;
 
-      if (avgGainTop > avgGainBottom + 2) {
+      // A meals-and-growth narrative only once food advice applies (6 months today and solids started:
+      // gvFoodAdviceOk), never for an early starter under 6 months (Ceres V-C-282e-4).
+      if (avgGainTop > avgGainBottom + 2 && gvFoodAdviceOk()) {
         html += `<div class="insight-narrative">${zi('chart')} Periods with <strong>more meals logged</strong> (${avgMealsTop}/day) correlate with <strong>higher weight gain</strong> (${avgGainTop}g/day vs ${avgGainBottom}g/day). Consistent feeding supports steady growth.</div>`;
       }
     }

@@ -6736,7 +6736,7 @@ function solidsStarted() {
 function gvFoodAdviceOk() {
   return ageAt().months >= 6 && solidsStarted();
 }
-const GV_MILK_ONLY_NOTE = 'Under 6 months, milk is the whole diet — talk to your doctor about feeding.';
+const GV_MILK_ONLY_NOTE = 'Under 6 months, milk is the main diet — talk to your doctor about feeding.';   // "main", not "whole": true for an early solids start too (Ceres V-C-282e-5)
 // From 6 months with solids not started (the gate closed for a reason other than age), the milk-only
 // note is false: WHO IYCF — "complementary (solid) foods are introduced from six months". A function,
 // so the pronoun follows the profile (audit-pronouns-v1) — Ceres V-C-282d-1.

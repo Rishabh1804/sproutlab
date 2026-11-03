@@ -1046,7 +1046,7 @@ function renderInfoGrowthDiet() {
 
   // Food lines only where food is part of the diet (gvFoodAdviceOk: 6 months of age today AND solids
   // started — V-K-282d-6, Ceres V-C-282c-3). Closed, the "Diet During This Period" grid is hidden
-  // too: nutrient bars beside "milk is the whole diet" contradict it (Ceres V-C-282d-4a).
+  // too: nutrient bars beside "milk is the main diet" contradict it (Ceres V-C-282d-4a).
   var foodOkCard = gvFoodAdviceOk();
 
   // Nutrient coverage
@@ -1078,6 +1078,12 @@ function renderInfoGrowthDiet() {
     if (velLabel === 'slow' && !foodOkCard) {
       var slowCardLead = velocity < 0 ? 'Weight down ' + Math.abs(velocity) + ' g/day — below the typical range.' : 'Growth velocity is below typical range (' + velocity + ' g/day).';
       iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml(gvGateNote()) + '</div>';
+    } else if (velLabel === 'slow' && velocity < 0) {
+      // A loss on the food-OK path: the same answer the Info insight gives (doctor line first-class),
+      // never "monitor at next weigh-in" (Ceres V-C-282e-1, PC-10). Low coverage stays as a second line.
+      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. Mention it to your doctor.</div>';
+      var lowNutrientsLoss = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
+      if (lowNutrientsLoss.length > 0) iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrientsLoss.slice(0, 2).join(' and ')) + ' coverage has been low in this period too.</div>';
     } else if (velLabel === 'slow') {
       var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
         return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;

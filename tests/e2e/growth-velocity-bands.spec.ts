@@ -429,7 +429,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     // A girl of 100 days: 100 g in the last 28 days (25 g/week) — below the 3–4 m band.
     const r = await page.evaluate((src) => eval(src)(100, 3.30, [[72, 5.00], [100, 5.10]]), NB_SETUP);
     expect(['slow', 'plateau']).toContain(r.status);
-    expect(r.qa).toContain('Under 6 months, milk is the whole diet — talk to your doctor about feeding.');
+    expect(r.qa).toContain('Under 6 months, milk is the main diet — talk to your doctor about feeding.');
     expect(r.qa).not.toMatch(/meal|calorie|ghee|nut butter|Food tab/i);
     expect(r.insight).not.toMatch(/caloric/i);
   });
@@ -623,7 +623,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
       const card = (document.getElementById('infoGrowthDietInsights') || {} as any).innerHTML || '';
       return { early, card, solids: w.solidsStarted(), ok: w.gvFoodAdviceOk(growthData[growthData.length - 1]), lib: w._libSuggestions().length };
     }, NB_SETUP);
-    const MILK = 'Under 6 months, milk is the whole diet — talk to your doctor about feeding.';
+    const MILK = 'Under 6 months, milk is the main diet — talk to your doctor about feeding.';
     expect(r.solids).toBe(true);
     expect(r.ok).toBe(false);
     expect(r.lib).toBe(0);                                // _libSuggestions unchanged: never under 6 months
@@ -1008,7 +1008,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
       return { noSolids, card, nut, pivNo, late, pivLate, ok: w.gvFoodAdviceOk() };
     }, NB_SETUP);
     const START = 'From 6 months babies need solid foods alongside milk — talk to your doctor about starting solids and her weight.';
-    const MILK = 'Under 6 months, milk is the whole diet';
+    const MILK = 'Under 6 months, milk is the main diet';
     expect(['slow', 'plateau']).toContain(r.noSolids.status);
     expect(r.noSolids.qa).toContain(START);
     expect(r.noSolids.qa).not.toContain(MILK);
@@ -1035,7 +1035,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
       growthData = [{ date: day(-120), wt: 3.3 }, { date: day(-30), wt: 5.6 }, { date: day(-2), wt: 5.7 }];
       return w.ctPivotStrategies({ category: 'weight_gain' });
     });
-    expect(r).toContain('Under 6 months, milk is the whole diet — talk to your doctor about feeding.');
+    expect(r).toContain('Under 6 months, milk is the main diet — talk to your doctor about feeding.');
     expect(r.join(' | ')).not.toMatch(/Increase meal frequency|calorie-dense/);
     expect(r).toContain('Schedule weight check with pediatrician');
   });
