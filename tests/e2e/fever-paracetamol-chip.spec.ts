@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
 
 const H = 3600000;
 
-async function seed(page: any, opts: { rows?: { date: string; wt: number }[]; doses?: number[]; earlier?: string } = {}) {
+async function seed(page: any, opts: { rows?: { date: string; wt: number }[]; doses?: number[]; earlier?: string; earlierHoursAgo?: number } = {}) {
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(500);
   await page.evaluate((o: any) => {
@@ -17,7 +17,7 @@ async function seed(page: any, opts: { rows?: { date: string; wt: number }[]; do
     const eps: any[] = [];
     if (o.earlier) eps.push({ id: 'fe-old', status: 'resolved', startedAt: new Date(now - 60 * 24 * 3600000).toISOString(),
       resolvedAt: new Date(now - 58 * 24 * 3600000).toISOString(), readings: [{ temp: 101, time: new Date(now - 60 * 24 * 3600000).toISOString(), notes: '' }],
-      doses: [{ time: new Date(now - 60 * 24 * 3600000).toISOString(), medicine: 'Paracetamol', dose: '5 ml', notes: '', form: o.earlier }],
+      doses: [{ time: new Date(now - (o.earlierHoursAgo || 60 * 24) * 3600000).toISOString(), medicine: 'Paracetamol', dose: '5 ml', notes: '', form: o.earlier }],
       actions: [], peakTemp: 101, triggerSource: 'test', notes: '', resolvedNotes: '' });
     eps.push({ id: 'fe-para', status: 'active', startedAt: new Date(now - 20 * 3600000).toISOString(), resolvedAt: null,
       readings: [{ temp: 101.2, time: new Date().toISOString(), notes: '' }],
@@ -91,4 +91,18 @@ test('the logged dose records the picked bottle, amount first in history', async
   await expect(card.locator('.fe-dose-row').first()).toContainText('2.5 ml of Paracetamol syrup (250 mg in 5 ml)');
   await page.evaluate(() => { _feParaForm = null; renderFeverEpisodeCard(); });
   await expect(card.locator('.fe-para-form.active')).toContainText('Syrup · 250 mg in 5 ml'); // within this episode
+});
+
+test('a dose from a just-resolved episode still holds the 4 h gap in a new, empty episode', async ({ page }) => {
+  const card = await seed(page, { rows: [{ date: '-3', wt: 9.5 }], earlier: 'drops100', earlierHoursAgo: 1 });
+  await expect(card.locator('.fe-dose-next')).toContainText('4 h gap');
+  const cd = await page.evaluate(() => getFeverDoseCountdown());
+  expect(cd.available).toBe(false);
+  expect(cd.reason).toBe('gap');
+});
+
+test('a months-old dose sets no limit and raises no alert', async ({ page }) => {
+  const card = await seed(page, { rows: [{ date: '-3', wt: 9.5 }], earlier: 'drops100' });
+  await expect(card.locator('.fe-dose-next')).toHaveCount(0);
+  expect(await page.evaluate(() => getFeverDoseCountdown())).toBeNull();
 });

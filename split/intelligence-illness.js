@@ -57,7 +57,7 @@ function _paraCurrentForm() {
 // For a hint only: the bottle used in an earlier fever, when this episode has no pick of its own.
 function _paraEarlierFormHint() {
   const ep = getActiveFeverEpisode();
-  if (_paraFormById(_feParaForm) || _paraLastFormIn(ep)) return null;
+  if (_paraCurrentForm()) return null;
   for (let e = _feverEpisodes.length - 1; e >= 0; e--) {
     if (_feverEpisodes[e] === ep) continue;
     const f = _paraFormById(_paraLastFormIn(_feverEpisodes[e]));
@@ -104,6 +104,8 @@ function getParacetamolChip(weightRow) {
   const ageDays = gvDaysBetween(date, today());   // the one shared day count (V-CA-284-2)
   if (!Number.isFinite(ageDays) || ageDays < 0) return { state: 'baddate', form, wt, date };
   if (!paraWeightPlausible(wt, date)) return { state: 'implausible', form, wt, date };
+  // Only a weight from the newborn weeks can reach this: at 3 months or more a weight under 3 kg fails
+  // z >= -6 and reads 'implausible'; under 3 months returns 'askdoctor' above. Keep that order.
   // A believable newborn weight under 3 kg has no dose here: one decision, never 'ok' without a dose (V-K-284-1).
   if (!getParacetamolDose(wt, PARACETAMOL_FORMS[0])) return { state: 'nodose', form, wt, date };
   if (!form) return { state: 'pick', form, wt, date };
@@ -116,7 +118,9 @@ function getParacetamolChip(weightRow) {
 
 function feSetParaForm(id) {
   if (!_paraFormById(id)) return;
+  const ep = getActiveFeverEpisode();
   _feParaForm = id;
+  _feParaFormEp = ep ? ep.id : null;
   renderFeverEpisodeCard();
 }
 
@@ -219,15 +223,17 @@ function getFeverCheckCountdown() {
 const PARA_MIN_GAP_MIN = 240;
 const PARA_MAX_PER_24H = 4;
 function getFeverDoseCountdown() {
-  const ep = getActiveFeverEpisode();
-  if (!ep || ep.doses.length === 0) return null;
+  // No early return on an empty episode: a fever that comes back after "resolved" starts a new episode
+  // with no doses, and the dose given an hour ago in the old one must still hold the gap (Cipher, #284).
+  if (!getActiveFeverEpisode()) return null;
   const now = Date.now();
   const times = [];
   _feverEpisodes.forEach(e => ((e && e.doses) || []).forEach(d => {
     const t = d && new Date(d.time).getTime();   // HR-12: d.time is a full ISO instant
-    if (Number.isFinite(t) && t <= now) times.push(t);
+    if (Number.isFinite(t)) times.push(Math.min(t, now));   // a fast-clock device's dose counts as "now", never dropped
   }));
-  if (!times.length) return null;
+  // Nothing in the last 24 h: no limit applies (and no "dose available" alert for a months-old dose).
+  if (!times.some(t => t > now - 24 * 3600000)) return null;
   times.sort((a, b) => b - a);   // newest first
   const lastTime = times[0];
   const gapAt = lastTime + PARA_MIN_GAP_MIN * 60000;
@@ -419,7 +425,8 @@ function renderFeverEpisodeCard() {
       const origIdx = ep.doses.length - 1 - i;
       html += '<div class="fe-dose-row ep-entry-tap" data-action="feEditDose" data-arg="' + origIdx + '">'+zi('pill')+' ' + (d.dose ? escHtml(d.dose) + ' of ' : '') + escHtml(d.medicine) + ' at ' + _feverTimeShort(d.time) + '</div>';
     });
-    if (doseCD) {
+  }
+  if (doseCD) {
       if (doseCD.available) {
         html += '<div class="fe-dose-next">Next dose available now (if needed, as advised by doctor)</div>';
       } else {
@@ -430,9 +437,9 @@ function renderFeverEpisodeCard() {
           ? PARA_MAX_PER_24H + ' doses in the last 24 h, the most allowed. Next dose not before ' + at + ' (in ' + (dh > 0 ? dh + 'h ' : '') + dm + 'm).'
           : 'Next dose not before ' + at + ' (in ' + (dh > 0 ? dh + 'h ' : '') + dm + 'm, 4 h gap).') + '</div>';
       }
-    }
-  } else {
-    html += '<div class="fe-dose-row" style="color:var(--light);font-size:var(--fs-xs);">No medicine logged yet</div>';
+  }
+  if (ep.doses.length === 0) {
+    html += '<div class="fe-dose-row fe-dose-empty">No medicine logged in this episode yet</div>';
   }
   // Paracetamol: which bottle, then the dose for HER weight — named, dated, sanity-checked (Maren V-M-282g-6).
   html += '<div class="fe-para-q">Which paracetamol bottle do you have?</div>';
