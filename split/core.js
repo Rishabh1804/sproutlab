@@ -1219,6 +1219,7 @@ function init() {
     else if (action === 'ceResolvePrompt') ceResolvePrompt(arg);
     else if (action === 'feToggleAllReadings') feToggleAllReadings();
     else if (action === 'feLogDosePrompt') feLogDosePrompt();
+    else if (action === 'feSetParaForm') feSetParaForm(arg);
     else if (action === 'deLogFluidPrompt') deLogFluidPrompt();
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();

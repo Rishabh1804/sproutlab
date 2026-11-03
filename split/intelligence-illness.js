@@ -21,14 +21,76 @@ function getFeverSeverity(tempF) {
   return { tier: 'low-grade', label: 'Low-grade', checkMins: 240, color: 'var(--tc-amber)' };
 }
 
-function getParacetamolDose(weightKg) {
+// Paracetamol: 10–15 mg/kg per dose, at least 4 h apart, no more than 4 doses in 24 h
+// (WHO Pocket Book of Hospital Care for Children, 2nd ed. 2013, Annex 2; BNF for Children).
+// The ml depends entirely on the bottle, so the parent picks it (Architect, 2026-11-03):
+// paediatric drops 100 mg/ml, suspension 120 mg/5 ml (24 mg/ml), suspension 250 mg/5 ml (50 mg/ml).
+const PARACETAMOL_FORMS = [
+  { id: 'drops100', label: 'Drops 100 mg/ml', mgPerMl: 100 },
+  { id: 'syrup120', label: 'Syrup 120 mg/5 ml', mgPerMl: 24 },
+  { id: 'syrup250', label: 'Syrup 250 mg/5 ml', mgPerMl: 50 },
+];
+const PARA_STALE_DAYS = 28;   // a month-old weight is already behind a growing toddler
+let _feParaForm = null;       // this render's pick; defaults to the last logged dose's bottle
+
+function _paraFormById(id) { return PARACETAMOL_FORMS.find(f => f.id === id) || null; }
+
+// The bottle last used, read from the logged doses themselves (no new storage key).
+function _paraLastFormId() {
+  for (let e = _feverEpisodes.length - 1; e >= 0; e--) {
+    const ds = (_feverEpisodes[e] && _feverEpisodes[e].doses) || [];
+    for (let i = ds.length - 1; i >= 0; i--) if (_paraFormById(ds[i].form)) return ds[i].form;
+  }
+  return null;
+}
+function _paraCurrentForm() {
+  return _paraFormById(_feParaForm) || _paraFormById(_paraLastFormId()) || PARACETAMOL_FORMS[0];
+}
+
+// Is this weight believable for her age at the weigh-in? Approximate z from the WHO percentiles
+// (one SD = (P97 − P50) / 1.881 above the median, (P50 − P3) / 1.881 below) and apply WHO's
+// biologically-implausible flags for weight-for-age: z < −6 or z > +5 (WHO Anthro manual, 2011).
+// Outside that it is almost certainly a typo (95 kg for 9.5 kg), so no dose is offered.
+function paraWeightPlausible(weightKg, dateStr) {
+  if (!(weightKg > 0)) return false;
+  const mo = ageMonthsAt(dateStr);
+  if (!isFinite(mo) || mo < 0) return false;
+  const r = getInterpolatedWHO(mo);
+  const z = weightKg >= r.w50 ? (weightKg - r.w50) / ((r.w97 - r.w50) / 1.881)
+                              : (weightKg - r.w50) / ((r.w50 - r.w3) / 1.881);
+  return z >= -6 && z <= 5;
+}
+
+// Dose range for a weight and a bottle. Low end rounds UP and high end DOWN to 0.1 ml,
+// so what is shown never goes past 15 mg/kg.
+function getParacetamolDose(weightKg, form) {
   if (!weightKg || weightKg < 3) return null;
+  const f = form || PARACETAMOL_FORMS[0];
   const lowMg = Math.round(weightKg * 10);
   const highMg = Math.round(weightKg * 15);
-  // Crocin drops: 100mg/ml
-  const lowMl = (lowMg / 100).toFixed(1);
-  const highMl = (highMg / 100).toFixed(1);
-  return { lowMg, highMg, lowMl, highMl, display: lowMl + '–' + highMl + ' ml' };
+  const lowMl = (Math.ceil(weightKg * 10 / f.mgPerMl * 10) / 10).toFixed(1);
+  const highMl = (Math.floor(weightKg * 15 / f.mgPerMl * 10) / 10).toFixed(1);
+  return { lowMg, highMg, lowMl, highMl, form: f, display: lowMl + '–' + highMl + ' ml' };
+}
+
+// Everything the dose chip needs, from the latest weight row ({ wt, date }).
+function getParacetamolChip(weightRow) {
+  const form = _paraCurrentForm();
+  const wt = weightRow && weightRow.wt;
+  const date = weightRow && weightRow.date;
+  if (!wt || !date) return { state: 'noweight', form };
+  if (!paraWeightPlausible(wt, date)) return { state: 'implausible', form, wt, date };
+  const day = _parseLocalDate(date);
+  const ageDays = day ? Math.floor((_parseLocalDate(today()) - day) / 86400000) : null;
+  const dateLabel = day ? day.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : date;
+  return { state: 'ok', form, wt, date, dateLabel, ageDays,
+    stale: ageDays !== null && ageDays > PARA_STALE_DAYS, dose: getParacetamolDose(wt, form) };
+}
+
+function feSetParaForm(id) {
+  if (!_paraFormById(id)) return;
+  _feParaForm = id;
+  renderFeverEpisodeCard();
 }
 
 function pruneFeverEpisodes() {
@@ -72,14 +134,15 @@ function logFeverReading(tempF, timeStr, notes) {
   renderHomeFeverBanner();
 }
 
-function logFeverDose(medicine, dose, timeStr, notes) {
+function logFeverDose(medicine, dose, timeStr, notes, form) {
   const ep = getActiveFeverEpisode();
   if (!ep) return;
   ep.doses.push({
     time: timeStr || new Date().toISOString(),
     medicine: medicine || 'Crocin / Paracetamol',
     dose: dose || '',
-    notes: notes || ''
+    notes: notes || '',
+    ...(form ? { form } : {})
   });
   save(KEYS.feverEpisodes, _feverEpisodes);
   renderFeverEpisodeCard();
@@ -229,8 +292,7 @@ function renderFeverEpisodeCard() {
 
   // Get weight for dose calc
   // The latest WEIGHT, not the last row: a height-only last row made the dose silently vanish (Carina V-CA-282f-5).
-  const latestWeight = (getLatestWeight() || {}).wt || null;
-  const doseInfo = getParacetamolDose(latestWeight);
+  const paraChip = getParacetamolChip(getLatestWeight());
 
   let html = '';
 
@@ -325,9 +387,25 @@ function renderFeverEpisodeCard() {
   } else {
     html += '<div class="fe-dose-row" style="color:var(--light);font-size:var(--fs-xs);">No medicine logged yet</div>';
   }
-  // Log dose button
-  const defaultDose = doseInfo ? doseInfo.display : '';
-  html += '<div style="padding:var(--sp-4) 0;"><span class="fe-action-chip" data-action="feLogDosePrompt">+ Log Crocin dose' + (defaultDose ? ' (' + defaultDose + ')' : '') + '</span></div>';
+  // Paracetamol: which bottle, then the dose for HER weight — named, dated, sanity-checked (Maren V-M-282g-6).
+  html += '<div class="fe-action-chips">';
+  PARACETAMOL_FORMS.forEach(f => {
+    html += '<span class="fe-action-chip' + (f.id === paraChip.form.id ? ' active' : '') + '" data-action="feSetParaForm" data-arg="' + escAttr(f.id) + '">' + escHtml(f.label) + '</span>';
+  });
+  html += '</div>';
+  if (paraChip.state === 'ok') {
+    html += '<div class="fe-para-dose">' + escHtml(paraChip.dose.display) + ' of ' + escHtml(paraChip.form.label.toLowerCase())
+      + ' <span class="t-light">· for ' + escHtml(String(paraChip.wt)) + ' kg, weighed ' + escHtml(paraChip.dateLabel) + '</span></div>';
+    if (paraChip.stale) {
+      html += '<div class="fe-para-note">That weight is ' + Math.floor(paraChip.ageDays / 7) + ' weeks old. The dose follows weight, so weigh ' + pron('obj') + ' again when you can, and check with your doctor.</div>';
+    }
+  } else if (paraChip.state === 'implausible') {
+    html += '<div class="fe-para-note fe-para-warn">The last weight, ' + escHtml(String(paraChip.wt)) + ' kg, looks off for ' + pron('poss') + ' age. Check it in Growth before working out a dose.</div>';
+  } else {
+    html += '<div class="fe-para-note">Add a weight in Growth to see a dose. Dosing is by weight.</div>';
+  }
+  html += '<div class="fe-para-note t-light">Use the syringe from this bottle. At least 4 h apart, no more than 4 doses in 24 h.</div>';
+  html += '<div class="fe-para-log"><span class="fe-action-chip" data-action="feLogDosePrompt">+ Log paracetamol dose</span></div>';
 
   // Actions section
   html += '<div class="fe-section-title">Actions</div>';
@@ -477,12 +555,12 @@ function feLogDosePrompt() {
   const ep = getActiveFeverEpisode();
   if (!ep) return;
   // The latest WEIGHT, not the last row: a height-only last row made the dose silently vanish (Carina V-CA-282f-5).
-  const latestWeight = (getLatestWeight() || {}).wt || null;
-  const doseInfo = getParacetamolDose(latestWeight);
-  const defaultDose = doseInfo ? doseInfo.lowMl + ' ml' : '';
-  const dose = prompt('Crocin / Paracetamol dose given:', defaultDose);
+  const chip = getParacetamolChip(getLatestWeight());
+  // Prefill only from a believable weight; otherwise the parent types what they gave.
+  const defaultDose = chip.state === 'ok' ? chip.dose.lowMl + ' ml' : '';
+  const dose = prompt('Paracetamol (' + chip.form.label + ') given:', defaultDose);
   if (dose === null) return;
-  logFeverDose('Crocin / Paracetamol', dose, null, '');
+  logFeverDose('Paracetamol ' + chip.form.label, dose, null, '', chip.form.id);
   showQLToast(zi('pill') + ' Dose logged');
 }
 
@@ -793,7 +871,7 @@ function renderFeverHistory() {
     html += _epHistoryRowOpen('fever', ep);
     html += '<div class="fe-history-date"><span>' + startD + (endD && endD !== startD ? ' — ' + endD : '') + ' · Peak: ' + ep.peakTemp.toFixed(1) + '°F</span>' + _epHistoryEditLabel(ep) + '</div>';
     html += '<div class="fe-history-detail">Duration: ' + dur + ' · ' + readingCount + ' reading' + (readingCount !== 1 ? 's' : '');
-    if (doseCount > 0) html += ' · Crocin ×' + doseCount;
+    if (doseCount > 0) html += ' · Paracetamol ×' + doseCount;
     html += '</div>';
     if (ep.resolvedNotes) html += '<div class="fe-history-detail">' + escHtml(ep.resolvedNotes) + '</div>';
     html += _epHistoryEditedLine(ep);
@@ -836,7 +914,7 @@ function computeFeverAlerts() {
       alerts.push({
         id: 'fever-dose-available', key,
         severity: 'info', icon: zi('pill'),
-        title: 'Crocin dose available',
+        title: 'Paracetamol dose available',
         body: 'Next dose is safe to give (if needed, as advised by doctor). Last dose was ' + _feverTimeAgo(ep.doses[ep.doses.length - 1].time) + '.',
         tab: 'medical', dismissable: true
       });
