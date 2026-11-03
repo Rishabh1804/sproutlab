@@ -27766,13 +27766,17 @@ function daysBetween(d1, d2) {
   return Math.round(Math.abs(new Date(d2) - new Date(d1)) / 86400000);
 }
 
+// A bare 'YYYY-MM-DD' is a LOCAL calendar day: parse it at local noon, then step whole days (HR-12).
+// new Date('YYYY-MM-DD') is UTC midnight — west of Greenwich the previous evening — so the step
+// landed a day early: in New York _offsetDateStr(today(), 1) returned today (Carina V-CA-282f-3).
+// A Date or a full date-time keeps its instant.
 function _offsetDateStr(baseDate, offsetDays) {
-  var d = new Date(baseDate);
+  var d = _parseLocalDate(baseDate) || new Date(baseDate);   // HR-12: a date-time or Date keeps its instant
   d.setDate(d.getDate() + offsetDays);
   return toDateStr(d);
 }
 function addDays(dateStr, days) {
-  const d = new Date(dateStr);
+  const d = _parseLocalDate(dateStr) || new Date(dateStr);   // HR-12: as _offsetDateStr
   d.setDate(d.getDate() + days);
   return toDateStr(d);
 }
@@ -30872,9 +30876,9 @@ function gvAgePhrase(entryOrDate) {
 //      drop outranks "not confirmed", whose text branch comes later (Maren V-M-282e-3).
 // Read-time lines (todayDay), each bounded in time (PC-7; Maren V-M-282e-6, -7, Kael V-K-282e-2):
 //   - 'newborn' carries a recheck (caution) once TODAY is day 14+ while the weigh-in was before day
-//     14 (V-M-282b-4). On days 14–20 it is "weigh again in the next day or two, before 3 weeks"
+//     14 (V-M-282b-4). On days 14–20 it is "weigh again in the next day or two, by 3 weeks"
 //     ("today or tomorrow" on days 19–20 — GV_TODAY_OR_TOMORROW_DAY).
-//   - A day 14–20 'not-regained' reading read on days 19–20 says "today or tomorrow — before 3 weeks";
+//   - A day 14–20 'not-regained' reading read on days 19–20 says "today or tomorrow — by 3 weeks";
 //     read on days 21–91 it is overdue: NICE 1.1.4's referral wording, action and score, with the
 //     actual age ("it is now N weeks", never "3 weeks have now passed").
 //   - A last weigh-in before day 14 read on days 21–91 → weighToday (Maren V-M-282d-5): with a birth
@@ -30893,6 +30897,7 @@ const GV_NEWBORN_LOSS_DAYS = 21;         // "the early days of life" — before 
 const GV_REGAIN_DAYS = 28;               // regain judged until the lookback leaves the first weigh-in
 const GV_REGAIN_START_DAY = 5;           // AAP: "about 5 days old … gaining weight steadily"
 const GV_REGAIN_REFER_DAY = 21;          // NICE 1.1.1 / 1.1.4: back by 3 weeks
+const GV_STALE_READING_DAYS = 28;       // a newborn reading goes stale only once the weigh-in itself is 4+ weeks old (Maren V-M-282f-1)
 const GV_REGAIN_LATE_DAYS = 92;          // below birth weight past day 28 is flagged until ~3 months; read-time "today" lines stop here (V-M-282e-7)
 const GV_TODAY_OR_TOMORROW_DAY = 19;     // days 19–20: "in the next day or two" would run past day 21, so "today or tomorrow" (V-M-282e-7)
 const GV_DROP_NOISE_G = 20;              // a drop since the last weigh-in counts from 20 g: home scales vary ±10–20 g (Kael V-K-282d-2)
@@ -31032,7 +31037,12 @@ function gvNewbornCheck(latest, first) {
         else status = 'regained';
       } else status = day >= GV_NEWBORN_DAYS ? 'not-regained' : 'newborn';
     } else if (day >= GV_NEWBORN_DAYS) {
-      if (first && first.date !== latest.date && lG <= Math.round(first.wt * 1000)) { status = 'not-regained'; noBirthLower = true; }
+      // "Lower than the first weigh-in" stands for "not back to birth weight" only when that first
+      // weigh-in was in the after-birth dip (before day 14) and the drop is beyond scale noise; a later
+      // stand-in or a 10 g wobble gave a false NICE referral (Kael V-K-282f-3). Otherwise "not confirmed".
+      const firstDay = first && first.date ? gvDayOf(first.date) : NaN;
+      if (first && first.date !== latest.date && isFinite(firstDay) && firstDay < GV_NEWBORN_DAYS
+          && Math.round(first.wt * 1000) - lG >= GV_DROP_NOISE_G) { status = 'not-regained'; noBirthLower = true; }
       else { status = 'newborn'; birthUnknown = true; }
     } else status = 'newborn';
   } else if (hasBirth && lG < bG && day >= GV_REGAIN_DAYS && day < GV_REGAIN_LATE_DAYS) status = 'not-regained';
@@ -31050,7 +31060,11 @@ function gvNewbornCheck(latest, first) {
   const todayKnown = isFinite(todayDay);
   // From about 3 months (GV_REGAIN_LATE_DAYS) a "today" for a weigh-in from the newborn weeks is no
   // longer the action (Maren V-M-282e-7, Kael V-K-282e-2): overdue, weighToday and the recheck stop.
-  const late = todayKnown && todayDay >= GV_REGAIN_LATE_DAYS;
+  // Stale needs BOTH: today past about 3 months AND the weigh-in itself at least 4 weeks old. Keyed on
+  // today's age alone, a baby still below birth weight at 13 weeks and weighed YESTERDAY flipped from
+  // "contact today" to "next week" on day 92 (Maren V-M-282f-1, blocking).
+  const readingOld = todayKnown && todayDay - day >= GV_STALE_READING_DAYS;
+  const late = todayKnown && todayDay >= GV_REGAIN_LATE_DAYS && readingOld;
   // A day 14–20 'not-regained' reading still standing on day 21 or later has passed NICE 1.1.4's
   // 3-week line with no newer weigh-in: it escalates to the referral wording, action and score.
   const overdueCand = status === 'not-regained' && day < GV_REGAIN_REFER_DAY && todayKnown && todayDay >= GV_REGAIN_REFER_DAY;
@@ -31061,12 +31075,14 @@ function gvNewbornCheck(latest, first) {
   // referral) read from about 3 months with no newer weigh-in goes stale too: not "contact today" for a
   // months-old weight, but not neutral either — a caution line and the weight check in the next week
   // (Lyra, round-5 decision 4; Maren V-M-282e-4 tiers). A plain out-of-date recheck stays neutral.
-  const staleWasStatus = status;
-  const staleConcern = late && (status === 'newborn-loss' || status === 'not-regained');
-  const stale = late && (overdueCand || plainRecheck || staleConcern);
+  const staleWasStatus = stillLosing ? 'still-losing' : status;
+  // Still losing is a concern too; a drop or an unconfirmed return goes plain stale (Maren V-M-282f-2).
+  const staleConcern = late && (status === 'newborn-loss' || status === 'not-regained' || stillLosing);
+  const stale = late && (plainRecheck || staleConcern || dropping || birthUnknown);
+  if (stale) { stillLosing = false; dropping = false; birthUnknown = false; }   // the stale line speaks instead
   if (stale) status = 'newborn';
   const overdue = overdueCand && !stale;
-  // Days 14–20: "in the next day or two — before 3 weeks"; on days 19–20 the next day or two would
+  // Days 14–20: "in the next day or two — by 3 weeks"; on days 19–20 the next day or two would
   // run past day 21, so "today or tomorrow" (Maren V-M-282e-7).
   const when = todayKnown && todayDay >= GV_TODAY_OR_TOMORROW_DAY ? 'today or tomorrow' : 'in the next day or two';
   const weeksNow = todayKnown ? Math.floor(todayDay / 7) : null;
@@ -31096,13 +31112,13 @@ function gvNewbornCheck(latest, first) {
     const lead = noBirthLower
       ? 'Lower than at day ' + startDay + ' — not back to birth weight yet' + (r.referral ? ' at ' + day + ' days' : '') + '.'
       : 'Not back to birth weight yet at ' + day + ' days.';
-    // Day 14–20: the action, bounded — before 3 weeks, NICE 1.1.4's line (Maren V-M-282d-4); on days
+    // Day 14–20: the action, bounded — by 3 weeks, NICE 1.1.4's line (Maren V-M-282d-4); on days
     // 19–20 "today or tomorrow". Overdue: the actual age, "it is now N weeks" (Maren V-M-282e-7).
     r.text = overdue
       ? lead + ' That was the last weigh-in, and it is now ' + weeksNow + ' weeks — contact your doctor or midwife today, and weigh ' + childNameHtml() + ' when you can.'
       : r.referral
       ? lead + ' Almost all babies are back by 3 weeks, and this is when doctors consider a referral to a children\'s doctor — contact your doctor or midwife today.'
-      : lead + ' Tell your doctor or midwife ' + when + ' — before 3 weeks. Most babies are back by about 2 weeks, almost all by 3.';
+      : lead + ' Tell your doctor or midwife ' + when + ' — by 3 weeks. Most babies are back by about 2 weeks, almost all by 3.';
     r.short = r.referral
       ? (overdue ? 'Not back to birth weight at the last weigh-in, and it is now ' + weeksNow + ' weeks' : day < GV_REGAIN_DAYS ? 'Not back to birth weight at 3 weeks' : 'Still below birth weight at ' + Math.floor(day / 7) + ' weeks') + ' — contact your doctor or midwife today'
       : 'Not back to birth weight yet — tell your doctor or midwife ' + when;
@@ -31161,25 +31177,26 @@ function gvNewbornCheck(latest, first) {
     // From day 92, a last weigh-in that was more than 10% down or not back to birth weight: caution and
     // the weight check in the next week, scored 50 through recheck (round-5 decision 4).
     r.tone = 'caution';
-    const then = staleWasStatus === 'newborn-loss' ? 'more than 10% below birth weight' : 'not back to birth weight';
+    const then = staleWasStatus === 'newborn-loss' ? 'more than 10% below birth weight' : staleWasStatus === 'still-losing' ? 'still losing weight' : 'not back to birth weight';
     r.text = 'Last weighed on day ' + day + ', when ' + childNameHtml() + ' was ' + then + ', and not weighed since — ' + GV_ACT_WEIGHT_CHECK.charAt(0).toLowerCase() + GV_ACT_WEIGHT_CHECK.slice(1) + '.';
     r.short = 'Not weighed since day ' + day + ' (' + then + ' then) — book a weight check in the next week';
     r.head = 'not weighed since day ' + day;
-    r.chip = 'Weigh now';
+    r.chip = 'Weigh this week';
     r.visit = 'Last weighed on day ' + day + ', ' + then + '; not weighed since';
   } else if (stale) {
     // From day 92 a weigh-in from the newborn weeks is simply out of date: neutral, no "today"
     // (Maren V-M-282e-7, Kael V-K-282e-2). Scored neutral (status 'newborn', no recheck).
     r.tone = 'neutral';
-    r.text = 'No weigh-in since day ' + day + ' — weigh ' + childNameHtml() + ' and show your doctor the chart.';
-    r.short = 'No weigh-in since day ' + day + ' — weigh and show your doctor the chart';
+    // "since … days old" matches the other newborn lines; bounded in time (Vela V-V-282f-7, Maren V-M-282f-6).
+    r.text = 'No weigh-in since ' + childNameHtml() + ' was ' + day + ' days old — weigh ' + childNameHtml() + ' and show your doctor the chart ' + GV_WHEN_MENTION + '.';
+    r.short = 'No weigh-in since ' + day + ' days old — weigh and show your doctor the chart';
     r.head = 'no weigh-in since day ' + day;
-    r.chip = 'Weigh now';
-    r.visit = 'Last weighed on day ' + day + (overdueCand ? ', not back to birth weight then' : '') + '; not weighed since';
+    r.chip = 'Weigh soon';
+    r.visit = 'Last weighed on day ' + day + '; not weighed since';   // overdue readings are staleConcern (Kael V-K-282f-8)
   } else if (r.recheck) {
-    // Days 14–20, last weighed before day 14: bounded — before 3 weeks (Maren V-M-282e-6).
+    // Days 14–20, last weighed before day 14: bounded — by 3 weeks (Maren V-M-282e-6).
     r.tone = 'caution';
-    r.text = 'Last weighed at ' + day + ' days, during the after-birth dip — weigh again ' + when + ', before 3 weeks, to check ' + childNameHtml() + ' is back to birth weight.';
+    r.text = 'Last weighed at ' + day + ' days, during the after-birth dip — weigh again ' + when + ', by 3 weeks, to check ' + childNameHtml() + ' is back to birth weight.';
     r.short = 'Weigh again ' + when + ' — back to birth weight not yet confirmed';
     r.head = 'weigh again';
     r.chip = 'Weigh again';
@@ -31198,17 +31215,17 @@ function gvNewbornCheck(latest, first) {
 // V-K-282c-3, V-V-282c-3) — or the stale line's own action (V-M-282e-7). null otherwise.
 function gvNewbornAction(nb) {
   if (nb && nb.staleConcern) return GV_ACT_WEIGHT_CHECK;   // a months-old concerning reading (round-5 decision 4)
-  if (nb && nb.stale) return 'Weigh ' + childNameHtml() + ' and show your doctor the chart';
+  if (nb && nb.stale) return 'Weigh ' + childNameHtml() + ' and show your doctor the chart ' + GV_WHEN_MENTION;   // bounded (Maren V-M-282f-6)
   if (!nb || nb.tone !== 'caution') return null;
   if (nb.status === 'newborn-loss' || nb.referral) return 'Contact your doctor or midwife today';
-  if (nb.status === 'not-regained') return 'Tell your doctor or midwife ' + (nb.when || 'in the next day or two') + ' — before 3 weeks';
+  if (nb.status === 'not-regained') return 'Tell your doctor or midwife ' + (nb.when || 'in the next day or two') + ' — by 3 weeks';   // NICE 1.1.4's "by 3 weeks" (Maren V-M-282f-7)
   if (nb.stillLosing) return 'Tell your doctor or midwife today';
   if (nb.weighToday) return nb.birthWt == null
     ? 'Weigh ' + childNameHtml() + ' today and compare with the birth weight from the hospital record — if not back to birth weight, contact your doctor or midwife today'
     : 'Weigh ' + childNameHtml() + ' today — if not back to birth weight, contact your doctor or midwife';
   if (nb.dropping) return 'Weigh ' + childNameHtml() + ' again in a day or two, and tell your doctor or midwife if it keeps dropping';
   if (nb.birthUnknown) return 'Add the birth weight, or ask your doctor or midwife';
-  return 'Weigh ' + childNameHtml() + ' again ' + (nb.when || 'in the next day or two') + ', before 3 weeks, to confirm the return to birth weight';
+  return 'Weigh ' + childNameHtml() + ' again ' + (nb.when || 'in the next day or two') + ', by 3 weeks, to confirm the return to birth weight';
 }
 // The "too soon to judge" line for a toddler whose two weigh-ins are under 28 days apart — one copy
 // for every reader (Info card, Q&A, Growth facts, the growth-diet card — Vela V-V-282c-6).
@@ -31254,6 +31271,16 @@ const GV_WHEN_MENTION = 'at the next check-up, or within a month if none is book
 const GV_ACT_WEIGHT_CHECK = 'Book a weight check with your doctor ' + GV_WHEN_WEIGHT_CHECK;
 const GV_ACT_MENTION_SLOW = 'Mention the slow weight gain to your doctor ' + GV_WHEN_MENTION;
 const GV_ACT_MENTION_CENTILE = 'Mention the centile change to your doctor ' + GV_WHEN_MENTION;
+// The ONE doctor action for slow gain, a plateau or a loss (a computeGrowthVelocity weight result):
+// under 28 days old, today; a loss or a plateau, the weight check in the next week; slower gain, the
+// mention. Every surface leads with it — Q&A, Info card and insight, Growth facts — and any food line
+// or gate note comes second (Ceres V-C-282f-1..4, PC-10). null when the weight is not slow.
+function gvSlowAction(w) {
+  if (!w || w.nb || w.tooShort || (w.status !== 'slow' && w.status !== 'plateau')) return null;
+  const d = w.latest && w.latest.date ? gvDayOf(w.latest.date) : NaN;
+  if (isFinite(d) && d < GV_REGAIN_DAYS) return 'Tell your doctor or midwife today';
+  return (w.gainG < 0 || w.status === 'plateau') ? GV_ACT_WEIGHT_CHECK : GV_ACT_MENTION_SLOW;
+}
 
 // ── A gain above the shown band: one line and one tone (Kael V-K-282e-7, Vela V-V-282e-3, PC-10) ──
 // status 'on-track' with the band verdict 'above' (1.0–1.3× the top) → good, "a little above the usual
@@ -54724,7 +54751,7 @@ function renderGrowthFacts() {
       const rateT = cw.gPerDay >= 0 ? `Gaining ${cw.gPerDay}g/day` : `Down ${Math.abs(cw.gPerDay)}g/day`;
       // The concern answer's tiers (Maren V-M-282e-4, PC-7): a loss or a plateau is a weight check in
       // the next week; slower gain is a mention at the next check-up, or within a month.
-      const slowAct = (cw.gainG < 0 || cw.status === 'plateau') ? `Book a weight check with your doctor ${GV_WHEN_WEIGHT_CHECK}` : `Mention it to your doctor ${GV_WHEN_MENTION}`;
+      const slowAct = gvSlowAction(cw) || GV_ACT_MENTION_SLOW;   // one source (Ceres V-C-282f-1, PC-10)
       facts.push({ type:'caution', icon:zi('scale'), title:`${rateT} — below the usual ${range} for this age`, body:`Over the last ${cw.daysBetween} days. ${slowAct} — ${pron('poss')} doctor can look at the whole curve.` });
     }
   }
@@ -54961,19 +54988,17 @@ function deleteEvent(i) {
 // @@INSERT_DATA_BLOCK_5@@
 
 // Get latest entry that has a weight value
+// The latest row of the shared filter (gvMeasureRows: numeric weight > 0, valid date, sorted), so a
+// synced wt:0 or undated row can't become "latest" and every reader picks the same row (Carina V-CA-282f-4).
 function getLatestWeight() {
-  for (let i = growthData.length - 1; i >= 0; i--) {
-    if (growthData[i].wt != null) return growthData[i];
-  }
-  return null;
+  const rows = gvMeasureRows('wt');
+  return rows.length ? rows[rows.length - 1] : null;
 }
 
 // Get latest entry that has a height value
 function getLatestHeight() {
-  for (let i = growthData.length - 1; i >= 0; i--) {
-    if (growthData[i].ht != null) return growthData[i];
-  }
-  return null;
+  const rows = gvMeasureRows('ht');
+  return rows.length ? rows[rows.length - 1] : null;
 }
 
 // ageMonthsAt() lives in core.js beside ageAt() / _parseLocalDate() (V-CA-282b-4).
@@ -64844,16 +64869,16 @@ function renderInfoGrowthVelocity() {
         // (gvGateNote — Ceres V-C-282d-1). A loss ends with the doctor, never "review caloric intake"
         // alone (Ceres V-C-282d-2).
         var slowLead = w2.gPerDay < 0 ? 'Weight down ' + Math.abs(w2.gPerDay) + 'g/day' : 'Weight gain has slowed to ' + w2.gPerDay + 'g/day';
-        var slowTail = !gvFoodAdviceOk() ? gvGateNote() : w2.gPerDay < 0 ? 'Review caloric intake. ' + GV_ACT_WEIGHT_CHECK + '.' : 'Review caloric intake.';
+        // The doctor action first (gvSlowAction), then the gate note or the food prompt (Ceres V-C-282f-3, -4).
+        var slowTail = (gvSlowAction(w2) || GV_ACT_MENTION_SLOW) + '. ' + (!gvFoodAdviceOk() ? gvGateNote() : 'Review calorie intake too.');
         iHtml += '<div class="si-insight si-insight-warn">' + slowLead + ' — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. ' + escHtml(slowTail) + '</div>';
       } else if (w2.status === 'plateau') {
         // A loss reads "down", never "only -40g gained"; under the food gate no "dietary gap" — milk
-        // is the whole diet (Ceres V-C-282c-5, Maren V-M-282c-9). A loss on the food-OK path drops
+        // is the main diet (Ceres V-C-282c-5, Maren V-M-282c-9). A loss on the food-OK path drops
         // "could be normal" and ends with the doctor (Ceres V-C-282d-2).
         var platLead = w2.gainG < 0 ? 'Weight down ' + Math.abs(w2.gainG) + 'g in ' + w2.daysBetween + ' days.' : 'Only ' + w2.gainG + 'g gained in the last ' + w2.daysBetween + ' days.';
-        var platTail = !gvFoodAdviceOk() ? ' This can happen after illness or a feeding change. ' + gvGateNote()
-          : w2.gainG < 0 ? ' This can follow an illness or a dietary gap. ' + GV_ACT_WEIGHT_CHECK + '.'
-          : ' This could be normal after illness or a dietary gap.';
+        // The doctor action first and never "could be normal" (Ceres V-C-282f-3; BUGS #117's pattern).
+        var platTail = ' ' + (gvSlowAction(w2) || GV_ACT_WEIGHT_CHECK) + '. ' + (!gvFoodAdviceOk() ? 'It can follow an illness or a feeding change. ' + gvGateNote() : 'It can follow an illness or a dietary gap.');
         iHtml += '<div class="si-insight si-insight-warn">' + platLead + escHtml(platTail) + '</div>';
       } else if (w2.status === 'fast') {
         // One line, one tone with the Growth facts and the concern answer (gvAboveBandLine — V-V-282e-3).
@@ -69809,6 +69834,14 @@ function _qaActionRank(text) {
   return 3;
 }
 function _qaSortActions(items) {
+  // One tier per concern: when the weight check (in the next week) or a "today" action is shown, a
+  // milder mention for the same worry is dropped (Maren V-M-282f-4); exact duplicates go too.
+  var strong = items.some(function(a) { return a.text === GV_ACT_WEIGHT_CHECK || /\btoday\b/i.test(a.text); });
+  var seen = {};
+  items = items.filter(function(a) {
+    if (seen[a.text]) return false; seen[a.text] = true;
+    return !(strong && (a.text === GV_ACT_MENTION_SLOW || a.text === GV_ACT_MENTION_CENTILE));
+  });
   return items.map(function(a, i) { return { a: a, i: i }; })
     .sort(function(x, y) { return (_qaActionRank(x.a.text) - _qaActionRank(y.a.text)) || (x.i - y.i); })
     .map(function(x) { return x.a; });
@@ -69894,10 +69927,13 @@ function qaAnswerWeightGain(intentId) {
     } else if (w.status === 'slow') {
       tail = (w.gPerDay < 0 ? 'down ' + Math.abs(w.gPerDay) + ' g/day' : 'gaining slowly (' + w.gPerDay + ' g/day)');
       dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day — below expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ' g/day', signal: 'warn' });
+      // The doctor action first, the same tier as "is she losing weight" (gvSlowAction — Ceres V-C-282f-1, PC-10).
+      if (gvSlowAction(w)) actionItems.push({ text: gvSlowAction(w), signal: 'action' });
       actionItems.push({ text: foodOk ? 'Add calorie-dense foods: ghee, banana, avocado, smooth nut butter thinned with milk or water (once nuts have been introduced)' : gateNote, signal: 'action' });
     } else if (w.status === 'plateau') {
       tail = w.gainG < 0 ? 'weight down ' + Math.abs(w.gainG) + ' g in ' + w.daysBetween + ' days' : 'weight plateau detected';
       dataItems.push({ text: w.gainG < 0 ? 'Weight down ' + Math.abs(w.gainG) + 'g in ' + w.daysBetween + ' days' : 'Only ' + w.gainG + 'g gained in ' + w.daysBetween + ' days', signal: 'warn' });
+      if (gvSlowAction(w)) actionItems.push({ text: gvSlowAction(w), signal: 'action' });   // Ceres V-C-282f-1
       actionItems.push({ text: foodOk ? 'Consider adding an extra meal or calorie-dense toppings' : gateNote, signal: 'action' });
     } else if (w.status === 'fast') {
       tail = 'gaining quickly (' + w.gPerDay + ' g/day)';
@@ -70718,7 +70754,7 @@ function qaAnswerWeightConcern(intentId) {
   var pctC = gv.latestPercentile;
   // At or below the 3rd centile line (gvPctLow — V-M-282e-1), and only outside the newborn window:
   // the after-birth dip moves the percentile by design, so there it is not a concern (Kael V-K-282e-6).
-  var lowPct = gvPctLow(pctC) && !nbWin;
+  var lowPct = gvPctLow(pctC) && !(gv.weight && gv.weight.nb);   // any newborn line, 'regained' too (Kael V-K-282f-4)
   var slideC = gv.centileSlide || null;
   var lastCrossC = gv.crossings && gv.crossings.length > 0 ? gv.crossings[gv.crossings.length - 1] : null;
   var dropC = !!(lastCrossC && lastCrossC.direction === 'dropping');
@@ -70761,9 +70797,7 @@ function qaAnswerWeightConcern(intentId) {
     } else {
       // Slow or plateau (a loss included): a warning with a doctor action, bounded in time (V-M-282e-4).
       dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'warn' });
-      actionItems.push({ text: under28 ? 'Tell your doctor or midwife today'
-        : (w.gainG < 0 || w.status === 'plateau') ? GV_ACT_WEIGHT_CHECK
-        : GV_ACT_MENTION_SLOW, signal: 'action' });
+      actionItems.push({ text: gvSlowAction(w) || (under28 ? 'Tell your doctor or midwife today' : GV_ACT_MENTION_SLOW), signal: 'action' });   // one source (gvSlowAction)
     }
   }
 
@@ -70880,7 +70914,8 @@ function qaAnswerGrowth(intentId) {
   // ordinal from the one helper (V-V-282e-5). Not judged in the newborn window (Kael V-K-282e-6).
   var lowG = gv.latestPercentile !== null && gvPctLow(gv.latestPercentile) && !(gv.weight && gv.weight.nb);
   if (gv.latestPercentile !== null) {
-    var pctSignal = lowG || gv.latestPercentile > 97 ? 'warn' : 'good';
+    // In the newborn window the percentile is not judged: info, never a green "below 3rd" (Kael V-K-282f-4).
+    var pctSignal = (gv.weight && gv.weight.nb) ? 'info' : (lowG || gv.latestPercentile > 97) ? 'warn' : 'good';
     dataItems.push({ text: lowG ? GV_LOW_CENTILE_LINE : 'Weight percentile: ' + pctOrdinal(gv.latestPercentile), signal: pctSignal });
   }
 
@@ -70889,7 +70924,7 @@ function qaAnswerGrowth(intentId) {
   var lowEndG = lowG;
   if (gv.crossings && gv.crossings.length > 0) {
     var lastCross = gv.crossings[gv.crossings.length - 1];
-    dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to), signal: 'warn' });
+    dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to), signal: lastCross.direction === 'dropping' ? 'warn' : 'good' });   // a climb is not a warning (Kael V-K-282f-6, Vela V-V-282f-4)
     if (lastCross.direction === 'dropping' && gvPctLow(lastCross.to)) lowEndG = true;
   }
   // A slow fall across two major centile lines (computeGrowthVelocity, V-M-282c-11).
@@ -70898,7 +70933,7 @@ function qaAnswerGrowth(intentId) {
     if (gvPctLow(gv.centileSlide.to)) lowEndG = true;
   }
   if (lowEndG || gv.centileSlide) actionItems.push({ text: GV_ACT_WEIGHT_CHECK, signal: 'action' });
-  else if (gv.crossings && gv.crossings.length > 0) actionItems.push({ text: GV_ACT_MENTION_CENTILE, signal: 'action' });
+  else if (gv.crossings && gv.crossings.length > 0 && gv.crossings[gv.crossings.length - 1].direction === 'dropping') actionItems.push({ text: GV_ACT_MENTION_CENTILE, signal: 'action' });
 
   // Proportionality
   if (gv.proportionFlag) {
@@ -70919,7 +70954,7 @@ function qaAnswerGrowth(intentId) {
     var wOk = gv.weight && ((gv.weight.nb && gv.weight.nb.status === 'regained') || (!gv.weight.nb && !gv.weight.tooShort && gv.weight.status === 'on-track'));
     var wSlow = gv.weight && !gv.weight.nb && !gv.weight.tooShort && (gv.weight.status === 'slow' || gv.weight.status === 'plateau');
     actionItems.push(wOk ? { text: 'Growth is on track — next measurement in 2-4 weeks', signal: 'good' }
-      : wSlow ? { text: (gv.weight.gainG < 0 || gv.weight.status === 'plateau') ? GV_ACT_WEIGHT_CHECK : GV_ACT_MENTION_SLOW, signal: 'action' }   // the concern answer's tiers (V-M-282e-4)
+      : wSlow ? { text: gvSlowAction(gv.weight) || GV_ACT_MENTION_SLOW, signal: 'action' }   // one source (gvSlowAction — Ceres V-C-282f-1)
       : gv.weight && gv.weight.tooShort ? { text: 'Weigh again in a few weeks', signal: 'action' }
       : gv.weight && gv.weight.nb ? { text: 'Keep to the weigh-ins your doctor or midwife suggests', signal: 'action' }
       : { text: 'Next measurement in 2-4 weeks', signal: 'action' });
@@ -73006,7 +73041,8 @@ function renderFeverEpisodeCard() {
   card.style.borderLeft = '4px solid ' + sev.color;
 
   // Get weight for dose calc
-  const latestWeight = growthData.length > 0 ? growthData[growthData.length - 1].wt : null;
+  // The latest WEIGHT, not the last row: a height-only last row made the dose silently vanish (Carina V-CA-282f-5).
+  const latestWeight = (getLatestWeight() || {}).wt || null;
   const doseInfo = getParacetamolDose(latestWeight);
 
   let html = '';
@@ -73253,7 +73289,8 @@ function feLogReadingFromInput() {
 function feLogDosePrompt() {
   const ep = getActiveFeverEpisode();
   if (!ep) return;
-  const latestWeight = growthData.length > 0 ? growthData[growthData.length - 1].wt : null;
+  // The latest WEIGHT, not the last row: a height-only last row made the dose silently vanish (Carina V-CA-282f-5).
+  const latestWeight = (getLatestWeight() || {}).wt || null;
   const doseInfo = getParacetamolDose(latestWeight);
   const defaultDose = doseInfo ? doseInfo.lowMl + ' ml' : '';
   const dose = prompt('Crocin / Paracetamol dose given:', defaultDose);
@@ -82178,21 +82215,22 @@ function renderInfoGrowthDiet() {
     // (Ceres V-C-282d-4b).
     if (velLabel === 'slow' && !foodOkCard) {
       var slowCardLead = velocity < 0 ? 'Weight down ' + Math.abs(velocity) + ' g/day — below the typical range.' : 'Growth velocity is below typical range (' + velocity + ' g/day).';
-      iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml(gvGateNote()) + '</div>';
+      iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml((gvSlowAction(gvW) || GV_ACT_MENTION_SLOW) + '. ' + gvGateNote()) + '</div>';   // tier first (Ceres V-C-282f-4)
     } else if (velLabel === 'slow' && velocity < 0) {
       // A loss on the food-OK path: the same answer the Info insight gives (doctor line first-class),
       // never "monitor at next weigh-in" (Ceres V-C-282e-1, PC-10). Low coverage stays as a second line.
-      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. ' + escHtml(GV_ACT_WEIGHT_CHECK) + '.</div>';   // the Info insight's tier (V-M-282e-4)
+      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. ' + escHtml(gvSlowAction(gvW) || GV_ACT_WEIGHT_CHECK) + '.</div>';   // one source (gvSlowAction)
       var lowNutrientsLoss = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
       if (lowNutrientsLoss.length > 0) iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrientsLoss.slice(0, 2).join(' and ')) + ' coverage has been low in this period too.</div>';
     } else if (velLabel === 'slow') {
       var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
         return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;
       });
+      // The doctor action leads, never "monitor at next weigh-in" (Ceres V-C-282f-2, PC-10); the food
+      // prompt follows as a second line.
+      iHtml += '<div class="si-insight si-insight-warn">Weight gain is below the typical range (' + velocity + ' g/day). ' + escHtml(gvSlowAction(gvW) || GV_ACT_MENTION_SLOW) + '.</div>';
       if (lowNutrients.length > 0) {
-        iHtml += '<div class="si-insight si-insight-warn">Slow growth velocity coincides with low ' + lowNutrients.slice(0, 2).join(' and ') + ' coverage — consider adding rich sources</div>';
-      } else {
-        iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day) — monitor at next weigh-in</div>';
+        iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrients.slice(0, 2).join(' and ')) + ' coverage has been low in this period — consider adding rich sources.</div>';
       }
     } else if (gvNb) {
       var nbInsCls = gvNb.tone === 'caution' ? 'si-insight-warn' : gvNb.tone === 'good' ? 'si-insight-good' : 'si-insight-info';
