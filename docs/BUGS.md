@@ -1,11 +1,63 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-10-31 (child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
+**Last updated:** 2026-11-03 (paracetamol chip #284 section: g-6 fixed, its deferrals logged as #161–#162; prior: 2026-10-31 child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
+
+### Paracetamol chip — 2026-11-03 (PR #284, Maren V-M-282g-6)
+
+The fever card's dose chip, which named no weight, date or bottle and had no check on a mistyped weight. The fix shipped in #284 after a full canon-cc-008 round (Kael, Maren, Carina, Vela, Ceres, then Cipher). The deferred items below were all sorted DEFERRABLE by their Governor and must not be lost. Full detail is in the #284 PR description.
+
+#### P0 — Paracetamol chip could dose from a mistyped or stale weight, for the wrong bottle (160)
+- **Symptom:** The chip showed "1.0–1.4 ml" with no weight, date or bottle. A weight typed as 95 kg for 9.5 kg scaled the dose tenfold. Syrup and drops were not told apart. The 4-in-24 h limit was not enforced.
+- **Cause:** `getParacetamolDose` scaled straight from the latest weight and assumed one formulation. The countdown only checked the 4 h gap within the active episode.
+- **Fix:**
+  - **Bottle:** the parent picks it (drops 100 mg in 1 ml / syrup 120 mg in 5 ml / syrup 250 mg in 5 ml). No ml is shown until a bottle is picked in this episode, and an unconfirmed bottle is never saved to the record.
+  - **Dose line:** mg plus ml, with the weight and the weigh-in date.
+  - **Weight checks:** a WHO Anthro implausible-value gate (z < −6 or > +5) at the weigh-in age, a newborn-weight / under-3-months gate, and a note when the weight is over 28 days old.
+  - **Dose timing:** the 4 h gap and the 4-in-24 h limit are enforced across episodes, and the card and the Home alert read them from one place.
+  - **History rows:** the amount comes first.
+  - **Copy:** NICE NG143 wording.
+- **Where:** intelligence-illness.js (`getParacetamolChip`, `paraWeightPlausible`, `getFeverDoseCountdown`, `renderFeverEpisodeCard`, `feLogDosePrompt`); core.js dispatch; styles.css `.fe-para-*`.
+- **Caught by:** V-M-282g-6 (Maren, #282 final verification), then the #284 Governor round.
+- **Patch class:** PC-7 / PC-10
+- **Status:** **Fixed** (#284, merge 24971a4).
+
+#### P1 — A believable mistyped weight still gets a dose (161)
+- **Symptom:** The WHO implausible-value gate catches decimal slips (95 or 0.95 for 9.5) but not near-miss typos. At 14 months the plausible band is about 3.3–16 kg, so 15.9 kg typed for 9.5 kg passes. The card then doses for 15.9 kg, about 100 mg/kg/day for her real weight. The printed weight and date are the only defence.
+- **Cause:** The gate checks the population range only, not her own history.
+- **Fix:** Planned. Compare against her previous weight through the shared selector (`gvMeasureRows` / `gvWeightWindow`, not a new row pick, per #124). Flag a change of more than about 20% within about 60 days that the velocity bands can't explain, and require an "Is 15.9 kg right?" confirm before any ml is shown. Maren should set the threshold from a cited source.
+- **Where:** intelligence-illness.js `getParacetamolChip` / `paraWeightPlausible`.
+- **Caught by:** V-M-284-6 / V-K-284-5.
+- **Patch class:** PC-5
+- **Status:** **Open** (the one remaining dosing gap on the chip, so it is first in line).
+
+#### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
+- **Symptom:** Non-blocking notes from the #284 round.
+- **Cause:** Each was sorted DEFERRABLE by its Governor.
+- **Fix:** Planned follow-up. Items:
+  - **Kael:** V-K-284-4: the WHO weight-for-age table stops at 24 m and `getInterpolatedWHO` clamps to that row, so past age 2 the gate over-flags and says "looks off for her age". Reached at about 3 y. Extend the table to 60 m (Carina's record) or skip the gate past it.
+  - **Maren:**
+    - V-M-284-8: credit each rule to the source that states it, quoted in a sources doc (the care-guidance-s3-sources.md pattern), and note z is approximated from P3/P97 rather than LMS.
+    - V-M-284-9: add a "my bottle isn't listed" chip (mg only, plus "ask your chemist"), and a soft confirm when the logged ml is above 15 mg/kg for the chosen bottle.
+    - V-M-284-12: a dose stamped later than now (a fast-clocked synced phone) is clamped to "now", so the wait keeps moving. Show "A dose is logged for HH:MM, later than now. Check its time."
+    - A dose renamed to another medicine still counts toward the limit. That is conservative, and goes with V-M-284-9.
+  - **Vela:**
+    - D1: the dose figure outranks the "next dose" countdown; dim it or add "from HH:MM" while the countdown is pending.
+    - D2: put a non-breaking space between numbers and units, so they don't wrap apart.
+    - D4: `.al-dur-chip.active` has the same white-on-`--sage` contrast failure.
+    - D5: the safety note in `.t-light` only just passes contrast.
+    - D7: post-vaccine copy in home.js still says "Calpol".
+    - Keyboard: the `.fe-para-form` chips have no tabindex (existing chips share this).
+  - **Cipher:** the "Last paracetamol at HH:MM" line in a new episode gives a time only, though that dose can be up to 24 h old; add the day when it isn't today.
+  - **Carina:** V-CA-284-3: the illness-episode sync stale-array bug (existing P1, below) now also governs which bottle each phone shows.
+- **Where:** intelligence-illness.js; styles.css; data.js (WHO table); home.js.
+- **Caught by:** #284 Governor round (V-K/V-M/V-V/V-CA-284) and Cipher's Edict V close.
+- **Patch class:** mixed
+- **Status:** **Open** (follow-up PR).
 
 ### Child-sex S2–S4 build — 2026-10-31 (pronouns, care guidance, infant weight gain)
 
@@ -1465,7 +1517,7 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
   - **Carina:** g-1 / Kael g-3: remaining growth-age gate bypasses (none in source; structural fix: make `gvAgeAt` return NaN instead of today, or an AST pass); g-2 `calcMedicalScore` and three other readers still take the last array row; g-3 an impossible bare date falls back to a UTC parse; g-4 `formatDate` UTC parse (existing V-K-267-12).
   - **Kael:** g-6 `gvSlowAction`'s "today" branch is unreachable while `nb` covers day < 28; g-7 correlate takes the first same-date row in unsorted order.
   - **Cipher (Edict V):** N2 dead code — `getGrowthNarrative` + `gvNewbornLine` + `_orig_renderInsightsGrowth`, the unreachable `under28` fallback in qaAnswerWeightConcern, the redundant `isPlateau` override in computeGrowthVelocity, and the `gvWeightRows` alias of `gvMeasureRows('wt')`; N3 the emergency tag is keyed on `'testicular-torsion'` literally (put the flag in the registry so `inguinal-hernia` → stuck-hernia matches its comment); N4 HR-2 debt on existing lines (the HR-2 ratchet is the fix); out of scope: medical.js `htGain` renders unrounded ("Grew 0.6000000000000014 cm").
-  - **Tracked separately (priority):** Maren g-6 — the paracetamol chip names no weight, date or formulation and has no plausibility cap on a mistyped weight. A dosing issue, so its own prioritised issue rather than part of the follow-up PR (Cipher).
+  - **Tracked separately (priority):** Maren g-6 — the paracetamol chip names no weight, date or formulation and has no plausibility cap on a mistyped weight. **Fixed in #284; see #160, with its deferrals at #161–#162.**
 - **Where:** various.
 - **Caught by:** Final verification round (V-M/V-V/V-C/V-CA/V-K-282g).
 - **Patch class:** mixed
