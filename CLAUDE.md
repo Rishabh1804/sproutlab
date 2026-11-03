@@ -96,6 +96,18 @@ An Architect waiver ("skip the chain" / "merge it directly") is valid only
 when **explicitly given** — surface the chain, get the explicit waiver, note
 it. Silence is not a waiver. Full procedure: `docs/QA_GATE_SPEC.md` Gate 2.5.
 
+**Patch classes — look before you build, classify what you find (PR #282, 2026-11-03).**
+[`docs/PATCH_CLASSES.md`](docs/PATCH_CLASSES.md) catalogues the bug types this codebase keeps
+producing — PC-1 time/age · PC-2 match vocabulary · PC-3 dead paths · PC-4 render-boundary rules
+(HR-4/HR-2) · PC-5 gate coverage · PC-6 test infrastructure · PC-7 safety rewording · PC-8 record keys
+as display · PC-9 cited-registry drift · PC-10 one state, two answers — each with a "Look for" list,
+its guard, and a guard backlog. Lyra runs the touched classes' lists before opening a PR; every Governor
+finding and every `docs/BUGS.md` entry names its class. In **verification rounds**, Governors sort
+findings into **BLOCKING** (safety, or a parent could act wrongly — fixed in the PR) and **DEFERRABLE**
+(a tagged follow-up list for the Architect), so rounds converge. New gates from #282, all self-tested and
+fail-closed: `audit-pronouns-v1`, `audit-growth-age-v1` (no growth verdict at today's age),
+`audit-hr12-dateonly-v1` (per-file ratchet on date-only UTC parses; only ever lower the baseline).
+
 ## What SproutLab Is
 
 Development & health-intelligence tracker for **Ziva Jain** (born 4 Sep 2025) — one app, tagged to one child, built to **evolve with her** across life-stages (tracking → learning → education). Architecture: split-file HTML PWA, localStorage + Firestore sync, no backend server. Used on a phone by parents, often one-handed while holding a baby.

@@ -103,6 +103,8 @@ Vocabulary signatures: "comprehension surface," "title-body coherence," "legend-
 
 **Finding-tag convention.** Surfacing-Region findings carry `V-V-{N}` tags monotonically across PR cycles (V-V-1 onward); Maren's parallel is `V-M-{N}`, Kael's is `V-K-{N}`, Carina's is `V-CA-{N}`. Tag identity persists across deferral and re-surfacing — a finding deferred in PR #N and closed in PR #N+1 keeps its original tag. The audit-chain ledger in Aurelius's chronicles is the canonical numbering register. The double-V tag (V-V) is deliberate — distinguishes Vela's findings from any future `V-{letter}` Governor under canon-gen-001 successor expansions.
 
+**Patch-class convention (PR #282, 2026-11-03).** Every finding names its bug type from `docs/PATCH_CLASSES.md` (PC-1 time and age · PC-2 match vocabulary · PC-3 dead paths · PC-4 render-boundary rules · PC-5 gate coverage · PC-6 test infrastructure · PC-7 safety rewording · PC-8 record keys as display · PC-9 cited-registry drift · PC-10 one state, two answers), so the classes that keep growing show where the next gate should go. Before auditing, run the "Look for" list of every class the diff touches. In a **verification round** (re-checking folded fixes), sort findings into **BLOCKING** — safety-tier, or something a parent could act on wrongly; fixed in the same PR — and **DEFERRABLE**, each with a suggested tag for the follow-up list; this keeps rounds converging instead of each opening the next.
+
 **Shared-module rotation (Option C, core trio).** Rounds fire sequentially through Maren → Ceres → Vela on any given commit; Kael joins when the diff also touches an engine file or ripple names him, and Carina joins when it touches a foundation file or the sprite / boot DOM ids. The Governor whose Region the diff most heavily touches goes first; ties default to the standing rotation order. Subsequent Governors endorse or contest via pair-note. Vela's first round on shared modules is typically about token-message coherence and card-shape consistency, which surfaces after Maren's care-safety pass and Ceres's food-card pass.
 
 ## Non-negotiables
@@ -148,6 +150,7 @@ The sections above are the **north star**: who Vela is and where she is going �
 - **The trust indicator cannot live in the agent's own render path (2026-07-11, the Borders sitting).** A hijacked surface paints itself reassuring — so the indicator must have the browser-padlock property: drawn by the substrate, unforgeable from within, identical every day so any deviation reads instantly.
 - **Animate the arrival of context, never the arrival of a number a parent needs now (2026-07-11, the Borders sitting).** A bar growing to show accumulation is warmth; a number gated behind a flourish fails the half-awake test — final state must be identical with motion off.
 - **Legibility is grace (2026-07-11, the Borders sitting).** The half-awake test is the final filter on every surface and every delight: would a tired parent, holding a baby, read this correctly at 2 AM?
+- **The number beside the verdict must come from the verdict (2026-11-03, PR #282).** After the verdict moved to g/week, the screen kept quoting hand-typed g/day ranges and showed "1.5 g/day — right on track … 1.7–12.3 typical". A displayed figure is derived from what decided the verdict, never read from a parallel column (PC-10).
 
 ## References
 

@@ -155,6 +155,8 @@ compass accumulates.
   SproutLab hardens toward real families' data, the cozy-journal brief is the
   thing most at risk of drifting clinical under feature gravity. Guard it first;
   it is a Hard Rule even where no HR names it.
+- **Patch classes before the PR, and the catalogue after it (2026-11-03, PR #282).** Before opening a PR, run the "Look for" list in `docs/PATCH_CLASSES.md` for every class the diff touches; log every bug in `docs/BUGS.md` with its class. The worst bugs in #282 were Lyra's own folds (a stale rule keyed on today's age, a gate rewrite that lost a case) — every fix gets re-audited, including the fixer's.
+- **Verification rounds converge by sorting, not by stopping (2026-11-03, PR #282).** Ask Governors to split findings into BLOCKING (fix in this PR) and DEFERRABLE (a tagged follow-up list for the Architect). Six rounds without the sort each opened the next; the sort closed it in one.
 
 ## References
 

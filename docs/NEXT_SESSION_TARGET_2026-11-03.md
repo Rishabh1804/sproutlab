@@ -1,5 +1,22 @@
 # Next session target — Tuesday 2026-11-03 (resume PR #282)
 
+> **Closed 2026-11-03.** PR #282 merged into main (merge commit 8f18144).
+>
+> **How it got there:**
+> - Rounds 5 and 6 added more fixes on top of round 4, and so did the final Governor round, where every BLOCKING item was folded.
+> - Cipher Edict V returned *amended*, A1–A4, all folded.
+> - Final full suite: 537 passed. The only failure outside main's set is the flaky smoke:822 (#123).
+>
+> **The four decisions:** confirmed by the Governors and taken with the merge.
+>
+> **Next targets, in priority order:**
+> 1. **Paracetamol chip (its own priority issue; Maren g-6, pre-existing).** Show the weight and its date, name the formulation, and add a plausibility cap on a mistyped weight.
+> 2. **Follow-up PR for BUGS #159 (by owner).** The PC-7/PC-10 edge items come first: a stale reading's percentile is shown as current, and the CareTicket weight goal can't resolve for infants weighed less than 28 days apart. After those: dead code (`getGrowthNarrative` and friends), the remaining gate bypasses (or make `gvAgeAt` return NaN), and the copy nits.
+> 3. **#137.** Choose a cited loss threshold, so a large toddler loss inside under 28 days of records stops reading "too soon to judge".
+> 4. **Guard backlog in `docs/PATCH_CLASSES.md`.** An HR-2 ratchet, the growth-bands provenance gate, a record-shape freeze test, and one test-origin helper.
+>
+> The plan below is kept as the record of how the session resumed.
+
 **PR:** #282 (draft), branch `ccr-8f248bef-4llsy9`. Paused by the Architect on 2026-10-31 to wait for the usage-limit reset. Everything below is committed and pushed. Nothing lives only in the old container.
 
 ## Where it stands

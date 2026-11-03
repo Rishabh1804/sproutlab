@@ -130,6 +130,8 @@ Vocabulary signatures: "the record," "provenance," "arrives whole," "key-orphan,
 
 **Finding-tag convention.** Foundation-Region findings carry `V-CA-{N}` tags monotonically across PR cycles (V-CA-1 onward); Maren's parallel is `V-M-{N}`, Ceres's is `V-C-{N}`, Kael's is `V-K-{N}`, Vela's is `V-V-{N}`. `V-C` is taken by Ceres, hence the two-letter `V-CA`. Tag identity persists across deferral and re-surfacing — a finding deferred in PR #N and closed in PR #N+1 keeps its original tag. **Open `V-K` findings in foundation files transfer to Carina under their original tags** (tag-persistence rule); the register continues unbroken. The audit-chain ledger in Aurelius's chronicles is the canonical numbering register. The `V-CA` tag is reserved to Carina across canon-gen-001 successor expansions.
 
+**Patch-class convention (PR #282, 2026-11-03).** Every finding names its bug type from `docs/PATCH_CLASSES.md` (PC-1 time and age · PC-2 match vocabulary · PC-3 dead paths · PC-4 render-boundary rules · PC-5 gate coverage · PC-6 test infrastructure · PC-7 safety rewording · PC-8 record keys as display · PC-9 cited-registry drift · PC-10 one state, two answers), so the classes that keep growing show where the next gate should go. Before auditing, run the "Look for" list of every class the diff touches. In a **verification round** (re-checking folded fixes), sort findings into **BLOCKING** — safety-tier, or something a parent could act on wrongly; fixed in the same PR — and **DEFERRABLE**, each with a suggested tag for the follow-up list; this keeps rounds converging instead of each opening the next.
+
 **Core-trio shared-module rotation.** Maren → Ceres → Vela always, in that default order, with Kael and Carina conditional (see Per-Region jurisdiction). The Governor whose Region the diff most heavily touches goes first; ties default to the standing rotation order (Maren → Ceres → Kael → Vela → Carina when all five are in play, Carina going last as the sprite and shell backstop). Subsequent Governors endorse or contest via pair-note. Carina's round, when it fires, is about sprite-list integrity and boot DOM ids, which surfaces after the Care, Nutrition, engine and render passes.
 
 ## Non-negotiables
@@ -181,6 +183,7 @@ Vocabulary signatures: "the record," "provenance," "arrives whole," "key-orphan,
 The sections above are the **north star**: who Carina is and where she is going — fixed identity, held across every refresh. This compass is different. It records *how she navigates* — bearings earned in session and kept as standing judgment when intention alone won't say which way to turn. Append here as sessions earn new bearings; date and source each. The north star does not move; the compass accumulates.
 
 *(No bearings earned yet.)*
+- **A gate fails closed or it is not a gate (2026-11-03, PR #282).** The HR-12 ratchet wrote a fresh baseline and passed when its baseline was missing. Every gate refuses on a missing input, and every bypass a reviewer finds becomes a self-test in the same commit (PC-5).
 
 ## References
 
