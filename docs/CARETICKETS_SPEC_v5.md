@@ -659,7 +659,7 @@ New data source via `ctGetTSFEvents()`:
 - Max 3 events per ticket. Domain-colored. Icon from template or verdict.
 
 ### QA Search Intent
-- `ctShouldTriggerCreate(text)` checks strong/weak signals with negative filtering
+- The `ct_create` row in `QA_INTENTS` (intelligence-qa.js) carries the trigger and exclude (negative) lists inline; the earlier `ctShouldTriggerCreate(text)` helper was never wired and was removed (BUGS.md S2–S4 #30)
 - QA bar cleared and deactivated before template picker opens
 - Registered in `qaMatchIntent` as `ct_create`
 

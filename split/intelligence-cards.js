@@ -974,9 +974,24 @@ function renderInfoGrowthDiet() {
   var prev = gvW.prev;
   var daysBetweenMeasurements = gvW.daysBetween;
   var velocity = gvW.gPerDay;
-  var velLabel = gvW.tooShort ? 'normal'
+  // The period's weight change. #266 removed its declaration while the period grid still read it, so
+  // that block threw a ReferenceError and the card stopped rendering (found with V-V-282b-8).
+  var wtDiffG = gvW.gainG;
+  // Newborn window (gvNewbornCheck, core.js): no rate verdict. 'newborn' (the dip) reads neutral,
+  // a flag (more than 10% lost, not back to birth weight, weigh again) reads caution, back to birth
+  // weight reads good — never the "normal" check (Vela V-V-282b-8; PC-1 bug #27).
+  var gvNb = gvW.nb || null;
+  // tooShort is "no verdict", never "normal" — a falling 10-day pair read "Growth velocity is normal"
+  // (Vela V-V-282c-6).
+  var velLabel = gvNb ? (gvNb.tone === 'caution' ? 'newborn-flag' : gvNb.status === 'regained' ? 'regained' : 'newborn')
+    : gvW.tooShort ? 'too-short'
     : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
     : gvW.status === 'fast' ? 'rapid' : 'normal';
+  // Above the shown band — beyond 1.3× the top ('fast') or 1.0–1.3× the top (on track, band verdict
+  // 'above'): the shared line, its tone and its icon (gvAboveBandLine — Vela V-V-282f-3, PC-10). "rapid"
+  // read green with a check, and the 1.0–1.3× zone read "normal" beside a range the rate sits above.
+  var aboveCard = (!gvNb && !gvW.tooShort && (gvW.status === 'fast' || (gvW.status === 'on-track' && gvW.bandVerdict === 'above')))
+    ? gvAboveBandLine(gvW.status, gvW.gPerDay, gvW.expectedRange) : null;
 
   // Diet metrics during the growth period
   var periodDates = [];
@@ -1019,21 +1034,33 @@ function renderInfoGrowthDiet() {
   var avgMeals = Math.round((totalMeals / feedingDays.length) * 10) / 10;
   var avgVariety = Math.round((totalFoods / feedingDays.length) * 10) / 10;
 
-  sumEl.innerHTML = '<div class="t-sm">Velocity <strong>' + velocity + ' g/day</strong> · <strong>' + avgMeals + '</strong> meals/day · diet ' + (velLabel === 'slow' ? zi('warn') : zi('check')) + '</div>';
+  var velIcon = (velLabel === 'slow' || velLabel === 'newborn-flag') ? zi('warn')
+    : aboveCard ? (aboveCard.tone === 'good' ? zi('check') : zi('info'))   // the shared tone (V-V-282f-3)
+    : (velLabel === 'newborn' || velLabel === 'too-short') ? zi('info') : zi('check');
+  var velText = gvNb ? escHtml(gvNb.short) : 'Velocity <strong>' + velocity + ' g/day</strong>';
+  sumEl.innerHTML = '<div class="t-sm">' + velText + ' · <strong>' + avgMeals + '</strong> meals/day · diet ' + velIcon + '</div>';
 
   // Period details
   if (perEl) {
     var pHtml = '<div class="cd-section-label">Current Growth Period</div>';
     pHtml += '<div class="si-stat-grid">';
-    pHtml += '<div class="si-stat"><div class="si-stat-val">' + velocity + '</div><div class="si-stat-label">g/day velocity</div></div>';
+    // A stale newborn line: no old rate as the "current" velocity — a dash; the dates below say when (Vela V-V-282f-5).
+    pHtml += '<div class="si-stat"><div class="si-stat-val">' + (gvNb && gvNb.stale ? '—' : velocity) + '</div><div class="si-stat-label">g/day velocity</div></div>';
     pHtml += '<div class="si-stat"><div class="si-stat-val">' + (wtDiffG >= 0 ? '+' : '') + wtDiffG + 'g</div><div class="si-stat-label">' + daysBetweenMeasurements + ' days</div></div>';
     pHtml += '</div>';
     pHtml += '<div class="cd-meta">' + formatDate(prev.date) + ' → ' + formatDate(last.date) + ' · ' + prev.wt + ' → ' + last.wt + ' kg</div>';
     perEl.innerHTML = pHtml;
   }
 
+  // Food lines only where food is part of the diet (gvFoodAdviceOk: 6 months of age today AND solids
+  // started — V-K-282d-6, Ceres V-C-282c-3). Closed, the "Diet During This Period" grid is hidden
+  // too: nutrient bars beside "milk is the main diet" contradict it (Ceres V-C-282d-4a).
+  var foodOkCard = gvFoodAdviceOk();
+
   // Nutrient coverage
-  if (nutEl) {
+  if (nutEl && !foodOkCard) {
+    nutEl.innerHTML = '';
+  } else if (nutEl) {
     var nHtml = '<div class="cd-section-label">Diet During This Period</div>';
     nHtml += '<div class="si-stat-grid">';
     nHtml += '<div class="si-stat"><div class="si-stat-val">' + avgMeals + '</div><div class="si-stat-label">Avg meals/day</div></div>';
@@ -1052,20 +1079,42 @@ function renderInfoGrowthDiet() {
   // Insights
   if (insEl) {
     var iHtml = '';
-    if (velLabel === 'slow') {
+    // Food closed: slow gain gets the below-range line and the gate note chosen by today's age
+    // (gvGateNote — milk-only under 6 months, start-solids from 6 months; Ceres V-C-282d-1), and no
+    // "nutrient gaps" (Ceres V-C-282c-3). A loss reads "Weight down", never "velocity … (-3.6 g/day)"
+    // (Ceres V-C-282d-4b).
+    if (velLabel === 'slow' && !foodOkCard) {
+      var slowCardLead = velocity < 0 ? 'Weight down ' + Math.abs(velocity) + ' g/day — below the typical range.' : 'Growth velocity is below typical range (' + velocity + ' g/day).';
+      iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml((gvSlowAction(gvW) || GV_ACT_MENTION_SLOW) + '. ' + gvGateNote()) + '</div>';   // tier first (Ceres V-C-282f-4)
+    } else if (velLabel === 'slow' && velocity < 0) {
+      // A loss on the food-OK path: the same answer the Info insight gives (doctor line first-class),
+      // never "monitor at next weigh-in" (Ceres V-C-282e-1, PC-10). Low coverage stays as a second line.
+      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. ' + escHtml(gvSlowAction(gvW) || GV_ACT_WEIGHT_CHECK) + '.</div>';   // one source (gvSlowAction)
+      var lowNutrientsLoss = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
+      if (lowNutrientsLoss.length > 0) iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrientsLoss.slice(0, 2).join(' and ')) + ' coverage has been low in this period too.</div>';
+    } else if (velLabel === 'slow') {
       var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
         return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;
       });
+      // The doctor action leads, never "monitor at next weigh-in" (Ceres V-C-282f-2, PC-10); the food
+      // prompt follows as a second line.
+      iHtml += '<div class="si-insight si-insight-warn">Weight gain is below the typical range (' + velocity + ' g/day). ' + escHtml(gvSlowAction(gvW) || GV_ACT_MENTION_SLOW) + '.</div>';
       if (lowNutrients.length > 0) {
-        iHtml += '<div class="si-insight si-insight-warn">Slow growth velocity coincides with low ' + lowNutrients.slice(0, 2).join(' and ') + ' coverage — consider adding rich sources</div>';
-      } else {
-        iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day) — monitor at next weigh-in</div>';
+        iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrients.slice(0, 2).join(' and ')) + ' coverage has been low in this period — consider adding rich sources.</div>';
       }
+    } else if (gvNb) {
+      var nbInsCls = gvNb.tone === 'caution' ? 'si-insight-warn' : gvNb.tone === 'good' ? 'si-insight-good' : 'si-insight-info';
+      iHtml += '<div class="si-insight ' + nbInsCls + '">' + escHtml(gvNb.text) + '</div>';   // HR-4 (Cipher A1)
+    } else if (velLabel === 'too-short') {
+      iHtml += '<div class="si-insight si-insight-info">' + gvTooShortText(daysBetweenMeasurements) + '</div>';
+    } else if (aboveCard) {
+      // The Info card's line and tone: good for a little above, neutral beyond 1.3× (V-V-282f-3).
+      iHtml += '<div class="si-insight ' + (aboveCard.tone === 'good' ? 'si-insight-good' : 'si-insight-info') + '">' + escHtml(aboveCard.text) + '</div>';
     } else {
       iHtml += '<div class="si-insight si-insight-good">Growth velocity is ' + velLabel + ' at ' + velocity + ' g/day with ' + avgMeals + ' meals/day</div>';
     }
     var covered = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) >= 0.5; });
-    if (covered.length < KEY_NUTRIENTS.length) {
+    if (foodOkCard && covered.length < KEY_NUTRIENTS.length) {
       var gaps = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
       iHtml += '<div class="si-insight si-insight-info">Nutrient gaps during this period: ' + gaps.join(', ') + '</div>';
     }
@@ -1796,6 +1845,18 @@ function _geReady() {
 // safety-first, never behind a tap); every other emergency is a teaser ROW
 // that opens its card on tap (§11 6-second rule — lead, then disclose).
 
+// child-sex S3: an entry may carry `sex: 'f' | 'm'` (testicular torsion is 'm'). It shows only
+// when childSex() matches, so a girl's family never sees torsion. While the sex is still unknown
+// the profile gate is up and the app inert; the entry then shows (an emergency fails toward
+// being visible). No `sex` = every child.
+function _geSexMatch(e) {
+  // Only 'f' / 'm' filter; any other value (a typo) shows the entry to everyone, so a bad field
+  // can never hide an emergency (V-CA-282-4).
+  if (!e || (e.sex !== 'f' && e.sex !== 'm')) return true;
+  var s = (typeof childSex === 'function') ? childSex() : null;
+  return s === null || s === e.sex;
+}
+
 function _geNums() {
   var r = (typeof EMERGENCY_CONTACTS !== 'undefined' && typeof DEFAULT_REGION !== 'undefined') ? EMERGENCY_CONTACTS[DEFAULT_REGION] : null;
   return {
@@ -1854,7 +1915,8 @@ function _geDocFace(e) {
       + '<button class="doc-na" data-action="emToggleNA" data-arg="' + escHtml(s.id) + '">N/A</button></div>';
   });
   if (d.action) rows += '<div class="doc-row"><span class="k">' + escHtml(d.action.label) + '</span><span class="v">' + escHtml(d.action.value) + '</span></div>';
-  rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
+  // The "first reaction" bracket belongs to an allergic reaction only (V-V-282-5).
+  if (e.id === 'allergic-reaction') rows += '<div class="doc-row"><span class="k">Known allergies</span><span class="v">none recorded yet (this may be a first reaction)</span></div>';
   var _docName = (typeof _emDocName === 'function' ? _emDocName() : '' + childNameCapHtml() + '');
   var _docVitals = (typeof _emDocVitals === 'function' ? _emDocVitals() : '');
   return '<div class="docface"><div class="doc"><div class="doc-body">'
@@ -1890,7 +1952,7 @@ function openGeneralEmergencyRoom() {
 
   var nums = _geNums();
   var all = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : [])
-    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER'; });
+    .filter(function(e) { return e && e.source && e.source !== 'PLACEHOLDER' && _geSexMatch(e); });
   // Hybrid (§9.7 safety-first): the critical card is pinned-open inline — its
   // steps are never behind a tap; every other emergency is a teaser row.
   var pinnedHtml = all.filter(function(e) { return e.severity === 'critical'; })
@@ -1938,7 +2000,7 @@ function openGeneralEmergencyRoom() {
 function geOpenCard(btn) { var id = btn && btn.getAttribute('data-arg'); if (id) _geShowCard(id); }
 function _geShowCard(id) {
   var e = (typeof GENERAL_EMERGENCIES !== 'undefined' ? GENERAL_EMERGENCIES : []).filter(function(x) { return x.id === id; })[0];
-  if (!e) return;
+  if (!e || !_geSexMatch(e)) return;
   var ov = document.getElementById('geCardOv');
   if (!ov) { ov = document.createElement('div'); ov.id = 'geCardOv'; ov.className = 'ge-card-ov'; document.body.appendChild(ov); }
   ov.innerHTML = '<div class="food-pop ge-pop">' + _geFlipCard(e, true) + '</div>';
@@ -1995,7 +2057,7 @@ function _geDocText(e, container) {
   L.push('', 'Suspected: ' + d.suspected);
   (d.stamps || []).forEach(function(s) { L.push(s.label + ': ' + _geStampVal(container, s.id)); });
   if (d.action) L.push(d.action.label + ': ' + d.action.value);
-  L.push('Known allergies: none recorded yet (this may be a first reaction)');
+  if (e.id === 'allergic-reaction') L.push('Known allergies: none recorded yet (this may be a first reaction)');
   L.push(''); L.push('For the team: ' + d.forTeam);
   return L.join('\n');
 }

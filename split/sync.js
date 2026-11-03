@@ -260,7 +260,7 @@ function _syncLedgerEntry(v) {
 function _syncMarkNeedsFull(key) {
   if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;   // same activation boundary as _syncMarkDirty
   var m = _syncLoadDirty();
-  var now = Date.now();
+  var now = _syncNow();   // the one ledger clock (Cipher A1, #282)
   var e = _syncLedgerEntry(m[key]) || { f: now, l: now, nf: false };   // positive knowledge of a failed push (Kael F19)
   e.nf = true;
   m[key] = e;
@@ -283,10 +283,22 @@ function _syncLedgerActive() {
 function _syncAttachedOnce() {
   try { return localStorage.getItem(SYNC_ATTACHED_KEY) === '1'; } catch(e) { return false; }
 }
+// Ledger stamps and push starts come from one strictly increasing clock. With plain Date.now()
+// a write and a push start in the same millisecond tie: a write landing mid-push looked "not
+// late" (l > startedAt false), was cleared and never re-pushed, or a re-pass started in the
+// same millisecond as that write and looped once more (F17 race, seen as an intermittent e2e
+// failure; 2026-10-31). Strict order makes "before the push" and "during it" unambiguous.
+var _syncLastStamp = 0;
+function _syncNow() {
+  var t = Date.now();
+  if (t <= _syncLastStamp) t = _syncLastStamp + 1;
+  _syncLastStamp = t;
+  return t;
+}
 function _syncMarkDirty(key) {
   if (!SYNC_KEYS[key] || !_syncLedgerActive()) return;
   var m = _syncLoadDirty();
-  var now = Date.now();
+  var now = _syncNow();
   var e = _syncLedgerEntry(m[key]) || { f: now, l: now, nf: false };
   if (!e.f) e.f = now;
   e.l = now;                      // first write time is kept — a later write never launders earlier dirt (Kael F1)
@@ -300,7 +312,7 @@ function _syncMarkDirty(key) {
 function syncMarkUnsynced(keys) {
   if (!_syncLedgerActive()) return;
   var m = _syncLoadDirty();
-  var now = Date.now();
+  var now = _syncNow();   // the one ledger clock (Cipher A1, #282)
   var any = false;
   (keys || []).forEach(function(k) {
     if (!SYNC_KEYS[k]) return;
@@ -1341,7 +1353,7 @@ function _syncWritePerEntry(hRef, collection, key, oldVal, newVal) {
     __sync_syncedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  var startedAt = Date.now();
+  var startedAt = _syncNow();
   var ops = [];   // raw promises (before .catch) so Promise.all sees real failures
 
   // Added entries
@@ -1478,7 +1490,7 @@ function _syncFlushSingleDoc(hRef, collection) {
   // Gather all localStorage KEYS that map to this collection
   var keysForCol = _syncCollectionToKeys[collection];
   if (!keysForCol || keysForCol.length === 0) return;
-  var startedAt = Date.now();
+  var startedAt = _syncNow();
 
   // C0 Fix 2: gate on listener-ready — don't push with a blind shadow.
   // If the listener hasn't first-fired for this collection, _syncShadow
@@ -1656,7 +1668,7 @@ function _syncFlushDirty(hRef, _pass) {
   var dirtyKeys = Object.keys(m).filter(function(k) { return !!SYNC_KEYS[k]; });
   if (dirtyKeys.length === 0) return Promise.resolve(0);
   if (!_syncUser || !hRef) return Promise.reject(new Error('not signed in'));
-  var startedAt = Date.now();
+  var startedAt = _syncNow();
   var db = hRef.firestore || ((typeof firebase !== 'undefined') ? firebase.firestore() : null);
   var writer = { uid: _syncUser.uid || null, name: _syncUser.displayName || 'Parent' };
   var settled = [];        // per-entry keys with an empty local array — nothing to push
@@ -1787,7 +1799,7 @@ function _syncAttachListeners(hId) {
   // tracks the broader straggler limitation; this reset only protects
   // reconcile re-fire, not snapshot-apply.
   _reconcileDone = new Set();
-  _syncSessionAttachedAt = Date.now();   // ledger: partial flushes may clear writes from here on
+  _syncSessionAttachedAt = _syncNow();   // ledger: partial flushes may clear writes from here on
   try { localStorage.setItem(SYNC_ATTACHED_KEY, '1'); } catch(e) {}
   // Issue #53 — capture the generation these listeners belong to. _syncDetachListeners()
   // (called just above, and on any future re-attach) bumps _syncListenerGen; each

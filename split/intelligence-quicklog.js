@@ -415,7 +415,7 @@ function _alRenderSuggestions() {
     var domain = pat ? pat.domain : 'motor';
     html += '<div class="al-suggest-group" data-domain="' + domain + '">';
     html += '<div class="al-suggest-group-label">' + zi('target') + ' For: ' +
-      escHtml(g.milestone.text) + ' <span class="al-suggest-stage">(' + escHtml(statusLabel) + ')</span></div>';
+      escHtml(msLabel(g.milestone.text)) + ' <span class="al-suggest-stage">(' + escHtml(statusLabel) + ')</span></div>';
     html += '<div class="al-suggest-cards">';
     g.activities.forEach(function(act) {
       var payload = JSON.stringify({ keyword: g.keyword, text: act.text, duration: act.duration, tip: act.tip || '', icon: act.icon || 'run' });
@@ -556,7 +556,7 @@ function _alRenderYesterday() {
     var payload = JSON.stringify({ text: item.text, duration: item.duration || null });
     html += '<button class="al-yesterday-item" data-domain="' + (dom || 'motor') + '" data-action="alTapYesterday" data-arg="' + escHtml(payload) + '">' +
       '<span class="al-yesterday-icon">' + meta.icon + '</span>' +
-      '<span class="al-yesterday-text">' + escHtml(item.text) + durStr + '</span></button>';
+      '<span class="al-yesterday-text">' + escHtml(msLabel(item.text)) + durStr + '</span></button>';
   });
   html += '</div>';
   html += '<button class="al-yesterday-repeat" data-action="alRepeatAll">' + zi('hourglass') + ' Repeat all</button>';
@@ -812,7 +812,7 @@ function _alShowUpgradeToast(candidate) {
   var newLabel = candidate.newStatus.charAt(0).toUpperCase() + candidate.newStatus.slice(1);
   var curLabel = candidate.currentStatus.charAt(0).toUpperCase() + candidate.currentStatus.slice(1);
 
-  toast.innerHTML = '<div class="al-upgrade-text">' + zi('target') + ' "' + escHtml(candidate.milestone.text) +
+  toast.innerHTML = '<div class="al-upgrade-text">' + zi('target') + ' "' + escHtml(msLabel(candidate.milestone.text)) +
     '" has ' + candidate.evidenceCount + ' observations</div>' +
     '<div class="al-upgrade-sub">Move from ' + escHtml(curLabel) + ' → ' + escHtml(newLabel) + '?</div>' +
     '<div class="al-upgrade-actions">' +
@@ -1622,8 +1622,8 @@ function _qlSleepInsight(dateStr, kind) {
       var n = todayNaps.length;
       var lateEnough = new Date().getHours() >= 15 || (lastNap && parseInt(lastNap.bedtime) >= 11);
       if (n >= 1 && n >= ideal[0] && n <= ideal[1] && (n === ideal[1] || lateEnough)) {
-        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at her age.';
-        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for her age.';
+        if (ideal[0] < ideal[1]) return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 ' + ideal[0] + ' or ' + ideal[1] + ' naps are both normal at this age.';
+        return n + (n === 1 ? ' nap' : ' naps') + ' today \u2014 right for this age.';
       }
     }
 
@@ -2575,7 +2575,9 @@ function _tsfCollectEvents() {
       } catch(e) {}
     }
     // Truncate label at last whole word before 30 chars
-    let label = act.text || 'Activity';
+    // msLabel: a milestone-tap entry stores the milestone's record-key text;
+    // show its display label (free notes fall back to themselves).
+    let label = msLabel(act.text || '') || 'Activity';
     if (label.length > 30) {
       label = label.substring(0, 30).replace(/\s+\S*$/, '');
     }
@@ -2590,7 +2592,7 @@ function _tsfCollectEvents() {
       color: 'sage',
       inferred: false,
       displayTime: displayTime,
-      fullText: act.text || '',
+      fullText: msLabel(act.text || '') || '',
       domains: act.domains || [],
       duration: act.duration
     };
@@ -5125,14 +5127,14 @@ function computeSleepRegression() {
   const causes = [];
   const motorMs = recentMilestones.filter(m => m.domain === 'motor');
   if (motorMs.length > 0 && severity !== 'none') {
-    causes.push({ icon: zi('run'), text: 'Motor milestone burst: ' + motorMs.map(m => m.text).slice(0, 2).join(', ') });
+    causes.push({ icon: zi('run'), text: 'Motor milestone burst: ' + motorMs.map(m => msLabel(m.text)).slice(0, 2).join(', ') });
   }
   if (recentVaccs.length > 0 && severity !== 'none') {
     causes.push({ icon: zi('syringe'), text: 'Recent vaccination: ' + recentVaccs.map(v => v.name).slice(0, 2).join(', ') + ' (' + formatDate(recentVaccs[0].date) + ')' });
   }
   const cogMs = recentMilestones.filter(m => m.domain === 'cognitive' || m.domain === 'language');
   if (cogMs.length > 0 && severity !== 'none') {
-    causes.push({ icon: zi('brain'), text: 'Cognitive/language leap: ' + cogMs.map(m => m.text).slice(0, 2).join(', ') });
+    causes.push({ icon: zi('brain'), text: 'Cognitive/language leap: ' + cogMs.map(m => msLabel(m.text)).slice(0, 2).join(', ') });
   }
   if (recentMilestones.length >= 3 && severity !== 'none') {
     causes.push({ icon: zi('sparkle'), text: 'Developmental leap — ' + recentMilestones.length + ' milestones progressing simultaneously' });
@@ -5218,7 +5220,7 @@ function renderInfoSleepRegression() {
     if (data.causes.length > 0) {
       html += '<div class="si-sub-label fe-section-gap" >Possible causes</div>';
       data.causes.forEach(c => {
-        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + c.icon + '</div><div class="si-reg-cause-text">' + c.text + '</div></div>';
+        html += '<div class="si-reg-cause"><div class="si-reg-cause-icon">' + c.icon + '</div><div class="si-reg-cause-text">' + escHtml(c.text) + '</div></div>';
       });
     }
 

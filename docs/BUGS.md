@@ -1,11 +1,1475 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-10-28 (repo sweep — stale entries moved to Fixed, sweep findings logged at the top of Open Bugs)
+**Last updated:** 2026-10-31 (child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
+
+### Child-sex S2–S4 build — 2026-10-31 (pronouns, care guidance, infant weight gain)
+
+**Patch classes (2026-10-31):** every open item was fixed as a patch to #282 and tagged with its class; the classes, what to look for and their guards are in [`PATCH_CLASSES.md`](./PATCH_CLASSES.md).
+
+Session record of every bug found while building and testing S2 (pronouns), S3 (sex-specific care guidance) and S4 (infant weight-gain bands) per [`specs/child-sex-v1.md`](./specs/child-sex-v1.md). Entry form: symptom, cause, fix, where (file:symbol), how caught, status. The S2 pronoun build gate `audit-pronouns-v1.sh` now exists and is wired into `build.sh` (V-K-282-9, spec §3). Fixed entries stay here as the session record and move to Fixed Bugs at merge.
+
+Entries 1–4 were found by the S2 render-time pronoun builder while working and caught in code review, not by a test.
+
+#### P1 — Child's name could trip a Q&A keyword in two answers (1)
+- **Symptom:** a name like "Sita" could match the milestone word `sit` in `qaAnswerMilestoneSpecific` / `qaAnswerNutrientGap`.
+- **Cause:** `qaExecuteQuery` stored `_qaCache._queryText` from the raw text, not through `_qaNameAsShe`. The V-K-280-5 fix (#280) missed this path.
+- **Fix:** `_queryText = _qaNameAsShe(text)`.
+- **Where:** intelligence-qa.js `qaExecuteQuery`.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (S2 render patch).
+
+#### P0 — Nutrient section header hard-coded for a girl (2)
+- **Symptom:** the nutrient-rich foods header read "HER <nutrient>-RICH FOODS" for every child.
+- **Cause:** the label `'HER ' + nutrient + '-RICH FOODS'` is uppercase, so a lowercase grep for the girl-specific pronouns missed it.
+- **Fix:** `pron('poss').toUpperCase()` in place of the literal `'HER '`.
+- **Where:** intelligence-qa-handlers.js ~:2010.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Patch class:** PC-2 (sex hard-coded in copy) (assigned at close)
+- **Status:** **Fixed**.
+
+#### P0 — Growth fun-fact is girl-specific (3)
+- **Symptom:** the growth fun-fact said "A little warrior princess" for every child.
+- **Cause:** hard-coded girl wording.
+- **Fix:** "prince" when `childSex()==='m'`.
+- **Where:** medical.js ~:1793.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Patch class:** PC-2 (sex hard-coded in copy) (assigned at close)
+- **Status:** **Fixed**.
+
+#### P2 — `_qaNameAsShe` turns a possessive name into "she" (4)
+- **Symptom:** "Arjun's nap" becomes "she nap" rather than "her nap".
+- **Cause:** `_qaNameAsShe` has no possessive handling. Pre-existing.
+- **Fix:** none. The result still matches intents, so it was left as is.
+- **Where:** intelligence-qa.js `_qaNameAsShe`.
+- **Caught by:** code review (S2 render-time pronoun builder); no test.
+- **Patch class:** PC-2 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): a possessive name folds to "her" before the bare name folds to "she" (intelligence-qa.js `_qaNameAsShe`); qa-sex-aware-match.spec.
+
+Entries 5–6 were found by the S2 load-time-tables builder and caught in code review.
+
+#### P1 — Milestone title is the record key (data-integrity trap, avoided) (5)
+- **Symptom it would cause:** rewording a milestone's `text:` silently disconnects stored records: the parents' 27 "yes" marks, `milestoneSuppress` hides, and Confirm/Practicing activity entries.
+- **Cause:** `MILESTONE_STANDARDS` rows have no id. The id is `slugify(row.text)`, matched in core.js ~7446–7460 and home.js ~4466.
+- **Fix (this build):** only `desc:` was reworded. The 9 `text:` fields containing she/her (data.js 3986, 4003, 4016, 4017, 4035, 4036, 4055, 4067, 4088) are left as they are.
+- **Where:** data.js `MILESTONE_STANDARDS`; core.js ~7446–7460; home.js ~4466.
+- **Caught by:** code review (S2 load-time-tables builder); no test.
+- **Patch class:** PC-8 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.** Carina chose the render-time display label (see #34). `MILESTONE_STANDARDS` `text:` is frozen as the record key. The 9 rows gain a neutral `label:`, and `msLabel(text)` / `msLabelById(id)` in core.js are used at every render site. Keys, slugs and stored records stay raw. `audit-pronouns-v1` exempts a milestone text only when its row has a pronoun-free label. Test `milestone-labels.spec.ts` passes.
+
+#### P1 — Activity keyword rows had girls' forms only (6)
+- **Symptom:** a boy's activity log ("put himself to sleep", "dragged himself", "clapped himself", "when he saw/does", "knows he is funny") never matched those milestone/activity evidence rows.
+- **Cause:** the data.js keyword tables (rows ~222, 327, 356, 1005, 1242, 1317, 1377) listed only she/herself phrases. Rows 143, 335 and 1217 already had himself.
+- **Fix:** added the he/himself variants alongside the existing phrases.
+- **Where:** data.js activity keyword tables.
+- **Caught by:** code review (S2 load-time-tables builder); no test.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+Entries 7–13 were found by the S3 care builder and the S4 weight-gain builder, caught in code review or by their new specs.
+
+#### P1 — Infant weight-gain bands narrower than WHO (7)
+- **Symptom:** a normal 9–12 m infant gaining 40 g/week read "below typical range"; a 0–2 m boy at the WHO median (~255 g/week) read "above".
+- **Cause:** hand-typed 0–12 m bands (150–250 / 100–180 / 70–130 / 55–100 g/wk) copy-pasted into ~10 sites. They were not taken from WHO and not keyed by sex.
+- **Fix:** core.js `GROWTH_VELOCITY_BANDS` `{f,m}` from the WHO 2-month velocity tables (P15–P85, cited), plus `growthVelocityBand(age)`. Every site reads it.
+- **Where:** core.js `getGrowthNarrative`; home.js `computeBaselines`, `renderTrendChips`, `_orig_renderInsights*`; medical.js `renderVelocity`, `computeGrowthVelocity`.
+- **Caught by:** spec §5 / V-M-281-8; test `growth-velocity-bands.spec.ts`.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — The growth-velocity band copies had drifted apart (8)
+- **Symptom:** different cards gave different "expected" ranges for the same child. `computeGrowthVelocity` gave 8–13 g/day for 9–12 m, `renderVelocity` gave 8–14. Height bands were 2.0–3.5 / 1.0–2.5 in one file and 2.5–4.0 in another.
+- **Cause:** copy-paste.
+- **Fix:** the same single source as #7.
+- **Where:** `computeGrowthVelocity`, `renderVelocity` (medical.js) and the height-band copies in the other files (as in #7).
+- **Caught by:** code review / S4 spec.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — `renderGrowthFacts` told every infant the same 15–30 g/day norm (9)
+- **Symptom:** a normal 10-month-old at 8 g/day got no message. One at 16 g/day was told a false norm: "The expected rate at N months is 15–30g/day". 15–40 g/day was counted as on track.
+- **Cause:** one hard-coded band regardless of age.
+- **Fix:** an age- and sex-specific g/day band. Above the max it falls through to the "healthy appetite" card, whose copy no longer assumes solids (that was wrong before ~6 months).
+- **Where:** medical.js `renderGrowthFacts`.
+- **Caught by:** code review / S4 spec.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — CareTicket weight goal fixed at 80 g/week under 12 m (10)
+- **Symptom:** the goal is far below the 0–4 m median (~175–255) and above the 9–12 m median (~55). A weight ticket closed too early for young infants and too late for older ones.
+- **Cause:** a fixed 80 g/week figure.
+- **Fix:** resolves at `growthVelocityBand(age).wGWkMedian`.
+- **Where:** intelligence-caretickets.js `resolutionCriteria`.
+- **Caught by:** code review / S4 spec.
+- **Patch class:** PC-9 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — 12–24 m length floor near WHO P10 late in year 2 (11)
+- **Symptom:** a normal toddler could read "slower than typical" late in year 2. The floor of 0.6 cm/month sat near WHO P10 at 22–24 m.
+- **Cause:** floor set too high for late year 2.
+- **Fix:** WHO P15 for 22–24 m, 0.45 cm/month (both sexes).
+- **Where:** growth-velocity bands (core.js `GROWTH_VELOCITY_BANDS`).
+- **Caught by:** code review / S4 spec.
+- **Patch class:** PC-9 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 (test infrastructure) — e2e fixtures hard-code origin 127.0.0.1:5173 (12)
+- **Symptom:** on any other port the profile is not loaded and the gate stays up silently, so tests behave as if the sex were unknown. Seen as torsion showing for a girl in `body-care.spec` on port 5291. Not an app bug.
+- **Cause:** `tests/e2e/fixtures/storage.json` and `privacy-empty-household.spec.ts` hard-code the origin.
+- **Fix shape:** derive the origin from `baseURL`.
+- **Where:** tests/e2e/fixtures/storage.json; privacy-empty-household.spec.ts.
+- **Caught by:** `body-care.spec` run on port 5291 (S3 care builder).
+- **Patch class:** PC-6 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): playwright.config rewrites the fixture origin to the served baseURL; privacy-empty-household derives it from PORT. Verified on port 5297 (25/25).
+
+#### P2 (spec) — child-sex-v1 §4 said a hydrocele "stays the same size" (13)
+- **Symptom:** the spec was wrong. AAP says a hydrocele can change size, which is also a hernia sign. The app does not use size to tell them apart.
+- **Cause:** spec wording.
+- **Fix:** spec corrected at assembly.
+- **Where:** docs/specs/child-sex-v1.md §4.
+- **Caught by:** S3 care builder, checking the spec against AAP.
+- **Patch class:** PC-7 (assigned at close)
+- **Status:** **Fixed** (spec).
+
+Entries 14–18 were caught by Ceres's Mode-1 audit (V-C-282). Entries 14–17 were introduced by the S2 load-time rewording.
+
+#### P1 — Litchi step lost its subject (14)
+- **Symptom:** recipes.js:1744 read "Serve only after a meal has been eaten". A parent can read that as "after mealtime" and give litchi as dessert to a child who barely ate. Litchi on an empty stomach is the hypoglycaemia mechanism the gate exists for.
+- **Cause:** the S2 neutral rewording used a passive.
+- **Fix:** "Serve only after the child has eaten a meal."
+- **Where:** recipes.js:1744.
+- **Caught by:** Ceres V-C-282-1.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — Oily-fish limit softened (15)
+- **Symptom:** data.js:2750 said "NHS suggests up to 2 portions… for girls". That reads as a target, not a ceiling (NHS: "best to give girls no more than 2").
+- **Cause:** the S2 rewrite changed the verb.
+- **Fix:** "NHS advises no more than 2 portions of oily fish a week for girls, and up to 4 for boys (because of pollutants)."
+- **Where:** data.js:2750.
+- **Caught by:** Ceres V-C-282-2.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Egg/fish allergen ladders lost "to whom" (16)
+- **Symptom:** the copy read "If egg is new, …" and "If fish is new, watch closely…", with no subject.
+- **Cause:** the S2 rewording dropped the pronoun.
+- **Fix:** "new to the child" and "watch the child closely".
+- **Where:** recipes.js 549, 763, 681.
+- **Caught by:** Ceres V-C-282-3.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Family-food tip said the grinding molars are not in yet, with no upper age (17)
+- **Symptom:** the tip claimed "the grinding molars are not in yet" for every toddler from 12 m with no upper age. First molars erupt ~13–19 m, so the claim goes stale.
+- **Cause:** age-unbounded copy.
+- **Fix:** "…until the grinding molars come in."
+- **Where:** diet.js `ALL_TIPS` ~3082.
+- **Caught by:** Ceres V-C-282-4.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — No e2e test renders the Nutrition safety copy for a boy (18)
+- **Symptom:** nothing tests that the meal-planner allergen caution, the Library choke panel and the mercury flag render correctly for a boy. They depend on pron obj vs poss.
+- **Cause:** test coverage gap.
+- **Fix:** e2e added: meal-planner-ui.spec "the safety lead reads right for a boy" (see #43).
+- **Where:** tests/e2e (Nutrition surfaces: meal planner, Library, mercury flag).
+- **Caught by:** Ceres V-C-282-5.
+- **Patch class:** PC-6 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+Entries 19–43 are the Governor Mode-1 audits of PR #282. For each, "caught by" is the Governor tag. Entries are all Fixed unless marked.
+
+#### P0 (safety) — Newborn with neither testis felt told to wait until about 8 weeks (19)
+- **Symptom:** Body care told parents of a newborn with NEITHER testis felt to "see the doctor sooner, from about 8 weeks".
+- **Cause:** the S3 builder misread NHS. Eight weeks is the specialist-referral time after a doctor's exam. Bilateral non-palpable testes in a newborn need immediate review (possible DSD/CAH).
+- **Fix:** "Neither testis can be felt, especially in a newborn: tell the doctor straight away" (AUA guideline Statement 5, verified 2026-10-31), plus "You think a testis is not in the scrotum: tell the doctor" (NHS).
+- **Where:** config.js `BODY_CARE_GUIDANCE` undescended-testes.
+- **Caught by:** V-M-282-1.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P0 (safety) — Fever guidance told parents of a baby under 3 months to wait (20)
+- **Symptom:** fever guidance from birth said "especially if it lasts more than 2 days", and the fever card said call at 102°F / 48 h. Both tell a parent of a baby under 3 months to wait.
+- **Cause:** no young-infant fever rule.
+- **Fix:** new Body care entry `fever-young-baby` (0–2 m): any 38°C/100.4°F or more means the doctor the same day (NHS fever-in-children, quoted). The urine-test entry now starts at 3 months. The fever card shows the under-3-months line.
+- **Where:** config.js `BODY_CARE_GUIDANCE`; intelligence-illness.js fever card.
+- **Caught by:** V-M-282-2.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — Newborn discharge / breast-swelling entries showed until about day 60 (21)
+- **Symptom:** a 7-week-old with bleeding read "nothing to worry about".
+- **Cause:** `ageMaxMo 1` counts completed months, so the entries ran to about day 60.
+- **Fix:** `ageMaxMo 0`.
+- **Where:** config.js `BODY_CARE_GUIDANCE` (newborn discharge and breast-swelling entries).
+- **Caught by:** V-M-282-3.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — Torsion card: "Call 112 now" button contradicted step 1 (22)
+- **Symptom:** a big "Call 112 now" button sat above step 1, "Go to the emergency department now".
+- **Cause:** conflicting calls to action, plus source-wording drift.
+- **Fix:** `callLead` false (drive; call if you can't get there fast). "Every hour counts" replaces "4 to 6 hours". "Can happen in a testis that has not come down" (source wording).
+- **Where:** Body care torsion card (config.js `BODY_CARE_GUIDANCE` and its render).
+- **Caught by:** V-M-282-4..6, V-V-282-4.
+- **Patch class:** PC-7 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P1 — Hydrocele entry reassured before telling parents to have it checked (23)
+- **Symptom:** it said "bigger after crying", which is also a hernia sign, before telling parents to have it checked.
+- **Cause:** point ordering.
+- **Fix:** the check-first point now leads. "A swelling that comes and goes with crying may be a hernia: see the doctor soon."
+- **Where:** Body care hydrocele entry.
+- **Caught by:** V-M-282-7.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — The single 12–24 m weight band read normal toddlers as "slow" (24)
+- **Symptom:** the one band (20–85 g/wk) read a normal P15–P25 toddler as "slow" or "plateau" in year two, and would have reached Ziva.
+- **Cause:** one band across the whole year, with too high a floor.
+- **Fix:** separate 12–18 and 18–24 rows by the same WHO P15–P85 rule (floors 0–10 g/wk).
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`.
+- **Caught by:** V-M-282-8, V-CA-282-2.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — Band age rule differed by caller (25)
+- **Symptom:** near a bracket edge the engine said "on track" while Home said "check" (e.g. a 1.6-month girl at 18 g/day).
+- **Cause:** `computeGrowthVelocity` rounded the age, while the other callers used completed months.
+- **Fix:** `growthVelocityBand` brackets by completed months (12 m from 11.5) for every caller.
+- **Where:** core.js `growthVelocityBand`; medical.js `computeGrowthVelocity`.
+- **Caught by:** V-M-282-9, V-K-282-3.
+- **Patch class:** PC-1 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282, residual closed): `gvAgeAt(entry)` judges every velocity at its own latest measurement's age (Home, narrative, Growth facts, gauge); growth-velocity-bands.spec "Home and the Growth tab agree at a bracket edge".
+
+#### P2 — g/day floors rounded below the g/week floors (26)
+- **Symptom:** for example, girls 9–12 m showed a g/day floor of 2 against 2.86 g/day from the g/week figure.
+- **Cause:** g/day rounded to a whole number.
+- **Fix:** g/day to 0.1.
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`.
+- **Caught by:** V-M-282-11.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Infant bracket floors sit near P3–P5 at the start of each bracket (27)
+- **Symptom:** a floor can be too lenient at the start of a bracket, by the bracket method.
+- **Cause:** bracketed bands.
+- **Fix (PC-1):** under 6 m the rows are one month wide (0–1 … 5–6), each from the single WHO 2-month interval centred on its first month (row m–(m+1) ← interval (m−1)–(m+1); 0–1 ← 0–2), recomputed from the WHO xlsx files (fetched 2026-10-31) by the existing rounding rule; 6–24 m rows unchanged. Girls at 4.0 m: floor 85 g/week (was 65). Newborn carve-out: `_gvNewbornWindow(ageMonthsAtMeasurement)` — a weight-velocity window ending before day 14 is never "slow", "plateau" or "below range" (AAP HealthyChildren + NHS quoted in core.js). `gvWeightVerdict` returns `'newborn'` and `computeGrowthVelocity` sets `status:'newborn'`, `newborn:true`, and every reader shows `GV_NEWBORN_NOTE` in place of a verdict (Home chips/pills, Growth facts and gauge, Info growth-velocity card, growth-diet card, Q&A weight/growth answers, visit prep).
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`, `_gvNewbornWindow`, `gvWeightVerdict`; medical.js `computeGrowthVelocity` and its readers; intelligence-cards.js; intelligence-qa-handlers.js.
+- **Caught by:** V-M-282-10.
+- **Patch class:** PC-1 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): one-month rows under 6 m from the WHO interval centred on each month (girls 4.0 m floor 85, was 65); newborn window (first 14 days; AAP + NHS cited) shows a weight-loss note instead of slow/plateau. Maren decided the window stays 14 days and a >10% loss is flagged (see #58).
+
+#### P1 — Q&A for a boy echoed "Can he eat her egg?" (28)
+- **Symptom:** "Can he eat his egg?" folded to "her egg" and echoed "Can he eat her egg?".
+- **Cause:** determiners were not stripped from food tokens.
+- **Fix:** strip leading determiners from food tokens.
+- **Where:** intelligence-qa.js `qaHandleFoodSafety`.
+- **Caught by:** V-K-282-1.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — CareTicket weight goal flipped to "met" on a stale weigh-in (29)
+- **Symptom:** a stale weigh-in flipped to "met" when the child crossed an age band.
+- **Cause:** the target was picked by today's age.
+- **Fix:** band by the latest weigh-in's age.
+- **Where:** intelligence-caretickets.js (weight goal / `resolutionCriteria`).
+- **Caught by:** V-K-282-2.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — Head-injury questions matched no SYMPTOM_DB row (30)
+- **Symptom:** "she/he hit her/his head" matched no `SYMPTOM_DB` row. The S2 'hit his head' addition went into dead code (`ctShouldTriggerCreate` has no callers).
+- **Cause:** keywords were not canonical, and the addition landed in dead code.
+- **Fix:** canonical 'hit her head', 'banged her head' and 'bumped her head' added to the head-injury keywords. The dead addition is removed.
+- **Where:** SYMPTOM_DB head-injury keywords; intelligence-caretickets.js `ctShouldTriggerCreate`.
+- **Caught by:** V-K-282-4.
+- **Patch class:** PC-3 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): `ctShouldTriggerCreate` removed (no callers; its lists had drifted from the live `ct_create` intent); CARETICKETS spec note updated.
+
+#### P2 — Food-lookback stripper had no word boundaries (31)
+- **Symptom:** "dates" became "ds", "thepla" became "pla", "sheera" became "era". Pre-existing.
+- **Cause:** pronoun stripping without word boundaries.
+- **Fix:** `\b`-bounded, and drops a folded "her".
+- **Where:** food-lookback stripper in intelligence-qa*.js.
+- **Caught by:** V-K-282-5.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — CareTicket force-resolve reasons stored a pronoun (32)
+- **Symptom:** `resolvedNotes` held a pronoun.
+- **Cause:** pronoun-bearing reason text.
+- **Fix:** neutral "Doctor confirmed all is well" / "I'm confident all is fine".
+- **Where:** intelligence-caretickets.js force-resolve reasons.
+- **Caught by:** V-K-282-7.
+- **Patch class:** PC-8 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — `qaWords` gained he/him/his for every sex (33)
+- **Symptom:** "ragi thik he" skips ingredient mode.
+- **Cause:** spec-mandated addition.
+- **Fix:** none.
+- **Where:** intelligence-qa.js `qaWords`.
+- **Caught by:** V-K-282-6.
+- **Patch class:** PC-2 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): 'he' removed from qaWords (a boy's "he" is folded first); "ragi thik he" stays ingredient mode; qa-sex-aware-match.spec.
+
+#### P1 — Milestone titles with "her" render to a boy's family (34)
+- **Symptom:** 9 rows. See #5; `text:` is the record key.
+- **Cause:** as #5.
+- **Fix:** Carina's decision, a render-time display label, never changing `text`. `MILESTONE_STANDARDS` `text:` is frozen as the record key. The 9 rows gain a neutral `label:`, and `msLabel(text)` / `msLabelById(id)` in core.js are used at every render site. Keys, slugs and stored records stay raw. `audit-pronouns-v1` exempts a milestone text only when its row has a pronoun-free label.
+- **Where:** data.js `MILESTONE_STANDARDS`; core.js `msLabel` / `msLabelById`.
+- **Caught by:** V-CA-282-1 / #5. Test: `milestone-labels.spec.ts` passes.
+- **Patch class:** PC-8 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.** Resolves #5.
+
+#### P2 — Food-effects manifest still had the girls-only oily-fish note (35)
+- **Symptom:** the manifest showed the girls-only note.
+- **Cause:** missed in the data.js oily-fish rewrite (#15).
+- **Fix:** both-sexes wording.
+- **Where:** food-effects manifest (data.js `FOOD_EFFECTS`).
+- **Caught by:** V-CA-282-3.
+- **Patch class:** PC-9 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — `GENERAL_EMERGENCIES` sex filter hid an entry on a typo (36)
+- **Symptom:** an entry vanished for everyone on a typo ('M', 'male').
+- **Cause:** a strict filter.
+- **Fix:** only 'f'/'m' filter; anything else shows.
+- **Where:** config.js `GENERAL_EMERGENCIES` sex filter.
+- **Caught by:** V-CA-282-4.
+- **Patch class:** PC-3 (an entry made unreachable by a filter) (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — AAP 2011 UTI guideline missing from the fever entry's sources (37)
+- **Symptom:** the fever entry listed no AAP 2011 UTI source.
+- **Cause:** omission.
+- **Fix:** added.
+- **Where:** config.js `BODY_CARE_GUIDANCE` fever entry sources.
+- **Caught by:** V-CA-282-6.
+- **Patch class:** PC-9 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — He-forms in activity keyword tables can fire on a girl's note about her father (38)
+- **Symptom:** a girl's note such as "when he does" can match.
+- **Cause:** the he/himself variants added in #6 are not sex-filtered.
+- **Fix:** none. Optional matcher filter by sex.
+- **Where:** data.js activity keyword tables.
+- **Caught by:** V-CA-282-5.
+- **Patch class:** PC-2 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): classifyActivity skips keywords in the other sex's pronouns (`kwFitsChildSex`, medical.js); `require`/`exclude` stay sex-blind; qa-sex-aware-match.spec.
+
+#### P1 — Body care light theme: emergency block weaker than the see-the-doctor block (39)
+- **Symptom:** the emergency block looked weaker than the see-the-doctor block, and a red "Emergency signs" pill sat on 7 of 8 boys' topics.
+- **Cause:** styling and tag logic.
+- **Fix:** emergency block gets a rose fill and a thick danger rail; the doctor block gets a rail only. The tag shows only on torsion. Topics with an Emergency Room card get an "Open the emergency steps" button. The chevron is fixed top-right. Source links are 32px.
+- **Where:** Body care render and styles.css.
+- **Caught by:** V-V-282-1/2/3/9/10.
+- **Patch class:** PC-7 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — Every General-room doctor summary said "Known allergies: none recorded yet" (40)
+- **Symptom:** the line "Known allergies: none recorded yet (this may be a first reaction)" appeared in every General-room doctor summary.
+- **Cause:** the line was not gated to the allergic reaction.
+- **Fix:** shown only on allergic-reaction.
+- **Where:** config.js `GENERAL_EMERGENCIES` doctor summary (General room).
+- **Caught by:** V-V-282-5.
+- **Patch class:** PC-7 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — Body care and Emergency Room copy and icon nits (41)
+- **Symptom:** torsion shared the anaphylaxis icon; 'Both testes in the scrotum' read as reassurance; two see-the-doctor items weren't conditions; "Hide a toy … in full view"; CPR "They call 112" was ambiguous; the sleep help tip was stuck at 6–8 months.
+- **Cause:** assorted copy and icon issues.
+- **Fix:** all corrected.
+- **Where:** Body care / Emergency Room cards and the sleep tip.
+- **Caught by:** V-V-282-6/7/8/12/13/14.
+- **Patch class:** PC-7 (assigned at close)
+- **Status:** **Fixed.**
+
+#### P2 — Safe-sleep and Body care copy fixes (42)
+- **Symptom:** "turn him back" (safe sleep); "Coughing or crying?"; "draws both legs up"; "ask your doctor".
+- **Cause:** pronoun and wording issues.
+- **Fix:** "turn him onto his back"; "Can your child cough or cry?"; "draws the legs up"; "ask the doctor".
+- **Where:** Body care / safe-sleep copy.
+- **Caught by:** V-M-282-12/13.
+- **Patch class:** PC-7 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P1 — Ceres: no e2e for a boy's Nutrition safety copy (43)
+- **Symptom:** see #18.
+- **Fix:** e2e added: meal-planner-ui.spec "the safety lead reads right for a boy". #18 is marked Fixed.
+- **Where:** tests/e2e meal-planner-ui.spec.
+- **Caught by:** Ceres (V-C-282-5).
+- **Patch class:** PC-6 (assigned at close)
+- **Status:** **Fixed.**
+
+Entry 44 was caught by the full e2e run on the assembled build.
+
+#### P1 — Sync ledger race: a same-millisecond write during a full push was never re-pushed (44)
+- **Symptom:** a write landing in the same millisecond as a full push start was cleared and never re-pushed (silent sync loss, rare). sync-unsynced-ledger.spec.ts:388 (F17) failed about 1 run in 3 (3 reruns: 1 failed, 2 passed). The S4 builder also saw it fail on untouched main, so it predates this PR.
+- **Cause:** `_syncFlushDirty` clears an entry when `l <= startedAt`. Ledger stamps are whole milliseconds, so a mid-push write stamped == `startedAt` looked "not late".
+- **First fix (insufficient):** `_syncFlushStartedAt` tracked the push in flight, and `_syncMarkDirty` stamped a write at least `startedAt+1` while it ran. This only moved the tie: a re-pass starting in the same millisecond as the late write looped once more (3 of 10 runs).
+- **Root fix:** `_syncNow()` in sync.js returns strictly increasing ms for every ledger stamp, push start (`_syncFlushDirty` and the two diff-push paths) and the session-attach mark.
+- **Where:** split/sync.js `_syncNow` / `_syncMarkDirty` / `_syncFlushDirty` (plus the two diff-push paths).
+- **Caught by:** full e2e run on the assembled build (`sync-unsynced-ledger.spec.ts:388`, F17).
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.** Verified: F17 passes 15/15; the whole sync-unsynced-ledger spec passes.
+
+Entries 45–48 were found by the label builder (the #5 / #34 work).
+
+#### P2 — Evidence rollup title showed a slug as a label (45)
+- **Symptom:** once a milestone got 3+ taps in 7 days, the title read like "Takes-A-Few-Steps-On-Her-Own". That is a pronoun leak and an ugly title.
+- **Cause:** `createMilestoneLabel(slug)` was used when the tap text didn't resolve to a short keyword.
+- **Fix:** `msLabelById(slug)` in `renderRecentEvidence`.
+- **Where:** home.js `renderRecentEvidence`.
+- **Caught by:** the label builder.
+- **Patch class:** PC-8 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun build gate failed on the head-injury match keywords (46)
+- **Symptom:** the gate flagged the head-injury match keywords added in the Kael fold ('hit her head' etc.). The build would have aborted.
+- **Cause:** the gate treated match vocabulary as copy.
+- **Fix:** allowlisted as match vocabulary (folded for boys).
+- **Where:** `audit-pronouns-v1.sh` allowlist.
+- **Caught by:** the label builder running the gate.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 (test) — qa-boy.spec first draft used phrasings an earlier classifier branch catches (47)
+- **Symptom:** `foodQuery` was undefined. "when did she last…" went to general lookback and "dates" matched a time word.
+- **Cause:** test bug, not an app bug.
+- **Fix:** phrasings changed in the spec.
+- **Where:** tests/e2e qa-boy.spec.
+- **Caught by:** the label builder (spec run).
+- **Patch class:** PC-6 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Sleep-regression cause text inserted without escHtml (48)
+- **Symptom:** the cause text goes into the render without `escHtml` (HR-4). The strings are constants today, so there is no live exposure. Pre-existing.
+- **Cause:** missing render-boundary escape.
+- **Fix:** none yet. Wrap in `escHtml()`.
+- **Where:** intelligence-quicklog.js ~5221.
+- **Caught by:** noted by the label builder.
+- **Patch class:** PC-4 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): escHtml at the boundary (intelligence-quicklog.js renderInfoSleepRegression).
+
+Entries 49–56 are Cipher's Edict V findings on #282.
+
+#### P1 — Ledger clock not yet one clock (49)
+- **Symptom:** an import or autosave-restore landing mid-push could tie with the push start and be cleared unpushed. This is the F17 silent-loss class, on the "parent's chosen truth" path.
+- **Cause:** `_syncMarkNeedsFull` and `syncMarkUnsynced` still stamped with `Date.now()`, while push starts used `_syncNow()`, which can run a ms ahead.
+- **Fix:** both use `_syncNow()`.
+- **Where:** sync.js `_syncMarkNeedsFull`, `syncMarkUnsynced`.
+- **Caught by:** Cipher A1.
+- **Patch class:** PC-1 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun gate allow entries matched by substring (50)
+- **Symptom:** copy containing "can she eat", "how is she" or "hit her head" would pass the gate.
+- **Cause:** three one-phrase allow entries matched by substring.
+- **Fix:** exact-match (`=`) entries.
+- **Where:** `audit-pronouns-v1.sh` allowlist.
+- **Caught by:** Cipher N1.
+- **Patch class:** PC-5 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun gate ignores template.html attribute copy (51)
+- **Symptom:** `<input placeholder="What did she eat">` passes. No current hits.
+- **Cause:** the gate does not scan placeholder, aria-label, title or alt attributes.
+- **Fix:** none yet.
+- **Where:** `audit-pronouns-v1.sh`; template.html.
+- **Caught by:** Cipher N2.
+- **Patch class:** PC-5 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): audit-pronouns-v1 scans placeholder, aria-label, title and alt in template.html.
+
+#### P2 — Renamed MILESTONE_STANDARDS anchor silently disabled the label rule (52)
+- **Symptom:** the pronoun gate's milestone label rule stopped working without any failure.
+- **Cause:** the rule anchors on the `MILESTONE_STANDARDS` name, and a missing anchor was skipped.
+- **Fix:** a missing anchor fails the gate.
+- **Where:** `audit-pronouns-v1.sh`.
+- **Caught by:** Cipher N3.
+- **Patch class:** PC-5 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Head-injury keywords had only her-forms (53)
+- **Symptom:** home and Medical symptom searches don't fold a boy's wording. A girl's family got a +2 exact match that a boy's did not.
+- **Cause:** only her-forms in the keywords.
+- **Fix:** his-forms added; allowlist comment corrected.
+- **Where:** SYMPTOM_DB head-injury keywords; `audit-pronouns-v1.sh` allowlist comment.
+- **Caught by:** Cipher N4.
+- **Patch class:** PC-2 (from docs/PATCH_CLASSES.md)
+- **Status:** **Fixed.**
+
+#### P2 — Pronoun gate has no adversarial self-test fixtures (54)
+- **Symptom:** the gate has no fixtures proving it catches what it should. Its sibling gates have them.
+- **Cause:** not written.
+- **Fix:** none yet.
+- **Where:** `audit-pronouns-v1.sh`.
+- **Caught by:** Cipher N5.
+- **Patch class:** PC-5 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): 16 adversarial self-test fixtures run before the scan; a scanner regression fails the build (exit 2).
+
+#### P2 — `ageMonthsAt` parses 'YYYY-MM-DD' as UTC (55)
+- **Symptom:** hours of age drift. It matters only at a band edge, but the CareTicket weight goal now reads it. Pre-existing (HR-12).
+- **Cause:** UTC date parsing.
+- **Fix (PC-1):** a bare 'YYYY-MM-DD' goes through `_parseLocalDate` (local noon) and counts whole calendar days from the birth date (rounded, DST-safe), so the age is the same in every timezone; a full date-time keeps its exact instant.
+- **Where:** medical.js `ageMonthsAt`.
+- **Caught by:** Cipher N6.
+- **Patch class:** PC-1 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): date-only strings parse as local calendar dates (whole days / 30.44); a 61-day weigh-in read 60.85 (IST) / 60.33 (LA) days. Tested in both zones.
+
+#### P2 (test) — Test gaps (56)
+- **Symptom:** no e2e pins the 2→3-month switch from `fever-young-baby` to `fever-uti`. None pins the CareTicket weigh-in-age goal either.
+- **Cause:** coverage gaps.
+- **Fix:** the fever switch is pinned (body-care.spec "under 3 months the fever entry says same day; the urine-test entry starts at 3 months"). The CareTicket weigh-in-age goal is still unpinned.
+- **Where:** tests/e2e.
+- **Caught by:** Cipher (Edict V).
+- **Patch class:** PC-6 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282): fever switch pinned (body-care.spec) and the CareTicket weigh-in-age goal pinned (growth-velocity-bands.spec).
+
+#### P2 — Home's "healthy growth for N weeks" alert could never fire (57)
+- **Symptom:** the positive "consistent healthy growth" alert never showed, whatever the record.
+- **Cause:** home.js `computeBaselines` read `velocity.wtSpanDays`, which `getGrowthVelocity` never set (NaN). Pre-existing.
+- **Fix:** `getGrowthVelocity` sets `wtSpanDays` (days from the first to the latest weight entry).
+- **Where:** core.js `getGrowthVelocity`; home.js `computeBaselines`.
+- **Caught by:** the PC-1 builder while unifying the band age (#25).
+- **Patch class:** PC-3 (docs/PATCH_CLASSES.md)
+- **Status:** **Fixed** (patch to #282).
+
+Entries 58–76 are the second Governor round on the patch to #282 (tags V-*-282b-*). Each has its Patch class (docs/PATCH_CLASSES.md).
+
+#### P0 (safety) — A newborn more than 10% below birth weight got the reassuring "Early days" note (58)
+- **Symptom:** a newborn more than 10% below birth weight got the reassuring "Early days… expected" note (Home neutral, score 70).
+- **Cause:** the newborn window only withheld "slow"; there was no loss threshold.
+- **Fix:** `gvNewbornCheck` 'newborn-loss': more than 10% below birth weight before day 21; caution; score 25; "contact your midwife, health visitor or doctor today" (NICE NG75 1.1.2/1.1.4).
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282b-1.
+- **Patch class:** PC-7 / PC-1
+- **Status:** **Fixed** (patch to #282).
+
+#### P1 — A baby exactly back at birth weight at day 14–21 read "plateau / below typical range" (59)
+- **Symptom:** a baby exactly back at birth weight at day 14–21 read "plateau / below typical range".
+- **Cause:** the window ran from the birth row, so the rate included the after-birth dip.
+- **Fix:** regain is judged against birth weight before day 28 when the window starts before day 5. 'Back to birth weight — right on schedule' / 'not-regained' from day 14, with NICE referral wording from day 21. One helper serves both engines.
+- **Where:** core.js (newborn regain helper); both growth engines.
+- **Caught by:** V-M-282b-2, V-K-282b-3, V-CA-282b-2.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (patch to #282).
+
+#### P1 — Under 6 months the slow/plateau advice suggested solid food (60)
+- **Symptom:** the advice suggested ghee, nut butters, extra meals and the Food tab. It reached newborns via the day-14 boundary. Pre-existing.
+- **Cause:** no age gate on food advice.
+- **Fix:** `gvFoodAdviceOk` gate (age at weigh-in 6 m or more, or solids started). Under 6 m: "milk is the whole diet — talk to your doctor or health visitor" (WHO IYCF).
+- **Where:** core.js `gvFoodAdviceOk`; the slow/plateau advice sites.
+- **Caught by:** V-M-282b-3, V-K-282b-4.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (patch to #282).
+
+#### P1 — The "Early days" note outlived its window (61)
+- **Symptom:** a weigh-in at day 10 still showed the note at day 25.
+- **Cause:** no recheck prompt.
+- **Fix:** a recheck prompt once today is day 14 or later ("weigh again to check … back to birth weight"). Visit prep says "not yet confirmed".
+- **Where:** core.js newborn note; visit prep.
+- **Caught by:** V-M-282b-4, V-V-282b-1.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (patch to #282).
+
+#### P1 — 0–6 m one-month weight rows derived from WHO 2-month increments (62)
+- **Symptom:** with ~4-week windows a P25 infant read "below… Monitor closely" by the end of each row.
+- **Cause:** one-month rows derived from the 2-month tables.
+- **Fix:** 0–12 m weight rows from the WHO 1-month increment tables, looked up at the window midpoint (`gvBandAge`).
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`, `gvBandAge`.
+- **Caught by:** V-CA-282b-1.
+- **Patch class:** PC-9
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — Q&A headline "3.25 kg (gaining -15 g/day)" and "Total gain since birth: -150g" (63)
+- **Symptom:** negative numbers shown as a gain.
+- **Cause:** wording assumed a gain.
+- **Fix:** "— early days" / flag headline; "down N g/day"; "Total change since birth".
+- **Where:** intelligence-qa-handlers.js weight answer.
+- **Caught by:** V-M-282b-6, V-K-282b-5, V-V-282b-2.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — Newborn state borrowed sky ("above range") on the gauge and Info bar (64)
+- **Symptom:** the gauge and Info bar showed sky ("above range"), and the Info bar still showed an "expected" band.
+- **Cause:** the newborn state reused the above-band styling.
+- **Fix:** neutral for the dip, caution for flags; band replaced in the window; `.growth-fact.neutral` / `.caution`.
+- **Where:** styles.css; Info growth bar and gauge render.
+- **Caught by:** V-V-282b-3.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — Newborn copy ambiguous (65)
+- **Symptom:** "The newborn weight checks look for exactly this"; a short line predicted this baby's regain.
+- **Cause:** wording.
+- **Fix:** reworded.
+- **Where:** core.js `GV_NEWBORN_NOTE` and the short line.
+- **Caught by:** V-V-282b-4.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (patch to #282).
+
+#### P1 — #57's revived "Growth on track for 8+ weeks" overclaimed (66)
+- **Symptom:** the alert used the whole-record span, had no freshness gate, and could disagree with the Growth tab.
+- **Cause:** revived by #57 without these checks.
+- **Fix:** weeks from the judged window, a fresh weigh-in, and the Growth tab must be on-track. "Growth on track over the last N weeks".
+- **Where:** home.js `computeBaselines`.
+- **Caught by:** V-M-282b-5, V-V-282b-5/6, V-CA-282b-3.
+- **Patch class:** PC-3 / PC-1
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — Age copy "at 0 months" / "5 months" on the 6-month birthday (67)
+- **Symptom:** wrong month in age copy.
+- **Cause:** 30.44-day months.
+- **Fix:** calendar months on the weigh-in date ("in the first month").
+- **Where:** growth age copy.
+- **Caught by:** V-M-282b-7, V-V-282b-7.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — Under 12 m a below-band rate outside the newborn window pushed no growth fact (68)
+- **Symptom:** nothing was shown (silent).
+- **Cause:** no fact for below-band rates.
+- **Fix:** "Gaining X g/day — below the usual Y–Z for this age; mention it at the next weigh-in".
+- **Where:** medical.js `renderGrowthFacts`.
+- **Caught by:** V-M-282b-8.
+- **Patch class:** PC-3
+- **Status:** **Fixed** (patch to #282).
+
+#### P1 — `renderInfoGrowthDiet` referenced an undeclared `wtDiffG` (69)
+- **Symptom:** the card threw a ReferenceError. Since #266.
+- **Cause:** undeclared variable.
+- **Fix:** `gvW.gainG`.
+- **Where:** `renderInfoGrowthDiet`.
+- **Caught by:** the round-2 builder.
+- **Patch class:** PC-3
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — Boy's Hinglish "ragi thik he" still went to QA mode (70)
+- **Symptom:** it still went to QA mode.
+- **Cause:** the pronoun fold ran before the `qaWords` test.
+- **Fix:** the step-4 test runs on name-folded, not pronoun-folded, tokens.
+- **Where:** intelligence-qa.js.
+- **Caught by:** V-K-282b-1.
+- **Patch class:** PC-2
+- **Status:** **Fixed** (patch to #282). Supersedes the accepted #33.
+
+#### P2 — "Shreyas' nap" became "she' nap" (71)
+- **Symptom:** an s-ending bare-apostrophe possessive was folded wrongly.
+- **Cause:** the possessive pattern handled only 's.
+- **Fix:** `['’]s?` only for names ending in s.
+- **Where:** intelligence-qa.js `_qaNameAsShe`.
+- **Caught by:** V-K-282b-2.
+- **Patch class:** PC-2
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — CareTicket goal age via `ageMonthsAt` directly (72)
+- **Symptom:** a malformed date gives NaN, which picks the 0–1 m row and an unresolvable goal.
+- **Cause:** the goal called `ageMonthsAt` directly.
+- **Fix:** `gvAgeAt`.
+- **Where:** intelligence-caretickets.js weight goal.
+- **Caught by:** V-K-282b-6.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — `hCmWk` display text rounded inward (73)
+- **Symptom:** the shown value could sit inside the band.
+- **Cause:** inward rounding.
+- **Fix:** outward rounding.
+- **Where:** core.js `GROWTH_VELOCITY_BANDS` `hCmWk`.
+- **Caught by:** V-CA-282b-5.
+- **Patch class:** PC-9
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — `ageMonthsAt` lived in medical.js behind a `typeof` guard in core's `gvAgeAt` (74)
+- **Symptom:** a core function depended on a Care-region function through a guard.
+- **Cause:** misplaced helper.
+- **Fix:** moved into core.js.
+- **Where:** core.js `ageMonthsAt` / `gvAgeAt`; medical.js.
+- **Caught by:** V-CA-282b-4.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — Pronoun gate gaps (75)
+- **Symptom:** no fixtures for title/alt/single quotes/uppercase/.test.js, and attribute values across lines were missed.
+- **Cause:** incomplete scan. Closes #51 and #54.
+- **Fix:** whole-file attribute scan plus fixtures.
+- **Where:** `audit-pronouns-v1.sh`.
+- **Caught by:** V-CA-282b-6.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (patch to #282).
+
+#### P2 — PATCH_CLASSES.md over-labelled guards (76)
+- **Symptom:** hr12-v3-3 covers only the v3-3 surface; `growthVelocityBand` is design, not a gate; the pronoun gate checks copy, not matching; the origin rewrite is a fix.
+- **Cause:** labelling.
+- **Fix:** labels corrected; PC-9 added; new gates `audit-growth-age-v1` (would have flagged 17 #25 sites) and `audit-hr12-dateonly-v1` (ratchet, baseline 221).
+- **Where:** docs/PATCH_CLASSES.md; split/ audit gates.
+- **Caught by:** V-CA-282b-7.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (patch to #282).
+
+Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282c-*) plus Lyra's assembly fixes. All are **Fixed in 6d8a482**, except the two gate entries, which are fixed in 3e40ce7 / 7fc168b. Groupings follow Lyra's brief. "Where" is taken from the V-*-282c-* comments in split/ and the growth-velocity-bands.spec test names, because the commit message and the round-3 report were not readable from this session. Please check them.
+
+#### P0 (safety) — Newborn with no birth-weight row read "early days" from day 14 (77)
+- **Symptom:** with no birth row, a latest weigh-in from day 14 still got the reassuring "Early days" note, even when the baby was below the first weigh-in.
+- **Cause:** the regain check needed a birth row and fell through to the newborn note.
+- **Fix:** no birth row, from day 14: at or below the first weigh-in is 'not-regained' (referral from day 21); above it is a caution "not confirmed" line. Never `GV_NEWBORN_NOTE` from day 14.
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282c-2, V-K-282c-1. Test: "no birth row from day 14…" in growth-velocity-bands.spec.
+- **Patch class:** PC-7 / PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — Back at birth weight but dropping read green (78)
+- **Symptom:** a baby at or above birth weight but down since the previous weigh-in read as regained (green).
+- **Cause:** regain was judged against birth weight only.
+- **Fix:** at or above birth weight but down since the last weigh-in is a caution "weigh again" line, never green. It is a 'newborn' status with a recheck, so every reader that colours a recheck amber colours it amber.
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282c-3, V-K-282c-2.
+- **Patch class:** PC-10 (one state, two answers)
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — The 10% loss threshold was not strict, and float error could flip it (79)
+- **Symptom:** exactly 10% could be flagged, or a 10.0% loss misjudged, by float error.
+- **Cause:** a fractional comparison on kilogram floats.
+- **Fix:** whole grams and a strict test: `(birthG − latestG) × 10 > birthG`. Exactly 10% is not flagged.
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282c-4. Test: "more than 10% is strict, in whole grams".
+- **Patch class:** PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P0 (safety) — Late "not regained": below birth weight past day 28 fell back to a rate (80)
+- **Symptom:** a baby below birth weight past day 28 (until about 3 months) was judged by a rate, and the 3-week short line did not say "not back". Referral wording and the plateau at the referral point were missing.
+- **Cause:** regain was judged only until day 28.
+- **Fix:** below birth weight from day 28 until about 3 months is 'not-regained' with the NICE 1.1.4 referral, before any rate. At 3 weeks the short line says so.
+- **Where:** core.js `gvNewbornCheck` (`GV_REGAIN_LATE_DAYS`).
+- **Caught by:** V-M-282c-5, -6, -10. Test: "below birth weight past day 28 is 'not back' with the referral…".
+- **Patch class:** PC-7 / PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — A caution newborn line scored a neutral 70 while coloured amber (81)
+- **Symptom:** the newborn modifier score stayed at a neutral 70 for a line that was coloured amber (a caution).
+- **Cause:** tone and score came from two separate code paths and drifted apart. This is a new pattern (proposed under PC-7, see the proposal in the report).
+- **Fix:** the score now follows the tone of the newborn line, so a caution line no longer scores a neutral 70 (the exact score values are not stated in the brief).
+- **Where:** the growth score / modifier path that reads `gvNewbornCheck`'s `tone` (file not stated in the brief). Covers the "modifier scores" item and Lyra's assembly finding.
+- **Caught by:** Lyra, at assembly.
+- **Patch class:** PC-10 (one state, two answers)
+- **Status:** **Fixed** (6d8a482).
+
+#### P0 (safety) — Q&A newborn action: a caution line did not lead the weight answer (82)
+- **Symptom:** a Q&A weight answer for a caution newborn line could lead with "on track", "next visit" or reassurance, burying the urgent action. A newborn could also get "it is the usual plan" lines for slow gain.
+- **Cause:** the answers composed from the rate verdict, not the newborn line.
+- **Fix:** the one urgent action for a caution newborn line (a core.js helper, ~6790) leads every weight answer when the line is a caution. No "on track", "next visit" or reassurance. In the plain dip the percentile and play lines go too.
+- **Where:** core.js (urgent-action helper ~6790); intelligence-qa-handlers.js ~1003, 1823, 1916, 1967.
+- **Caught by:** V-M-282c-1, V-K-282c-3, V-V-282c-3. Test: "a caution newborn line leads every weight answer with the urgent action".
+- **Patch class:** PC-7
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — Food gate: `solidsStarted` and a missing weight row (83)
+- **Symptom:** an early solids start at 4 months gave slow-gain food advice. No weight row was treated as "food is fine". The Library and "nutrient gaps" ignored the 6-month rule.
+- **Cause:** the gate looked at age only (or solids only), and `gvFoodAdviceOk(null)` was not defined.
+- **Fix:** `solidsStarted()` is the one solids check. `gvFoodAdviceOk(latest)` needs 6 months at the weigh-in AND solids started. `null` judges by today's age. diet.js `_libSuggestions`, the nutrient-gaps card and the CareTicket text use the same gate. Under 6 months milk is the whole diet.
+- **Where:** core.js `solidsStarted` / `gvFoodAdviceOk`; diet.js `_libSuggestions` ~1698; intelligence-qa-handlers.js ~998, 1870; intelligence-cards.js ~1069; intelligence-caretickets.js ~219.
+- **Caught by:** V-C-282c-1, -2, -3, -4, -5, -6 and V-K-282c-5. Tests: "no weight row: food advice is judged by today's age" and "food advice needs 6 months AND solids".
+- **Patch class:** PC-7
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — `tooShort` ordering: a 10-day toddler pair read "on track" (84)
+- **Symptom:** a too-short window was called "gaining well", "within normal range" or "(on track)". The Info card line disagreed.
+- **Cause:** the on-track branch ran before the `tooShort` check.
+- **Fix:** `tooShort` is checked before on-track in Q&A, the Info card and Growth facts.
+- **Where:** intelligence-qa-handlers.js ~1841, 1921; intelligence-cards.js ~985; medical.js.
+- **Caught by:** V-V-282c-6. Test: "tooShort is never 'gaining well'…".
+- **Patch class:** PC-10 (one state, two answers)
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Plateau-negative headline (85)
+- **Symptom:** a negative plateau gain still got a plateau-style headline.
+- **Cause:** the headline ignored the sign of the change (see also #63).
+- **Fix:** the headline says which way the weight moved.
+- **Where:** intelligence-qa-handlers.js weight answer (~1020); intelligence-cards.js.
+- **Caught by:** V-V-282c-6 per the code comments. The exact tag is not stated in the brief, so please confirm.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — Insights preview did not lead with a "Check" tile (86)
+- **Symptom:** a collapsed card hid a caution behind "Positive" / "Info".
+- **Cause:** the preview tiles did not consider the caution.
+- **Fix:** the preview leads with a "Check" tile and the caution title.
+- **Where:** medical.js ~1261.
+- **Caught by:** V-V-282c-1. Test: "the insights preview leads with a 'Check' tile…".
+- **Patch class:** PC-10 (one state, two answers)
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Percentile crossings reported in the newborn window (87)
+- **Symptom:** a centile "crossing" was reported in the first weeks, where the dip causes one.
+- **Cause:** no newborn-window filter on crossings.
+- **Fix:** crossings are not reported in the newborn window or before day 28. The bracket is closed ("(recent)").
+- **Where:** medical.js ~10834.
+- **Caught by:** V-V-282c-2, V-V-282c-7. Test: "percentile crossings are not reported in the newborn window…".
+- **Patch class:** PC-7
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Birth-ratio gauge read "Approaching 2×" against the wrong baseline (88)
+- **Symptom:** the gauge read against the first weigh-in in the newborn window, and the dip was coloured as a problem.
+- **Cause:** wrong baseline and no newborn tone.
+- **Fix:** the gauge reads against birth weight in the newborn window, coloured by the newborn line's tone (the dip is neutral).
+- **Where:** medical.js ~1785.
+- **Caught by:** V-V-282c-4. Test: "the birth-ratio gauge reads against birth weight in the newborn window".
+- **Patch class:** PC-10 (one state, two answers)
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Velocity bar shown in the newborn window (89)
+- **Symptom:** the velocity bar showed an "expected" band where there is no rate verdict.
+- **Cause:** the bar was not suppressed.
+- **Fix:** no `mi-velocity-range` bar in the newborn window; the sub-label and the number stay.
+- **Where:** medical.js ~10947.
+- **Caught by:** V-V-282c-5.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — Doctor-summary / "since birth" lines used the first row, not the birth row (90)
+- **Symptom:** "since birth" gain was built on `growthData[0]`, which may be days later or carry no height. A loss was shown as a gain.
+- **Cause:** the first row was assumed to be the birth row.
+- **Fix:** `gvBirthRow(measure)` is the birth-date row that carries that measure. No birth height means no height line. A loss is a change, not a gain.
+- **Where:** core.js `gvBirthRow`; medical.js ~762, 1891.
+- **Caught by:** V-M-282c-7, V-CA-282c-6. Test: ""since birth" uses the birth-date row for each measure".
+- **Patch class:** PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Growth facts from 12 m celebrated a 7-day toddler pair (91)
+- **Symptom:** a toddler's 7-day weight pair got a celebrating fact.
+- **Cause:** the 12 m+ path lacked the too-short and slow/plateau lines.
+- **Fix:** the same lines as under 12 months for slow / plateau, and no celebration on a too-short pair.
+- **Where:** medical.js ~920.
+- **Caught by:** V-M-282c-8.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — Slow centile slide missed (92)
+- **Symptom:** a slow fall across two major centile lines, spread over several weigh-ins, was not flagged.
+- **Cause:** only pairwise crossings were checked.
+- **Fix:** a gradual slide check against the major WHO lines (`GV_CENTILE_LINES`) in `computeGrowthVelocity`. One line is not flagged; two are.
+- **Where:** medical.js ~10852, 10983; core.js `GV_CENTILE_LINES`; Q&A ~1080, 1946.
+- **Caught by:** V-M-282c-11. Test: "a slow fall across two major centile lines is flagged; one line is not".
+- **Patch class:** PC-7
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — Weight verdicts in two units disagreed (93)
+- **Symptom:** Home (g/week) and the Growth tab (g/day, rounded to 0.1) could give different verdicts for the same gain (girls 7–8 m at 24.7 g/week).
+- **Cause:** g/day columns rounded to 0.1 can sit under the g/week floor (3.5 × 7 = 24.5 < 25).
+- **Fix:** one unit: every weight verdict is made in g/week (`gvBandVerdict`; `computeGrowthVelocity` on `Math.floor(g / days × 7)`). The g/day columns are display copy only.
+- **Where:** core.js `GROWTH_VELOCITY_BANDS` notes; medical.js ~933, 1727, 10724.
+- **Caught by:** V-CA-282c-3. Test: "Home (g/week) and the Growth tab give one verdict for the same gain".
+- **Patch class:** PC-10 (one state, two answers)
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Length rows recomputed (94)
+- **Symptom:** the 6–12 m length rows had been rounded to 0.1, one 0.05 step too wide. Window spread was undocumented.
+- **Cause:** rounding at the wrong step.
+- **Fix:** rows recomputed from WHO 2-month tables by the rule (girls 9–12 0.85–1.8, boys 6–9 1.0–2.05, boys 9–12 0.85–1.75). cm/week text rounds outward. The window-spread limits are documented as a model estimate.
+- **Where:** core.js `GROWTH_VELOCITY_BANDS`.
+- **Caught by:** V-CA-282c-3.
+- **Patch class:** PC-9
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — CareTicket goal row did not match the verdict's row (95)
+- **Symptom:** the weight goal could use a different band row than the verdict.
+- **Cause:** the goal read the age at weigh-in, the verdict the window midpoint.
+- **Fix:** the goal reads the verdict's row, the midpoint (`gv.wtBandAge`). `gvAgeAt` guards a malformed stored date.
+- **Where:** intelligence-caretickets.js ~145; core.js ~6380.
+- **Caught by:** V-K-282c-7, V-CA-282c-5, V-K-282c-6. Test: growth-velocity-bands.spec ~255.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — `getSleepScore24h` parsed today as UTC (96)
+- **Symptom:** west of Greenwich, "yesterday" became the day before yesterday.
+- **Cause:** `new Date('YYYY-MM-DD')` is UTC midnight (HR-12).
+- **Fix:** `_parseLocalDate(todayStr)`.
+- **Where:** core.js `getSleepScore24h` (~2672).
+- **Caught by:** V-CA-282c-2 (part of Carina's HR-12 ratchet finding). Test: "HR-12: getSleepScore24h reads yesterday as a local calendar day".
+- **Patch class:** PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Growth-age gate bypasses (97)
+- **Symptom:** `audit-growth-age-v1` let today's age reach a band helper through ways the scanner did not read.
+- **Cause:** the scanner matched only direct `ageAt()` in the argument.
+- **Fix:** it also catches an identifier assigned from `ageAt()` (joined across lines, ternaries, `||`, object fields), `Math.floor` wrappers, a no-argument `gvAgeAt()` and `ageMonthsAt(today())`, and multi-line calls. 20 self-test fixtures: six are Kael's bypasses and five are Carina's.
+- **Where:** split/audit-growth-age-v1.sh.
+- **Caught by:** V-K-282c-4, V-CA-282c-1.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (gate, 3e40ce7 / 7fc168b).
+
+#### P2 — HR-12 date-only ratchet failed open and missed `*Str` / `today()` (98)
+- **Symptom:** the ratchet could pass with no baseline, and did not count `new Date(x)` where `x` ends in `Str` or is `today()`.
+- **Cause:** a missing baseline was treated as pass, and the pattern was too narrow.
+- **Fix:** a missing baseline fails; `--update` refuses to raise a count without `--allow-raise`; the pattern covers date / Date / key / Key / Str and `today()`. A benign site carries `// HR-12`.
+- **Where:** split/audit-hr12-dateonly-v1.sh.
+- **Caught by:** V-CA-282c-2.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (gate, 3e40ce7 / 7fc168b).
+
+#### P1 — `isFinite(null)` is true: a null `wtBandAge` selected the 0–1 m row (99)
+- **Symptom:** a null band age read as 0 months and picked the 0–1 m weight row, so a toddler could be judged on newborn numbers.
+- **Cause:** global `isFinite(null)` is `true`, because `Number(null)` is 0.
+- **Fix:** null guard plus `Number.isFinite`. Look-for line proposed for PC-1 (see the proposal in the report).
+- **Where:** core.js (`gvBandVerdict` / band lookup, e.g. ~6382).
+- **Caught by:** Lyra, at assembly.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P1 — `_gvNewbornWindow(null)` read as day 0 (100)
+- **Symptom:** an unknown age was treated as a newborn in the first 14 days, withholding any rate verdict.
+- **Cause:** `Number(null)` is 0.
+- **Fix:** `null` or `''` returns false; then `Number.isFinite`.
+- **Where:** core.js `_gvNewbornWindow` (~6636).
+- **Caught by:** Lyra, at assembly.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 — Gauge inline colour (HR-2) (101)
+- **Symptom:** round 3 extended the birth-ratio gauge's inline `style="color:${…}"` with a new tone-to-colour mapping, which adds to HR-2 debt.
+- **Cause:** the new branch copied the existing inline pattern instead of using the utility classes that already exist (`t-sage`, `t-caution`, `t-mid`, `t-lav`).
+- **Fix:** `ratioClass` picks a utility class; the inline colour is gone.
+- **Where:** medical.js `renderVelocity` (birth-ratio gauge).
+- **Caught by:** Lyra, at assembly.
+- **Patch class:** PC-4 (render-boundary hard rules; PC-4 now covers HR-2 as well as HR-4).
+- **Status:** **Fixed** (6d8a482).
+
+#### P2 (docs) — Doc corrections (102)
+- **Symptom:** PATCH_CLASSES PC-1 said the regain check runs "up to day 21" (the code uses `GV_REGAIN_DAYS` = 28), and that every velocity is judged at its latest measurement's age (weight is judged at the window midpoint, `gvBandAge`).
+- **Cause:** the table was written before the round-2 model changes and was not updated with them.
+- **Fix:** both rows corrected; the guard text now names the scanned forms of both gates.
+- **Where:** docs/PATCH_CLASSES.md PC-1 table and Guards.
+- **Caught by:** V-CA-282c-4.
+- **Patch class:** PC-9 (a doc that describes the registry drifted from it).
+- **Status:** **Fixed** (3e40ce7).
+
+#### P0 — Displayed g/day contradicted the g/week verdict (103)
+- **Symptom:** After verdicts moved to g/week, the screen still quoted the hand-typed g/day columns. In 26 of 28 rows those sat inside the g/week band, so "Gaining 1.5g/day — right on track! about 1.7–12.3g/day is typical" could show (girls 12–18 m, Ziva's row). Under 12 m the rate was shown as a whole number ("4g/day" against 4.7–18.3).
+- **Cause:** the round-3 fix moved the verdict to one unit but left the display reading a second, separately typed scale.
+- **Fix:** `gvDayFromWeek(k) = Math.floor(k*10/7)/10` derives every displayed limit and rate from g/week; the wGDay* columns are removed; rates show one decimal everywhere. Whole-number g/week values are 1/7 apart, more than the 0.1 step, so shown rate inside shown range ⇔ verdict 'in'. A sweep test checks every band row for both sexes.
+- **Where:** core.js `gvDayFromWeek`, `growthVelocityBand`; medical.js `computeGrowthVelocity`, `renderGrowthFacts`, `renderVelocity`, Info bar; qa-handlers; cards; visit prep.
+- **Caught by:** V-V-282d-1, V-CA-282d-1 (both independently).
+- **Patch class:** PC-10 (one state, two answers); came back because the display read a different column from the verdict.
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — g/week computed as (g/days)×7 lost a gram to floating point (104)
+- **Symptom:** 460 g over 28 days computed as 114.999… g/week and floored to 114, one under an exact 115 limit.
+- **Cause:** dividing before multiplying in floating point.
+- **Fix:** Both engines multiply first: `Math.floor(g*7/days)`.
+- **Where:** core.js `getGrowthVelocity`; medical.js `computeGrowthVelocity`.
+- **Caught by:** Round-4 builder, found by the band sweep test.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Gain-rate gauge judged the last two weigh-ins while Growth facts judged the 28-day window (105)
+- **Symptom:** From 12 m, an amber "−4 g/day" gauge could sit above "right on track" on the same tab.
+- **Cause:** the gauge kept its own last-pair calculation.
+- **Fix:** From 12 m the gauge takes `computeGrowthVelocity().weight`; too short reads "Too soon to judge" in the neutral colour.
+- **Where:** medical.js `renderVelocity`.
+- **Caught by:** V-V-282d-2.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Too-short window forced to on-track (106)
+- **Symptom:** The summary said "too soon to judge" while the Info bar drew a green marker in the expected zone, and the score counted it as 90.
+- **Cause:** `computeGrowthVelocity` set status 'on-track' for a short window.
+- **Fix:** Status 'too-short' in both engines (`wtTooShort` in getGrowthVelocity); no bar, a "too soon to judge" sub-label; neutral tone; scores 70.
+- **Where:** medical.js `computeGrowthVelocity`, Info bar; core.js `getGrowthVelocity`, `gvVerdictTone`, `computeMedicalModifier`; home.js chip.
+- **Caught by:** V-V-282d-3, V-V-282d-7.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Home flagged a healthy fast gain as a warning (107)
+- **Symptom:** A 95 g/week toddler showed an amber "check" chip on Home and green "on track" on Growth.
+- **Cause:** Home used the band top as its limit; the other surfaces allow up to 1.3× the top.
+- **Fix:** One 1.3× rule in g/week, `gvRateStatus`, used by both engines; `gvHomeVerdict`; 'above' is neutral, never a warning; chips colour from tone only.
+- **Where:** core.js `gvRateStatus`, `gvHomeVerdict`, `gvVerdictTone`; home.js `renderTrendChips`.
+- **Caught by:** V-V-282d-4 (predated #282).
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Birth-ratio gauge showed "1.0×" next to "Below birth weight" (108)
+- **Symptom:** A loss under about 5% rounded the ratio up to 1.0×.
+- **Cause:** `toFixed(1)` on the ratio.
+- **Fix:** Below birth weight the gauge shows the floored percentage ("98% of birth wt").
+- **Where:** medical.js `renderVelocity`.
+- **Caught by:** V-V-282d-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Home chip showed a raw rate after the return to birth weight (109)
+- **Symptom:** "21g/wk ✓ healthy" appeared, a rate the verdict never judged.
+- **Cause:** the chip used `nb.chip` only for caution lines.
+- **Fix:** `nb.chip` is used whenever `wtNewborn` is set; the chip text is escaped (HR-4).
+- **Where:** home.js `renderTrendChips`.
+- **Caught by:** V-V-282d-6.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P0 — "Is she losing weight" reassured a baby who was losing weight (110)
+- **Symptom:** `qaAnswerWeightConcern` showed slow or plateau gain as info, called any centile at or below the 85th "within normal range" (including below the 3rd), added "a higher percentile is usually fine", "encourage active play" and "discuss at the next visit", and never showed the centile slide.
+- **Cause:** the handler predated the newborn and slide work, and was never re-read against it.
+- **Fix:** A `concern` flag (slow or plateau, below P3, slide, dropping crossing, caution newborn line) gives the warn signal and leads with a doctor action ("today" under 28 days); below P3 never says "within normal range"; slide and dropping crossings each carry an action; the reassurance lines are dropped when there is a concern.
+- **Where:** intelligence-qa-handlers.js `qaAnswerWeightConcern`.
+- **Caught by:** V-M-282d-1 (blocking).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — No-birth-row regain check ran only when the first weigh-in was before day 5 (111)
+- **Symptom:** First weigh-in on day 7 and a loss by day 21 read 'plateau' with the milk note; with the same weights, day 3 gave caution and day 6 gave green.
+- **Cause:** the regain window opened only for a first weigh-in before day 5.
+- **Fix:** With no birth row, the regain window opens whenever the first weigh-in is before day 14; e2e checks day 3 and day 6 give the same answer.
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282d-2, V-K-282d-1.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — A baby still losing after day 5 read neutral (112)
+- **Symptom:** 3.40 kg at birth, 3.20 on day 4, 3.15 on day 7, 3.10 on day 10 showed "Early days" and scored 70; the Q&A said "Continue regular weigh-ins every 1-2 weeks".
+- **Cause:** the model only flagged a loss over 10%.
+- **Fix:** `stillLosing` (below birth weight, previous weigh-in from day 5, dropped by at least the noise floor) gives a caution line "tell your doctor or midwife today" (AAP, steady gain from about day 5) and scores 50. The newborn fallback reads "Keep to the weigh-ins your doctor or midwife suggests".
+- **Where:** core.js `gvNewbornCheck`; qa-handlers.
+- **Caught by:** V-M-282d-3.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — "Dropping" had no noise floor (113)
+- **Symptom:** A 10 g drop after regain turned green "back to birth weight" amber and the score from 90 to 50.
+- **Cause:** any drop counted.
+- **Fix:** `GV_DROP_NOISE_G = 20` (home scales vary by ±10–20 g), used for the regain drop and for "still losing".
+- **Where:** core.js.
+- **Caught by:** V-K-282d-2.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Newborn lines without a time bound, and stale readings that never escalated (114)
+- **Symptom:** The day 14–20 line said only "tell your doctor or midwife"; a below-birth-weight recheck read "weigh again" even on day 30; a day 14–20 'not-regained' reading still standing past day 21 kept the "next day or two" wording.
+- **Cause:** the copy had no age or time bound, and the escalation read the weigh-in day, not today.
+- **Fix:** Day 14–20: "Tell your doctor or midwife in the next day or two — before 3 weeks". From day 21 with the last weight below birth weight: "Weigh [name] today — if not back to birth weight, contact your doctor or midwife". A day 14–20 reading still standing on day 21 or later sets `overdue`: referral wording, "Contact your doctor or midwife today", score 25 (Lyra; e2e).
+- **Where:** core.js `gvNewbornCheck`, `gvNewbornAction`.
+- **Caught by:** V-M-282d-4, V-M-282d-5; overdue case found by the round-4 builder and fixed by Lyra.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Centile slide could be cut off or contradicted in the weight-gain answer (115)
+- **Symptom:** The slide was pushed after five other items and `slice(0,5)` could drop it; the headline could still read "gaining well"; two actions repeated each other; a slide below P3 did not escalate; the birth row could not start a slide.
+- **Cause:** the slide was appended late, and the headline ignored it.
+- **Fix:** The slide comes right after the weight line; the headline reads "weight moving down the centile lines"; one merged action; below P3, "Book a weight check with your doctor" (NICE NG75 1.2.1 quoted; the app uses the 3rd centile its WHO charts draw, where NICE names the 2nd); the birth row can start the slide.
+- **Where:** qa-handlers `qaAnswerWeightGain`; medical.js `centileSlide`.
+- **Caught by:** V-M-282d-6, V-M-282d-7.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Milk-only note was false for a baby past 6 months not on solids (116)
+- **Symptom:** "Under 6 months, milk is the whole diet" showed to a 6.5-month-old whose solids start was in the future, hiding that from 6 months milk alone is not enough.
+- **Cause:** the note was tied to the food gate, which closes for more than one reason; the gate also read the weigh-in age, not today's.
+- **Fix:** `gvFoodAdviceOk()` judges today's age and `solidsStarted()`; `gvGateNote()` picks the milk note under 6 m today and `gvStartSolidsNote()` from 6 m without solids, at every site.
+- **Where:** core.js; qa-handlers; cards; medical.js; caretickets.
+- **Caught by:** V-C-282d-1, V-K-282d-6.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Weight-loss lines on the food path said "could be normal" with no doctor line (117)
+- **Symptom:** A 6-month-plus child losing weight read "This could be normal after illness or a dietary gap".
+- **Cause:** the loss branch reused the slow-gain copy.
+- **Fix:** A loss ends "Mention it to your doctor."; "could be normal" is gone; card and visit-prep lines read "Weight down".
+- **Where:** medical.js Info insights and visit prep; cards.
+- **Caught by:** V-C-282d-2, V-C-282d-4(b,c).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Food gate leftovers (118)
+- **Symptom:** With the gate closed, "Increase meal frequency" stayed in the CareTicket pivots and the diet bar grid still painted nutrient gaps; a comment misstated the gate; the nut-butter line had no introduction clause.
+- **Cause:** the gate was applied to text lines but not to every surface.
+- **Fix:** Both hidden or dropped when the gate is closed (direct test of the pivots); comment fixed; "(once nuts have been introduced)".
+- **Where:** caretickets `ctPivotStrategies`; cards `renderInfoGrowthDiet`; qa-handlers.
+- **Caught by:** V-C-282d-3, V-C-282d-4(a,d,e).
+- **Patch class:** PC-3 (pivots not yet rendered) / PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Two engines filtered weight rows differently (119)
+- **Symptom:** A synced row with `wt: 0`, a string weight or no date could give the engines a different first or latest weigh-in.
+- **Cause:** each engine had its own filter.
+- **Fix:** One shared `gvWeightRows()` (finite wt > 0, valid date, sorted) for both engines, `gvBirthRow` and `_gvWeightRowBefore`; e2e with malformed rows.
+- **Where:** core.js.
+- **Caught by:** V-K-282d-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Boys 12–18 m length floor one step too lenient (120)
+- **Symptom:** `hCmMoMin` 0.55 where WHO's lowest P15 2-month increment (1.2 cm) gives 0.6.
+- **Cause:** an older hand derivation (ee61e98).
+- **Fix:** 0.6, with the source comment corrected.
+- **Where:** core.js GROWTH_VELOCITY_BANDS.
+- **Caught by:** V-CA-282d-4.
+- **Patch class:** PC-9
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Growth-age gate bypasses (round 3), including a regression in the rewrite (121)
+- **Symptom:** Carina found eight new ways past the gate (`preciseAge()`, `ageAt…()` with no argument, destructuring, two hops, `obj.prop =`, `Date.now()`, long assignments, a `")"` string in the arguments). Kael found three more (a clean reassignment in front of a today default, `gvAgeAt(null)`, `gvBandAge()`) and a regression: Lyra's rewrite started its look-back one line above the call, so an assignment on the call's own line was no longer traced.
+- **Cause:** the trace followed only the nearest assignment of a bare identifier, and the rewrite had an off-by-one.
+- **Fix:** Every assignment in the 40 lines above, the call's own line up to the call, destructuring, member paths, three hops, 30-line assignments, string literals skipped, and `gvRateStatus` watched. 39 self-test fixtures.
+- **Where:** split/audit-growth-age-v1.sh.
+- **Caught by:** V-CA-282d-2, V-K-282d-3, V-K-282d-4 (regression).
+- **Patch class:** PC-5
+- **Status:** **Fixed** (d9dff76, 69c6ccc, 869b8d8).
+
+#### P2 — HR-12 ratchet: a bare exemption and a no-baseline update passed (122)
+- **Symptom:** With the baseline deleted, `--update` wrote any count without `--allow-raise`; a bare `// HR-12` with no reason exempted a line.
+- **Cause:** the raise check ran only when a baseline existed; the exemption matched the tag alone.
+- **Fix:** A new baseline needs `--allow-raise`; an exemption needs a reason after a colon. Fixtures for both.
+- **Where:** split/audit-hr12-dateonly-v1.sh.
+- **Caught by:** V-CA-282d-3.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (d9dff76).
+
+#### P3 (test, main-side) — smoke.spec.ts:822 expects the Home tab after load (123)
+- **Symptom:** "home tab active by default landing" fails: the app opens on the landing tab.
+- **Cause:** the default has been the landing tab since #219 and the fixture sets no saved tab; the test only passed when another state put Home first. It fails identically against main's build.
+- **Fix:** None in #282 (out of scope). The test should switch to Home before asserting, or assert the landing default.
+- **Where:** tests/e2e/smoke.spec.ts:822.
+- **Caught by:** Full-suite run on 6d8a482, reproduced on main.
+- **Patch class:** PC-6
+- **Status:** **Open** (main-side; not a #282 regression).
+
+#### P1 — Home and the Growth tab judged different weight windows (124)
+- **Symptom:** Under 12 m, Home took the nearest weigh-in at least 28 days back (it could stretch to 99 days) while the Growth tab took the last two weigh-ins: in a random sweep of 1,467 cases they disagreed in 640 (an 8 m girl read "77 g/wk healthy" on Home and "plateau" on Growth). From 12 m, Home's `setDate(-28)` on a UTC-parsed date also drifted across a DST change.
+- **Cause:** two engines, two window rules, and a UTC parse in one of them.
+- **Fix:** One selector, `gvWeightWindow` (whole calendar days via `gvDaysBetween` / `gvDayOf`), used by both engines for weight and height and by `updateStatPillTrends`. e2e: the 8 m repro, a 420-case seeded sweep at every age, and an America/New_York case across 1 Nov.
+- **Where:** core.js `gvWeightWindow`, `getGrowthVelocity`, `updateStatPillTrends`; medical.js `computeGrowthVelocity`.
+- **Caught by:** V-K-282e-1, V-V-282e-1, V-CA-282e-4 (independently).
+- **Patch class:** PC-10 (one state, two answers) / PC-1
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Readers outside the two engines still used the old row filter (125)
+- **Symptom:** `getPercentileNarrative`, the stat-pill trend arrow, a Home spurt guard and several medical.js readers kept `wt != null`, so a synced `wt: 0` or undated row could drive a trend arrow; a non-array `growthData` from sync would throw.
+- **Cause:** the shared filter (#119) covered the engines only.
+- **Fix:** `gvMeasureRows('wt'|'ht')` with an `Array.isArray` guard, used by the readers Carina listed; e2e with malformed rows. The latest-weight helpers and two engine-file readers were still on the old filter until #142 and round 6 (V-CA-282f-4, V-K-282f-10).
+- **Where:** core.js; home.js; medical.js; diet.js.
+- **Caught by:** V-CA-282e-3, V-K-282e-4, V-C-282e-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — "2th percentile" and false precision below the 3rd centile (126)
+- **Symptom:** "Weight at 2th percentile — below the 3rd centile" and "dropped from 58th to 31th".
+- **Cause:** `calcPercentile` returns a placeholder 2 at or below P3, and ordinals were built by appending "th" at about 12 sites.
+- **Fix:** One shared `ordinal()` / `pctOrdinal()`; a weight at or below P3 reads "at or below the 3rd centile line" with no number (`gvPctLow`, ≤ 3).
+- **Where:** core.js; medical.js; qa-handlers.
+- **Caught by:** V-M-282e-1, V-V-282e-5.
+- **Patch class:** PC-8-adjacent display / PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — A weight below the 3rd centile alone read "gaining well" (127)
+- **Symptom:** With an on-track rate and the latest weight below P3, the weight-gain answer said "gaining well" with no centile line; a dropping crossing ending below P3 got the softer action; inside the newborn window a low percentile silently removed the "next visit" line.
+- **Cause:** escalation below P3 only ran through a slide; `lowPct` counted toward concern even where the line was hidden.
+- **Fix:** `lowNow` escalates the centile action and the headline; a dropping crossing ending low escalates; `concern` uses `lowPct && !nbWin`.
+- **Where:** qa-handlers `qaAnswerWeightGain`, `qaAnswerWeightConcern`.
+- **Caught by:** V-M-282e-2, V-K-282e-6.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — Newborn edges: no birth row, the day-14 cliff, stale readings (128)
+- **Symptom:** With no birth row, "still losing" was suppressed and weigh-today never fired; a first weigh-in on day 13 vs day 14 flipped amber to green; overdue and weigh-today never expired (a day-15 reading at day 200 still said "3 weeks have now passed — contact today"); on days 19–20 "in the next day or two — before 3 weeks" contradicted itself.
+- **Cause:** the no-birth-row branches and the read-time escalations had no upper bound or a different window.
+- **Fix:** stillLosing without a birth row; the stand-in regain window runs to day 28; weigh-today against the hospital record; "today or tomorrow" on days 19–20; overdue in actual weeks; from day 92 a plain recheck goes stale and neutral, and a concerning reading (more than 10% down, not back, overdue or referral) goes stale as caution with the weight check in the next week, scored 50 (Lyra, round-5 decision).
+- **Where:** core.js `gvNewbornCheck`, `gvNewbornAction`.
+- **Caught by:** V-M-282e-3, -6, -7; V-K-282e-2, -3; Lyra (stale concerning readings).
+- **Patch class:** PC-7 / PC-1
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — Doctor actions without a time bound, and centile actions out of severity order (129)
+- **Symptom:** "Book a weight check", "Mention the centile change" and "Show the weight chart" had no time bound; a centile slide above P3 (2+ lines) got the milder mention while a single crossing got "show the chart in the next week".
+- **Cause:** actions were written one at a time, without a tier table.
+- **Fix:** Two tiers: a weight check "in the next week" (loss, plateau, any slide — NICE NG75 1.2.1 — or ending at or below P3); a mention "at the next check-up, or within a month if none is booked" (slow gain, a single crossing above P3). The slide's own text names the same tier. Actions are sorted by urgency.
+- **Where:** core.js tier constants; qa-handlers (all three weight answers); medical.js `centileSlide`, Info and Growth facts; cards.
+- **Caught by:** V-M-282e-4, -5; Lyra (severity order).
+- **Patch class:** PC-7 / PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Gains above the band read three ways (130)
+- **Symptom:** In the 1.0–1.3× zone the concern answer said "within normal range", the gauge showed a green rate beside a range it exceeded, and Home's alert said "within the healthy range"; above 1.3× the Growth fact said "usually fine", Info said "monitor proportionality" and the concern answer warned.
+- **Cause:** each surface phrased the above-band state on its own.
+- **Fix:** `gvAboveBandLine` gives one line and one tone everywhere; a fast gain is signalled info, never a warning; the concern headline never says "gaining" beside a concern.
+- **Where:** core.js `gvAboveBandLine`; qa-handlers; medical.js; home.js.
+- **Caught by:** V-V-282e-3, V-K-282e-7, V-M-282e-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Number display: float noise and inflated losses (131)
+- **Symptom:** The Info bar's end labels showed "4.199999999999999"; a 1 g loss over 28 days showed "Down 0.2 g/day".
+- **Cause:** the labels skipped `gvDayFromWeek`, which floored negatives away from zero.
+- **Fix:** Labels derive from g/week; losses truncate toward zero (−1 g/week → −0.1). The shown-rate ⇔ verdict property still holds (every band floor ≥ 0).
+- **Where:** medical.js Info bar; core.js `gvDayFromWeek`.
+- **Caught by:** V-V-282e-2, V-V-282e-5, V-CA-282e-6.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Stale comments and a dead verdict helper (132)
+- **Symptom:** Four registry comments described rounding, counts and a formula the code no longer used; `gvWeightVerdict` had no production caller and disagreed with `gvRateStatus` between 1.0× and 1.3×; the slide comment overclaimed that the WHO-line count "errs toward false alarm".
+- **Cause:** comments not updated with the round-4 changes; a helper left behind.
+- **Fix:** Comments corrected (the slide comment states both directions of the approximation); `gvWeightVerdict` removed and its test pointed at `gvBandVerdict` / `gvRateStatus`.
+- **Where:** core.js; medical.js; qa-handlers.
+- **Caught by:** V-CA-282e-1, V-K-282e-8, V-M-282e-9.
+- **Patch class:** PC-9 / PC-3
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — Food-OK loss card said "monitor at next weigh-in" (133)
+- **Symptom:** On the growth-diet card, a loss with food advice open read "Growth velocity is below typical range (-3.6 g/day) — monitor at next weigh-in" while the Info insight sent the same state to the doctor; a concern answer still added "not calorie restriction".
+- **Cause:** the round-3 fix covered only the closed-gate branch.
+- **Fix:** The loss leads with "Weight down … — book a weight check with your doctor in the next week" (round-5 tier), low coverage second; no calorie line on a concern.
+- **Where:** intelligence-cards.js `renderInfoGrowthDiet`; qa-handlers.
+- **Caught by:** V-C-282e-1, -2, V-V-282e-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (0d9e722, 38f63fe).
+
+#### P2 — Diet tab "growth vs meals" ungated and on raw rows (134)
+- **Symptom:** "Consistent feeding supports steady growth" could show for an early starter under 6 months, and the view read raw rows.
+- **Cause:** the view predated the food gate and the shared filter.
+- **Fix:** Uses `gvWeightRows()`; the narrative shows only under `gvFoodAdviceOk()`.
+- **Where:** diet.js.
+- **Caught by:** V-C-282e-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (0d9e722).
+
+#### P3 — Milk note said "whole diet" (135)
+- **Symptom:** "Under 6 months, milk is the whole diet" is untrue for a family who logged an early solids start.
+- **Cause:** wording.
+- **Fix:** "milk is the main diet" — the same safety meaning, accurate.
+- **Where:** core.js `GV_MILK_ONLY_NOTE`.
+- **Caught by:** V-C-282e-5.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (0d9e722).
+
+#### P2 — Growth-age gate bypasses (round 4) (136)
+- **Symptom:** Carina found more ways past the gate: falsy-literal `ageAt…()` / `gvAgeAt('')`, `new Date` without parentheses, bare `Date()`, `_offsetDateStr(0)` (not today — it returns an invalid date; the pattern is kept as harmless, V-CA-282f-2), `??=` / `||=`, array destructuring, names in a template literal. Kael found compound assignment and a bare `growth-age-ok:` with no reason.
+- **Cause:** the TODAY pattern and the assignment forms were narrower than the language.
+- **Fix:** All covered, with a fixture each (52 self-tests); an exemption needs a reason; structural limits (a helper behind another name, a pass-through parameter, more than 40 lines up, four or more hops) are listed in the gate header for hand review. The HR-12 gate's message now names `--allow-raise`.
+- **Where:** split/audit-growth-age-v1.sh; split/audit-hr12-dateonly-v1.sh.
+- **Caught by:** V-CA-282e-2, -5; V-K-282e-5.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (de02e81, 0c395bb).
+
+#### P2 (deferred) — A large toddler loss inside under 28 days of records reads "too soon to judge" (137)
+- **Symptom:** When the whole weight record spans under 28 days, every verdict is suppressed, including a large loss.
+- **Cause:** the too-short rule has no loss exception.
+- **Fix:** Not built: Maren wants a cited loss threshold before the app acts on it. `TODO(V-M-282e-8)` marks the place in qaAnswerWeightConcern.
+- **Where:** intelligence-qa-handlers.js.
+- **Caught by:** V-M-282e-8.
+- **Patch class:** PC-7
+- **Status:** **Open** (deferred, needs a cited threshold).
+
+#### P3 (info) — CareTicket pivot strategies have no caller (138)
+- **Symptom:** `ctPivotStrategies` is only called by tests; the food-gate fix to it protects a surface no parent sees yet.
+- **Cause:** the pivot UI was never wired.
+- **Fix:** None now. Rule: any future pivot render must go through `ctPivotStrategies()`, never `tpl.pivotStrategies` directly.
+- **Where:** intelligence-caretickets.js.
+- **Caught by:** V-C-282d-3, V-C-282e-3.
+- **Patch class:** PC-3
+- **Status:** **Open** (logged; no surface yet).
+
+#### P0 — A baby weighed yesterday at 13 weeks, still below birth weight, was told the doctor could wait a week (139)
+- **Symptom:** At midnight on day 92 a not-back-to-birth-weight reading from day 85–91 flipped from "contact your doctor or midwife today" (score 25) to "book a weight check in the next week" (score 50).
+- **Cause:** Lyra's round-5 stale rule keyed on today's age alone, not on how old the weigh-in was.
+- **Fix:** A reading goes stale only when today is past about 3 months AND the weigh-in itself is 4+ weeks old (`GV_STALE_READING_DAYS`); still-losing goes stale as a concern, dropping and not-confirmed go plain stale; e2e: weighed day 91, read day 92 → today, 25.
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282f-1 (blocking), V-K-282f-1, -2.
+- **Patch class:** PC-1 / PC-7
+- **Status:** **Fixed** (80153ad).
+
+#### P0 — "She's not gaining" got food advice only (140)
+- **Symptom:** On the food-OK path, slow gain, a plateau or a loss in the weight-gain answer led with "Add calorie-dense foods…" and no doctor line, while "is she losing weight" said "book a weight check in the next week"; the Info card said "monitor at next weigh-in" and the Info insight "could be normal".
+- **Cause:** each surface wrote its own slow-gain action; round 4 tiered some of them.
+- **Fix:** One helper, `gvSlowAction(w)` (under 28 days today; a loss or plateau the weight check; slower gain the mention), first on every surface — both Q&A answers, qaAnswerGrowth, Growth facts, the Info insight and the growth-diet card — with any food line or gate note second; e2e on loss, plateau and slow.
+- **Where:** core.js; qa-handlers; medical.js; intelligence-cards.js.
+- **Caught by:** V-C-282f-1..4, V-M-282f-3, V-V-282f-1.
+- **Patch class:** PC-10 / PC-7
+- **Status:** **Fixed** (80153ad).
+
+#### P1 — False NICE referral from a scale wobble with no birth row (141)
+- **Symptom:** With no birth row, day 26 at 3.80 kg then day 27 at 3.79 kg read "Lower than at day 26 — … contact your doctor or midwife today", score 25.
+- **Cause:** the round-5 stand-in window ran to day 28 and "lower than the first weigh-in" had no noise floor.
+- **Fix:** "Lower" stands for "not back to birth weight" only when the first weigh-in was in the after-birth dip (before day 14) and the drop is at least 20 g; otherwise "not confirmed".
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-K-282f-3.
+- **Patch class:** PC-1 / PC-7
+- **Status:** **Fixed** (80153ad).
+
+#### P1 — Paracetamol dose disappeared when the last growth row had no weight (142)
+- **Symptom:** The fever card and dose prompt read `growthData[last].wt`; a height-only last row (the form allows it) gave `getParacetamolDose(null)` and the dose guidance silently vanished. `getLatestWeight` / `getLatestHeight` also accepted wt:0 and undated rows.
+- **Cause:** a last-row read instead of the latest weight; the latest-weight helpers predated the shared filter.
+- **Fix:** Both helpers return the last row of `gvMeasureRows`; the dose reads `getLatestWeight()`.
+- **Where:** intelligence-illness.js; medical.js `getLatestWeight`, `getLatestHeight`.
+- **Caught by:** V-CA-282f-4, -5.
+- **Patch class:** PC-10 / PC-3
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Date-offset helpers landed a day early west of Greenwich (143)
+- **Symptom:** In New York, `_offsetDateStr(today(), 1)` returned today, and `_offsetDateStr('2026-11-01', -1)` returned 30 Oct.
+- **Cause:** `new Date('YYYY-MM-DD')` is UTC midnight; `setDate` then stepped from the previous local evening.
+- **Fix:** Both `_offsetDateStr` and `addDays` parse a bare date as a local day (`_parseLocalDate`). India is unaffected.
+- **Where:** core.js.
+- **Caught by:** V-CA-282f-3.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Newborn-window percentile and climbing crossings sent the wrong signal (144)
+- **Symptom:** Beside "Back to birth weight — right on schedule" the concern answer added "at or below the 3rd centile line — book a weight check", and qaAnswerGrowth showed "below 3rd" in green; a climbing crossing got a warning and a "mention" action in qaAnswerGrowth only.
+- **Cause:** the newborn exclusion skipped the 'regained' line; the crossing action ignored direction.
+- **Fix:** Any newborn line suppresses the low-centile concern (info in the growth answer); a climb is good and has no action.
+- **Where:** qa-handlers.
+- **Caught by:** V-K-282f-4, -6, V-V-282f-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Two tiers for one centile fall; stale lines and "before 3 weeks" wording (145)
+- **Symptom:** A slide plus a single crossing listed both the weight check and the milder mention; the stale action had no time bound; on day 20 "today or tomorrow — before 3 weeks" contradicted itself.
+- **Cause:** actions were added per item without a tier rule; copy drift.
+- **Fix:** When the weight check or a "today" action is shown, the milder mention is dropped (in the shared sorter); stale actions are bounded; "by 3 weeks" (NICE 1.1.4's wording); stale chips name their tier.
+- **Where:** qa-handlers `_qaSortActions`; core.js.
+- **Caught by:** V-M-282f-4, -6, -7, V-K-282f-5, V-V-282f-7.
+- **Patch class:** PC-7 / PC-10
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Growth-age gate bypasses (round 5) (146)
+- **Symptom:** Carina: `?.()`, `.call` / `.apply`, bracket calls, a marker inside a string, for-of, nested template braces, `new globalThis.Date`, a comment before `(`. Kael: assignments after `)`, `:`, `?`, `else` and `case`; declaration-less destructuring; `gvAgeAt(void 0 / NaN / {})`; `window['ageAt']()`; a reason of ".".
+- **Cause:** the call and assignment forms were narrower than the language.
+- **Fix:** All covered with a fixture each (71 self-tests); the marker must be a // comment with a worded reason; Object.assign / spread and one-exemption-per-line are listed as structural limits.
+- **Where:** split/audit-growth-age-v1.sh.
+- **Caught by:** V-CA-282f-1, V-K-282f-7.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (80153ad).
+
+#### P1 — "Early days … expected" beside "book a weight check" in the first week (147)
+- **Symptom:** In the newborn dip, a low percentile showed the caution "at or below the 3rd centile line — book a weight check" on Growth facts, the percentile and pulse narratives and the Info summary, next to the neutral newborn line.
+- **Cause:** the Q&A answers excluded the newborn window; the other surfaces did not.
+- **Fix:** No low-centile escalation while a newborn line is set; visit prep keeps it as information for the doctor ("(newborn weeks)").
+- **Where:** medical.js; core.js `getPercentileNarrative`, `getPulseNarrative`.
+- **Caught by:** V-M-282f-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — "Percentile has dropped" headline from an old crossing (148)
+- **Symptom:** A 58th → 35th crossing from months ago made the concern headline read "weight percentile has dropped" while every other surface said fine.
+- **Cause:** the headline took any past dropping crossing.
+- **Fix:** `gvCrossingCurrent`: the headline only for a crossing that ends at the latest weigh-in or still within 15 points; every crossing line carries its dates (`gvCrossingDates`). The old crossing keeps its dated line and its mention action.
+- **Where:** core.js; qa-handlers; medical.js.
+- **Caught by:** V-V-282f-2.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — A stale newborn reading shown as a present-day rate (149)
+- **Symptom:** For a 100-day-old, the (dormant) Home narrative read "Weight: down 504g/week (over 5 days). Last weighed on day 5…"; the gauge showed a caution "−72 g/day" and "Below birth weight" in the present tense; Info and the Q&A repeated a generic "Time for a weigh-in!" in a second colour.
+- **Cause:** marking the reading 'newborn' sent it down the rate-prefix branches; the freshness lines did not know about the stale line.
+- **Fix:** A stale reading leads with the date of the last weigh-in (`nb.dateLead`, `gvDateText`); the rate and ratio gauges show a dash and "Below birth weight on day N"; one stale line, one tone; one weigh-now action.
+- **Where:** core.js; medical.js; qa-handlers; cards.
+- **Caught by:** V-V-282f-5, -6.
+- **Patch class:** PC-10 / PC-1
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — Growth-diet card read a fast gain as green "rapid" (150)
+- **Symptom:** The card showed "Growth velocity is rapid" with a green check, and the 1.0–1.3× zone as "normal", while every other surface said neutral "above the usual".
+- **Cause:** the card kept its own labels.
+- **Fix:** Tone, icon and line from `gvAboveBandLine`; the (dormant) Home narrative too (no "Likely a growth spurt"). `getGrowthNarrative` has no live caller (Cipher A4).
+- **Where:** intelligence-cards.js; core.js `getGrowthNarrative`.
+- **Caught by:** V-V-282f-3, V-K-282e-7.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — CareTicket weight goal could clear on one noisy week (151)
+- **Symptom:** With the shared window, a single 7-day pair held for 14 days could meet the weight-gain goal and offer "All clear — stop tracking".
+- **Cause:** the metric read whatever window the engine picked.
+- **Fix:** `wtGPerWeek` counts only a window of 28+ days; otherwise null.
+- **Where:** intelligence-caretickets.js `ctGetMetricValue`.
+- **Caught by:** V-M-282f note (Maren).
+- **Patch class:** PC-1
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P3 — Height gauge, ISL and correlation read rows outside the shared filters (152)
+- **Symptom:** The height gauge used the last two rows (a different pair from the Info card); a wt:0 last row rendered "Last measurement:  (date)"; the correlation counted wt:0 as a weight.
+- **Cause:** readers left over from before `gvWeightWindow` / `gvMeasureRows`.
+- **Fix:** The gauge uses `gvWeightWindow(gvMeasureRows('ht'))`; ISL `rangeGrowth` and the readers skip rows with no real measurement; correlation needs a finite wt > 0.
+- **Where:** medical.js `renderVelocity`; intelligence-isl.js; intelligence-qa.js; qa-handlers; intelligence-correlate.js.
+- **Caught by:** V-K-282f-9, -10.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P3 — Percentile text into innerHTML unescaped (HR-4) (153)
+- **Symptom:** A raw '<3rd' string reached innerHTML in the growth summary and the height fact.
+- **Cause:** string concatenation without `escHtml`.
+- **Fix:** Escaped at every site; a test hooks the innerHTML setter.
+- **Where:** medical.js.
+- **Caught by:** V-V-282f HR-4 note.
+- **Patch class:** PC-4
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P0 — "Not confirmed" with no time bound at 3–4 weeks (154)
+- **Symptom:** With no birth row, a flat or slowly falling week at 3–4 weeks (e.g. day 20 at 3.40 kg, day 27 at 3.39 kg) read "Back to birth weight not confirmed — add the birth weight, or ask your doctor or midwife", with no time bound; a parent could wait for the 6-week check.
+- **Cause:** #141's fix sent these cases to the not-confirmed branch, whose action was never bounded.
+- **Fix:** Bounded by today's age: from day 21, weigh today and compare with the hospital record — if not back, contact the doctor or midwife today; on days 14–20, ask by 3 weeks. Never claims "not back to birth weight". e2e on both cases.
+- **Where:** core.js `gvNewbornCheck`, `gvNewbornAction`.
+- **Caught by:** V-M-282g-1 (blocking).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (bcc371e).
+
+#### P0 — "How is she growing" dropped the doctor action when anything else was said (155)
+- **Symptom:** A losing or plateaued baby whose height was stale got only "measure height again" (or only the milder centile mention) from qaAnswerGrowth.
+- **Cause:** the slow-gain action sat in the empty-actions fallback only.
+- **Fix:** `gvSlowAction` is pushed whenever the weight is slow; the shared sorter puts it first and drops the milder mention. e2e asserts it on every slow case.
+- **Where:** intelligence-qa-handlers.js `qaAnswerGrowth`.
+- **Caught by:** V-C-282g-1, V-V-282g-1 (blocking).
+- **Patch class:** PC-7 / PC-10
+- **Status:** **Fixed** (bcc371e).
+
+#### P1 — A crossing that kept falling was treated as history (156)
+- **Symptom:** 58th → 35th, then 28th → 22nd → 19th with no new crossing or slide: the headline read "gaining well".
+- **Cause:** `gvCrossingCurrent` used `Math.abs`, so a further fall retired the crossing like a recovery.
+- **Fix:** One-sided: only a recovery of 15+ points retires it.
+- **Where:** core.js `gvCrossingCurrent`.
+- **Caught by:** V-M-282g-2, V-K-282g-2, V-V-282g-2 (blocking).
+- **Patch class:** PC-10
+- **Status:** **Fixed** (bcc371e).
+
+#### P0 — "Within normal range" for a small baby back at birth weight below the 3rd centile (157)
+- **Symptom:** Born 2.30 kg, back to 2.40 kg on day 20 at the 2nd percentile: the concern answer said "Weight at below 3rd percentile — within normal range" (green) and "In the first month, being on a higher percentile is usually fine".
+- **Cause:** #144 suppressed the low-centile concern for every newborn line, but the percentile block still ran for 'regained' and fell to its reassuring branch.
+- **Fix:** An info line ("at or below the 3rd centile line (newborn weeks)"), no reassurance; e2e.
+- **Where:** intelligence-qa-handlers.js `qaAnswerWeightConcern`.
+- **Caught by:** V-K-282g-1 (blocking).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (bcc371e).
+
+#### P2 — Leftovers: "today" that never expired, Home's "Monitor closely", repeated stale copy, regained readings never stale (158)
+- **Symptom:** `gvSlowAction`'s "today" depended on the weigh-in's day of life only; the (dormant) Home narrative said "Monitor closely"; the stale-concern line repeated "Last weighed" after the date lead; back-to-birth-weight read at day 200 still said "right on schedule"; the short stale line had no time bound.
+- **Cause:** read-time urgency keyed on the wrong clock; copy drift.
+- **Fix:** "Today" only while the reading is under 28 days old; a doctor action on Home's line; "On day N … was …"; a regained reading goes plain stale; the short line is bounded.
+- **Where:** core.js; qa-handlers.
+- **Caught by:** V-C-282g-4, -5; V-M-282g-3; V-K-282g-4; V-V-282g-3, -4.
+- **Patch class:** PC-7 / PC-1
+- **Status:** **Fixed** (bcc371e).
+
+#### P2 (deferred) — Deferred to a follow-up PR, by owner (159)
+- **Symptom:** Non-blocking notes from the final verification round.
+- **Cause:** Each was sorted DEFERRABLE by its Governor (no parent acts wrongly on it today).
+- **Fix:** Planned follow-up PR. Items:
+  - **Maren:** g-4 / Kael g-5: the CareTicket weight goal cannot auto-resolve for an infant weighed under 28 days apart (safe direction; consider a 28-day look-back for the metric). g-5: stale ratio gauge label. **g-6 (safety consult, pre-existing):** the paracetamol chip does not name the weight, its date or the formulation, and has no plausibility cap on a mistyped weight. g-7: revisit the newborn low-centile rule if an SGA birth flag lands.
+  - **Vela:** g-5 mixed day wording ("since day 10" vs "since 10 days old"); g-6 "At day N" label and "—g/day"; **g-7 a stale reading's percentile is shown as current, with no date (PC-7)**; g-8 the percentile line in green beside an amber dropping crossing; g-9 one inline colour style on a changed line (HR-2); g-10 `getGrowthNarrative` is dormant (its round-6 edits and #149's "Home read…" describe a surface no parent sees); g-11 the card header over a stale window.
+  - **Ceres:** g-2 the card summary icon reads as a diet verdict, "1 meals/day"; g-3 the low-coverage line repeats the nutrient-gaps line and should name iron-rich foods.
+  - **Carina:** g-1 / Kael g-3: remaining growth-age gate bypasses (none in source; structural fix: make `gvAgeAt` return NaN instead of today, or an AST pass); g-2 `calcMedicalScore` and three other readers still take the last array row; g-3 an impossible bare date falls back to a UTC parse; g-4 `formatDate` UTC parse (existing V-K-267-12).
+  - **Kael:** g-6 `gvSlowAction`'s "today" branch is unreachable while `nb` covers day < 28; g-7 correlate takes the first same-date row in unsorted order.
+  - **Cipher (Edict V):** N2 dead code — `getGrowthNarrative` + `gvNewbornLine` + `_orig_renderInsightsGrowth`, the unreachable `under28` fallback in qaAnswerWeightConcern, the redundant `isPlateau` override in computeGrowthVelocity, and the `gvWeightRows` alias of `gvMeasureRows('wt')`; N3 the emergency tag is keyed on `'testicular-torsion'` literally (put the flag in the registry so `inguinal-hernia` → stuck-hernia matches its comment); N4 HR-2 debt on existing lines (the HR-2 ratchet is the fix); out of scope: medical.js `htGain` renders unrounded ("Grew 0.6000000000000014 cm").
+  - **Tracked separately (priority):** Maren g-6 — the paracetamol chip names no weight, date or formulation and has no plausibility cap on a mistyped weight. A dosing issue, so its own prioritised issue rather than part of the follow-up PR (Cipher).
+- **Where:** various.
+- **Caught by:** Final verification round (V-M/V-V/V-C/V-CA/V-K-282g).
+- **Patch class:** mixed
+- **Status:** **Open** (follow-up PR).
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 

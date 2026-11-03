@@ -285,7 +285,7 @@ for m in changed:
 # Care-content in the foundation (V-M-275-2): records whose CONTENT is parent-facing
 # care guidance always summon Maren on consequence, even when only a render or
 # engine file reads them (GENERAL_EMERGENCIES is read only by cards.js).
-CARE_CONTENT = re.compile(r"^(GENERAL_EMERGENCIES|VACC_\w+|SAFE_POOP_COLORS|POOP_COLOR\w*|medDoseSlots|vitDSupplement|getNextUpcomingVacc|calcMedicalScore)$")
+CARE_CONTENT = re.compile(r"^(GENERAL_EMERGENCIES|BODY_CARE_GUIDANCE|BODY_CARE_SOURCES|VACC_\w+|SAFE_POOP_COLORS|POOP_COLOR\w*|medDoseSlots|vitDSupplement|getNextUpcomingVacc|calcMedicalScore)$")
 for m in changed:
     if MODULE_PROVINCE.get(m) != FND:
         continue
