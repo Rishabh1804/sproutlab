@@ -1108,7 +1108,7 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 #### P2 — Readers outside the two engines still used the old row filter (125)
 - **Symptom:** `getPercentileNarrative`, the stat-pill trend arrow, a Home spurt guard and several medical.js readers kept `wt != null`, so a synced `wt: 0` or undated row could drive a trend arrow; a non-array `growthData` from sync would throw.
 - **Cause:** the shared filter (#119) covered the engines only.
-- **Fix:** `gvMeasureRows('wt'|'ht')` with an `Array.isArray` guard, used by every reader; e2e with malformed rows.
+- **Fix:** `gvMeasureRows('wt'|'ht')` with an `Array.isArray` guard, used by the readers Carina listed; e2e with malformed rows. The latest-weight helpers and two engine-file readers were still on the old filter until #142 and round 6 (V-CA-282f-4, V-K-282f-10).
 - **Where:** core.js; home.js; medical.js; diet.js.
 - **Caught by:** V-CA-282e-3, V-K-282e-4, V-C-282e-4.
 - **Patch class:** PC-10
@@ -1205,7 +1205,7 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 - **Status:** **Fixed** (0d9e722).
 
 #### P2 — Growth-age gate bypasses (round 4) (136)
-- **Symptom:** Carina found more ways past the gate: falsy-literal `ageAt…()` / `gvAgeAt('')`, `new Date` without parentheses, bare `Date()`, `_offsetDateStr(0)`, `??=` / `||=`, array destructuring, names in a template literal. Kael found compound assignment and a bare `growth-age-ok:` with no reason.
+- **Symptom:** Carina found more ways past the gate: falsy-literal `ageAt…()` / `gvAgeAt('')`, `new Date` without parentheses, bare `Date()`, `_offsetDateStr(0)` (not today — it returns an invalid date; the pattern is kept as harmless, V-CA-282f-2), `??=` / `||=`, array destructuring, names in a template literal. Kael found compound assignment and a bare `growth-age-ok:` with no reason.
 - **Cause:** the TODAY pattern and the assignment forms were narrower than the language.
 - **Fix:** All covered, with a fixture each (52 self-tests); an exemption needs a reason; structural limits (a helper behind another name, a pass-through parameter, more than 40 lines up, four or more hops) are listed in the gate header for hand review. The HR-12 gate's message now names `--allow-raise`.
 - **Where:** split/audit-growth-age-v1.sh; split/audit-hr12-dateonly-v1.sh.
@@ -1230,6 +1230,78 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 - **Caught by:** V-C-282d-3, V-C-282e-3.
 - **Patch class:** PC-3
 - **Status:** **Open** (logged; no surface yet).
+
+#### P0 — A baby weighed yesterday at 13 weeks, still below birth weight, was told the doctor could wait a week (139)
+- **Symptom:** At midnight on day 92 a not-back-to-birth-weight reading from day 85–91 flipped from "contact your doctor or midwife today" (score 25) to "book a weight check in the next week" (score 50).
+- **Cause:** Lyra's round-5 stale rule keyed on today's age alone, not on how old the weigh-in was.
+- **Fix:** A reading goes stale only when today is past about 3 months AND the weigh-in itself is 4+ weeks old (`GV_STALE_READING_DAYS`); still-losing goes stale as a concern, dropping and not-confirmed go plain stale; e2e: weighed day 91, read day 92 → today, 25.
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282f-1 (blocking), V-K-282f-1, -2.
+- **Patch class:** PC-1 / PC-7
+- **Status:** **Fixed** (80153ad).
+
+#### P0 — "She's not gaining" got food advice only (140)
+- **Symptom:** On the food-OK path, slow gain, a plateau or a loss in the weight-gain answer led with "Add calorie-dense foods…" and no doctor line, while "is she losing weight" said "book a weight check in the next week"; the Info card said "monitor at next weigh-in" and the Info insight "could be normal".
+- **Cause:** each surface wrote its own slow-gain action; round 4 tiered some of them.
+- **Fix:** One helper, `gvSlowAction(w)` (under 28 days today; a loss or plateau the weight check; slower gain the mention), first on every surface — both Q&A answers, qaAnswerGrowth, Growth facts, the Info insight and the growth-diet card — with any food line or gate note second; e2e on loss, plateau and slow.
+- **Where:** core.js; qa-handlers; medical.js; intelligence-cards.js.
+- **Caught by:** V-C-282f-1..4, V-M-282f-3, V-V-282f-1.
+- **Patch class:** PC-10 / PC-7
+- **Status:** **Fixed** (80153ad).
+
+#### P1 — False NICE referral from a scale wobble with no birth row (141)
+- **Symptom:** With no birth row, day 26 at 3.80 kg then day 27 at 3.79 kg read "Lower than at day 26 — … contact your doctor or midwife today", score 25.
+- **Cause:** the round-5 stand-in window ran to day 28 and "lower than the first weigh-in" had no noise floor.
+- **Fix:** "Lower" stands for "not back to birth weight" only when the first weigh-in was in the after-birth dip (before day 14) and the drop is at least 20 g; otherwise "not confirmed".
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-K-282f-3.
+- **Patch class:** PC-1 / PC-7
+- **Status:** **Fixed** (80153ad).
+
+#### P1 — Paracetamol dose disappeared when the last growth row had no weight (142)
+- **Symptom:** The fever card and dose prompt read `growthData[last].wt`; a height-only last row (the form allows it) gave `getParacetamolDose(null)` and the dose guidance silently vanished. `getLatestWeight` / `getLatestHeight` also accepted wt:0 and undated rows.
+- **Cause:** a last-row read instead of the latest weight; the latest-weight helpers predated the shared filter.
+- **Fix:** Both helpers return the last row of `gvMeasureRows`; the dose reads `getLatestWeight()`.
+- **Where:** intelligence-illness.js; medical.js `getLatestWeight`, `getLatestHeight`.
+- **Caught by:** V-CA-282f-4, -5.
+- **Patch class:** PC-10 / PC-3
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Date-offset helpers landed a day early west of Greenwich (143)
+- **Symptom:** In New York, `_offsetDateStr(today(), 1)` returned today, and `_offsetDateStr('2026-11-01', -1)` returned 30 Oct.
+- **Cause:** `new Date('YYYY-MM-DD')` is UTC midnight; `setDate` then stepped from the previous local evening.
+- **Fix:** Both `_offsetDateStr` and `addDays` parse a bare date as a local day (`_parseLocalDate`). India is unaffected.
+- **Where:** core.js.
+- **Caught by:** V-CA-282f-3.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Newborn-window percentile and climbing crossings sent the wrong signal (144)
+- **Symptom:** Beside "Back to birth weight — right on schedule" the concern answer added "at or below the 3rd centile line — book a weight check", and qaAnswerGrowth showed "below 3rd" in green; a climbing crossing got a warning and a "mention" action in qaAnswerGrowth only.
+- **Cause:** the newborn exclusion skipped the 'regained' line; the crossing action ignored direction.
+- **Fix:** Any newborn line suppresses the low-centile concern (info in the growth answer); a climb is good and has no action.
+- **Where:** qa-handlers.
+- **Caught by:** V-K-282f-4, -6, V-V-282f-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Two tiers for one centile fall; stale lines and "before 3 weeks" wording (145)
+- **Symptom:** A slide plus a single crossing listed both the weight check and the milder mention; the stale action had no time bound; on day 20 "today or tomorrow — before 3 weeks" contradicted itself.
+- **Cause:** actions were added per item without a tier rule; copy drift.
+- **Fix:** When the weight check or a "today" action is shown, the milder mention is dropped (in the shared sorter); stale actions are bounded; "by 3 weeks" (NICE 1.1.4's wording); stale chips name their tier.
+- **Where:** qa-handlers `_qaSortActions`; core.js.
+- **Caught by:** V-M-282f-4, -6, -7, V-K-282f-5, V-V-282f-7.
+- **Patch class:** PC-7 / PC-10
+- **Status:** **Fixed** (80153ad).
+
+#### P2 — Growth-age gate bypasses (round 5) (146)
+- **Symptom:** Carina: `?.()`, `.call` / `.apply`, bracket calls, a marker inside a string, for-of, nested template braces, `new globalThis.Date`, a comment before `(`. Kael: assignments after `)`, `:`, `?`, `else` and `case`; declaration-less destructuring; `gvAgeAt(void 0 / NaN / {})`; `window['ageAt']()`; a reason of ".".
+- **Cause:** the call and assignment forms were narrower than the language.
+- **Fix:** All covered with a fixture each (71 self-tests); the marker must be a // comment with a worded reason; Object.assign / spread and one-exemption-per-line are listed as structural limits.
+- **Where:** split/audit-growth-age-v1.sh.
+- **Caught by:** V-CA-282f-1, V-K-282f-7.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (80153ad).
 
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 

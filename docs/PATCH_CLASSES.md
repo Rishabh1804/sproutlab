@@ -1,6 +1,6 @@
 # SproutLab — Patch classes
 
-**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#138). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
+**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#146). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
 
 **How to use it:**
 - **Builder (Lyra):** before opening a PR, run the "Look for" list of every class the diff touches.
@@ -161,7 +161,7 @@ Also look for: a new `style="color:` / `background:` built from a JS value; chec
 - #115: the centile slide could be cut off or contradicted by a "gaining well" headline.
 - #117: a loss line said "could be normal" with no doctor line.
 
-**Look for:** an older handler that answers the same question as a newly fixed one, but was not re-read (#110); a passive voice that drops who must act; "suggests" or "up to" replacing "no more than"; a claim with no age bound; reassurance placed before "see the doctor"; any wait advice without its age floor.
+**Look for:** a time-based downgrade keyed on today's date instead of the age of the reading it downgrades (#139); an older handler that answers the same question as a newly fixed one, but was not re-read (#110, #140); a passive voice that drops who must act; "suggests" or "up to" replacing "no more than"; a claim with no age bound; reassurance placed before "see the doctor"; any wait advice without its age floor.
 
 **Guards:**
 - **Rule:** Ceres and Maren sign off every changed safety line, line by line, and every care claim cites a source quote (canon-cc-013).
@@ -229,6 +229,8 @@ Also look for: a new `style="color:` / `background:` built from a JS value; chec
 | 129 | A slide got a milder action than a single crossing | Actions in one tier table, ordered by severity |
 | 130 | Gains above the band read three ways | `gvAboveBandLine`: one line, one tone |
 | 133, 134 | A loss on the food-OK card and the Diet view kept their own copy | Shared tier wording; the food gate on every surface |
+| 140 | "Not gaining" got food advice while "losing weight" got a weight check | One `gvSlowAction`, first on every surface |
+| 144 | The newborn window and crossing direction were honoured on some answers only | One exclusion rule; direction decides the signal |
 
 **Same family, earlier:** #25 (PC-1: two cards, two ages), #63.
 
