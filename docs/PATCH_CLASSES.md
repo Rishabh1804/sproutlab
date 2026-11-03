@@ -1,6 +1,6 @@
 # SproutLab — Patch classes
 
-**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#153). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
+**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#159). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
 
 **How to use it:**
 - **Builder (Lyra):** before opening a PR, run the "Look for" list of every class the diff touches.

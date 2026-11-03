@@ -1366,6 +1366,65 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 - **Patch class:** PC-4
 - **Status:** **Fixed** (4d1dd1d).
 
+#### P0 — "Not confirmed" with no time bound at 3–4 weeks (154)
+- **Symptom:** With no birth row, a flat or slowly falling week at 3–4 weeks (e.g. day 20 at 3.40 kg, day 27 at 3.39 kg) read "Back to birth weight not confirmed — add the birth weight, or ask your doctor or midwife", with no time bound; a parent could wait for the 6-week check.
+- **Cause:** #141's fix sent these cases to the not-confirmed branch, whose action was never bounded.
+- **Fix:** Bounded by today's age: from day 21, weigh today and compare with the hospital record — if not back, contact the doctor or midwife today; on days 14–20, ask by 3 weeks. Never claims "not back to birth weight". e2e on both cases.
+- **Where:** core.js `gvNewbornCheck`, `gvNewbornAction`.
+- **Caught by:** V-M-282g-1 (blocking).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (bcc371e).
+
+#### P0 — "How is she growing" dropped the doctor action when anything else was said (155)
+- **Symptom:** A losing or plateaued baby whose height was stale got only "measure height again" (or only the milder centile mention) from qaAnswerGrowth.
+- **Cause:** the slow-gain action sat in the empty-actions fallback only.
+- **Fix:** `gvSlowAction` is pushed whenever the weight is slow; the shared sorter puts it first and drops the milder mention. e2e asserts it on every slow case.
+- **Where:** intelligence-qa-handlers.js `qaAnswerGrowth`.
+- **Caught by:** V-C-282g-1, V-V-282g-1 (blocking).
+- **Patch class:** PC-7 / PC-10
+- **Status:** **Fixed** (bcc371e).
+
+#### P1 — A crossing that kept falling was treated as history (156)
+- **Symptom:** 58th → 35th, then 28th → 22nd → 19th with no new crossing or slide: the headline read "gaining well".
+- **Cause:** `gvCrossingCurrent` used `Math.abs`, so a further fall retired the crossing like a recovery.
+- **Fix:** One-sided: only a recovery of 15+ points retires it.
+- **Where:** core.js `gvCrossingCurrent`.
+- **Caught by:** V-M-282g-2, V-K-282g-2, V-V-282g-2 (blocking).
+- **Patch class:** PC-10
+- **Status:** **Fixed** (bcc371e).
+
+#### P0 — "Within normal range" for a small baby back at birth weight below the 3rd centile (157)
+- **Symptom:** Born 2.30 kg, back to 2.40 kg on day 20 at the 2nd percentile: the concern answer said "Weight at below 3rd percentile — within normal range" (green) and "In the first month, being on a higher percentile is usually fine".
+- **Cause:** #144 suppressed the low-centile concern for every newborn line, but the percentile block still ran for 'regained' and fell to its reassuring branch.
+- **Fix:** An info line ("at or below the 3rd centile line (newborn weeks)"), no reassurance; e2e.
+- **Where:** intelligence-qa-handlers.js `qaAnswerWeightConcern`.
+- **Caught by:** V-K-282g-1 (blocking).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (bcc371e).
+
+#### P2 — Leftovers: "today" that never expired, Home's "Monitor closely", repeated stale copy, regained readings never stale (158)
+- **Symptom:** `gvSlowAction`'s "today" depended on the weigh-in's day of life only; the (dormant) Home narrative said "Monitor closely"; the stale-concern line repeated "Last weighed" after the date lead; back-to-birth-weight read at day 200 still said "right on schedule"; the short stale line had no time bound.
+- **Cause:** read-time urgency keyed on the wrong clock; copy drift.
+- **Fix:** "Today" only while the reading is under 28 days old; a doctor action on Home's line; "On day N … was …"; a regained reading goes plain stale; the short line is bounded.
+- **Where:** core.js; qa-handlers.
+- **Caught by:** V-C-282g-4, -5; V-M-282g-3; V-K-282g-4; V-V-282g-3, -4.
+- **Patch class:** PC-7 / PC-1
+- **Status:** **Fixed** (bcc371e).
+
+#### P2 (deferred) — Deferred to a follow-up PR, by owner (159)
+- **Symptom:** Non-blocking notes from the final verification round.
+- **Cause:** Each was sorted DEFERRABLE by its Governor (no parent acts wrongly on it today).
+- **Fix:** Planned follow-up PR. Items:
+  - **Maren:** g-4 / Kael g-5: the CareTicket weight goal cannot auto-resolve for an infant weighed under 28 days apart (safe direction; consider a 28-day look-back for the metric). g-5: stale ratio gauge label. **g-6 (safety consult, pre-existing):** the paracetamol chip does not name the weight, its date or the formulation, and has no plausibility cap on a mistyped weight. g-7: revisit the newborn low-centile rule if an SGA birth flag lands.
+  - **Vela:** g-5 mixed day wording ("since day 10" vs "since 10 days old"); g-6 "At day N" label and "—g/day"; **g-7 a stale reading's percentile is shown as current, with no date (PC-7)**; g-8 the percentile line in green beside an amber dropping crossing; g-9 one inline colour style on a changed line (HR-2); g-10 `getGrowthNarrative` is dormant (its round-6 edits and #149's "Home read…" describe a surface no parent sees); g-11 the card header over a stale window.
+  - **Ceres:** g-2 the card summary icon reads as a diet verdict, "1 meals/day"; g-3 the low-coverage line repeats the nutrient-gaps line and should name iron-rich foods.
+  - **Carina:** g-1 / Kael g-3: remaining growth-age gate bypasses (none in source; structural fix: make `gvAgeAt` return NaN instead of today, or an AST pass); g-2 `calcMedicalScore` and three other readers still take the last array row; g-3 an impossible bare date falls back to a UTC parse; g-4 `formatDate` UTC parse (existing V-K-267-12).
+  - **Kael:** g-6 `gvSlowAction`'s "today" branch is unreachable while `nb` covers day < 28; g-7 correlate takes the first same-date row in unsorted order.
+- **Where:** various.
+- **Caught by:** Final verification round (V-M/V-V/V-C/V-CA/V-K-282g).
+- **Patch class:** mixed
+- **Status:** **Open** (follow-up PR).
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
