@@ -928,7 +928,7 @@ function renderGrowthFacts() {
       const rateT = cw.gPerDay >= 0 ? `Gaining ${cw.gPerDay}g/day` : `Down ${Math.abs(cw.gPerDay)}g/day`;
       // The concern answer's tiers (Maren V-M-282e-4, PC-7): a loss or a plateau is a weight check in
       // the next week; slower gain is a mention at the next check-up, or within a month.
-      const slowAct = (cw.gainG < 0 || cw.status === 'plateau') ? `Book a weight check with your doctor ${GV_WHEN_WEIGHT_CHECK}` : `Mention it to your doctor ${GV_WHEN_MENTION}`;
+      const slowAct = gvSlowAction(cw) || GV_ACT_MENTION_SLOW;   // one source (Ceres V-C-282f-1, PC-10)
       facts.push({ type:'caution', icon:zi('scale'), title:`${rateT} — below the usual ${range} for this age`, body:`Over the last ${cw.daysBetween} days. ${slowAct} — ${pron('poss')} doctor can look at the whole curve.` });
     }
   }
@@ -1165,19 +1165,17 @@ function deleteEvent(i) {
 // @@INSERT_DATA_BLOCK_5@@
 
 // Get latest entry that has a weight value
+// The latest row of the shared filter (gvMeasureRows: numeric weight > 0, valid date, sorted), so a
+// synced wt:0 or undated row can't become "latest" and every reader picks the same row (Carina V-CA-282f-4).
 function getLatestWeight() {
-  for (let i = growthData.length - 1; i >= 0; i--) {
-    if (growthData[i].wt != null) return growthData[i];
-  }
-  return null;
+  const rows = gvMeasureRows('wt');
+  return rows.length ? rows[rows.length - 1] : null;
 }
 
 // Get latest entry that has a height value
 function getLatestHeight() {
-  for (let i = growthData.length - 1; i >= 0; i--) {
-    if (growthData[i].ht != null) return growthData[i];
-  }
-  return null;
+  const rows = gvMeasureRows('ht');
+  return rows.length ? rows[rows.length - 1] : null;
 }
 
 // ageMonthsAt() lives in core.js beside ageAt() / _parseLocalDate() (V-CA-282b-4).
@@ -11048,16 +11046,16 @@ function renderInfoGrowthVelocity() {
         // (gvGateNote — Ceres V-C-282d-1). A loss ends with the doctor, never "review caloric intake"
         // alone (Ceres V-C-282d-2).
         var slowLead = w2.gPerDay < 0 ? 'Weight down ' + Math.abs(w2.gPerDay) + 'g/day' : 'Weight gain has slowed to ' + w2.gPerDay + 'g/day';
-        var slowTail = !gvFoodAdviceOk() ? gvGateNote() : w2.gPerDay < 0 ? 'Review caloric intake. ' + GV_ACT_WEIGHT_CHECK + '.' : 'Review caloric intake.';
+        // The doctor action first (gvSlowAction), then the gate note or the food prompt (Ceres V-C-282f-3, -4).
+        var slowTail = (gvSlowAction(w2) || GV_ACT_MENTION_SLOW) + '. ' + (!gvFoodAdviceOk() ? gvGateNote() : 'Review calorie intake too.');
         iHtml += '<div class="si-insight si-insight-warn">' + slowLead + ' — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. ' + escHtml(slowTail) + '</div>';
       } else if (w2.status === 'plateau') {
         // A loss reads "down", never "only -40g gained"; under the food gate no "dietary gap" — milk
-        // is the whole diet (Ceres V-C-282c-5, Maren V-M-282c-9). A loss on the food-OK path drops
+        // is the main diet (Ceres V-C-282c-5, Maren V-M-282c-9). A loss on the food-OK path drops
         // "could be normal" and ends with the doctor (Ceres V-C-282d-2).
         var platLead = w2.gainG < 0 ? 'Weight down ' + Math.abs(w2.gainG) + 'g in ' + w2.daysBetween + ' days.' : 'Only ' + w2.gainG + 'g gained in the last ' + w2.daysBetween + ' days.';
-        var platTail = !gvFoodAdviceOk() ? ' This can happen after illness or a feeding change. ' + gvGateNote()
-          : w2.gainG < 0 ? ' This can follow an illness or a dietary gap. ' + GV_ACT_WEIGHT_CHECK + '.'
-          : ' This could be normal after illness or a dietary gap.';
+        // The doctor action first and never "could be normal" (Ceres V-C-282f-3; BUGS #117's pattern).
+        var platTail = ' ' + (gvSlowAction(w2) || GV_ACT_WEIGHT_CHECK) + '. ' + (!gvFoodAdviceOk() ? 'It can follow an illness or a feeding change. ' + gvGateNote() : 'It can follow an illness or a dietary gap.');
         iHtml += '<div class="si-insight si-insight-warn">' + platLead + escHtml(platTail) + '</div>';
       } else if (w2.status === 'fast') {
         // One line, one tone with the Growth facts and the concern answer (gvAboveBandLine — V-V-282e-3).

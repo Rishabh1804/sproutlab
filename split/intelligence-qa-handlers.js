@@ -1001,6 +1001,14 @@ function _qaActionRank(text) {
   return 3;
 }
 function _qaSortActions(items) {
+  // One tier per concern: when the weight check (in the next week) or a "today" action is shown, a
+  // milder mention for the same worry is dropped (Maren V-M-282f-4); exact duplicates go too.
+  var strong = items.some(function(a) { return a.text === GV_ACT_WEIGHT_CHECK || /\btoday\b/i.test(a.text); });
+  var seen = {};
+  items = items.filter(function(a) {
+    if (seen[a.text]) return false; seen[a.text] = true;
+    return !(strong && (a.text === GV_ACT_MENTION_SLOW || a.text === GV_ACT_MENTION_CENTILE));
+  });
   return items.map(function(a, i) { return { a: a, i: i }; })
     .sort(function(x, y) { return (_qaActionRank(x.a.text) - _qaActionRank(y.a.text)) || (x.i - y.i); })
     .map(function(x) { return x.a; });
@@ -1086,10 +1094,13 @@ function qaAnswerWeightGain(intentId) {
     } else if (w.status === 'slow') {
       tail = (w.gPerDay < 0 ? 'down ' + Math.abs(w.gPerDay) + ' g/day' : 'gaining slowly (' + w.gPerDay + ' g/day)');
       dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day — below expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ' g/day', signal: 'warn' });
+      // The doctor action first, the same tier as "is she losing weight" (gvSlowAction — Ceres V-C-282f-1, PC-10).
+      if (gvSlowAction(w)) actionItems.push({ text: gvSlowAction(w), signal: 'action' });
       actionItems.push({ text: foodOk ? 'Add calorie-dense foods: ghee, banana, avocado, smooth nut butter thinned with milk or water (once nuts have been introduced)' : gateNote, signal: 'action' });
     } else if (w.status === 'plateau') {
       tail = w.gainG < 0 ? 'weight down ' + Math.abs(w.gainG) + ' g in ' + w.daysBetween + ' days' : 'weight plateau detected';
       dataItems.push({ text: w.gainG < 0 ? 'Weight down ' + Math.abs(w.gainG) + 'g in ' + w.daysBetween + ' days' : 'Only ' + w.gainG + 'g gained in ' + w.daysBetween + ' days', signal: 'warn' });
+      if (gvSlowAction(w)) actionItems.push({ text: gvSlowAction(w), signal: 'action' });   // Ceres V-C-282f-1
       actionItems.push({ text: foodOk ? 'Consider adding an extra meal or calorie-dense toppings' : gateNote, signal: 'action' });
     } else if (w.status === 'fast') {
       tail = 'gaining quickly (' + w.gPerDay + ' g/day)';
@@ -1910,7 +1921,7 @@ function qaAnswerWeightConcern(intentId) {
   var pctC = gv.latestPercentile;
   // At or below the 3rd centile line (gvPctLow — V-M-282e-1), and only outside the newborn window:
   // the after-birth dip moves the percentile by design, so there it is not a concern (Kael V-K-282e-6).
-  var lowPct = gvPctLow(pctC) && !nbWin;
+  var lowPct = gvPctLow(pctC) && !(gv.weight && gv.weight.nb);   // any newborn line, 'regained' too (Kael V-K-282f-4)
   var slideC = gv.centileSlide || null;
   var lastCrossC = gv.crossings && gv.crossings.length > 0 ? gv.crossings[gv.crossings.length - 1] : null;
   var dropC = !!(lastCrossC && lastCrossC.direction === 'dropping');
@@ -1953,9 +1964,7 @@ function qaAnswerWeightConcern(intentId) {
     } else {
       // Slow or plateau (a loss included): a warning with a doctor action, bounded in time (V-M-282e-4).
       dataItems.push({ text: (w.gPerDay < 0 ? 'Weight down ' + Math.abs(w.gPerDay) : 'Weight gain: ' + w.gPerDay) + ' g/day (expected ' + w.expectedRange.min + '-' + w.expectedRange.max + ')', signal: 'warn' });
-      actionItems.push({ text: under28 ? 'Tell your doctor or midwife today'
-        : (w.gainG < 0 || w.status === 'plateau') ? GV_ACT_WEIGHT_CHECK
-        : GV_ACT_MENTION_SLOW, signal: 'action' });
+      actionItems.push({ text: gvSlowAction(w) || (under28 ? 'Tell your doctor or midwife today' : GV_ACT_MENTION_SLOW), signal: 'action' });   // one source (gvSlowAction)
     }
   }
 
@@ -2072,7 +2081,8 @@ function qaAnswerGrowth(intentId) {
   // ordinal from the one helper (V-V-282e-5). Not judged in the newborn window (Kael V-K-282e-6).
   var lowG = gv.latestPercentile !== null && gvPctLow(gv.latestPercentile) && !(gv.weight && gv.weight.nb);
   if (gv.latestPercentile !== null) {
-    var pctSignal = lowG || gv.latestPercentile > 97 ? 'warn' : 'good';
+    // In the newborn window the percentile is not judged: info, never a green "below 3rd" (Kael V-K-282f-4).
+    var pctSignal = (gv.weight && gv.weight.nb) ? 'info' : (lowG || gv.latestPercentile > 97) ? 'warn' : 'good';
     dataItems.push({ text: lowG ? GV_LOW_CENTILE_LINE : 'Weight percentile: ' + pctOrdinal(gv.latestPercentile), signal: pctSignal });
   }
 
@@ -2081,7 +2091,7 @@ function qaAnswerGrowth(intentId) {
   var lowEndG = lowG;
   if (gv.crossings && gv.crossings.length > 0) {
     var lastCross = gv.crossings[gv.crossings.length - 1];
-    dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to), signal: 'warn' });
+    dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to), signal: lastCross.direction === 'dropping' ? 'warn' : 'good' });   // a climb is not a warning (Kael V-K-282f-6, Vela V-V-282f-4)
     if (lastCross.direction === 'dropping' && gvPctLow(lastCross.to)) lowEndG = true;
   }
   // A slow fall across two major centile lines (computeGrowthVelocity, V-M-282c-11).
@@ -2090,7 +2100,7 @@ function qaAnswerGrowth(intentId) {
     if (gvPctLow(gv.centileSlide.to)) lowEndG = true;
   }
   if (lowEndG || gv.centileSlide) actionItems.push({ text: GV_ACT_WEIGHT_CHECK, signal: 'action' });
-  else if (gv.crossings && gv.crossings.length > 0) actionItems.push({ text: GV_ACT_MENTION_CENTILE, signal: 'action' });
+  else if (gv.crossings && gv.crossings.length > 0 && gv.crossings[gv.crossings.length - 1].direction === 'dropping') actionItems.push({ text: GV_ACT_MENTION_CENTILE, signal: 'action' });
 
   // Proportionality
   if (gv.proportionFlag) {
@@ -2111,7 +2121,7 @@ function qaAnswerGrowth(intentId) {
     var wOk = gv.weight && ((gv.weight.nb && gv.weight.nb.status === 'regained') || (!gv.weight.nb && !gv.weight.tooShort && gv.weight.status === 'on-track'));
     var wSlow = gv.weight && !gv.weight.nb && !gv.weight.tooShort && (gv.weight.status === 'slow' || gv.weight.status === 'plateau');
     actionItems.push(wOk ? { text: 'Growth is on track — next measurement in 2-4 weeks', signal: 'good' }
-      : wSlow ? { text: (gv.weight.gainG < 0 || gv.weight.status === 'plateau') ? GV_ACT_WEIGHT_CHECK : GV_ACT_MENTION_SLOW, signal: 'action' }   // the concern answer's tiers (V-M-282e-4)
+      : wSlow ? { text: gvSlowAction(gv.weight) || GV_ACT_MENTION_SLOW, signal: 'action' }   // one source (gvSlowAction — Ceres V-C-282f-1)
       : gv.weight && gv.weight.tooShort ? { text: 'Weigh again in a few weeks', signal: 'action' }
       : gv.weight && gv.weight.nb ? { text: 'Keep to the weigh-ins your doctor or midwife suggests', signal: 'action' }
       : { text: 'Next measurement in 2-4 weeks', signal: 'action' });

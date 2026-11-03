@@ -361,7 +361,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     }, NB_SETUP);
     // Read on day 17: the bounded "next day or two" line.
     expect(r.fresh.status).toBe('not-regained');
-    expect(r.fresh.qaActions[0]).toBe('Tell your doctor or midwife in the next day or two — before 3 weeks');
+    expect(r.fresh.qaActions[0]).toBe('Tell your doctor or midwife in the next day or two — by 3 weeks');
     expect(r.fresh.factor).toBe(50);
     // The same day-16 reading on day 25, no newer weigh-in: past NICE 1.1.4's 3-week line.
     expect(r.stale.status).toBe('not-regained');
@@ -390,9 +390,9 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     }
     expect(r.d16.verdict).toBe('not-regained');
     expect(r.d16.status).toBe('not-regained');
-    // Action first, bounded: before 3 weeks; and "Most babies are back" — the verb restored (V-M-282d-4).
-    expect(r.d16.narrative).toContain('Not back to birth weight yet at 16 days. Tell your doctor or midwife in the next day or two — before 3 weeks. Most babies are back by about 2 weeks, almost all by 3.');
-    expect(r.d16.qaActions[0]).toBe('Tell your doctor or midwife in the next day or two — before 3 weeks');
+    // Action first, bounded: by 3 weeks (NICE 1.1.4, V-M-282f-7); and "Most babies are back" — the verb restored (V-M-282d-4).
+    expect(r.d16.narrative).toContain('Not back to birth weight yet at 16 days. Tell your doctor or midwife in the next day or two — by 3 weeks. Most babies are back by about 2 weeks, almost all by 3.');
+    expect(r.d16.qaActions[0]).toBe('Tell your doctor or midwife in the next day or two — by 3 weeks');
     expect(r.d16.chip).toContain('tc-warn');
     expect(r.d16.insight).toContain('si-insight-warn');
     expect(r.d16.qcHeadline).toBe('3.15 kg — not back to birth weight yet');
@@ -483,7 +483,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     }, NB_SETUP);
     expect(r.lower.status).toBe('not-regained');
     expect(r.lower.nb.referral).toBe(false);
-    expect(r.lower.narrative).toContain('Lower than at day 3 — not back to birth weight yet. Tell your doctor or midwife in the next day or two — before 3 weeks.');
+    expect(r.lower.narrative).toContain('Lower than at day 3 — not back to birth weight yet. Tell your doctor or midwife in the next day or two — by 3 weeks.');
     expect(r.lower.chip).toContain('Not back yet');
     expect(r.lowerRef.nb.referral).toBe(true);
     expect(r.lowerRef.narrative).toContain('Lower than at day 3 — not back to birth weight yet at 23 days.');
@@ -636,7 +636,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.early.qa).toContain(MILK);
     expect(r.early.qa).not.toMatch(/ghee|calorie|nut butter|Food tab/i);
     expect(r.early.insight).toContain(MILK);
-    expect(r.early.insight).toContain('after illness or a feeding change');
+    expect(r.early.insight).toContain('It can follow an illness or a feeding change.');
     expect(r.early.insight).not.toMatch(/dietary gap|caloric/);
     expect(r.card).toContain(MILK);
     expect(r.card).not.toMatch(/consider adding rich sources|Nutrient gaps/);
@@ -1075,6 +1075,33 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.card).not.toMatch(/velocity is below typical range \(-/);
   });
 
+  test('"not gaining" leads with the doctor on every surface: the same tier as "is she losing weight", food second (V-C-282f-1..4)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const w = window as any;
+      const setup = eval(src);
+      const fill = () => { const now = new Date(); for (let i = 0; i < 28; i++) feedingData[w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 28 + i))] = { breakfast: 'rice cereal' }; };
+      const card = () => { fill(); w.renderInfoGrowthDiet(); return (document.getElementById('infoGrowthDietInsights') || {} as any).innerHTML || ''; };
+      const loss = setup(300, 3.30, [[272, 8.50], [300, 8.40]]); const lossCard = card();
+      const plateau = setup(214, 3.30, [[186, 7.00], [214, 7.005]]); const plateauCard = card();   // 7 m, +5 g in 28 days
+      const slow = setup(214, 3.30, [[186, 7.00], [214, 7.08]]); const slowCard = card();
+      return { loss, lossCard, plateau, plateauCard, slow, slowCard };
+    }, NB_SETUP);
+    const CHECK = 'Book a weight check with your doctor in the next week';
+    const MENTION = 'Mention the slow weight gain to your doctor at the next check-up, or within a month if none is booked';
+    // The tier follows the status: a loss or a plateau → the weight check; slower gain → the mention.
+    for (const [c, card] of [[r.loss, r.lossCard], [r.plateau, r.plateauCard], [r.slow, r.slowCard]] as const) {
+      const act = (c.status === 'plateau' || c.totalGainG < 0) ? CHECK : MENTION;
+      expect(c.qaActions[0]).toBe(act);                 // the weight-gain answer ("not gaining")
+      expect(c.qa).toContain(act);
+      expect(c.insight).toContain(act + '.');           // the Info insight: doctor first
+      expect(c.insight).not.toMatch(/could be normal/);
+      expect(card).toContain(act + '.');                // the growth-diet card
+      expect(card).not.toMatch(/monitor at next weigh-in/);
+    }
+    expect(['plateau', 'slow']).toContain(r.plateau.status);
+    expect(r.slow.status).toBe('slow');
+  });
+
   test('the calorie-dense food line names nuts only once they have been introduced (V-C-282d-4e)', async ({ page }) => {
     // Girls 6–7 m (30–130 g/week): 80 g in 28 days = 20 g/week, slow; 7 months old, solids started.
     const r = await page.evaluate((src) => eval(src)(214, 3.30, [[186, 7.00], [214, 7.08]]), NB_SETUP);
@@ -1320,7 +1347,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
       const wtS = eval(wtSrc)(ageDaysS);
       const pts: [number, number][] = [52, 30, 13, 12, 11].map((t, i) => { const d = Math.round((4 + i) * 30.44); return [d, wtS(d, t)]; });
       const slide = setup(ageDaysS, 3.30, pts, { noBirth: true });
-      // Slow gain (+20 g in 30 days) while below the 3rd centile line: a mention and a weight check.
+      // Slow gain (+20 g in 30 days) while below the 3rd centile line: the weight check only (one tier).
       const wtL = eval(wtSrc)(305);
       const low = wtL(275, 'low');
       const slowLow = setup(305, 3.30, [[275, low], [305, Math.round((low + 0.02) * 1000) / 1000]], { noBirth: true });
@@ -1331,7 +1358,8 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.slide.qcHeadline).toContain('weight moving down the centile lines');
     expect(r.slowLow.status).toBe('slow');
     expect(r.slowLow.qcActions[0]).toBe('Book a weight check with your doctor in the next week');
-    expect(r.slowLow.qcActions[1]).toBe('Mention the slow weight gain to your doctor at the next check-up, or within a month if none is booked');
+    // One tier per concern: the weight check is shown, so the milder mention is dropped (Maren V-M-282f-4).
+    expect(r.slowLow.qcActions).not.toContain('Mention the slow weight gain to your doctor at the next check-up, or within a month if none is booked');
     expect(r.slowLow.qcHeadline).not.toMatch(/gaining/);
   });
 
@@ -1394,6 +1422,32 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.d14.qa).not.toMatch(/gaining well/);
   });
 
+  test('a newborn reading goes stale only once the weigh-in itself is old: weighed yesterday at 13 weeks stays "today"; still losing goes stale as caution (V-M-282f-1, -2)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return {
+        fresh91: setup(91, 3.40, [[91, 3.30]]),
+        fresh92: setup(92, 3.40, [[91, 3.30]]),
+        old: setup(130, 3.40, [[91, 3.30]]),
+        stillLosing: setup(200, 3.40, [[4, 3.20], [7, 3.15], [10, 3.10]]),
+      };
+    }, NB_SETUP);
+    // Below birth weight at 13 weeks, weighed yesterday: the referral stays (blocking finding).
+    for (const c of [r.fresh91, r.fresh92]) {
+      expect(c.status).toBe('not-regained');
+      expect(c.qaActions[0]).toBe('Contact your doctor or midwife today');
+      expect(c.factor).toBe(25);
+    }
+    // The same reading 39 days on: stale, caution, the weight check in the next week.
+    expect(r.old.nb.tone).toBe('caution');
+    expect(r.old.qaActions[0]).toBe('Book a weight check with your doctor in the next week');
+    expect(r.old.factor).toBe(50);
+    // "Still losing" read months later never says "today".
+    expect(r.stillLosing.nb.text).toContain('when Asha was still losing weight, and not weighed since — book a weight check with your doctor in the next week.');
+    expect(r.stillLosing.qaActions.join(' | ')).not.toMatch(/\btoday\b/);
+    expect(r.stillLosing.factor).toBe(50);
+  });
+
   test('newborn read-time lines are bounded: no birth row → weigh today against the hospital record; days 14–20 and 19–20; the actual age when overdue; stale from day 92: neutral for a plain recheck, caution with a weight check for a concerning reading (V-M-282e-6, -7, V-K-282e-2; round-5 decision 4)', async ({ page }) => {
     const r = await page.evaluate((src) => {
       const setup = eval(src);
@@ -1411,11 +1465,11 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.noBirth25.nb.text).toContain('Weigh Asha today and compare with the birth weight from the hospital record — if not back to birth weight, contact your doctor or midwife today.');
     expect(r.noBirth25.qaActions[0]).toMatch(/^Weigh .+ today and compare with the birth weight from the hospital record/);
     expect(r.noBirth25.factor).toBe(50);
-    expect(r.noBirth17.nb.text).toContain('weigh again in the next day or two, before 3 weeks');
-    expect(r.noBirth17.qaActions[0]).toMatch(/in the next day or two, before 3 weeks/);
-    expect(r.d19.nb.text).toContain('Tell your doctor or midwife today or tomorrow — before 3 weeks.');
+    expect(r.noBirth17.nb.text).toContain('weigh again in the next day or two, by 3 weeks');
+    expect(r.noBirth17.qaActions[0]).toMatch(/in the next day or two, by 3 weeks/);
+    expect(r.d19.nb.text).toContain('Tell your doctor or midwife today or tomorrow — by 3 weeks.');
     expect(r.d19.nb.text).not.toContain('next day or two');
-    expect(r.d19.qaActions[0]).toBe('Tell your doctor or midwife today or tomorrow — before 3 weeks');
+    expect(r.d19.qaActions[0]).toBe('Tell your doctor or midwife today or tomorrow — by 3 weeks');
     expect(r.d30.nb.text).toContain('it is now 4 weeks');
     expect(r.d30.nb.text).not.toContain('3 weeks have now passed');
     // A months-old CONCERNING reading (overdue, referral, more than 10% down) is stale too — never
@@ -1429,13 +1483,13 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
       expect(c.qaActions.join(' | ') + c.qcActions.join(' | ')).not.toMatch(/\btoday\b/);
     }
     for (const c of [r.staleWeigh]) {
-      expect(c.nb.text).toMatch(/^No weigh-in since day \d+ — weigh Asha and show your doctor the chart\.$/);
+      expect(c.nb.text).toMatch(/^No weigh-in since Asha was \d+ days old — weigh Asha and show your doctor the chart at the next check-up, or within a month if none is booked\.$/);
       expect(c.nb.tone).toBe('neutral');
       expect(c.factor).toBe(70);
       expect(c.growthChip).toContain('tc-neutral');
       expect(c.growthChip).not.toContain('early days');
       expect(c.qaActions.join(' | ') + c.qcActions.join(' | ')).not.toMatch(/\btoday\b/);
-      expect(c.qaActions).toContain('Weigh Asha and show your doctor the chart');
+      expect(c.qaActions).toContain('Weigh Asha and show your doctor the chart at the next check-up, or within a month if none is booked');
     }
   });
 });

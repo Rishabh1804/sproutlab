@@ -228,7 +228,8 @@ function renderFeverEpisodeCard() {
   card.style.borderLeft = '4px solid ' + sev.color;
 
   // Get weight for dose calc
-  const latestWeight = growthData.length > 0 ? growthData[growthData.length - 1].wt : null;
+  // The latest WEIGHT, not the last row: a height-only last row made the dose silently vanish (Carina V-CA-282f-5).
+  const latestWeight = (getLatestWeight() || {}).wt || null;
   const doseInfo = getParacetamolDose(latestWeight);
 
   let html = '';
@@ -475,7 +476,8 @@ function feLogReadingFromInput() {
 function feLogDosePrompt() {
   const ep = getActiveFeverEpisode();
   if (!ep) return;
-  const latestWeight = growthData.length > 0 ? growthData[growthData.length - 1].wt : null;
+  // The latest WEIGHT, not the last row: a height-only last row made the dose silently vanish (Carina V-CA-282f-5).
+  const latestWeight = (getLatestWeight() || {}).wt || null;
   const doseInfo = getParacetamolDose(latestWeight);
   const defaultDose = doseInfo ? doseInfo.lowMl + ' ml' : '';
   const dose = prompt('Crocin / Paracetamol dose given:', defaultDose);

@@ -1077,21 +1077,22 @@ function renderInfoGrowthDiet() {
     // (Ceres V-C-282d-4b).
     if (velLabel === 'slow' && !foodOkCard) {
       var slowCardLead = velocity < 0 ? 'Weight down ' + Math.abs(velocity) + ' g/day — below the typical range.' : 'Growth velocity is below typical range (' + velocity + ' g/day).';
-      iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml(gvGateNote()) + '</div>';
+      iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml((gvSlowAction(gvW) || GV_ACT_MENTION_SLOW) + '. ' + gvGateNote()) + '</div>';   // tier first (Ceres V-C-282f-4)
     } else if (velLabel === 'slow' && velocity < 0) {
       // A loss on the food-OK path: the same answer the Info insight gives (doctor line first-class),
       // never "monitor at next weigh-in" (Ceres V-C-282e-1, PC-10). Low coverage stays as a second line.
-      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. ' + escHtml(GV_ACT_WEIGHT_CHECK) + '.</div>';   // the Info insight's tier (V-M-282e-4)
+      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. ' + escHtml(gvSlowAction(gvW) || GV_ACT_WEIGHT_CHECK) + '.</div>';   // one source (gvSlowAction)
       var lowNutrientsLoss = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
       if (lowNutrientsLoss.length > 0) iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrientsLoss.slice(0, 2).join(' and ')) + ' coverage has been low in this period too.</div>';
     } else if (velLabel === 'slow') {
       var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
         return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;
       });
+      // The doctor action leads, never "monitor at next weigh-in" (Ceres V-C-282f-2, PC-10); the food
+      // prompt follows as a second line.
+      iHtml += '<div class="si-insight si-insight-warn">Weight gain is below the typical range (' + velocity + ' g/day). ' + escHtml(gvSlowAction(gvW) || GV_ACT_MENTION_SLOW) + '.</div>';
       if (lowNutrients.length > 0) {
-        iHtml += '<div class="si-insight si-insight-warn">Slow growth velocity coincides with low ' + lowNutrients.slice(0, 2).join(' and ') + ' coverage — consider adding rich sources</div>';
-      } else {
-        iHtml += '<div class="si-insight si-insight-warn">Growth velocity is below typical range (' + velocity + ' g/day) — monitor at next weigh-in</div>';
+        iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrients.slice(0, 2).join(' and ')) + ' coverage has been low in this period — consider adding rich sources.</div>';
       }
     } else if (gvNb) {
       var nbInsCls = gvNb.tone === 'caution' ? 'si-insight-warn' : gvNb.tone === 'good' ? 'si-insight-good' : 'si-insight-info';
