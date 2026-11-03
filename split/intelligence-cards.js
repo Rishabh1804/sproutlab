@@ -1081,7 +1081,7 @@ function renderInfoGrowthDiet() {
     } else if (velLabel === 'slow' && velocity < 0) {
       // A loss on the food-OK path: the same answer the Info insight gives (doctor line first-class),
       // never "monitor at next weigh-in" (Ceres V-C-282e-1, PC-10). Low coverage stays as a second line.
-      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. Mention it to your doctor.</div>';
+      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. ' + escHtml(GV_ACT_WEIGHT_CHECK) + '.</div>';   // the Info insight's tier (V-M-282e-4)
       var lowNutrientsLoss = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
       if (lowNutrientsLoss.length > 0) iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrientsLoss.slice(0, 2).join(' and ')) + ' coverage has been low in this period too.</div>';
     } else if (velLabel === 'slow') {

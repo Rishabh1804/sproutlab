@@ -8681,6 +8681,10 @@ function computeBaselines() {
   if (velocity.wtGPerWeek != null) {
     // The one verdict getGrowthVelocity made (band at the window midpoint, newborn window) — PC-1.
     b.wtInHealthyRange = gvVelocityVerdict(velocity) === 'in';
+    // Strictly inside the band, and the band's g/day range, for the alert's wording (V-V-282e-3).
+    b.wtBandVerdict = velocity.wtBandVerdict;
+    const bandH = growthVelocityBand(velocity.wtBandAge);
+    b.wtBandRange = { min: bandH.wGDayMin, max: bandH.wGDayMax, label: bandH.label, fromMo: bandH.fromMo, toMo: bandH.toMo };
     // Weeks the JUDGED window spans — not the whole record's span, which let one good month claim
     // "8+ weeks" over a record that began a year ago (Maren V-M-282b-5, Vela V-V-282b-5, V-CA-282b-3).
     b.growthConsistentWeeks = Math.min(Math.floor((velocity.wtDays || 0) / 7), 8);
@@ -9433,7 +9437,10 @@ function computeAlerts() {
       id: 'growth-on-track', key,
       severity: 'positive', icon: zi('chart'),
       title: 'Growth on track over the last ' + bl.growthConsistentWeeks + ' weeks',
-      body: 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. ' + childNameCapHtml() + ' is growing beautifully.',
+      // "Within the healthy range" only when the gain is inside WHO P15–P85 (bandVerdict 'in'); up to
+      // 1.3× the top it is the Info card's "a little above the usual … — usually fine" (gvAboveBandLine
+      // — Vela V-V-282e-3, PC-10).
+      body: (bl.wtBandVerdict === 'in' ? 'Weight velocity (' + bl.wtGPerWeek + ' g/week) is within the healthy range. ' : gvAboveBandLine('on-track', gvDayFromWeek(bl.wtGPerWeek), bl.wtBandRange).text + ' ') + childNameCapHtml() + ' is growing beautifully.',
       tip: 'Consistent, healthy weight gain is more important than hitting a specific number. Keep up the balanced nutrition.',
       action: null, tab: 'growth'    });
   }
@@ -10372,7 +10379,10 @@ function renderTrendChips() {
     // 'in' covers up to 1.3× the band top (the Growth tab's on track); beyond that 'above' is a
     // neutral "above range", never a warning (Vela V-V-282d-4). Too short a window: "Too soon",
     // neutral (V-V-282d-7). Colour from the shared tone alone (PC-10).
+    // The stale newborn-weeks weigh-in (from day 92) is "no recent weigh-in", never "early days" (V-M-282e-7).
+    const staleNb = !!(velocity.wtNewborn && velocity.wtNewborn.stale);
     const delta = ok ? zi('check') + ' healthy' : nbFlag ? zi('warn') + ' check weight'
+      : (verdict === 'newborn' && staleNb) ? 'no recent weigh-in'
       : verdict === 'newborn' ? 'early days' : verdict === 'too-short' ? 'too soon to judge'
       : verdict === 'above' ? 'above range' : zi('warn') + ' check';
     // The newborn line's own chip word whenever there is a newborn line — "Down >10%", "Not back
@@ -10643,7 +10653,10 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
       const daysSince = Math.floor((new Date() - new Date(latestWt.date)) / 86400000);
       if (daysSince > 7) pills += `<span class="ins-preview-pill ipp-warn">${zi('clock')} ${daysSince}d since weigh-in</span>`;
     }
-    if (pctNarrative) pills += `<span class="ins-preview-pill ipp-info">${zi('chart')} ${pctNarrative.match(/\d+\w*\s*percentile/)?.[0] || 'tracking'}</span>`;
+    // At or below the 3rd centile line the narrative names the line in words (V-M-282e-1): a caution pill.
+    if (pctNarrative) pills += pctNarrative.indexOf(GV_LOW_CENTILE_LINE) !== -1
+      ? `<span class="ins-preview-pill ipp-warn">${zi('chart')} at or below 3rd centile</span>`
+      : `<span class="ins-preview-pill ipp-info">${zi('chart')} ${pctNarrative.match(/\d+\w*\s*percentile/)?.[0] || 'tracking'}</span>`;
     prevEl.innerHTML = `<div class="ins-preview">${pills}</div>`;
   }
 
@@ -10657,11 +10670,12 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
     // A recheck / "down since the last weigh-in" newborn line is a flag too (its tone is caution).
     const nbFlag = verdict === 'newborn-loss' || verdict === 'not-regained' || (verdict === 'newborn' && gvVerdictTone(verdict, velocity.wtNewborn) === 'caution');
     const cls = inRange ? 'trend-up' : (verdict === 'below' || nbFlag) ? 'trend-down' : 'trend-flat';
-    const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : nbFlag ? 'check weight' : verdict === 'newborn' ? 'early days' : verdict === 'too-short' ? 'too soon to judge' : '↑ above range';
+    const staleNbR = !!(velocity.wtNewborn && velocity.wtNewborn.stale);   // V-M-282e-7
+    const deltaText = inRange ? zi('check') + ' healthy' : verdict === 'below' ? '↓ below range' : nbFlag ? 'check weight' : (verdict === 'newborn' && staleNbR) ? 'no recent weigh-in' : verdict === 'newborn' ? 'early days' : verdict === 'too-short' ? 'too soon to judge' : '↑ above range';
     html += `<div class="insight-row">
       <div class="ir-icon">${zi('scale')}</div>
       <div class="ir-body">
-        <div class="ir-label">Weight velocity (4-week)</div>
+        <div class="ir-label">Weight velocity (last ${velocity.wtDays} days)</div>
         <div class="ir-value">${velocity.wtGPerWeek} g/week <span class="ir-delta ${cls}">${deltaText}</span></div>
       </div>
     </div>`;
@@ -10676,7 +10690,7 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
     html += `<div class="insight-row">
       <div class="ir-icon">${zi('ruler')}</div>
       <div class="ir-body">
-        <div class="ir-label">Height velocity (4-week)</div>
+        <div class="ir-label">Height velocity (last ${velocity.htDays} days)</div>
         <div class="ir-value">${velocity.htCmPerMonth} cm/month <span class="ir-delta ${cls}">${inRange ? zi('check') + ' healthy' : velocity.htCmPerMonth < expectedMin ? '↓ below range' : '↑ above range'}</span></div>
       </div>
     </div>`;
@@ -10703,7 +10717,8 @@ function renderInsightsGrowth() { /* v2.4: DORMANT — insights cards replaced b
 
   // ── Growth spurt detection ──
   if (velocity.wtEntryCount >= 3) {
-    const wtEntries = growthData.filter(r => r.wt != null).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+    // The shared weight-row filter (V-CA-282e-3, V-K-282e-4): a stored wt:0 or an undated row is not a weigh-in.
+    const wtEntries = gvWeightRows();
     const last3 = wtEntries.slice(-3);
     if (last3.length >= 3) {
       const recentDays = Math.max(1, Math.round((new Date(last3[2].date) - new Date(last3[1].date)) / 86400000));

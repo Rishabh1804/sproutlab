@@ -908,7 +908,7 @@ function renderGrowthFacts() {
       // Newborn window (gvNewbornCheck): the dip (info), back to birth weight (positive), or a flag —
       // more than 10% lost, not back by day 14, weigh again — in the alert style (V-M-282b-2..4).
       const dir = cw.gainG >= 0 ? 'up' : 'down';
-      const title = nbF.status === 'newborn' && !nbF.recheck ? `Weight ${dir} ${Math.abs(cw.gainG)}g in ${cw.daysBetween} day${cw.daysBetween === 1 ? '' : 's'}` : nbF.short;
+      const title = nbF.status === 'newborn' && !nbF.recheck && !nbF.stale ? `Weight ${dir} ${Math.abs(cw.gainG)}g in ${cw.daysBetween} day${cw.daysBetween === 1 ? '' : 's'}` : nbF.short;
       facts.push({ type: nbF.tone === 'good' ? 'positive' : nbF.tone === 'caution' ? 'caution' : 'neutral', icon:zi('scale'), title, body:nbF.text });
     } else if (cw.tooShort) {
       facts.push({ type:'info', icon:zi('clock'), title:'Too soon to judge — weigh again in a few weeks', body:gvTooShortText(cw.daysBetween) });
@@ -918,18 +918,23 @@ function renderGrowthFacts() {
         : `The expected rate ${agePhrase} is ${range}g/day. ${childNameCapHtml()} is growing beautifully.` });
     } else if (cw.status === 'on-track' || cw.status === 'fast') {
       // Above the shown range (on track up to 1.3× the top, 'fast' beyond): never "right on track"
-      // beside a range the rate sits above.
-      facts.push({ type:'info', icon:zi('bars'), title:`Gaining ${cw.gPerDay}g/day — healthy appetite!`, body:`Above average gain (the usual is ${range}g/day ${agePhrase}), which is usually fine while ${toddler ? 'a child' : 'a baby'} finds ${toddler ? pron('poss') : 'their'} own growth curve. Watch the trend across visits.` });
+      // beside a range the rate sits above. One line and one tone with the Info card and the concern
+      // answer (gvAboveBandLine — Kael V-K-282e-7, Vela V-V-282e-3): a little above → good; fast → neutral.
+      const above = gvAboveBandLine(cw.status, cw.gPerDay, cw.expectedRange);
+      facts.push({ type: above.tone === 'good' ? 'positive' : 'info', icon:zi('bars'), title: above.title, body: above.text });
     } else if (cw.status === 'slow' || cw.status === 'plateau') {
       // Below the band: said plainly here too, so the Growth facts don't fall silent while the Info
       // card flags it (Maren V-M-282b-8).
       const rateT = cw.gPerDay >= 0 ? `Gaining ${cw.gPerDay}g/day` : `Down ${Math.abs(cw.gPerDay)}g/day`;
-      facts.push({ type:'caution', icon:zi('scale'), title:`${rateT} — below the usual ${range} for this age`, body:`Over the last ${cw.daysBetween} days. Mention it at the next weigh-in — ${pron('poss')} doctor can look at the whole curve.` });
+      // The concern answer's tiers (Maren V-M-282e-4, PC-7): a loss or a plateau is a weight check in
+      // the next week; slower gain is a mention at the next check-up, or within a month.
+      const slowAct = (cw.gainG < 0 || cw.status === 'plateau') ? `Book a weight check with your doctor ${GV_WHEN_WEIGHT_CHECK}` : `Mention it to your doctor ${GV_WHEN_MENTION}`;
+      facts.push({ type:'caution', icon:zi('scale'), title:`${rateT} — below the usual ${range} for this age`, body:`Over the last ${cw.daysBetween} days. ${slowAct} — ${pron('poss')} doctor can look at the whole curve.` });
     }
   }
 
-  // Height velocity
-  const htEntries = growthData.filter(r => r.ht != null);
+  // Height velocity — the shared height-row filter (sorted, dated, above 0 — V-CA-282e-3)
+  const htEntries = gvMeasureRows('ht');
   if (htEntries.length >= 2) {
     const htLast = htEntries[htEntries.length - 1];
     const htPrev = htEntries[htEntries.length - 2];
@@ -941,7 +946,11 @@ function renderGrowthFacts() {
     const moExact = ageMonthsAt(lwFact.date);
     const whoInterp = getGrowthRef(moExact);
     const pctW = calcPercentile(lwFact.wt, whoInterp.w3, whoInterp.w50, whoInterp.w97, whoInterp.w15, whoInterp.w85);
-    facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of ${childKinWord()} ${pron('poss')} age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
+    // At or below the 3rd centile line: the line in words, no number — calcPercentile's 2 is a
+    // placeholder, so "heavier than 2%" was never measured — and the weight-check action every weight
+    // answer gives (Maren V-M-282e-1, -4).
+    if (gvPctLow(pctW.pct)) facts.push({ type:'caution', icon:zi('scale'), title: GV_LOW_CENTILE_LINE, body:`On the WHO growth standard for ${childKinWord()} ${pron('poss')} age. Book a weight check with your doctor ${GV_WHEN_WEIGHT_CHECK} — ${pron('poss')} doctor can look at the whole curve.` });
+    else facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of ${childKinWord()} ${pron('poss')} age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
   }
   if (lh) {
     const htWho = getGrowthRef(ageMonthsAt(lh.date));
@@ -1214,9 +1223,9 @@ function calcPercentile(val, p3, p50, p97, p15, p85) {
 
   const pct = Math.round(normalCDF(z) * 100);
   const clamped = Math.max(3, Math.min(97, pct));
-  const suffix = [11,12,13].includes(clamped%100) ? 'th' :
-    clamped%10===1 ? 'st' : clamped%10===2 ? 'nd' : clamped%10===3 ? 'rd' : 'th';
-  return { text: clamped + suffix, pct: clamped };
+  // The one ordinal helper (core.js ordinal — V-V-282e-5). At or below P3 the pct above is a
+  // placeholder 2 (text '<3rd'): readers say "at or below the 3rd centile line", never the number.
+  return { text: ordinal(clamped), pct: clamped };
 }
 
 // WHO tables run 0–24 months (data.js). Clamp to the table's own last index — never a
@@ -1715,7 +1724,11 @@ function renderVelocity() {
     : cwV.tooShort ? 'var(--mid)'
     : (cwV.status === 'slow' || cwV.status === 'plateau') ? 'var(--tc-caution)'
     : cwV.status === 'fast' ? 'var(--tc-sky)' : 'var(--tc-sage)';
-  const wtContext = wtNb ? escHtml(wtNb.short) : cwV.tooShort ? 'Too soon to judge' : `Expected: ${expectedMin}–${expectedMax} g/day`;
+  // On track but above the shown range (1.0–1.3× the top): the Info card's words, never a bare
+  // "Expected" range the rate sits above (gvAboveBandLine — Vela V-V-282e-3).
+  const wtContext = wtNb ? escHtml(wtNb.short) : cwV.tooShort ? 'Too soon to judge'
+    : (cwV.status === 'on-track' && cwV.bandVerdict === 'above') ? gvAboveBandLine('on-track', gPerDay, cwV.expectedRange).short
+    : `Expected: ${expectedMin}–${expectedMax} g/day`;
 
   // Position relative to reference 50th
   const wtPct = calcPercentile(lastWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85); // 5-point, matches the badge (V-M-266-16)
@@ -1742,8 +1755,8 @@ function renderVelocity() {
       </div>
     </div>`;
 
-  // Height velocity — compare two most recent entries with height
-  const htEntries = growthData.filter(r => r.ht != null);
+  // Height velocity — compare two most recent entries with height (the shared filter — V-CA-282e-3)
+  const htEntries = gvMeasureRows('ht');
   if (htEntries.length >= 2) {
     const htLast = htEntries[htEntries.length - 1];
     const htPrev = htEntries[htEntries.length - 2];
@@ -9039,7 +9052,7 @@ function computePostIllnessRecovery() {
     const dur = _episodeDurationDays(ep);
 
     // Weight recovery: find closest weight before and after illness
-    const gSorted = (growthData || []).filter(g => g.wt).sort((a, b) => a.date.localeCompare(b.date));
+    const gSorted = gvMeasureRows('wt');   // the shared weight-row filter (V-CA-282e-3)
     let wtBefore = null, wtAfter = null;
     for (let i = gSorted.length - 1; i >= 0; i--) {
       if (gSorted[i].date <= startDate) { wtBefore = gSorted[i]; break; }
@@ -10670,7 +10683,7 @@ function renderInfoVaccRecovery() {
 // percentile gain rates for healthy term infants. Update if WHO publishes
 // revisions or IAP issues new guidance.
 function computeGrowthVelocity() {
-  var gd = (growthData || []).filter(function(g) { return g.date; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+  var gd = (Array.isArray(growthData) ? growthData : []).filter(function(g) { return g && g.date; }).sort(function(a, b) { return a.date.localeCompare(b.date); });   // a non-array synced value gives no rows, never a throw (V-CA-282e-3)
   if (gd.length < 2) return { insufficient: true, needed: 2, count: gd.length };
 
   var todayStr = today();
@@ -10679,21 +10692,19 @@ function computeGrowthVelocity() {
   var weightEntries = gvWeightRows();   // the shared weight-row filter (Kael V-K-282d-5)
   var weightResult = null;
   if (weightEntries.length >= 2) {
-    var wLatest = weightEntries[weightEntries.length - 1];
-    // Band age = the measurement's age, rounded — so a weigh-in on (or just before) her birthday
+    // The ONE velocity window (gvWeightWindow, core.js — V-K-282e-1 = V-V-282e-1 = V-CA-282e-4, PC-10),
+    // the same pair getGrowthVelocity (Home) judges: under 12 m the last two weigh-ins; from 12 m the
+    // latest weigh-in at least 28 whole calendar days back (Maren V-M-266-3 / Kael V-K-266-7: a
+    // toddler's two-week gain is the size of home-scale noise, and WHO publishes 12–24 m velocity
+    // only in 2-month steps). Whole calendar days (gvDaysBetween), never a UTC-parsed difference.
+    var wWin = gvWeightWindow(weightEntries);
+    var wLatest = wWin.latest;
+    // Band age = the measurement's age, rounded — so a weigh-in on (or just before) the birthday
     // takes the same 12–24 m band the Growth gauge uses (Maren V-M-266-4).
     var ageMo = ageMonthsAt(wLatest.date);
     var bandMo = ageMo;   // growthVelocityBand brackets it (completed months; 12 m from 11.5) — V-M-282-9
-    // From 12 m, judge velocity over >= 28 days (Maren V-M-266-3 / Kael V-K-266-7): a toddler's
-    // two-week gain (~90 g at the median) is the size of home-scale noise, and WHO publishes
-    // 12–24 m velocity only in 2-month steps. Use the latest weigh-in at least 28 days back.
-    var wPrev = weightEntries[weightEntries.length - 2];
-    if (bandMo >= 12) {
-      for (var wi = weightEntries.length - 2; wi >= 0; wi--) {
-        if ((new Date(wLatest.date) - new Date(weightEntries[wi].date)) / 86400000 >= 28) { wPrev = weightEntries[wi]; break; }
-      }
-    }
-    var wDaysBetween = Math.max(1, Math.round((new Date(wLatest.date) - new Date(wPrev.date)) / 86400000));
+    var wPrev = wWin.previous;
+    var wDaysBetween = wWin.days;
     var wGainG = Math.round((wLatest.wt - wPrev.wt) * 1000);
 
     // Expected velocity by age and sex (WHO P15–P85; GROWTH_VELOCITY_BANDS), looked up at the window
@@ -10703,9 +10714,12 @@ function computeGrowthVelocity() {
     // the g/week verdict is 'in' (V-V-282d-1, V-CA-282d-1).
     var wBandAge = gvBandAge(wLatest, wPrev);
     var wBand = growthVelocityBand(wBandAge);
-    var expectedRange = { min: wBand.wGDayMin, max: wBand.wGDayMax, label: wBand.label, fromMo: wBand.fromMo, toMo: wBand.toMo };
+    // wkMin / wkMax carry the g/week limits, so every derived g/day label (the Info bar's end labels)
+    // goes through gvDayFromWeek too — never min − 5 in floating point ("4.199999999999999", V-V-282e-2).
+    var expectedRange = { min: wBand.wGDayMin, max: wBand.wGDayMax, wkMin: wBand.wGWkMin, wkMax: wBand.wGWkMax, label: wBand.label, fromMo: wBand.fromMo, toMo: wBand.toMo };
 
-    // Judged in g/week, the unit and formula getGrowthVelocity uses (Math.floor(g / days × 7)), by the
+    // Judged in g/week, the unit and formula getGrowthVelocity uses (Math.floor(g × 7 / days), multiplied
+    // first — V-CA-282e-1), by the
     // one shared rule (gvRateStatus: plateau / slow / on-track up to 1.3× the top / fast — V-CA-282c-3,
     // V-V-282d-4). gPerDay is display only: gvDayFromWeek(gPerWeek), one decimal, floored — never a
     // separately rounded g/day (V-V-282d-1).
@@ -10740,7 +10754,7 @@ function computeGrowthVelocity() {
     var wNewborn = wStatus === 'newborn';
 
     // Freshness — toddlers are weighed about monthly, so "stale" moves from 3 to 5 weeks at 12 m+.
-    var daysSinceWeight = Math.round((new Date(todayStr) - new Date(wLatest.date)) / 86400000);
+    var daysSinceWeight = gvDaysBetween(wLatest.date, todayStr);   // whole calendar days (HR-12)
     var weightStale = daysSinceWeight > (bandMo >= 12 ? 35 : 21);
 
     // Total change since birth — from the row dated on the birth date (gvBirthRow), never the first
@@ -10771,18 +10785,16 @@ function computeGrowthVelocity() {
   }
 
   // HEIGHT VELOCITY
-  var heightEntries = gd.filter(function(g) { return typeof g.ht === 'number' && g.ht > 0; });
+  // The shared height-row filter and the same window as weight (gvMeasureRows, gvWeightWindow —
+  // V-CA-282e-3, V-CA-282e-4): getGrowthVelocity's height takes the same pair.
+  var heightEntries = gvMeasureRows('ht');
   var heightResult = null;
   if (heightEntries.length >= 2) {
-    var hLatest = heightEntries[heightEntries.length - 1];
+    var hWin = gvWeightWindow(heightEntries);
+    var hLatest = hWin.latest;
     var hBandMo = ageMonthsAt(hLatest.date);
-    var hPrev = heightEntries[heightEntries.length - 2];
-    if (hBandMo >= 12) { // same >= 28-day lookback as weight
-      for (var hi = heightEntries.length - 2; hi >= 0; hi--) {
-        if ((new Date(hLatest.date) - new Date(heightEntries[hi].date)) / 86400000 >= 28) { hPrev = heightEntries[hi]; break; }
-      }
-    }
-    var hDaysBetween = Math.max(1, Math.round((new Date(hLatest.date) - new Date(hPrev.date)) / 86400000));
+    var hPrev = hWin.previous;
+    var hDaysBetween = hWin.days;
     var cmGain = Math.round((hLatest.ht - hPrev.ht) * 10) / 10;
     var cmPerMonth = Math.round(cmGain / hDaysBetween * 30.44 * 10) / 10;
 
@@ -10792,7 +10804,7 @@ function computeGrowthVelocity() {
     var hStatus = cmPerMonth < hExpected.min ? 'slow' : (cmPerMonth > hExpected.max ? 'fast' : 'on-track');
     if (hBandMo >= 12 && hDaysBetween < 28) hStatus = 'on-track';
 
-    var daysSinceHeight = Math.round((new Date(todayStr) - new Date(hLatest.date)) / 86400000);
+    var daysSinceHeight = gvDaysBetween(hLatest.date, todayStr);   // whole calendar days (HR-12)
 
     heightResult = {
       latest: hLatest,
@@ -10861,8 +10873,14 @@ function computeGrowthVelocity() {
     var linesCrossed = topP ? GV_CENTILE_LINES.filter(function(L) { return lastP.percentile < L && L <= topP.percentile; }).length : 0;
     if (linesCrossed >= 2) {
       var nWord = ['', 'one', 'two', 'three', 'four', 'five'][linesCrossed] || String(linesCrossed);
-      centileSlide = { from: topP.percentile, to: lastP.percentile, fromDate: topP.date, date: lastP.date, lines: linesCrossed,
-        text: 'Weight has moved down ' + nWord + ' centile lines since ' + formatDate(_parseLocalDate(topP.date) || topP.date) + ' — mention it to your doctor' };
+      // A slide is a fall across 2+ centile lines — NICE NG75 1.2.1's concern in itself — so its action
+      // is always the weight check in the next week, ending low or not; a single crossing above the 3rd
+      // centile line is the milder mention (Lyra, severity order; Maren V-M-282e-4, PC-7). The answers'
+      // action for the slide names the same tier, never a second one.
+      var slideLowEnd = gvPctLow(lastP.percentile);
+      centileSlide = { from: topP.percentile, to: lastP.percentile, fromDate: topP.date, date: lastP.date, lines: linesCrossed, low: slideLowEnd,
+        text: 'Weight has moved down ' + nWord + ' centile lines since ' + formatDate(_parseLocalDate(topP.date) || topP.date) + ' — '
+          + 'book a weight check with your doctor ' + GV_WHEN_WEIGHT_CHECK };
     }
   }
 
@@ -10917,14 +10935,17 @@ function renderInfoGrowthVelocity() {
     : wNbS ? wNbS.head
     : data.weight.gPerDay + 'g/day (' + (data.weight.tooShort ? 'too soon to judge' : data.weight.status) + ')';
   var hStr = data.height ? data.height.cmPerMonth + 'cm/mo (' + data.height.status + ')' : '—';
-  var pStr = data.latestPercentile !== null ? Math.round(data.latestPercentile) + 'th' : '—';
-  summaryEl.innerHTML = '<span class="t-sm t-mid" >Weight: ' + wStr + ' · Height: ' + hStr + ' · ' + pStr + ' percentile</span>';
+  // The one ordinal helper; at or below P3 the line in words, never the placeholder 2 (V-M-282e-1, V-V-282e-5).
+  var pStr = data.latestPercentile === null ? '— percentile' : gvPctLow(data.latestPercentile) ? 'at or below the 3rd centile line' : pctOrdinal(data.latestPercentile) + ' percentile';
+  summaryEl.innerHTML = '<span class="t-sm t-mid" >Weight: ' + wStr + ' · Height: ' + hStr + ' · ' + escHtml(pStr) + '</span>';
 
   // Velocity bar
   if (barEl && data.weight) {
     var w = data.weight;
-    var rangeMin = Math.max(0, w.expectedRange.min - 5);
-    var rangeMax = w.expectedRange.max + 10;
+    // End labels derived from g/week through gvDayFromWeek (5 / 10 g/day = 35 / 70 g/week), never
+    // min − 5 in floating point, which showed "4.199999999999999" (Vela V-V-282e-2).
+    var rangeMin = gvDayFromWeek(Math.max(0, w.expectedRange.wkMin - 35));
+    var rangeMax = gvDayFromWeek(w.expectedRange.wkMax + 70);
     var totalRange = rangeMax - rangeMin;
     var expLeftPct = Math.round(((w.expectedRange.min - rangeMin) / totalRange) * 100);
     var expWidthPct = Math.round(((w.expectedRange.max - w.expectedRange.min) / totalRange) * 100);
@@ -10972,13 +10993,13 @@ function renderInfoGrowthVelocity() {
       html += '<div class="si-bar-row">';
       html += '<div class="si-bar-label">' + dateLabel + '</div>';
       html += '<div class="si-bar-track"><div class="si-bar-fill" style="width:' + pctVal + '%;background:' + color + ';"></div></div>';
-      html += '<div class="si-bar-val" style="color:' + color + ';">' + pctVal + 'th</div>';
+      html += '<div class="si-bar-val" style="color:' + color + ';">' + escHtml(pctOrdinal(pctVal, true)) + '</div>';   // V-V-282e-5
       html += '</div>';
     });
     if (data.crossings.length > 0) {
       var latest = data.crossings[data.crossings.length - 1];
       var crossColor = latest.direction === 'climbing' ? 'si-insight-good' : 'si-insight-warn';
-      html += '<div class="si-insight ' + crossColor + '">Crossed from ' + Math.round(latest.from) + 'th to ' + Math.round(latest.to) + 'th percentile — ' + latest.direction + '.</div>';
+      html += '<div class="si-insight ' + crossColor + '">Crossed from ' + pctOrdinal(latest.from) + ' to ' + pctOrdinal(latest.to) + ' percentile — ' + latest.direction + '.</div>';   // V-V-282e-5
     }
     // A slow fall across two major centile lines, which the pairwise check above misses (V-M-282c-11).
     if (data.centileSlide) html += '<div class="si-insight si-insight-warn">' + escHtml(data.centileSlide.text) + '.</div>';
@@ -11018,7 +11039,8 @@ function renderInfoGrowthVelocity() {
         iHtml += '<div class="si-insight si-insight-info">' + gvTooShortText(w2.daysBetween) + '</div>';
       } else if (w2.status === 'on-track' && w2.bandVerdict === 'above') {
         // On track (up to 1.3× the top) but above the shown range: never "right in the expected range".
-        iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is a little above the usual ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day for ' + gvBandPhrase(w2.expectedRange) + ' — usually fine.</div>';
+        // The shared line (gvAboveBandLine — V-V-282e-3).
+        iHtml += '<div class="si-insight si-insight-good">' + gvAboveBandLine('on-track', w2.gPerDay, w2.expectedRange).text + '</div>';
       } else if (w2.status === 'on-track') {
         iHtml += '<div class="si-insight si-insight-good">Weight gain of ' + w2.gPerDay + 'g/day is right in the expected range for ' + gvBandPhrase(w2.expectedRange) + '.</div>';
       } else if (w2.status === 'slow') {
@@ -11026,7 +11048,7 @@ function renderInfoGrowthVelocity() {
         // (gvGateNote — Ceres V-C-282d-1). A loss ends with the doctor, never "review caloric intake"
         // alone (Ceres V-C-282d-2).
         var slowLead = w2.gPerDay < 0 ? 'Weight down ' + Math.abs(w2.gPerDay) + 'g/day' : 'Weight gain has slowed to ' + w2.gPerDay + 'g/day';
-        var slowTail = !gvFoodAdviceOk() ? gvGateNote() : w2.gPerDay < 0 ? 'Review caloric intake. Mention it to your doctor.' : 'Review caloric intake.';
+        var slowTail = !gvFoodAdviceOk() ? gvGateNote() : w2.gPerDay < 0 ? 'Review caloric intake. ' + GV_ACT_WEIGHT_CHECK + '.' : 'Review caloric intake.';
         iHtml += '<div class="si-insight si-insight-warn">' + slowLead + ' — expected is ' + w2.expectedRange.min + '–' + w2.expectedRange.max + 'g/day. ' + escHtml(slowTail) + '</div>';
       } else if (w2.status === 'plateau') {
         // A loss reads "down", never "only -40g gained"; under the food gate no "dietary gap" — milk
@@ -11034,11 +11056,12 @@ function renderInfoGrowthVelocity() {
         // "could be normal" and ends with the doctor (Ceres V-C-282d-2).
         var platLead = w2.gainG < 0 ? 'Weight down ' + Math.abs(w2.gainG) + 'g in ' + w2.daysBetween + ' days.' : 'Only ' + w2.gainG + 'g gained in the last ' + w2.daysBetween + ' days.';
         var platTail = !gvFoodAdviceOk() ? ' This can happen after illness or a feeding change. ' + gvGateNote()
-          : w2.gainG < 0 ? ' This can follow an illness or a dietary gap. Mention it to your doctor.'
+          : w2.gainG < 0 ? ' This can follow an illness or a dietary gap. ' + GV_ACT_WEIGHT_CHECK + '.'
           : ' This could be normal after illness or a dietary gap.';
         iHtml += '<div class="si-insight si-insight-warn">' + platLead + escHtml(platTail) + '</div>';
       } else if (w2.status === 'fast') {
-        iHtml += '<div class="si-insight si-insight-info">Weight gain at ' + w2.gPerDay + 'g/day is above the expected range. Monitor proportionality.</div>';
+        // One line, one tone with the Growth facts and the concern answer (gvAboveBandLine — V-V-282e-3).
+        iHtml += '<div class="si-insight si-insight-info">' + gvAboveBandLine('fast', w2.gPerDay, w2.expectedRange).text + '</div>';
       }
       if (w2.stale) {
         iHtml += '<div class="si-insight si-insight-warn">Last weight measurement was ' + w2.daysSince + ' days ago. Time for a weigh-in!</div>';
@@ -11048,7 +11071,7 @@ function renderInfoGrowthVelocity() {
       iHtml += '<div class="si-insight si-insight-warn">Last height measurement was ' + data.height.daysSince + ' days ago. Time for a measurement!</div>';
     }
     if (data.proportionFlag) {
-      iHtml += '<div class="si-insight si-insight-info">Weight (' + Math.round(data.proportionFlag.weightPct) + 'th) and height (' + Math.round(data.proportionFlag.heightPct) + 'th) percentiles differ significantly. Mention this at the next visit.</div>';
+      iHtml += '<div class="si-insight si-insight-info">Weight (' + pctOrdinal(data.proportionFlag.weightPct) + ') and height (' + pctOrdinal(data.proportionFlag.heightPct) + ') percentiles differ significantly. Mention this at the next visit.</div>';   // V-V-282e-5
     }
     insightEl.innerHTML = iHtml;
   }
@@ -11078,19 +11101,19 @@ function computeVisitPrep() {
   var sections = {};
 
   // 1. Growth changes
-  var growthSince = (growthData || []).filter(function(g) { return g.date > sinceDate; });
-  var weightGrowth = growthSince.filter(function(g) { return typeof g.wt === 'number' && g.wt > 0; });
-  var heightGrowth = growthSince.filter(function(g) { return typeof g.ht === 'number' && g.ht > 0; });
+  // The shared row filters (gvMeasureRows — V-CA-282e-3, V-K-282e-4): sorted, dated, value above 0.
+  var weightGrowth = gvMeasureRows('wt').filter(function(g) { return g.date > sinceDate; });
+  var heightGrowth = gvMeasureRows('ht').filter(function(g) { return g.date > sinceDate; });
   var gvData = computeGrowthVelocity();
   var weightDelta = null, heightDelta = null;
   if (weightGrowth.length >= 1) {
-    var allW = (growthData || []).filter(function(g) { return typeof g.wt === 'number' && g.wt > 0 && g.date <= sinceDate; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+    var allW = gvMeasureRows('wt').filter(function(g) { return g.date <= sinceDate; });
     var refW = allW.length > 0 ? allW[allW.length - 1].wt : null;
     var latestW = weightGrowth[weightGrowth.length - 1].wt;
     if (refW !== null) weightDelta = Math.round((latestW - refW) * 1000);
   }
   if (heightGrowth.length >= 1) {
-    var allH = (growthData || []).filter(function(g) { return typeof g.ht === 'number' && g.ht > 0 && g.date <= sinceDate; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+    var allH = gvMeasureRows('ht').filter(function(g) { return g.date <= sinceDate; });
     var refH = allH.length > 0 ? allH[allH.length - 1].ht : null;
     var latestH = heightGrowth[heightGrowth.length - 1].ht;
     if (refH !== null) heightDelta = Math.round((latestH - refH) * 10) / 10;
@@ -11104,7 +11127,8 @@ function computeVisitPrep() {
   };
   if (weightDelta !== null) { sections.growth.items.push(weightDelta < 0 ? 'Weight down ' + Math.abs(weightDelta) + 'g' : 'Gained ' + weightDelta + 'g'); changes++; }
   if (heightDelta !== null) { sections.growth.items.push('Grew ' + heightDelta + 'cm'); changes++; }
-  if (latestPct !== null) sections.growth.items.push(Math.round(latestPct) + 'th percentile');
+  // At or below P3 the line in words, never "2th percentile" (V-M-282e-1, V-V-282e-5).
+  if (latestPct !== null) sections.growth.items.push(gvPctLow(latestPct) ? 'At or below the 3rd centile line' : pctOrdinal(latestPct) + ' percentile');
   // Newborn window: the line from gvNewbornCheck — the expected dip, back to birth weight, a loss
   // over 10%, not back by day 14, or "Back to birth weight not yet confirmed (last weighed day N)"
   // once she is past day 14 with only an earlier weigh-in (V-M-282b-4).
@@ -11254,7 +11278,7 @@ function computeVisitPrep() {
     if (gvData.crossings && gvData.crossings.length > 0) {
       var lastCross = gvData.crossings[gvData.crossings.length - 1];
       if (lastCross.direction === 'dropping') {
-        concerns.push({ type: 'warn', text: 'Percentile dropped from ' + Math.round(lastCross.from) + 'th to ' + Math.round(lastCross.to) + 'th' });
+        concerns.push({ type: 'warn', text: 'Percentile dropped from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to) });   // V-V-282e-5
       }
     }
     if (gvData.proportionFlag) {
