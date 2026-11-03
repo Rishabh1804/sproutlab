@@ -1303,6 +1303,69 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 - **Patch class:** PC-5
 - **Status:** **Fixed** (80153ad).
 
+#### P1 — "Early days … expected" beside "book a weight check" in the first week (147)
+- **Symptom:** In the newborn dip, a low percentile showed the caution "at or below the 3rd centile line — book a weight check" on Growth facts, the percentile and pulse narratives and the Info summary, next to the neutral newborn line.
+- **Cause:** the Q&A answers excluded the newborn window; the other surfaces did not.
+- **Fix:** No low-centile escalation while a newborn line is set; visit prep keeps it as information for the doctor ("(newborn weeks)").
+- **Where:** medical.js; core.js `getPercentileNarrative`, `getPulseNarrative`.
+- **Caught by:** V-M-282f-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — "Percentile has dropped" headline from an old crossing (148)
+- **Symptom:** A 58th → 35th crossing from months ago made the concern headline read "weight percentile has dropped" while every other surface said fine.
+- **Cause:** the headline took any past dropping crossing.
+- **Fix:** `gvCrossingCurrent`: the headline only for a crossing that ends at the latest weigh-in or still within 15 points; every crossing line carries its dates (`gvCrossingDates`). The old crossing keeps its dated line and its mention action.
+- **Where:** core.js; qa-handlers; medical.js.
+- **Caught by:** V-V-282f-2.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — A stale newborn reading shown as a present-day rate (149)
+- **Symptom:** For a 100-day-old, Home read "Weight: down 504g/week (over 5 days). Last weighed on day 5…"; the gauge showed a caution "−72 g/day" and "Below birth weight" in the present tense; Info and the Q&A repeated a generic "Time for a weigh-in!" in a second colour.
+- **Cause:** marking the reading 'newborn' sent it down the rate-prefix branches; the freshness lines did not know about the stale line.
+- **Fix:** A stale reading leads with the date of the last weigh-in (`nb.dateLead`, `gvDateText`); the rate and ratio gauges show a dash and "Below birth weight on day N"; one stale line, one tone; one weigh-now action.
+- **Where:** core.js; medical.js; qa-handlers; cards.
+- **Caught by:** V-V-282f-5, -6.
+- **Patch class:** PC-10 / PC-1
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — Growth-diet card read a fast gain as green "rapid" (150)
+- **Symptom:** The card showed "Growth velocity is rapid" with a green check, and the 1.0–1.3× zone as "normal", while every other surface said neutral "above the usual".
+- **Cause:** the card kept its own labels.
+- **Fix:** Tone, icon and line from `gvAboveBandLine`; Home's narrative too (no "Likely a growth spurt").
+- **Where:** intelligence-cards.js; core.js `getGrowthNarrative`.
+- **Caught by:** V-V-282f-3, V-K-282e-7.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P2 — CareTicket weight goal could clear on one noisy week (151)
+- **Symptom:** With the shared window, a single 7-day pair held for 14 days could meet the weight-gain goal and offer "All clear — stop tracking".
+- **Cause:** the metric read whatever window the engine picked.
+- **Fix:** `wtGPerWeek` counts only a window of 28+ days; otherwise null.
+- **Where:** intelligence-caretickets.js `ctGetMetricValue`.
+- **Caught by:** V-M-282f note (Maren).
+- **Patch class:** PC-1
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P3 — Height gauge, ISL and correlation read rows outside the shared filters (152)
+- **Symptom:** The height gauge used the last two rows (a different pair from the Info card); a wt:0 last row rendered "Last measurement:  (date)"; the correlation counted wt:0 as a weight.
+- **Cause:** readers left over from before `gvWeightWindow` / `gvMeasureRows`.
+- **Fix:** The gauge uses `gvWeightWindow(gvMeasureRows('ht'))`; ISL `rangeGrowth` and the readers skip rows with no real measurement; correlation needs a finite wt > 0.
+- **Where:** medical.js `renderVelocity`; intelligence-isl.js; intelligence-qa.js; qa-handlers; intelligence-correlate.js.
+- **Caught by:** V-K-282f-9, -10.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (4d1dd1d).
+
+#### P3 — Percentile text into innerHTML unescaped (HR-4) (153)
+- **Symptom:** A raw '<3rd' string reached innerHTML in the growth summary and the height fact.
+- **Cause:** string concatenation without `escHtml`.
+- **Fix:** Escaped at every site; a test hooks the innerHTML setter.
+- **Where:** medical.js.
+- **Caught by:** V-V-282f HR-4 note.
+- **Patch class:** PC-4
+- **Status:** **Fixed** (4d1dd1d).
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
