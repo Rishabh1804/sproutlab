@@ -68,7 +68,7 @@ test('g-4/g-5: no weigh-in 28+ days back → the goal metric stays null', async 
   expect(metric).toBeNull();
 });
 
-test('g-4/g-5: the goal window never reaches past 61 days (a birth weight 4 months back is not the goal\'s gain)', async ({ page }) => {
+test('g-4/g-5: the goal window never reaches past 62 days (a birth weight 4 months back is not the goal\'s gain)', async ({ page }) => {
   await boot(page);
   await seedGrowth(page, 120, [{ d: -120, wt: 3.3 }, { d: -7, wt: 6.0 }, { d: 0, wt: 6.2 }]);
   const metric = await page.evaluate(() => ctGetMetricValue('wtGPerWeek'));
@@ -120,12 +120,13 @@ test('V-M-286-1: the weight goal is never met on weigh-ins from before it was op
   const before = await page.evaluate(() => {
     const t: any = { category: 'weight_gain', createdAt: new Date().toISOString() };
     const r = ctCheckThresholdMet(t);
-    return { display: ctGetMetricValue('wtGPerWeek'), judged: ctGetMetricValue('wtGPerWeek', null, t), firstMetAt: t.firstMetAt || null, met: r.met };
+    return { display: ctGetMetricValue('wtGPerWeek'), judged: ctGetMetricValue('wtGPerWeek', null, t), firstMetAt: t.firstMetAt || null, met: r.met, verdict: ctComputeVerdict(t, {}).verdict };
   });
   expect(before.display).toBe(137);   // shown as data …
   expect(before.judged).toBeNull();   // … but no weigh-in since opening → not judged
   expect(before.firstMetAt).toBeNull();
   expect(before.met).toBe(false);
+  expect(before.verdict).toBe('watch');   // the check-in verdict path is gated too (Cipher #286 note 7)
   // A weigh-in after the goal was opened counts.
   const after = await page.evaluate(() => {
     const opened = new Date(); opened.setDate(opened.getDate() - 10);

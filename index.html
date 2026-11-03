@@ -86644,7 +86644,10 @@ function _ctBuildAutoData(tpl) {
     }
     if (tpl.autoDataSources && tpl.autoDataSources.indexOf('growth') !== -1) {
       var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
-      if (gv) ad.growthVelocity = { wtGPerWeek: gv.wtGPerWeek || null, htCmPerMonth: gv.htCmPerMonth || null };
+      // The weight rate recorded is the one the check-in shows (the goal window, ctGetMetricValue —
+      // Cipher #286 finding 1, PC-10), not the shared velocity window; a 0 g/week stays 0, never null.
+      var wvSnap = ctGetMetricValue('wtGPerWeek');
+      if (gv || wvSnap != null) ad.growthVelocity = { wtGPerWeek: wvSnap != null ? wvSnap : null, htCmPerMonth: (gv && gv.htCmPerMonth) || null };
     }
     if (tpl.autoDataSources && tpl.autoDataSources.indexOf('poop') !== -1) {
       ad.recentPoop = (poopData || []).filter(function(p) { return p.date === today(); });

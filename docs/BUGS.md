@@ -40,6 +40,7 @@ The four #159 items where a parent could misread something, plus the fixes from 
   - **Carina (sync note):** sync.js:461 assigns `growthData` with no type check; home.js 4835 / 8186 and medical.js 1310 / 1985 / 2286 call `growthData.length` and would throw on a non-array.
   - **Vela (V-V-286-5), PC-1:** Percentile History bar labels parse a bare date as UTC and carry no year; the latest bar stays sage beside a "dropping" insight.
   - **Kael (V-K-286-5):** if crossings are ever gated by `gvCrossingCurrent`, gate qaAnswerGrowth's `fallingG` and qaAnswerWeightConcern's `dropC` together.
+  - **Cipher (Edict V #286):** note 2 — before the first weigh-in after the goal opened, the check-in shows "Weight velocity: 137 g/week" while the verdict stays 'watch', unexplained (PC-7; consider "weigh her again to judge the goal"); note 3 — home.js:8180–8181 growth-history preview counts days with a UTC parse (part of V-CA-286-1); note 4 — the Weight %ile badge (medical.js `updatePercentileBadges`) shows a stale percentile undated; note 5 — "being on a higher percentile is usually fine" stays green beside a stale reading. (Note 1, the stored check-in snapshot, was fixed in #286.)
   - **Kael (coverage note):** a toddler weighed only at the 3-monthly visits never resolves the weight goal by metric (null, the safe direction); the follow-up schedule still offers resolve when it runs out.
 - **Status:** **Open**
 
