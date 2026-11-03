@@ -1096,6 +1096,141 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 - **Patch class:** PC-6
 - **Status:** **Open** (main-side; not a #282 regression).
 
+#### P1 — Home and the Growth tab judged different weight windows (124)
+- **Symptom:** Under 12 m, Home took the nearest weigh-in at least 28 days back (it could stretch to 99 days) while the Growth tab took the last two weigh-ins: in a random sweep of 1,467 cases they disagreed in 640 (an 8 m girl read "77 g/wk healthy" on Home and "plateau" on Growth). From 12 m, Home's `setDate(-28)` on a UTC-parsed date also drifted across a DST change.
+- **Cause:** two engines, two window rules, and a UTC parse in one of them.
+- **Fix:** One selector, `gvWeightWindow` (whole calendar days via `gvDaysBetween` / `gvDayOf`), used by both engines for weight and height and by `updateStatPillTrends`. e2e: the 8 m repro, a 420-case seeded sweep at every age, and an America/New_York case across 1 Nov.
+- **Where:** core.js `gvWeightWindow`, `getGrowthVelocity`, `updateStatPillTrends`; medical.js `computeGrowthVelocity`.
+- **Caught by:** V-K-282e-1, V-V-282e-1, V-CA-282e-4 (independently).
+- **Patch class:** PC-10 (one state, two answers) / PC-1
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Readers outside the two engines still used the old row filter (125)
+- **Symptom:** `getPercentileNarrative`, the stat-pill trend arrow, a Home spurt guard and several medical.js readers kept `wt != null`, so a synced `wt: 0` or undated row could drive a trend arrow; a non-array `growthData` from sync would throw.
+- **Cause:** the shared filter (#119) covered the engines only.
+- **Fix:** `gvMeasureRows('wt'|'ht')` with an `Array.isArray` guard, used by every reader; e2e with malformed rows.
+- **Where:** core.js; home.js; medical.js; diet.js.
+- **Caught by:** V-CA-282e-3, V-K-282e-4, V-C-282e-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — "2th percentile" and false precision below the 3rd centile (126)
+- **Symptom:** "Weight at 2th percentile — below the 3rd centile" and "dropped from 58th to 31th".
+- **Cause:** `calcPercentile` returns a placeholder 2 at or below P3, and ordinals were built by appending "th" at about 12 sites.
+- **Fix:** One shared `ordinal()` / `pctOrdinal()`; a weight at or below P3 reads "at or below the 3rd centile line" with no number (`gvPctLow`, ≤ 3).
+- **Where:** core.js; medical.js; qa-handlers.
+- **Caught by:** V-M-282e-1, V-V-282e-5.
+- **Patch class:** PC-8-adjacent display / PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — A weight below the 3rd centile alone read "gaining well" (127)
+- **Symptom:** With an on-track rate and the latest weight below P3, the weight-gain answer said "gaining well" with no centile line; a dropping crossing ending below P3 got the softer action; inside the newborn window a low percentile silently removed the "next visit" line.
+- **Cause:** escalation below P3 only ran through a slide; `lowPct` counted toward concern even where the line was hidden.
+- **Fix:** `lowNow` escalates the centile action and the headline; a dropping crossing ending low escalates; `concern` uses `lowPct && !nbWin`.
+- **Where:** qa-handlers `qaAnswerWeightGain`, `qaAnswerWeightConcern`.
+- **Caught by:** V-M-282e-2, V-K-282e-6.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — Newborn edges: no birth row, the day-14 cliff, stale readings (128)
+- **Symptom:** With no birth row, "still losing" was suppressed and weigh-today never fired; a first weigh-in on day 13 vs day 14 flipped amber to green; overdue and weigh-today never expired (a day-15 reading at day 200 still said "3 weeks have now passed — contact today"); on days 19–20 "in the next day or two — before 3 weeks" contradicted itself.
+- **Cause:** the no-birth-row branches and the read-time escalations had no upper bound or a different window.
+- **Fix:** stillLosing without a birth row; the stand-in regain window runs to day 28; weigh-today against the hospital record; "today or tomorrow" on days 19–20; overdue in actual weeks; from day 92 a plain recheck goes stale and neutral, and a concerning reading (more than 10% down, not back, overdue or referral) goes stale as caution with the weight check in the next week, scored 50 (Lyra, round-5 decision).
+- **Where:** core.js `gvNewbornCheck`, `gvNewbornAction`.
+- **Caught by:** V-M-282e-3, -6, -7; V-K-282e-2, -3; Lyra (stale concerning readings).
+- **Patch class:** PC-7 / PC-1
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — Doctor actions without a time bound, and centile actions out of severity order (129)
+- **Symptom:** "Book a weight check", "Mention the centile change" and "Show the weight chart" had no time bound; a centile slide above P3 (2+ lines) got the milder mention while a single crossing got "show the chart in the next week".
+- **Cause:** actions were written one at a time, without a tier table.
+- **Fix:** Two tiers: a weight check "in the next week" (loss, plateau, any slide — NICE NG75 1.2.1 — or ending at or below P3); a mention "at the next check-up, or within a month if none is booked" (slow gain, a single crossing above P3). The slide's own text names the same tier. Actions are sorted by urgency.
+- **Where:** core.js tier constants; qa-handlers (all three weight answers); medical.js `centileSlide`, Info and Growth facts; cards.
+- **Caught by:** V-M-282e-4, -5; Lyra (severity order).
+- **Patch class:** PC-7 / PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Gains above the band read three ways (130)
+- **Symptom:** In the 1.0–1.3× zone the concern answer said "within normal range", the gauge showed a green rate beside a range it exceeded, and Home's alert said "within the healthy range"; above 1.3× the Growth fact said "usually fine", Info said "monitor proportionality" and the concern answer warned.
+- **Cause:** each surface phrased the above-band state on its own.
+- **Fix:** `gvAboveBandLine` gives one line and one tone everywhere; a fast gain is signalled info, never a warning; the concern headline never says "gaining" beside a concern.
+- **Where:** core.js `gvAboveBandLine`; qa-handlers; medical.js; home.js.
+- **Caught by:** V-V-282e-3, V-K-282e-7, V-M-282e-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Number display: float noise and inflated losses (131)
+- **Symptom:** The Info bar's end labels showed "4.199999999999999"; a 1 g loss over 28 days showed "Down 0.2 g/day".
+- **Cause:** the labels skipped `gvDayFromWeek`, which floored negatives away from zero.
+- **Fix:** Labels derive from g/week; losses truncate toward zero (−1 g/week → −0.1). The shown-rate ⇔ verdict property still holds (every band floor ≥ 0).
+- **Where:** medical.js Info bar; core.js `gvDayFromWeek`.
+- **Caught by:** V-V-282e-2, V-V-282e-5, V-CA-282e-6.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (38f63fe).
+
+#### P2 — Stale comments and a dead verdict helper (132)
+- **Symptom:** Four registry comments described rounding, counts and a formula the code no longer used; `gvWeightVerdict` had no production caller and disagreed with `gvRateStatus` between 1.0× and 1.3×; the slide comment overclaimed that the WHO-line count "errs toward false alarm".
+- **Cause:** comments not updated with the round-4 changes; a helper left behind.
+- **Fix:** Comments corrected (the slide comment states both directions of the approximation); `gvWeightVerdict` removed and its test pointed at `gvBandVerdict` / `gvRateStatus`.
+- **Where:** core.js; medical.js; qa-handlers.
+- **Caught by:** V-CA-282e-1, V-K-282e-8, V-M-282e-9.
+- **Patch class:** PC-9 / PC-3
+- **Status:** **Fixed** (38f63fe).
+
+#### P1 — Food-OK loss card said "monitor at next weigh-in" (133)
+- **Symptom:** On the growth-diet card, a loss with food advice open read "Growth velocity is below typical range (-3.6 g/day) — monitor at next weigh-in" while the Info insight sent the same state to the doctor; a concern answer still added "not calorie restriction".
+- **Cause:** the round-3 fix covered only the closed-gate branch.
+- **Fix:** The loss leads with "Weight down … — book a weight check with your doctor in the next week" (round-5 tier), low coverage second; no calorie line on a concern.
+- **Where:** intelligence-cards.js `renderInfoGrowthDiet`; qa-handlers.
+- **Caught by:** V-C-282e-1, -2, V-V-282e-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (0d9e722, 38f63fe).
+
+#### P2 — Diet tab "growth vs meals" ungated and on raw rows (134)
+- **Symptom:** "Consistent feeding supports steady growth" could show for an early starter under 6 months, and the view read raw rows.
+- **Cause:** the view predated the food gate and the shared filter.
+- **Fix:** Uses `gvWeightRows()`; the narrative shows only under `gvFoodAdviceOk()`.
+- **Where:** diet.js.
+- **Caught by:** V-C-282e-4.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (0d9e722).
+
+#### P3 — Milk note said "whole diet" (135)
+- **Symptom:** "Under 6 months, milk is the whole diet" is untrue for a family who logged an early solids start.
+- **Cause:** wording.
+- **Fix:** "milk is the main diet" — the same safety meaning, accurate.
+- **Where:** core.js `GV_MILK_ONLY_NOTE`.
+- **Caught by:** V-C-282e-5.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (0d9e722).
+
+#### P2 — Growth-age gate bypasses (round 4) (136)
+- **Symptom:** Carina found more ways past the gate: falsy-literal `ageAt…()` / `gvAgeAt('')`, `new Date` without parentheses, bare `Date()`, `_offsetDateStr(0)`, `??=` / `||=`, array destructuring, names in a template literal. Kael found compound assignment and a bare `growth-age-ok:` with no reason.
+- **Cause:** the TODAY pattern and the assignment forms were narrower than the language.
+- **Fix:** All covered, with a fixture each (52 self-tests); an exemption needs a reason; structural limits (a helper behind another name, a pass-through parameter, more than 40 lines up, four or more hops) are listed in the gate header for hand review. The HR-12 gate's message now names `--allow-raise`.
+- **Where:** split/audit-growth-age-v1.sh; split/audit-hr12-dateonly-v1.sh.
+- **Caught by:** V-CA-282e-2, -5; V-K-282e-5.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (de02e81, 0c395bb).
+
+#### P2 (deferred) — A large toddler loss inside under 28 days of records reads "too soon to judge" (137)
+- **Symptom:** When the whole weight record spans under 28 days, every verdict is suppressed, including a large loss.
+- **Cause:** the too-short rule has no loss exception.
+- **Fix:** Not built: Maren wants a cited loss threshold before the app acts on it. `TODO(V-M-282e-8)` marks the place in qaAnswerWeightConcern.
+- **Where:** intelligence-qa-handlers.js.
+- **Caught by:** V-M-282e-8.
+- **Patch class:** PC-7
+- **Status:** **Open** (deferred, needs a cited threshold).
+
+#### P3 (info) — CareTicket pivot strategies have no caller (138)
+- **Symptom:** `ctPivotStrategies` is only called by tests; the food-gate fix to it protects a surface no parent sees yet.
+- **Cause:** the pivot UI was never wired.
+- **Fix:** None now. Rule: any future pivot render must go through `ctPivotStrategies()`, never `tpl.pivotStrategies` directly.
+- **Where:** intelligence-caretickets.js.
+- **Caught by:** V-C-282d-3, V-C-282e-3.
+- **Patch class:** PC-3
+- **Status:** **Open** (logged; no surface yet).
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:

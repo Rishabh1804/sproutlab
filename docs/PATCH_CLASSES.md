@@ -1,6 +1,6 @@
 # SproutLab — Patch classes
 
-**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#123). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
+**What this is:** a catalog of the bug *types* this codebase keeps producing, built from the PR #282 build log (`docs/BUGS.md` → "Child-sex S2–S4 build", entries #1–#138). Each class names the pattern, how to spot it in a diff, what fixed it here, and the guard that now catches it.
 
 **How to use it:**
 - **Builder (Lyra):** before opening a PR, run the "Look for" list of every class the diff touches.
@@ -224,12 +224,18 @@ Also look for: a new `style="color:` / `background:` built from a JS value; chec
 | 111 | Same weights, different answer depending on the first weigh-in day | One regain window rule before day 14 |
 | 116 | The milk note was tied to a gate that closes for more than one reason | `gvGateNote()` picks the note by today's age |
 | 119 | Two engines filtered weight rows differently | One shared `gvWeightRows()` |
+| 124 | Home and Growth judged different weigh-in windows (640 of 1,467 cases under 11.5 m) | One selector, `gvWeightWindow`, in whole calendar days |
+| 125 | Readers outside the engines kept the old row filter | `gvMeasureRows` everywhere |
+| 129 | A slide got a milder action than a single crossing | Actions in one tier table, ordered by severity |
+| 130 | Gains above the band read three ways | `gvAboveBandLine`: one line, one tone |
+| 133, 134 | A loss on the food-OK card and the Diet view kept their own copy | Shared tier wording; the food gate on every surface |
 
 **Same family, earlier:** #25 (PC-1: two cards, two ages), #63.
 
 **Look for:**
 - a `tone`, colour or chip decided in one function and a score or status in another, from the same inputs;
 - the same comparison written in two units;
+- the same input (rows, window, threshold) selected separately by two engines — share the selector, not just the rule (#124: one rule, two windows, 640 disagreements);
 - a verdict computed from one source and the number shown beside it read from another (a second column, a rounded copy) — #103 came back exactly this way after #93 was fixed;
 - a special case handled on one surface only.
 
