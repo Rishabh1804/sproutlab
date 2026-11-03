@@ -30925,7 +30925,7 @@ function solidsStarted() {
 function gvFoodAdviceOk() {
   return ageAt().months >= 6 && solidsStarted();
 }
-const GV_MILK_ONLY_NOTE = 'Under 6 months, milk is the whole diet — talk to your doctor about feeding.';
+const GV_MILK_ONLY_NOTE = 'Under 6 months, milk is the main diet — talk to your doctor about feeding.';   // "main", not "whole": true for an early solids start too (Ceres V-C-282e-5)
 // From 6 months with solids not started (the gate closed for a reason other than age), the milk-only
 // note is false: WHO IYCF — "complementary (solid) foods are introduced from six months". A function,
 // so the pronoun follows the profile (audit-pronouns-v1) — Ceres V-C-282d-1.
@@ -52573,7 +52573,9 @@ function renderInsightsCross() {
   }
 
   // ── Growth vs Feeding correlation ──
-  const wtEntries = growthData.filter(r => r.wt != null).sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  // The shared weight-row filter, so a synced wt:0 or undated row can't skew it (Ceres V-C-282e-4,
+  // Kael V-K-282d-5).
+  const wtEntries = gvWeightRows();
   if (wtEntries.length >= 3) {
     // For each weight measurement gap, calculate meals logged per day in that period
     const periods = [];
@@ -52615,7 +52617,9 @@ function renderInsightsCross() {
         </div>
       </div>`;
 
-      if (avgGainTop > avgGainBottom + 2) {
+      // A meals-and-growth narrative only once food advice applies (6 months today and solids started:
+      // gvFoodAdviceOk), never for an early starter under 6 months (Ceres V-C-282e-4).
+      if (avgGainTop > avgGainBottom + 2 && gvFoodAdviceOk()) {
         html += `<div class="insight-narrative">${zi('chart')} Periods with <strong>more meals logged</strong> (${avgMealsTop}/day) correlate with <strong>higher weight gain</strong> (${avgGainTop}g/day vs ${avgGainBottom}g/day). Consistent feeding supports steady growth.</div>`;
       }
     }
@@ -70541,7 +70545,10 @@ function qaAnswerWeightConcern(intentId) {
     if (!nbWin && !concern) actionItems.push({ text: (ageM === 0 ? 'In the first month' : 'At ' + fmtAgeMonths(ageM)) + ', being on a higher percentile is usually fine', signal: 'good' });
     // Food closed (under 6 months, or solids not started): the gate note chosen by today's age
     // (gvGateNote — Ceres V-C-282d-1); open: no calorie restriction.
-    actionItems.push({ text: gvFoodAdviceOk() ? 'Focus on nutrient-dense foods, not calorie restriction' : gvGateNote(), signal: 'action' });
+    // "Not calorie restriction" is written for a high-centile child; with a concern (loss, slow gain,
+    // a slide, under P3) the doctor action leads and no food line follows it (Ceres V-C-282e-2).
+    if (!concern) actionItems.push({ text: gvFoodAdviceOk() ? 'Focus on nutrient-dense foods, not calorie restriction' : gvGateNote(), signal: 'action' });
+    else if (!gvFoodAdviceOk()) actionItems.push({ text: gvGateNote(), signal: 'action' });
   }
   if (!nbCautionC && !concern) actionItems.push({ text: 'Discuss any concerns with your pediatrician at the next visit', signal: 'action' });
   if (!nbWin && !concern) actionItems.push({ text: 'Encourage active play — motor activity supports healthy growth', signal: 'action' });
@@ -81868,7 +81875,7 @@ function renderInfoGrowthDiet() {
 
   // Food lines only where food is part of the diet (gvFoodAdviceOk: 6 months of age today AND solids
   // started — V-K-282d-6, Ceres V-C-282c-3). Closed, the "Diet During This Period" grid is hidden
-  // too: nutrient bars beside "milk is the whole diet" contradict it (Ceres V-C-282d-4a).
+  // too: nutrient bars beside "milk is the main diet" contradict it (Ceres V-C-282d-4a).
   var foodOkCard = gvFoodAdviceOk();
 
   // Nutrient coverage
@@ -81900,6 +81907,12 @@ function renderInfoGrowthDiet() {
     if (velLabel === 'slow' && !foodOkCard) {
       var slowCardLead = velocity < 0 ? 'Weight down ' + Math.abs(velocity) + ' g/day — below the typical range.' : 'Growth velocity is below typical range (' + velocity + ' g/day).';
       iHtml += '<div class="si-insight si-insight-warn">' + slowCardLead + ' ' + escHtml(gvGateNote()) + '</div>';
+    } else if (velLabel === 'slow' && velocity < 0) {
+      // A loss on the food-OK path: the same answer the Info insight gives (doctor line first-class),
+      // never "monitor at next weigh-in" (Ceres V-C-282e-1, PC-10). Low coverage stays as a second line.
+      iHtml += '<div class="si-insight si-insight-warn">Weight down ' + Math.abs(velocity) + ' g/day — below the typical range. Mention it to your doctor.</div>';
+      var lowNutrientsLoss = KEY_NUTRIENTS.filter(function(n) { return (nutrientDayCoverage[n] / feedingDays.length) < 0.5; });
+      if (lowNutrientsLoss.length > 0) iHtml += '<div class="si-insight si-insight-info">' + escHtml(lowNutrientsLoss.slice(0, 2).join(' and ')) + ' coverage has been low in this period too.</div>';
     } else if (velLabel === 'slow') {
       var lowNutrients = KEY_NUTRIENTS.filter(function(n) {
         return (nutrientDayCoverage[n] / feedingDays.length) < 0.5;
