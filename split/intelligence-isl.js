@@ -787,8 +787,14 @@ function _islMedicalData(startDate, endDate) {
   var completed = vaccData.filter(function(v) { return !v.upcoming; });
   var upcoming = vaccData.filter(function(v) { return v.upcoming; }).sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
 
-  // Growth — latest in range
-  var rangeGrowth = growthData.filter(function(g) { return g.date >= startDate && g.date <= endDate; });
+  // Growth — latest in range. The shared row filter (gvMeasureRows): a row counts when it carries a real
+  // weight or a real height (finite, above 0, a valid local date), sorted by date. growthData.filter
+  // kept a stored wt:0 row, which became the "last measurement" and rendered "Last measurement:  (date)",
+  // and threw on a synced non-array growthData (Kael V-K-282f-10, PC-10).
+  var rangeSeen = [];
+  var rangeGrowth = gvMeasureRows('wt').concat(gvMeasureRows('ht'))
+    .filter(function(g) { if (rangeSeen.indexOf(g) !== -1) return false; rangeSeen.push(g); return g.date >= startDate && g.date <= endDate; })
+    .sort(function(a, b) { return a.date.localeCompare(b.date); });
 
   // Illness episodes in range
   var illnessEps = [];

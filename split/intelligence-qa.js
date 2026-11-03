@@ -2224,9 +2224,10 @@ function _qaRenderDomainTemporal(domain, tr) {
     if (data.growthInRange.length > 0) {
       var lg = data.growthInRange[data.growthInRange.length - 1];
       var parts = [];
-      if (lg.wt) parts.push(lg.wt + ' kg');
-      if (lg.ht) parts.push(lg.ht + ' cm');
-      items.push({ text: 'Growth: ' + parts.join(', ') + ' (' + formatDate(lg.date) + ')', signal: 'info' });
+      if (typeof lg.wt === 'number' && lg.wt > 0) parts.push(lg.wt + ' kg');
+      if (typeof lg.ht === 'number' && lg.ht > 0) parts.push(lg.ht + ' cm');
+      // Never "Growth:  (date)" for a wt:0 row (Kael V-K-282f-10); the date read locally (HR-12).
+      if (parts.length) items.push({ text: 'Growth: ' + parts.join(', ') + ' (' + gvDateText(lg.date) + ')', signal: 'info' });
     }
     if (data.illnessEpisodes.length > 0) {
       items.push({ text: data.illnessEpisodes.length + ' illness episode' + (data.illnessEpisodes.length !== 1 ? 's' : '') + ' in period', signal: 'warn' });

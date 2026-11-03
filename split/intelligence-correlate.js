@@ -149,7 +149,8 @@ const SIGNAL_EXTRACTORS = {
   // ── growth domain (growthData is an array of {date, wt, ht}; sparse — only measurement days) ──
   'growth:weightKg': function(dateStr) {
     if (!Array.isArray(growthData)) return null;
-    var match = growthData.find(function(r) { return r && r.date === dateStr && typeof r.wt === 'number'; });
+    // A real weight only: a stored wt:0 is not a measurement (the gvMeasureRows rule — Kael V-K-282f-10).
+    var match = growthData.find(function(r) { return r && r.date === dateStr && typeof r.wt === 'number' && Number.isFinite(r.wt) && r.wt > 0; });
     return match ? match.wt : null;
   },
 };

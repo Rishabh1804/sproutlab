@@ -1492,6 +1492,257 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
       expect(c.qaActions).toContain('Weigh Asha and show your doctor the chart at the next check-up, or within a month if none is booked');
     }
   });
+
+  // ── Round 6: round-5 verification folds (Maren V-M-282f-5, Vela V-V-282f-2/3/5/6, Kael V-K-282f-9/10) ──
+
+  test('a low centile in the newborn window is never an escalation: day 10, 2.40 → 2.30 kg reads "early days" with no weight check on any surface (V-M-282f-5)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const w = window as any;
+      const setup = eval(src);
+      const c = setup(10, 2.40, [[10, 2.30]]);
+      const html = (id: string) => { const el = document.getElementById(id); return el ? el.innerHTML : ''; };
+      return { c, summary: html('infoGrowthVelocitySummary'), pctNarr: w.getPercentileNarrative() || '', pulse: w.getPulseNarrative() || '',
+        low: w.gvPctLow(w.computeGrowthVelocity().latestPercentile) };
+    }, NB_SETUP);
+    expect(r.low).toBe(true);                       // the precondition: at or below the 3rd centile line
+    expect(r.c.nb.status).toBe('newborn');
+    expect(r.c.nb.tone).toBe('neutral');            // the plain after-birth dip
+    const c = r.c;
+    const all = [c.facts, c.insight, c.preview, c.visit, c.concerns, c.qa, c.qc, c.qg, c.narrative, r.summary, r.pctNarr, r.pulse];
+    for (const s of all) expect(s).not.toMatch(/book a weight check/i);
+    // The low-centile line is left out as an escalation (facts, summary, Home narratives) …
+    expect(c.facts).not.toContain('at or below the 3rd centile line');
+    expect(r.summary).not.toContain('3rd centile');
+    expect(r.pctNarr).toBe('');
+    expect(r.pulse).not.toContain('3rd centile');
+    expect(c.preview).not.toContain('ds-amber');     // no "Check" tile in the insights preview
+    // … and is information for the doctor in visit prep, said to be the newborn weeks.
+    expect(c.visit).toContain('At or below the 3rd centile line (newborn weeks)');
+    expect(c.visit).toContain('Early-days weight dip (expected)');
+  });
+
+  test('an old dropping crossing does not set the headline: 58th → 35th long ago, now at the 50th; the crossing line carries its dates (V-V-282f-2)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const dt = (d: string) => w.formatDate(w._parseLocalDate(d));   // a date as the app shows it, read locally (HR-12)
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      const AGE = 300;
+      w._profSave(Object.assign({}, profile.child, { dob: day(-AGE), sex: 'f', solidsStart: null }), profile.place);
+      // The lightest weight (to the gram, rounded up) at the target percentile on that date.
+      const wtFor = (d: string, target: number) => {
+        const ref = w.getGrowthRef(w.ageMonthsAt(d));
+        let lo = ref.w3 + 0.001, hi = ref.w97 - 0.001;
+        for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (w.calcPercentile(mid, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85).pct < target) lo = mid; else hi = mid; }
+        return Math.ceil(hi * 1000) / 1000;
+      };
+      const at = (ageDay: number, pct: number) => { const d = day(ageDay - AGE); return { date: d, wt: wtFor(d, pct) }; };
+      growthData = [{ date: day(-AGE), wt: 3.20 }, at(120, 58), at(150, 35), at(200, 40), at(250, 45), at(298, 50)];
+      w._clearModifierCache();
+      const gv = w.computeGrowthVelocity();
+      const lc = gv.crossings[gv.crossings.length - 1];
+      const qa = w.qaAnswerWeightGain('weight_gain');
+      const qc = w.qaAnswerWeightConcern('weight_concern');
+      const qg = w.qaAnswerGrowth('growth');
+      const latestCross = Object.assign({}, lc, { date: gv.weight.latest.date });
+      return { crossings: gv.crossings.map((x: any) => [x.from, x.to, x.direction]), latestPct: gv.latestPercentile, slide: gv.centileSlide,
+        qaHead: qa.headline, qcHead: qc.headline, qa: JSON.stringify(qa.sections), qc: JSON.stringify(qc.sections), qg: JSON.stringify(qg.sections),
+        from: dt(growthData[1].date), to: dt(growthData[2].date),   // the day-120 → day-150 crossing
+        current: typeof w.gvCrossingCurrent === 'function' ? w.gvCrossingCurrent(lc, gv) : null, currentAtLatest: typeof w.gvCrossingCurrent === 'function' ? w.gvCrossingCurrent(latestCross, gv) : null };
+    });
+    // The precondition — Vela's case: one dropping crossing 58th → 35th, the baby now at the 50th.
+    expect(r.crossings).toEqual([[58, 35, 'dropping']]);
+    expect(r.latestPct).toBe(50);
+    expect(r.slide).toBeNull();
+    expect(r.qaHead).not.toContain('percentile has dropped');
+    expect(r.qcHead).not.toContain('percentile has dropped');
+    expect(r.current).toBe(false);
+    expect(r.currentAtLatest).toBe(true);            // a crossing that ends at the latest weigh-in is current
+    // The crossing line stays, with both dates, on every weight answer.
+    const line = 'Percentile dropped from 58th to 35th (' + r.from + ' → ' + r.to + ')';
+    expect(r.qa).toContain(line);
+    expect(r.qc).toContain(line);
+    expect(r.qg).toContain('Percentile shift: dropping from 58th to 35th (' + r.from + ' → ' + r.to + ')');
+  });
+
+  test('the growth-diet card takes the shared above-the-band line, tone and icon: never a green "rapid" check or "normal" above the range (V-V-282f-3)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const w = window as any;
+      const setup = eval(src);
+      const fill = () => { const now = new Date(); for (let i = 0; i < 28; i++) feedingData[w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 28 + i))] = { breakfast: 'rice cereal' }; };
+      const card = () => { fill(); w.renderInfoGrowthDiet(); const h = (id: string) => (document.getElementById(id) || {} as any).innerHTML || ''; return { ins: h('infoGrowthDietInsights'), sum: h('infoGrowthDietSummary') }; };
+      const near = setup(214, 3.30, [[186, 7.000], [214, 7.600]]); const nearCard = card();
+      const far = setup(214, 3.30, [[186, 7.000], [214, 7.800]]); const farCard = card();
+      return { near, nearCard, far, farCard };
+    }, NB_SETUP);
+    expect(r.near.status).toBe('on-track');
+    expect(r.near.bandVerdict).toBe('above');
+    expect(r.far.status).toBe('fast');
+    // 1.0–1.3× the top: the Info card's line, good, with a check.
+    expect(r.nearCard.ins).toContain('Weight gain of 21.4g/day is a little above the usual 4.2–18.5g/day for 6–7 months — usually fine.');
+    expect(r.nearCard.ins).toContain('si-insight-good');
+    expect(r.nearCard.ins).not.toContain('is normal');
+    expect(r.nearCard.sum).toContain('#zi-check');
+    // Beyond 1.3×: the neutral line with an info icon — never green, never "rapid" with a check.
+    expect(r.farCard.ins).toContain('Weight gain at 28.5g/day is above the expected range (4.2–18.5g/day for 6–7 months). Monitor proportionality.');
+    expect(r.farCard.ins).toContain('si-insight-info');
+    expect(r.farCard.ins).not.toContain('si-insight-good');
+    expect(r.farCard.ins).not.toContain('rapid');
+    expect(r.farCard.sum).toContain('#zi-info');
+    expect(r.farCard.sum).not.toContain('#zi-check');
+  });
+
+  test('a stale newborn line leads with the date of the last weigh-in: no old rate, no ratio, no present-tense "Below birth weight" (V-V-282f-5)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const w = window as any;
+      const dt = (d: string) => w.formatDate(w._parseLocalDate(d));
+      const setup = eval(src);
+      const loss = setup(100, 3.40, [[5, 3.04]]);     // Vela's case: down 504 g/week over 5 days, read at 100 days
+      const lossDate = dt(growthData[1].date);
+      const plain = setup(100, 3.40, [[10, 3.30]]);
+      const plainDate = dt(growthData[1].date);
+      return { loss, lossDate, plain, plainDate };
+    }, NB_SETUP);
+    for (const [c, date, day] of [[r.loss, r.lossDate, 5], [r.plain, r.plainDate, 10]] as const) {
+      expect(c.narrative).toContain('Last weighed on ' + date);
+      expect(c.narrative).not.toMatch(/g\/week/);
+      expect(c.gauges).toContain('Last weighed on ' + date);
+      expect(c.gauges).not.toContain('>Below birth weight<');       // present tense from a months-old weigh-in
+      expect(c.gauges).toContain('Below birth weight on day ' + day);
+      expect(c.bar).toContain('Last weighed on ' + date);           // the Info bar: the date, not the old rate
+      expect(c.bar).not.toMatch(/\d g\/day/);
+      expect(JSON.stringify(c.qaData)).not.toMatch(/g in \d+ days?\./);   // no old rate in the weight answer
+      expect(c.qaData.map((d: any) => d.text).join(' | ')).toContain('Last weighed on ' + date);
+    }
+    expect(r.loss.gPerDay).toBe(-72);
+    expect(r.loss.gauges).not.toContain('>-72<');                   // the rate gauge shows a dash, not the old rate
+    expect(r.loss.gauges).not.toContain('>Gain rate −72');
+    expect(r.loss.nb.tone).toBe('caution');
+    expect(r.plain.nb.tone).toBe('neutral');
+  });
+
+  test('a stale newborn line is the one answer: no generic freshness line, one weigh-now action, a Growth fact title that is not its body, one tone (V-V-282f-6)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const w = window as any;
+      const dt = (d: string) => w.formatDate(w._parseLocalDate(d));
+      const setup = eval(src);
+      const run = (args: any[]) => {
+        const c = setup(...args);
+        const qg = w.qaAnswerGrowth('growth');
+        const d = qg.sections.find((x: any) => x.label === 'WHAT THE DATA SHOWS');
+        const f = document.querySelector('#growthFacts .growth-fact');
+        return { c, date: dt(growthData[1].date), qgData: d ? d.items : [],
+          factCls: f ? f.className : '', factTitle: f ? (f.querySelector('strong') || {} as any).textContent : '', factBody: f ? (f.querySelector('span') || {} as any).textContent : '' };
+      };
+      return { plain: run([100, 3.40, [[10, 3.30]]]), concern: run([100, 3.40, [[5, 3.04]]]) };
+    }, NB_SETUP);
+    for (const x of [r.plain, r.concern]) {
+      const c = x.c;
+      expect(c.insight).not.toContain('Time for a weigh-in');
+      expect(c.qa).not.toContain('consider a new measurement');
+      expect(c.qa).not.toMatch(/Last weighed \d+ days ago/);
+      expect(c.qgActions.filter((a: string) => /weigh|measurement/i.test(a)).length).toBe(1);
+      expect(c.qgActions.join(' | ')).not.toContain('time for a new measurement');
+      expect(x.factTitle).toBe('Last weighed on ' + x.date);
+      expect(x.factBody).not.toContain(x.factTitle);
+      expect(c.nb.text).toBe(x.factBody);
+    }
+    // One tone: the freshness line and the fact take the newborn line's tone.
+    const fresh = (x: any) => x.qgData.find((d: any) => /^Weight: [\d.]+ kg \(measured/.test(d.text));
+    expect(fresh(r.plain).signal).toBe('info');
+    expect(r.plain.factCls).toContain('neutral');
+    expect(fresh(r.concern).signal).toBe('warn');
+    expect(r.concern.factCls).toContain('caution');
+  });
+
+  test('the Height-gain gauge takes the Info card\'s pair: from 12 m the latest height 28+ days back, not a 5-day pair (V-K-282f-9)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      w._profSave(Object.assign({}, profile.child, { dob: day(-400), sex: 'f' }), profile.place);
+      growthData = [{ date: day(-400), wt: 3.30, ht: 50.0 }, { date: day(-40), wt: 9.00, ht: 74.0 }, { date: day(-5), wt: 9.20, ht: 76.0 }, { date: day(0), wt: 9.25, ht: 76.3 }];
+      w._clearModifierCache();
+      w.renderVelocity();
+      const h = w.computeGrowthVelocity().height;
+      return { gauges: (document.getElementById('velocityContent') || {} as any).innerHTML || '', cmGain: h.cmGain, days: h.daysBetween };
+    });
+    expect(r.cmGain).toBe(2.3);                      // the Info card's pair: day −40 → today
+    expect(r.days).toBe(40);
+    expect(r.gauges).toContain('+2.3');
+    expect(r.gauges).not.toContain('+0.3');          // the last two rows, 5 days apart
+  });
+
+  test('a stored wt:0 row is never the "last measurement": ISL range rows, doctor prep, the medical summary and the correlation signal (V-K-282f-10)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      w._profSave(Object.assign({}, profile.child, { dob: day(-200), sex: 'f' }), profile.place);
+      growthData = [{ date: day(-200), wt: 3.30, ht: 50.0 }, { date: day(-10), wt: 7.00, ht: 66.0 }, { date: day(0), wt: 0 }];
+      w._clearModifierCache();
+      const dd = w.getDomainData('medical', day(-30), day(0));
+      const last = dd.growthInRange[dd.growthInRange.length - 1];
+      return {
+        rows: dd.growthInRange.map((g: any) => g.date),
+        lastWt: last ? last.wt : null,
+        prep: JSON.stringify(w._qaDoctorPrep()),
+        temporal: JSON.stringify(w._qaRenderDomainTemporal('medical', { start: day(-30), end: day(0), label: 'last 30 days' })),
+        signal: SIGNAL_EXTRACTORS['growth:weightKg'](day(0)),
+        signalOld: SIGNAL_EXTRACTORS['growth:weightKg'](day(-10)),
+      };
+    });
+    expect(r.rows.length).toBe(1);
+    expect(r.lastWt).toBe(7);
+    expect(r.prep).not.toMatch(/Last measurement:\s*\(/);
+    expect(r.prep).toContain('Last measurement: 7 kg, 66 cm');
+    expect(r.temporal).not.toMatch(/Growth:\s*\(/);
+    expect(r.temporal).toContain('Growth: 7 kg, 66 cm');
+    expect(r.signal).toBeNull();
+    expect(r.signalOld).toBe(7);
+  });
+
+  test('the CareTicket weight goal counts only a window of 28+ days: one 7-day pair is no metric (Maren, round-5 note)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      w._profSave(Object.assign({}, profile.child, { dob: day(-120), sex: 'f' }), profile.place);
+      growthData = [{ date: day(-120), wt: 3.30 }, { date: day(-7), wt: 6.00 }, { date: day(0), wt: 6.20 }];   // +200 g in 7 days
+      const short = w.ctGetMetricValue('wtGPerWeek');
+      const goal = w.CT_TEMPLATES.weight_gain.resolutionCriteria.value();
+      const passesShort = w.ctCompare(short, '>=', goal);
+      growthData = [{ date: day(-120), wt: 3.30 }, { date: day(-28), wt: 5.60 }, { date: day(0), wt: 6.20 }];   // +600 g in 28 days
+      const long = w.ctGetMetricValue('wtGPerWeek');
+      return { short, long, goal, passesShort, shortRate: (() => { growthData = [{ date: day(-120), wt: 3.30 }, { date: day(-7), wt: 6.00 }, { date: day(0), wt: 6.20 }]; return w.getGrowthVelocity().wtGPerWeek; })() };
+    });
+    expect(r.shortRate).toBe(200);                   // above the median on its own …
+    expect(r.shortRate).toBeGreaterThan(r.goal);
+    expect(r.short).toBeNull();                      // … but a 7-day window is no metric
+    expect(r.passesShort).toBe(false);
+    expect(r.long).toBe(150);
+  });
+
+  test('HR-4: a "<3rd" percentile never reaches innerHTML unescaped — the height fact and the gauges (Vela HR-4 note)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const now = new Date();
+      const day = (n: number) => w.toDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+      w._profSave(Object.assign({}, profile.child, { dob: day(-60), sex: 'f' }), profile.place);
+      growthData = [{ date: day(-60), wt: 3.30, ht: 49.0 }, { date: day(-30), wt: 4.20, ht: 50.0 }, { date: day(0), wt: 5.00, ht: 50.5 }];   // height well below P3 at 2 m
+      w._clearModifierCache();
+      const desc = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML') as PropertyDescriptor;
+      const raw: string[] = [];
+      Object.defineProperty(Element.prototype, 'innerHTML', { configurable: true, get() { return desc.get!.call(this); }, set(v) { raw.push(String(v)); desc.set!.call(this, v); } });
+      try { w.renderGrowthFacts(); w.renderVelocity(); } finally { Object.defineProperty(Element.prototype, 'innerHTML', desc); }
+      const ref = w.getGrowthRef(w.ageMonthsAt(day(0)));
+      return { htText: w.calcPercentile(50.5, ref.h3, ref.h50, ref.h97, ref.h15, ref.h85).text, unescaped: raw.filter(s => s.indexOf('<3rd') !== -1).length,
+        escaped: raw.filter(s => s.indexOf('&lt;3rd') !== -1).length };
+    });
+    expect(r.htText).toBe('<3rd');                   // the precondition
+    expect(r.unescaped).toBe(0);
+    expect(r.escaped).toBeGreaterThan(0);
+  });
 });
 
 test.describe('HR-12: getSleepScore24h reads yesterday as a local calendar day (V-CA-282c-2)', () => {

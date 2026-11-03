@@ -539,9 +539,11 @@ function _qaDoctorPrep() {
   if (gd.growthInRange.length > 0) {
     var lg = gd.growthInRange[gd.growthInRange.length - 1];
     var parts = [];
-    if (lg.wt) parts.push(lg.wt + ' kg');
-    if (lg.ht) parts.push(lg.ht + ' cm');
-    items.push({ text: 'Last measurement: ' + parts.join(', ') + ' (' + formatDate(lg.date) + ')', signal: 'info' });
+    if (typeof lg.wt === 'number' && lg.wt > 0) parts.push(lg.wt + ' kg');
+    if (typeof lg.ht === 'number' && lg.ht > 0) parts.push(lg.ht + ' cm');
+    // rangeGrowth holds only rows with a real weight or height (gvMeasureRows — Kael V-K-282f-10); an
+    // empty list is still never shown as "Last measurement:  (date)". The date is read locally (HR-12).
+    if (parts.length) items.push({ text: 'Last measurement: ' + parts.join(', ') + ' (' + gvDateText(lg.date) + ')', signal: 'info' });
   }
 
   // Vaccination status
@@ -982,7 +984,12 @@ function _qaWeightConcernHead(gv) {
   if (gv.centileSlide) return 'weight moving down the centile lines';
   if (gvPctLow(gv.latestPercentile)) return 'weight at or below the 3rd centile line';
   var lc = gv.crossings && gv.crossings.length > 0 ? gv.crossings[gv.crossings.length - 1] : null;
-  if (lc && lc.direction === 'dropping') return 'weight percentile has dropped';
+  // Only a crossing that still describes the weight now — it ends at the latest weigh-in, or the latest
+  // percentile is within 15 points of where it ended (gvCrossingCurrent). Any past drop took the
+  // headline, so a 58th → 35th crossing from long ago read "weight percentile has dropped" with the
+  // baby back at the 50th and every other surface fine (Vela V-V-282f-2, PC-10). Its data line, with
+  // its dates, and its mention still stand.
+  if (lc && lc.direction === 'dropping' && gvCrossingCurrent(lc, gv)) return 'weight percentile has dropped';
   return null;
 }
 // A rate headline that says "gaining" (or "too soon to judge") never stands beside a concern: the
@@ -1111,7 +1118,11 @@ function qaAnswerWeightGain(intentId) {
       // an earlier weigh-in, the recheck line instead (V-M-282b-4); from day 92 the stale line (V-M-282e-7).
       tail = nbQ ? nbQ.head : 'early days';
       var dirQ = w.gainG >= 0 ? 'up ' : 'down ';
-      dataItems.push({ text: 'Weight ' + dirQ + Math.abs(w.gainG) + ' g in ' + w.daysBetween + ' day' + (w.daysBetween === 1 ? '' : 's') + '. ' + (nbQ ? nbQ.text : GV_NEWBORN_NOTE), signal: nbCaution ? 'warn' : 'info' });
+      // A stale line: the date of the last weigh-in leads, never the old rate ("Weight down 504 g in 5
+      // days" read as today's news for a 100-day-old — Vela V-V-282f-5).
+      var leadQ = (nbQ && nbQ.stale) ? nbQ.dateLead + '. '
+        : 'Weight ' + dirQ + Math.abs(w.gainG) + ' g in ' + w.daysBetween + ' day' + (w.daysBetween === 1 ? '' : 's') + '. ';
+      dataItems.push({ text: leadQ + (nbQ ? nbQ.text : GV_NEWBORN_NOTE), signal: nbCaution ? 'warn' : 'info' });
       if (nbCaution || (nbQ && nbQ.stale)) actionItems.push({ text: gvNewbornAction(nbQ), signal: 'action' });
     }
     // A slide, below P3 or a dropping crossing replaces a "gaining" headline (V-M-282d-6, V-M-282e-2, -5).
@@ -1126,7 +1137,9 @@ function qaAnswerWeightGain(intentId) {
       dataItems.push({ text: (w.totalGainG < 0 ? 'Total change since birth: −' : 'Total gain since birth: ') + Math.abs(Math.round(w.totalGainG)) + 'g (' + (Math.abs(w.totalGainG) / 1000).toFixed(2) + ' kg)', signal: 'info' });
     }
 
-    if (w.stale) {
+    // A stale newborn line already says when and what to do, in its own tone: no second, amber
+    // "Last weighed N days ago" beside it (Vela V-V-282f-6, PC-10).
+    if (w.stale && !(nbQ && nbQ.stale)) {
       dataItems.push({ text: 'Last weighed ' + w.daysSince + ' days ago — consider a new measurement', signal: 'warn' });
       if (!nbCaution && !(nbQ && nbQ.stale)) actionItems.push({ text: 'Weigh ' + childNameHtml() + ' to update growth tracking', signal: 'action' });
     }
@@ -1151,9 +1164,9 @@ function qaAnswerWeightGain(intentId) {
     if (lastCross.direction === 'dropping') {
       crossDrop = true;
       crossLow = gvPctLow(lastCross.to);
-      dataItems.push({ text: 'Percentile dropped from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to), signal: 'warn' });
+      dataItems.push({ text: 'Percentile dropped from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to) + gvCrossingDates(lastCross), signal: 'warn' });   // dated (Vela V-V-282f-2)
     } else {
-      dataItems.push({ text: 'Percentile climbed from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to), signal: 'good' });
+      dataItems.push({ text: 'Percentile climbed from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to) + gvCrossingDates(lastCross), signal: 'good' });
     }
   }
   // ONE percentile action for a dropping crossing, a slide and/or weight at or below P3 (they were near-
@@ -1976,7 +1989,7 @@ function qaAnswerWeightConcern(intentId) {
     actionItems.push({ text: GV_ACT_WEIGHT_CHECK, signal: 'action' });   // any slide: the weight check (severity order)
   }
   if (dropC) {
-    dataItems.push({ text: 'Percentile dropped from ' + pctOrdinal(lastCrossC.from) + ' to ' + pctOrdinal(lastCrossC.to), signal: 'warn' });
+    dataItems.push({ text: 'Percentile dropped from ' + pctOrdinal(lastCrossC.from) + ' to ' + pctOrdinal(lastCrossC.to) + gvCrossingDates(lastCrossC), signal: 'warn' });   // dated (Vela V-V-282f-2)
     actionItems.push({ text: crossLowC ? GV_ACT_WEIGHT_CHECK : GV_ACT_MENTION_CENTILE, signal: 'action' });   // one crossing: the same tier as qaAnswerWeightGain (PC-10)
   }
 
@@ -2053,7 +2066,11 @@ function qaAnswerGrowth(intentId) {
   // Weight
   if (gv.weight) {
     var w = gv.weight;
-    dataItems.push({ text: 'Weight: ' + w.latest.wt + ' kg (' + (w.stale ? 'measured ' + w.daysSince + ' days ago' : 'recent') + ')', signal: w.stale ? 'warn' : 'good' });
+    // A stale newborn line sets the tone of the freshness line too — one tone, not an amber "measured
+    // N days ago" beside a neutral stale line (Vela V-V-282f-6, PC-10).
+    var nbStaleG = !!(w.nb && w.nb.stale);
+    var freshSignal = nbStaleG ? (w.nb.tone === 'caution' ? 'warn' : 'info') : w.stale ? 'warn' : 'good';
+    dataItems.push({ text: 'Weight: ' + w.latest.wt + ' kg (' + (w.stale ? 'measured ' + w.daysSince + ' days ago' : 'recent') + ')', signal: freshSignal });
     var wSignal = w.nb ? (w.nb.tone === 'good' ? 'good' : w.nb.tone === 'caution' ? 'warn' : 'info')
       : w.tooShort ? 'info'
       : w.status === 'on-track' ? 'good' : (w.status === 'slow' || w.status === 'plateau') ? 'warn' : 'info';
@@ -2091,7 +2108,7 @@ function qaAnswerGrowth(intentId) {
   var lowEndG = lowG;
   if (gv.crossings && gv.crossings.length > 0) {
     var lastCross = gv.crossings[gv.crossings.length - 1];
-    dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to), signal: lastCross.direction === 'dropping' ? 'warn' : 'good' });   // a climb is not a warning (Kael V-K-282f-6, Vela V-V-282f-4)
+    dataItems.push({ text: 'Percentile shift: ' + lastCross.direction + ' from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to) + gvCrossingDates(lastCross), signal: lastCross.direction === 'dropping' ? 'warn' : 'good' });   // a climb is not a warning (Kael V-K-282f-6, Vela V-V-282f-4)
     if (lastCross.direction === 'dropping' && gvPctLow(lastCross.to)) lowEndG = true;
   }
   // A slow fall across two major centile lines (computeGrowthVelocity, V-M-282c-11).
@@ -2107,8 +2124,9 @@ function qaAnswerGrowth(intentId) {
     dataItems.push({ text: 'Weight and height on different curves — check proportionality', signal: 'info' });
   }
 
-  // Staleness
-  if (gv.weight && gv.weight.stale) {
+  // Staleness — a stale newborn line's own action (gvNewbornAction, above) is the one weigh-now action;
+  // a second "time for a new measurement" repeated it (Vela V-V-282f-6).
+  if (gv.weight && gv.weight.stale && !(gv.weight.nb && gv.weight.nb.stale)) {
     actionItems.push({ text: 'Weight data is ' + gv.weight.daysSince + ' days old — time for a new measurement', signal: 'action' });
   }
   if (gv.height && gv.height.stale) {

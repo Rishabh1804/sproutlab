@@ -6804,6 +6804,14 @@ function gvGateNote() {
   return ageAt().months < 6 ? GV_MILK_ONLY_NOTE : gvStartSolidsNote();
 }
 
+// A 'YYYY-MM-DD' measurement date as text ("12 Jul 2026"), read as a local calendar day (HR-12:
+// _parseLocalDate, never a UTC parse that shows the day before west of Greenwich). Used where a line
+// names the date of a weigh-in — the stale newborn lead, the centile-crossing dates (V-V-282f-2, -5).
+function gvDateText(d) {
+  const p = _parseLocalDate(d);
+  return p ? formatDate(p) : String(d || '');
+}
+
 // The weight row just before a date (the previous weigh-in), from growthData.
 function _gvWeightRowBefore(date) {
   let prev = null;
@@ -6907,6 +6915,10 @@ function gvNewbornCheck(latest, first) {
   // birth weight with none (Maren V-M-282e-6).
   const weighToday = plainRecheck && !stale && todayDay >= GV_REGAIN_REFER_DAY && (!hasBirth || lG < bG);
   r.weighToday = weighToday;
+  // A stale line leads with the date of the last weigh-in, never a rate or a present-tense state from
+  // that weigh-in: "Weight: down 504g/week (over 5 days)" for a 100-day-old (Vela V-V-282f-5). Every
+  // surface that shows a stale newborn line takes this lead in place of the rate.
+  r.dateLead = stale ? 'Last weighed on ' + gvDateText(latest.date) : null;
   const kg = w => (Math.round(w * 1000) / 1000) + ' kg';
   if (status === 'newborn-loss') {
     // To a tenth; a loss over 10% that rounds down to 10.0% still says it is over the line.
@@ -7067,10 +7079,38 @@ function pctOrdinal(p, short) {
 }
 // At or below the 3rd centile line (a placeholder 2, or a measured 3): the ONE low-centile test every
 // weight answer, fact and narrative uses (NICE NG75 1.2.1 — quoted at qaAnswerWeightGain; V-M-282e-1, -2).
+// A stored 3 is a MEASURED value just above the line (calcPercentile gives the placeholder 2 at or
+// below P3, so 3 means "between the 3rd line and the next step up"). Counting it as "at or below" errs
+// toward caution on purpose: a weight that close to the line gets the weight check, never "within
+// normal range" (Kael note, round 5). The copy says "at or below", so it stays true for both.
+// Outside the newborn window only: inside it the after-birth dip moves the percentile by design, so
+// the low-centile line is never an escalation there — the newborn line carries the action (Maren
+// V-M-282f-5, Kael V-K-282e-6). Readers check weight.nb (or gvNewbornCheck) before this.
 function gvPctLow(p) {
   return p != null && p !== '' && Number.isFinite(Number(p)) && Number(p) <= 3;
 }
 const GV_LOW_CENTILE_LINE = 'Weight is at or below the 3rd centile line';   // no number (V-M-282e-1)
+
+// ── Centile crossings (computeGrowthVelocity().crossings: { from, to, direction, fromDate, date }) ──
+// The dates of a crossing, for its line: " (12 Jan 2026 → 9 Feb 2026)". A crossing from long ago with
+// no dates read as news — "Percentile dropped from 58th to 35th" beside a baby now at the 50th (Vela
+// V-V-282f-2). '' when the crossing carries no date.
+function gvCrossingDates(c) {
+  if (!c || !c.date) return '';
+  return ' (' + (c.fromDate ? gvDateText(c.fromDate) + ' → ' : '') + gvDateText(c.date) + ')';
+}
+// A crossing still describes the weight NOW when it ends at the latest weigh-in, or the latest
+// percentile is less than 15 points from where it ended. Only then may it set a headline (Vela
+// V-V-282f-2): an old 58th → 35th crossing with the baby back at the 50th — 15 points above where it
+// ended, Vela's own case — is history, not "weight percentile has dropped". Strictly under 15, so that
+// case reads as history. gv: a computeGrowthVelocity() result.
+function gvCrossingCurrent(c, gv) {
+  if (!c || !gv) return false;
+  const latestDate = gv.weight && gv.weight.latest ? gv.weight.latest.date : null;
+  if (latestDate && c.date === latestDate) return true;
+  const p = gv.latestPercentile;
+  return p != null && Number.isFinite(Number(p)) && Math.abs(Number(p) - c.to) < 15;
+}
 
 // ── Doctor actions, each bounded in time (Maren V-M-282e-4, PC-7) ──
 // Two tiers. A weight check — a loss, a plateau, any centile slide (2+ lines, NICE NG75 1.2.1), or
@@ -7152,7 +7192,14 @@ function getGrowthNarrative(velocity) {
     const nb = velocity.wtNewborn;
     const windowText = velocity.wtDays >= 21 ? `over ${Math.round(velocity.wtDays / 7)} weeks` : `over ${velocity.wtDays} days`;
     const change = `${gw >= 0 ? 'up' : 'down'} ${Math.abs(gw)}g/week`;
-    if (nb && nb.status === 'regained') {
+    // The band in g/day with its age range, for the shared above-the-band line (gvAboveBandLine).
+    const rangeD = { min: band.wGDayMin, max: band.wGDayMax, label: band.label, fromMo: band.fromMo, toMo: band.toMo };
+    if (nb && nb.stale) {
+      // A stale newborn line (from about 3 months, the weigh-in itself 4+ weeks old): the date of the
+      // last weigh-in leads, and no rate — "down 504g/week (over 5 days)" read as today's news for a
+      // 100-day-old (Vela V-V-282f-5).
+      lines.push(`${zi('scale')} Weight — ${nb.dateLead}: ${nb.text}`);
+    } else if (nb && nb.status === 'regained') {
       lines.push(`${zi('scale')} Weight: ${nb.text}`);
     } else if (verdict === 'newborn') {
       lines.push(`${zi('scale')} Weight: ${change} (${windowText}). ${gvNewbornLine(velocity)}`);
@@ -7160,12 +7207,18 @@ function getGrowthNarrative(velocity) {
       lines.push(`${zi('scale')} Weight: ${gvNewbornLine(velocity)}`);
     } else if (verdict === 'too-short') {
       lines.push(`${zi('scale')} Weight: ${gvTooShortText(velocity.wtDays)}`);
+    } else if (verdict === 'in' && velocity.wtBandVerdict === 'above') {
+      // 1.0–1.3× the top: the shared line and its tone (good), never a bare "healthy pace" beside a
+      // range the rate sits above (gvAboveBandLine — Kael V-K-282e-7, PC-10).
+      lines.push(`${zi('scale')} Weight: ${gvAboveBandLine('on-track', gvDayFromWeek(gw), rangeD).text} (${windowText})`);
     } else if (verdict === 'in') {
       lines.push(`${zi('scale')} Weight: gaining ${gw}g/week — healthy pace ${gvAgePhrase(velocity.wtLatest)} (${windowText})`);
     } else if (verdict === 'below') {
       lines.push(`${zi('scale')} Weight: ${gw >= 0 ? 'gaining ' + gw + 'g/week' : change} — below typical range (${expectedMin}–${expectedMax}g/week). Monitor closely (${windowText})`);
     } else {
-      lines.push(`${zi('scale')} Weight: gaining ${gw}g/week — above typical range (${expectedMin}–${expectedMax}g/week). Likely a growth spurt (${windowText})`);
+      // Beyond 1.3× the top: the Info card's line and its tone (neutral), never "Likely a growth
+      // spurt" — Home kept its own wording after the other surfaces moved (Kael V-K-282e-7 leftover).
+      lines.push(`${zi('scale')} Weight: ${gvAboveBandLine('fast', gvDayFromWeek(gw), rangeD).text} (${windowText})`);
     }
   }
 
@@ -7199,6 +7252,11 @@ function getPercentileNarrative() {
   const ref = getGrowthRef(moExact);
   const currentPct = calcPercentile(latest.wt, ref.w3, ref.w50, ref.w97, ref.w15 != null ? ref.w15 : undefined, ref.w85 != null ? ref.w85 : undefined);
 
+  // In the newborn window (gvNewbornCheck, the same call and rows both engines make) the after-birth
+  // dip moves the percentile by design: no low-centile escalation beside "Early days … expected" —
+  // the line is left out and the newborn line carries the action (Maren V-M-282f-5).
+  const nbP = gvNewbornCheck(latest, wtEntries[0]);
+  if (nbP && gvPctLow(currentPct.pct)) return null;
   // At or below the 3rd centile line: the line in words, never a placeholder number, and the
   // weight-check action every weight answer gives (V-M-282e-1, -4).
   if (gvPctLow(currentPct.pct)) return `${zi('chart')} ${GV_LOW_CENTILE_LINE} — book a weight check with your doctor ${GV_WHEN_WEIGHT_CHECK}.`;
@@ -7496,8 +7554,11 @@ function getPulseNarrative() {
     const moExact = ageMonthsAt(latestWt.date);
     const ref = getGrowthRef(moExact);
     const pct = calcPercentile(latestWt.wt, ref.w3, ref.w50, ref.w97, ref.w15, ref.w85);
-    // At or below P3: the line in words, never "<3rd percentile" (V-M-282e-1).
-    parts.push(gvPctLow(pct.pct) ? `weight at ${latestWt.wt} kg (at or below the 3rd centile line)` : `weight at ${latestWt.wt} kg (${pct.text} percentile)`);
+    // At or below P3: the line in words, never "<3rd percentile" (V-M-282e-1). Not in the newborn
+    // window, where the dip moves the percentile by design and the newborn line speaks (Maren V-M-282f-5).
+    const wRows = gvWeightRows();
+    const nbPulse = wRows.length ? gvNewbornCheck(wRows[wRows.length - 1], wRows[0]) : null;
+    parts.push(gvPctLow(pct.pct) ? (nbPulse ? `weight at ${latestWt.wt} kg` : `weight at ${latestWt.wt} kg (at or below the 3rd centile line)`) : `weight at ${latestWt.wt} kg (${pct.text} percentile)`);
   }
 
   // Sleep

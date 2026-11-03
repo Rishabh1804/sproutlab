@@ -265,8 +265,13 @@ function ctGetMetricValue(metric, dateStr) {
       var sc = getDailySleepScore(dateStr || today());
       return (sc && sc.score !== undefined) ? sc.score : null;
     case 'wtGPerWeek':
+      // Counted only over a window of 28 days or more (Maren, round-5 note). Since the shared window
+      // (gvWeightWindow) an infant's velocity is the last two weigh-ins, so one 7-day pair above the
+      // median, held through confirmAfterDays (14) with no new weigh-in, met the weight goal. A shorter
+      // window is not a measure of sustained gain: the metric is null (not met, never "not passing").
       var gv = getGrowthVelocity();
-      return (gv && gv.wtGPerWeek !== undefined) ? gv.wtGPerWeek : null;
+      if (!gv || gv.wtGPerWeek == null || !(gv.wtDays >= GV_TODDLER_WINDOW_DAYS)) return null;
+      return gv.wtGPerWeek;
     case 'uniqueFoods7d':
       return ctUniqueFoods7d();
     default:

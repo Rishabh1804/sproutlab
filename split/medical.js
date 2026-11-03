@@ -651,13 +651,13 @@ function renderDoctorPrep() {
   if (lw) {
     const wtWho = getGrowthRef(ageMonthsAt(lw.date));
     const wtP = calcPercentile(lw.wt, wtWho.w3, wtWho.w50, wtWho.w97, wtWho.w15, wtWho.w85);
-    growthSummary = `${zi('scale')} ${lw.wt} kg (${wtP.text} %ile)`;
+    growthSummary = `${zi('scale')} ${lw.wt} kg (${escHtml(wtP.text)} %ile)`;
   }
   const lh = getLatestHeight();
   if (lh) {
     const htWho = getGrowthRef(ageMonthsAt(lh.date));
     const htP = calcPercentile(lh.ht, htWho.h3, htWho.h50, htWho.h97, htWho.h15, htWho.h85);
-    growthSummary += `${growthSummary ? ' · ' : ''}${zi('ruler')} ${lh.ht} cm (${htP.text} %ile)`;
+    growthSummary += `${growthSummary ? ' · ' : ''}${zi('ruler')} ${lh.ht} cm (${escHtml(htP.text)} %ile)`;
   }
 
   // Milestones achieved
@@ -695,12 +695,12 @@ function renderDoctorPrep() {
       ${(() => { const lwp = getLatestWeight(); if (!lwp) return ''; const ww = getGrowthRef(ageMonthsAt(lwp.date)); return `<div class="diet-stat ds-rose" data-tab="growth">
         <div class="diet-stat-icon"><svg class="zi"><use href="#zi-scale"/></svg></div>
         <div class="diet-stat-val ds-val-sm">${lwp.wt} kg</div>
-        <div class="diet-stat-label">${calcPercentile(lwp.wt, ww.w3, ww.w50, ww.w97, ww.w15, ww.w85).text}</div>
+        <div class="diet-stat-label">${escHtml(calcPercentile(lwp.wt, ww.w3, ww.w50, ww.w97, ww.w15, ww.w85).text)}</div>
       </div>`; })()}
       ${(() => { const lh = getLatestHeight(); if (!lh) return ''; const hw = getGrowthRef(ageMonthsAt(lh.date)); return `<div class="diet-stat ds-sky" data-tab="growth">
         <div class="diet-stat-icon"><svg class="zi"><use href="#zi-ruler"/></svg></div>
         <div class="diet-stat-val ds-val-sm">${formatHeight(lh.ht)}</div>
-        <div class="diet-stat-label">${calcPercentile(lh.ht, hw.h3, hw.h50, hw.h97, hw.h15, hw.h85).text}</div>
+        <div class="diet-stat-label">${escHtml(calcPercentile(lh.ht, hw.h3, hw.h50, hw.h97, hw.h15, hw.h85).text)}</div>
       </div>`; })()}
       <div class="diet-stat ds-sage" data-action="switchTab" data-arg="milestones">
         <div class="diet-stat-icon"><svg class="zi"><use href="#zi-star"/></svg></div>
@@ -908,7 +908,10 @@ function renderGrowthFacts() {
       // Newborn window (gvNewbornCheck): the dip (info), back to birth weight (positive), or a flag —
       // more than 10% lost, not back by day 14, weigh again — in the alert style (V-M-282b-2..4).
       const dir = cw.gainG >= 0 ? 'up' : 'down';
-      const title = nbF.status === 'newborn' && !nbF.recheck && !nbF.stale ? `Weight ${dir} ${Math.abs(cw.gainG)}g in ${cw.daysBetween} day${cw.daysBetween === 1 ? '' : 's'}` : nbF.short;
+      // A stale line: the date of the last weigh-in as the title and the line as the body — the title
+      // repeated the body's sentence (nbF.short beside nbF.text — Vela V-V-282f-6), and no rate.
+      const title = nbF.stale ? nbF.dateLead
+        : nbF.status === 'newborn' && !nbF.recheck ? `Weight ${dir} ${Math.abs(cw.gainG)}g in ${cw.daysBetween} day${cw.daysBetween === 1 ? '' : 's'}` : nbF.short;
       facts.push({ type: nbF.tone === 'good' ? 'positive' : nbF.tone === 'caution' ? 'caution' : 'neutral', icon:zi('scale'), title, body:nbF.text });
     } else if (cw.tooShort) {
       facts.push({ type:'info', icon:zi('clock'), title:'Too soon to judge — weigh again in a few weeks', body:gvTooShortText(cw.daysBetween) });
@@ -949,13 +952,19 @@ function renderGrowthFacts() {
     // At or below the 3rd centile line: the line in words, no number — calcPercentile's 2 is a
     // placeholder, so "heavier than 2%" was never measured — and the weight-check action every weight
     // answer gives (Maren V-M-282e-1, -4).
-    if (gvPctLow(pctW.pct)) facts.push({ type:'caution', icon:zi('scale'), title: GV_LOW_CENTILE_LINE, body:`On the WHO growth standard for ${childKinWord()} ${pron('poss')} age. Book a weight check with your doctor ${GV_WHEN_WEIGHT_CHECK} — ${pron('poss')} doctor can look at the whole curve.` });
-    else facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${pctW.text} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of ${childKinWord()} ${pron('poss')} age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
+    // In the newborn window (weight.nb) the after-birth dip moves the percentile by design: no
+    // escalation and no "heavier than 2%" — the line is left out and the newborn fact carries the
+    // action (Maren V-M-282f-5; the Q&A answers already do this, Kael V-K-282e-6).
+    const nbLowF = !!(cw && cw.nb) && gvPctLow(pctW.pct);
+    if (nbLowF) { /* the newborn fact speaks */ }
+    else if (gvPctLow(pctW.pct)) facts.push({ type:'caution', icon:zi('scale'), title: GV_LOW_CENTILE_LINE, body:`On the WHO growth standard for ${childKinWord()} ${pron('poss')} age. Book a weight check with your doctor ${GV_WHEN_WEIGHT_CHECK} — ${pron('poss')} doctor can look at the whole curve.` });
+    else facts.push({ type:'info', icon:zi('scale'), title:`Weight at ${escHtml(pctW.text)} percentile`, body:`This means ${childNameHtml()} is heavier than ${pctW.pct}% of ${childKinWord()} ${pron('poss')} age on the WHO growth standard. Anything between 3rd–97th is healthy.` });
   }
   if (lh) {
     const htWho = getGrowthRef(ageMonthsAt(lh.date));
     const pctH = calcPercentile(lh.ht, htWho.h3, htWho.h50, htWho.h97, htWho.h15, htWho.h85);
-    facts.push({ type:'info', icon:zi('ruler'), title:`Height at ${pctH.text} percentile`, body:`Consistent height percentile over time matters more than the exact number. Watch the trend across visits.` });
+    // '<3rd' / '>97th' escaped at the render boundary (Vela HR-4 note).
+    facts.push({ type:'info', icon:zi('ruler'), title:`Height at ${escHtml(pctH.text)} percentile`, body:`Consistent height percentile over time matters more than the exact number. Watch the trend across visits.` });
   }
   // From the row dated on the birth date (gvBirthRow, V-M-282b-1), not the first weigh-in; a change
   // below birth weight is the newborn fact's to explain, not a "gain".
@@ -1724,7 +1733,11 @@ function renderVelocity() {
     : cwV.status === 'fast' ? 'var(--tc-sky)' : 'var(--tc-sage)';
   // On track but above the shown range (1.0–1.3× the top): the Info card's words, never a bare
   // "Expected" range the rate sits above (gvAboveBandLine — Vela V-V-282e-3).
-  const wtContext = wtNb ? escHtml(wtNb.short) : cwV.tooShort ? 'Too soon to judge'
+  // A stale newborn line (Vela V-V-282f-5): no rate and no ratio — the gauge read "Gain rate −72
+  // g/day" in caution and "Below birth weight" in the present tense for a 100-day-old weighed on day
+  // 5. The value is a dash, the colour the newborn line's tone, and the context leads with the date.
+  const wtStale = !!(wtNb && wtNb.stale);
+  const wtContext = wtStale ? escHtml(wtNb.dateLead) : wtNb ? escHtml(wtNb.short) : cwV.tooShort ? 'Too soon to judge'
     : (cwV.status === 'on-track' && cwV.bandVerdict === 'above') ? gvAboveBandLine('on-track', gPerDay, cwV.expectedRange).short
     : `Expected: ${expectedMin}–${expectedMax} g/day`;
 
@@ -1737,7 +1750,7 @@ function renderVelocity() {
     <div class="velocity-gauge vg-sage">
       <div class="vg-icon">${zi('bolt')}</div>
       <div class="vg-info">
-        <div><span class="vg-value" style="color:${wtColor};">${gPerDay}</span><span class="vg-unit">g/day</span></div>
+        <div><span class="vg-value" style="color:${wtColor};">${wtStale ? '—' : gPerDay}</span><span class="vg-unit">g/day</span></div>
         <div class="vg-label">Gain rate</div>
         <div class="vg-context">${wtContext}</div>
       </div>
@@ -1753,12 +1766,14 @@ function renderVelocity() {
       </div>
     </div>`;
 
-  // Height velocity — compare two most recent entries with height (the shared filter — V-CA-282e-3)
-  const htEntries = gvMeasureRows('ht');
-  if (htEntries.length >= 2) {
-    const htLast = htEntries[htEntries.length - 1];
-    const htPrev = htEntries[htEntries.length - 2];
-    const htDays = Math.max(1, Math.round((new Date(htLast.date) - new Date(htPrev.date)) / 86400000));
+  // Height velocity — the ONE window the Info card and both engines take (gvWeightWindow over the shared
+  // height rows): from 12 m the latest height 28+ whole calendar days back, not the last two rows, which
+  // could be a 5-day pair (Kael V-K-282f-9, PC-10). Days are whole calendar days (HR-12), no UTC parse.
+  const htWin = gvWeightWindow(gvMeasureRows('ht'));
+  if (htWin) {
+    const htLast = htWin.latest;
+    const htPrev = htWin.previous;
+    const htDays = htWin.days;
     const htGainCm = (htLast.ht - htPrev.ht).toFixed(1);
     const cmPerWeek = ((htLast.ht - htPrev.ht) / (htDays / 7)).toFixed(1);
     const expCmWk = growthVelocityBand(gvAgeAt(htLast)).hCmWk;   // at the latest height's age (bug #25)
@@ -1785,7 +1800,9 @@ function renderVelocity() {
   // against birth weight, coloured by the newborn line's tone — never "Approaching 2×" (V-V-282c-4).
   const belowBirth = birth ? Math.round(lastWt.wt * 1000) < Math.round(birth.wt * 1000) : false;
   const vsBirth = !!(birth && (wtNb || belowBirth));
-  const ratioLabel = vsBirth ? (belowBirth ? 'Below birth weight' : 'Back to birth weight') : doubled ? 'Doubled!' : 'Approaching 2×';
+  // Stale (Vela V-V-282f-5): no present-tense state from a months-old weigh-in — the label says when.
+  const ratioLabel = wtStale ? (belowBirth ? 'Below birth weight on day ' + wtNb.day : 'At day ' + wtNb.day)
+    : vsBirth ? (belowBirth ? 'Below birth weight' : 'Back to birth weight') : doubled ? 'Doubled!' : 'Approaching 2×';
   const ratioClass = vsBirth
     ? (wtNb ? (wtNb.tone === 'good' ? 't-sage' : wtNb.tone === 'caution' ? 't-caution' : 't-mid') : 't-caution')
     : doubled ? 't-sage' : 't-lav';   // HR-2: utility classes, not an inline colour
@@ -1793,9 +1810,9 @@ function renderVelocity() {
     <div class="velocity-gauge vg-lav">
       <div class="vg-icon">${zi('sparkle')}</div>
       <div class="vg-info">
-        <div>${belowBirth ? `<span class="vg-value ${ratioClass}">${pctOfBirth}%</span><span class="vg-unit">of birth wt</span>` : `<span class="vg-value ${ratioClass}">${ratio}×</span><span class="vg-unit">birth wt</span>`}</div>
+        <div>${wtStale ? `<span class="vg-value ${ratioClass}">—</span><span class="vg-unit">birth wt</span>` : belowBirth ? `<span class="vg-value ${ratioClass}">${pctOfBirth}%</span><span class="vg-unit">of birth wt</span>` : `<span class="vg-value ${ratioClass}">${ratio}×</span><span class="vg-unit">birth wt</span>`}</div>
         <div class="vg-label">${ratioLabel}</div>
-        <div class="vg-context">${refLabel}: ${wtPct.text} · ${birth.wt}→${lastWt.wt} kg</div>
+        <div class="vg-context">${refLabel}: ${escHtml(wtPct.text)} · ${birth.wt}→${lastWt.wt} kg</div>
       </div>
     </div>`;
 
@@ -10843,6 +10860,7 @@ function computeGrowthVelocity() {
         from: percentiles[i - 1].percentile,
         to: percentiles[i].percentile,
         direction: diff > 0 ? 'climbing' : 'dropping',
+        fromDate: percentiles[i - 1].date,   // the crossing's start, so its line can carry both dates (Vela V-V-282f-2)
         date: percentiles[i].date
       });
     }
@@ -10934,8 +10952,11 @@ function renderInfoGrowthVelocity() {
     : data.weight.gPerDay + 'g/day (' + (data.weight.tooShort ? 'too soon to judge' : data.weight.status) + ')';
   var hStr = data.height ? data.height.cmPerMonth + 'cm/mo (' + data.height.status + ')' : '—';
   // The one ordinal helper; at or below P3 the line in words, never the placeholder 2 (V-M-282e-1, V-V-282e-5).
-  var pStr = data.latestPercentile === null ? '— percentile' : gvPctLow(data.latestPercentile) ? 'at or below the 3rd centile line' : pctOrdinal(data.latestPercentile) + ' percentile';
-  summaryEl.innerHTML = '<span class="t-sm t-mid" >Weight: ' + wStr + ' · Height: ' + hStr + ' · ' + escHtml(pStr) + '</span>';
+  // In the newborn window the low-centile line is left out: the dip moves the percentile by design,
+  // and "early days · at or below the 3rd centile line" read as an escalation (Maren V-M-282f-5).
+  var pLowNb = !!(data.weight && data.weight.nb) && gvPctLow(data.latestPercentile);
+  var pStr = data.latestPercentile === null ? '— percentile' : pLowNb ? '' : gvPctLow(data.latestPercentile) ? 'at or below the 3rd centile line' : pctOrdinal(data.latestPercentile) + ' percentile';
+  summaryEl.innerHTML = '<span class="t-sm t-mid" >Weight: ' + escHtml(wStr) + ' · Height: ' + hStr + (pStr ? ' · ' + escHtml(pStr) : '') + '</span>';
 
   // Velocity bar
   if (barEl && data.weight) {
@@ -10964,7 +10985,8 @@ function renderInfoGrowthVelocity() {
     var bHtml;
     if (wNbB) {
       bHtml = '<div class="si-sub-label">Weight change · ' + escHtml(wNbB.short) + '</div>';
-      bHtml += '<div class="t-sm t-mid">' + w.gPerDay + ' g/day</div>';
+      // A stale line: the date of the last weigh-in in place of the old rate (Vela V-V-282f-5).
+      bHtml += '<div class="t-sm t-mid">' + (wNbB.stale ? escHtml(wNbB.dateLead) : w.gPerDay + ' g/day') + '</div>';
     } else if (w.tooShort) {
       bHtml = '<div class="si-sub-label">Weight change · too soon to judge</div>';
       bHtml += '<div class="t-sm t-mid">' + w.gPerDay + ' g/day</div>';
@@ -10997,7 +11019,8 @@ function renderInfoGrowthVelocity() {
     if (data.crossings.length > 0) {
       var latest = data.crossings[data.crossings.length - 1];
       var crossColor = latest.direction === 'climbing' ? 'si-insight-good' : 'si-insight-warn';
-      html += '<div class="si-insight ' + crossColor + '">Crossed from ' + pctOrdinal(latest.from) + ' to ' + pctOrdinal(latest.to) + ' percentile — ' + latest.direction + '.</div>';   // V-V-282e-5
+      // With its dates, so an old crossing never reads as today's (Vela V-V-282f-2).
+      html += '<div class="si-insight ' + crossColor + '">' + escHtml('Crossed from ' + pctOrdinal(latest.from) + ' to ' + pctOrdinal(latest.to) + ' percentile' + gvCrossingDates(latest) + ' — ' + latest.direction + '.') + '</div>';   // V-V-282e-5
     }
     // A slow fall across two major centile lines, which the pairwise check above misses (V-M-282c-11).
     if (data.centileSlide) html += '<div class="si-insight si-insight-warn">' + escHtml(data.centileSlide.text) + '.</div>';
@@ -11061,7 +11084,9 @@ function renderInfoGrowthVelocity() {
         // One line, one tone with the Growth facts and the concern answer (gvAboveBandLine — V-V-282e-3).
         iHtml += '<div class="si-insight si-insight-info">' + gvAboveBandLine('fast', w2.gPerDay, w2.expectedRange).text + '</div>';
       }
-      if (w2.stale) {
+      // A stale newborn line already says when and what to do, in its own tone: the generic amber
+      // "Time for a weigh-in!" beside a neutral stale line was a second answer (Vela V-V-282f-6, PC-10).
+      if (w2.stale && !(w2.nb && w2.nb.stale)) {
         iHtml += '<div class="si-insight si-insight-warn">Last weight measurement was ' + w2.daysSince + ' days ago. Time for a weigh-in!</div>';
       }
     }
@@ -11126,7 +11151,10 @@ function computeVisitPrep() {
   if (weightDelta !== null) { sections.growth.items.push(weightDelta < 0 ? 'Weight down ' + Math.abs(weightDelta) + 'g' : 'Gained ' + weightDelta + 'g'); changes++; }
   if (heightDelta !== null) { sections.growth.items.push('Grew ' + heightDelta + 'cm'); changes++; }
   // At or below P3 the line in words, never "2th percentile" (V-M-282e-1, V-V-282e-5).
-  if (latestPct !== null) sections.growth.items.push(gvPctLow(latestPct) ? 'At or below the 3rd centile line' : pctOrdinal(latestPct) + ' percentile');
+  // In the newborn window the low-centile line is information for the doctor, not an escalation: it
+  // says so, and the newborn line below carries the action (Maren V-M-282f-5).
+  var nbVisit = !!(gvData && !gvData.insufficient && gvData.weight && gvData.weight.nb);
+  if (latestPct !== null) sections.growth.items.push(gvPctLow(latestPct) ? (nbVisit ? 'At or below the 3rd centile line (newborn weeks)' : 'At or below the 3rd centile line') : pctOrdinal(latestPct) + ' percentile');
   // Newborn window: the line from gvNewbornCheck — the expected dip, back to birth weight, a loss
   // over 10%, not back by day 14, or "Back to birth weight not yet confirmed (last weighed day N)"
   // once she is past day 14 with only an earlier weigh-in (V-M-282b-4).
@@ -11276,7 +11304,7 @@ function computeVisitPrep() {
     if (gvData.crossings && gvData.crossings.length > 0) {
       var lastCross = gvData.crossings[gvData.crossings.length - 1];
       if (lastCross.direction === 'dropping') {
-        concerns.push({ type: 'warn', text: 'Percentile dropped from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to) });   // V-V-282e-5
+        concerns.push({ type: 'warn', text: 'Percentile dropped from ' + pctOrdinal(lastCross.from) + ' to ' + pctOrdinal(lastCross.to) + gvCrossingDates(lastCross) });   // V-V-282e-5; dated (V-V-282f-2)
       }
     }
     if (gvData.proportionFlag) {

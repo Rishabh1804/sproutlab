@@ -987,6 +987,11 @@ function renderInfoGrowthDiet() {
     : gvW.tooShort ? 'too-short'
     : (gvW.status === 'slow' || gvW.status === 'plateau') ? 'slow'
     : gvW.status === 'fast' ? 'rapid' : 'normal';
+  // Above the shown band — beyond 1.3× the top ('fast') or 1.0–1.3× the top (on track, band verdict
+  // 'above'): the shared line, its tone and its icon (gvAboveBandLine — Vela V-V-282f-3, PC-10). "rapid"
+  // read green with a check, and the 1.0–1.3× zone read "normal" beside a range the rate sits above.
+  var aboveCard = (!gvNb && !gvW.tooShort && (gvW.status === 'fast' || (gvW.status === 'on-track' && gvW.bandVerdict === 'above')))
+    ? gvAboveBandLine(gvW.status, gvW.gPerDay, gvW.expectedRange) : null;
 
   // Diet metrics during the growth period
   var periodDates = [];
@@ -1029,7 +1034,9 @@ function renderInfoGrowthDiet() {
   var avgMeals = Math.round((totalMeals / feedingDays.length) * 10) / 10;
   var avgVariety = Math.round((totalFoods / feedingDays.length) * 10) / 10;
 
-  var velIcon = (velLabel === 'slow' || velLabel === 'newborn-flag') ? zi('warn') : (velLabel === 'newborn' || velLabel === 'too-short') ? zi('info') : zi('check');
+  var velIcon = (velLabel === 'slow' || velLabel === 'newborn-flag') ? zi('warn')
+    : aboveCard ? (aboveCard.tone === 'good' ? zi('check') : zi('info'))   // the shared tone (V-V-282f-3)
+    : (velLabel === 'newborn' || velLabel === 'too-short') ? zi('info') : zi('check');
   var velText = gvNb ? escHtml(gvNb.short) : 'Velocity <strong>' + velocity + ' g/day</strong>';
   sumEl.innerHTML = '<div class="t-sm">' + velText + ' · <strong>' + avgMeals + '</strong> meals/day · diet ' + velIcon + '</div>';
 
@@ -1037,7 +1044,8 @@ function renderInfoGrowthDiet() {
   if (perEl) {
     var pHtml = '<div class="cd-section-label">Current Growth Period</div>';
     pHtml += '<div class="si-stat-grid">';
-    pHtml += '<div class="si-stat"><div class="si-stat-val">' + velocity + '</div><div class="si-stat-label">g/day velocity</div></div>';
+    // A stale newborn line: no old rate as the "current" velocity — a dash; the dates below say when (Vela V-V-282f-5).
+    pHtml += '<div class="si-stat"><div class="si-stat-val">' + (gvNb && gvNb.stale ? '—' : velocity) + '</div><div class="si-stat-label">g/day velocity</div></div>';
     pHtml += '<div class="si-stat"><div class="si-stat-val">' + (wtDiffG >= 0 ? '+' : '') + wtDiffG + 'g</div><div class="si-stat-label">' + daysBetweenMeasurements + ' days</div></div>';
     pHtml += '</div>';
     pHtml += '<div class="cd-meta">' + formatDate(prev.date) + ' → ' + formatDate(last.date) + ' · ' + prev.wt + ' → ' + last.wt + ' kg</div>';
@@ -1099,6 +1107,9 @@ function renderInfoGrowthDiet() {
       iHtml += '<div class="si-insight ' + nbInsCls + '">' + gvNb.text + '</div>';
     } else if (velLabel === 'too-short') {
       iHtml += '<div class="si-insight si-insight-info">' + gvTooShortText(daysBetweenMeasurements) + '</div>';
+    } else if (aboveCard) {
+      // The Info card's line and tone: good for a little above, neutral beyond 1.3× (V-V-282f-3).
+      iHtml += '<div class="si-insight ' + (aboveCard.tone === 'good' ? 'si-insight-good' : 'si-insight-info') + '">' + escHtml(aboveCard.text) + '</div>';
     } else {
       iHtml += '<div class="si-insight si-insight-good">Growth velocity is ' + velLabel + ' at ' + velocity + ' g/day with ' + avgMeals + ' meals/day</div>';
     }
