@@ -907,6 +907,195 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 - **Patch class:** PC-9 (a doc that describes the registry drifted from it).
 - **Status:** **Fixed** (3e40ce7).
 
+#### P0 — Displayed g/day contradicted the g/week verdict (103)
+- **Symptom:** After verdicts moved to g/week, the screen still quoted the hand-typed g/day columns. In 26 of 28 rows those sat inside the g/week band, so "Gaining 1.5g/day — right on track! about 1.7–12.3g/day is typical" could show (girls 12–18 m, Ziva's row). Under 12 m the rate was shown as a whole number ("4g/day" against 4.7–18.3).
+- **Cause:** the round-3 fix moved the verdict to one unit but left the display reading a second, separately typed scale.
+- **Fix:** `gvDayFromWeek(k) = Math.floor(k*10/7)/10` derives every displayed limit and rate from g/week; the wGDay* columns are removed; rates show one decimal everywhere. Whole-number g/week values are 1/7 apart, more than the 0.1 step, so shown rate inside shown range ⇔ verdict 'in'. A sweep test checks every band row for both sexes.
+- **Where:** core.js `gvDayFromWeek`, `growthVelocityBand`; medical.js `computeGrowthVelocity`, `renderGrowthFacts`, `renderVelocity`, Info bar; qa-handlers; cards; visit prep.
+- **Caught by:** V-V-282d-1, V-CA-282d-1 (both independently).
+- **Patch class:** PC-10 (one state, two answers); came back because the display read a different column from the verdict.
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — g/week computed as (g/days)×7 lost a gram to floating point (104)
+- **Symptom:** 460 g over 28 days computed as 114.999… g/week and floored to 114, one under an exact 115 limit.
+- **Cause:** dividing before multiplying in floating point.
+- **Fix:** Both engines multiply first: `Math.floor(g*7/days)`.
+- **Where:** core.js `getGrowthVelocity`; medical.js `computeGrowthVelocity`.
+- **Caught by:** Round-4 builder, found by the band sweep test.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Gain-rate gauge judged the last two weigh-ins while Growth facts judged the 28-day window (105)
+- **Symptom:** From 12 m, an amber "−4 g/day" gauge could sit above "right on track" on the same tab.
+- **Cause:** the gauge kept its own last-pair calculation.
+- **Fix:** From 12 m the gauge takes `computeGrowthVelocity().weight`; too short reads "Too soon to judge" in the neutral colour.
+- **Where:** medical.js `renderVelocity`.
+- **Caught by:** V-V-282d-2.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Too-short window forced to on-track (106)
+- **Symptom:** The summary said "too soon to judge" while the Info bar drew a green marker in the expected zone, and the score counted it as 90.
+- **Cause:** `computeGrowthVelocity` set status 'on-track' for a short window.
+- **Fix:** Status 'too-short' in both engines (`wtTooShort` in getGrowthVelocity); no bar, a "too soon to judge" sub-label; neutral tone; scores 70.
+- **Where:** medical.js `computeGrowthVelocity`, Info bar; core.js `getGrowthVelocity`, `gvVerdictTone`, `computeMedicalModifier`; home.js chip.
+- **Caught by:** V-V-282d-3, V-V-282d-7.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Home flagged a healthy fast gain as a warning (107)
+- **Symptom:** A 95 g/week toddler showed an amber "check" chip on Home and green "on track" on Growth.
+- **Cause:** Home used the band top as its limit; the other surfaces allow up to 1.3× the top.
+- **Fix:** One 1.3× rule in g/week, `gvRateStatus`, used by both engines; `gvHomeVerdict`; 'above' is neutral, never a warning; chips colour from tone only.
+- **Where:** core.js `gvRateStatus`, `gvHomeVerdict`, `gvVerdictTone`; home.js `renderTrendChips`.
+- **Caught by:** V-V-282d-4 (predated #282).
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Birth-ratio gauge showed "1.0×" next to "Below birth weight" (108)
+- **Symptom:** A loss under about 5% rounded the ratio up to 1.0×.
+- **Cause:** `toFixed(1)` on the ratio.
+- **Fix:** Below birth weight the gauge shows the floored percentage ("98% of birth wt").
+- **Where:** medical.js `renderVelocity`.
+- **Caught by:** V-V-282d-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Home chip showed a raw rate after the return to birth weight (109)
+- **Symptom:** "21g/wk ✓ healthy" appeared, a rate the verdict never judged.
+- **Cause:** the chip used `nb.chip` only for caution lines.
+- **Fix:** `nb.chip` is used whenever `wtNewborn` is set; the chip text is escaped (HR-4).
+- **Where:** home.js `renderTrendChips`.
+- **Caught by:** V-V-282d-6.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P0 — "Is she losing weight" reassured a baby who was losing weight (110)
+- **Symptom:** `qaAnswerWeightConcern` showed slow or plateau gain as info, called any centile at or below the 85th "within normal range" (including below the 3rd), added "a higher percentile is usually fine", "encourage active play" and "discuss at the next visit", and never showed the centile slide.
+- **Cause:** the handler predated the newborn and slide work, and was never re-read against it.
+- **Fix:** A `concern` flag (slow or plateau, below P3, slide, dropping crossing, caution newborn line) gives the warn signal and leads with a doctor action ("today" under 28 days); below P3 never says "within normal range"; slide and dropping crossings each carry an action; the reassurance lines are dropped when there is a concern.
+- **Where:** intelligence-qa-handlers.js `qaAnswerWeightConcern`.
+- **Caught by:** V-M-282d-1 (blocking).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — No-birth-row regain check ran only when the first weigh-in was before day 5 (111)
+- **Symptom:** First weigh-in on day 7 and a loss by day 21 read 'plateau' with the milk note; with the same weights, day 3 gave caution and day 6 gave green.
+- **Cause:** the regain window opened only for a first weigh-in before day 5.
+- **Fix:** With no birth row, the regain window opens whenever the first weigh-in is before day 14; e2e checks day 3 and day 6 give the same answer.
+- **Where:** core.js `gvNewbornCheck`.
+- **Caught by:** V-M-282d-2, V-K-282d-1.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — A baby still losing after day 5 read neutral (112)
+- **Symptom:** 3.40 kg at birth, 3.20 on day 4, 3.15 on day 7, 3.10 on day 10 showed "Early days" and scored 70; the Q&A said "Continue regular weigh-ins every 1-2 weeks".
+- **Cause:** the model only flagged a loss over 10%.
+- **Fix:** `stillLosing` (below birth weight, previous weigh-in from day 5, dropped by at least the noise floor) gives a caution line "tell your doctor or midwife today" (AAP, steady gain from about day 5) and scores 50. The newborn fallback reads "Keep to the weigh-ins your doctor or midwife suggests".
+- **Where:** core.js `gvNewbornCheck`; qa-handlers.
+- **Caught by:** V-M-282d-3.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — "Dropping" had no noise floor (113)
+- **Symptom:** A 10 g drop after regain turned green "back to birth weight" amber and the score from 90 to 50.
+- **Cause:** any drop counted.
+- **Fix:** `GV_DROP_NOISE_G = 20` (home scales vary by ±10–20 g), used for the regain drop and for "still losing".
+- **Where:** core.js.
+- **Caught by:** V-K-282d-2.
+- **Patch class:** PC-1
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Newborn lines without a time bound, and stale readings that never escalated (114)
+- **Symptom:** The day 14–20 line said only "tell your doctor or midwife"; a below-birth-weight recheck read "weigh again" even on day 30; a day 14–20 'not-regained' reading still standing past day 21 kept the "next day or two" wording.
+- **Cause:** the copy had no age or time bound, and the escalation read the weigh-in day, not today.
+- **Fix:** Day 14–20: "Tell your doctor or midwife in the next day or two — before 3 weeks". From day 21 with the last weight below birth weight: "Weigh [name] today — if not back to birth weight, contact your doctor or midwife". A day 14–20 reading still standing on day 21 or later sets `overdue`: referral wording, "Contact your doctor or midwife today", score 25 (Lyra; e2e).
+- **Where:** core.js `gvNewbornCheck`, `gvNewbornAction`.
+- **Caught by:** V-M-282d-4, V-M-282d-5; overdue case found by the round-4 builder and fixed by Lyra.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Centile slide could be cut off or contradicted in the weight-gain answer (115)
+- **Symptom:** The slide was pushed after five other items and `slice(0,5)` could drop it; the headline could still read "gaining well"; two actions repeated each other; a slide below P3 did not escalate; the birth row could not start a slide.
+- **Cause:** the slide was appended late, and the headline ignored it.
+- **Fix:** The slide comes right after the weight line; the headline reads "weight moving down the centile lines"; one merged action; below P3, "Book a weight check with your doctor" (NICE NG75 1.2.1 quoted; the app uses the 3rd centile its WHO charts draw, where NICE names the 2nd); the birth row can start the slide.
+- **Where:** qa-handlers `qaAnswerWeightGain`; medical.js `centileSlide`.
+- **Caught by:** V-M-282d-6, V-M-282d-7.
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Milk-only note was false for a baby past 6 months not on solids (116)
+- **Symptom:** "Under 6 months, milk is the whole diet" showed to a 6.5-month-old whose solids start was in the future, hiding that from 6 months milk alone is not enough.
+- **Cause:** the note was tied to the food gate, which closes for more than one reason; the gate also read the weigh-in age, not today's.
+- **Fix:** `gvFoodAdviceOk()` judges today's age and `solidsStarted()`; `gvGateNote()` picks the milk note under 6 m today and `gvStartSolidsNote()` from 6 m without solids, at every site.
+- **Where:** core.js; qa-handlers; cards; medical.js; caretickets.
+- **Caught by:** V-C-282d-1, V-K-282d-6.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P1 — Weight-loss lines on the food path said "could be normal" with no doctor line (117)
+- **Symptom:** A 6-month-plus child losing weight read "This could be normal after illness or a dietary gap".
+- **Cause:** the loss branch reused the slow-gain copy.
+- **Fix:** A loss ends "Mention it to your doctor."; "could be normal" is gone; card and visit-prep lines read "Weight down".
+- **Where:** medical.js Info insights and visit prep; cards.
+- **Caught by:** V-C-282d-2, V-C-282d-4(b,c).
+- **Patch class:** PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Food gate leftovers (118)
+- **Symptom:** With the gate closed, "Increase meal frequency" stayed in the CareTicket pivots and the diet bar grid still painted nutrient gaps; a comment misstated the gate; the nut-butter line had no introduction clause.
+- **Cause:** the gate was applied to text lines but not to every surface.
+- **Fix:** Both hidden or dropped when the gate is closed (direct test of the pivots); comment fixed; "(once nuts have been introduced)".
+- **Where:** caretickets `ctPivotStrategies`; cards `renderInfoGrowthDiet`; qa-handlers.
+- **Caught by:** V-C-282d-3, V-C-282d-4(a,d,e).
+- **Patch class:** PC-3 (pivots not yet rendered) / PC-7
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Two engines filtered weight rows differently (119)
+- **Symptom:** A synced row with `wt: 0`, a string weight or no date could give the engines a different first or latest weigh-in.
+- **Cause:** each engine had its own filter.
+- **Fix:** One shared `gvWeightRows()` (finite wt > 0, valid date, sorted) for both engines, `gvBirthRow` and `_gvWeightRowBefore`; e2e with malformed rows.
+- **Where:** core.js.
+- **Caught by:** V-K-282d-5.
+- **Patch class:** PC-10
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Boys 12–18 m length floor one step too lenient (120)
+- **Symptom:** `hCmMoMin` 0.55 where WHO's lowest P15 2-month increment (1.2 cm) gives 0.6.
+- **Cause:** an older hand derivation (ee61e98).
+- **Fix:** 0.6, with the source comment corrected.
+- **Where:** core.js GROWTH_VELOCITY_BANDS.
+- **Caught by:** V-CA-282d-4.
+- **Patch class:** PC-9
+- **Status:** **Fixed** (869b8d8).
+
+#### P2 — Growth-age gate bypasses (round 3), including a regression in the rewrite (121)
+- **Symptom:** Carina found eight new ways past the gate (`preciseAge()`, `ageAt…()` with no argument, destructuring, two hops, `obj.prop =`, `Date.now()`, long assignments, a `")"` string in the arguments). Kael found three more (a clean reassignment in front of a today default, `gvAgeAt(null)`, `gvBandAge()`) and a regression: Lyra's rewrite started its look-back one line above the call, so an assignment on the call's own line was no longer traced.
+- **Cause:** the trace followed only the nearest assignment of a bare identifier, and the rewrite had an off-by-one.
+- **Fix:** Every assignment in the 40 lines above, the call's own line up to the call, destructuring, member paths, three hops, 30-line assignments, string literals skipped, and `gvRateStatus` watched. 39 self-test fixtures.
+- **Where:** split/audit-growth-age-v1.sh.
+- **Caught by:** V-CA-282d-2, V-K-282d-3, V-K-282d-4 (regression).
+- **Patch class:** PC-5
+- **Status:** **Fixed** (d9dff76, 69c6ccc, 869b8d8).
+
+#### P2 — HR-12 ratchet: a bare exemption and a no-baseline update passed (122)
+- **Symptom:** With the baseline deleted, `--update` wrote any count without `--allow-raise`; a bare `// HR-12` with no reason exempted a line.
+- **Cause:** the raise check ran only when a baseline existed; the exemption matched the tag alone.
+- **Fix:** A new baseline needs `--allow-raise`; an exemption needs a reason after a colon. Fixtures for both.
+- **Where:** split/audit-hr12-dateonly-v1.sh.
+- **Caught by:** V-CA-282d-3.
+- **Patch class:** PC-5
+- **Status:** **Fixed** (d9dff76).
+
+#### P3 (test, main-side) — smoke.spec.ts:822 expects the Home tab after load (123)
+- **Symptom:** "home tab active by default landing" fails: the app opens on the landing tab.
+- **Cause:** the default has been the landing tab since #219 and the fixture sets no saved tab; the test only passed when another state put Home first. It fails identically against main's build.
+- **Fix:** None in #282 (out of scope). The test should switch to Home before asserting, or assert the landing default.
+- **Where:** tests/e2e/smoke.spec.ts:822.
+- **Caught by:** Full-suite run on 6d8a482, reproduced on main.
+- **Patch class:** PC-6
+- **Status:** **Open** (main-side; not a #282 regression).
+
 ### Repo sweep — 2026-10-28 (monthly-update session, Ziva 13.8 months)
 
 A full sweep of the roadmaps, specs, this log, the handoffs, code stubs and git. Seven entries that had in fact been fixed were moved to **Fixed Bugs → Ledger sweep (2026-10-28)**. The reconciled plan lives in [`ROADMAP_2026-10_RECONCILED.md`](./ROADMAP_2026-10_RECONCILED.md). New entries found by the sweep:
