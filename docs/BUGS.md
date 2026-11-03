@@ -1322,7 +1322,7 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 - **Status:** **Fixed** (4d1dd1d).
 
 #### P2 — A stale newborn reading shown as a present-day rate (149)
-- **Symptom:** For a 100-day-old, Home read "Weight: down 504g/week (over 5 days). Last weighed on day 5…"; the gauge showed a caution "−72 g/day" and "Below birth weight" in the present tense; Info and the Q&A repeated a generic "Time for a weigh-in!" in a second colour.
+- **Symptom:** For a 100-day-old, the (dormant) Home narrative read "Weight: down 504g/week (over 5 days). Last weighed on day 5…"; the gauge showed a caution "−72 g/day" and "Below birth weight" in the present tense; Info and the Q&A repeated a generic "Time for a weigh-in!" in a second colour.
 - **Cause:** marking the reading 'newborn' sent it down the rate-prefix branches; the freshness lines did not know about the stale line.
 - **Fix:** A stale reading leads with the date of the last weigh-in (`nb.dateLead`, `gvDateText`); the rate and ratio gauges show a dash and "Below birth weight on day N"; one stale line, one tone; one weigh-now action.
 - **Where:** core.js; medical.js; qa-handlers; cards.
@@ -1333,7 +1333,7 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
 #### P2 — Growth-diet card read a fast gain as green "rapid" (150)
 - **Symptom:** The card showed "Growth velocity is rapid" with a green check, and the 1.0–1.3× zone as "normal", while every other surface said neutral "above the usual".
 - **Cause:** the card kept its own labels.
-- **Fix:** Tone, icon and line from `gvAboveBandLine`; Home's narrative too (no "Likely a growth spurt").
+- **Fix:** Tone, icon and line from `gvAboveBandLine`; the (dormant) Home narrative too (no "Likely a growth spurt"). `getGrowthNarrative` has no live caller (Cipher A4).
 - **Where:** intelligence-cards.js; core.js `getGrowthNarrative`.
 - **Caught by:** V-V-282f-3, V-K-282e-7.
 - **Patch class:** PC-10
@@ -1420,6 +1420,8 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
   - **Ceres:** g-2 the card summary icon reads as a diet verdict, "1 meals/day"; g-3 the low-coverage line repeats the nutrient-gaps line and should name iron-rich foods.
   - **Carina:** g-1 / Kael g-3: remaining growth-age gate bypasses (none in source; structural fix: make `gvAgeAt` return NaN instead of today, or an AST pass); g-2 `calcMedicalScore` and three other readers still take the last array row; g-3 an impossible bare date falls back to a UTC parse; g-4 `formatDate` UTC parse (existing V-K-267-12).
   - **Kael:** g-6 `gvSlowAction`'s "today" branch is unreachable while `nb` covers day < 28; g-7 correlate takes the first same-date row in unsorted order.
+  - **Cipher (Edict V):** N2 dead code — `getGrowthNarrative` + `gvNewbornLine` + `_orig_renderInsightsGrowth`, the unreachable `under28` fallback in qaAnswerWeightConcern, the redundant `isPlateau` override in computeGrowthVelocity, and the `gvWeightRows` alias of `gvMeasureRows('wt')`; N3 the emergency tag is keyed on `'testicular-torsion'` literally (put the flag in the registry so `inguinal-hernia` → stuck-hernia matches its comment); N4 HR-2 debt on existing lines (the HR-2 ratchet is the fix); out of scope: medical.js `htGain` renders unrounded ("Grew 0.6000000000000014 cm").
+  - **Tracked separately (priority):** Maren g-6 — the paracetamol chip names no weight, date or formulation and has no plausibility cap on a mistyped weight. A dosing issue, so its own prioritised issue rather than part of the follow-up PR (Cipher).
 - **Where:** various.
 - **Caught by:** Final verification round (V-M/V-V/V-C/V-CA/V-K-282g).
 - **Patch class:** mixed

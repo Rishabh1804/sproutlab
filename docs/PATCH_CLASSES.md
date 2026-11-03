@@ -49,8 +49,8 @@ The labels were corrected after Carina's audit (V-CA-282b-7), so no class claims
 
 **Guards:**
 - **Guarded:**
-  - `audit-growth-age-v1`: no band or verdict helper (`growthVelocityBand`, `gvBandVerdict`, `gvWeightVerdict`, `gvRateStatus`, `_gvNewbornWindow`) takes today's age. It fails on `ageAt(`, `ageAt…()` with no argument, `preciseAge(`, `getAgeInMonths(`, `today()`, `new Date()`, `Date.now(`, `gvAgeAt()` / `gvAgeAt(null)` or `gvBandAge()` anywhere in the argument, and on any name in the argument (identifier, member path or destructured field) with an assignment in the 40 lines above — the call's own line included — that reaches one of those within three hops. Calls and assignments may span lines; string literals are skipped. 39 self-test fixtures, every one a pattern a reviewer found (Kael V-K-282c-4 / 282d-3 / 282d-4, Carina V-CA-282c-1 / 282d-2). It flags 17 sites in the pre-#25 code.
-  - `audit-hr12-dateonly-v1`: a per-file ratchet on `new Date(x)` where `x` ends in date / Date / key / Key / Str, or is `today()`. Counts may only fall; a benign site carries `// HR-12`. A missing baseline fails, and `--update` refuses to raise a count without `--allow-raise` (V-CA-282c-2).
+  - `audit-growth-age-v1`: no band or verdict helper (`growthVelocityBand`, `gvBandVerdict`, `gvWeightVerdict`, `gvRateStatus`, `_gvNewbornWindow`) takes today's age. It fails on `ageAt(`, `ageAt…()` with no argument, `preciseAge(`, `getAgeInMonths(`, `today()`, `new Date()`, `Date.now(`, `gvAgeAt()` / `gvAgeAt(null)` or `gvBandAge()` anywhere in the argument, and on any name in the argument (identifier, member path or destructured field) with an assignment in the 40 lines above — the call's own line included — that reaches one of those within three hops. Calls and assignments may span lines; string literals are skipped. 71 self-test fixtures, every one a pattern a reviewer found (Kael V-K-282c-4 / 282d-3 / 282d-4, Carina V-CA-282c-1 / 282d-2). It flags 17 sites in the pre-#25 code.
+  - `audit-hr12-dateonly-v1`: a per-file ratchet on `new Date(x)` where `x` ends in date / Date / key / Key / Str, or is `today()`. Counts may only fall; a benign site carries `// HR-12: <reason>` (a bare marker still counts). A missing baseline fails, and `--update` refuses to raise a count without `--allow-raise` (V-CA-282c-2).
 - **Design:** `growthVelocityBand()`, `gvAgeAt()` and `ageMonthsAt()` (core.js) are the single band, age and month sources; `_syncNow()` orders all sync-ledger events.
 - **Tests:** growth-velocity-bands.spec (bracket edges, age rule, newborn cases), sync-unsynced-ledger F17 (run repeated).
 - **Rule:** "one helper, one clock". A new time-derived value goes through the existing helper, never a local copy.
@@ -114,7 +114,7 @@ Also look for: a new `style="color:` / `background:` built from a JS value; chec
 | # | Item | Patch |
 |---|---|---|
 | 51 | Pronoun gate ignored template attribute copy | Scans placeholder, aria-label, title and alt |
-| 54 | Pronoun gate had no self-tests | 16 adversarial fixtures run first; a scanner regression fails the build |
+| 54 | Pronoun gate had no self-tests | Adversarial fixtures run first (16 at the time, 22 now); a scanner regression fails the build |
 
 **Same class, already fixed in #282:** #46 (gate failed on new keywords, caught before shipping), #50 (substring allow entries), #52 (missing anchor switched a rule off), #97 (growth-age gate bypasses: a today-age fallback hidden behind an approved helper, unscanned verdict helpers, multi-line and property-path arguments), #98 (HR-12 ratchet passed with no baseline and missed `*Str` / `today()`), #121 (round-3 bypasses, and a regression in the gate's own rewrite that stopped tracing the call's own line), #122 (a bare exemption and a no-baseline update passed).
 
@@ -123,7 +123,7 @@ Also look for: a new `style="color:` / `background:` built from a JS value; chec
 **Guards:**
 - **Guarded:** `audit-pronouns-v1` self-test.
 - **Rule:** every new gate ships with fixtures for its pass and fail cases and a stale-entry check.
-- **Rule:** every bypass a reviewer finds becomes a self-test fixture in the same commit as the scanner fix. Fixtures run before the scan, and a mismatch fails the build (exit 2). audit-growth-age-v1 grew from 8 fixtures to 39 this way.
+- **Rule:** every bypass a reviewer finds becomes a self-test fixture in the same commit as the scanner fix. Fixtures run before the scan, and a mismatch fails the build (exit 2). audit-growth-age-v1 grew from 8 fixtures to 71 this way.
 - **Rule:** a gate rewrite keeps every earlier fixture and adds the new ones; a fixture that stops failing is a regression in the scanner (#121).
 - **Rule (fail closed):** a missing baseline, anchor or input fails the gate; it never passes (#52, #98). A baseline update may only lower counts unless the raise is explicit (`--allow-raise`).
 

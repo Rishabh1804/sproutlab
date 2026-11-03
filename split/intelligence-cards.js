@@ -1104,7 +1104,7 @@ function renderInfoGrowthDiet() {
       }
     } else if (gvNb) {
       var nbInsCls = gvNb.tone === 'caution' ? 'si-insight-warn' : gvNb.tone === 'good' ? 'si-insight-good' : 'si-insight-info';
-      iHtml += '<div class="si-insight ' + nbInsCls + '">' + gvNb.text + '</div>';
+      iHtml += '<div class="si-insight ' + nbInsCls + '">' + escHtml(gvNb.text) + '</div>';   // HR-4 (Cipher A1)
     } else if (velLabel === 'too-short') {
       iHtml += '<div class="si-insight si-insight-info">' + gvTooShortText(daysBetweenMeasurements) + '</div>';
     } else if (aboveCard) {

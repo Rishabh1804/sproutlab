@@ -170,7 +170,7 @@ if ! bash audit-growth-age-v1.sh >&2; then
   exit 1
 fi
 # audit-hr12-dateonly-v1.sh — PC-1 ratchet (BUGS #55): date-only strings parsed with new Date()
-# may only decrease across split/*.js; a new one needs _parseLocalDate or an '// HR-12' marker.
+# may only decrease across split/*.js; a new one needs _parseLocalDate or an '// HR-12: <reason>' marker (a bare marker still counts).
 if ! bash audit-hr12-dateonly-v1.sh >&2; then
   echo "BUILD ABORTED: HR-12 date-only ratchet failed. A new UTC-parsed date-only string (see above)." >&2
   exit 1

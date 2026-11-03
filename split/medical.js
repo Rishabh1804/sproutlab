@@ -912,7 +912,8 @@ function renderGrowthFacts() {
       // repeated the body's sentence (nbF.short beside nbF.text — Vela V-V-282f-6), and no rate.
       const title = nbF.stale ? nbF.dateLead
         : nbF.status === 'newborn' && !nbF.recheck ? `Weight ${dir} ${Math.abs(cw.gainG)}g in ${cw.daysBetween} day${cw.daysBetween === 1 ? '' : 's'}` : nbF.short;
-      facts.push({ type: nbF.tone === 'good' ? 'positive' : nbF.tone === 'caution' ? 'caution' : 'neutral', icon:zi('scale'), title, body:nbF.text });
+      // The facts renderer interpolates title and body raw, so escape at the push (HR-4, Cipher A3).
+      facts.push({ type: nbF.tone === 'good' ? 'positive' : nbF.tone === 'caution' ? 'caution' : 'neutral', icon:zi('scale'), title: escHtml(title), body: escHtml(nbF.text) });
     } else if (cw.tooShort) {
       facts.push({ type:'info', icon:zi('clock'), title:'Too soon to judge — weigh again in a few weeks', body:gvTooShortText(cw.daysBetween) });
     } else if (cw.status === 'on-track' && cw.bandVerdict === 'in') {
@@ -11055,7 +11056,7 @@ function renderInfoGrowthVelocity() {
         // Newborn window (gvNewbornCheck): the after-birth dip (info), back to birth weight (good), or a
         // flag — more than 10% lost, not back by day 14, or weigh again (caution) — V-M-282b-2..4.
         var nbCls = w2.nb.tone === 'good' ? 'si-insight-good' : w2.nb.tone === 'caution' ? 'si-insight-warn' : 'si-insight-info';
-        iHtml += '<div class="si-insight ' + nbCls + '">' + w2.nb.text + '</div>';
+        iHtml += '<div class="si-insight ' + nbCls + '">' + escHtml(w2.nb.text) + '</div>';   // HR-4 (Cipher A2)
       } else if (w2.tooShort) {
         iHtml += '<div class="si-insight si-insight-info">' + gvTooShortText(w2.daysBetween) + '</div>';
       } else if (w2.status === 'on-track' && w2.bandVerdict === 'above') {
