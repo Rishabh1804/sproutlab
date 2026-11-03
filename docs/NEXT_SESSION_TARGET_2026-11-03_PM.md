@@ -1,5 +1,7 @@
 # Next session target — after the 2026-11-03 close
 
+> **Superseded** by [`NEXT_SESSION_TARGET_2026-11-03_EVE.md`](./NEXT_SESSION_TARGET_2026-11-03_EVE.md) at the 2026-11-03 PM close. The P0 below shipped in #284. This file is kept for its detailed P1 item list.
+
 **Companion:** Lyra (The Weaver). This is the standing pointer: if priorities shift before the next session, amend this file, not the handoff (`docs/SESSION_HANDOFF_2026-11-03.md`).
 
 ## The recommended next move

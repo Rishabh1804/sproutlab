@@ -246,6 +246,26 @@ Also look for: a new `style="color:` / `background:` built from a JS value; chec
 - **Tests:** growth-velocity-bands.spec (Home and the Growth tab agree at girls 7–8 m; a caution line gives a caution score).
 - **Rule:** when adding a surface for an existing state, take every field from the shared result. When adding a field, add it to the shared result, not to one reader.
 
+## PC-11 · An unconfirmed default saved as if the parent chose it
+*Added 2026-11-03 from PR #284. Maren proposed it (V-M-284-1) and Lyra accepted.*
+
+**Pattern:** a surface pre-fills a choice (a bottle, a unit, a strength) and then writes that default to the record as though the parent had picked it. The next visit reads the "recorded" choice back as fact, so a wrong default keeps reinforcing itself. A remembered default that outlives its context, such as a bottle from a fever months ago, is the same failure spread across time.
+
+**Items:**
+
+| # | Item | Patch |
+|---|---|---|
+| 160 | The paracetamol chip preselected the bottle from any earlier fever, showed ml for it, and saved it as the dose's `form`. Syrup read as drops is a 2–4× overdose | No bottle means no ml. The choice is remembered only within the active episode, an earlier episode's choice is shown as a hint only, and `form` is written only when the parent tapped a bottle |
+
+**Look for:**
+- a value written to a record that the parent saw but never acted on (a prefilled field accepted with no change counts only if the prompt names the value);
+- a "remember the last choice" that reads across episodes, days or devices, with no time bound;
+- for a dosing or safety number, a default that errs toward the larger amount. If a default can't be avoided, pick the one whose mistake under-doses.
+
+**Guards:**
+- **Tests:** fever-paracetamol-chip.spec (no bottle means no ml; an earlier fever's bottle is a hint, never preselected; the logged `form` is the bottle that was tapped).
+- **Rule:** a dosing surface shows no number until the parent has confirmed the unit it is in.
+
 ## Guard backlog (candidates, by owner)
 1. `audit-growth-bands-provenance-v1` (PC-9). Owner: Carina.
 2. HR-4 render-boundary gate (PC-4). Owners: Carina (`escHtml` root) and Cipher.
@@ -254,3 +274,4 @@ Also look for: a new `style="color:` / `background:` built from a JS value; chec
 5. A test-origin rule: one exported baseURL helper; no spec builds its own origin (PC-6).
 6. An HR-2 ratchet: per-file count of inline `style=` that may only fall (PC-4). Owners: Vela and Carina.
 7. A lint for bare global `isFinite(` / `Number(` on nullable values in growth and age code (PC-1). Owner: Carina.
+8. A paracetamol weight-jump confirm against her own last weight (PC-5; BUGS #161). Owners: Kael (engine) and Maren (threshold).
