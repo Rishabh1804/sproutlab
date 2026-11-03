@@ -2469,7 +2469,7 @@ function calcMedicalScore() {
   const lastMeasure = gvLatestMeasure();
   const daysSinceGrowth = gvDaysSinceMeasure();
   if (lastMeasure && daysSinceGrowth != null) {
-    const daysSince = Math.max(0, daysSinceGrowth);   // a future-dated row counts as today, as the old floor did
+    const daysSince = daysSinceGrowth;
     if (daysSince <= 14) growthScore = 100;
     else if (daysSince <= 21) growthScore = 80;
     else if (daysSince <= 30) growthScore = 50;
@@ -2516,7 +2516,7 @@ function calcMedicalScore() {
       // Routine doses inside their window and not yet given (not scored; shown as "due now").
       vaccDueNow: VACC_SCHEDULE.filter(v => !vaccIsConditional(v, givenNames) && vaccDueState(v, mo) === 'due' && !vaccIsGiven(v, givenNames, givenList)).length,
       suppDays: activeMeds.length > 0 ? Math.round(suppScore / 100 * 7) : null, suppTotal: 7,
-      daysSinceGrowth: daysSinceGrowth == null ? null : Math.max(0, daysSinceGrowth),   // never "-2d ago" for a future-dated row
+      daysSinceGrowth: daysSinceGrowth,
       hasBothMeasures: !!(lastMeasure && lastMeasure.both)
     }
   };
@@ -6772,12 +6772,13 @@ function gvLatestMeasure() {
   return { row: row, date: row.date, both: !!(lw && lh && lw.date === row.date && lh.date === row.date) };
 }
 // Whole calendar days from the latest measurement to today (HR-12: gvDaysBetween, never a UTC parse
-// of a bare date). null when there is no measurement.
+// of a bare date), at least 0: a future-dated row reads as today, never "-2d ago", so no caller has to
+// clamp (V-CA-286-3). null when there is no measurement.
 function gvDaysSinceMeasure() {
   const m = gvLatestMeasure();
   if (!m) return null;
   const d = gvDaysBetween(m.date, today());
-  return isFinite(d) ? d : null;
+  return isFinite(d) ? Math.max(0, d) : null;
 }
 // The weigh-in date for a percentile line when that weigh-in is stale (Vela V-V-282g-7, PC-7): the
 // latest percentile is the percentile AT the latest weigh-in, so once the weight reading is stale

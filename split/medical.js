@@ -2221,7 +2221,7 @@ function renderGrowthHero() {
   let lastMeasuredStr = '—';
   const daysSinceM = gvDaysSinceMeasure();
   if (daysSinceM != null) {
-    const daysSince = Math.max(0, daysSinceM);
+    const daysSince = daysSinceM;
     lastMeasuredStr = daysSince === 0 ? 'Today' : daysSince === 1 ? 'Yesterday' : daysSince + 'd ago';
   }
 
@@ -10957,7 +10957,7 @@ function renderInfoGrowthVelocity() {
   // In the newborn window the low-centile line is left out: the dip moves the percentile by design,
   // and "early days · at or below the 3rd centile line" read as an escalation (Maren V-M-282f-5).
   var pLowNb = !!(data.weight && data.weight.nb) && gvPctLow(data.latestPercentile);
-  var pStr = data.latestPercentile === null ? '— percentile' : pLowNb ? '' : gvPctLow(data.latestPercentile) ? 'at or below the 3rd centile line' : pctOrdinal(data.latestPercentile) + ' percentile'
+  var pStr = data.latestPercentile === null ? '— percentile' : pLowNb ? '' : gvPctLow(data.latestPercentile) ? 'at or below the 3rd centile line' : pctOrdinal(data.latestPercentile) + ' percentile';
   if (pStr && data.latestPercentile !== null) pStr += gvPctAsOf(data);   // dated once stale (Vela V-V-282g-7)
   summaryEl.innerHTML = '<span class="t-sm t-mid" >Weight: ' + escHtml(wStr) + ' · Height: ' + hStr + (pStr ? ' · ' + escHtml(pStr) : '') + '</span>';
 
