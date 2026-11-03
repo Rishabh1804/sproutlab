@@ -1942,7 +1942,8 @@ function qaAnswerWeightConcern(intentId) {
   var concern = nbCautionC || slowC || lowPct || !!slideC || dropC;
   // Under 28 days a slow gain is told to the doctor or midwife today (Maren V-M-282d-1).
   var latestDayC = gv.weight ? gvDayOf(gv.weight.latest.date) : NaN;
-  var under28 = isFinite(latestDayC) && latestDayC < GV_REGAIN_DAYS;
+  var todayDayC = gvDayOf(today());
+  var under28 = isFinite(latestDayC) && latestDayC < GV_REGAIN_DAYS && isFinite(todayDayC) && todayDayC - latestDayC < GV_STALE_READING_DAYS;   // expires with the reading (Ceres V-C-282g-4)
 
   if (gv.weight) {
     var w = gv.weight;
@@ -1993,8 +1994,14 @@ function qaAnswerWeightConcern(intentId) {
     actionItems.push({ text: crossLowC ? GV_ACT_WEIGHT_CHECK : GV_ACT_MENTION_CENTILE, signal: 'action' });   // one crossing: the same tier as qaAnswerWeightGain (PC-10)
   }
 
+  // A newborn line (even 'regained') with the weight at or below the 3rd centile: an info line for the
+  // record, never "within normal range" and never the "higher percentile is usually fine" reassurance
+  // (Kael V-K-282g-1; the newborn line carries the action).
+  var nbLow = gvPctLow(pctC) && gv.weight && gv.weight.nb;
   if (pctC !== null && !nbWin) {
-    if (lowPct) {
+    if (nbLow) {
+      dataItems.push({ text: GV_LOW_CENTILE_LINE + ' (newborn weeks)', signal: 'info' });
+    } else if (lowPct) {
       // At or below the 3rd centile line: no placeholder number, never "within normal range"
       // (Maren V-M-282d-1, V-M-282e-1).
       dataItems.push({ text: GV_LOW_CENTILE_LINE, signal: 'warn' });
@@ -2020,7 +2027,7 @@ function qaAnswerWeightConcern(intentId) {
   // At this age, rapid weight gain is rarely a concern — only said when nothing is a concern.
   var ageM = ageAt().months;
   if (ageM < 12) {
-    if (!nbWin && !concern) actionItems.push({ text: (ageM === 0 ? 'In the first month' : 'At ' + fmtAgeMonths(ageM)) + ', being on a higher percentile is usually fine', signal: 'good' });
+    if (!nbWin && !concern && !nbLow) actionItems.push({ text: (ageM === 0 ? 'In the first month' : 'At ' + fmtAgeMonths(ageM)) + ', being on a higher percentile is usually fine', signal: 'good' });
     // Food closed (under 6 months, or solids not started): the gate note chosen by today's age
     // (gvGateNote — Ceres V-C-282d-1); open: no calorie restriction.
     // "Not calorie restriction" is written for a high-centile child; with a concern (loss, slow gain,
@@ -2086,6 +2093,10 @@ function qaAnswerGrowth(intentId) {
     } else {
       dataItems.push({ text: 'Weight velocity: ' + w.gPerDay + ' g/day (' + w.status.replace('-', ' ') + ')', signal: wSignal });
     }
+    // The slow-gain doctor action whenever the weight is slow, a plateau or a loss — not only when
+    // nothing else is said: a stale height line or a centile mention used to crowd it out (Ceres
+    // V-C-282g-1). _qaSortActions puts it first and drops a milder mention.
+    if (gvSlowAction(w)) actionItems.push({ text: gvSlowAction(w), signal: 'action' });
   }
 
   // Height
@@ -2137,9 +2148,7 @@ function qaAnswerGrowth(intentId) {
     // "On track" only when the weight verdict is on track (not tooShort) or a clean return to birth
     // weight — never for slow gain, the after-birth dip or "too soon to judge" (V-M-282c-1, V-K-282c-3).
     var wOk = gv.weight && ((gv.weight.nb && gv.weight.nb.status === 'regained') || (!gv.weight.nb && !gv.weight.tooShort && gv.weight.status === 'on-track'));
-    var wSlow = gv.weight && !gv.weight.nb && !gv.weight.tooShort && (gv.weight.status === 'slow' || gv.weight.status === 'plateau');
     actionItems.push(wOk ? { text: 'Growth is on track — next measurement in 2-4 weeks', signal: 'good' }
-      : wSlow ? { text: gvSlowAction(gv.weight) || GV_ACT_MENTION_SLOW, signal: 'action' }   // one source (gvSlowAction — Ceres V-C-282f-1)
       : gv.weight && gv.weight.tooShort ? { text: 'Weigh again in a few weeks', signal: 'action' }
       : gv.weight && gv.weight.nb ? { text: 'Keep to the weigh-ins your doctor or midwife suggests', signal: 'action' }
       : { text: 'Next measurement in 2-4 weeks', signal: 'action' });

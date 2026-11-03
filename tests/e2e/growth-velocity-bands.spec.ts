@@ -491,7 +491,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.lowerRef.factor).toBe(25);
     expect(r.higher.status).toBe('newborn');
     expect(r.higher.nb.tone).toBe('caution');
-    expect(r.higher.insight).toContain('Back to birth weight not confirmed — add the birth weight, or ask your doctor or midwife.');
+    expect(r.higher.insight).toContain('Back to birth weight not confirmed — add the birth weight, or ask your doctor or midwife in the next day or two, by 3 weeks.');   // bounded (V-M-282g-1)
     expect(r.higher.insight).toContain('si-insight-warn');
     expect(r.higher.totalGainG).toBeNull();
     for (const c of [r.lower, r.lowerRef, r.higher]) {
@@ -1092,6 +1092,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     for (const [c, card] of [[r.loss, r.lossCard], [r.plateau, r.plateauCard], [r.slow, r.slowCard]] as const) {
       const act = (c.status === 'plateau' || c.totalGainG < 0) ? CHECK : MENTION;
       expect(c.qaActions[0]).toBe(act);                 // the weight-gain answer ("not gaining")
+      expect(c.qgActions[0]).toBe(act);                 // qaAnswerGrowth too, even beside other actions (V-C-282g-1)
       expect(c.qa).toContain(act);
       expect(c.insight).toContain(act + '.');           // the Info insight: doctor first
       expect(c.insight).not.toMatch(/could be normal/);
@@ -1443,9 +1444,25 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     expect(r.old.qaActions[0]).toBe('Book a weight check with your doctor in the next week');
     expect(r.old.factor).toBe(50);
     // "Still losing" read months later never says "today".
-    expect(r.stillLosing.nb.text).toContain('when Asha was still losing weight, and not weighed since — book a weight check with your doctor in the next week.');
+    expect(r.stillLosing.nb.text).toContain('Asha was still losing weight, and has not been weighed since — book a weight check with your doctor in the next week.');
     expect(r.stillLosing.qaActions.join(' | ')).not.toMatch(/\btoday\b/);
     expect(r.stillLosing.factor).toBe(50);
+  });
+
+  test('no birth row, flat or slowly falling at 3–4 weeks: "not confirmed" is bounded — compare with the hospital record today from day 21 (V-M-282g-1)', async ({ page }) => {
+    const r = await page.evaluate((src) => {
+      const setup = eval(src);
+      return {
+        flat: setup(27, 3.40, [[20, 3.40], [27, 3.39]], { noBirth: true }),
+        slowFall: setup(27, 3.40, [[20, 3.40], [24, 3.38], [27, 3.37]], { noBirth: true }),
+      };
+    }, NB_SETUP);
+    for (const c of [r.flat, r.slowFall]) {
+      expect(c.nb.text).toContain('weigh Asha today and compare with the birth weight from the hospital record');
+      expect(c.qaActions[0]).toMatch(/^Weigh Asha today and compare with the birth weight from the hospital record/);
+      expect(c.nb.text).not.toMatch(/not back to birth weight yet/);
+      expect(c.factor).toBe(50);
+    }
   });
 
   test('newborn read-time lines are bounded: no birth row → weigh today against the hospital record; days 14–20 and 19–20; the actual age when overdue; stale from day 92: neutral for a plain recheck, caution with a weight check for a concerning reading (V-M-282e-6, -7, V-K-282e-2; round-5 decision 4)', async ({ page }) => {
@@ -1476,7 +1493,7 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     // "contact today" — but caution with the weight check in the next week, scored 50 (round-5
     // decision 4). Only a plain out-of-date recheck turns neutral.
     for (const [c, then] of [[r.staleOverdue, 'not back to birth weight'], [r.staleReferral, 'not back to birth weight'], [r.staleLoss, 'more than 10% below birth weight']] as const) {
-      expect(c.nb.text).toBe('Last weighed on day ' + c.nb.day + ', when Asha was ' + then + ', and not weighed since — book a weight check with your doctor in the next week.');
+      expect(c.nb.text).toBe('On day ' + c.nb.day + ' Asha was ' + then + ', and has not been weighed since — book a weight check with your doctor in the next week.');
       expect(c.nb.tone).toBe('caution');
       expect(c.factor).toBe(50);
       expect(c.qaActions[0]).toBe('Book a weight check with your doctor in the next week');
@@ -1519,6 +1536,25 @@ test.describe('PC-1: velocity verdicts at the latest measurement, and the newbor
     // … and is information for the doctor in visit prep, said to be the newborn weeks.
     expect(c.visit).toContain('At or below the 3rd centile line (newborn weeks)');
     expect(c.visit).toContain('Early-days weight dip (expected)');
+  });
+
+  test('a crossing stays current while the fall continues; only a 15-point recovery retires it (V-M-282g-2, V-K-282g-2, V-V-282g-2)', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const w = window as any;
+      const c = { from: 58, to: 35, direction: 'dropping', date: '2026-01-01' };
+      const gv = (p: number) => ({ latestPercentile: p, weight: { latest: { date: '2026-06-01' } } });
+      return { fell: w.gvCrossingCurrent(c, gv(19)), held: w.gvCrossingCurrent(c, gv(40)), recovered: w.gvCrossingCurrent(c, gv(50)) };
+    });
+    expect(r.fell).toBe(true);        // kept falling: still current (was retired by Math.abs)
+    expect(r.held).toBe(true);
+    expect(r.recovered).toBe(false);
+  });
+
+  test('back to birth weight but below the 3rd centile: never "within normal range" or "a higher percentile is usually fine" (V-K-282g-1)', async ({ page }) => {
+    const r = await page.evaluate((src) => eval(src)(20, 2.30, [[5, 2.15], [20, 2.40]]), NB_SETUP);
+    expect(r.nb.status).toBe('regained');
+    expect(r.qc).not.toMatch(/within normal range/);
+    expect(r.qcActions.join(' | ')).not.toMatch(/higher percentile is usually fine/);
   });
 
   test('an old dropping crossing does not set the headline: 58th → 35th long ago, now at the 50th; the crossing line carries its dates (V-V-282f-2)', async ({ page }) => {

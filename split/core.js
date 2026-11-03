@@ -6897,7 +6897,9 @@ function gvNewbornCheck(latest, first) {
   const staleWasStatus = stillLosing ? 'still-losing' : status;
   // Still losing is a concern too; a drop or an unconfirmed return goes plain stale (Maren V-M-282f-2).
   const staleConcern = late && (status === 'newborn-loss' || status === 'not-regained' || stillLosing);
-  const stale = late && (plainRecheck || staleConcern || dropping || birthUnknown);
+  // A return to birth weight read months later is out of date too: plain stale, never "right on schedule"
+  // in the present tense (Kael V-K-282g-4).
+  const stale = late && (plainRecheck || staleConcern || dropping || birthUnknown || status === 'regained');
   if (stale) { stillLosing = false; dropping = false; birthUnknown = false; }   // the stale line speaks instead
   if (stale) status = 'newborn';
   const overdue = overdueCand && !stale;
@@ -6974,9 +6976,15 @@ function gvNewbornCheck(latest, first) {
     r.chip = 'Weigh again';
     r.visit = 'Back to birth weight, then down ' + downG + ' g between day ' + prevDay + ' and day ' + day;
   } else if (birthUnknown) {
+    // Bounded by today's age (Maren V-M-282g-1, PC-7): from day 21 the hospital record is checked TODAY
+    // (the weigh-today wording for a missing birth row); on days 14–20, by 3 weeks. Never "not back to
+    // birth weight" — that is not known without the birth weight.
     r.tone = 'caution';
-    r.text = 'Back to birth weight not confirmed — add the birth weight, or ask your doctor or midwife.';
-    r.short = 'Back to birth weight not confirmed';
+    r.birthUnknownToday = todayKnown && todayDay >= GV_REGAIN_REFER_DAY;
+    r.text = r.birthUnknownToday
+      ? 'Back to birth weight not confirmed — weigh ' + childNameHtml() + ' today and compare with the birth weight from the hospital record; if not back to birth weight, contact your doctor or midwife today.'
+      : 'Back to birth weight not confirmed — add the birth weight, or ask your doctor or midwife ' + when + ', by 3 weeks.';
+    r.short = r.birthUnknownToday ? 'Not confirmed — compare with the hospital birth weight today' : 'Back to birth weight not confirmed — ask ' + when + ', by 3 weeks';
     r.head = 'back to birth weight not confirmed';
     r.chip = 'Not confirmed';
     r.visit = 'Back to birth weight not confirmed (birth weight not recorded)';
@@ -7001,7 +7009,8 @@ function gvNewbornCheck(latest, first) {
     // the weight check in the next week, scored 50 through recheck (round-5 decision 4).
     r.tone = 'caution';
     const then = staleWasStatus === 'newborn-loss' ? 'more than 10% below birth weight' : staleWasStatus === 'still-losing' ? 'still losing weight' : 'not back to birth weight';
-    r.text = 'Last weighed on day ' + day + ', when ' + childNameHtml() + ' was ' + then + ', and not weighed since — ' + GV_ACT_WEIGHT_CHECK.charAt(0).toLowerCase() + GV_ACT_WEIGHT_CHECK.slice(1) + '.';
+    // Not "Last weighed …": the date lead already says that where it is shown (Maren V-M-282g-3).
+    r.text = 'On day ' + day + ' ' + childNameHtml() + ' was ' + then + ', and has not been weighed since — ' + GV_ACT_WEIGHT_CHECK.charAt(0).toLowerCase() + GV_ACT_WEIGHT_CHECK.slice(1) + '.';
     r.short = 'Not weighed since day ' + day + ' (' + then + ' then) — book a weight check in the next week';
     r.head = 'not weighed since day ' + day;
     r.chip = 'Weigh this week';
@@ -7012,7 +7021,7 @@ function gvNewbornCheck(latest, first) {
     r.tone = 'neutral';
     // "since … days old" matches the other newborn lines; bounded in time (Vela V-V-282f-7, Maren V-M-282f-6).
     r.text = 'No weigh-in since ' + childNameHtml() + ' was ' + day + ' days old — weigh ' + childNameHtml() + ' and show your doctor the chart ' + GV_WHEN_MENTION + '.';
-    r.short = 'No weigh-in since ' + day + ' days old — weigh and show your doctor the chart';
+    r.short = 'No weigh-in since ' + day + ' days old — weigh and show your doctor the chart within a month';   // bounded (Vela V-V-282g-4)
     r.head = 'no weigh-in since day ' + day;
     r.chip = 'Weigh soon';
     r.visit = 'Last weighed on day ' + day + '; not weighed since';   // overdue readings are staleConcern (Kael V-K-282f-8)
@@ -7047,7 +7056,9 @@ function gvNewbornAction(nb) {
     ? 'Weigh ' + childNameHtml() + ' today and compare with the birth weight from the hospital record — if not back to birth weight, contact your doctor or midwife today'
     : 'Weigh ' + childNameHtml() + ' today — if not back to birth weight, contact your doctor or midwife';
   if (nb.dropping) return 'Weigh ' + childNameHtml() + ' again in a day or two, and tell your doctor or midwife if it keeps dropping';
-  if (nb.birthUnknown) return 'Add the birth weight, or ask your doctor or midwife';
+  if (nb.birthUnknown) return nb.birthUnknownToday
+    ? 'Weigh ' + childNameHtml() + ' today and compare with the birth weight from the hospital record — if not back to birth weight, contact your doctor or midwife today'
+    : 'Add the birth weight, or ask your doctor or midwife ' + (nb.when || 'in the next day or two') + ', by 3 weeks';   // bounded (Maren V-M-282g-1)
   return 'Weigh ' + childNameHtml() + ' again ' + (nb.when || 'in the next day or two') + ', by 3 weeks, to confirm the return to birth weight';
 }
 // The "too soon to judge" line for a toddler whose two weigh-ins are under 28 days apart — one copy
@@ -7109,7 +7120,8 @@ function gvCrossingCurrent(c, gv) {
   const latestDate = gv.weight && gv.weight.latest ? gv.weight.latest.date : null;
   if (latestDate && c.date === latestDate) return true;
   const p = gv.latestPercentile;
-  return p != null && Number.isFinite(Number(p)) && Math.abs(Number(p) - c.to) < 15;
+  // One-sided: a further fall keeps the crossing current; only a recovery of 15+ points retires it (Maren V-M-282g-2).
+  return p != null && Number.isFinite(Number(p)) && Number(p) - c.to < 15;
 }
 
 // ── Doctor actions, each bounded in time (Maren V-M-282e-4, PC-7) ──
@@ -7129,7 +7141,10 @@ const GV_ACT_MENTION_CENTILE = 'Mention the centile change to your doctor ' + GV
 function gvSlowAction(w) {
   if (!w || w.nb || w.tooShort || (w.status !== 'slow' && w.status !== 'plateau')) return null;
   const d = w.latest && w.latest.date ? gvDayOf(w.latest.date) : NaN;
-  if (isFinite(d) && d < GV_REGAIN_DAYS) return 'Tell your doctor or midwife today';
+  // "Today" for a weigh-in under 28 days old — while the reading is recent; read months later it is the
+  // tier below, never "today … midwife" (Ceres V-C-282g-4).
+  const t = gvDayOf(today());
+  if (isFinite(d) && d < GV_REGAIN_DAYS && isFinite(t) && t - d < GV_STALE_READING_DAYS) return 'Tell your doctor or midwife today';
   return (w.gainG < 0 || w.status === 'plateau') ? GV_ACT_WEIGHT_CHECK : GV_ACT_MENTION_SLOW;
 }
 
@@ -7214,7 +7229,7 @@ function getGrowthNarrative(velocity) {
     } else if (verdict === 'in') {
       lines.push(`${zi('scale')} Weight: gaining ${gw}g/week — healthy pace ${gvAgePhrase(velocity.wtLatest)} (${windowText})`);
     } else if (verdict === 'below') {
-      lines.push(`${zi('scale')} Weight: ${gw >= 0 ? 'gaining ' + gw + 'g/week' : change} — below typical range (${expectedMin}–${expectedMax}g/week). Monitor closely (${windowText})`);
+      lines.push(`${zi('scale')} Weight: ${gw >= 0 ? 'gaining ' + gw + 'g/week' : change} — below typical range (${expectedMin}–${expectedMax}g/week) (${windowText}). ${escHtml((typeof computeGrowthVelocity === 'function' && gvSlowAction(computeGrowthVelocity().weight)) || GV_ACT_MENTION_SLOW)}.`);   // a doctor action, not "monitor closely" (Ceres V-C-282g-5)
     } else {
       // Beyond 1.3× the top: the Info card's line and its tone (neutral), never "Likely a growth
       // spurt" — Home kept its own wording after the other surfaces moved (Kael V-K-282e-7 leftover).
