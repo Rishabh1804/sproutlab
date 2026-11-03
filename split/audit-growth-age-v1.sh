@@ -55,7 +55,7 @@ function namesIn(expr) {
 // covering `const x =`, `x =`, `obj.p =` and destructuring `const { p } =` / `const { p: x } =`.
 function rhsOf(lines, name, ln, upto) {
   const n = esc(name);
-  const plain = new RegExp('(?:\\b(?:const|let|var)\\s+|^\\s*|[;,{(]\\s*)' + n + '\\s*(?:\\?\\?|\\|\\||&&)?=(?![=>])\\s*(.*)');   // =, ??=, ||=, &&= (V-CA-282e-2)
+  const plain = new RegExp('(?:\\b(?:const|let|var)\\s+|^\\s*|[;,{(]\\s*)' + n + '\\s*(?:\\?\\?|\\|\\||&&|\\*\\*|<<|>>>?|[-+*/%|&^])?=(?![=>])\\s*(.*)');   // = and every compound assignment (V-CA-282e-2, V-K-282e-5)
   const arr = name.includes('.') ? null : new RegExp('\\b(?:const|let|var)\\s*\\[[^\\]]*\\b' + n + '\\b[^\\]]*\\]\\s*=\\s*(.*)');
   const destr = name.includes('.') ? null : new RegExp('\\b(?:const|let|var)\\s*\\{[^}]*?(?:\\b' + n + '\\s*(?=[,}=])|:\\s*' + n + '\\b)[^}]*\\}\\s*=\\s*(.*)');
   const out = [];
@@ -93,7 +93,7 @@ function scan(name, src, log) {
     const before = src.slice(Math.max(0, m.index - 12), m.index);
     if (/function\s+$/.test(before)) continue;                       // the definition itself
     const ln = lineOf(m.index);
-    if (/growth-age-ok:/.test(lines[ln - 1] || '')) continue;
+    if (/growth-age-ok:\s*\S/.test(lines[ln - 1] || '')) continue;   // an exemption needs a reason (V-K-282e-5)
     const a = args(src, m.index + m[0].length - 1);
     for (const k of WATCH[m[1]]) {
       const arg = a[k]; if (!arg) continue;
@@ -161,6 +161,9 @@ const T = [
   { src: 'const mo = ageAt().months;\ngrowthVelocityBand(Number(`${mo}`));', bad: 1 },
   { src: 'growthVelocityBand(ageMonthsAt(_offsetDateStr(-28)));', bad: 0 },
   { src: 'growthVelocityBand(gvAgeAt(latest.date));', bad: 0 },
+  // Kael's round-4 bypasses (V-K-282e-5):
+  { src: 'let mo = 0;\nmo += ageAt().months;\ngrowthVelocityBand(mo);', bad: 1 },
+  { src: 'const b = growthVelocityBand(ageAt().months); // growth-age-ok:', bad: 1 },
 ];
 let fails = 0;
 T.forEach((t, i) => { const n = scan('fixture' + i, t.src, () => {}); if (n !== t.bad) { fails++; console.error(`audit-growth-age: SELF-TEST FAIL fixture ${i}: ${n} (want ${t.bad})`); } });
