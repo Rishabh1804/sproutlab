@@ -3339,6 +3339,16 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .fe-dose-next { font-size:var(--fs-xs); color:var(--tc-sage); font-weight:500; padding:var(--sp-4) 0; }
 .fe-action-chips { display:flex; flex-wrap:wrap; gap:var(--sp-4); padding:var(--sp-4) 0; }
 .fe-action-chip { display:inline-flex; align-items:center; padding:var(--sp-4) var(--sp-10); border-radius:var(--r-full); font-size:var(--fs-xs); font-weight:500; background:rgba(181,213,197,0.15); border:1px solid rgba(58,112,96,0.12); color:var(--tc-sage); cursor:pointer; transition:transform 0.1s; }
+.fe-dose-empty { color:var(--light); font-size:var(--fs-xs); }
+.fe-para-q { font-size:var(--fs-xs); font-weight:600; padding:var(--sp-4) 0 0; }
+.fe-para-forms { display:flex; flex-wrap:wrap; gap:var(--sp-4); padding:var(--sp-4) 0; }
+.fe-para-form { display:inline-flex; align-items:center; gap:var(--sp-4); padding:var(--sp-4) var(--sp-10); border-radius:var(--r-md); font-size:var(--fs-xs); font-weight:600; background:var(--card-bg); border:1.5px solid rgba(58,112,96,0.35); color:var(--tc-sage); cursor:pointer; }
+.fe-para-form.active { background:var(--accent-sage-deep); border-color:var(--accent-sage-deep); color:white; }
+.fe-para-form .zi { width:14px; height:14px; }
+.fe-para-dose { font-family:'Fraunces',serif; font-size:var(--fs-md); padding:var(--sp-4) 0; }
+.fe-para-note { font-size:var(--fs-xs); padding:var(--sp-2) 0; }
+.fe-para-warn { color:var(--tc-danger); }
+.fe-para-log { padding:var(--sp-4) 0; }
 .fe-action-chip:active { transform:scale(0.95); background:var(--sage); color:white; }
 .fe-action-entry { font-size:var(--fs-xs); color:var(--mid); padding:var(--sp-4) 0; }
 .fe-guidance { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-relaxed); padding:var(--sp-4) 0; }
@@ -3374,6 +3384,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .fe-section-title { border-top-color:rgba(255,255,255,0.04); }
 [data-theme="dark"] .fe-tl-line { background:rgba(255,255,255,0.06); }
 [data-theme="dark"] .fe-action-chip { background:rgba(58,112,96,0.12); border-color:rgba(181,213,197,0.15); color:var(--tc-sage); }
+[data-theme="dark"] .fe-para-form { border-color:rgba(181,213,197,0.35); }
 [data-theme="dark"] .fe-action-chip:active { background:var(--accent-sage-deep); color:var(--body-bg); }
 [data-theme="dark"] .fe-history-entry { border-bottom-color:rgba(255,255,255,0.04); }
 [data-theme="dark"] .fe-home-banner-low, [data-theme="dark"] .fe-home-banner-mild { background:rgba(240,180,80,0.06); }
