@@ -1,11 +1,53 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-11-03 (paracetamol chip #284 section: g-6 fixed, its deferrals logged as #161–#162; prior: 2026-10-31 child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
+**Last updated:** 2026-11-03 (growth follow-up #286 section: #159 edge items fixed as #163, deferrals #164, pre-existing e2e failures #165; #161 threshold consult recorded; prior: paracetamol chip #284 section: g-6 fixed, its deferrals logged as #161–#162; prior: 2026-10-31 child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
+
+### Growth follow-up — 2026-11-03 (PR #286, BUGS #159 edge items)
+
+The four #159 items where a parent could misread something, plus the fixes from the #286 Governor round (all five Governors, then Cipher). Deferred items are below and must not be lost.
+
+#### P1 — Four growth readings a parent could misread (163)
+- **Symptom:**
+  - The medical score, the diet "time to weigh" nudge, both doctor summaries and the growth stat took the last saved row, not the newest measurement, and counted days with a UTC parse.
+  - An infant weighed weekly could never resolve the CareTicket weight goal on its own.
+  - A stale weigh-in's percentile read as today's.
+  - The percentile line showed green beside an amber "dropping" crossing.
+- **Cause:** Readers outside the shared row filter (PC-10); the goal metric was tied to the shared velocity window, which is the last two weigh-ins under 12 months (PC-1); no stale date on percentile lines (PC-7).
+- **Fix:** #286.
+  - `gvLatestMeasure` / `gvDaysSinceMeasure` (core.js): latest measurement by date through `gvMeasureRows`, whole calendar days, never negative.
+  - `gvWeightGoalWindow`: the goal's own window, the closest weigh-in 28–62 days back; a start in the first 28 days counts only at the birth row. The goal is judged only once there is a weigh-in dated after it was opened (`ctRefTime`) — Maren V-M-286-1 (BLOCKING), Kael V-K-286-3.
+  - `gvWeighInStale` / `gvPctStaleDate` / `gvPctAsOf`: a stale percentile carries "weighed DATE" in the Q&A answers, the velocity summary (dated once, at its head), the since-last-visit line, Growth Facts, the doctor-prep weight and the This Week's Pulse card (Vela V-V-286-1, BLOCKING); it is never green.
+  - HR-12 ratchet lowered: core 14→13, diet 16→15, medical 69→68.
+  - Tests: `tests/e2e/growth-followup-159.spec.ts` (14 cases).
+- **Caught by:** Carina V-CA-282g-2, Maren V-M-282g-4, Kael V-K-282g-5, Vela V-V-282g-7 / g-8.
+- **Patch class:** PC-1, PC-7, PC-10
+- **Status:** **Fixed** in #286.
+
+#### P2 (deferred) — Growth follow-up deferrals, by owner (164)
+- **Symptom:** Non-blocking notes from the #286 round.
+- **Cause:** Each was sorted DEFERRABLE by its Governor.
+- **Fix:** Planned follow-up. Items:
+  - **Maren / Carina / Ceres (V-C-286-1, V-CA-286-2), PC-5:** the growth form accepts a future date (`#gDate` has no `max`; `addGrowthEntry` doesn't reject it). A mistyped year becomes the "latest" measurement until that date: the score reads 100 and the weigh nudge stays silent. Not new. Fix at entry (max = today, reject in `addGrowthEntry`), or skip future rows in `gvMeasureRows`.
+  - **Maren (V-M-286-3), PC-10:** "Last measured" counts either measure, so a height-only entry hides an old weight (hero, diet nudge, score recency). Consider "Last weighed", or one date per measure; the full doctor summary should date each line.
+  - **Carina (V-CA-286-1), PC-10:** home.js 8180–8181, 10653, 10736, 10743 and medical.js 1994, 2001 still count days with a UTC parse; route through `gvDaysSinceMeasure` / `gvDaysBetween` and lower the HR-12 baseline.
+  - **Carina (V-CA-286-4), PC-2:** medical.js `renderChartContext` takes the first and last row outside `gvMeasureRows`.
+  - **Carina / Kael (V-CA-286-5), PC-3:** the calcMedicalScore "+10 for both measures" bonus can never change the score.
+  - **Carina (sync note):** sync.js:461 assigns `growthData` with no type check; home.js 4835 / 8186 and medical.js 1310 / 1985 / 2286 call `growthData.length` and would throw on a non-array.
+  - **Vela (V-V-286-5), PC-1:** Percentile History bar labels parse a bare date as UTC and carry no year; the latest bar stays sage beside a "dropping" insight.
+  - **Kael (V-K-286-5):** if crossings are ever gated by `gvCrossingCurrent`, gate qaAnswerGrowth's `fallingG` and qaAnswerWeightConcern's `dropC` together.
+  - **Kael (coverage note):** a toddler weighed only at the 3-monthly visits never resolves the weight goal by metric (null, the safe direction); the follow-up schedule still offers resolve when it runs out.
+- **Status:** **Open**
+
+#### P2 — e2e failures already on main (165)
+- **Symptom:** `smoke.spec.ts` :89, :117, :144 (essential-mode tab sets); `diet-preference-gate.spec.ts` :57, :148; `food-effects-v2-r2-qa-food-safety.spec.ts` :51–:103 (6 cases). All fail identically on a `main` build (checked 2026-11-03 during #286). `smoke.spec.ts:822` is the known flake (#123), failing about 1 run in 3.
+- **Cause:** Not yet diagnosed.
+- **Patch class:** PC-6
+- **Status:** **Open**
 
 ### Paracetamol chip — 2026-11-03 (PR #284, Maren V-M-282g-6)
 
@@ -33,6 +75,7 @@ The fever card's dose chip, which named no weight, date or bottle and had no che
 - **Where:** intelligence-illness.js `getParacetamolChip` / `paraWeightPlausible`.
 - **Caught by:** V-M-284-6 / V-K-284-5.
 - **Patch class:** PC-5
+- **Threshold consult (Maren, 2026-11-03, Mode 2):** use WHO weight-velocity increments, not a percentage. Ask "Is X kg right?" when the change since the previous weigh-in is above the WHO P99 or below the P1 increment for that interval and sex (2-month table up to 61 days apart, 3-month table for 62–92); no earlier weight, or one more than 92 days back, also asks. Girls 12–14 m, 2-month: P1 −185 g, P99 +1142 g (WHO `ttt-weight-girls-2mon-p.xlsx`). The "about 20%" above would flag healthy infants (girls 3–5 m P99 is 1894 g in 2 months). A confirm is stored on the growth row as the confirmed value (`wtConfirmed`), so editing the weight undoes it (PC-11); a new state, never `ok` with a flag, so the log-dose prompt cannot pre-fill. **Architect gate:** accept P1/P99 (leaves about 12–16% error at her age), verify the WHO file versions and the boys' 3-month table, and approve the `wtConfirmed` field (Carina consult).
 - **Status:** **Open** (the one remaining dosing gap on the chip, so it is first in line).
 
 #### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
@@ -1517,6 +1560,7 @@ Entries 77–102 are the third Governor round on the patch to #282 (tags V-*-282
   - **Carina:** g-1 / Kael g-3: remaining growth-age gate bypasses (none in source; structural fix: make `gvAgeAt` return NaN instead of today, or an AST pass); g-2 `calcMedicalScore` and three other readers still take the last array row; g-3 an impossible bare date falls back to a UTC parse; g-4 `formatDate` UTC parse (existing V-K-267-12).
   - **Kael:** g-6 `gvSlowAction`'s "today" branch is unreachable while `nb` covers day < 28; g-7 correlate takes the first same-date row in unsorted order.
   - **Cipher (Edict V):** N2 dead code — `getGrowthNarrative` + `gvNewbornLine` + `_orig_renderInsightsGrowth`, the unreachable `under28` fallback in qaAnswerWeightConcern, the redundant `isPlateau` override in computeGrowthVelocity, and the `gvWeightRows` alias of `gvMeasureRows('wt')`; N3 the emergency tag is keyed on `'testicular-torsion'` literally (put the flag in the registry so `inguinal-hernia` → stuck-hernia matches its comment); N4 HR-2 debt on existing lines (the HR-2 ratchet is the fix); out of scope: medical.js `htGain` renders unrounded ("Grew 0.6000000000000014 cm").
+  - **Fixed in #286 (see #163):** Maren g-4, Kael g-5, Vela g-7 and g-8, Carina g-2. The rest of this list is still open.
   - **Tracked separately (priority):** Maren g-6 — the paracetamol chip names no weight, date or formulation and has no plausibility cap on a mistyped weight. **Fixed in #284; see #160, with its deferrals at #161–#162.**
 - **Where:** various.
 - **Caught by:** Final verification round (V-M/V-V/V-C/V-CA/V-K-282g).
