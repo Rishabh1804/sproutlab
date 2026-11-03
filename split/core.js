@@ -6780,26 +6780,45 @@ function gvDaysSinceMeasure() {
   const d = gvDaysBetween(m.date, today());
   return isFinite(d) ? Math.max(0, d) : null;
 }
-// The weigh-in date for a percentile line when that weigh-in is stale (Vela V-V-282g-7, PC-7): the
-// latest percentile is the percentile AT the latest weigh-in, so once the weight reading is stale
-// (computeGrowthVelocity's weight.stale — 3 weeks under 12 m, 5 weeks from 12 m) a bare "50th
-// percentile" reads as today's. " (weighed 12 Sept 2026)", or '' while the reading is current.
-// gv: a computeGrowthVelocity() result.
+// A weigh-in is stale once it is more than 3 weeks old under 12 m, 5 weeks from 12 m (its age on the
+// weigh-in date) — computeGrowthVelocity's weight.stale rule, as one function for readers that hold a
+// row and not a velocity result (the Pulse card — V-V-286-1). Whole calendar days (HR-12).
+function gvWeighInStale(date) {
+  const d = gvDaysBetween(date, today());
+  return isFinite(d) && d > (ageMonthsAt(date) >= 12 ? 35 : 21);
+}
+// The weigh-in date to show beside a percentile, or null while that weigh-in is current (Vela
+// V-V-282g-7, PC-7): the latest percentile is the percentile AT the latest weigh-in, so once it is
+// stale a bare "50th percentile" reads as today's. From the weight result when there is one, else the
+// last percentile point — one weigh-in plus a height-only row gives no weight result but still a
+// percentile (Kael V-K-286-4). gv: a computeGrowthVelocity() result.
+function gvPctStaleDate(gv) {
+  if (!gv) return null;
+  const pts = gv.percentiles || [];
+  const date = (gv.weight && gv.weight.latest && gv.weight.latest.date) || (pts.length ? pts[pts.length - 1].date : null);
+  return (date && gvWeighInStale(date)) ? date : null;
+}
+// " (weighed 12 Sept 2026)" for a stale percentile, or ''. Lines that already carry a bracket fold the
+// date into it with gvPctStaleDate instead (V-V-286-6).
 function gvPctAsOf(gv) {
-  const w = gv && gv.weight;
-  return (w && w.stale && w.latest && w.latest.date) ? ' (weighed ' + gvDateText(w.latest.date) + ')' : '';
+  const d = gvPctStaleDate(gv);
+  return d ? ' (weighed ' + gvDateText(d) + ')' : '';
 }
 // The weight-goal window (Maren V-M-282g-4 / Kael V-K-282g-5): the latest weigh-in and the latest
 // weigh-in at least GV_TODDLER_WINDOW_DAYS (28) whole calendar days before it, at EVERY age. The shared
 // velocity window (gvWeightWindow) takes the last two weigh-ins under 12 m, so an infant weighed every
 // week or two never had a 28-day window and the CareTicket weight goal (which counts only sustained
 // gain, 28+ days) could never resolve on its own. The start is the closest weigh-in 28+ days back, and
-// no more than GV_GOAL_WINDOW_MAX_DAYS (61) back: WHO publishes weight-velocity increments over 1- and
-// 2-month intervals (GROWTH_VELOCITY_BANDS' source), and a longer span mostly measures gain from before
-// the goal was set (a birth weight 4 months back would "meet" a goal opened last week).
-// { latest, previous, days, gPerWeek }, or null when no weigh-in is 28–61 days before the latest.
+// no more than GV_GOAL_WINDOW_MAX_DAYS (62) back: WHO publishes weight-velocity increments over 1- and
+// 2-month intervals (GROWTH_VELOCITY_BANDS' source), and the longest two-calendar-month pair is 62
+// days (1 Jul → 1 Sep — Kael V-K-286-1); a longer span mostly measures gain from older weeks.
+// A start row in the first 28 days counts only if it is the birth row: a day-2 row sits in the
+// after-birth dip and overstates the gain, while WHO's 0–1 m increment is birth-anchored (Kael
+// V-K-286-2; centileSlide's rule). The goal itself also needs a weigh-in after it was opened — that
+// gate is ticket-aware and lives in ctGetMetricValue (Maren V-M-286-1).
+// { latest, previous, days, gPerWeek }, or null when no usable weigh-in is 28–62 days before the latest.
 // gPerWeek uses getGrowthVelocity's formula (multiply first).
-const GV_GOAL_WINDOW_MAX_DAYS = 61;
+const GV_GOAL_WINDOW_MAX_DAYS = 62;
 function gvWeightGoalWindow() {
   const rows = gvMeasureRows('wt');
   if (rows.length < 2) return null;
@@ -6808,6 +6827,8 @@ function gvWeightGoalWindow() {
     const d = gvDaysBetween(rows[i].date, latest.date);
     if (isFinite(d) && d > GV_GOAL_WINDOW_MAX_DAYS) return null;   // sorted by date: every earlier row is further back
     if (isFinite(d) && d >= GV_TODDLER_WINDOW_DAYS) {
+      const birth = gvBirthRow();
+      if (gvDayOf(rows[i].date) < GV_REGAIN_DAYS && !(birth && birth.date === rows[i].date)) continue;   // in the after-birth dip
       const gainG = Math.round((latest.wt - rows[i].wt) * 1000);
       return { latest: latest, previous: rows[i], days: d, gPerWeek: Math.floor(gainG * 7 / d) };
     }
@@ -7630,7 +7651,10 @@ function getPulseNarrative() {
     // window, where the dip moves the percentile by design and the newborn line speaks (Maren V-M-282f-5).
     const wRows = gvWeightRows();
     const nbPulse = wRows.length ? gvNewbornCheck(wRows[wRows.length - 1], wRows[0]) : null;
-    parts.push(gvPctLow(pct.pct) ? (nbPulse ? `weight at ${latestWt.wt} kg` : `weight at ${latestWt.wt} kg (at or below the 3rd centile line)`) : `weight at ${latestWt.wt} kg (${pct.text} percentile)`);
+    // "This week" must not carry an old weigh-in as current: once it is stale the weight names its
+    // date, in the same bracket (Vela V-V-286-1; the gvWeighInStale rule every percentile line uses).
+    const wOn = gvWeighInStale(latestWt.date) ? 'weighed ' + gvDateText(latestWt.date) : '';
+    parts.push(gvPctLow(pct.pct) ? (nbPulse ? `weight at ${latestWt.wt} kg${wOn ? ' (' + wOn + ')' : ''}` : `weight at ${latestWt.wt} kg (at or below the 3rd centile line${wOn ? ', ' + wOn : ''})`) : `weight at ${latestWt.wt} kg (${pct.text} percentile${wOn ? ', ' + wOn : ''})`);
   }
 
   // Sleep

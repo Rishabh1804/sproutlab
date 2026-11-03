@@ -2000,7 +2000,8 @@ function qaAnswerWeightConcern(intentId) {
   var nbLow = gvPctLow(pctC) && gv.weight && gv.weight.nb;
   if (pctC !== null && !nbWin) {
     if (nbLow) {
-      dataItems.push({ text: GV_LOW_CENTILE_LINE + ' (newborn weeks)' + gvPctAsOf(gv), signal: 'info' });
+      var nbOn = gvPctStaleDate(gv);   // one bracket, not "(newborn weeks) (weighed …)" (V-V-286-6, V-K-286-6)
+      dataItems.push({ text: GV_LOW_CENTILE_LINE + ' (newborn weeks' + (nbOn ? ', weighed ' + gvDateText(nbOn) : '') + ')', signal: 'info' });
     } else if (lowPct) {
       // At or below the 3rd centile line: no placeholder number, never "within normal range"
       // (Maren V-M-282d-1, V-M-282e-1).
@@ -2011,7 +2012,7 @@ function qaAnswerWeightConcern(intentId) {
     } else if (concern) {
       dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile' + gvPctAsOf(gv), signal: 'info' });
     } else {
-      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile' + gvPctAsOf(gv) + ' — within normal range', signal: 'good' });
+      dataItems.push({ text: 'Weight at ' + pctOrdinal(pctC) + ' percentile' + gvPctAsOf(gv) + ' — within normal range', signal: gvPctStaleDate(gv) ? 'info' : 'good' });   // stale → info (V-M-286-4)
     }
   }
 
@@ -2114,7 +2115,8 @@ function qaAnswerGrowth(intentId) {
     // neutral then, and the crossing line below carries the warning.
     var lastCrossG = gv.crossings && gv.crossings.length > 0 ? gv.crossings[gv.crossings.length - 1] : null;
     var fallingG = !!gv.centileSlide || !!(lastCrossG && lastCrossG.direction === 'dropping');
-    var pctSignal = (gv.weight && gv.weight.nb) ? 'info' : (lowG || gv.latestPercentile > 97) ? 'warn' : fallingG ? 'info' : 'good';
+    // A stale reading is information, not a green "fine now" (Maren V-M-286-4, Vela V-V-286-3).
+    var pctSignal = (gv.weight && gv.weight.nb) ? 'info' : (lowG || gv.latestPercentile > 97) ? 'warn' : (fallingG || gvPctStaleDate(gv)) ? 'info' : 'good';
     // Dated once the weigh-in is stale, so an old percentile never reads as today's (Vela V-V-282g-7).
     dataItems.push({ text: (lowG ? GV_LOW_CENTILE_LINE : 'Weight percentile: ' + pctOrdinal(gv.latestPercentile)) + gvPctAsOf(gv), signal: pctSignal });
   }

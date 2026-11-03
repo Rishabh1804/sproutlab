@@ -110,3 +110,90 @@ test('g-8: the percentile line is not green beside a dropping crossing', async (
   expect(r.low).toBe(false);
   expect(r.signal).not.toBe('good');
 });
+
+// ── Governor round on #286 ──
+
+test('V-M-286-1: the weight goal is never met on weigh-ins from before it was opened', async ({ page }) => {
+  await boot(page);
+  // Weekly infant, strong gain then a stall; the parent opens "Increase weight" today.
+  await seedGrowth(page, 150, [{ d: -28, wt: 6.0 }, { d: -21, wt: 6.2 }, { d: -14, wt: 6.4 }, { d: -7, wt: 6.55 }, { d: 0, wt: 6.55 }]);
+  const before = await page.evaluate(() => {
+    const t: any = { category: 'weight_gain', createdAt: new Date().toISOString() };
+    const r = ctCheckThresholdMet(t);
+    return { display: ctGetMetricValue('wtGPerWeek'), judged: ctGetMetricValue('wtGPerWeek', null, t), firstMetAt: t.firstMetAt || null, met: r.met };
+  });
+  expect(before.display).toBe(137);   // shown as data …
+  expect(before.judged).toBeNull();   // … but no weigh-in since opening → not judged
+  expect(before.firstMetAt).toBeNull();
+  expect(before.met).toBe(false);
+  // A weigh-in after the goal was opened counts.
+  const after = await page.evaluate(() => {
+    const opened = new Date(); opened.setDate(opened.getDate() - 10);
+    const iso = (off: number) => { const x = new Date(); x.setDate(x.getDate() + off); return toDateStr(x); };
+    growthData = growthData.filter((r: any) => r.date !== iso(0)).concat([{ date: iso(0), wt: 6.7 }]);   // today's weigh-in, after opening
+    return ctGetMetricValue('wtGPerWeek', null, { category: 'weight_gain', createdAt: opened.toISOString() });
+  });
+  expect(after).not.toBeNull();
+});
+
+test('V-K-286-1: a two-calendar-month pair (62 days) is a goal window; 63 is not', async ({ page }) => {
+  await boot(page);
+  await seedGrowth(page, 400, [{ d: -62, wt: 9.0 }, { d: 0, wt: 9.4 }]);
+  expect(await page.evaluate(() => (gvWeightGoalWindow() || {}).days)).toBe(62);
+  await seedGrowth(page, 400, [{ d: -63, wt: 9.0 }, { d: 0, wt: 9.4 }]);
+  expect(await page.evaluate(() => gvWeightGoalWindow())).toBeNull();
+});
+
+test('V-K-286-2: a goal window never starts in the after-birth dip, only at the birth row', async ({ page }) => {
+  await boot(page);
+  // Born 30 days ago; birth row, a dip-day row on day 2, latest on day 30.
+  await seedGrowth(page, 30, [{ d: -30, wt: 3.3 }, { d: -28, wt: 3.1 }, { d: 0, wt: 4.0 }]);
+  const r = await page.evaluate(() => { const g = gvWeightGoalWindow(); return g && { days: g.days, prev: g.previous.wt }; });
+  expect(r).toEqual({ days: 30, prev: 3.3 });
+});
+
+test('V-V-286-1: the Pulse card dates an old weigh-in in the same bracket', async ({ page }) => {
+  await boot(page);
+  await seedGrowth(page, 425, [{ d: -90, wt: 8.9 }, { d: -50, wt: 9.3 }]);
+  const stale = await page.evaluate(() => getPulseNarrative());
+  expect(stale).toMatch(/weight at 9\.3 kg \([^)]*percentile, weighed [^)]+\)/);
+  await seedGrowth(page, 425, [{ d: -40, wt: 8.9 }, { d: -3, wt: 9.3 }]);
+  const fresh = await page.evaluate(() => getPulseNarrative());
+  expect(fresh).not.toContain('weighed');
+});
+
+test('V-K-286-4 / V-M-286-4: a stale percentile with no weight result is dated, and never green', async ({ page }) => {
+  await boot(page);
+  // One weigh-in 90 days ago plus a recent height-only row: no weight result, still a percentile.
+  await seedGrowth(page, 425, [{ d: -90, wt: 8.9 }, { d: -3, ht: 77 }]);
+  const r = await page.evaluate(() => {
+    const gv = computeGrowthVelocity();
+    const items = qaAnswerGrowth('growth').sections.flatMap((s: any) => s.items);
+    const pct = items.find((i: any) => /^Weight percentile/.test(i.text));
+    return { weight: gv.weight, text: pct && pct.text, signal: pct && pct.signal };
+  });
+  expect(r.weight).toBeNull();
+  expect(r.text).toContain('(weighed ');
+  expect(r.signal).toBe('info');
+});
+
+test('V-CA-286-6: latest-measure edge cases (height newer, same-day split rows, non-array)', async ({ page }) => {
+  await boot(page);
+  await seedGrowth(page, 420, [{ d: -10, wt: 9.4 }, { d: -3, ht: 77 }]);
+  expect(await page.evaluate(() => { const m = gvLatestMeasure(); return [gvDaysSinceMeasure(), m.both]; })).toEqual([3, false]);
+  await seedGrowth(page, 420, [{ d: -3, wt: 9.4 }, { d: -3, ht: 77 }]);
+  expect(await page.evaluate(() => gvLatestMeasure().both)).toBe(true);
+  const nonArray = await page.evaluate(() => { (window as any).growthData = null; growthData = null as any; const a = gvLatestMeasure(); growthData = {} as any; return [a, gvLatestMeasure(), calcMedicalScore().components.growth]; });
+  expect(nonArray).toEqual([null, null, 0]);
+});
+
+test('V-C-286-2: the diet heads-up "time to weigh" nudge reads the latest measurement by date', async ({ page }) => {
+  await boot(page);
+  const nudge = () => page.evaluate(() => (_tpGatherHeadsUp() || []).map((i: any) => i.text).find((t: string) => /^Last measured/.test(t)) || null);
+  await seedGrowth(page, 420, [{ d: -3, wt: 9.4 }, { d: -40, wt: 9.0 }]);   // saved out of order
+  expect(await nudge()).toBeNull();
+  await seedGrowth(page, 420, [{ d: -30, wt: 9.0 }, { d: 2, wt: 9.4 }]);    // future-dated row
+  expect(await nudge()).toBeNull();
+  await seedGrowth(page, 420, [{ d: -20, wt: 9.4 }]);
+  expect(await nudge()).toBe('Last measured 20 days ago — time to weigh and measure');
+});

@@ -266,7 +266,7 @@ function ctCompare(val, operator, threshold) {
   }
 }
 
-function ctGetMetricValue(metric, dateStr) {
+function ctGetMetricValue(metric, dateStr, ticket) {
   switch (metric) {
     case 'dailySleepScore':
       var sc = getDailySleepScore(dateStr || today());
@@ -280,7 +280,13 @@ function ctGetMetricValue(metric, dateStr) {
       // the shared window is the last two weigh-ins under 12 m, so an infant weighed weekly never had a
       // 28-day pair and the goal could never resolve. Still null with no weigh-in 28+ days back.
       var gw = (typeof gvWeightGoalWindow === 'function') ? gvWeightGoalWindow() : null;
-      return gw ? gw.gPerWeek : null;
+      if (!gw) return null;
+      // Judging a goal: only once she has been weighed AFTER it was opened (or reopened / re-escalated
+      // — ctRefTime). Weigh-ins from before are the data that raised the concern, and must never say
+      // "All clear" on their own (Maren V-M-286-1, Kael V-K-286-3). A weigh-in on the opening day may
+      // predate the ticket (rows carry no time), so strictly a later local date. No ticket → display.
+      if (ticket && gw.latest.date <= toDateStr(new Date(ctRefTime(ticket)))) return null;
+      return gw.gPerWeek;
     case 'uniqueFoods7d':
       return ctUniqueFoods7d();
     default:
@@ -495,7 +501,7 @@ function ctComputeVerdict(ticket, answers) {
   // ── Goal: metric-driven ──
   var criteria = ctResolutionCriteria(ticket);
   if (criteria.type === 'manual') return { verdict: 'watch', trigger: null, allTriggers: [] };
-  var metricVal = ctGetMetricValue(criteria.metric);
+  var metricVal = ctGetMetricValue(criteria.metric, null, ticket);
   var passes = ctCompare(metricVal, criteria.operator, criteria.value);
   return { verdict: passes ? 'clear' : 'watch', trigger: null, allTriggers: [] };
 }
@@ -550,7 +556,7 @@ function ctCheckThresholdMet(ticket) {
   if (!criteria || criteria.type !== 'threshold_met') {
     return { met: false, daysHeld: 0, paused: false };
   }
-  var metricVal = ctGetMetricValue(criteria.metric);
+  var metricVal = ctGetMetricValue(criteria.metric, null, ticket);
   var passes = ctCompare(metricVal, criteria.operator, criteria.value);
   var ill = ctHasActiveIllness();
   if (passes) {
