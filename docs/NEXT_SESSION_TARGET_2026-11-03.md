@@ -9,11 +9,7 @@
 >
 > **The four decisions:** confirmed by the Governors and taken with the merge.
 >
-> **Next targets, in priority order:**
-> 1. **Paracetamol chip (its own priority issue; Maren g-6, pre-existing).** Show the weight and its date, name the formulation, and add a plausibility cap on a mistyped weight.
-> 2. **Follow-up PR for BUGS #159 (by owner).** The PC-7/PC-10 edge items come first: a stale reading's percentile is shown as current, and the CareTicket weight goal can't resolve for infants weighed less than 28 days apart. After those: dead code (`getGrowthNarrative` and friends), the remaining gate bypasses (or make `gvAgeAt` return NaN), and the copy nits.
-> 3. **#137.** Choose a cited loss threshold, so a large toddler loss inside under 28 days of records stops reading "too soon to judge".
-> 4. **Guard backlog in `docs/PATCH_CLASSES.md`.** An HR-2 ratchet, the growth-bands provenance gate, a record-shape freeze test, and one test-origin helper.
+> **Next targets:** see the standing pointer, `docs/NEXT_SESSION_TARGET_2026-11-03_PM.md`, and the session handoff, `docs/SESSION_HANDOFF_2026-11-03.md`.
 >
 > The plan below is kept as the record of how the session resumed.
 

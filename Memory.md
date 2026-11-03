@@ -51,7 +51,7 @@
     - `docs/PATCH_CLASSES.md`;
     - three new self-tested gates: audit-pronouns-v1, audit-growth-age-v1, audit-hr12-dateonly-v1.
   - Follow-ups: BUGS #159 (by owner), the paracetamol-chip plausibility issue (its own priority), and #137 (needs a cited threshold).
-- **LOC:** 86,540 split-file source (post-#274, 2026-10-29). Five Governors seated: Maren (Care 22,660) + Ceres (Nutrition 9,799) + Kael (Intelligence engine 12,609) + Vela (Surfacing render 8,934) + Carina (Foundation 17,058); shared styles.css + template.html 15,480. Kael's Region is no longer CONTESTED after the 2026-10-29 D4 split.
+- **LOC:** 90,334 split-file source (post-#282, 2026-11-03). Five Governors seated: Maren (Care 23,040) + Ceres (Nutrition 10,659) + Kael (Intelligence engine 12,988) + Vela (Surfacing render 9,001) + Carina (Foundation 18,876); shared styles.css + template.html 15,770. Kael's Region is no longer CONTESTED after the 2026-10-29 D4 split.
 
 ### SEP Invoicing (Active)
 - Phase 8D complete: IM desktop table + detail panel
