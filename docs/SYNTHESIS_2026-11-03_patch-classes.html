@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patch Classes Synthesis</title>
+<style>
+:root {
+  --bg: #fdf8f3; --card: #ffffff; --ink: #3a3340; --mute: #7a7083; --line: #eadfd6;
+  --sage: #8fbfa8; --rose: #e48ba0; --amber: #d9a24f; --lav: #a995d8; --sky: #84b8d0; --indigo: #8391c9; --peach: #f1b78a;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1d1a22; --card: #26222c; --ink: #ece6f0; --mute: #a79cb2; --line: #3a3442; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Georgia, "Times New Roman", serif; }
+main { max-width: 920px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.7rem; margin: 0 0 4px; }
+h2 { font-size: 1.15rem; margin: 28px 0 10px; }
+p.sub { color: var(--mute); margin: 0 0 18px; font-family: system-ui, sans-serif; font-size: .9rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
+.lead { font-size: 1.05rem; }
+.bars { font-family: system-ui, sans-serif; font-size: .9rem; }
+.bar { display: grid; grid-template-columns: 210px 1fr 40px; gap: 10px; align-items: center; margin: 6px 0; }
+.bar .track { background: var(--line); border-radius: 6px; height: 12px; overflow: hidden; }
+.bar .fill { height: 100%; border-radius: 6px; }
+.bar .n { text-align: right; font-variant-numeric: tabular-nums; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.rule h3 { margin: 0 0 6px; font-size: 1rem; }
+.rule p { margin: 0; font-family: system-ui, sans-serif; font-size: .9rem; color: var(--mute); }
+.tag { display: inline-block; font-family: system-ui, sans-serif; font-size: .75rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; color: var(--mute); }
+ol.flow { font-family: system-ui, sans-serif; font-size: .92rem; padding-left: 20px; margin: 0; }
+ol.flow li { margin: 6px 0; }
+.mark { color: var(--sage); }
+.warn { color: var(--rose); }
+footer { margin-top: 28px; color: var(--mute); font-family: system-ui, sans-serif; font-size: .85rem; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: .85em; }
+@media (max-width: 560px) { .bar { grid-template-columns: 130px 1fr 32px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Patch classes &amp; convergent verification</h1>
+  <p class="sub">Synthesis 2026-11-03 &middot; PR #282 (child sex S2&ndash;S4 + growth velocity) &middot; skim layer over <code>SYNTHESIS_2026-11-03_patch-classes.md</code></p>
+
+  <div class="card lead">
+    Bugs come in <strong>types</strong>. Every bug and every Governor finding now names its class from <code>docs/PATCH_CLASSES.md</code>; the Builder runs each touched class's &ldquo;Look for&rdquo; list before a PR; the classes that keep growing show where the next gate goes.
+  </div>
+
+  <h2>159 bugs in #282, by class</h2>
+  <div class="card bars">
+    <div class="bar"><span>PC-7 safety rewording</span><span class="track"><span class="fill" style="width:100%;background:var(--rose)"></span></span><span class="n">43</span></div>
+    <div class="bar"><span>PC-1 time &amp; age</span><span class="track"><span class="fill" style="width:67%;background:var(--sky)"></span></span><span class="n">29</span></div>
+    <div class="bar"><span>PC-10 one state, two answers</span><span class="track"><span class="fill" style="width:67%;background:var(--lav)"></span></span><span class="n">29</span></div>
+    <div class="bar"><span>PC-2 match vocabulary</span><span class="track"><span class="fill" style="width:30%;background:var(--peach)"></span></span><span class="n">13</span></div>
+    <div class="bar"><span>PC-5 gate coverage</span><span class="track"><span class="fill" style="width:28%;background:var(--indigo)"></span></span><span class="n">12</span></div>
+    <div class="bar"><span>PC-9 registry drift</span><span class="track"><span class="fill" style="width:23%;background:var(--amber)"></span></span><span class="n">10</span></div>
+    <div class="bar"><span>PC-3 dead paths</span><span class="track"><span class="fill" style="width:19%;background:var(--sage)"></span></span><span class="n">8</span></div>
+    <div class="bar"><span>PC-6 test infrastructure</span><span class="track"><span class="fill" style="width:14%;background:var(--sage)"></span></span><span class="n">6</span></div>
+    <div class="bar"><span>PC-8 record keys as display</span><span class="track"><span class="fill" style="width:12%;background:var(--sage)"></span></span><span class="n">5</span></div>
+    <div class="bar"><span>PC-4 render-boundary rules</span><span class="track"><span class="fill" style="width:7%;background:var(--sage)"></span></span><span class="n">3</span></div>
+  </div>
+
+  <h2>Rules the arc earned</h2>
+  <div class="grid">
+    <div class="card rule"><h3>Share the selector, not just the rule <span class="tag">PC-10</span></h3><p>One band rule, two weigh-in windows: 640 of 1,467 infants disagreed. One selector: 0 of 8,826.</p></div>
+    <div class="card rule"><h3>Derive the shown number from the verdict <span class="tag">PC-10</span></h3><p>&ldquo;1.5 g/day &mdash; right on track &hellip; 1.7&ndash;12.3 typical&rdquo; came from a parallel hand-typed column.</p></div>
+    <div class="card rule"><h3>Key a downgrade on the reading&rsquo;s age <span class="tag">PC-1</span></h3><p>Keyed on today&rsquo;s date, a baby weighed yesterday went from &ldquo;contact today&rdquo; to &ldquo;next week&rdquo; at midnight.</p></div>
+    <div class="card rule"><h3>One question, one first action <span class="tag">PC-7</span></h3><p>&ldquo;Not gaining&rdquo; got food tips; &ldquo;losing weight&rdquo; got a weight check. One action table now leads everywhere.</p></div>
+    <div class="card rule"><h3>Gates fail closed <span class="tag">PC-5</span></h3><p>Every reviewer bypass became a self-test: 8 fixtures grew to 71. A missing baseline fails.</p></div>
+    <div class="card rule"><h3>Re-audit the fixer&rsquo;s folds <span class="tag">all</span></h3><p>Several of the worst bugs were Lyra&rsquo;s own fixes. Every fold is verified, whoever wrote the original.</p></div>
+  </div>
+
+  <h2>How verification converged</h2>
+  <div class="card">
+    <ol class="flow">
+      <li><span class="warn">&#10007;</span> Rounds 1&ndash;6: each Governor round surfaced fresh, smaller findings, and each opened the next.</li>
+      <li><span class="mark">&#10003;</span> The fix: Governors sort findings into <strong>BLOCKING</strong> (safety, or a parent could act wrongly &mdash; fixed in the PR) and <strong>DEFERRABLE</strong> (a tagged follow-up list).</li>
+      <li><span class="mark">&#10003;</span> The final round closed with four small blockers and a follow-up list (BUGS #159).</li>
+      <li><span class="mark">&#10003;</span> Cipher Edict V: amended, A1&ndash;A4 (three escapes, one docs line), folded &rarr; merged.</li>
+    </ol>
+  </div>
+
+  <h2>Candidate canon</h2>
+  <div class="card">
+    <ol class="flow">
+      <li>Patch classes as a standing QA artifact for every Province.</li>
+      <li>BLOCKING / DEFERRABLE sorting as the verification-round contract.</li>
+      <li>The four engine rules (selector, derived display, reading age, one first action) as SproutLab design floor.</li>
+    </ol>
+  </div>
+
+  <footer>&#9873; Lyra (The Weaver) &middot; sources: docs/PATCH_CLASSES.md, docs/BUGS.md (S2&ndash;S4 #1&ndash;#159), PR #282</footer>
+</main>
+</body>
+</html>

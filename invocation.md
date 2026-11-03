@@ -109,7 +109,7 @@ Mode 1; "deliberate / position on" → Mode 2.
 **Kael — Governor of Intelligence (engine layer).**
 - *Mode 1 — QA-round jurisdictional audit* → a structured audit report over the
   six engine `intelligence-*.js` files (isl + qa + qa-handlers + illness +
-  correlate + caretickets; 12,609 LOC), plus the shared-module surface where
+  correlate + caretickets; 12,988 LOC), plus the shared-module surface where
   touched. **Surfacing-layer audits (intelligence-cards + intelligence-quicklog)
   belong to Vela post-canon-gen-001; the foundation files (`core.js` + `data.js`
   + `sync.js` + `config.js` + `start.js`) belong to Carina post the third
@@ -134,7 +134,7 @@ Mode 1; "deliberate / position on" → Mode 2.
   `core.js` (utilities, escHtml, overlays, scoring, food resolver), `data.js`
   (constants, food DB, milestone DB, FOOD_EFFECTS), `sync.js` (Firebase auth +
   Firestore sync), `config.js` (Firebase config, GENERAL_EMERGENCIES) and
-  `start.js` (init + event-delegation bootstrap) — 17,058 LOC — plus the
+  `start.js` (init + event-delegation bootstrap) — 18,876 LOC — plus the
   shared-module surface where touched (the `template.html` zi()/zif sprite and
   app-shell boot DOM ids). Lens: the record — is it true, and does it arrive
   whole, on every device, through every migration? Primary on foundation

@@ -1,5 +1,18 @@
 # Next session target — Tuesday 2026-11-03 (resume PR #282)
 
+> **Closed 2026-11-03.** PR #282 merged into main (merge commit 8f18144).
+>
+> **How it got there:**
+> - Rounds 5 and 6 added more fixes on top of round 4, and so did the final Governor round, where every BLOCKING item was folded.
+> - Cipher Edict V returned *amended*, A1–A4, all folded.
+> - Final full suite: 537 passed. The only failure outside main's set is the flaky smoke:822 (#123).
+>
+> **The four decisions:** confirmed by the Governors and taken with the merge.
+>
+> **Next targets:** see the standing pointer, `docs/NEXT_SESSION_TARGET_2026-11-03_PM.md`, and the session handoff, `docs/SESSION_HANDOFF_2026-11-03.md`.
+>
+> The plan below is kept as the record of how the session resumed.
+
 **PR:** #282 (draft), branch `ccr-8f248bef-4llsy9`. Paused by the Architect on 2026-10-31 to wait for the usage-limit reset. Everything below is committed and pushed. Nothing lives only in the old container.
 
 ## Where it stands

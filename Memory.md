@@ -38,7 +38,20 @@
 - **Wave 2 reservoir:** 9 nodes at `forward` status — R-1 (silver capstone, adaptive layer) now has a real adaptive signal post-sleep-arc-3
 - **canon-cc-008 chain operational:** 7 audit gates on main (8th + 9th queued for milestone-engine-prep IMPL + milestones-tab IMPL)
 - **Tree state:** 34 nodes on `docs/SPROUTLAB_V3_PROGRESSION_TREE.html` (post-PR #150 §9-bis refresh)
-- **LOC:** 86,540 split-file source (post-#274, 2026-10-29). Five Governors seated: Maren (Care 22,660) + Ceres (Nutrition 9,799) + Kael (Intelligence engine 12,609) + Vela (Surfacing render 8,934) + Carina (Foundation 17,058); shared styles.css + template.html 15,480. Kael's Region is no longer CONTESTED after the 2026-10-29 D4 split.
+- **Child profile + growth arc (Oct–Nov 2026):**
+  - #280: privacy v1 P2.
+  - #281: child sex S1 (household profile `sex`).
+  - **#282 (merged 2026-11-03):** child sex S2–S4. Contents:
+    - pronouns via `pron()`;
+    - cited body-care guidance with sex and age filters;
+    - WHO sex-specific growth-velocity bands;
+    - a newborn weight model (NICE NG75 / AAP);
+    - two-tier timed doctor actions;
+    - one weigh-in window and one row filter for both growth engines;
+    - `docs/PATCH_CLASSES.md`;
+    - three new self-tested gates: audit-pronouns-v1, audit-growth-age-v1, audit-hr12-dateonly-v1.
+  - Follow-ups: BUGS #159 (by owner), the paracetamol-chip plausibility issue (its own priority), and #137 (needs a cited threshold).
+- **LOC:** 90,334 split-file source (post-#282, 2026-11-03). Five Governors seated: Maren (Care 23,040) + Ceres (Nutrition 10,659) + Kael (Intelligence engine 12,988) + Vela (Surfacing render 9,001) + Carina (Foundation 18,876); shared styles.css + template.html 15,770. Kael's Region is no longer CONTESTED after the 2026-10-29 D4 split.
 
 ### SEP Invoicing (Active)
 - Phase 8D complete: IM desktop table + detail panel
@@ -85,6 +98,17 @@
 - **Lyra fold-authority register-flip pattern (canon-cc-022 sub-pattern, ratified 2026-05-27).** When the Architect explicitly grants Lyra fold-authority in advance of a canon-cc-008 chain run on a docs-only spec PR — typically with narrow scope — Lyra applies all in-scope BLOCKING + NOTE folds inline without Architect roundtrip. Cipher Edict V terminal pass verifies canon-cc-027 spec amendment authority was NOT exceeded. Silence is not a waiver. See invocation.md §10.3.
 - **Flexible-name sourcing + deferred hardcode debt (Architect decision, 2026-06-07, PR #235).** Configurable values — the baby's name being canonical — must be **sourced from runtime config**, not hardcoded. The household profile field `_syncHousehold.name` (sync.js; the create flow labels it "Baby's name") is the single source of truth; new code reads it with at most one fallback literal marked `TODO(legacy-name-debt)`. The Architect's principle: *"keep hardcoded name out of the code as far as possible — keeps us flexible."* **Known legacy debt:** the app still hardcodes `'Ziva'` in several modules (`core.js` avatar `alt`, `medical.js` growth-chart labels, `diet.js` `_emDocName` fallback). This is acknowledged and **deferred to a later session** — migrate deliberately, do NOT fix opportunistically without the Architect re-opening it. First application: the PR #235 doc-prep "For the doctor" card was reworked to lead with the **patient** (baby's name as the card title + age·weight beneath) instead of "SproutLab" branding — a clinical handoff identifies the patient, not the app.
 
+- **Patch classes and BLOCKING/DEFERRABLE verification (PR #282, 2026-11-03).** The Architect asked for every open item to be fixed in the same PR and classified as a patch type, so later PRs can look for the same faults up front.
+  - **Result:** `docs/PATCH_CLASSES.md` (PC-1..PC-10). Each class has a "Look for" list, its guard and a backlog.
+  - **Every `docs/BUGS.md` entry carries its class.** #282 logged 159 entries: PC-7 safety rewording 43, PC-1 time/age 29, PC-10 one state two answers 29, PC-2 13, PC-5 12, PC-9 10, PC-3 8, PC-6 6, PC-8 5, PC-4 3.
+  - **Lessons that became rules:**
+    - **Share the selector, not just the rule.** Two engines used one band rule over two different windows, which gave 640 disagreements in 1,467 cases.
+    - **Derive a displayed number from what decided the verdict.**
+    - **Key a time-based downgrade on the reading's age, not today's date.**
+    - **Gates fail closed.** Every bypass a reviewer finds becomes a gate self-test.
+  - **Convergence:** six build rounds each opened the next, until the Governors were asked to sort findings into BLOCKING (fixed in the PR) and DEFERRABLE (a tagged follow-up list for the Architect). With that sort, the next round closed.
+  - **The worst bugs were Lyra's own folds.** Every fix gets re-audited, the fixer's included.
+
 ## Companion Registry (Quick Reference)
 
 | Name | Role | Archetype | Repo / Scope |
@@ -115,3 +139,11 @@ Lyra (SproutLab's Builder) is named for the constellation **Lyra**, which rode *
 - **Git:** Always --no-pager, descriptive commits, never force push (except `--force-with-lease` after `git commit --amend --no-edit` re-signing workaround for worktree-signing 400 "missing source" issue)
 - **Session rhythm:** Spec → Build → QA rounds (canon-cc-008 chain) → §9-bis tree refresh → Handoff doc → Deploy
 - **Parallel arc execution:** worktree-isolated agents (Agent-A/B/C pattern) when arcs are file-disjoint; canon-cc-008 chain runs in one wave when Governors can be independently briefed; see SESSION_HANDOFF_2026-05-27.md §Doctrine ratified item 6 for the full pattern
+- **Worktree builders, main-checkout assembly (PR #282).** Builder agents work in isolated worktrees and leave their changes uncommitted, because commit signing fails in worktrees. Lyra then:
+  1. captures the changes with `git -C <wt> diff -- split tests`;
+  2. applies them with `git apply --3way` in the main checkout;
+  3. builds, tests and commits.
+
+  To base a builder on a local commit, run `git reset --hard <sha>` in its worktree (worktrees share the object store).
+- **Never rebuild `index.html` under a running e2e suite (PR #282).** Test changes in a separate serve directory on another PORT. Kill any stale server first: `reuseExistingServer` silently attaches to an old build. If a push can't wait, write the build to a temp file and `mv` it over `index.html` (an atomic rename).
+- **Hooks to know.** The guard hook blocks any shell command line that mentions the raw build script together with a stderr-to-stdout merge, even inside a string. The pre-push hook needs `index.html` rebuilt in any push range that touches a bundled source.

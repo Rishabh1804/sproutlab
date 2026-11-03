@@ -64,6 +64,8 @@ git add -A && git commit -m "msg" && git --no-pager push
 - **`/code-review` is NOT a Governor audit** (canon-cc-022 artifact test — a skill is an in-transcript smell-check, no signature, no Edict V entry). It may supplement; it never replaces.
 - **Scribe Worker Tier** (canon-proc-006): each senior companion may command four task-Scribes — `scribe-scout` (recon) · `scribe-draft` (compose) · `scribe-verify` (mechanical checks) · `scribe-record` (chronicle). They support, never deliberate/commit/ratify.
 - An **Architect waiver** ("merge it directly") is valid only when *explicitly* given. Silence is not a waiver.
+- **Patch classes** (`docs/PATCH_CLASSES.md`, PC-1..PC-10): run the touched classes' "Look for" lists before a PR; every finding and `docs/BUGS.md` entry names its class; verification rounds sort findings BLOCKING (fix now) vs DEFERRABLE (tagged follow-up).
+- **Growth helpers are single sources** (core.js): `gvWeightWindow` (the one weigh-in window), `gvMeasureRows` (the one row filter), `gvNewbornCheck` (the one newborn result), `gvSlowAction` + `GV_ACT_*` (the one doctor-action table), `gvAboveBandLine`, `ordinal`/`pctOrdinal`. A new surface reads these — never recomputes a verdict, tone or action (PC-10).
 
 ---
 
