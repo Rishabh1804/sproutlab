@@ -572,6 +572,44 @@ function childSex() { const s = _profChild().sex; return s === 'f' || s === 'm' 
 // one-question gate is up from boot on every phone (no attached-device wait) and the app behind it
 // is inert, so the girls' set it returns then is only a stand-in that keeps hidden screens finite.
 function whoT() { return WHO_GROWTH[childSex() || 'f']; }
+
+// ── WHO weight-for-age z, 0–60 months (spec docs/specs/paracetamol-weight-check-v1.md §4.1) ──
+// The age clock for every WHO_WFA_LMS read (V-CA-287-6: medical.js's percentile reads of WHO_GROWTH still
+// use ageMonthsAt's 30.44-day months — at most 0.15 day apart; converge before PR 2): whole calendar days from the birth date to the
+// weigh-in (gvDaysBetween, HR-12), divided by WHO's month, 30.4375 days (WHO Anthro). The table's last
+// row is month 60.0; a weigh-in past day 1826 is outside it.
+const WHO_MONTH_DAYS = 30.4375;
+const WHO_WFA_MAX_DAY = 1826;
+// Months from the birth date to a 'YYYY-MM-DD' date on that clock, or NaN when the date is not a
+// valid local date, is before the birth date, or is past the table.
+function whoAgeMoAt(dateStr) {
+  const days = gvDaysBetween(toDateStr(DOB), dateStr);
+  if (!Number.isFinite(days) || days < 0 || days > WHO_WFA_MAX_DAY) return NaN;
+  return Math.min(60, days / WHO_MONTH_DAYS);
+}
+// Weight-for-age z for a weight (kg) at an age (months, whoAgeMoAt) and a sex ('f' / 'm'), from
+// WHO_WFA_LMS (data.js) with L, M and S interpolated linearly between completed months. Beyond ±3 it
+// is WHO's restricted z — each further unit is one SD2→SD3 distance — so the biologically-implausible
+// flags (z < −6, z > +5) fall where WHO Anthro puts them (WHO Child Growth Standards: Methods and
+// development, 2006, ch. 7). The sex is passed, never defaulted: no whoT() girls stand-in here. NaN —
+// which every caller must treat as "not plausible / ask" (fail closed) — for an unknown sex, a weight
+// that is not a positive number, or an age outside 0–60 months.
+function whoWfaZ(wtKg, ageMo, sex) {
+  const T = (sex === 'f' || sex === 'm') ? WHO_WFA_LMS[sex] : null;
+  if (!T || typeof wtKg !== 'number' || !Number.isFinite(wtKg) || !(wtKg > 0)
+      || typeof ageMo !== 'number' || !(ageMo >= 0 && ageMo <= 60)) return NaN;   // no coercion of null / '' / '24' (V-CA-287-5)
+  const i = Math.min(Math.floor(ageMo), T.length - 2);
+  const f = ageMo - i;
+  if (!(f >= 0 && f <= 1)) return NaN;
+  const L = T[i][0] + (T[i + 1][0] - T[i][0]) * f;
+  const M = T[i][1] + (T[i + 1][1] - T[i][1]) * f;
+  const S = T[i][2] + (T[i + 1][2] - T[i][2]) * f;
+  const sd = k => Math.abs(L) < 1e-6 ? M * Math.exp(k * S) : M * Math.pow(1 + L * S * k, 1 / L);
+  const z = Math.abs(L) < 1e-6 ? Math.log(wtKg / M) / S : (Math.pow(wtKg / M, L) - 1) / (L * S);
+  if (z > 3) return 3 + (wtKg - sd(3)) / (sd(3) - sd(2));
+  if (z < -3) return -3 + (wtKg - sd(-3)) / (sd(-2) - sd(-3));
+  return z;
+}
 // "girls" / "boys" for growth copy ("heavier than 60% of girls her age"); "children" until known.
 function childKinWord() { const s = childSex(); return s === 'm' ? 'boys' : s === 'f' ? 'girls' : 'children'; }
 // Pronouns for copy: pron('subj') she/he, 'obj' her/him, 'poss' her/his, 'refl' herself/himself.

@@ -169,6 +169,17 @@ if ! bash audit-growth-age-v1.sh >&2; then
   echo "BUILD ABORTED: growth-age audit failed. A growth verdict would be judged at today's age (see above)." >&2
   exit 1
 fi
+# audit-who-wfa-v1.mjs — PC-9 cited-registry gate (#161/#162, spec paracetamol-weight-check-v1 §4.1):
+# WHO_WFA_LMS is exactly the committed WHO weight-for-age files (sha256 recorded), and WHO_GROWTH's
+# weight columns equal the file's P columns exactly.
+# Advisory (#161, Cipher N2): the interim dosing ceiling must go when PR 4 ships, before 2027-09-04.
+if grep -q '_paraInterimCeilingOk' intelligence-illness.js && [ "$(date +%Y%m%d)" -ge 20270801 ]; then
+  echo "WARN: _paraInterimCeilingOk (#161 interim ceiling) still present — PR 4 must ship before 2027-09-04 (spec paracetamol-weight-check-v1 §7)" >&2
+fi
+if ! node audit-who-wfa-v1.mjs >&2; then
+  echo "BUILD ABORTED: WHO weight-for-age registry audit failed (see above)." >&2
+  exit 1
+fi
 # audit-hr12-dateonly-v1.sh — PC-1 ratchet (BUGS #55): date-only strings parsed with new Date()
 # may only decrease across split/*.js; a new one needs _parseLocalDate or an '// HR-12: <reason>' marker (a bare marker still counts).
 if ! bash audit-hr12-dateonly-v1.sh >&2; then
