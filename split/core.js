@@ -1264,17 +1264,17 @@ function init() {
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();
     else if (action === 'sgTapChip') sgTapChip(parseInt(arg));
-    else if (action === 'feEditReading') feEditReading(parseInt(arg));
+    else if (action === 'feEditReading') feEditReading(arg);   // illness rows pass the entry id, not a position (#161 PR 3, Vela V-V-289-1)
     else if (action === 'epEditResolved') epEditResolved(arg, arg2);
-    else if (action === 'feEditDose') feEditDose(parseInt(arg));
-    else if (action === 'feEditAction') feEditAction(parseInt(arg));
-    else if (action === 'deEditFluid') deEditFluid(parseInt(arg));
-    else if (action === 'deEditWetDiaper') deEditWetDiaper(parseInt(arg));
-    else if (action === 'deEditStool') deEditStool(parseInt(arg));
-    else if (action === 'deEditAction') deEditAction(parseInt(arg));
-    else if (action === 'voEditEntry') voEditEntry(parseInt(arg));
-    else if (action === 'voEditAction') voEditAction(parseInt(arg));
-    else if (action === 'ceEditAction') ceEditAction(parseInt(arg));
+    else if (action === 'feEditDose') feEditDose(arg);
+    else if (action === 'feEditAction') feEditAction(arg);
+    else if (action === 'deEditFluid') deEditFluid(arg);
+    else if (action === 'deEditWetDiaper') deEditWetDiaper(arg);
+    else if (action === 'deEditStool') deEditStool(arg);
+    else if (action === 'deEditAction') deEditAction(arg);
+    else if (action === 'voEditEntry') voEditEntry(arg);
+    else if (action === 'voEditAction') voEditAction(arg);
+    else if (action === 'ceEditAction') ceEditAction(arg);
     else if (action === 'ceSetSeverity') ceSetSeverity(arg);
     else if (action === 'toggleUpcomingSubcat') toggleUpcomingSubcat(arg);
     else if (action === 'dismissPostSaveFlash') dismissPostSaveFlash();

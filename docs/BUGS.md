@@ -80,7 +80,8 @@ The fever card's dose chip, which named no weight, date or bottle and had no che
 - **Council and spec (2026-11-04):** a five-seat council plus two Cipher passes produced the ratified spec [`docs/specs/paracetamol-weight-check-v1.md`](specs/paracetamol-weight-check-v1.md) (record: `docs/COUNCIL_2026-11-04_161.md`). It supersedes the threshold note above: WHO velocity P1/P99 to 24 m and a weight-for-age Δz method to 60 m, confirm by retyping into a separate synced key, and a leftover-risk flow on the dose total. Build in five PRs (spec §7).
 - **PR 1 (#287):** the WHO weight-for-age registry, `whoWfaZ`, and #162. The exact WHO flag is 0.3–1.7 kg higher than the old one at 3–24 months, so an **interim ceiling** keeps the old upper flag for weigh-ins ≤ 24 months until PR 4's confirm state ships — PR 1 does not widen what is dosed at ≤ 24 months (V-K-287-1, V-M-287-3; past 24 months the exact flag admits more by design, the #162 fix). PR 4 must ship before 2027-09-04; the build warns from 2027-08-01 while the interim ceiling exists.
 - **PR 2:** WHO weight-velocity registry + `gvWeightJumpCheck` (velocity to 24 m, weight-for-age Δz from a 12 m start up to 184 days and 60 months, fail-closed). Engine only — the chip uses it from PR 4.
-- **Status:** **Open** — PR 1 merged (#287); PR 2 in review.
+- **PR 3:** illness-episode sync — all four episode keys merge by entry id on receive and push (tombstones, derived status, concurrent-start fold, transactional write, join-pending), the module arrays are reassigned on receive, edit sheets commit by id. Spec §5A.
+- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 in review.
 
 #### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
 - **Symptom:** Non-blocking notes from the #284 round.
@@ -1741,7 +1742,27 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Sequencing:** Stability sub-phase carryforward item.
 - **Files:** `split/medical.js`, `split/sync.js`
 
+#### P2 — Raised on #161 PR 3 (#289), pre-existing, not fixed there
+- **`getActiveIllnessPosture` reads fields episodes never carry (PC-8 / PC-3; Vela V-V-289 pair-note to Kael).** `intelligence-illness.js` (the posture helper near the end of the file) reads `startDate`, `maxTemp` and `stoolCount`; episodes carry `startedAt` and `peakTemp`. The landing Care card's "Day N" never shows (always "Tap to view"), severity always takes its default, and the `maxTemp >= 39` threshold is in °C while readings are stored in °F. Fix: read `startedAt` / `peakTemp`, compare in °F, derive the stool count from `_deStoolsInLast24h`. Kael-primary.
+- **Diarrhoea stool chips store literal quotes (PC-2; Maren V-M-289-9).** The chips render `data-arg="'soft'"`, so `deLogStoolPrompt` stores `'soft'` with the quotes. #289 strips them in the reopen rule, but the "improving" checks still never fire for chip-logged stools. Fix: drop the quotes in the chip markup and normalise stored values on read.
+- **99.0 °F starts / reopens a fever episode; the severity ladder calls a fever only from 99.1 °F (PC-9; Kael V-K-289-11).** `FE_FEVER_START_F = 99`. Consequence ruling owed by Maren.
+- **Late entries that don't reopen an episode carry no "logged after it was marked resolved" label (Maren V-M-P3-8, accepted as DEFERRABLE in V-M-289-12).**
+- **Join with a household that lacks an episode key keeps the joining phone's local episodes (Carina V-CA-289-7, ruled acceptable).** For a key the household already has, the joining phone takes the household's copy outright; for a key it lacks, local stays and goes up as a union on the next write (never overwriting household records). Recorded as an accepted asymmetry.
+- **Episodes without an `id` are dropped silently by `_epNormalize` (Carina V-CA-289-10 / D-4, PC-3).** Every creator sets one; log the drop or assign a deterministic id.
+- **An episode receive replays the landing fade-up (Vela V-V-289-9).** Skip `_ldAnimateIn` on sync-driven renders.
+- **Active-card rows show a time only (Maren V-M-289-17, PC-1).** An entry moved in from an earlier day (a stale phone's 23:00 dose pulled into an 08:00 episode) reads as today's. Show the date on any row not from today, as the came-back note does.
+- **The join flag can stay set when local and household already match (Cipher #289 nit 5).** The `[E]` / `[L]` / `[K4]` skips `continue` before `_epJoinDone`; harmless while the dirty ledger guards writes. End the join on those paths too.
+- **Inline `style=` on episode rows (HR-2, pre-existing; Cipher #289 nit 6).** `intelligence-illness.js` episode row renders (readings, doses, stools and vomit rows) still carry `style="font-size:…;color:…"`. Move to classes.
+
+#### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
+Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:
+- `alert-routing.spec.ts` ×2 — `.ca-view-all` never becomes visible.
+- `food-effects-v2-p1c-milk.spec.ts` ×10 — timeouts.
+- `smoke.spec.ts` 2a/2b/2c — a tab panel never gets `active`.
+- `vit-d3-tracking.spec.ts` ×3, `vit-d3-tracking-v2.spec.ts` ×1 — "Adherence 0/13" where the test expects N/3 from medStart; today's "Given at X" action item missing; a waitForFunction timeout. Likely date-dependent (Ziva is past 14 months; the Caldikind switch of 2026-09-24).
+
 #### P1 — Illness-episode sync receive re-renders from stale module arrays (all four keys)
+- **Status:** **Fixed in #161 PR 3** (spec `docs/specs/paracetamol-weight-check-v1.md` §5A). The four keys now carry `global:` (the receive reassigns `_feverEpisodes` etc. through `_epNormalize`), `mergeOnReceive` (one merge, `_epMergeLists`, on both phones, by entry id), `pushBackOnDiverge`, and the `render*History` renderers; every episodes write is a Firestore transaction; edit sheets re-find the live entry by id. Class PC-10 (one state, two answers). Tests: `tests/e2e/episode-sync-merge.spec.ts`.
 - **Symptom:** `SYNC_RENDER_DEPS` registers `feverEpisodes` / `diarrhoeaEpisodes` / `vomitingEpisodes` / `coldEpisodes` with `global: null` and dispatches the episode-card renderers on receive, but those renderers read module-level `let` arrays (`_feverEpisodes` etc.) hydrated once from localStorage at load, not the freshly written key. Device B resolves an episode; device A keeps showing "Active … Episode" until reload. Nothing throws (per-renderer try/catch), it silently no-ops on data.
 - **Fix shape:** Either a `_postReceive*` hook per episode key that reassigns the module array (the `_postReceiveMilestones` idiom), or have `getActive*Episode()` read through `load()`. Kael-primary; separate PR.
 - **Origin:** Kael V-K-3 on PR #263 (fever readings toggle), widened by Cipher Edict V ruling 5 from fever-only to all four illness-episode keys. Pre-existing; not introduced by #263.

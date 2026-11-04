@@ -1,8 +1,333 @@
 // ── FEVER EPISODE TRACKING (v2.9) ──
 
+// ── Illness-episode sync: entry ids, tombstones and the one merge (#161 PR 3, spec §5A) ──
+// Both phones merge the same way on receive and on push, so they converge (Carina V-CA-P3-1..14,
+// Kael V-K-P3-1..18, Maren V-M-P3-1..8). Inputs are never mutated.
+const FE_FEVER_START_F = 99;   // a fever episode starts at this reading — and a late reading this high reopens a resolved one (V-M-P3-1)
+// The entry or its episode is gone from this phone's list (removed, or moved when two episodes merged).
+const _EP_GONE = 'Not saved \u2014 the other phone removed or moved this entry. Close this and find it in the list again.';
+const _EP_GONE_DEL = 'Not deleted \u2014 the other phone already removed or moved this entry. Check the list.';
+// Per kind: the storage key, the nested entry arrays, and which late entries reopen a resolved episode
+// (an entry the parent's Resolve question rules out, or a red flag only checked on an active card — Maren).
+const _EP_SYNC = {
+  fever:     { key: 'feverEpisodes',     arrays: ['readings', 'doses', 'actions'],
+               reopens: (arr, e) => arr === 'readings' && Number(e.temp) >= FE_FEVER_START_F },
+  diarrhoea: { key: 'diarrhoeaEpisodes', arrays: ['stools', 'fluids', 'wetDiapers', 'actions'],
+               reopens: (arr, e) => arr === 'stools' && (!!e.blood || !!e.mucus || ['soft', 'normal', 'hard'].indexOf(String(e.consistency || '').replace(/'/g, '')) < 0) },
+  vomiting:  { key: 'vomitingEpisodes',  arrays: ['episodes', 'fluids', 'wetDiapers', 'actions'],
+               reopens: (arr, e) => arr === 'episodes' && e.type !== 'spit-up' },
+  cold:      { key: 'coldEpisodes',      arrays: ['actions'], logs: 'dailyLogs',
+               reopens: (arr, e) => arr === 'dailyLogs' && ((Array.isArray(e.symptoms) && e.symptoms.length > 0) || Number(e.severity) >= 4) }
+};
+function _epKindOfKey(keyName) { for (const k in _EP_SYNC) if (_EP_SYNC[k].key === keyName) return k; return null; }
+// A new entry id: never changes on edit, so it — not the entry's time — is the identity.
+function _epNewId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function _epStable(v) {
+  if (Array.isArray(v)) return '[' + v.map(_epStable).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => k.indexOf('__sync_') !== 0).sort().map(k => JSON.stringify(k) + ':' + _epStable(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+function _epHash(str) { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); }
+const _epT = t => { const x = new Date(t).getTime(); return Number.isFinite(x) ? x : 0; };
+const _epMin = t => Math.floor(_epT(t) / 60000);
+// An entry's instant: its time, or — a legacy cold day-log with only a date — local midnight of that date (HR-12, V-K-289-9).
+const _epEntryT = e => e.time ? _epT(e.time) : (e.date && typeof _epLocalToISO === 'function' ? _epT(_epLocalToISO(e.date, '00:00')) : 0);
+// Lazy, idempotent: arrays exist; legacy entries get a deterministic id both phones compute alike
+// ('L:<array>:<time>#<n>', n by stable JSON among same-time entries). Never stamps edit/resolve times.
+function _epNormalize(kind, list) {
+  const cfg = _EP_SYNC[kind];
+  return (Array.isArray(list) ? list : []).filter(ep => ep && typeof ep === 'object' && ep.id).map(ep => {
+    const out = Object.assign({}, ep);
+    cfg.arrays.forEach(arr => {
+      const src = Array.isArray(ep[arr]) ? ep[arr] : [];
+      const groups = {};
+      src.forEach(e => { if (e && !e.id) (groups[String(e.time)] = groups[String(e.time)] || []).push(e); });
+      // The id carries a hash of the entry's content (plus a count among identical copies), not its position:
+      // phones holding different same-time sets still name the same entry alike (Kael V-K-289-6).
+      const legacyId = new Map();
+      Object.keys(groups).forEach(t => { const seen = {}; groups[t].forEach(e => {
+        const h = _epHash(_epStable(e)); const k = seen[h] = (seen[h] || 0) + 1;
+        legacyId.set(e, 'L:' + arr + ':' + t + '#' + h + (k > 1 ? '.' + (k - 1) : ''));
+      }); });
+      out[arr] = src.filter(e => e && typeof e === 'object').map(e => e.id ? e : Object.assign({}, e, { id: legacyId.get(e) }));
+    });
+    if (cfg.logs) out[cfg.logs] = (Array.isArray(ep[cfg.logs]) ? ep[cfg.logs] : []).filter(e => e && e.date);
+    out._del = Array.isArray(ep._del) ? ep._del.filter(t => t && t.arr && t.id) : [];
+    if (ep.absorbed !== undefined) out.absorbed = Array.isArray(ep.absorbed) ? ep.absorbed.filter(x => typeof x === 'string') : [];
+    if (ep.resolveSuperseded !== undefined) out.resolveSuperseded = Array.isArray(ep.resolveSuperseded) ? ep.resolveSuperseded.filter(x => x && typeof x === 'object') : [];
+    return out;
+  });
+}
+// The one save for the four episode keys: any entry still without an id is new — it gets a random one.
+function _epSave(keyName, list) {
+  const kind = _epKindOfKey(keyName);
+  if (kind) (list || []).forEach(ep => _EP_SYNC[kind].arrays.forEach(arr => (ep[arr] || []).forEach(e => { if (e && !e.id) e.id = _epNewId(); })));
+  save(KEYS[keyName], list);
+}
+function _epList(kind) {
+  return kind === 'fever' ? _feverEpisodes : kind === 'diarrhoea' ? _diarrhoeaEpisodes : kind === 'vomiting' ? _vomitingEpisodes : _coldEpisodes;
+}
+// A row's data-arg: the entry id (V-CA-P3-2); a numeric position only for an entry somehow without one.
+function _epRowArg(arr, i) { const e = arr && arr[i]; return escAttr(String(e && e.id ? e.id : i)); }
+function _epIdxOf(ep, arr, arg) {
+  const a = (ep && ep[arr]) || [];
+  const byId = a.findIndex(e => e && String(e.id) === String(arg));
+  if (byId >= 0) return byId;
+  const n = Number(arg);
+  return Number.isInteger(n) && n >= 0 && n < a.length && !a[n].id ? n : -1;
+}
+// The live episode and entry at commit time, by ids — never the objects captured when a sheet opened.
+function _epLive(kind, epId, arr, eid) {
+  if (!epId || !eid) return null;   // an entry without an id must never match 'the first id-less entry' (V-CA-289-3)
+  const ep = _epList(kind).find(e => e && e.id === epId);
+  if (!ep || !Array.isArray(ep[arr])) return null;
+  const i = ep[arr].findIndex(e => e && e.id === eid);
+  return i < 0 ? null : { ep: ep, i: i };
+}
+// An active episode whose resolve the merge overrode (symptoms logged after it on the other phone) says so,
+// so the parent isn't left wondering why a fever she marked better is open again (Maren V-M-P3-7).
+function _epCameBackHtml(ep) {
+  const sup = (ep && ep.status === 'active' && Array.isArray(ep.resolveSuperseded)) ? ep.resolveSuperseded : [];
+  const last = sup.reduce((m, x) => (!m || _epT(x && x.resolvedAt) > _epT(m.resolvedAt) ? x : m), null);
+  if (!last || !_epT(last.resolvedAt)) return '';
+  const dayOf = iso => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  const fmt = iso => dayOf(iso) + ', ' + _feverTimeShort(iso);
+  // Name what reopened it, so the parent can check it — and fix it if it was a typo (Vela V-V-289-6, Maren
+  // V-M-289-8) — but only while that entry still reopens: a corrected or removed one is not named as the
+  // reason (V-V-289-7). The date shows when it differs from the resolve's (V-V-289-8, V-M-289-15).
+  const by = last.by || {}, list = by.arr && Array.isArray(ep[by.arr]) ? ep[by.arr] : [];
+  const e = by.id ? list.find(x => x && x.id === by.id) : null;
+  const kind = { readings: 'fever', stools: 'diarrhoea', episodes: 'vomiting', dailyLogs: 'cold' }[by.arr];
+  let what = 'New symptoms were logged after that';
+  if (by.id && (!e || !kind || !_EP_SYNC[kind].reopens(by.arr, e))) what = 'An entry logged after that reopened it; it has since been changed or removed';
+  else if (e && _epT(e.time)) {
+    const at = ' at ' + (dayOf(e.time) === dayOf(last.resolvedAt) ? _feverTimeShort(e.time) : fmt(e.time));
+    if (by.arr === 'readings') what = 'A ' + Number(e.temp).toFixed(1) + '\u00b0F reading was logged' + at;
+    else if (by.arr === 'stools') {
+      const c = String(e.consistency || '').replace(/'/g, '');
+      const adj = ['soft', 'normal', 'hard'].indexOf(c) >= 0 ? '' : (c || 'loose');
+      const withs = [e.blood ? 'blood' : '', e.mucus ? 'mucus' : ''].filter(Boolean);
+      what = 'A ' + (adj ? adj + ' ' : '') + 'stool' + (withs.length ? ' with ' + withs.join(' and ') : '') + ' was logged' + at;   // e.g. "A watery stool", "A stool with blood"
+    }
+    else if (by.arr === 'episodes') what = 'A vomiting episode was logged' + at;
+    else if (by.arr === 'dailyLogs') what = 'Cold symptoms were logged' + at;
+  }
+  return '<div class="ep-edit-hint">Marked resolved on ' + escHtml(fmt(last.resolvedAt)) + '. ' + escHtml(what) + ', so this is open again. Tap Mark Resolved again once symptoms settle.</div>';
+}
+// A delete leaves a tombstone so the other phone's copy can't bring the entry back (V-CA-P3-5).
+function _epTombstone(ep, arr, idx) {
+  const e = ep[arr] && ep[arr][idx];
+  if (!e || !e.id) return;
+  if (!Array.isArray(ep._del)) ep._del = [];
+  const base = _epBaseId(e.id);
+  // What the delete protects is the OTHER copies the parent saw and kept (conflict copies of the same
+  // entry) — not the deleted copy's content: any other version of the deleted entry still dies, so an
+  // edit-then-delete, or an earlier edit on the other phone, can't bring it back (Carina V-CA-289-12).
+  const keep = ep[arr].filter((x, i) => i !== idx && x && x.id && _epBaseId(x.id) === base)
+    .map(x => _epStable(Object.assign({}, x, { id: base }))).sort();
+  const t = { arr: arr, id: base, at: new Date().toISOString() };
+  if (keep.length) t.keep = keep;
+  ep._del.push(t);
+}
+function _epBaseId(id) { return String(id).replace(/~\d+$/, ''); }
+// A tombstone kills every copy of its entry (keyed arr|baseId, the copy passed with its base id) unless
+// the copy was edited after the delete, or is a conflict copy the parent kept when deleting.
+function _epKilled(delMap, arr, e) {
+  const ts = delMap && delMap.get(arr + '|' + e.id);
+  return !!ts && ts.some(t => !((e.editedAt || '') > (t.at || '')) && !(Array.isArray(t.keep) && t.keep.indexOf(_epStable(e)) >= 0));
+}
+function _epDelMap(lists) {
+  const m = new Map();
+  lists.forEach(l => (l || []).forEach(t => { if (!t || !t.arr || !t.id) return; const k = t.arr + '|' + t.id; if (!m.has(k)) m.set(k, []); m.get(k).push(t); }));
+  return m;
+}
+// Tombstones from both sides, one of each, in a stable order (so the merge stays commutative).
+function _epUnionDel() {
+  const m = new Map();
+  Array.prototype.slice.call(arguments).forEach(l => (l || []).forEach(t => { if (t && t.arr && t.id) m.set(_epStable(t), t); }));
+  return Array.from(m.entries()).sort((x, y) => x[0] < y[0] ? -1 : 1).map(x => x[1]);
+}
+// Keep every active episode, every fever episode holding a dose in the last 24 h (the 4-in-24 gather),
+// then the newest up to 20 — by (startedAt, id), so both phones keep the same set (V-K-P3-6, V-CA-P3-11).
+function _epPrune(kind, list, nowMs) {
+  const now = nowMs || Date.now();
+  const sorted = list.slice().sort(_epCmpEp);
+  const keep = new Set();
+  sorted.forEach(ep => {
+    if (ep.status === 'active') keep.add(ep);
+    if (kind === 'fever' && (ep.doses || []).some(d => now - _epT(d.time) < 24 * 3600000)) keep.add(ep);
+  });
+  for (let i = sorted.length - 1; i >= 0 && keep.size < 20; i--) keep.add(sorted[i]);
+  return sorted.filter(ep => keep.has(ep));
+}
+function _epCmpEp(a, b) { return (_epT(a.startedAt) - _epT(b.startedAt)) || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0); }
+function _epCmpEntry(a, b) { return (_epT(a.time) - _epT(b.time)) || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0); }
+// Two copies of one entry: the later editedAt wins whole; equal content is one; differing content with
+// no edit stamp keeps both (a duplicate over-counts — the safe direction, V-K-P3-1).
+function _epMergeEntryArrays(arr, A, B, delMap) {
+  const byId = new Map();
+  [A, B].forEach(src => (src || []).forEach(e0 => {
+    const base = String(e0.id).replace(/~\d+$/, '');
+    const e = base === e0.id ? e0 : Object.assign({}, e0, { id: base });
+    const cur = byId.get(e.id);
+    if (!cur) { byId.set(e.id, [e]); return; }
+    if (cur.some(c => _epStable(c) === _epStable(e))) return;
+    const ea = e.editedAt || '', best = cur.reduce((m, c) => ((c.editedAt || '') > (m.editedAt || '') ? c : m), cur[0]);
+    if (ea || best.editedAt) {
+      if (ea > (best.editedAt || '') || (ea === (best.editedAt || '') && _epStable(e) < _epStable(best))) byId.set(e.id, [e]);
+      else byId.set(e.id, [best]);
+    } else cur.push(e);
+  }));
+  const out = [];
+  byId.forEach(v0 => {
+    const v = v0.filter(e => !_epKilled(delMap, arr, e));
+    v.sort((x, y) => _epStable(x) < _epStable(y) ? -1 : 1).forEach((e, n) => out.push(n === 0 ? e : Object.assign({}, e, { id: e.id + '~' + n })));
+  });
+  return out;
+}
+function _epMergePair(kind, a, b) {
+  const cfg = _EP_SYNC[kind];
+  const out = Object.assign({}, a, b);
+  ['startedAt', 'triggerSource', 'notes'].forEach(f => { const v = a[f] !== undefined && a[f] !== null && a[f] !== '' ? (b[f] && _epStable(b[f]) < _epStable(a[f]) ? b[f] : a[f]) : b[f]; out[f] = v === undefined ? null : v; });   // never undefined (Kael V-K-289-8)
+  if (kind === 'fever') { const pk = [Number(a.peakTemp), Number(b.peakTemp)].filter(Number.isFinite); out.peakTemp = pk.length ? Math.max.apply(null, pk) : 0; }   // the larger side (V-K-289-7)
+  out._del = _epUnionDel(a._del, b._del);
+  const delMap = _epDelMap([out._del]);
+  cfg.arrays.forEach(arr => { out[arr] = _epMergeEntryArrays(arr, a[arr], b[arr], delMap).sort(_epCmpEntry); });
+  if (cfg.logs) {
+    const byDate = new Map();
+    (a[cfg.logs] || []).concat(b[cfg.logs] || []).forEach(l => {
+      const c = byDate.get(l.date);
+      if (!c || _epT(l.time) > _epT(c.time) || (_epT(l.time) === _epT(c.time) && _epStable(l) < _epStable(c))) byDate.set(l.date, l);
+    });
+    out[cfg.logs] = Array.from(byDate.values()).sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : _epT(x.time) - _epT(y.time)));
+  }
+  // The resolve group moves together, from the side with the later resolvedUpdatedAt (V-CA-P3-3, V-K-P3-2).
+  const ra = a.resolvedUpdatedAt || '', rb = b.resolvedUpdatedAt || '';
+  const pickA = ra > rb || (ra === rb && _epStable([a.resolvedAt, a.resolvedNotes]) <= _epStable([b.resolvedAt, b.resolvedNotes]));
+  const R = pickA ? a : b;
+  ['resolvedAt', 'resolvedNotes', 'resolvedEditedAt', 'resolvedUpdatedAt'].forEach(f => { out[f] = R[f] !== undefined ? R[f] : null; });
+  // The original press time moves with the resolve group: a stale copy from before a reopen must not bring
+  // back an old one and drop the move bound below the new press (Maren V-M-289-18).
+  out.resolvedAtOriginal = R.resolvedAtOriginal || null;
+  const sup = new Map();
+  (a.resolveSuperseded || []).concat(b.resolveSuperseded || []).forEach(x => sup.set(_epStable(x), x));
+  out.resolveSuperseded = Array.from(sup.values()).sort((x, y) => _epStable(x) < _epStable(y) ? -1 : 1);
+  out.absorbed = Array.from(new Set((a.absorbed || []).concat(b.absorbed || []))).sort();
+  return out;
+}
+function _epAllEntries(kind, ep) {
+  const cfg = _EP_SYNC[kind], all = [];
+  cfg.arrays.forEach(arr => (ep[arr] || []).forEach(e => all.push({ arr: arr, e: e, t: _epT(e.time) })));
+  if (cfg.logs) (ep[cfg.logs] || []).forEach(e => all.push({ arr: cfg.logs, e: e, t: _epEntryT(e) }));
+  return all;
+}
+function _epMoveEntries(kind, from, to, sinceMs, alsoMove) {
+  const cfg = _EP_SYNC[kind];
+  cfg.arrays.concat(cfg.logs ? [cfg.logs] : []).forEach(arr => {
+    const keep = [], move = [];
+    (from[arr] || []).forEach(e => (_epEntryT(e) >= sinceMs || (alsoMove && alsoMove(arr, e)) ? move : keep).push(e));
+    if (!move.length) return;
+    from[arr] = keep;
+    to[arr] = cfg.logs === arr ? _epMergePair(kind, { [arr]: to[arr] || [] }, { [arr]: move })[arr]
+      : _epMergeEntryArrays(arr, to[arr], move, _epDelMap([to._del, from._del])).sort(_epCmpEntry);
+  });
+  to._del = _epUnionDel(to._del, from._del);
+}
+// Receive hooks (SYNC_RENDER_DEPS mergeOnReceive, resolved by name on window — so function declarations).
+// A joining device takes the household's copy outright on its first receive (V-CA-P3-8).
+function _epMergeReceive(kind, remote, local) {
+  const key = KEYS[_EP_SYNC[kind].key];
+  if (typeof _epJoinPending === 'function' && _epJoinPending(key)) return _epMergeLists(kind, remote, []);
+  return _epMergeLists(kind, remote, local);
+}
+function _epMergeReceiveFever(remote, local) { return _epMergeReceive('fever', remote, local); }
+function _epMergeReceiveDiarrhoea(remote, local) { return _epMergeReceive('diarrhoea', remote, local); }
+function _epMergeReceiveVomiting(remote, local) { return _epMergeReceive('vomiting', remote, local); }
+function _epMergeReceiveCold(remote, local) { return _epMergeReceive('cold', remote, local); }
+// A fever the other phone started runs this phone's check countdown too (V-K-P3-8).
+function _epPostReceiveFever() { if (getActiveFeverEpisode()) _startFeverCountdown(); }
+// The one merge: commutative and idempotent; receive and push both call it (spec §5A).
+function _epMergeLists(kind, A, B, nowMs) {
+  const cfg = _EP_SYNC[kind];
+  const a = _epNormalize(kind, JSON.parse(JSON.stringify(A || []))), b = _epNormalize(kind, JSON.parse(JSON.stringify(B || [])));
+  const byId = new Map();
+  a.concat(b).forEach(ep => {
+    const cur = byId.get(ep.id);
+    byId.set(ep.id, cur ? (_epStable(cur) <= _epStable(ep) ? _epMergePair(kind, cur, ep) : _epMergePair(kind, ep, cur)) : ep);
+  });
+  // An absorbed episode is folded into its absorber, never dropped: an entry the other phone logged into it
+  // after the fold moves into the survivor (Carina V-CA-289-2, Maren V-M-289-2). Chains are followed;
+  // the lowest absorber id wins a tie, so both phones pick the same one.
+  const absorberOf = new Map();
+  Array.from(byId.values()).sort(_epCmpEp).forEach(ep => (ep.absorbed || []).forEach(id => {
+    if (id !== ep.id && (!absorberOf.has(id) || String(ep.id) < String(absorberOf.get(id)))) absorberOf.set(id, ep.id);
+  }));
+  const rootOf = id => { const seen = new Set([id]); let r = id; while (absorberOf.has(r) && !seen.has(absorberOf.get(r))) { r = absorberOf.get(r); seen.add(r); } return r; };
+  Array.from(absorberOf.keys()).sort().forEach(id => {
+    const x = byId.get(id), root = rootOf(id), surv = byId.get(root);
+    if (!x) return;
+    if (surv && root !== id) {
+      _epMoveEntries(kind, x, surv, -Infinity);
+      surv.absorbed = Array.from(new Set((surv.absorbed || []).concat([id], x.absorbed || []))).sort();
+    }
+    if (root !== id) byId.delete(id);
+  });
+  let list = Array.from(byId.values()).sort(_epCmpEp);
+  // Derived status (V-K-P3-2, Maren V-M-P3): resolved iff resolvedAt is set and no reopening entry is
+  // later than it (to the minute). A newer same-kind episode started after the resolve keeps the old one
+  // resolved and takes its later entries instead (V-M-P3-5).
+  list.forEach(ep => {
+    if (!ep.resolvedAt) { ep.status = 'active'; return; }
+    const newer = list.find(x => x !== ep && _epT(x.startedAt) > _epT(ep.resolvedAt));
+    // Bounded by when Resolve was first pressed, not by an edited end time: an entry logged before that press
+    // was logged while the episode was active and belongs to it (Cipher A1; Maren V-M-289-3 otherwise).
+    const resolvedBound = Math.max(_epT(ep.resolvedAt), _epT(ep.resolvedAtOriginal));
+    // A red flag later than the (edited) end also moves, wherever it falls: only an entry that arrived late
+    // can sit between an edited end and the press, and the active card's severity must see it (Maren V-M-289-16).
+    const endMin = _epMin(ep.resolvedAt);
+    if (newer) { _epMoveEntries(kind, ep, newer, (Math.floor(resolvedBound / 60000) + 1) * 60000, (arr, e) => cfg.reopens(arr, e) && Math.floor(_epEntryT(e) / 60000) > endMin); ep.status = 'resolved'; return; }
+    const late = _epAllEntries(kind, ep).filter(x => cfg.reopens(x.arr, x.e) && Math.floor(x.t / 60000) > _epMin(ep.resolvedAt)).sort((x, y) => x.t - y.t)[0];
+    if (!late) { ep.status = 'resolved'; return; }
+    const rec = { resolvedAt: ep.resolvedAt, resolvedNotes: ep.resolvedNotes || '', resolvedAtOriginal: ep.resolvedAtOriginal || null,
+      supersededAt: new Date(late.t).toISOString(), by: { arr: late.arr, id: late.e.id || null } };
+    const sup = new Map((ep.resolveSuperseded || []).map(x => [_epStable(x), x])); sup.set(_epStable(rec), rec);
+    ep.resolveSuperseded = Array.from(sup.values()).sort((x, y) => _epStable(x) < _epStable(y) ? -1 : 1);
+    ep.resolvedAt = null; ep.resolvedNotes = ''; ep.resolvedAtOriginal = null; ep.resolvedEditedAt = null;
+    ep.status = 'active';
+  });
+  // Fold concurrent actives (V-CA-P3-6, V-K-P3-3): the earliest survives; the others move in and are absorbed.
+  const actives = list.filter(ep => ep.status === 'active').sort(_epCmpEp);
+  if (actives.length > 1) {
+    const surv = actives[0];
+    actives.slice(1).forEach(x => {
+      _epMoveEntries(kind, x, surv, -Infinity);
+      surv.absorbed = Array.from(new Set((surv.absorbed || []).concat([x.id], x.absorbed || []))).sort();
+    });
+    const gone = new Set(actives.slice(1).map(x => x.id));
+    list = list.filter(ep => !gone.has(ep.id));
+  }
+  // A delete recorded on the episode an entry came from still applies after the entry moved (Kael V-K-289-5).
+  const kindDel = _epDelMap(list.map(ep => ep._del));
+  list.forEach(ep => cfg.arrays.forEach(arr => { if (Array.isArray(ep[arr])) ep[arr] = ep[arr].filter(e => !_epKilled(kindDel, arr, Object.assign({}, e, { id: String(e.id).replace(/~\d+$/, '') }))); }));
+  // One shape whether an episode came from one side or both, so a single-side merge equals a pair merge
+  // of the same content (else every receive would read as divergent and push back).
+  list.forEach(ep => {
+    ['absorbed', 'resolveSuperseded', '_del'].forEach(f => { if (!Array.isArray(ep[f])) ep[f] = []; });
+    ['resolvedAt', 'resolvedNotes', 'resolvedEditedAt', 'resolvedUpdatedAt', 'resolvedAtOriginal', 'startedAt', 'triggerSource', 'notes'].forEach(f => { if (ep[f] === undefined) ep[f] = null; });   // (Carina D-2)
+  });
+  if (kind === 'fever') list.forEach(ep => {
+    const temps = (ep.readings || []).map(r => Number(r.temp)).filter(Number.isFinite);
+    const side = Number(ep.peakTemp);
+    ep.peakTemp = temps.length ? Math.max.apply(null, temps) : (Number.isFinite(side) ? side : 0);
+  });
+  return _epPrune(kind, list, nowMs);
+}
+
+
 let _feverEpisodes = [];
 try { _feverEpisodes = JSON.parse(localStorage.getItem(KEYS.feverEpisodes)) || []; } catch { _feverEpisodes = []; }
 if (!Array.isArray(_feverEpisodes)) _feverEpisodes = [];
+_feverEpisodes = _epNormalize('fever', _feverEpisodes);   // ids for legacy entries, in memory only (V-CA-P3-14)
 
 let _feverCountdownInterval = null;
 // Readings timeline expand/collapse state for the active-episode card.
@@ -146,16 +471,12 @@ function feSetParaForm(id) {
   renderFeverEpisodeCard();
 }
 
-function pruneFeverEpisodes() {
-  if (_feverEpisodes.length > 20) {
-    _feverEpisodes = _feverEpisodes.slice(-20);
-  }
-}
+// One prune for create, receive and push (_epPrune): actives and recent-dose episodes always kept (V-K-P3-6).
+function pruneFeverEpisodes() { _feverEpisodes = _epPrune('fever', _feverEpisodes); }
 
 function startFeverEpisode(tempF, source) {
   // Don't create if one is already active
   if (getActiveFeverEpisode()) return getActiveFeverEpisode();
-  pruneFeverEpisodes();
   const now = new Date().toISOString();
   const episode = {
     id: 'fe-' + Date.now(),
@@ -171,7 +492,8 @@ function startFeverEpisode(tempF, source) {
     resolvedNotes: ''
   };
   _feverEpisodes.push(episode);
-  save(KEYS.feverEpisodes, _feverEpisodes);
+  pruneFeverEpisodes();   // after the push, so the stored list is the 20 the merge also keeps (V-K-P3-6)
+  _epSave('feverEpisodes', _feverEpisodes);
   _startFeverCountdown();
   return episode;
 }
@@ -182,7 +504,7 @@ function logFeverReading(tempF, timeStr, notes) {
   const time = timeStr || new Date().toISOString();
   ep.readings.push({ time: time, temp: tempF, notes: notes || '' });
   if (tempF > ep.peakTemp) ep.peakTemp = tempF;
-  save(KEYS.feverEpisodes, _feverEpisodes);
+  _epSave('feverEpisodes', _feverEpisodes);
   renderFeverEpisodeCard();
   renderHomeFeverBanner();
 }
@@ -197,7 +519,7 @@ function logFeverDose(medicine, dose, timeStr, notes, form) {
     notes: notes || '',
     ...(form ? { form } : {})
   });
-  save(KEYS.feverEpisodes, _feverEpisodes);
+  _epSave('feverEpisodes', _feverEpisodes);
   renderFeverEpisodeCard();
 }
 
@@ -208,7 +530,7 @@ function logFeverAction(action, timeStr) {
     time: timeStr || new Date().toISOString(),
     action: action
   });
-  save(KEYS.feverEpisodes, _feverEpisodes);
+  _epSave('feverEpisodes', _feverEpisodes);
   renderFeverEpisodeCard();
 }
 
@@ -216,9 +538,9 @@ function resolveFeverEpisode(notes) {
   const ep = getActiveFeverEpisode();
   if (!ep) return;
   ep.status = 'resolved';
-  ep.resolvedAt = new Date().toISOString();
+  ep.resolvedAt = new Date().toISOString(); ep.resolvedUpdatedAt = ep.resolvedAt;   // the resolve group's merge stamp (V-CA-P3-3)
   ep.resolvedNotes = notes || '';
-  save(KEYS.feverEpisodes, _feverEpisodes);
+  _epSave('feverEpisodes', _feverEpisodes);
   _stopFeverCountdown();
   _feShowAllReadings = false;
   renderFeverEpisodeCard();
@@ -371,6 +693,7 @@ function renderFeverEpisodeCard() {
   // Header
   html += '<div class="card-header"><div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Fever Episode</div>';
   html += '<span class="t-sm t-light">' + duration + '</span></div>';
+  html += _epCameBackHtml(ep);
 
   // Temperature display
   html += '<div class="fe-temp-display" style="color:' + sev.color + ';">' + lastReading.temp.toFixed(1) + '°F</div>';
@@ -425,7 +748,7 @@ function renderFeverEpisodeCard() {
   showReadings.slice(0, maxShow).forEach((r, i) => {
     const rs = getFeverSeverity(r.temp);
     const origIdx = ep.readings.length - 1 - i;
-    html += '<div class="fe-tl-entry ep-entry-tap" data-action="feEditReading" data-arg="' + origIdx + '">';
+    html += '<div class="fe-tl-entry ep-entry-tap" data-action="feEditReading" data-arg="' + _epRowArg(ep.readings, origIdx) + '">';
     html += '<div class="fe-tl-dot" style="background:' + rs.color + ';"></div>';
     if (i < visibleCount - 1) html += '<div class="fe-tl-line"></div>';
     html += '<div class="fe-tl-time">' + _feverTimeShort(r.time) + '</div>';
@@ -445,7 +768,7 @@ function renderFeverEpisodeCard() {
   if (ep.doses.length > 0) {
     ep.doses.slice().reverse().forEach((d, i) => {
       const origIdx = ep.doses.length - 1 - i;
-      html += '<div class="fe-dose-row ep-entry-tap" data-action="feEditDose" data-arg="' + origIdx + '">'+zi('pill')+' ' + (d.dose ? escHtml(d.dose) + ' of ' : '') + escHtml(d.medicine) + ' at ' + _feverTimeShort(d.time) + '</div>';
+      html += '<div class="fe-dose-row ep-entry-tap" data-action="feEditDose" data-arg="' + _epRowArg(ep.doses, origIdx) + '">'+zi('pill')+' ' + (d.dose ? escHtml(d.dose) + ' of ' : '') + escHtml(d.medicine) + ' at ' + _feverTimeShort(d.time) + '</div>';
     });
   }
   if (doseCD) {
@@ -518,7 +841,7 @@ function renderFeverEpisodeCard() {
   if (ep.actions.length > 0) {
     ep.actions.slice().reverse().slice(0, 5).forEach((a, i) => {
       const origIdx = ep.actions.length - 1 - i;
-      html += '<div class="fe-action-entry ep-entry-tap" data-action="feEditAction" data-arg="' + origIdx + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+      html += '<div class="fe-action-entry ep-entry-tap" data-action="feEditAction" data-arg="' + _epRowArg(ep.actions, origIdx) + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -558,9 +881,9 @@ function renderFeverEpisodeCard() {
     });
   }
 
-  // Breaking check: 2 consecutive readings < 99
+  // Breaking check: 2 consecutive readings below the fever start (FE_FEVER_START_F)
   const recentTwo = ep.readings.slice(-2);
-  if (recentTwo.length >= 2 && recentTwo.every(r => r.temp < 99)) {
+  if (recentTwo.length >= 2 && recentTwo.every(r => r.temp < FE_FEVER_START_F)) {
     html += '<div style="padding:10px 12px;border-radius:var(--r-md);margin:var(--sp-8) 0;background:rgba(58,112,96,0.08);font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;">' + zi('check') + ' Temperature normalizing — continue monitoring for 6 hours before resolving</div>';
   }
 
@@ -634,7 +957,7 @@ function feLogReadingFromInput() {
 
   // If no active episode, start one
   if (!getActiveFeverEpisode()) {
-    if (tempF >= 99) {
+    if (tempF >= FE_FEVER_START_F) {
       startFeverEpisode(tempF, 'manual');
       renderFeverEpisodeCard();
       renderHomeFeverBanner();
@@ -667,9 +990,11 @@ function feLogDosePrompt() {
 
 // ── Fever Edit/Delete ──
 
-function feEditReading(idx) {
+function feEditReading(arg) {
   const ep = getActiveFeverEpisode();
-  if (!ep || !ep.readings[idx]) return;
+  const idx = _epIdxOf(ep, 'readings', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.readings[idx].id;
   const r = ep.readings[idx];
   _epEditEntry({
     title: 'Edit Temperature Reading',
@@ -679,27 +1004,35 @@ function feEditReading(idx) {
       { label: 'Notes', id: 'notes', type: 'text', value: r.notes || '' }
     ],
     onSave: function(v) {
+      const L = _epLive('fever', epId, 'readings', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.readings[idx].temp = parseFloat(v.temp) || r.temp;
       ep.readings[idx].time = _epTimeToISO(v.time, ep.readings[idx].time);
       ep.readings[idx].notes = v.notes || '';
       ep.peakTemp = Math.max(...ep.readings.map(x => x.temp));
-      save(KEYS.feverEpisodes, _feverEpisodes);
+      ep.readings[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('feverEpisodes', _feverEpisodes);
       renderFeverEpisodeCard(); renderHomeFeverBanner();
       showQLToast(zi('flame') + ' Reading updated');
     },
     onDelete: function() {
+      const L = _epLive('fever', epId, 'readings', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'readings', idx);
       ep.readings.splice(idx, 1);
       if (ep.readings.length > 0) ep.peakTemp = Math.max(...ep.readings.map(x => x.temp));
-      save(KEYS.feverEpisodes, _feverEpisodes);
+      _epSave('feverEpisodes', _feverEpisodes);
       renderFeverEpisodeCard(); renderHomeFeverBanner();
       showQLToast(zi('flame') + ' Reading deleted');
     }
   });
 }
 
-function feEditDose(idx) {
+function feEditDose(arg) {
   const ep = getActiveFeverEpisode();
-  if (!ep || !ep.doses[idx]) return;
+  const idx = _epIdxOf(ep, 'doses', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.doses[idx].id;
   const d = ep.doses[idx];
   _epEditEntry({
     title: 'Edit Medicine Dose',
@@ -709,26 +1042,34 @@ function feEditDose(idx) {
       { label: 'Time', id: 'time', type: 'time', value: d.time }
     ],
     onSave: function(v) {
+      const L = _epLive('fever', epId, 'doses', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       if (v.medicine && v.medicine !== d.medicine) delete ep.doses[idx].form;   // V-CA-284-1: one answer per dose
       ep.doses[idx].medicine = v.medicine || d.medicine;
       ep.doses[idx].dose = v.dose || d.dose;
       ep.doses[idx].time = _epTimeToISO(v.time, ep.doses[idx].time);
-      save(KEYS.feverEpisodes, _feverEpisodes);
+      ep.doses[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('feverEpisodes', _feverEpisodes);
       renderFeverEpisodeCard();
       showQLToast(zi('pill') + ' Dose updated');
     },
     onDelete: function() {
+      const L = _epLive('fever', epId, 'doses', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'doses', idx);
       ep.doses.splice(idx, 1);
-      save(KEYS.feverEpisodes, _feverEpisodes);
+      _epSave('feverEpisodes', _feverEpisodes);
       renderFeverEpisodeCard();
       showQLToast(zi('pill') + ' Dose deleted');
     }
   });
 }
 
-function feEditAction(idx) {
+function feEditAction(arg) {
   const ep = getActiveFeverEpisode();
-  if (!ep || !ep.actions[idx]) return;
+  const idx = _epIdxOf(ep, 'actions', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.actions[idx].id;
   const a = ep.actions[idx];
   _epEditEntry({
     title: 'Edit Action',
@@ -737,15 +1078,21 @@ function feEditAction(idx) {
       { label: 'Time', id: 'time', type: 'time', value: a.time }
     ],
     onSave: function(v) {
+      const L = _epLive('fever', epId, 'actions', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.actions[idx].action = v.action || a.action;
       ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
-      save(KEYS.feverEpisodes, _feverEpisodes);
+      ep.actions[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('feverEpisodes', _feverEpisodes);
       renderFeverEpisodeCard();
       showQLToast('Action updated');
     },
     onDelete: function() {
+      const L = _epLive('fever', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);
-      save(KEYS.feverEpisodes, _feverEpisodes);
+      _epSave('feverEpisodes', _feverEpisodes);
       renderFeverEpisodeCard();
       showQLToast('Action deleted');
     }
@@ -801,9 +1148,8 @@ function epEditResolved(kind, id) {
   // left open while the other parent logged, and saving it whole would revert their entries.
   const stored = load(KEYS[cfg.key], null);
   if (Array.isArray(stored)) {
-    cfg.set(stored);
-    // The active-episode card's taps carry array indices; re-render it from the re-read list so a
-    // longer stored array can't make a tap edit the wrong entry (Cipher A1).
+    cfg.set(_epNormalize(kind, stored));   // legacy entries keep their deterministic ids — never random ones on save (V-CA-289-3, V-M-289-4)
+    // Re-render the active card from the re-read list so its rows carry the same entry ids (Cipher A1).
     try { cfg.active(); } catch (e) { console.warn('[epEditResolved] active re-render', e); }
   }
   const list = cfg.list();
@@ -846,13 +1192,22 @@ function epEditResolved(kind, id) {
           return 'This makes the ' + cfg.noun + ' last about ' + days + ' day' + (days !== 1 ? 's' : '') + '. Tap Save again if that is right.';
         }
       }
+      // Commit to the LIVE list and episode, by id: a receive while the sheet was open may have
+      // replaced the array (V-CA-P3-2, V-K-P3-5).
+      const liveList = cfg.list();
+      const live = liveList.find(e => e.id === id && e.status === 'resolved');
+      if (!live) return _EP_GONE;
       if (!unchanged) {
-        if (!ep.resolvedAtOriginal) ep.resolvedAtOriginal = ep.resolvedAt;
-        ep.resolvedAt = iso;
-        ep.resolvedEditedAt = new Date().toISOString();
+        if (!live.resolvedAtOriginal) live.resolvedAtOriginal = live.resolvedAt;
+        live.resolvedAt = iso;
+        live.resolvedEditedAt = new Date().toISOString();
       }
-      ep.resolvedNotes = v.rnotes || '';
-      save(KEYS[cfg.key], list);
+      const notesChanged = (live.resolvedNotes || '') !== (v.rnotes || '');
+      live.resolvedNotes = v.rnotes || '';
+      // A real change to the resolve group — end time or notes — stamps it; an empty Save must not outrank
+      // an earlier real edit from the other phone (Kael V-K-289-10).
+      if (!unchanged || notesChanged) live.resolvedUpdatedAt = new Date().toISOString();
+      _epSave(cfg.key, liveList);
       cfg.render();
       if (typeof renderHome === 'function') renderHome();
       showQLToast(cfg.label + ' episode updated');
@@ -936,7 +1291,7 @@ function feHomeBannerLog() {
   const tempF = parseFloat(tempStr);
   if (isNaN(tempF) || tempF < 95 || tempF > 108) return;
   if (!getActiveFeverEpisode()) {
-    if (tempF >= 99) startFeverEpisode(tempF, 'home-banner');
+    if (tempF >= FE_FEVER_START_F) startFeverEpisode(tempF, 'home-banner');
     else { showQLToast('Temperature is normal'); return; }
   } else {
     logFeverReading(tempF, null, '');
@@ -1042,7 +1397,7 @@ function computeFeverAlerts() {
   // Breaking
   if (ep.readings.length >= 2) {
     const last2 = ep.readings.slice(-2);
-    if (last2.every(r => r.temp < 99)) {
+    if (last2.every(r => r.temp < FE_FEVER_START_F)) {
       alerts.push({
         id: 'fever-breaking', key: 'fever-breaking-' + todayStr,
         severity: 'positive', icon: zi('check'),
@@ -1172,6 +1527,7 @@ if (getActiveFeverEpisode()) _startFeverCountdown();
 let _diarrhoeaEpisodes = [];
 try { _diarrhoeaEpisodes = JSON.parse(localStorage.getItem(KEYS.diarrhoeaEpisodes)) || []; } catch { _diarrhoeaEpisodes = []; }
 if (!Array.isArray(_diarrhoeaEpisodes)) _diarrhoeaEpisodes = [];
+_diarrhoeaEpisodes = _epNormalize('diarrhoea', _diarrhoeaEpisodes);   // ids for legacy entries, in memory only (V-CA-P3-14)
 
 function getActiveDiarrhoeaEpisode() {
   return _diarrhoeaEpisodes.find(e => e.status === 'active') || null;
@@ -1192,13 +1548,11 @@ function _deHasFlag(ep, flag) {
   return ep.stools.some(s => s[flag]);
 }
 
-function pruneDiarrhoeaEpisodes() {
-  if (_diarrhoeaEpisodes.length > 20) _diarrhoeaEpisodes = _diarrhoeaEpisodes.slice(-20);
-}
+function pruneDiarrhoeaEpisodes() { _diarrhoeaEpisodes = _epPrune('diarrhoea', _diarrhoeaEpisodes); }
 
 function startDiarrhoeaEpisode(source) {
   if (getActiveDiarrhoeaEpisode()) return getActiveDiarrhoeaEpisode();
-  pruneDiarrhoeaEpisodes();
+
   const now = new Date().toISOString();
   const episode = {
     id: 'de-' + Date.now(),
@@ -1214,7 +1568,8 @@ function startDiarrhoeaEpisode(source) {
     resolvedNotes: ''
   };
   _diarrhoeaEpisodes.push(episode);
-  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  pruneDiarrhoeaEpisodes();
+  _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
   return episode;
 }
 
@@ -1229,7 +1584,7 @@ function logDiarrhoeaStool(consistency, color, blood, mucus, timeStr, notes) {
     mucus: !!mucus,
     notes: notes || ''
   });
-  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
   renderDiarrhoeaEpisodeCard();
   renderHomeDiarrhoeaBanner();
 }
@@ -1243,7 +1598,7 @@ function logDiarrhoeaFluid(type, amount, timeStr) {
     amount: amount || '',
     notes: ''
   });
-  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
   renderDiarrhoeaEpisodeCard();
 }
 
@@ -1251,7 +1606,7 @@ function logDiarrhoeaWetDiaper(timeStr) {
   const ep = getActiveDiarrhoeaEpisode();
   if (!ep) return;
   ep.wetDiapers.push({ time: timeStr || new Date().toISOString(), notes: '' });
-  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
   renderDiarrhoeaEpisodeCard();
 }
 
@@ -1259,7 +1614,7 @@ function logDiarrhoeaAction(action, timeStr) {
   const ep = getActiveDiarrhoeaEpisode();
   if (!ep) return;
   ep.actions.push({ time: timeStr || new Date().toISOString(), action: action });
-  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
   renderDiarrhoeaEpisodeCard();
 }
 
@@ -1267,9 +1622,9 @@ function resolveDiarrhoeaEpisode(notes) {
   const ep = getActiveDiarrhoeaEpisode();
   if (!ep) return;
   ep.status = 'resolved';
-  ep.resolvedAt = new Date().toISOString();
+  ep.resolvedAt = new Date().toISOString(); ep.resolvedUpdatedAt = ep.resolvedAt;   // the resolve group's merge stamp (V-CA-P3-3)
   ep.resolvedNotes = notes || '';
-  save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+  _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
   renderDiarrhoeaEpisodeCard();
   renderDiarrhoeaHistory();
   renderHomeDiarrhoeaBanner();
@@ -1345,6 +1700,7 @@ function renderDiarrhoeaEpisodeCard() {
   // Header
   html += '<div class="card-header"><div class="card-title"><div class="icon icon-amber"><svg class="zi"><use href="#zi-diaper"/></svg></div> Active Diarrhoea Episode</div>';
   html += '<span class="t-sm t-light">' + duration + '</span></div>';
+  html += _epCameBackHtml(ep);
 
   // Stool count display
   html += '<div class="de-stool-count" style="color:' + sev.color + ';">' + recent24.length + ' stools <span class="fs-sm-500">in 24h</span></div>';
@@ -1369,13 +1725,13 @@ function renderDiarrhoeaEpisodeCard() {
   if (ep.fluids.length > 0) {
     ep.fluids.slice().reverse().slice(0, 3).forEach((f, i) => {
       const origIdx = ep.fluids.length - 1 - i;
-      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditFluid" data-arg="' + origIdx + '">' + _feverTimeShort(f.time) + ' — ' + escHtml(f.type) + (f.amount ? ' (' + escHtml(f.amount) + ')' : '') + '</div>';
+      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditFluid" data-arg="' + _epRowArg(ep.fluids, origIdx) + '">' + _feverTimeShort(f.time) + ' — ' + escHtml(f.type) + (f.amount ? ' (' + escHtml(f.amount) + ')' : '') + '</div>';
     });
   }
   if (ep.wetDiapers.length > 0) {
     ep.wetDiapers.slice().reverse().slice(0, 3).forEach((w, i) => {
       const origIdx = ep.wetDiapers.length - 1 - i;
-      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditWetDiaper" data-arg="' + origIdx + '">' + _feverTimeShort(w.time) + ' — ' + zi('diaper') + ' Wet diaper</div>';
+      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditWetDiaper" data-arg="' + _epRowArg(ep.wetDiapers, origIdx) + '">' + _feverTimeShort(w.time) + ' — ' + zi('diaper') + ' Wet diaper</div>';
     });
   }
 
@@ -1403,7 +1759,7 @@ function renderDiarrhoeaEpisodeCard() {
       let flags = '';
       if (s.blood) flags += ' ' + zi('drop');
       if (s.mucus) flags += ' ' + zi('drop');
-      html += '<div class="de-stool-entry ep-entry-tap" data-action="deEditStool" data-arg="' + origIdx + '">';
+      html += '<div class="de-stool-entry ep-entry-tap" data-action="deEditStool" data-arg="' + _epRowArg(ep.stools, origIdx) + '">';
       html += '<span>' + emoji + '</span>';
       html += '<span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(s.time) + '</span>';
       html += '<span class="fs-sm-500">' + (s.consistency || 'loose') + flags + '</span>';
@@ -1427,7 +1783,7 @@ function renderDiarrhoeaEpisodeCard() {
   if (ep.actions.length > 0) {
     ep.actions.slice().reverse().slice(0, 5).forEach((a, i) => {
       const origIdx = ep.actions.length - 1 - i;
-      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditAction" data-arg="' + origIdx + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+      html += '<div class="fe-action-entry ep-entry-tap" data-action="deEditAction" data-arg="' + _epRowArg(ep.actions, origIdx) + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -1490,9 +1846,11 @@ function deLogFluidPrompt() {
 
 // ── Diarrhoea Edit/Delete ──
 
-function deEditStool(idx) {
+function deEditStool(arg) {
   const ep = getActiveDiarrhoeaEpisode();
-  if (!ep || !ep.stools[idx]) return;
+  const idx = _epIdxOf(ep, 'stools', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.stools[idx].id;
   const s = ep.stools[idx];
   _epEditEntry({
     title: 'Edit Stool Entry',
@@ -1505,25 +1863,33 @@ function deEditStool(idx) {
       { label: 'Notes', id: 'notes', type: 'text', value: s.notes || '' }
     ],
     onSave: function(v) {
+      const L = _epLive('diarrhoea', epId, 'stools', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.stools[idx].consistency = v.consistency || s.consistency;
       ep.stools[idx].time = _epTimeToISO(v.time, ep.stools[idx].time);
       ep.stools[idx].notes = v.notes || '';
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      ep.stools[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard(); renderHomeDiarrhoeaBanner();
       showQLToast(zi('diaper') + ' Stool entry updated');
     },
     onDelete: function() {
+      const L = _epLive('diarrhoea', epId, 'stools', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'stools', idx);
       ep.stools.splice(idx, 1);
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard(); renderHomeDiarrhoeaBanner();
       showQLToast('Stool entry deleted');
     }
   });
 }
 
-function deEditFluid(idx) {
+function deEditFluid(arg) {
   const ep = getActiveDiarrhoeaEpisode();
-  if (!ep || !ep.fluids[idx]) return;
+  const idx = _epIdxOf(ep, 'fluids', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.fluids[idx].id;
   const f = ep.fluids[idx];
   _epEditEntry({
     title: 'Edit Fluid Entry',
@@ -1533,25 +1899,33 @@ function deEditFluid(idx) {
       { label: 'Time', id: 'time', type: 'time', value: f.time }
     ],
     onSave: function(v) {
+      const L = _epLive('diarrhoea', epId, 'fluids', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.fluids[idx].type = v.type || f.type;
       ep.fluids[idx].amount = v.amount || '';
       ep.fluids[idx].time = _epTimeToISO(v.time, ep.fluids[idx].time);
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      ep.fluids[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast(zi('drop') + ' Fluid entry updated');
     },
     onDelete: function() {
+      const L = _epLive('diarrhoea', epId, 'fluids', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'fluids', idx);
       ep.fluids.splice(idx, 1);
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast('Fluid entry deleted');
     }
   });
 }
 
-function deEditWetDiaper(idx) {
+function deEditWetDiaper(arg) {
   const ep = getActiveDiarrhoeaEpisode();
-  if (!ep || !ep.wetDiapers[idx]) return;
+  const idx = _epIdxOf(ep, 'wetDiapers', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.wetDiapers[idx].id;
   const w = ep.wetDiapers[idx];
   _epEditEntry({
     title: 'Edit Wet Diaper Entry',
@@ -1559,23 +1933,31 @@ function deEditWetDiaper(idx) {
       { label: 'Time', id: 'time', type: 'time', value: w.time }
     ],
     onSave: function(v) {
+      const L = _epLive('diarrhoea', epId, 'wetDiapers', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.wetDiapers[idx].time = _epTimeToISO(v.time, ep.wetDiapers[idx].time);
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      ep.wetDiapers[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast(zi('diaper') + ' Wet diaper updated');
     },
     onDelete: function() {
+      const L = _epLive('diarrhoea', epId, 'wetDiapers', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'wetDiapers', idx);
       ep.wetDiapers.splice(idx, 1);
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast('Wet diaper deleted');
     }
   });
 }
 
-function deEditAction(idx) {
+function deEditAction(arg) {
   const ep = getActiveDiarrhoeaEpisode();
-  if (!ep || !ep.actions[idx]) return;
+  const idx = _epIdxOf(ep, 'actions', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.actions[idx].id;
   const a = ep.actions[idx];
   _epEditEntry({
     title: 'Edit Action',
@@ -1584,15 +1966,21 @@ function deEditAction(idx) {
       { label: 'Time', id: 'time', type: 'time', value: a.time }
     ],
     onSave: function(v) {
+      const L = _epLive('diarrhoea', epId, 'actions', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.actions[idx].action = v.action || a.action;
       ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      ep.actions[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast('Action updated');
     },
     onDelete: function() {
+      const L = _epLive('diarrhoea', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);
-      save(KEYS.diarrhoeaEpisodes, _diarrhoeaEpisodes);
+      _epSave('diarrhoeaEpisodes', _diarrhoeaEpisodes);
       renderDiarrhoeaEpisodeCard();
       showQLToast('Action deleted');
     }
@@ -1782,17 +2170,18 @@ function promptDiarrhoeaTrack() {
 let _vomitingEpisodes = [];
 try { _vomitingEpisodes = JSON.parse(localStorage.getItem(KEYS.vomitingEpisodes)) || []; } catch { _vomitingEpisodes = []; }
 if (!Array.isArray(_vomitingEpisodes)) _vomitingEpisodes = [];
+_vomitingEpisodes = _epNormalize('vomiting', _vomitingEpisodes);   // ids for legacy entries, in memory only (V-CA-P3-14)
 
 function getActiveVomitingEpisode() { return _vomitingEpisodes.find(e => e.status === 'active') || null; }
 
 function startVomitingEpisode(source) {
   if (getActiveVomitingEpisode()) return getActiveVomitingEpisode();
-  if (_vomitingEpisodes.length > 20) _vomitingEpisodes = _vomitingEpisodes.slice(-20);
   const now = new Date().toISOString();
   const ep = { id: 'vo-' + Date.now(), status: 'active', startedAt: now, resolvedAt: null,
     episodes: [], fluids: [], wetDiapers: [], actions: [], triggerSource: source || 'manual', notes: '', resolvedNotes: '' };
   _vomitingEpisodes.push(ep);
-  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  _vomitingEpisodes = _epPrune('vomiting', _vomitingEpisodes);
+  _epSave('vomitingEpisodes', _vomitingEpisodes);
   return ep;
 }
 
@@ -1800,7 +2189,7 @@ function logVomitingEpisodeEntry(type, timeStr, notes) {
   const ep = getActiveVomitingEpisode();
   if (!ep) return;
   ep.episodes.push({ time: timeStr || new Date().toISOString(), type: type || 'vomit', notes: notes || '' });
-  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  _epSave('vomitingEpisodes', _vomitingEpisodes);
   renderVomitingEpisodeCard(); renderHomeVomitingBanner();
 }
 
@@ -1808,7 +2197,7 @@ function logVomitingFluid(type, timeStr) {
   const ep = getActiveVomitingEpisode();
   if (!ep) return;
   ep.fluids.push({ time: timeStr || new Date().toISOString(), type: type || 'Breast milk' });
-  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  _epSave('vomitingEpisodes', _vomitingEpisodes);
   renderVomitingEpisodeCard();
 }
 
@@ -1816,7 +2205,7 @@ function logVomitingWetDiaper(timeStr) {
   const ep = getActiveVomitingEpisode();
   if (!ep) return;
   ep.wetDiapers.push({ time: timeStr || new Date().toISOString() });
-  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  _epSave('vomitingEpisodes', _vomitingEpisodes);
   renderVomitingEpisodeCard();
 }
 
@@ -1824,15 +2213,15 @@ function logVomitingAction(action, timeStr) {
   const ep = getActiveVomitingEpisode();
   if (!ep) return;
   ep.actions.push({ time: timeStr || new Date().toISOString(), action: action });
-  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  _epSave('vomitingEpisodes', _vomitingEpisodes);
   renderVomitingEpisodeCard();
 }
 
 function resolveVomitingEpisode() {
   const ep = getActiveVomitingEpisode();
   if (!ep) return;
-  ep.status = 'resolved'; ep.resolvedAt = new Date().toISOString();
-  save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+  ep.status = 'resolved'; ep.resolvedAt = new Date().toISOString(); ep.resolvedUpdatedAt = ep.resolvedAt;   // the resolve group's merge stamp (V-CA-P3-3)
+  _epSave('vomitingEpisodes', _vomitingEpisodes);
   renderVomitingEpisodeCard(); renderVomitingHistory(); renderHomeVomitingBanner(); renderHome();
 }
 
@@ -1862,7 +2251,7 @@ function renderVomitingEpisodeCard() {
   const sevLabel = (isProjectile || hasBile) ? 'Seek care' : recent12.length >= 4 ? 'Frequent' : recent12.length >= 2 ? 'Monitor' : 'Mild';
 
   card.style.borderLeft = '4px solid ' + sevColor;
-  let html = '<div class="card-header"><div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Vomiting Episode</div><span class="t-sm t-light">' + dur + '</span></div>';
+  let html = '<div class="card-header"><div class="card-title"><div class="icon icon-rose"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Vomiting Episode</div><span class="t-sm t-light">' + dur + '</span></div>' + _epCameBackHtml(ep);
   html += '<div class="ve-count-display" style="color:' + sevColor + ';">' + recent12.length + ' episode' + (recent12.length !== 1 ? 's' : '') + ' <span class="fs-sm-500">in 12h</span></div>';
   html += '<div class="text-center"><span class="fe-severity" style="background:rgba(220,120,80,0.12);color:' + sevColor + ';">' + sevLabel + '</span></div>';
 
@@ -1888,7 +2277,7 @@ function renderVomitingEpisodeCard() {
     ep.episodes.slice().reverse().slice(0, 6).forEach((e, i) => {
       const origIdx = ep.episodes.length - 1 - i;
       const icon = e.type === 'projectile' ? zi('siren') : e.type === 'bile' ? zi('dot-red') : e.type === 'spit-up' ? zi('warn') : zi('siren');
-      html += '<div class="de-stool-entry ep-entry-tap" data-action="voEditEntry" data-arg="' + origIdx + '"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span class="fs-sm-500">' + (e.type || 'vomit') + '</span></div>';
+      html += '<div class="de-stool-entry ep-entry-tap" data-action="voEditEntry" data-arg="' + _epRowArg(ep.episodes, origIdx) + '"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span class="fs-sm-500">' + escHtml(e.type || 'vomit') + '</span></div>';   // arrives via the merge from the other phone (HR-4, Cipher A2)
     });
   }
 
@@ -1903,7 +2292,7 @@ function renderVomitingEpisodeCard() {
   if (ep.actions.length > 0) {
     ep.actions.slice().reverse().slice(0, 4).forEach((a, i) => {
       const origIdx = ep.actions.length - 1 - i;
-      html += '<div class="fe-action-entry ep-entry-tap" data-action="voEditAction" data-arg="' + origIdx + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+      html += '<div class="fe-action-entry ep-entry-tap" data-action="voEditAction" data-arg="' + _epRowArg(ep.actions, origIdx) + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -1947,9 +2336,11 @@ function voLogFluidPrompt() {
 
 // ── Vomiting Edit/Delete ──
 
-function voEditEntry(idx) {
+function voEditEntry(arg) {
   const ep = getActiveVomitingEpisode();
-  if (!ep || !ep.episodes[idx]) return;
+  const idx = _epIdxOf(ep, 'episodes', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.episodes[idx].id;
   const e = ep.episodes[idx];
   _epEditEntry({
     title: 'Edit Vomiting Entry',
@@ -1961,25 +2352,33 @@ function voEditEntry(idx) {
       { label: 'Notes', id: 'notes', type: 'text', value: e.notes || '' }
     ],
     onSave: function(v) {
+      const L = _epLive('vomiting', epId, 'episodes', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.episodes[idx].type = v.type || e.type;
       ep.episodes[idx].time = _epTimeToISO(v.time, ep.episodes[idx].time);
       ep.episodes[idx].notes = v.notes || '';
-      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      ep.episodes[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('vomitingEpisodes', _vomitingEpisodes);
       renderVomitingEpisodeCard(); renderHomeVomitingBanner();
       showQLToast(zi('siren') + ' Entry updated');
     },
     onDelete: function() {
+      const L = _epLive('vomiting', epId, 'episodes', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'episodes', idx);
       ep.episodes.splice(idx, 1);
-      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      _epSave('vomitingEpisodes', _vomitingEpisodes);
       renderVomitingEpisodeCard(); renderHomeVomitingBanner();
       showQLToast('Entry deleted');
     }
   });
 }
 
-function voEditAction(idx) {
+function voEditAction(arg) {
   const ep = getActiveVomitingEpisode();
-  if (!ep || !ep.actions[idx]) return;
+  const idx = _epIdxOf(ep, 'actions', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.actions[idx].id;
   const a = ep.actions[idx];
   _epEditEntry({
     title: 'Edit Action',
@@ -1988,15 +2387,21 @@ function voEditAction(idx) {
       { label: 'Time', id: 'time', type: 'time', value: a.time }
     ],
     onSave: function(v) {
+      const L = _epLive('vomiting', epId, 'actions', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.actions[idx].action = v.action || a.action;
       ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
-      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      ep.actions[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('vomitingEpisodes', _vomitingEpisodes);
       renderVomitingEpisodeCard();
       showQLToast('Action updated');
     },
     onDelete: function() {
+      const L = _epLive('vomiting', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);
-      save(KEYS.vomitingEpisodes, _vomitingEpisodes);
+      _epSave('vomitingEpisodes', _vomitingEpisodes);
       renderVomitingEpisodeCard();
       showQLToast('Action deleted');
     }
@@ -2086,19 +2491,20 @@ function promptVomitingTrack() {
 let _coldEpisodes = [];
 try { _coldEpisodes = JSON.parse(localStorage.getItem(KEYS.coldEpisodes)) || []; } catch { _coldEpisodes = []; }
 if (!Array.isArray(_coldEpisodes)) _coldEpisodes = [];
+_coldEpisodes = _epNormalize('cold', _coldEpisodes);   // ids for legacy entries, in memory only (V-CA-P3-14)
 
 function getActiveColdEpisode() { return _coldEpisodes.find(e => e.status === 'active') || null; }
 
 function startColdEpisode(source) {
   if (getActiveColdEpisode()) return getActiveColdEpisode();
-  if (_coldEpisodes.length > 20) _coldEpisodes = _coldEpisodes.slice(-20);
   const now = new Date().toISOString();
   const ep = { id: 'ce-' + Date.now(), status: 'active', startedAt: now, resolvedAt: null,
     dailyLogs: [],    // { date, symptoms: [...], severity: 1-5, notes }
     actions: [],
     triggerSource: source || 'manual', notes: '', resolvedNotes: '' };
   _coldEpisodes.push(ep);
-  save(KEYS.coldEpisodes, _coldEpisodes);
+  _coldEpisodes = _epPrune('cold', _coldEpisodes);
+  _epSave('coldEpisodes', _coldEpisodes);
   return ep;
 }
 
@@ -2111,7 +2517,7 @@ function logColdDailySymptoms(symptoms, severity, notes) {
   const entry = { date: todayStr, time: new Date().toISOString(), symptoms: symptoms || [], severity: severity || 3, notes: notes || '' };
   if (existing >= 0) ep.dailyLogs[existing] = entry;
   else ep.dailyLogs.push(entry);
-  save(KEYS.coldEpisodes, _coldEpisodes);
+  _epSave('coldEpisodes', _coldEpisodes);
   renderColdEpisodeCard(); renderHomeColdBanner();
 }
 
@@ -2119,15 +2525,15 @@ function logColdAction(action, timeStr) {
   const ep = getActiveColdEpisode();
   if (!ep) return;
   ep.actions.push({ time: timeStr || new Date().toISOString(), action: action });
-  save(KEYS.coldEpisodes, _coldEpisodes);
+  _epSave('coldEpisodes', _coldEpisodes);
   renderColdEpisodeCard();
 }
 
 function resolveColdEpisode() {
   const ep = getActiveColdEpisode();
   if (!ep) return;
-  ep.status = 'resolved'; ep.resolvedAt = new Date().toISOString();
-  save(KEYS.coldEpisodes, _coldEpisodes);
+  ep.status = 'resolved'; ep.resolvedAt = new Date().toISOString(); ep.resolvedUpdatedAt = ep.resolvedAt;   // the resolve group's merge stamp (V-CA-P3-3)
+  _epSave('coldEpisodes', _coldEpisodes);
   renderColdEpisodeCard(); renderColdHistory(); renderHomeColdBanner(); renderHome();
 }
 
@@ -2146,7 +2552,7 @@ function renderColdEpisodeCard() {
   const sevColor = latestSeverity >= 4 ? 'var(--tc-caution)' : 'var(--tc-sky)';
 
   card.style.borderLeft = '4px solid ' + sevColor;
-  let html = '<div class="card-header"><div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Cold / Cough</div><span class="t-sm t-light">' + dur + '</span></div>';
+  let html = '<div class="card-header"><div class="card-title"><div class="icon icon-sky"><svg class="zi"><use href="#zi-medical"/></svg></div> Active Cold / Cough</div><span class="t-sm t-light">' + dur + '</span></div>' + _epCameBackHtml(ep);
   html += '<div class="ce-day-display">Day ' + durationDays + '</div>';
   html += '<div style="text-align:center;font-size:var(--fs-xs);color:var(--light);">' + dayCount + ' daily log' + (dayCount !== 1 ? 's' : '') + ' recorded</div>';
 
@@ -2193,7 +2599,7 @@ function renderColdEpisodeCard() {
   if (ep.actions.length > 0) {
     ep.actions.slice().reverse().slice(0, 4).forEach((a, i) => {
       const origIdx = ep.actions.length - 1 - i;
-      html += '<div class="fe-action-entry ep-entry-tap" data-action="ceEditAction" data-arg="' + origIdx + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
+      html += '<div class="fe-action-entry ep-entry-tap" data-action="ceEditAction" data-arg="' + _epRowArg(ep.actions, origIdx) + '">' + _feverTimeShort(a.time) + ' — ' + escHtml(a.action) + '</div>';
     });
   }
 
@@ -2253,9 +2659,11 @@ function ceResolvePrompt() {
 
 // ── Cold Edit/Delete ──
 
-function ceEditAction(idx) {
+function ceEditAction(arg) {
   const ep = getActiveColdEpisode();
-  if (!ep || !ep.actions[idx]) return;
+  const idx = _epIdxOf(ep, 'actions', arg);   // the row carries the entry id (V-CA-P3-2, V-K-P3-5)
+  if (idx < 0) return;
+  const epId = ep.id, eid = ep.actions[idx].id;
   const a = ep.actions[idx];
   _epEditEntry({
     title: 'Edit Action',
@@ -2264,15 +2672,21 @@ function ceEditAction(idx) {
       { label: 'Time', id: 'time', type: 'time', value: a.time }
     ],
     onSave: function(v) {
+      const L = _epLive('cold', epId, 'actions', eid); if (!L) return _EP_GONE;
+      const ep = L.ep, idx = L.i;   // the live entry at commit, never the one captured at open
       ep.actions[idx].action = v.action || a.action;
       ep.actions[idx].time = _epTimeToISO(v.time, ep.actions[idx].time);
-      save(KEYS.coldEpisodes, _coldEpisodes);
+      ep.actions[idx].editedAt = new Date().toISOString();   // an edited entry wins whole on merge (V-K-P3-9)
+      _epSave('coldEpisodes', _coldEpisodes);
       renderColdEpisodeCard();
       showQLToast('Action updated');
     },
     onDelete: function() {
+      const L = _epLive('cold', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
+      const ep = L.ep, idx = L.i;
+      _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);
-      save(KEYS.coldEpisodes, _coldEpisodes);
+      _epSave('coldEpisodes', _coldEpisodes);
       renderColdEpisodeCard();
       showQLToast('Action deleted');
     }
