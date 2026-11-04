@@ -81,7 +81,8 @@ The fever card's dose chip, which named no weight, date or bottle and had no che
 - **PR 1 (#287):** the WHO weight-for-age registry, `whoWfaZ`, and #162. The exact WHO flag is 0.3–1.7 kg higher than the old one at 3–24 months, so an **interim ceiling** keeps the old upper flag for weigh-ins ≤ 24 months until PR 4's confirm state ships — PR 1 does not widen what is dosed at ≤ 24 months (V-K-287-1, V-M-287-3; past 24 months the exact flag admits more by design, the #162 fix). PR 4 must ship before 2027-09-04; the build warns from 2027-08-01 while the interim ceiling exists.
 - **PR 2:** WHO weight-velocity registry + `gvWeightJumpCheck` (velocity to 24 m, weight-for-age Δz from a 12 m start up to 184 days and 60 months, fail-closed). Engine only — the chip uses it from PR 4.
 - **PR 3:** illness-episode sync — all four episode keys merge by entry id on receive and push (tombstones, derived status, concurrent-start fold, transactional write, join-pending), the module arrays are reassigned on receive, edit sheets commit by id. Spec §5A.
-- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 in review.
+- **PR 4a:** the weight confirm — `KEYS.growthConfirm`, the chip's confirm state on `gvWeightJumpCheck`, the retype UI; the emergency summary and doctor export show the weigh-in date and "not yet checked". Spec §7.4 (split into 4a/4b).
+- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 merged (#289); PR 4a in review; PR 4b (leftover-risk flow, interim ceiling removed) and PR 5 to come.
 
 #### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
 - **Symptom:** Non-blocking notes from the #284 round.
@@ -1753,6 +1754,26 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Active-card rows show a time only (Maren V-M-289-17, PC-1).** An entry moved in from an earlier day (a stale phone's 23:00 dose pulled into an 08:00 episode) reads as today's. Show the date on any row not from today, as the came-back note does.
 - **The join flag can stay set when local and household already match (Cipher #289 nit 5).** The `[E]` / `[L]` / `[K4]` skips `continue` before `_epJoinDone`; harmless while the dirty ledger guards writes. End the join on those paths too.
 - **Inline `style=` on episode rows (HR-2, pre-existing; Cipher #289 nit 6).** `intelligence-illness.js` episode row renders (readings, doses, stools and vomit rows) still carry `style="font-size:…;color:…"`. Move to classes.
+
+#### P2 — Deferred from the PR #290 (#161 PR 4a) Governor round
+- **A confirm made before a different same-day weight arrived can still unlock the newest row if a sync merge keeps the old row on top (Maren V-M-290-13, PC-10).** Rare; decide whether a same-date conflict should be resolved only by deleting a row.
+- **Graded escalation for a confirmed drop (Maren V-M-290-12, PC-7; for 4b with R3):** ≥ 10 % of the earlier weight in ≤ 31 days → "Call your doctor now" (CDC MMWR 2003;52(RR-16)); 3–9 % → "today".
+- **Fever-guidance "Offer breast milk or fluids frequently" (intelligence-illness.js, pre-existing) has the under-6-month "fluids" problem (Ceres V-C-290-6, PC-7).** Same age split as the confirmed-loss line.
+- **A catch-up feeding line after a real drop with solids started (Ceres V-C-290-7).**
+- **No e2e test asserts the exact growth-vs-meals numbers after a confirmed weight (Ceres V-C-290-4, PC-6).**
+- **Emergency doc cards and the cross-insights aren't re-rendered when a confirm lands from the other phone (Carina pair-note to Vela).** They fail closed ("not yet confirmed").
+- **No gate checks that SYNC_KEYS, SYNC_RENDER_DEPS and the global accessors pair up for every synced key (Carina V-CA-290-5, PC-5).** Guard backlog, owner Carina.
+- **Sync tests not yet written (Carina V-CA-290-6 b/c/e):** a confirm-only partial flush on the shared growth doc; a malformed remote entry; the [L] guard while growthConfirm is dirty.
+- **Should a passing near pair be enough on its own when a far pair can't be compared? (Maren V-M-290-3 question to Kael.)** Today the check still asks; the copy now says the near weigh-in matched.
+- **Grams keys round to the gram (Carina V-CA-290-8):** 9.5 and 9.5004 share "9500"; a confirm of one covers the other. Cannot change a dose.
+- **Unknown confirm kinds are dropped, never matched (Carina V-CA-290-9):** keep that rule if GV_CONFIRM_KINDS grows; an older build rewriting a kinds list converges through push-back.
+- **"Weighed {date}" repeats "Last measured" in the doctor export (Maren V-M-290-14):** merge the two lines.
+- **After a confirmed same-date conflict that then reads calm, the parent retypes the same number twice (Kael ruling on V-K-290-8):** kept for consistency; easing it needs a spec note.
+- **The Home alert body's "Last dose was 5h  ago" has a double space from `_feverTimeAgo` (Vela, pre-existing).**
+- **One dismissal key for both Home dose-alert titles (Cipher #290 nit 2):** dismissing "check the fever card" also hides "dose available" for that dose after the confirm. Errs toward less prompting; decide if intended.
+- **One `amber` confirm covers jump-up, jump-down and implausible (Cipher #290 nit 3):** after an earlier row is edited, a weight confirmed against a jump-up can print "a drop, confirmed by the family" in the export. The family confirmed the weight, not the drop; reword or bind to the direction.
+- **Confirms are permanent (no tombstones) (Cipher #290 nit 4):** a fixed typo re-entered identically on the same date is already confirmed. Next to the §4.3 accepted residual.
+- **The doctor-export print renderer writes lines starting with two spaces into the page unescaped (Cipher #290 nit 5, pre-existing):** the new "Weighed …" line uses only internal strings.
 
 #### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
 Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:

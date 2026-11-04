@@ -2379,7 +2379,15 @@ function _emDocName() {
 function _emDocVitals() {
   var bits = [];
   try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
-  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
+  // The weigh-in date always, and "not yet checked" while the weight-jump check asks (#161 §4.4): a doctor
+  // reading this must see how old the weight is and whether the family confirmed it.
+  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) {   // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
+    var wl = typeof _paraDateLabel === 'function' ? _paraDateLabel(w.date) : w.date;
+    var unchecked = typeof gvWeightNeedsConfirm === 'function' && !!gvWeightNeedsConfirm(w);
+    // U+00A0 before escaping so "kg" never wraps alone (Vela V-V-290-8); "confirmed by the family", which a
+    // hospital team can't misread as a clinical note (Ceres V-C-290-5, Maren V-M-290-6).
+    bits.push(w.wt + '\u00a0kg (weighed ' + wl + (unchecked ? '; not yet confirmed by the family' : '') + ')');
+  } } } catch (e) {}
   return bits.join(' · ');
 }
 // Name + vitals on one line — retained for the plain-text copy/share path.
@@ -7770,14 +7778,31 @@ function renderInsightsCross() {
   // ── Growth vs Feeding correlation ──
   // The shared weight-row filter, so a synced wt:0 or undated row can't skew it (Ceres V-C-282e-4,
   // Kael V-K-282d-5).
-  const wtEntries = gvWeightRows();
+  // A newest weight the weight-jump check flags (a jump, drop or same-day conflict) and nobody has
+  // confirmed is left out, so this insight never reads a typo the dose chip is asking about (Ceres
+  // V-C-288-1, PC-10).
+  let wtEntries = gvWeightRows();
+  { const lw = wtEntries[wtEntries.length - 1];
+    if (lw) {
+      // The newest date reduced to the row the check and the chip read, so a second weight on that date
+      // (a conflict or a re-save) can't carry the number in (Ceres V-C-290-1).
+      wtEntries = wtEntries.filter(r => r.date !== lw.date || r === lw);
+      const jc = gvWeightNeedsConfirm(lw);
+      if (jc && jc.variant === 'implausible' && jc.pair) {
+        // Drop the row that looks off — the earlier one when that is the bad row (Ceres V-C-290-3).
+        const bad = (jc.pair.badRow === 'a' || jc.pair.reason === 'dob') ? [jc.pair.a] : jc.pair.badRow === 'both' ? [jc.pair.a, lw] : [lw];   // a row dated before birth is the earlier one (Ceres V-C-290-8)
+        wtEntries = wtEntries.filter(r => bad.indexOf(r) < 0);
+      } else if (jc && ['jump-up', 'jump-down', 'samedate'].indexOf(jc.variant) >= 0) {
+        wtEntries = wtEntries.filter(r => r !== lw);
+      }
+    }
+  }
   if (wtEntries.length >= 3) {
     // For each weight measurement gap, calculate meals logged per day in that period
     const periods = [];
     for (let i = 1; i < wtEntries.length; i++) {
-      const startDate = new Date(wtEntries[i-1].date);
-      const endDate = new Date(wtEntries[i].date);
-      const days = Math.max(1, Math.round((endDate - startDate) / 86400000));
+      const startDate = _parseLocalDate(wtEntries[i-1].date);   // local dates, not UTC midnight (HR-12)
+      const days = Math.max(1, gvDaysBetween(wtEntries[i-1].date, wtEntries[i].date));
       if (days < 3 || days > 60) continue; // skip too-short or too-long gaps
 
       let mealsTotal = 0;

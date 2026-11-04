@@ -114,6 +114,7 @@ test('#162: the fever chip doses a 4-year-old normally (no "looks off for her ag
     const w = window as any;
     const d = new Date(); d.setDate(d.getDate() - 3);
     growthData = [{ date: w.toDateStr(d), wt: 17.5 }];
+    growthConfirm = { [w.toDateStr(d)]: { '17500': ['amber', 'calm', 'samedate'] } };   // the plausibility gate is under test, not the jump check (#161 PR 4a)
     _feverEpisodes = [{ id: 'fe-4y', status: 'active', startedAt: new Date(Date.now() - 6 * 3600000).toISOString(), resolvedAt: null,
       readings: [{ temp: 101.4, time: new Date().toISOString(), notes: '' }], doses: [], actions: [], peakTemp: 101.4,
       triggerSource: 'test', notes: '', resolvedNotes: '' }];

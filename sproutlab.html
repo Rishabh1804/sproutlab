@@ -3364,6 +3364,29 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .fe-para-note { font-size:var(--fs-xs); padding:var(--sp-2) 0; }
 .fe-para-warn { color:var(--tc-danger); }
 .fe-para-log { padding:var(--sp-4) 0; }
+/* Weight confirm block (#161 §4.4): leads the paracetamol section when the weight-jump check asks. Amber for a
+   jump, drop or same-day conflict; calm for "couldn't compare". Text at full contrast; 44px controls; the
+   retype row and actions stack at the larger text sizes. */
+.fe-para-confirm { background:var(--amber-light); border:1px solid rgba(138,101,32,0.28); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); margin:var(--sp-6) 0 var(--sp-8); }
+.fe-para-confirm--calm { background:var(--warm); border-color:var(--border-subtle); }
+[data-theme="dark"] .fe-para-confirm:not(.fe-para-confirm--calm) { border-color:rgba(212,168,72,0.38); }   /* the light rgba vanishes on dark amber (Vela V-V-290-5) */
+/* The countdown while the dose is held (weight check, or no dose here): neutral, not the go-green (Vela V-V-290-6). */
+.fe-dose-next--hold { color:var(--text); }
+.fe-para-confirm-title { font-size:var(--fs-sm); font-weight:700; color:var(--tc-amber); display:flex; align-items:center; gap:var(--sp-4); }
+.fe-para-confirm--calm .fe-para-confirm-title { color:var(--text); }
+.fe-para-confirm-title .zi { width:16px; height:16px; flex-shrink:0; }
+.fe-para-pair { display:flex; flex-wrap:wrap; gap:var(--sp-4) var(--sp-12); font-size:var(--fs-sm); color:var(--text); padding:var(--sp-6) 0 var(--sp-2); }
+.fe-para-pair-wt { font-family:'Fraunces',serif; font-weight:600; }
+.fe-para-pair-change { font-weight:600; }
+.fe-para-confirm-text { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); padding:var(--sp-2) 0; }
+.fe-para-retype { display:flex; gap:var(--sp-8); align-items:stretch; padding:var(--sp-6) 0 var(--sp-2); }
+.fe-para-retype .ep-edit-input { flex:1; min-width:0; min-height:44px; font-size:var(--fs-base); }
+.fe-para-confirm .btn { min-height:44px; }
+.fe-para-retype-err { font-size:var(--fs-sm); font-weight:600; color:var(--tc-caution); }
+.fe-para-retype-err:empty { display:none; }
+.fe-para-confirm-actions { display:flex; flex-wrap:wrap; gap:var(--sp-8); padding:var(--sp-6) 0 var(--sp-4); }
+:root[data-zoom="med"] .fe-para-retype, :root[data-zoom="high"] .fe-para-retype,
+:root[data-zoom="med"] .fe-para-confirm-actions, :root[data-zoom="high"] .fe-para-confirm-actions { flex-direction:column; align-items:stretch; }
 .fe-action-chip:active { transform:scale(0.95); background:var(--sage); color:white; }
 .fe-action-entry { font-size:var(--fs-xs); color:var(--mid); padding:var(--sp-4) 0; }
 .fe-guidance { font-size:var(--fs-xs); color:var(--mid); line-height:var(--lh-relaxed); padding:var(--sp-4) 0; }
@@ -24542,6 +24565,10 @@ const KEYS = {
   //   { entries, _meta } breaks 20+ existing Array.isArray consumers).
   milestoneSuppress: 'ziva_milestone_suppress',
   activityMeta:      'ziva_activity_meta',
+  // growthConfirm: single-doc { 'YYYY-MM-DD': <wt kg> } — a weight the parent confirmed by retyping it after
+  //   the weight-jump check asked (#161 spec §4.3). Never on the growth row: the growth array is replaced
+  //   whole and its recovery merge is local-wins, so a confirm on the row could resurrect a fixed typo.
+  growthConfirm:     'ziva_growth_confirm',
   // teeth: single-doc tooth-eruption record { [toothId]: { date:'YYYY-MM-DD'|null, ts:epochMs } }.
   //   date:null is a tombstone (the parent removed a tooth), so a remote copy
   //   can't resurrect it. Merged per tooth, newest ts wins (_postReceiveTeeth).
@@ -24993,6 +25020,8 @@ let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, m
 // milestoneSuppress: per-milestone suppress-until { [milestoneId]: epochMs }.
 // Both hydrated from localStorage in init flow alongside the other data globals.
 let activityMeta, milestoneSuppress;
+// growthConfirm: weights confirmed by retyping (KEYS.growthConfirm, #161 spec §4.3).
+let growthConfirm;
 // teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
 let teethLog;
 // ── PROFILE (privacy-v1 §3.1) ──
@@ -25742,6 +25771,7 @@ function init() {
     else if (action === 'feToggleAllReadings') feToggleAllReadings();
     else if (action === 'feLogDosePrompt') feLogDosePrompt();
     else if (action === 'feSetParaForm') feSetParaForm(arg);
+    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2, arg3);   // retype to confirm a weight (#161 §4.4)
     else if (action === 'deLogFluidPrompt') deLogFluidPrompt();
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();
@@ -26037,6 +26067,7 @@ function init() {
   // consumers. V-K-104 floor: milestoneSuppress is explicitly registered for
   // sync (see SYNC_KEYS in sync.js) — no falling through ziva_* pattern picker.
   activityMeta = load(KEYS.activityMeta, null) || {};
+  growthConfirm = gvConfirmNormalize(load(KEYS.growthConfirm, null));
   if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) activityMeta = {};
   milestoneSuppress = load(KEYS.milestoneSuppress, null) || {};
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null || Array.isArray(milestoneSuppress)) milestoneSuppress = {};
@@ -31530,6 +31561,109 @@ function gvWeightJumpCheck(rows, sex) {
     return { verdict: 'confirm', variant: 'error', reason: null, method: 'nocompare', pair: null, pairs: [], anchor };
   }
 }
+// ── Weight confirmations (#161 spec §4.3, decision A/B; shape amended in the PR 4a round) ──
+// { 'YYYY-MM-DD': { '<grams>': [kinds] } } — a weight the parent retyped, keyed by its date AND its weight
+// (grams, so no '.' reaches a Firestore field path), with what the check had asked:
+//   'calm'     — "couldn't compare" (no earlier weight, too long a gap, no sex set, an error);
+//   'amber'    — a jump, a drop, or an earlier weight that looks off (covers 'calm');
+//   'samedate' — two different weights on one date (the jump test still runs after it).
+// A confirm unlocks only what the parent was shown: a calm confirm never covers a jump that later evidence
+// reveals (Kael V-K-290-3). Keyed by weight, merging is a plain union — no conflict, no lossy pick, never
+// undone by the other phone (Kael V-K-290-4, Maren V-M-290-4).
+const GV_CONFIRM_KINDS = ['amber', 'calm', 'samedate'];
+function _gvGrams(wt) { return String(Math.round(Number(wt) * 1000)); }
+function gvConfirmNormalize(m) {
+  const out = {};
+  if (!m || typeof m !== 'object' || Array.isArray(m)) return out;
+  Object.keys(m).sort().forEach(d => {
+    const day = m[d];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !_parseLocalDate(d) || !day || typeof day !== 'object' || Array.isArray(day)) return;
+    Object.keys(day).sort().forEach(g => {
+      const kinds = Array.isArray(day[g]) ? Array.from(new Set(day[g].filter(k => GV_CONFIRM_KINDS.indexOf(k) >= 0))).sort() : [];
+      if (!/^[1-9]\d*$/.test(g) || !kinds.length) return;
+      (out[d] = out[d] || {})[g] = kinds;
+    });
+  });
+  return out;
+}
+// The ONE merge, receive and push alike: a union by date, weight and kind. Commutative and idempotent as a
+// function; the phones converge because receive pushes back what the cloud lacks (sync.js, V-CA-290-3).
+function gvConfirmMerge(a, b) {
+  const A = gvConfirmNormalize(a), B = gvConfirmNormalize(b), u = {};
+  [A, B].forEach(M => Object.keys(M).forEach(d => Object.keys(M[d]).forEach(g => {
+    (u[d] = u[d] || {})[g] = ((u[d][g] || []).concat(M[d][g]));
+  })));
+  return gvConfirmNormalize(u);
+}
+function _gvConfirmKinds(row) {
+  const day = row && growthConfirm && growthConfirm[row.date];
+  const k = day && day[_gvGrams(row.wt)];
+  return Array.isArray(k) ? k : [];
+}
+function _gvKindOf(variant) {
+  return variant === 'samedate' ? 'samedate' : (variant === 'jump-up' || variant === 'jump-down' || variant === 'implausible') ? 'amber' : 'calm';
+}
+function _gvCovers(kinds, need) {
+  return need === 'calm' ? (kinds.indexOf('calm') >= 0 || kinds.indexOf('amber') >= 0) : kinds.indexOf(need) >= 0;
+}
+// Any confirm on this exact date + weight.
+function gvWeightConfirmed(row) { return _gvConfirmKinds(row).length > 0; }
+// The check after a confirmed same-date conflict: the confirmed weight against the earlier weigh-ins, the
+// other weight on its date left out — so the jump test still runs (Kael V-K-290-8).
+function _gvJumpAfterSamedate(row) {
+  return gvWeightJumpCheck(gvMeasureRows('wt').filter(r => r.date !== row.date || r === row || (r.wt === row.wt)));
+}
+// The weight-jump check as the dose reads it: null when the latest weight can be used — the check passes,
+// or the parent confirmed exactly what it asks — else the check's result plus askKind (what a retype
+// records). Bound to the row passed in (the chip's displayed row): if the check's anchor is a different
+// row, it asks and a confirm can't clear it (fail closed).
+function gvWeightNeedsConfirm(row) {
+  if (!row) return null;
+  let jc;
+  try { jc = gvWeightJumpCheck(); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+  const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
+  if (!sameRow) return Object.assign({}, jc, { verdict: 'confirm', variant: 'error', askKind: null });
+  if (jc.verdict === 'ok') return null;
+  const kinds = _gvConfirmKinds(row);
+  if (jc.variant === 'samedate') {
+    if (!_gvCovers(kinds, 'samedate')) return Object.assign({}, jc, { askKind: 'samedate' });
+    let jc2;
+    try { jc2 = _gvJumpAfterSamedate(row); } catch (e) { jc2 = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+    if (jc2.verdict === 'ok') return null;
+    const need2 = _gvKindOf(jc2.variant);
+    return _gvCovers(kinds, need2) ? null : Object.assign({}, jc2, { askKind: need2 });
+  }
+  const need = _gvKindOf(jc.variant);
+  return _gvCovers(kinds, need) ? null : Object.assign({}, jc, { askKind: need });
+}
+// Record a retype: adds what the check is asking for that exact date + weight. Writes only the
+// confirmation map (never the growth row). `shownKind`: the question the parent read; if the check has
+// changed since (a receive between render and tap), nothing is recorded (Kael V-K-290-11).
+function gvConfirmRecord(row, shownKind) {
+  const ask = gvWeightNeedsConfirm(row);
+  if (!ask || !ask.askKind) return false;
+  if (shownKind && shownKind !== ask.askKind) return false;
+  const add = { [row.date]: { [_gvGrams(row.wt)]: [ask.askKind] } };
+  growthConfirm = gvConfirmMerge(growthConfirm, add);
+  save(KEYS.growthConfirm, growthConfirm);
+  return true;
+}
+// The check that decided a confirmed weight: the jump check, or — after a confirmed same-date conflict —
+// the jump check that ran after it. Null when nothing was flagged or the weight still asks. The ONE
+// source for the loss line and the doctor export (Kael V-K-290-9).
+function gvConfirmedCheck(row) {
+  if (!row || !gvWeightConfirmed(row) || gvWeightNeedsConfirm(row)) return null;
+  try {
+    const jc = gvWeightJumpCheck();
+    if (jc.verdict === 'ok') return null;
+    if (jc.variant !== 'samedate') return jc;
+    const jc2 = _gvJumpAfterSamedate(row);
+    return jc2.verdict === 'ok' ? null : jc2;
+  } catch (e) { return null; }
+}
+// The confirmed check's variant — so a screen can add the loss line after a confirmed drop.
+function gvWeightConfirmedVariant(row) { const c = gvConfirmedCheck(row); return c ? c.variant : null; }
+
 // Solids have started: the profile's solids start date is today or earlier. The ONE check, read by
 // gvFoodAdviceOk and diet.js _libSuggestions (Ceres V-C-282c-1).
 function solidsStarted() {
@@ -48017,7 +48151,15 @@ function _emDocName() {
 function _emDocVitals() {
   var bits = [];
   try { if (typeof getAgeInMonths === 'function') { var a = getAgeInMonths(); if (a != null) bits.push(a + ' months'); } } catch (e) {}
-  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) bits.push(w.wt + ' kg'); } } catch (e) {}  // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
+  // The weigh-in date always, and "not yet checked" while the weight-jump check asks (#161 §4.4): a doctor
+  // reading this must see how old the weight is and whether the family confirmed it.
+  try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) {   // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
+    var wl = typeof _paraDateLabel === 'function' ? _paraDateLabel(w.date) : w.date;
+    var unchecked = typeof gvWeightNeedsConfirm === 'function' && !!gvWeightNeedsConfirm(w);
+    // U+00A0 before escaping so "kg" never wraps alone (Vela V-V-290-8); "confirmed by the family", which a
+    // hospital team can't misread as a clinical note (Ceres V-C-290-5, Maren V-M-290-6).
+    bits.push(w.wt + '\u00a0kg (weighed ' + wl + (unchecked ? '; not yet confirmed by the family' : '') + ')');
+  } } } catch (e) {}
   return bits.join(' · ');
 }
 // Name + vitals on one line — retained for the plain-text copy/share path.
@@ -53408,14 +53550,31 @@ function renderInsightsCross() {
   // ── Growth vs Feeding correlation ──
   // The shared weight-row filter, so a synced wt:0 or undated row can't skew it (Ceres V-C-282e-4,
   // Kael V-K-282d-5).
-  const wtEntries = gvWeightRows();
+  // A newest weight the weight-jump check flags (a jump, drop or same-day conflict) and nobody has
+  // confirmed is left out, so this insight never reads a typo the dose chip is asking about (Ceres
+  // V-C-288-1, PC-10).
+  let wtEntries = gvWeightRows();
+  { const lw = wtEntries[wtEntries.length - 1];
+    if (lw) {
+      // The newest date reduced to the row the check and the chip read, so a second weight on that date
+      // (a conflict or a re-save) can't carry the number in (Ceres V-C-290-1).
+      wtEntries = wtEntries.filter(r => r.date !== lw.date || r === lw);
+      const jc = gvWeightNeedsConfirm(lw);
+      if (jc && jc.variant === 'implausible' && jc.pair) {
+        // Drop the row that looks off — the earlier one when that is the bad row (Ceres V-C-290-3).
+        const bad = (jc.pair.badRow === 'a' || jc.pair.reason === 'dob') ? [jc.pair.a] : jc.pair.badRow === 'both' ? [jc.pair.a, lw] : [lw];   // a row dated before birth is the earlier one (Ceres V-C-290-8)
+        wtEntries = wtEntries.filter(r => bad.indexOf(r) < 0);
+      } else if (jc && ['jump-up', 'jump-down', 'samedate'].indexOf(jc.variant) >= 0) {
+        wtEntries = wtEntries.filter(r => r !== lw);
+      }
+    }
+  }
   if (wtEntries.length >= 3) {
     // For each weight measurement gap, calculate meals logged per day in that period
     const periods = [];
     for (let i = 1; i < wtEntries.length; i++) {
-      const startDate = new Date(wtEntries[i-1].date);
-      const endDate = new Date(wtEntries[i].date);
-      const days = Math.max(1, Math.round((endDate - startDate) / 86400000));
+      const startDate = _parseLocalDate(wtEntries[i-1].date);   // local dates, not UTC midnight (HR-12)
+      const days = Math.max(1, gvDaysBetween(wtEntries[i-1].date, wtEntries[i].date));
       if (days < 3 || days > 60) continue; // skip too-short or too-long gaps
 
       let mealsTotal = 0;
@@ -55189,6 +55348,28 @@ function renderDoctorPrep() {
   `;
 }
 
+// The weight-jump check, said plainly for the doctor: which way it was off, and whether the family
+// confirmed it — never a generic "or could not be compared" (Maren V-M-290-6).
+function _docWeightCheckNote(row) {
+  const ask = gvWeightNeedsConfirm(row);
+  if (ask) {
+    const p = ask.pair, prev = p && p.a ? ' the ' + _paraDateLabel(p.a.date) + ' weigh-in' : ' the earlier weigh-in';
+    const why = ask.variant === 'jump-up' ? 'more than usual above' + prev
+      : ask.variant === 'jump-down' ? 'more than usual below' + prev
+      : ask.variant === 'samedate' ? 'two different weights were recorded that day'
+      : ask.variant === 'implausible' ? 'an earlier weigh-in looks off'
+      : 'could not be compared with an earlier weigh-in';
+    return ' (' + why + '; not yet confirmed by the family)';
+  }
+  const cc = gvConfirmedCheck(row);   // the check that decided it, after a same-date conflict too (Kael V-K-290-9)
+  if (cc && cc.variant === 'jump-down') {
+    const p = cc.pair;
+    if (!(p && p.a && Number.isFinite(p.changeG))) return ' (a drop, confirmed by the family)';
+    const g = Math.abs(p.changeG);   // grams under 100 g, never "0.0 kg" (Vela V-V-290-9)
+    return ' (a drop, confirmed by the family: ' + (g < 100 ? g + ' g' : (g / 1000).toFixed(1) + ' kg') + ' less than on ' + _paraDateLabel(p.a.date) + ')';
+  }
+  return '';
+}
 function showFullDoctorSummary() {
   const { months, days } = preciseAge();
 
@@ -55208,6 +55389,8 @@ function showFullDoctorSummary() {
     const wtWho = getGrowthRef(ageMonthsAt(lwDoc.date));
     const wtP = calcPercentile(lwDoc.wt, wtWho.w3, wtWho.w50, wtWho.w97, wtWho.w15, wtWho.w85);
     lines.push('  Weight: ' + lwDoc.wt + ' kg (' + wtP.text + ' percentile, WHO ' + childKinWord() + ')');   // the chart named, for the doctor (V-M-281-1)
+    // How old the weight is, and whether the family confirmed a weight the jump check flagged (#161 §4.4).
+    lines.push('    Weighed ' + _paraDateLabel(lwDoc.date) + _docWeightCheckNote(lwDoc));
   }
   if (lhDoc) {
     const htWho = getGrowthRef(ageMonthsAt(lhDoc.date));
@@ -73978,12 +74161,142 @@ function getParacetamolChip(weightRow) {
   // table it is −6.3 and the gate stops it). It has no dose here: one decision, never 'ok' without a
   // dose (V-K-284-1). Keep this after the gate.
   if (!getParacetamolDose(wt, PARACETAMOL_FORMS[0])) return { state: 'nodose', form, wt, date };
-  if (!form) return { state: 'pick', form, wt, date };
+  // The weight-jump check (#161 §4.2/§4.4): a weight that jumped, dropped, can't be compared, or shares
+  // its date with a different weight gives no dose until the parent retypes it (decision B). No dose
+  // object in this state; it carries the bottle.
+  const check = gvWeightNeedsConfirm(weightRow);
+  if (check) return { state: 'confirm', form, wt, date, check };
+  const lossConfirmed = gvWeightConfirmedVariant(weightRow) === 'jump-down';
+  if (!form) return { state: 'pick', form, wt, date, lossConfirmed };
   const dose = getParacetamolDose(wt, form);
   const day = _parseLocalDate(date);
   const sameYear = day.getFullYear() === _parseLocalDate(today()).getFullYear();
   const dateLabel = day.toLocaleDateString('en-IN', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
-  return { state: 'ok', form, wt, date, dateLabel, ageDays, stale: ageDays > PARA_STALE_DAYS, dose };
+  return { state: 'ok', form, wt, date, dateLabel, ageDays, stale: ageDays > PARA_STALE_DAYS, dose, lossConfirmed };
+}
+// Every chip state, each with its own render branch (a test checks the list against the card).
+const PARA_CHIP_STATES = ['askdoctor', 'noweight', 'baddate', 'outofrange', 'implausible', 'nodose', 'confirm', 'pick', 'ok'];
+
+// ── The weight confirm block (#161 §4.4) ──
+// A weigh-in date as the chip shows it (HR-12: parsed as a local date).
+function _paraDateLabel(dateStr) {
+  const day = _parseLocalDate(dateStr);
+  if (!day) return '';
+  const sameYear = day.getFullYear() === _parseLocalDate(today()).getFullYear();
+  return day.toLocaleDateString('en-IN', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
+}
+// "9.5 kg" with a no-break space, inserted BEFORE escaping (a literal &nbsp; would double-escape).
+function _paraKgText(w) { return String(w) + '\u00a0kg'; }
+function _paraGapWords(days) {
+  if (!(days >= 0)) return '';
+  if (days < 14) return days + (days === 1 ? ' day' : ' days');
+  if (days < 61) { const w = Math.round(days / 7); return w + ' weeks'; }
+  const m = Math.round(days / 30.4375); return m + (m === 1 ? ' month' : ' months');
+}
+// After a confirmed drop: tell the doctor today (Maren V-M-290-2 — a drop past WHO's 1st-percentile velocity
+// during an illness is not a next-visit note), and keep the milk going — milk feeds under 6 months (WHO:
+// milk only before 6 months; "fluids" could read as water — Ceres V-C-290-2). Shown only when the drop was
+// weighed during this illness or the week before it, so an old drop isn't read as this fever's (Kael
+// V-K-290-5, Maren V-M-290-5).
+function _paraLossLineHtml(chip, ep) {
+  if (!chip || !chip.lossConfirmed || !ep) return '';
+  const startDay = toDateStr(new Date(ep.startedAt));
+  const before = gvDaysBetween(chip.date, startDay);
+  if (!Number.isFinite(before) || before > 7) return '';
+  // Cow's milk as a drink waits until 12 months (iron), so "other milk" only from then (Ceres V-C-290-2).
+  const mo = ageMonthsAt(today());
+  const feeds = mo < 6 ? 'Keep offering milk feeds often.'
+    : mo < 12 ? 'Keep offering breast milk or formula, and fluids, often.'
+    : 'Keep offering breast milk or other milk, and fluids, often.';
+  return '<div class="fe-para-note">A real drop in weight while ' + pron('subj') + ' is unwell is worth telling your doctor today. ' + feeds + '</div>';
+}
+// "she", or neutral words when the sex isn't set (Kael V-K-290-7, Vela V-V-290-7, Maren V-M-290-11).
+function _paraSubjOr(fallback) { return childSex() ? pron('subj') : fallback; }
+// A weight change in words: grams under 100 g, so a small loss never prints "0.0 kg" beside "more than
+// usual" (Vela V-V-290-1).
+function _paraChangeWords(changeG, gapDays) {
+  if (!Number.isFinite(changeG) || changeG === 0) return '';
+  const g = Math.abs(changeG);
+  const amt = g < 100 ? g + ' g' : (g / 1000).toFixed(1) + ' kg';
+  return amt + ' ' + (changeG > 0 ? 'more' : 'less') + ' in ' + _paraGapWords(gapDays);
+}
+// Why the check asked, for a tired parent: what it compared and what to do. Jump, loss and conflict
+// read amber; "couldn't compare" reads calm. The escape line is always there (Vela, Maren). Every claim
+// comes from the check's own pairs (spec §9, Cipher #288 finding 9 — Maren V-M-290-3).
+function _paraConfirmHtml(chip) {
+  const jc = chip.check || {};
+  const v = jc.variant, p = jc.pair;
+  const amber = v === 'jump-up' || v === 'jump-down' || v === 'samedate' || v === 'implausible';
+  const okPair = (jc.pairs || []).find(x => x && x.ok);
+  let html = '<div class="fe-para-confirm' + (amber ? '' : ' fe-para-confirm--calm') + '">';
+  html += '<div class="fe-para-confirm-title">' + (amber ? zi('warn') + ' ' : '') + 'Check the weight before working out a dose</div>';
+  const dated = (label, r) => '<span>' + escHtml(label) + ' <span class="fe-para-pair-wt">' + escHtml(_paraKgText(r.wt)) + '</span> · ' + escHtml(_paraDateLabel(r.date)) + '</span>';
+  if (p && p.a && p.b && v === 'samedate') {
+    // One flex item, so "and" and the comma stay with their weights (Vela V-V-290-2).
+    html += '<div class="fe-para-pair"><span><span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.b.wt)) + '</span> and <span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.a.wt)) + '</span>, both on ' + escHtml(_paraDateLabel(p.b.date)) + '</span></div>';
+  } else if (p && p.a && p.b && p.a.date !== p.b.date) {
+    // Labelled, so the order can't be misread (Vela V-V-290-4).
+    const change = _paraChangeWords(p.changeG, p.gapDays);
+    html += '<div class="fe-para-pair">' + dated('Newest', p.b) + dated('Before', p.a) + (change ? '<span class="fe-para-pair-change">' + escHtml(change) + '</span>' : '') + '</div>';
+  } else {
+    html += '<div class="fe-para-pair">' + dated('Newest', { wt: chip.wt, date: chip.date }) + '</div>';
+  }
+  let why;
+  if (v === 'jump-up') why = 'That is more than children usually gain in that time, so one of the numbers may be a typo.';
+  else if (v === 'jump-down') why = 'That is a bigger drop than usual for that time. It may be a typo, or a real drop while ' + _paraSubjOr('your child') + ' is unwell.';
+  else if (v === 'samedate') why = 'Growth has two different weights on the same day, so the dose can\'t tell which is right. If ' + _paraKgText(p && p.a ? p.a.wt : '') + ' is the right one, tap Change the weight and remove ' + _paraKgText(chip.wt) + '.';
+  else if (v === 'implausible') {
+    // Only an off EARLIER row, or a row dated before the birth date, reaches here: the chip's own gate
+    // stops an off newest weight first (Kael V-K-290-2).
+    why = p && p.reason === 'dob' ? 'An earlier weigh-in is dated before ' + pron('poss') + ' birth date. Check its date in Growth.'
+      : p && p.badRow === 'a' ? 'The earlier weight looks off for ' + pron('poss') + ' age. Check it in Growth.'
+      : p && p.badRow === 'b' ? 'The newest weight looks off for ' + pron('poss') + ' age.'
+      : p && p.badRow === 'both' ? 'Both weights look off for ' + pron('poss') + ' age.'
+      : 'One of these weights looks off. Check them in Growth.';
+  }
+  else if ((jc.reason === 'gap' || jc.reason === 'age') && okPair && p && p.a) {
+    why = 'The ' + _paraDateLabel(okPair.a.date) + ' weigh-in matches, but the one on ' + _paraDateLabel(p.a.date) + ' is too long ago to compare with, so the check can\'t finish.';
+  }
+  else if (jc.reason === 'noprev') why = 'There is no earlier weight to check it against.';
+  else if (jc.reason === 'gap' && p && p.a) why = 'The weigh-in on ' + _paraDateLabel(p.a.date) + ' is too long ago to check it against.';
+  else if (jc.reason === 'gap') why = 'The weigh-in before it was too long ago to check it against.';
+  else if (jc.reason === 'age') why = 'These weigh-ins are too far apart to check at ' + pron('poss') + ' age.';
+  else if (jc.reason === 'nosex') why = 'The weight can\'t be checked until your child\'s sex is set in Settings.';
+  else why = 'The weight couldn\'t be checked against an earlier one.';
+  html += '<div class="fe-para-confirm-text">' + escHtml(why) + '</div>';
+  html += '<div class="fe-para-confirm-text">If ' + escHtml(_paraKgText(chip.wt)) + ' is right, type it here to confirm it.</div>';
+  html += '<div class="fe-para-retype"><input id="feWtRetype" class="ep-edit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Type the newest weight in kilograms">'
+    + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="feConfirmWeight" data-arg="' + escAttr(chip.date) + '" data-arg2="' + escAttr(String(chip.wt)) + '" data-arg3="' + escAttr(jc.askKind || '') + '">Confirm</button></div>';
+  html += '<div id="feWtRetypeErr" class="fe-para-retype-err" role="alert"></div>';
+  html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="switchTab" data-arg="growth">Change the weight</button></div>';
+  html += '<div class="fe-para-confirm-text">If ' + _paraSubjOr('your child') + ' needs medicine now, ask your doctor or chemist for the dose.</div>';
+  html += '</div>';
+  return html;
+}
+// The retype (decision B): the parent types the weight the chip SHOWED; it is compared at 0.01 kg
+// (comma decimals accepted) and must still be the weight on that date in Growth. Writes only the
+// confirmation map — never the growth row — recording what the check asked (gvConfirmRecord).
+function feConfirmWeight(date, wtStr, shownKind) {
+  const input = document.getElementById('feWtRetype');
+  const say = msg => { const err = document.getElementById('feWtRetypeErr'); if (err) err.textContent = msg; };
+  const typed = parseFloat(String(input ? input.value : '').trim().replace(',', '.'));
+  const shown = Number(wtStr);
+  if (!Number.isFinite(typed) || typed <= 0) { say('Type the weight in kg, for example 9.5.'); return; }
+  const row = gvMeasureRows('wt').find(r => r.date === date && r.wt === shown);
+  // Re-render first, then say it, or the redraw wipes the message (Kael V-K-290-6, Vela V-V-290-3).
+  if (!row) { renderFeverEpisodeCard(); showQLToast('That weight has changed in Growth. Check it there.'); return; }
+  if (Math.round(typed * 100) !== Math.round(shown * 100)) {
+    say('You typed ' + _paraKgText(typed) + '; Growth has ' + _paraKgText(shown) + ' on that date. If Growth is wrong, tap Change the weight.');
+    return;
+  }
+  const latest = getLatestWeight();
+  if (!gvConfirmRecord(row, shownKind || null) && gvWeightNeedsConfirm(row)) {
+    // The check changed since the card was drawn: show the new question rather than record the old one.
+    renderFeverEpisodeCard(); showQLToast('The weight check has changed. Look again.'); return;
+  }
+  renderFeverEpisodeCard();
+  // The toast only when this was the weight the dose reads (a newer one may now be asking).
+  if (latest && latest.date === row.date && latest.wt === row.wt && !gvWeightNeedsConfirm(latest)) showQLToast(zi('check') + ' Weight confirmed');
 }
 
 function feSetParaForm(id) {
@@ -74301,7 +74614,12 @@ function renderFeverEpisodeCard() {
         ? 'Last paracetamol at ' + _feverTimeShort(new Date(doseCD.lastTime).toISOString()) + ', in ' + pron('poss') + ' earlier fever. '
         : '';
       if (doseCD.available) {
-        html += '<div class="fe-dose-next">' + from + 'Next dose can be given now, if needed, as your doctor advised.</div>';
+        const canDose = paraChip.state === 'ok' || paraChip.state === 'pick';
+        html += canDose
+          ? '<div class="fe-dose-next">' + from + 'Next dose can be given now, if needed, as your doctor advised.</div>'
+          : '<div class="fe-dose-next fe-dose-next--hold">' + from + (paraChip.state === 'confirm'
+            ? 'The 4-hour gap has passed. A dose can be given, if needed, as your doctor advised, once the weight below is checked.'
+            : 'The 4-hour gap has passed. See below before giving a dose.') + '</div>';
       } else {
         const dh = Math.floor(doseCD.remaining / 60);
         const dm = doseCD.remaining % 60;
@@ -74315,6 +74633,8 @@ function renderFeverEpisodeCard() {
     html += '<div class="fe-dose-row fe-dose-empty">No medicine logged since this fever started</div>';
   }
   // Paracetamol: which bottle, then the dose for HER weight — named, dated, sanity-checked (Maren V-M-282g-6).
+  // A weight the check flagged leads the section (#161 §4.4).
+  if (paraChip.state === 'confirm') html += _paraConfirmHtml(paraChip);
   html += '<div class="fe-para-q">Which paracetamol bottle do you have?</div>';
   html += '<div class="fe-para-forms" role="group" aria-label="Paracetamol bottle">';
   PARACETAMOL_FORMS.forEach(f => {
@@ -74333,8 +74653,12 @@ function renderFeverEpisodeCard() {
     if (paraChip.stale) {
       html += '<div class="fe-para-note">That weight is ' + Math.floor(paraChip.ageDays / 7) + ' weeks old. The dose follows weight, so weigh ' + pron('obj') + ' again when you can, and check with your doctor.</div>';
     }
+    html += _paraLossLineHtml(paraChip, ep);
+  } else if (paraChip.state === 'confirm') {
+    // The block above says it all; nothing more here.
   } else if (paraChip.state === 'pick') {
     html += '<div class="fe-para-note">Tap the bottle you have to see the dose for ' + escHtml(String(paraChip.wt)) + ' kg.</div>';
+    html += _paraLossLineHtml(paraChip, ep);
   } else if (paraChip.state === 'askdoctor') {
     html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' Under 3 months, ask your doctor before giving paracetamol.</div>';
   } else if (paraChip.state === 'nodose') {
@@ -74346,8 +74670,11 @@ function renderFeverEpisodeCard() {
     html += '<div class="fe-para-note">The weight check here covers children up to age 5, so it can\'t work out a dose from ' + pron('poss') + ' weight. Ask your doctor or chemist for the dose.</div>';
   } else if (paraChip.state === 'implausible') {
     html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' The last weight, ' + escHtml(String(paraChip.wt)) + ' kg, looks off for ' + pron('poss') + ' age. Check it in Growth before working out a dose. If ' + pron('subj') + ' needs medicine now, ask your doctor or chemist for the dose.</div>';
-  } else {
+  } else if (paraChip.state === 'noweight') {
     html += '<div class="fe-para-note">Add a weight in Growth to see a dose. Dosing is by weight.</div>';
+  } else {
+    // A state with no branch never shows a dose (fail closed).
+    html += '<div class="fe-para-note">The dose can\'t be worked out here. Ask your doctor or chemist for the dose.</div>';
   }
   html += '<div class="fe-para-note t-light">Give it if ' + pron('subj') + ' seems uncomfortable or your doctor advised it, not just to lower the number. Your doctor\'s dose comes first. Measure with the dropper or an oral syringe, never a kitchen spoon. At least 4 h apart, no more than 4 doses in 24 h.</div>';
   html += '<div class="fe-para-log"><span class="fe-action-chip" data-action="feLogDosePrompt">+ Log paracetamol dose</span></div>';
@@ -74891,12 +75218,22 @@ function computeFeverAlerts() {
   if (doseCD && doseCD.available && ep.readings.length && ep.readings[ep.readings.length - 1].temp >= 100) {
     // Keyed on the dose the wait counts from: the count now spans episodes (V-K-284-11).
     const key = 'fever-dose-avail-' + doseCD.lastTime;
+    // "Safe to give" only when the card can show a dose; while the weight check asks (or the dose can't be
+    // worked out), Home sends the parent to the card instead — one state, one answer (Kael V-K-290-1, Maren
+    // V-M-290-1). No confirm control on Home (spec §4.4).
+    let chipState = 'ok';
+    try { chipState = getParacetamolChip(getLatestWeight()).state; } catch (e) { chipState = 'unknown'; }
+    const canDose = chipState === 'ok' || chipState === 'pick';
     if (!isDismissed(key)) {
       alerts.push({
         id: 'fever-dose-available', key,
         severity: 'info', icon: zi('pill'),
-        title: 'Paracetamol dose available',
-        body: 'Next dose is safe to give (if needed, as advised by doctor). Last dose was ' + _feverTimeAgo(new Date(doseCD.lastTime).toISOString()) + '.',
+        title: canDose ? 'Paracetamol dose available' : 'Paracetamol: check the fever card',
+        body: canDose
+          ? 'Next dose is safe to give (if needed, as advised by doctor). Last dose was ' + _feverTimeAgo(new Date(doseCD.lastTime).toISOString()) + '.'
+          : (chipState === 'confirm'
+            ? 'The 4-hour gap has passed. Check the weight on the fever card before giving a dose.'
+            : 'The 4-hour gap has passed. Open the fever card before giving a dose.'),
         tab: 'medical', dismissable: true
       });
     }
@@ -88607,6 +88944,7 @@ const SYNC_KEYS = {
   [KEYS.activityLog]:        { collection: 'activities',  model: 'single-doc' },
   [KEYS.milestones]:         { collection: 'milestones',  model: 'single-doc' },
   [KEYS.growth]:             { collection: 'growth',      model: 'single-doc' },
+  [KEYS.growthConfirm]:      { collection: 'growth',      model: 'single-doc' },   // weights confirmed by retyping (#161 §4.3)
   [KEYS.vacc]:               { collection: 'vaccinations', model: 'single-doc' },
   [KEYS.vaccBooked]:         { collection: 'vaccinations', model: 'single-doc' },
   [KEYS.meds]:               { collection: 'medical',     model: 'single-doc' },
@@ -88875,7 +89213,9 @@ const SYNC_RENDER_DEPS = {
   // stale on sync receive).
   [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.milestones]:        { global: 'milestones',  postReceive: '_postReceiveMilestones', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
-  [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
+  [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth', 'renderFeverEpisodeCard'], growth: ['renderGrowthStats'] } },   // the dose chip reads the latest weight (#161 §4.4)
+  // Weights confirmed by retyping: a union by date + weight (gvConfirmMerge, core.js); the dose chip and Home's dose alert re-rendered (#161 §4.3).
+  [KEYS.growthConfirm]:     { global: 'growthConfirm', mergeOnReceive: '_postReceiveGrowthConfirm', renderers: { home: ['renderHome'], 'track:medical': ['renderFeverEpisodeCard'] } },   // Home's dose alert reads the chip too (Kael V-K-290-1)
   [KEYS.vacc]:              { global: 'vaccData',    mergeOnReceive: '_postReceiveVacc', renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
@@ -88950,6 +89290,7 @@ function _syncSetGlobal(name, value) {
     // a future dedupeScrapbookByText).
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
+    case 'growthConfirm': growthConfirm = gvConfirmNormalize(value); return true;
     case 'mealPlan':     mealPlan     = value; return true;
     // Illness episodes (#161 PR 3): the module arrays are reassigned on receive, so the cards, the
     // countdown and the dose gate read the other phone's entries without a reload (V-CA-P3-10).
@@ -88986,6 +89327,7 @@ function _syncGetGlobal(name) {
     case 'activityLog':  return activityLog;
     case 'scrapbook':    return scrapbook;
     case 'teethLog':     return teethLog;
+    case 'growthConfirm': return growthConfirm;
     case 'mealPlan':     return mealPlan;
     case '_feverEpisodes':     return _feverEpisodes;
     case '_diarrhoeaEpisodes': return _diarrhoeaEpisodes;
@@ -89192,6 +89534,8 @@ function _postReceiveTeeth(remoteMap, localMap) {
 // sides-preserved on no-conflict" semantics — this matches what the parent
 // expects: a tag set on one device shows up on the other; clearing on one
 // device doesn't resurrect from the other.
+// Weights confirmed by retyping (#161 §4.3): the one merge, both directions.
+function _postReceiveGrowthConfirm(remoteMap, localMap) { return gvConfirmMerge(remoteMap, localMap); }
 function _postReceiveActivityMeta(remoteMap, localMap) {
   var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
   var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
@@ -89405,6 +89749,7 @@ function _syncFindHousehold(uid) {
               } else {
                 _syncSaveDirty({});
                 _epJoinBegin();   // a true first attach: this device's episodes are not household data (V-CA-P3-8)
+                _gvConfirmJoinReset();   // nor are its weight confirms (Carina V-CA-290-4)
                 _syncAttachListeners(_syncHouseholdId);
               }
             }
@@ -89508,6 +89853,7 @@ function syncJoinByCode(code) {
         localStorage.setItem('sl_sync_seeded', '4');
         _syncSaveDirty({});
         _epJoinBegin();   // the first episode receive takes the household's copy outright (V-CA-P3-8)
+        _gvConfirmJoinReset();   // weight confirms made before joining are not household data (Carina V-CA-290-4)
         _syncAttachListeners(_syncHouseholdId);
       });
     })
@@ -90150,6 +90496,11 @@ function _epKindOfKeyId(key) {
   return key === KEYS.feverEpisodes ? 'fever' : key === KEYS.diarrhoeaEpisodes ? 'diarrhoea'
     : key === KEYS.vomitingEpisodes ? 'vomiting' : key === KEYS.coldEpisodes ? 'cold' : null;
 }
+// A joining device's own weight confirms are not household data: cleared locally at a true first attach,
+// with no sync write (Carina V-CA-290-4).
+function _gvConfirmJoinReset() {
+  try { localStorage.removeItem(KEYS.growthConfirm); growthConfirm = {}; } catch (e) {}
+}
 // A joining device takes the household's episodes outright on first receive, with no push-back (V-CA-P3-8).
 var EP_JOIN_KEY = 'sl_ep_join_pending';
 function _epJoinBegin() {
@@ -90231,6 +90582,8 @@ function _syncMergeForPush(local, cloud, key) {
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
   if (key === KEYS.vacc && Array.isArray(local) && Array.isArray(cloud)) return vaccDropSatisfiedPending(_syncUnionArrays(local, cloud, key));
+  // Weights confirmed by retyping: the one date merge, never local-wins (#161 §4.3).
+  if (key === KEYS.growthConfirm) return gvConfirmMerge(cloud, local);
   // Illness episodes: the one merge (spec §5A), never a local-wins union.
   var _epk = _epKindOfKeyId(key);
   if (_epk) {
@@ -90879,6 +91232,19 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
         if (_epKind) _epJoinDone(key);
       } catch (e) { console.warn('[sync] episode push-back skipped:', e); }
       if (_epNoop) continue;
+      // Weight confirms: when the union holds confirms the cloud lacks, the shadow becomes the cloud's copy and
+      // the next flush pushes them, so both phones answer "confirmed?" alike (Carina V-CA-290-3).
+      try {
+        if (key === KEYS.growthConfirm && _cfg && _cfg.collection) {
+          var _gcRemote = gvConfirmNormalize(remoteVal);
+          if (JSON.stringify(gvConfirmNormalize(_saveVal)) !== JSON.stringify(_gcRemote)) {
+            _syncShadow[key] = _syncCloneDeep(_gcRemote);
+            _syncMarkDirty(key);
+            if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) _syncMarkNeedsFull(key);
+            else { _syncCountWrites(1); _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal); }
+          }
+        }
+      } catch (e) { console.warn('[sync] growth-confirm push-back skipped:', e); }
       // Profile: the merge refills a sex the cloud copy lacks (an older-build phone saved without
       // it). Write it back, the meal planner's way, so the household's copy holds it and a new phone
       // isn't asked again (V-CA-281-1).
