@@ -751,6 +751,7 @@ function _paraDoseMg(d) {
   // More than one quantity is never one dose (Kael V-K-291-15): "2 x 1.5 ml", "5 ml x2", "2x5ml", "then", "+",
   // "twice", "and", a separator comma (decimal commas are already dots), or two amounts in the same unit.
   if (/\bx\b|\d\s*x|x\s*\d|×|\bthen\b|\+|\btwice\b|\bthrice\b|\band\b|,/.test(rest)) return unread;
+  if (/mg\s*\/\s*kg|per\s*kg/.test(rest)) return unread;   // a dose per kg is not an amount given (Kael V-K-291-D26)
   if ((rest.match(/\d\s*mg\b/g) || []).length > 1 || (rest.match(/\d\s*ml\b/g) || []).length > 1) return unread;
   const pick = (re1, reR) => { const r = rest.match(new RegExp(reR)); if (r) return [parseFloat(r[1]), parseFloat(r[2])]; const m = rest.match(new RegExp(re1)); return m ? [parseFloat(m[1]), parseFloat(m[1])] : null; };
   const mg = pick(N + '\\s*mg', R + '\\s*mg'), ml = pick(N + '\\s*ml', R + '\\s*ml');
@@ -841,6 +842,7 @@ function _paraGiSign(nowMs) {
   const act = (_feverEpisodes || []).some(e => ((e && e.actions) || []).some(a => a && PARA_GI_MATCH.indexOf(a.action) >= 0 && inWin(a.time)));
   return vom || act;
 }
+const PARA_GI_YES = ' If so, call your doctor now.';   // R2's own answer (RCH, spec §5.3), where the chips can't be shown
 const PARA_ER = ' If you can\'t reach your doctor now, go to the emergency department.';
 // The pure engine (spec §5.3/§5.4, as amended in the PR 4b round): doses + weights + context → the rules that
 // fire, each with its tier and copy, plus the one "until" and whether anything says stop.
@@ -912,6 +914,7 @@ function _paraLoadFrom(o) {
   const bigD = in24.filter(d => d.lo > topD + stepOf(d)), bigR = in24.filter(d => d.lo > topR + stepOf(d) && !(d.lo > topD + stepOf(d)));
   if (bigD.length) {
     const max = bigD.reduce((m, d) => (d.lo > m.lo ? d : m), bigD[0]);
+    out.bigDoseMg = Math.round(max.lo);
     const now2 = max.lo >= 2 * topD;
     const fact = 'That dose is bigger than one dose for ' + wtTxt + ': ' + Math.round(max.lo) + ' mg, where the most for one dose is ' + topD + ' mg.' + (bigD.length > 1 ? ' ' + bigD.length + ' doses in the last 24 hours were that big.' : '');
     fire('R0b', now2 ? 'now' : 'red', [fact + ' Call your doctor ' + (now2 ? 'now' : 'today') + ' and tell them the amount and the bottle. Give no more paracetamol until they say.' + (now2 ? PARA_ER : '')], { stop: true, fact });
@@ -968,9 +971,11 @@ function _paraLoadFrom(o) {
   out.giQ = 'Has ' + subj + ' vomited, retched, or had tummy pain?';
   out.giWatch = 'Call your doctor now if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow, or ' + subj + ' won\'t eat and won\'t drink, even breastfeeds or milk.' + PARA_ER;
   const r2now = (out.rules.some(r => r.rule === 'R2' && r.tier === 'now') || anz48) && !anz24;   // the 48 h figure when the 48 h rule drives
-  if (last) out.tellText = r2now
-    ? 'Tell them: ' + in48.length + ' doses, ' + _paraMgText(lo48, hi48) + ' in the last 48 hours. The last at ' + when(last.t) + '.'
+  const last48 = in48.length ? in48[in48.length - 1] : null;   // the 48 h rules can fire with every dose over 24 h old (Kael V-K-291-18)
+  if (r2now ? last48 : last) out.tellText = r2now
+    ? 'Tell them: ' + in48.length + ' doses, ' + _paraMgText(lo48, hi48) + ' in the last 48 hours. The last at ' + when(last48.t) + '.'
     : 'Tell them: ' + in24.length + (in24.length === 1 ? ' dose, ' : ' doses, ') + _paraMgText(lo24, hi24) + ' in the last 24 hours. The last at ' + when(last.t) + '.';
+  if (out.tellText && out.bigDoseMg) out.tellText += ' The biggest dose was ' + out.bigDoseMg + '\u00a0mg: have the bottle with you.';   // the doctor needs the dose and the strength (Maren D20)
   return _paraFinish(out, now, when);
 }
 // One block, one "until" (Kael V-K-291-4): when a rule at red or above (other than R0) fires, R0 keeps only its
@@ -1040,9 +1045,9 @@ function getParacetamolNextDose(nowMs) {
 // The leftover-risk block (spec §5.3): the rules that fired, highest tier first, folded into one block. Calm
 // reads as a plain note. where: 'fever' (everything) or 'gi' (the vomiting / diarrhoea cards: R2 only).
 const PARA_TIER_TITLE = { now: 'Call your doctor now', red: 'Call your doctor today', amber: 'Check before the next dose' };
-// The rules one surface shows, in its order (the emergency lead, then tier), with the fallback said once: on the
-// first call-now line, unless the emergency department already leads (Architect, 2026-11-04). Each surface —
-// the fever card, a GI card, Home's alert — calls this on its own subset, so none loses the fallback.
+// The rules one surface shows, in its order (the emergency lead, then tier). It also re-adds the fallback once on
+// the first call-now line, for the engine-level text the tests read; the rendered surfaces (the block's lead,
+// Home's body) say the fallback themselves and the Why strips it (Kael V-K-291-D25).
 function _paraSurface(rules) {
   const list = (rules || []).slice().sort((a, b) => (b.er ? 1 : 0) - (a.er ? 1 : 0) || PARA_TIER[b.tier] - PARA_TIER[a.tier]).map(r => Object.assign({}, r, { lines: r.lines.slice() }));
   if (!list.some(r => r.er)) { const c = list.find(r => r.callNow && r.lines.length); if (c) c.lines[c.lines.length - 1] += PARA_ER; }
@@ -1054,15 +1059,15 @@ function _paraWhy(r) {
   const unread = /^We can'?t tell|^We couldn't read/.test(l0);
   switch (r.rule) {
     case 'ANZ': return { t: 'Far more than is safe' };
-    case 'R0': return { t: /^That's \d+ doses/.test(r.fact || '') ? 'More than 4 doses in 24 hours' : 'Two doses less than 4 h apart', act: r.tier === 'amber' && r.lines.length && r.lines[0] !== r.fact ? 'If you haven\'t yet, call your doctor today.' : '' };
+    case 'R0': return { t: /^That's \d+ doses/.test(r.fact || '') ? 'More than 4 doses in 24 hours' : /logged twice/.test(r.fact || '') ? 'Two doses logged at the same time' : 'Two doses less than 4 h apart', act: r.tier === 'amber' && r.lines.length && r.lines[0] !== r.fact ? 'If you haven\'t yet, call your doctor today.' : '' };
     case 'R0b': return { t: r.weightQ ? 'One dose may be too big' : 'One dose bigger than the most for one dose' };
     case 'R1': return unread ? { t: 'Some dose amounts unclear', act: 'Check the bottle\'s label, then tap each dose above and write the mg given.' }
       : { t: r.tier === 'now' ? 'More than is safe in 24 hours' : r.tier === 'red' ? 'May be more than is safe in 24 hours' : r.weightQ ? 'May be over the daily most' : 'Over the usual most for a day' };
     case 'R2': return unread ? { t: 'Some dose amounts unclear', act: 'Check the bottle\'s label, then tap each dose above and write the mg given.' }
       : { t: r.weightQ ? 'May be over the daily most for 2 days' : 'Over the daily most for 2 days' };
-    case 'R2b': { const m = l0.match(/the (\w+) day/); return { t: (m ? m[1] : '4th') + ' day of paracetamol', act: 'Speak to a doctor or pharmacist before giving more.' }; }
+    case 'R2b': { const m = l0.match(/the (\w+) day/); return { t: (m ? m[1] : '4th') + ' day of paracetamol', gate: 'speak to a doctor or pharmacist' }; }
     case 'R3': return { t: 'Weighed before the illness', act: l0 };
-    case 'MED': return { t: 'Also on the medicines list', act: l0 };
+    case 'MED': return { t: 'Also on the medicines list', act: r.fact || l0, gate: 'ask your doctor or chemist' };
     case 'NOWT': return { t: 'No weight to check against', act: 'Add a weight so the day\'s total can be checked.' };
     default: return { t: '' };
   }
@@ -1071,6 +1076,30 @@ function _paraWhy(r) {
 function _paraLeadBold(text, lead) {
   const t = String(text || '');
   return t.indexOf(lead) === 0 ? '<strong>' + escHtml(lead) + '</strong>' + escHtml(t.slice(lead.length)) : escHtml(t);
+}
+// The one instruction (6-second lead). A rule that gates the next dose on asking someone folds into it, so the
+// time is never read without its condition (Vela V-V-291-19): "…until 7:24 pm, and speak to a doctor or
+// pharmacist first." / "Speak to a doctor or pharmacist before the next dose."
+function _paraDoLine(load, live, where) {
+  const er = live.some(r => r.er), stop = live.some(r => r.stop);
+  if (er) return 'Give no more paracetamol. Take the bottle with you.';
+  if (stop) return 'Give no more paracetamol until your doctor says.';
+  const until = load.untilText && where !== 'gi' ? load.untilText.replace(/\.$/, '') : '';
+  // Red with no stop and no time (R1 red: unsafe only on the earlier weigh-in) still holds the next dose (Kael V-K-291-19).
+  if (!until && live.some(r => PARA_TIER[r.tier] >= PARA_TIER.red)) return live.some(r => r.weightQ)
+    ? 'Give no more paracetamol until you\'ve spoken to your doctor or confirmed the weight.'
+    : 'Give no more paracetamol until you\'ve spoken to your doctor.';
+  const gates = [];
+  live.forEach(r => { const g = _paraWhy(r).gate; if (g && gates.indexOf(g) < 0) gates.push(g); });
+  if (gates.length) return until ? until + ', and ' + gates.join(' and ') + ' first.' : gates.join(' and ').replace(/^./, c => c.toUpperCase()) + ' before the next dose.';
+  return until ? until + '.' : '';
+}
+// The block carries the next-dose time itself: the later of the 4-hour gap / 4-in-24 countdown and any rule's
+// time, so a question never hides the countdown (Maren V-M-291-14; Vela V-V-291-13 — one time, the later).
+function _paraWithGap(load, cd) {
+  if (!load || !cd || cd.available || !Number.isFinite(cd.nextAt) || load.stop) return load;
+  if (Number.isFinite(load.until) && load.until >= cd.nextAt) return load;
+  return Object.assign({}, load, { until: cd.nextAt, untilText: 'Give no more paracetamol until ' + _paraWhen(cd.nextAt) + '.' });
 }
 let _feLoadWhyOpen = {};   // the "Why" row stays as the parent left it across re-renders, per surface
 function feLoadWhy(btn) {
@@ -1084,9 +1113,9 @@ function feLoadWhy(btn) {
 // The load block, to the 6-second rule (DESIGN_PRINCIPLES §11; Architect, 2026-11-04): the action as the title,
 // one instruction, "Tell them" when a call is needed, then only what asks the parent to act (a question with its
 // chips, the weight retype, a button); every reason folds into one "Why" row. The full rule text lives there.
-function _paraLoadHtml(load, where) {
+function _paraLoadHtml(load, where, card) {
   if (!load || load.none) return '';
-  const rules = _paraSurface((load.rules || []).filter(r => where !== 'gi' || r.rule === 'R2' || r.er));   // the GI cards carry the emergency lead too (Maren V-M-291-11)
+  const rules = _paraSurface((load.rules || []).filter(r => where !== 'gi' || r.rule === 'R2' || r.er || r.tier === 'now'));   // and any call-now rule (Maren V-M-291-11, D18)   // the GI cards carry the emergency lead too (Maren V-M-291-11)
   if (!rules.length) return '';
   const tier = rules.reduce((t, r) => PARA_TIER[r.tier] > PARA_TIER[t] ? r.tier : t, 'calm');
   if (tier === 'calm') {
@@ -1099,9 +1128,7 @@ function _paraLoadHtml(load, where) {
   let html = '<div class="fe-load fe-load--' + tier + '" role="' + (PARA_TIER[tier] >= PARA_TIER.red ? 'alert' : 'status') + '">';
   html += '<div class="fe-load-title">' + zi('warn') + ' ' + escHtml(title) + '</div>';
   // 1. The one instruction.
-  const doLine = er ? 'Give no more paracetamol. Take the bottle with you.'
-    : stop ? 'Give no more paracetamol until your doctor says.'
-    : (load.untilText && where === 'fever') ? load.untilText : '';
+  const doLine = _paraDoLine(load, live, where);
   if (doLine) html += '<div class="fe-load-do">' + escHtml(doLine) + '</div>';
   // 2. What to tell them, when a call is the action; the fallback once, when the call is now.
   if (PARA_TIER[tier] >= PARA_TIER.red && load.tellText) html += '<div class="fe-load-tell">' + _paraLeadBold(load.tellText, 'Tell them:') + '</div>';
@@ -1128,22 +1155,32 @@ function _paraLoadHtml(load, where) {
     html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="switchTab" data-arg="growth">Fix the weight or add a weight</button></div>';
   }
   if (live.some(r => r.giChips) && load.giQ) {
-    html += '<div class="fe-load-q">' + escHtml(load.giQ) + '</div>';
-    if (getActiveFeverEpisode()) html += '<div class="fe-action-chips fe-load-chips">' + PARA_GI_ACTIONS.map(a => '<button type="button" class="fe-action-chip" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</button>').join('') + '</div>';
-    html += '<div class="fe-load-watch">' + _paraLeadBold(load.giWatch, 'Call your doctor now') + '</div>';
+    const chips = !!getActiveFeverEpisode();
+    html += '<div class="fe-load-q">' + escHtml(load.giQ + (chips ? '' : PARA_GI_YES)) + '</div>';   // no chips to tap → say what "yes" means (Maren V-M-291-15)
+    if (chips) html += '<div class="fe-action-chips fe-load-chips">' + PARA_GI_ACTIONS.map(a => '<button type="button" class="fe-action-chip" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</button>').join('') + '</div>';
+    const watch = (tier === 'now' && !er && load.giWatch.endsWith(PARA_ER)) ? load.giWatch.slice(0, -PARA_ER.length) : load.giWatch;   // one fallback per block (Vela V-V-291-21)
+    html += '<div class="fe-load-watch">' + _paraLeadBold(watch, 'Call your doctor now') + '</div>';
   }
   acts.forEach(a => { html += '<div class="fe-load-tell">' + escHtml(a) + '</div>'; });
   if (live.some(r => r.addWeight)) html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-soft btn-soft--peach" data-action="switchTab" data-arg="growth">Add a weight</button></div>';
   // 4. Why: the reasons, folded, with a teaser.
   const teasers = [];
-  live.forEach(r => { const t = _paraWhy(r).t; if (t && teasers.indexOf(t) < 0) teasers.push(t); });
+  const shown = r => (r.giChips || r.weightQ || _paraWhy(r).gate) ? 0 : 1;
+  live.slice().sort((a, b) => shown(a) - shown(b)).forEach(r => { const t = _paraWhy(r).t; if (t && teasers.indexOf(t) < 0) teasers.push(t); });
+  if (teasers.length > 2) teasers.splice(2, teasers.length - 2, '+' + (teasers.length - 2) + ' more');
   let body = '';
-  live.forEach(r => r.lines.forEach(l => { body += '<p class="fe-load-text">' + escHtml(l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l) + '</p>'; }));   // the fallback is in the lead
+  const whyLine = (r, l) => {
+    let t = l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l;   // the fallback is in the lead
+    if (r.rule === 'R0') t = t.replace(/ (?:If you haven't yet, call|Call) your doctor today and tell them:.*$/, '');   // "Tell them" is in the lead (Vela V-V-291-20)
+    return t;
+  };
+  live.forEach(r => r.lines.forEach(l => { body += '<p class="fe-load-text">' + escHtml(whyLine(r, l)) + '</p>'; }));
   if (where === 'fever' && load.extra) body += '<p class="fe-load-text">' + escHtml(load.extra) + '</p>';
-  const open = !!_feLoadWhyOpen[where];
-  html += '<div class="fe-load-prow' + (open ? ' open' : '') + '" data-where="' + escAttr(where) + '">'
+  const whyKey = where + (card ? '-' + card : '');   // per card: the vomiting and diarrhoea cards fold apart (Vela V-V-291-23)
+  const open = !!_feLoadWhyOpen[whyKey];
+  html += '<div class="fe-load-prow' + (open ? ' open' : '') + '" data-where="' + escAttr(whyKey) + '">'
     + '<button type="button" class="fe-load-prow-head" data-action="feLoadWhy" aria-expanded="' + (open ? 'true' : 'false') + '">'
-    + '<span class="fe-load-prow-txt"><span class="fe-load-prow-t">Why</span><span class="fe-load-prow-d">' + escHtml(teasers.slice(0, 2).join(' · ')) + '</span></span>'
+    + '<span class="fe-load-prow-txt"><span class="fe-load-prow-t">Why</span><span class="fe-load-prow-d">' + escHtml(teasers.join(' · ')) + '</span></span>'
     + '<span class="fe-load-prow-chev">' + zi('arrow-right') + '</span></button>'
     + '<div class="fe-load-prow-body">' + body + '</div></div>';
   html += '</div>';
@@ -1182,16 +1219,15 @@ function feLogGiSign(label) {
 // Home's alert says what the block leads with: the instruction, "Tell them", the fallback when the call is now
 // (the hold time travels with it — Vela V-V-291-12; one fallback — Kael V-K-291-16).
 function _paraHomeBody(load, top, er) {
-  const parts = [];
-  if (er) parts.push('Give no more paracetamol. Take the bottle with you.');
-  else if (load.stop) parts.push('Give no more paracetamol until your doctor says.');
-  else if (load.untilText) parts.push(load.untilText);
+  const live = (load.rules || []).filter(r => r.tier !== 'calm');
+  const parts = [_paraDoLine(load, live, 'home')];
   if (PARA_TIER[load.tier] >= PARA_TIER.red && load.tellText) parts.push(load.tellText);
   if (load.tier === 'now' && !er) parts.push(PARA_ER.trim());
-  if (!parts.length && top) {
-    if (top.weightQ && load.wq) parts.push(load.wq.q + ' Check before the next dose.');
-    else if (top.giChips && load.giQ) parts.push(load.giQ);
-    else parts.push(_paraWhy(top).act || _paraWhy(top).t || '');
+  if (load.tier === 'amber') {
+    // At amber the question or check travels with the time: Home's title never says what to check (Vela V-V-291-19).
+    if (live.some(r => r.giChips) && load.giQ) parts.push(load.giQ + PARA_GI_YES);
+    else if (live.some(r => r.weightQ) && load.wq) parts.push(load.wq.q + ' Check before the next dose.');
+    else if (!parts[0] && top) parts.push(_paraWhy(top).act || _paraWhy(top).t || '');
   }
   return parts.filter(Boolean).join(' ');
 }
@@ -1212,7 +1248,7 @@ function computeParacetamolLoadAlerts() {
     title: er ? 'Paracetamol: go to the emergency department now' : load.tier === 'now' ? 'Paracetamol: call your doctor now' : load.tier === 'red' ? 'Paracetamol: call your doctor today' : 'Paracetamol: check before the next dose',
     // The hold time travels with it: Home hides the dose-available alert on a hold, so this is the only place on
     // Home that says how long to wait (Vela V-V-291-12).
-    body: _paraHomeBody(load, top, er),
+    body: _paraHomeBody(_paraWithGap(load, (typeof getFeverDoseCountdown === 'function') ? getFeverDoseCountdown() : null), top, er),
     tab: 'medical'
   });
   return alerts;
@@ -1410,7 +1446,8 @@ function renderFeverEpisodeCard() {
         ? 'Last paracetamol at ' + _feverTimeShort(new Date(doseCD.lastTime).toISOString()) + ', in ' + pron('poss') + ' earlier fever. '
         : '';
       // The load block below leads with the instruction (6-second rule, Architect 2026-11-04): no second line here.
-      const blockLeads = paraNext.verdict === 'hold' || paraNext.verdict === 'check' || (paraNext.verdict === 'wait' && paraNext.load && paraNext.load.untilText && PARA_TIER[paraNext.load.tier] >= PARA_TIER.amber);
+      // Only when a block renders (amber or above); an engine throw (load null) keeps the countdown (Maren V-M-291-14).
+      const blockLeads = !!(paraNext.load && PARA_TIER[paraNext.load.tier] >= PARA_TIER.amber) && (paraNext.verdict === 'hold' || paraNext.verdict === 'check' || (paraNext.verdict === 'wait' && paraNext.load.untilText));
       if (blockLeads) {
         if (from) html += '<div class="fe-dose-next fe-dose-next--hold">' + from.trim() + '</div>';
       } else if (doseCD.available && paraNext.verdict === 'wait' && paraNext.load && paraNext.load.untilText) {
@@ -1434,7 +1471,7 @@ function renderFeverEpisodeCard() {
   if (ep.doses.length === 0) {
     html += '<div class="fe-dose-row fe-dose-empty">No medicine logged since this fever started</div>';
   }
-  html += _paraLoadHtml(paraNext.load, 'fever');
+  html += _paraLoadHtml(_paraWithGap(paraNext.load, doseCD), 'fever');
   // Paracetamol: which bottle, then the dose for HER weight — named, dated, sanity-checked (Maren V-M-282g-6).
   // A weight the check flagged leads the section (#161 §4.4).
   if (paraChip.state === 'confirm') html += _paraConfirmHtml(paraChip);
@@ -2465,7 +2502,7 @@ function renderDiarrhoeaEpisodeCard() {
   }
 
   // Guidance
-  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi'); } catch (e) {}   // R2 renders here too, above the guidance and the closing controls (#161 §5.4, Vela V-V-291-5)
+  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi', 'diarrhoea'); } catch (e) {}   // R2 renders here too, above the guidance and the closing controls (#161 §5.4, Vela V-V-291-5)
   html += '<div class="fe-section-title">Guidance</div>';
   html += '<div class="fe-guidance"><ul class="ep-list">';
   html += '<li>Continue breastfeeding — most important</li>';
@@ -2975,7 +3012,7 @@ function renderVomitingEpisodeCard() {
   }
 
   // Guidance
-  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi'); } catch (e) {}   // R2 renders here too, above the guidance and the closing controls (#161 §5.4, Vela V-V-291-5)
+  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi', 'vomiting'); } catch (e) {}   // R2 renders here too, above the guidance and the closing controls (#161 §5.4, Vela V-V-291-5)
   html += '<div class="fe-section-title">Guidance</div><div class="fe-guidance"><ul class="ep-list">';
   html += '<li>Keep ' + childNameHtml() + ' upright for 20–30 minutes after feeds</li>';
   html += '<li>Offer small, frequent feeds — not large volumes</li>';

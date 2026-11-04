@@ -300,7 +300,7 @@ test('an amber rule keeps "safe to give" off: the 4th day of paracetamol asks to
   expect(r).toEqual({ verdict: 'check', safe: false });
   await expect(card).not.toContainText('can be given now');
   await expect(card.locator('.fe-load--amber .fe-load-title')).toContainText('Check before the next dose');
-  await expect(card.locator('.fe-load--amber')).toContainText('Speak to a doctor or pharmacist before giving more.');
+  await expect(card.locator('.fe-load--amber')).toContainText('Speak to a doctor or pharmacist before the next dose.');
 });
 
 test('a weight the chip rejects is no weight for the totals (V-K-291-12, V-M-291-6), and the medicines list is read by brand (V-K-291-10)', async ({ page }) => {
@@ -435,4 +435,45 @@ test('"logged twice" only for the same minute; two carers minutes apart keep bot
   expect(same.text).toContain('If one dose was logged twice, delete the extra. If two people each gave a dose, keep both.');
   const apart = await load(page, { doses: [[3, 140], [3 - 10 / 60, 140]] });
   expect(apart.text).not.toContain('logged twice');
+});
+
+test('a question never hides the next-dose time; a gate folds into the instruction; Home carries both (Maren V-M-291-14, Vela V-V-291-19)', async ({ page }) => {
+  // The 4th day of paracetamol, the last dose an hour ago: the block leads with the 4-hour time AND the gate.
+  const card = await seed(page, [[40, 9.2], [3, 9.5]], [[73, '1.0 ml'], [49, '1.0 ml'], [25, '1.0 ml'], [1, '1.0 ml']], { confirmLatest: true });
+  const doLine = card.locator('.fe-load--amber .fe-load-do');
+  await expect(doLine).toContainText('Give no more paracetamol until');
+  await expect(doLine).toContainText(', and speak to a doctor or pharmacist first.');
+  const body = await page.evaluate(() => (window as any).computeParacetamolLoadAlerts()[0].body);
+  expect(body).toContain('Give no more paracetamol until');
+  expect(body).toContain('speak to a doctor or pharmacist first');
+});
+
+test('R2\'s question says what "yes" means where no chips can be tapped (Maren V-M-291-15)', async ({ page }) => {
+  await boot(page);
+  const html = await page.evaluate(() => {
+    const w: any = window;
+    const load = { rules: [{ rule: 'R2', tier: 'amber', lines: ['x'], giChips: true }], tier: 'amber', giQ: 'Has she vomited, retched, or had tummy pain?', giWatch: 'Call your doctor now if y.' };
+    (0, eval)('_feverEpisodes = []');
+    return w._paraLoadHtml(load, 'gi', 'diarrhoea');
+  });
+  expect(html).toContain('Has she vomited, retched, or had tummy pain? If so, call your doctor now.');
+  expect(html).not.toContain('feLogGiSign');
+});
+
+test('the 48 h rules keep "Tell them" when every dose is over 24 h old; R1 red alone still holds the dose (Kael V-K-291-18/-19)', async ({ page }) => {
+  await boot(page);
+  const d: number[][] = []; for (let h = 47; h >= 25; h -= 2) d.push([h, 300]);
+  const anz48 = await load(page, { doses: d });
+  expect(anz48.rules).toContain('ANZ:now');
+  expect(anz48.raw.tellText).toContain('in the last 48 hours');
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const now = Date.UTC(2026, 10, 10, 12);
+    const doses = [20, 14, 8, 2].map(h => ({ t: now - h * 3600000, lo: 140, hi: 140, readable: true, form: null, medicine: 'Paracetamol' }));
+    const ld = w._paraLoadFrom({ nowMs: now, doses, wDose: 9.5, wRef: { w: 7.4, src: { date: '2026-10-01', wt: 7.2 } }, medName: null, gi: false, illnessStart: null, latestWtDate: null, subj: 'she', obj: 'her', pos: 'her', fmtTime: () => 'T', fmtDate: () => 'D' });
+    return { rules: ld.rules.map((x: any) => x.rule + ':' + x.tier), html: w._paraLoadHtml(ld, 'fever'), home: w._paraHomeBody(ld, w._paraSurface(ld.rules)[0], false) };
+  });
+  expect(r.rules).toContain('R1:red');
+  expect(r.html).toContain('Give no more paracetamol until you\'ve spoken to your doctor or confirmed the weight.');
+  expect(r.home).toContain('Give no more paracetamol until you\'ve spoken to your doctor');
 });

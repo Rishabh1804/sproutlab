@@ -1814,6 +1814,13 @@ Found while running the full suite for #289 on 2026-11-04. The full run had 59 f
   - The wait state can show the same time twice (countdown line and the until line); add a self-test that they agree. PC-10. (V-V-291-9)
   - Amber's "Snooze 3d" outlasts the 72 h window; R2 amber on a GI card with no active fever asks the question but shows no chips. (V-V-291-11)
 - **Foundation (Carina):** no re-render when a dose ages out of the window (stricter until the next render; could hang off the fever countdown interval). (V-CA-291-10)
+- **Round 3 (the 6-second redesign), open:**
+  - "Check other medicines' labels…" folds into Why at amber and above (open when calm). Needs an Architect / Maren ruling on whether it belongs in the lead. PC-7. (Kael V-K-291-D23)
+  - The same-minute "delete the extra / keep both" instruction lives in Why; the teaser names it. PC-7. (Kael D24)
+  - R2's question asks about vomiting, but there is no "Vomited" chip (vomits are logged on the vomiting card), and "off food" isn't in the question. PC-10. (Ceres V-C-291-9; Kael / Maren pair-note)
+  - The prose bar (won't eat AND won't drink) vs the "Retching or off food" chip, which escalates on its own. PC-10. (Ceres V-C-291-5, Maren D18)
+  - The diarrhoea Diet banner has no won't-drink line. PC-5. (Ceres V-C-291-7)
+  - `from.trim()` in the fever-card countdown line is an internal, unescaped string (pre-existing). HR-4 hygiene. (Vela)
 - **Pre-existing, seen during the round:** `alert-routing.spec.ts` "+N more in Insights" and "gotoCard expands the target card" fail on main as well as on this branch. PC-6.
 
 #### P2 — Deferred from the PR #267 Governor round (illness edit + timezone)
