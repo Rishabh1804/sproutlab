@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // audit-who-wfa-v1.mjs — PC-9 cited-registry gate (spec docs/specs/paracetamol-weight-check-v1.md §4.1).
 // WHO_WFA_LMS (data.js) must be exactly the L, M, S columns of the committed WHO weight-for-age files,
-// and WHO_GROWTH's weight columns (0–24 m) must sit on the same curve. Fail-closed: a missing file, an
+// and WHO_GROWTH's weight columns (0–24 m) must equal the file's P columns exactly. Fail-closed: a missing file, an
 // unreadable sheet, a header that is not what we expect, or any mismatch fails the build.
 //   1. Re-extract Month / L / M / S / P3 / P15 / P50 / P85 / P97 from docs/research/who-growth/
 //      tab_wfa_{girls,boys}_p_0_5.xlsx (dependency-free: zip central directory + zlib + sheet XML).

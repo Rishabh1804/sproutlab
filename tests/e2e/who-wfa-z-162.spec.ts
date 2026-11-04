@@ -136,6 +136,15 @@ test('band edges at 14 months (girl): exact lower flag; interim ceiling keeps th
   expect(r).toEqual({ lo41: false, lo42: true, hi160: true, hi161: false, hi172: false, exact172: true });
 });
 
+test('the interim ceiling stops at 24 months: day 730 applies it, day 731 uses the exact flag (Cipher N1)', async ({ page }) => {
+  await boot(page);
+  await child(page, 730, 'f');
+  const at730 = await page.evaluate(() => { const w = window as any; return w.paraWeightPlausible(20.5, w.toDateStr(new Date())); });
+  await child(page, 731, 'f');
+  const at731 = await page.evaluate(() => { const w = window as any; return w.paraWeightPlausible(20.5, w.toDateStr(new Date())); });
+  expect([at730, at731]).toEqual([false, true]);   // girls' upper bound 19.73 → 21.35 kg across the seam
+});
+
 test('past 24 months the interim ceiling no longer applies (the old table clamped there — #162)', async ({ page }) => {
   await boot(page);
   await child(page, 913, 'f');   // ~30 months: old clamped ceiling ≈ 19.8 kg, exact +5 flag well above it

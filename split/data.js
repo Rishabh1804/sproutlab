@@ -1932,8 +1932,8 @@ const WHO_GROWTH = {
 // downloaded 2026-10-30 (re-fetched 2026-11-04, unchanged). Committed at docs/research/who-growth/.
 // Each row is [L, M, S], copied from the file by a script, never typed; split/audit-who-wfa-v1.mjs
 // re-reads the committed xlsx and fails the build on any difference, recomputes the P columns from
-// L/M/S, and binds WHO_GROWTH's weight columns (0–24 m) to this table (±0.05 kg; the file rounds
-// to 0.1). Read only through whoWfaZ() (core.js). Spec: docs/specs/paracetamol-weight-check-v1.md §4.1.
+// L/M/S, and binds WHO_GROWTH's weight columns (0–24 m) to the file's P columns exactly (WHO's
+// published 0.1 kg values). Read only through whoWfaZ() (core.js). Spec: docs/specs/paracetamol-weight-check-v1.md §4.1.
 const WHO_WFA_LMS = {
   f: [
     [0.3809, 3.2322, 0.14171],

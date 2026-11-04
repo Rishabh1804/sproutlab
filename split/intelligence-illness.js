@@ -86,8 +86,9 @@ function paraWeightPlausible(weightKg, dateStr) {
 // V-M-287-3). Until the weight-jump confirm guards that window, a weigh-in at 24 months or under must
 // ALSO pass the old ceiling: approximate z from the 0–24 m table, (P97 − P50) / 1.881 per SD, ≤ +5.
 // Upper side only (the exact lower flag is already the stricter one); uncited approximation, kept
-// as a ceiling so PR 1 never widens what is dosed. Past 24 months the old table clamped (#162), so it
-// does not apply there.
+// as a ceiling so PR 1 never widens what is dosed at ≤ 24 months. Past 24 months the old table clamped
+// (#162); there the exact flag admits more by design (spec §4.1, decision E) — the pre-#161 typo
+// exposure that PR 4 closes. The build warns from 2027-08-01 while this function still exists.
 function _paraInterimCeilingOk(weightKg, mo) {
   if (!(mo <= 24)) return true;
   const r = getInterpolatedWHO(mo);
