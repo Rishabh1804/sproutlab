@@ -194,7 +194,7 @@ test('the card: a hold says stop and shows the red block; Home raises the load a
   expect(r.load[0].body).toMatch(/^Give no more paracetamol until .*Tell them: 2 doses/);
   expect(r.fever).not.toContain('safe to give');
   await expect(card.locator('.fe-para-dose')).toHaveCount(0);
-  await expect(card).toContainText('The dose is hidden while the box above says to stop');
+  await expect(card).toContainText('The dose is hidden while the box above says to hold it');
   // What Home actually shows, not just what the producer returns (Carina V-CA-291-1).
   const home = await page.evaluate(() => { const w: any = window; w.switchTab('home'); w.renderHomeContextAlerts(); return document.body.innerText; });
   expect(home).toContain('Paracetamol: call your doctor today');
@@ -516,4 +516,19 @@ test('at red the "kg is right" retype is not offered; at amber it is (Maren\'s r
   expect(r.red).toContain('Fix the weight or add a weight');
   expect(r.red).not.toContain('or weigh her again');   // no time shown → doctor-only, in Why too
   expect(r.amber).toContain('feLoadRetype');
+});
+
+test('Home\'s "if so, call now" line carries the fallback once; the card never says "give it" under a hold (Cipher A1/A2)', async ({ page }) => {
+  const card = await seed(page, [[40, 9.2], [3, 9.5]], [[20, '1.8 ml'], [14, '1.8 ml'], [8, '1.8 ml'], [2, '1.8 ml']], { confirmLatest: true });
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const amber = { rules: [{ rule: 'R2', tier: 'amber', lines: ['x'], giChips: true }], tier: 'amber', giQ: 'Has she vomited, retched, or had tummy pain?' };
+    const red = { rules: [{ rule: 'R1', tier: 'red', lines: ['y'] }, { rule: 'R2', tier: 'amber', lines: ['x'], giChips: true }], tier: 'red', giQ: 'Has she vomited, retched, or had tummy pain?' };
+    return { verdict: w.getParacetamolNextDose().verdict, a: w._paraHomeBody(amber, amber.rules[0], false), b: w._paraHomeBody(red, red.rules[0], false) };
+  });
+  const ER = 'go to the emergency department';
+  expect(r.a.split(ER).length - 1).toBe(1);
+  expect(r.b.split(ER).length - 1).toBe(1);
+  expect(r.verdict).toBe('hold');
+  await expect(card).not.toContainText('Give it if');
 });

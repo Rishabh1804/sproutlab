@@ -1240,10 +1240,10 @@ function _paraHomeBody(load, top, er) {
   if (PARA_TIER[load.tier] >= PARA_TIER.red && load.tellText) parts.push(load.tellText);
   if (load.tier === 'now' && !er) parts.push(PARA_ER.trim());
   // R2's question turns "today" into "now": it travels at red too (Maren D24).
-  if (load.tier === 'red' && live.some(r => r.giChips) && load.giQ) parts.push(load.giQ + PARA_GI_YES);
+  if (load.tier === 'red' && live.some(r => r.giChips) && load.giQ) parts.push(load.giQ + PARA_GI_YES + PARA_ER);   // a call-now line ends with the fallback (Cipher A1)
   if (load.tier === 'amber') {
     // At amber the question or check travels with the time: Home's title never says what to check (Vela V-V-291-19).
-    if (live.some(r => r.giChips) && load.giQ) parts.push(load.giQ + PARA_GI_YES);
+    if (live.some(r => r.giChips) && load.giQ) parts.push(load.giQ + PARA_GI_YES + PARA_ER);   // Cipher A1
     else if (live.some(r => r.weightQ) && load.wq) parts.push(load.wq.q);   // the title already says check (Vela V-V-291-27)
     else if (!parts[0] && top) parts.push(_paraWhy(top).act || _paraWhy(top).t || '');
   }
@@ -1506,7 +1506,7 @@ function renderFeverEpisodeCard() {
   }
   if (paraChip.state === 'ok' && paraNext && paraNext.verdict === 'hold') {
     // The chip never shows a dose under a stop (spec §5.4: the card reads only the verdict — Kael V-K-291-7).
-    html += '<div class="fe-para-note">The dose is hidden while the box above says to stop. ' + ((paraNext.load && (paraNext.load.rules || []).some(r => r.er)) ? 'Follow the box above first.' : 'Speak to your doctor first.') + '</div>';
+    html += '<div class="fe-para-note">The dose is hidden while the box above says to hold it. ' + ((paraNext.load && paraNext.load.stop && !(paraNext.load.rules || []).some(r => r.er)) ? 'Speak to your doctor first.' : 'Follow the box above first.') + '</div>';   // one wording with the block (Cipher F7)
   } else if (paraChip.state === 'ok') {
     if (paraNext && paraNext.verdict === 'check') html += '<div class="fe-para-note">Check the box above before giving this.</div>';
     // mg first, so the line can be checked against any label or prescription (V-M-284-1c).
@@ -1538,7 +1538,8 @@ function renderFeverEpisodeCard() {
     // A state with no branch never shows a dose (fail closed).
     html += '<div class="fe-para-note">The dose can\'t be worked out here. Ask your doctor or chemist for the dose.</div>';
   }
-  html += '<div class="fe-para-note t-light">Give it if ' + pron('subj') + ' seems uncomfortable or your doctor advised it, not just to lower the number. Your doctor\'s dose comes first. Measure with the dropper or an oral syringe, never a kitchen spoon. At least 4 h apart, no more than 4 doses in 24 h.</div>';
+  // Never "give it" under a hold: the card reads the verdict (spec §5.4; Cipher A2).
+  if (paraNext.verdict !== 'hold') html += '<div class="fe-para-note t-light">Give it if ' + pron('subj') + ' seems uncomfortable or your doctor advised it, not just to lower the number. Your doctor\'s dose comes first. Measure with the dropper or an oral syringe, never a kitchen spoon. At least 4 h apart, no more than 4 doses in 24 h.</div>';
   html += '<div class="fe-para-log"><span class="fe-action-chip" data-action="feLogDosePrompt">+ Log paracetamol dose</span></div>';
 
   // Actions section

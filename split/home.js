@@ -8842,7 +8842,7 @@ function applyCrossSynthesis(alerts) {
       // Create synthesized alert
       const highestSev = rule.ids.reduce((best, id) => {
         const a = alerts.find(al => al.id === id);
-        return a && (SEV_ORDER[a.severity] || 2) < (SEV_ORDER[best] || 2) ? a.severity : best;
+        return a && (SEV_ORDER[a.severity] ?? 2) < (SEV_ORDER[best] ?? 2) ? a.severity : best;   // Cipher A3
       }, rule.severity || 'watch');
 
       const primaryAlert = alerts.find(a => a.id === rule.ids[0]);
@@ -9559,7 +9559,7 @@ function computeAlerts() {
   }
 
   // ── Sort by severity (action → watch → info → positive) ──
-  alerts.sort((a, b) => (SEV_ORDER[a.severity] || 3) - (SEV_ORDER[b.severity] || 3));
+  alerts.sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3));   // ?? — action is 0, which || read as missing (Cipher A3)
 
   // ── Cross-alert synthesis ──
   const warningAlerts = alerts.filter(a => a.severity !== 'positive');
