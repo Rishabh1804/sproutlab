@@ -1742,6 +1742,19 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Sequencing:** Stability sub-phase carryforward item.
 - **Files:** `split/medical.js`, `split/sync.js`
 
+#### P2 — Raised on #161 PR 3 (#289), pre-existing, not fixed there
+- **`getActiveIllnessPosture` reads fields episodes never carry (PC-8 / PC-3; Vela V-V-289 pair-note to Kael).** `intelligence-illness.js` (the posture helper near the end of the file) reads `startDate`, `maxTemp` and `stoolCount`; episodes carry `startedAt` and `peakTemp`. The landing Care card's "Day N" never shows (always "Tap to view"), severity always takes its default, and the `maxTemp >= 39` threshold is in °C while readings are stored in °F. Fix: read `startedAt` / `peakTemp`, compare in °F, derive the stool count from `_deStoolsInLast24h`. Kael-primary.
+- **Diarrhoea stool chips store literal quotes (PC-2; Maren V-M-289-9).** The chips render `data-arg="'soft'"`, so `deLogStoolPrompt` stores `'soft'` with the quotes. #289 strips them in the reopen rule, but the "improving" checks still never fire for chip-logged stools. Fix: drop the quotes in the chip markup and normalise stored values on read.
+- **99.0 °F starts / reopens a fever episode; the severity ladder calls a fever only from 99.1 °F (PC-9; Kael V-K-289-11).** `FE_FEVER_START_F = 99`. Consequence ruling owed by Maren.
+- **Late entries that don't reopen an episode carry no "logged after it was marked resolved" label (Maren V-M-P3-8, accepted as DEFERRABLE in V-M-289-12).**
+
+#### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
+Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:
+- `alert-routing.spec.ts` ×2 — `.ca-view-all` never becomes visible.
+- `food-effects-v2-p1c-milk.spec.ts` ×10 — timeouts.
+- `smoke.spec.ts` 2a/2b/2c — a tab panel never gets `active`.
+- `vit-d3-tracking.spec.ts` ×3, `vit-d3-tracking-v2.spec.ts` ×1 — "Adherence 0/13" where the test expects N/3 from medStart; today's "Given at X" action item missing; a waitForFunction timeout. Likely date-dependent (Ziva is past 14 months; the Caldikind switch of 2026-09-24).
+
 #### P1 — Illness-episode sync receive re-renders from stale module arrays (all four keys)
 - **Status:** **Fixed in #161 PR 3** (spec `docs/specs/paracetamol-weight-check-v1.md` §5A). The four keys now carry `global:` (the receive reassigns `_feverEpisodes` etc. through `_epNormalize`), `mergeOnReceive` (one merge, `_epMergeLists`, on both phones, by entry id), `pushBackOnDiverge`, and the `render*History` renderers; every episodes write is a Firestore transaction; edit sheets re-find the live entry by id. Class PC-10 (one state, two answers). Tests: `tests/e2e/episode-sync-merge.spec.ts`.
 - **Symptom:** `SYNC_RENDER_DEPS` registers `feverEpisodes` / `diarrhoeaEpisodes` / `vomitingEpisodes` / `coldEpisodes` with `global: null` and dispatches the episode-card renderers on receive, but those renderers read module-level `let` arrays (`_feverEpisodes` etc.) hydrated once from localStorage at load, not the freshly written key. Device B resolves an episode; device A keeps showing "Active … Episode" until reload. Nothing throws (per-renderer try/catch), it silently no-ops on data.
