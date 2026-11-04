@@ -726,6 +726,26 @@ function renderDoctorPrep() {
   `;
 }
 
+// The weight-jump check, said plainly for the doctor: which way it was off, and whether the family
+// confirmed it — never a generic "or could not be compared" (Maren V-M-290-6).
+function _docWeightCheckNote(row) {
+  const ask = gvWeightNeedsConfirm(row);
+  if (ask) {
+    const p = ask.pair, prev = p && p.a ? ' the ' + _paraDateLabel(p.a.date) + ' weigh-in' : ' the earlier weigh-in';
+    const why = ask.variant === 'jump-up' ? 'more than usual above' + prev
+      : ask.variant === 'jump-down' ? 'more than usual below' + prev
+      : ask.variant === 'samedate' ? 'two different weights were recorded that day'
+      : ask.variant === 'implausible' ? 'an earlier weigh-in looks off'
+      : 'could not be compared with an earlier weigh-in';
+    return ' (' + why + '; not yet confirmed by the family)';
+  }
+  if (gvWeightConfirmedVariant(row) === 'jump-down') {
+    let jc = null; try { jc = gvWeightJumpCheck(); } catch (e) {}
+    const p = jc && jc.pair;
+    return p && p.a && Number.isFinite(p.changeG) ? ' (a drop, confirmed by the family: ' + (Math.abs(p.changeG) / 1000).toFixed(1) + ' kg less than on ' + _paraDateLabel(p.a.date) + ')' : ' (a drop, confirmed by the family)';
+  }
+  return '';
+}
 function showFullDoctorSummary() {
   const { months, days } = preciseAge();
 
@@ -746,7 +766,7 @@ function showFullDoctorSummary() {
     const wtP = calcPercentile(lwDoc.wt, wtWho.w3, wtWho.w50, wtWho.w97, wtWho.w15, wtWho.w85);
     lines.push('  Weight: ' + lwDoc.wt + ' kg (' + wtP.text + ' percentile, WHO ' + childKinWord() + ')');   // the chart named, for the doctor (V-M-281-1)
     // How old the weight is, and whether the family confirmed a weight the jump check flagged (#161 §4.4).
-    lines.push('    Weighed ' + _paraDateLabel(lwDoc.date) + (gvWeightNeedsConfirm(lwDoc) ? ' (not yet checked: it differs from the earlier weigh-in more than usual, or could not be compared)' : ''));
+    lines.push('    Weighed ' + _paraDateLabel(lwDoc.date) + _docWeightCheckNote(lwDoc));
   }
   if (lhDoc) {
     const htWho = getGrowthRef(ageMonthsAt(lhDoc.date));

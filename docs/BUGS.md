@@ -1755,6 +1755,17 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **The join flag can stay set when local and household already match (Cipher #289 nit 5).** The `[E]` / `[L]` / `[K4]` skips `continue` before `_epJoinDone`; harmless while the dirty ledger guards writes. End the join on those paths too.
 - **Inline `style=` on episode rows (HR-2, pre-existing; Cipher #289 nit 6).** `intelligence-illness.js` episode row renders (readings, doses, stools and vomit rows) still carry `style="font-size:…;color:…"`. Move to classes.
 
+#### P2 — Deferred from the PR #290 (#161 PR 4a) Governor round
+- **A confirm made before a different same-day weight arrived can still unlock the newest row if a sync merge keeps the old row on top (Maren V-M-290-13, PC-10).** Rare; decide whether a same-date conflict should be resolved only by deleting a row.
+- **Graded escalation for a confirmed drop (Maren V-M-290-12, PC-7; for 4b with R3):** ≥ 10 % of the earlier weight in ≤ 31 days → "Call your doctor now" (CDC MMWR 2003;52(RR-16)); 3–9 % → "today".
+- **Fever-guidance "Offer breast milk or fluids frequently" (intelligence-illness.js, pre-existing) has the under-6-month "fluids" problem (Ceres V-C-290-6, PC-7).** Same age split as the confirmed-loss line.
+- **A catch-up feeding line after a real drop with solids started (Ceres V-C-290-7).**
+- **No e2e test asserts the exact growth-vs-meals numbers after a confirmed weight (Ceres V-C-290-4, PC-6).**
+- **Emergency doc cards and the cross-insights aren't re-rendered when a confirm lands from the other phone (Carina pair-note to Vela).** They fail closed ("not yet confirmed").
+- **No gate checks that SYNC_KEYS, SYNC_RENDER_DEPS and the global accessors pair up for every synced key (Carina V-CA-290-5, PC-5).** Guard backlog, owner Carina.
+- **Sync tests not yet written (Carina V-CA-290-6 b/c/e):** a confirm-only partial flush on the shared growth doc; a malformed remote entry; the [L] guard while growthConfirm is dirty.
+- **Should a passing near pair be enough on its own when a far pair can't be compared? (Maren V-M-290-3 question to Kael.)** Today the check still asks; the copy now says the near weigh-in matched.
+
 #### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
 Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:
 - `alert-routing.spec.ts` ×2 — `.ca-view-all` never becomes visible.

@@ -410,8 +410,8 @@ const SYNC_RENDER_DEPS = {
   [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.milestones]:        { global: 'milestones',  postReceive: '_postReceiveMilestones', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth', 'renderFeverEpisodeCard'], growth: ['renderGrowthStats'] } },   // the dose chip reads the latest weight (#161 §4.4)
-  // Weights confirmed by retyping: merged by date (gvConfirmMerge, core.js), the dose chip re-rendered (#161 §4.3).
-  [KEYS.growthConfirm]:     { global: 'growthConfirm', mergeOnReceive: '_postReceiveGrowthConfirm', renderers: { 'track:medical': ['renderFeverEpisodeCard'] } },
+  // Weights confirmed by retyping: a union by date + weight (gvConfirmMerge, core.js); the dose chip and Home's dose alert re-rendered (#161 §4.3).
+  [KEYS.growthConfirm]:     { global: 'growthConfirm', mergeOnReceive: '_postReceiveGrowthConfirm', renderers: { home: ['renderHome'], 'track:medical': ['renderFeverEpisodeCard'] } },   // Home's dose alert reads the chip too (Kael V-K-290-1)
   [KEYS.vacc]:              { global: 'vaccData',    mergeOnReceive: '_postReceiveVacc', renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
@@ -945,6 +945,7 @@ function _syncFindHousehold(uid) {
               } else {
                 _syncSaveDirty({});
                 _epJoinBegin();   // a true first attach: this device's episodes are not household data (V-CA-P3-8)
+                _gvConfirmJoinReset();   // nor are its weight confirms (Carina V-CA-290-4)
                 _syncAttachListeners(_syncHouseholdId);
               }
             }
@@ -1048,6 +1049,7 @@ function syncJoinByCode(code) {
         localStorage.setItem('sl_sync_seeded', '4');
         _syncSaveDirty({});
         _epJoinBegin();   // the first episode receive takes the household's copy outright (V-CA-P3-8)
+        _gvConfirmJoinReset();   // weight confirms made before joining are not household data (Carina V-CA-290-4)
         _syncAttachListeners(_syncHouseholdId);
       });
     })
@@ -1689,6 +1691,11 @@ function _syncUnionArrays(local, cloud, key) {
 function _epKindOfKeyId(key) {
   return key === KEYS.feverEpisodes ? 'fever' : key === KEYS.diarrhoeaEpisodes ? 'diarrhoea'
     : key === KEYS.vomitingEpisodes ? 'vomiting' : key === KEYS.coldEpisodes ? 'cold' : null;
+}
+// A joining device's own weight confirms are not household data: cleared locally at a true first attach,
+// with no sync write (Carina V-CA-290-4).
+function _gvConfirmJoinReset() {
+  try { localStorage.removeItem(KEYS.growthConfirm); growthConfirm = {}; } catch (e) {}
 }
 // A joining device takes the household's episodes outright on first receive, with no push-back (V-CA-P3-8).
 var EP_JOIN_KEY = 'sl_ep_join_pending';
@@ -2421,6 +2428,19 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
         if (_epKind) _epJoinDone(key);
       } catch (e) { console.warn('[sync] episode push-back skipped:', e); }
       if (_epNoop) continue;
+      // Weight confirms: when the union holds confirms the cloud lacks, the shadow becomes the cloud's copy and
+      // the next flush pushes them, so both phones answer "confirmed?" alike (Carina V-CA-290-3).
+      try {
+        if (key === KEYS.growthConfirm && _cfg && _cfg.collection) {
+          var _gcRemote = gvConfirmNormalize(remoteVal);
+          if (JSON.stringify(gvConfirmNormalize(_saveVal)) !== JSON.stringify(_gcRemote)) {
+            _syncShadow[key] = _syncCloneDeep(_gcRemote);
+            _syncMarkDirty(key);
+            if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) _syncMarkNeedsFull(key);
+            else { _syncCountWrites(1); _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal); }
+          }
+        }
+      } catch (e) { console.warn('[sync] growth-confirm push-back skipped:', e); }
       // Profile: the merge refills a sex the cloud copy lacks (an older-build phone saved without
       // it). Write it back, the meal planner's way, so the household's copy holds it and a new phone
       // isn't asked again (V-CA-281-1).

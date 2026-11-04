@@ -16,7 +16,7 @@ async function seed(page: any, opts: { rows?: { date: string; wt: number }[]; do
     const iso = (offsetDays: number) => { const d = new Date(); d.setDate(d.getDate() + offsetDays); return toDateStr(d); };
     growthData = (o.rows || []).map((r: any) => ({ date: r.date === 'DOB' ? toDateStr(DOB) : iso(+r.date), wt: r.wt }));
     growthConfirm = {};
-    if (!o.unconfirmed && growthData.length) { const last = growthData[growthData.length - 1]; growthConfirm[last.date] = last.wt; }
+    if (!o.unconfirmed && growthData.length) { const last = growthData[growthData.length - 1]; growthConfirm[last.date] = { [String(Math.round(last.wt * 1000))]: ['amber', 'calm', 'samedate'] }; }
     const now = Date.now();
     const eps: any[] = [];
     if (o.earlier) eps.push({ id: 'fe-old', status: 'resolved', startedAt: new Date(now - 60 * 24 * 3600000).toISOString(),
@@ -113,4 +113,13 @@ test('a months-old dose sets no limit and raises no alert', async ({ page }) => 
   const card = await seed(page, { rows: [{ date: '-3', wt: 9.5 }], earlier: 'drops100' });
   await expect(card.locator('.fe-dose-next')).toHaveCount(0);
   expect(await page.evaluate(() => getFeverDoseCountdown())).toBeNull();
+});
+
+test('a weight the check asks about shows no dose and the log prompt pre-fills nothing (Maren V-M-290-7)', async ({ page }) => {
+  const card = await seed(page, { rows: [{ date: '-3', wt: 9.5 }], unconfirmed: true });
+  await card.locator('[data-action="feSetParaForm"][data-arg="drops100"]').click();
+  await expect(card.locator('.fe-para-confirm')).toHaveCount(1);
+  await expect(card.locator('.fe-para-dose')).toHaveCount(0);
+  const def = await page.evaluate(() => { const w: any = window; let got: any = null; const real = w.prompt; w.prompt = (_m: string, d: string) => { got = d; return null; }; try { w.feLogDosePrompt(); } finally { w.prompt = real; } return got; });
+  expect(def).toBe('');
 });

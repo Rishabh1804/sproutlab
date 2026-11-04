@@ -110,6 +110,7 @@ Every decision made during the 8-pass process, with rationale.
 | `activities` | `activityLog` | Single-doc |
 | `milestones` | `milestones` | Single-doc |
 | `growth` | `growth` | Single-doc |
+| `growthConfirm` | `growth` | Single-doc (shares the growth doc; merged by date + weight, `gvConfirmMerge` — #161 PR 4a) |
 | `vaccinations` | `vacc`, `vaccBooked` | Single-doc (combined) |
 | `medical` | `meds`, `visits`, `doctors`, `medChecks` | Single-doc (combined) |
 | `episodes` | `feverEpisodes`, `diarrhoeaEpisodes`, `vomitingEpisodes`, `coldEpisodes` | Single-doc (combined) |

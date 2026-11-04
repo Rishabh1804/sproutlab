@@ -460,13 +460,13 @@ function getParacetamolChip(weightRow) {
   // object in this state; it carries the bottle.
   const check = gvWeightNeedsConfirm(weightRow);
   if (check) return { state: 'confirm', form, wt, date, check };
-  if (!form) return { state: 'pick', form, wt, date };
+  const lossConfirmed = gvWeightConfirmedVariant(weightRow) === 'jump-down';
+  if (!form) return { state: 'pick', form, wt, date, lossConfirmed };
   const dose = getParacetamolDose(wt, form);
   const day = _parseLocalDate(date);
   const sameYear = day.getFullYear() === _parseLocalDate(today()).getFullYear();
   const dateLabel = day.toLocaleDateString('en-IN', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
-  return { state: 'ok', form, wt, date, dateLabel, ageDays, stale: ageDays > PARA_STALE_DAYS, dose,
-    lossConfirmed: gvWeightConfirmedVariant(weightRow) === 'jump-down' };
+  return { state: 'ok', form, wt, date, dateLabel, ageDays, stale: ageDays > PARA_STALE_DAYS, dose, lossConfirmed };
 }
 // Every chip state, each with its own render branch (a test checks the list against the card).
 const PARA_CHIP_STATES = ['askdoctor', 'noweight', 'baddate', 'outofrange', 'implausible', 'nodose', 'confirm', 'pick', 'ok'];
@@ -487,33 +487,71 @@ function _paraGapWords(days) {
   if (days < 61) { const w = Math.round(days / 7); return w + ' weeks'; }
   const m = Math.round(days / 30.4375); return m + (m === 1 ? ' month' : ' months');
 }
+// After a confirmed drop: tell the doctor today (Maren V-M-290-2 — a drop past WHO's 1st-percentile velocity
+// during an illness is not a next-visit note), and keep the milk going — milk feeds under 6 months (WHO:
+// milk only before 6 months; "fluids" could read as water — Ceres V-C-290-2). Shown only when the drop was
+// weighed during this illness or the week before it, so an old drop isn't read as this fever's (Kael
+// V-K-290-5, Maren V-M-290-5).
+function _paraLossLineHtml(chip, ep) {
+  if (!chip || !chip.lossConfirmed || !ep) return '';
+  const startDay = toDateStr(new Date(ep.startedAt));
+  const before = gvDaysBetween(chip.date, startDay);
+  if (!Number.isFinite(before) || before > 7) return '';
+  const feeds = ageMonthsAt(today()) < 6 ? 'Keep offering milk feeds often.' : 'Keep offering breast milk or other milk, and fluids, often.';
+  return '<div class="fe-para-note">A real drop in weight while ' + pron('subj') + ' is unwell is worth telling your doctor today. ' + feeds + '</div>';
+}
+// "she", or neutral words when the sex isn't set (Kael V-K-290-7, Vela V-V-290-7, Maren V-M-290-11).
+function _paraSubjOr(fallback) { return childSex() ? pron('subj') : fallback; }
+// A weight change in words: grams under 100 g, so a small loss never prints "0.0 kg" beside "more than
+// usual" (Vela V-V-290-1).
+function _paraChangeWords(changeG, gapDays) {
+  if (!Number.isFinite(changeG) || changeG === 0) return '';
+  const g = Math.abs(changeG);
+  const amt = g < 100 ? g + ' g' : (g / 1000).toFixed(1) + ' kg';
+  return amt + ' ' + (changeG > 0 ? 'more' : 'less') + ' in ' + _paraGapWords(gapDays);
+}
 // Why the check asked, for a tired parent: what it compared and what to do. Jump, loss and conflict
-// read amber; "couldn't compare" reads calm. The escape line is always there (Vela, Maren).
+// read amber; "couldn't compare" reads calm. The escape line is always there (Vela, Maren). Every claim
+// comes from the check's own pairs (spec §9, Cipher #288 finding 9 — Maren V-M-290-3).
 function _paraConfirmHtml(chip) {
   const jc = chip.check || {};
   const v = jc.variant, p = jc.pair;
   const amber = v === 'jump-up' || v === 'jump-down' || v === 'samedate' || v === 'implausible';
+  const okPair = (jc.pairs || []).find(x => x && x.ok);
   let html = '<div class="fe-para-confirm' + (amber ? '' : ' fe-para-confirm--calm') + '">';
   html += '<div class="fe-para-confirm-title">' + (amber ? zi('warn') + ' ' : '') + 'Check the weight before working out a dose</div>';
-  const dated = r => '<span class="fe-para-pair-wt">' + escHtml(_paraKgText(r.wt)) + '</span> · ' + escHtml(_paraDateLabel(r.date));
+  const dated = (label, r) => '<span>' + escHtml(label) + ' <span class="fe-para-pair-wt">' + escHtml(_paraKgText(r.wt)) + '</span> · ' + escHtml(_paraDateLabel(r.date)) + '</span>';
   if (p && p.a && p.b && v === 'samedate') {
-    html += '<div class="fe-para-pair">' + '<span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.b.wt)) + '</span> and <span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.a.wt)) + '</span>, both on ' + escHtml(_paraDateLabel(p.b.date)) + '</div>';
+    // One flex item, so "and" and the comma stay with their weights (Vela V-V-290-2).
+    html += '<div class="fe-para-pair"><span><span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.b.wt)) + '</span> and <span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.a.wt)) + '</span>, both on ' + escHtml(_paraDateLabel(p.b.date)) + '</span></div>';
   } else if (p && p.a && p.b && p.a.date !== p.b.date) {
-    const ch = Number.isFinite(p.changeG) ? Math.abs(p.changeG) / 1000 : NaN;
-    const change = Number.isFinite(ch) && p.changeG !== 0 ? (ch.toFixed(1) + '\u00a0kg ' + (p.changeG > 0 ? 'more' : 'less') + ' in ' + _paraGapWords(p.gapDays)) : '';
-    html += '<div class="fe-para-pair"><span>' + dated(p.b) + '</span><span>' + dated(p.a) + '</span>' + (change ? '<span class="fe-para-pair-change">' + escHtml(change) + '</span>' : '') + '</div>';
+    // Labelled, so the order can't be misread (Vela V-V-290-4).
+    const change = _paraChangeWords(p.changeG, p.gapDays);
+    html += '<div class="fe-para-pair">' + dated('Newest', p.b) + dated('Before', p.a) + (change ? '<span class="fe-para-pair-change">' + escHtml(change) + '</span>' : '') + '</div>';
   } else {
-    html += '<div class="fe-para-pair"><span>' + dated({ wt: chip.wt, date: chip.date }) + '</span></div>';
+    html += '<div class="fe-para-pair">' + dated('Newest', { wt: chip.wt, date: chip.date }) + '</div>';
   }
   let why;
   if (v === 'jump-up') why = 'That is more than children usually gain in that time, so one of the numbers may be a typo.';
-  else if (v === 'jump-down') why = 'That is more than children usually lose in that time. It may be a typo, or a real drop while ' + pron('subj') + ' is unwell.';
-  else if (v === 'samedate') why = 'Growth has two different weights on the same day, so the dose can\'t tell which is right.';
-  else if (v === 'implausible') why = (p && p.badRow === 'a' ? 'The earlier weight' : p && p.badRow === 'both' ? 'Both weights' : 'The newest weight') + ' looks off for ' + pron('poss') + ' age.';
+  else if (v === 'jump-down') why = 'That is a bigger drop than usual for that time. It may be a typo, or a real drop while ' + _paraSubjOr('your child') + ' is unwell.';
+  else if (v === 'samedate') why = 'Growth has two different weights on the same day, so the dose can\'t tell which is right. If ' + _paraKgText(p && p.a ? p.a.wt : '') + ' is the right one, tap Change the weight and remove ' + _paraKgText(chip.wt) + '.';
+  else if (v === 'implausible') {
+    // Only an off EARLIER row, or a row dated before the birth date, reaches here: the chip's own gate
+    // stops an off newest weight first (Kael V-K-290-2).
+    why = p && p.reason === 'dob' ? 'An earlier weigh-in is dated before ' + pron('poss') + ' birth date. Check its date in Growth.'
+      : p && p.badRow === 'a' ? 'The earlier weight looks off for ' + pron('poss') + ' age. Check it in Growth.'
+      : p && p.badRow === 'b' ? 'The newest weight looks off for ' + pron('poss') + ' age.'
+      : p && p.badRow === 'both' ? 'Both weights look off for ' + pron('poss') + ' age.'
+      : 'One of these weights looks off. Check them in Growth.';
+  }
+  else if ((jc.reason === 'gap' || jc.reason === 'age') && okPair && p && p.a) {
+    why = 'The ' + _paraDateLabel(okPair.a.date) + ' weigh-in matches, but the one on ' + _paraDateLabel(p.a.date) + ' is too long ago to compare with, so the check can\'t finish.';
+  }
   else if (jc.reason === 'noprev') why = 'There is no earlier weight to check it against.';
+  else if (jc.reason === 'gap' && p && p.a) why = 'The weigh-in on ' + _paraDateLabel(p.a.date) + ' is too long ago to check it against.';
   else if (jc.reason === 'gap') why = 'The weigh-in before it was too long ago to check it against.';
   else if (jc.reason === 'age') why = 'These weigh-ins are too far apart to check at ' + pron('poss') + ' age.';
-  else if (jc.reason === 'nosex') why = 'The weight can\'t be checked until Settings says whether ' + pron('subj') + ' is a girl or a boy.';
+  else if (jc.reason === 'nosex') why = 'The weight can\'t be checked until your child\'s sex is set in Settings.';
   else why = 'The weight couldn\'t be checked against an earlier one.';
   html += '<div class="fe-para-confirm-text">' + escHtml(why) + '</div>';
   html += '<div class="fe-para-confirm-text">If ' + escHtml(_paraKgText(chip.wt)) + ' is right, type it here to confirm it.</div>';
@@ -521,30 +559,31 @@ function _paraConfirmHtml(chip) {
     + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="feConfirmWeight" data-arg="' + escAttr(chip.date) + '" data-arg2="' + escAttr(String(chip.wt)) + '">Confirm</button></div>';
   html += '<div id="feWtRetypeErr" class="fe-para-retype-err" role="alert"></div>';
   html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="switchTab" data-arg="growth">Change the weight</button></div>';
-  html += '<div class="fe-para-confirm-text">If ' + pron('subj') + ' needs medicine now, ask your doctor or chemist for the dose.</div>';
+  html += '<div class="fe-para-confirm-text">If ' + _paraSubjOr('your child') + ' needs medicine now, ask your doctor or chemist for the dose.</div>';
   html += '</div>';
   return html;
 }
 // The retype (decision B): the parent types the weight the chip SHOWED; it is compared at 0.01 kg
 // (comma decimals accepted) and must still be the weight on that date in Growth. Writes only the
-// confirmation map — never the growth row.
+// confirmation map — never the growth row — recording what the check asked (gvConfirmRecord).
 function feConfirmWeight(date, wtStr) {
   const input = document.getElementById('feWtRetype');
-  const err = document.getElementById('feWtRetypeErr');
-  const say = msg => { if (err) err.textContent = msg; };
+  const say = msg => { const err = document.getElementById('feWtRetypeErr'); if (err) err.textContent = msg; };
   const typed = parseFloat(String(input ? input.value : '').trim().replace(',', '.'));
   const shown = Number(wtStr);
   if (!Number.isFinite(typed) || typed <= 0) { say('Type the weight in kg, for example 9.5.'); return; }
   const row = gvMeasureRows('wt').find(r => r.date === date && r.wt === shown);
-  if (!row) { say('That weight has changed in Growth. Check it there.'); renderFeverEpisodeCard(); return; }
+  // Re-render first, then say it, or the redraw wipes the message (Kael V-K-290-6, Vela V-V-290-3).
+  if (!row) { renderFeverEpisodeCard(); showQLToast('That weight has changed in Growth. Check it there.'); return; }
   if (Math.round(typed * 100) !== Math.round(shown * 100)) {
-    say('You typed ' + _paraKgText(typed) + '; Growth has ' + _paraKgText(shown) + '. If Growth is wrong, tap Change the weight.');
+    say('You typed ' + _paraKgText(typed) + '; Growth has ' + _paraKgText(shown) + ' on that date. If Growth is wrong, tap Change the weight.');
     return;
   }
-  growthConfirm = Object.assign({}, growthConfirm || {}, { [date]: shown });
-  save(KEYS.growthConfirm, growthConfirm);
+  const latest = getLatestWeight();
+  gvConfirmRecord(row);
   renderFeverEpisodeCard();
-  showQLToast(zi('check') + ' Weight confirmed');
+  // The toast only when this was the weight the dose reads (a newer one may now be asking).
+  if (latest && latest.date === row.date && latest.wt === row.wt && !gvWeightNeedsConfirm(latest)) showQLToast(zi('check') + ' Weight confirmed');
 }
 
 function feSetParaForm(id) {
@@ -862,9 +901,12 @@ function renderFeverEpisodeCard() {
         ? 'Last paracetamol at ' + _feverTimeShort(new Date(doseCD.lastTime).toISOString()) + ', in ' + pron('poss') + ' earlier fever. '
         : '';
       if (doseCD.available) {
-        html += '<div class="fe-dose-next">' + from + (paraChip.state === 'confirm'
-          ? 'Next dose can be given now, if needed, as your doctor advised, once the weight below is checked.'
-          : 'Next dose can be given now, if needed, as your doctor advised.') + '</div>';
+        const canDose = paraChip.state === 'ok' || paraChip.state === 'pick';
+        html += canDose
+          ? '<div class="fe-dose-next">' + from + 'Next dose can be given now, if needed, as your doctor advised.</div>'
+          : '<div class="fe-dose-next fe-dose-next--hold">' + from + (paraChip.state === 'confirm'
+            ? 'The 4-hour gap has passed. A dose can be given, if needed, as your doctor advised, once the weight below is checked.'
+            : 'The 4-hour gap has passed. See below before giving a dose.') + '</div>';
       } else {
         const dh = Math.floor(doseCD.remaining / 60);
         const dm = doseCD.remaining % 60;
@@ -898,13 +940,12 @@ function renderFeverEpisodeCard() {
     if (paraChip.stale) {
       html += '<div class="fe-para-note">That weight is ' + Math.floor(paraChip.ageDays / 7) + ' weeks old. The dose follows weight, so weigh ' + pron('obj') + ' again when you can, and check with your doctor.</div>';
     }
-    if (paraChip.lossConfirmed) {
-      html += '<div class="fe-para-note">A real drop in weight while ' + pron('subj') + ' is unwell is worth telling your doctor. Keep offering breast milk and fluids often.</div>';
-    }
+    html += _paraLossLineHtml(paraChip, ep);
   } else if (paraChip.state === 'confirm') {
     // The block above says it all; nothing more here.
   } else if (paraChip.state === 'pick') {
     html += '<div class="fe-para-note">Tap the bottle you have to see the dose for ' + escHtml(String(paraChip.wt)) + ' kg.</div>';
+    html += _paraLossLineHtml(paraChip, ep);
   } else if (paraChip.state === 'askdoctor') {
     html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' Under 3 months, ask your doctor before giving paracetamol.</div>';
   } else if (paraChip.state === 'nodose') {
@@ -1464,12 +1505,22 @@ function computeFeverAlerts() {
   if (doseCD && doseCD.available && ep.readings.length && ep.readings[ep.readings.length - 1].temp >= 100) {
     // Keyed on the dose the wait counts from: the count now spans episodes (V-K-284-11).
     const key = 'fever-dose-avail-' + doseCD.lastTime;
+    // "Safe to give" only when the card can show a dose; while the weight check asks (or the dose can't be
+    // worked out), Home sends the parent to the card instead — one state, one answer (Kael V-K-290-1, Maren
+    // V-M-290-1). No confirm control on Home (spec §4.4).
+    let chipState = 'ok';
+    try { chipState = getParacetamolChip(getLatestWeight()).state; } catch (e) { chipState = 'unknown'; }
+    const canDose = chipState === 'ok' || chipState === 'pick';
     if (!isDismissed(key)) {
       alerts.push({
         id: 'fever-dose-available', key,
         severity: 'info', icon: zi('pill'),
-        title: 'Paracetamol dose available',
-        body: 'Next dose is safe to give (if needed, as advised by doctor). Last dose was ' + _feverTimeAgo(new Date(doseCD.lastTime).toISOString()) + '.',
+        title: canDose ? 'Paracetamol dose available' : 'Paracetamol: check the fever card',
+        body: canDose
+          ? 'Next dose is safe to give (if needed, as advised by doctor). Last dose was ' + _feverTimeAgo(new Date(doseCD.lastTime).toISOString()) + '.'
+          : (chipState === 'confirm'
+            ? 'The 4-hour gap has passed. Check the weight on the fever card before giving a dose.'
+            : 'The 4-hour gap has passed. Open the fever card before giving a dose.'),
         tab: 'medical', dismissable: true
       });
     }

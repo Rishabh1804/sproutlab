@@ -2384,7 +2384,9 @@ function _emDocVitals() {
   try { if (typeof getLatestWeight === 'function') { var w = getLatestWeight(); if (w && typeof w.wt === 'number' && w.wt > 0) {   // V-M-236: getLatestWeight() returns a growth-record object {wt,…}, not a number
     var wl = typeof _paraDateLabel === 'function' ? _paraDateLabel(w.date) : w.date;
     var unchecked = typeof gvWeightNeedsConfirm === 'function' && !!gvWeightNeedsConfirm(w);
-    bits.push(w.wt + ' kg (weighed ' + wl + (unchecked ? ', not yet checked' : '') + ')');
+    // U+00A0 before escaping so "kg" never wraps alone (Vela V-V-290-8); "confirmed by the family", which a
+    // hospital team can't misread as a clinical note (Ceres V-C-290-5, Maren V-M-290-6).
+    bits.push(w.wt + '\u00a0kg (weighed ' + wl + (unchecked ? '; not yet confirmed by the family' : '') + ')');
   } } } catch (e) {}
   return bits.join(' · ');
 }
@@ -7779,9 +7781,22 @@ function renderInsightsCross() {
   // A newest weight the weight-jump check flags (a jump, drop or same-day conflict) and nobody has
   // confirmed is left out, so this insight never reads a typo the dose chip is asking about (Ceres
   // V-C-288-1, PC-10).
-  const wtEntries = gvWeightRows().slice();
-  { const lw = wtEntries[wtEntries.length - 1], jc = lw ? gvWeightNeedsConfirm(lw) : null;
-    if (jc && ['jump-up', 'jump-down', 'samedate', 'implausible'].indexOf(jc.variant) >= 0) wtEntries.pop(); }
+  let wtEntries = gvWeightRows();
+  { const lw = wtEntries[wtEntries.length - 1];
+    if (lw) {
+      // The newest date reduced to the row the check and the chip read, so a second weight on that date
+      // (a conflict or a re-save) can't carry the number in (Ceres V-C-290-1).
+      wtEntries = wtEntries.filter(r => r.date !== lw.date || r === lw);
+      const jc = gvWeightNeedsConfirm(lw);
+      if (jc && jc.variant === 'implausible' && jc.pair) {
+        // Drop the row that looks off — the earlier one when that is the bad row (Ceres V-C-290-3).
+        const bad = jc.pair.badRow === 'a' ? [jc.pair.a] : jc.pair.badRow === 'both' ? [jc.pair.a, lw] : [lw];
+        wtEntries = wtEntries.filter(r => bad.indexOf(r) < 0);
+      } else if (jc && ['jump-up', 'jump-down', 'samedate'].indexOf(jc.variant) >= 0) {
+        wtEntries = wtEntries.filter(r => r !== lw);
+      }
+    }
+  }
   if (wtEntries.length >= 3) {
     // For each weight measurement gap, calculate meals logged per day in that period
     const periods = [];

@@ -7056,51 +7056,101 @@ function gvWeightJumpCheck(rows, sex) {
     return { verdict: 'confirm', variant: 'error', reason: null, method: 'nocompare', pair: null, pairs: [], anchor };
   }
 }
-// ── Weight confirmations (#161 spec §4.3, decision A/B) ──
-// { 'YYYY-MM-DD': wt } — a date maps to the weight the parent retyped. Only finite positive numbers on a
-// valid date survive; anything else is dropped, so a malformed synced copy can't confirm a weight.
+// ── Weight confirmations (#161 spec §4.3, decision A/B; shape amended in the PR 4a round) ──
+// { 'YYYY-MM-DD': { '<grams>': [kinds] } } — a weight the parent retyped, keyed by its date AND its weight
+// (grams, so no '.' reaches a Firestore field path), with what the check had asked:
+//   'calm'     — "couldn't compare" (no earlier weight, too long a gap, no sex set, an error);
+//   'amber'    — a jump, a drop, or an earlier weight that looks off (covers 'calm');
+//   'samedate' — two different weights on one date (the jump test still runs after it).
+// A confirm unlocks only what the parent was shown: a calm confirm never covers a jump that later evidence
+// reveals (Kael V-K-290-3). Keyed by weight, merging is a plain union — no conflict, no lossy pick, never
+// undone by the other phone (Kael V-K-290-4, Maren V-M-290-4).
+const GV_CONFIRM_KINDS = ['amber', 'calm', 'samedate'];
+function _gvGrams(wt) { return String(Math.round(Number(wt) * 1000)); }
 function gvConfirmNormalize(m) {
   const out = {};
   if (!m || typeof m !== 'object' || Array.isArray(m)) return out;
-  Object.keys(m).forEach(d => { const w = m[d]; if (typeof w === 'number' && Number.isFinite(w) && w > 0 && /^\d{4}-\d{2}-\d{2}$/.test(d) && _parseLocalDate(d)) out[d] = w; });
-  return out;
-}
-// The ONE merge, receive and push alike: a union by date; a date the two sides confirmed with
-// DIFFERENT weights keeps the smaller. (The spec's "drop it" can't hold across phones: with no tombstone
-// an absent date reads as "not synced yet" and comes back on the next receive. The smaller weight is the
-// conservative pick, and a confirm only ever unlocks the exact weight on the row — gvWeightConfirmed —
-// so a kept 9.5 never confirms a 15.9 row.) Commutative, idempotent, converges.
-function gvConfirmMerge(a, b) {
-  const A = gvConfirmNormalize(a), B = gvConfirmNormalize(b), out = {};
-  Object.keys(A).concat(Object.keys(B)).sort().forEach(d => {
-    if (d in out) return;
-    out[d] = (d in A && d in B) ? Math.min(A[d], B[d]) : (d in A ? A[d] : B[d]);
+  Object.keys(m).sort().forEach(d => {
+    const day = m[d];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !_parseLocalDate(d) || !day || typeof day !== 'object' || Array.isArray(day)) return;
+    Object.keys(day).sort().forEach(g => {
+      const kinds = Array.isArray(day[g]) ? Array.from(new Set(day[g].filter(k => GV_CONFIRM_KINDS.indexOf(k) >= 0))).sort() : [];
+      if (!/^[1-9]\d*$/.test(g) || !kinds.length) return;
+      (out[d] = out[d] || {})[g] = kinds;
+    });
   });
   return out;
 }
-// Confirmed only while the stored weight equals the row's weight exactly: a confirm of 15.9 never
-// covers a later edit to 16.9 on the same date.
-function gvWeightConfirmed(row) {
-  const c = row && growthConfirm && growthConfirm[row.date];
-  return typeof c === 'number' && row && c === row.wt;
+// The ONE merge, receive and push alike: a union by date, weight and kind. Commutative and idempotent as a
+// function; the phones converge because receive pushes back what the cloud lacks (sync.js, V-CA-290-3).
+function gvConfirmMerge(a, b) {
+  const A = gvConfirmNormalize(a), B = gvConfirmNormalize(b), u = {};
+  [A, B].forEach(M => Object.keys(M).forEach(d => Object.keys(M[d]).forEach(g => {
+    (u[d] = u[d] || {})[g] = ((u[d][g] || []).concat(M[d][g]));
+  })));
+  return gvConfirmNormalize(u);
 }
-// The weight-jump check as the dose reads it: null when the latest weight can be used — the check
-// passes, or the parent confirmed that exact weight — else the check's result (verdict 'confirm').
-// Bound to the row passed in (the chip's displayed row): if the check's anchor is a different row, it
-// asks (fail closed).
+function _gvConfirmKinds(row) {
+  const day = row && growthConfirm && growthConfirm[row.date];
+  const k = day && day[_gvGrams(row.wt)];
+  return Array.isArray(k) ? k : [];
+}
+function _gvKindOf(variant) {
+  return variant === 'samedate' ? 'samedate' : (variant === 'jump-up' || variant === 'jump-down' || variant === 'implausible') ? 'amber' : 'calm';
+}
+function _gvCovers(kinds, need) {
+  return need === 'calm' ? (kinds.indexOf('calm') >= 0 || kinds.indexOf('amber') >= 0) : kinds.indexOf(need) >= 0;
+}
+// Any confirm on this exact date + weight.
+function gvWeightConfirmed(row) { return _gvConfirmKinds(row).length > 0; }
+// The check after a confirmed same-date conflict: the confirmed weight against the earlier weigh-ins, the
+// other weight on its date left out — so the jump test still runs (Kael V-K-290-8).
+function _gvJumpAfterSamedate(row) {
+  return gvWeightJumpCheck(gvMeasureRows('wt').filter(r => r.date !== row.date || r === row || (r.wt === row.wt)));
+}
+// The weight-jump check as the dose reads it: null when the latest weight can be used — the check passes,
+// or the parent confirmed exactly what it asks — else the check's result plus askKind (what a retype
+// records). Bound to the row passed in (the chip's displayed row): if the check's anchor is a different
+// row, it asks and a confirm can't clear it (fail closed).
 function gvWeightNeedsConfirm(row) {
   if (!row) return null;
   let jc;
   try { jc = gvWeightJumpCheck(); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
   const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
-  if (jc && jc.verdict === 'ok' && sameRow) return null;
-  if (gvWeightConfirmed(row)) return null;
-  return sameRow ? jc : Object.assign({}, jc, { verdict: 'confirm', variant: 'error' });
+  if (!sameRow) return Object.assign({}, jc, { verdict: 'confirm', variant: 'error', askKind: null });
+  if (jc.verdict === 'ok') return null;
+  const kinds = _gvConfirmKinds(row);
+  if (jc.variant === 'samedate') {
+    if (!_gvCovers(kinds, 'samedate')) return Object.assign({}, jc, { askKind: 'samedate' });
+    let jc2;
+    try { jc2 = _gvJumpAfterSamedate(row); } catch (e) { jc2 = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+    if (jc2.verdict === 'ok') return null;
+    const need2 = _gvKindOf(jc2.variant);
+    return _gvCovers(kinds, need2) ? null : Object.assign({}, jc2, { askKind: need2 });
+  }
+  const need = _gvKindOf(jc.variant);
+  return _gvCovers(kinds, need) ? null : Object.assign({}, jc, { askKind: need });
+}
+// Record a retype: adds what the check is asking now for that exact date + weight. Writes only the
+// confirmation map (never the growth row).
+function gvConfirmRecord(row) {
+  const ask = gvWeightNeedsConfirm(row);
+  if (!ask || !ask.askKind) return false;
+  const add = { [row.date]: { [_gvGrams(row.wt)]: [ask.askKind] } };
+  growthConfirm = gvConfirmMerge(growthConfirm, add);
+  save(KEYS.growthConfirm, growthConfirm);
+  return true;
 }
 // The confirmed check's variant — so a screen can add the loss line after a confirmed drop.
 function gvWeightConfirmedVariant(row) {
-  if (!row || !gvWeightConfirmed(row)) return null;
-  try { const jc = gvWeightJumpCheck(); return jc && jc.verdict !== 'ok' ? jc.variant : null; } catch (e) { return null; }
+  if (!row || !gvWeightConfirmed(row) || gvWeightNeedsConfirm(row)) return null;
+  try {
+    const jc = gvWeightJumpCheck();
+    if (jc.verdict === 'ok') return null;
+    if (jc.variant !== 'samedate') return jc.variant;
+    const jc2 = _gvJumpAfterSamedate(row);
+    return jc2.verdict === 'ok' ? null : jc2.variant;
+  } catch (e) { return null; }
 }
 
 // Solids have started: the profile's solids start date is today or earlier. The ONE check, read by
