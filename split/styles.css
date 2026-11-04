@@ -3357,6 +3357,39 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .fe-para-confirm:not(.fe-para-confirm--calm) { border-color:rgba(212,168,72,0.38); }   /* the light rgba vanishes on dark amber (Vela V-V-290-5) */
 /* The countdown while the dose is held (weight check, or no dose here): neutral, not the go-green (Vela V-V-290-6). */
 .fe-dose-next--hold { color:var(--text); }
+/* The held line when the leftover-risk flow says stop (#161 §5.3): the danger tone, bold. */
+.fe-dose-next--stop { color:var(--rose-deep); font-weight:700; font-size:var(--fs-sm); }   /* the stop line is not the card's smallest text (Vela V-V-291-11) */
+/* The leftover-risk block (#161 §5.3): amber "check before the next dose"; red "call your doctor today"; call-now
+   the same with a stronger border. Text at full contrast; controls reuse the confirm block's 44px rules. */
+.fe-load { background:var(--amber-light); border:1px solid rgba(138,101,32,0.28); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); margin:var(--sp-6) 0 var(--sp-8); }
+.fe-load--red, .fe-load--now { background:var(--rose-light); border-color:rgba(196,64,64,0.35); }
+.fe-load--now { border-width:2px; border-color:var(--tc-danger); }
+.fe-load-title { font-family:'Fraunces',serif; font-size:var(--fs-lg); line-height:var(--lh-snug); font-weight:700; color:var(--tc-amber); display:flex; align-items:center; gap:var(--sp-6); padding-bottom:var(--sp-2); }
+.fe-load--red .fe-load-title, .fe-load--now .fe-load-title { color:var(--rose-deep); }   /* --tc-danger on rose missed AA at fs-sm (4.32:1) — Vela V-V-291-6 */
+.fe-load-title .zi { width:var(--icon-lg); height:var(--icon-lg); flex-shrink:0; }
+.fe-load-text { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); padding:var(--sp-2) 0; }
+.fe-load .btn { min-height:44px; }
+.fe-load-chips .fe-action-chip { min-height:44px; display:inline-flex; align-items:center; font-family:inherit; }   /* tap target (Vela V-V-291-7) */
+/* The 6-second lead (DESIGN_PRINCIPLES §11; Architect 2026-11-04): instruction, Tell them, actions, a folded Why. */
+.fe-load-do { margin-top:var(--sp-8); font-weight:800; font-size:var(--fs-md); line-height:var(--lh-snug); color:var(--text); }
+.fe-load-tell { margin-top:var(--sp-4); font-size:var(--fs-sm); line-height:var(--lh-relaxed); color:var(--text); }
+.fe-load-q { margin-top:var(--sp-10); font-weight:700; font-size:var(--fs-sm); line-height:var(--lh-snug); color:var(--text); }
+.fe-load-watch { margin-top:var(--sp-10); padding-left:var(--sp-10); border-left:3px solid var(--tc-danger); font-size:var(--fs-sm); line-height:var(--lh-relaxed); color:var(--text); }
+.fe-load-watch + .fe-load-tell { margin-top:var(--sp-10); }   /* apart from the call-now box (Ceres pair-note) */
+.fe-load-prow { margin-top:var(--sp-10); border-top:1px solid var(--card-border); }
+.fe-load-prow-head { display:flex; align-items:center; gap:var(--sp-10); width:100%; min-height:44px; padding:var(--sp-6) 0; border:none; background:none; cursor:pointer; text-align:left; font-family:'Nunito',sans-serif; color:var(--text); }
+.fe-load-prow-txt { flex:1; min-width:0; }
+.fe-load-prow-t { display:block; font-weight:800; font-size:var(--fs-sm); line-height:var(--lh-snug); }
+.fe-load-prow-d { display:block; font-size:var(--fs-xs); color:var(--mid); margin-top:1px; }
+.fe-load-prow-chev { flex:0 0 auto; display:inline-flex; color:var(--mid); transition:transform var(--ease-fast); }
+.fe-load-prow-chev .zi { width:var(--icon-base); height:var(--icon-base); }
+.fe-load-prow.open .fe-load-prow-chev { transform:rotate(90deg); }
+.fe-load-prow-body { max-height:0; overflow:hidden; transition:max-height var(--ease-slow); }
+.fe-load-prow.open .fe-load-prow-body { max-height:2400px; }
+.fe-load-prow-body .fe-load-text { margin:0 0 var(--sp-6); }
+.fe-load-until { font-weight:700; }
+[data-theme="dark"] .fe-load--red:not(.fe-load--now) { border-color:var(--tc-danger); }   /* the light rgba fades on dark rose (Ceres V-C-291-4) */
+[data-theme="dark"] .fe-load:not(.fe-load--red):not(.fe-load--now) { border-color:rgba(212,168,72,0.38); }
 .fe-para-confirm-title { font-size:var(--fs-sm); font-weight:700; color:var(--tc-amber); display:flex; align-items:center; gap:var(--sp-4); }
 .fe-para-confirm--calm .fe-para-confirm-title { color:var(--text); }
 .fe-para-confirm-title .zi { width:16px; height:16px; flex-shrink:0; }

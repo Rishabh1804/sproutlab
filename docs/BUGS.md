@@ -82,7 +82,8 @@ The fever card's dose chip, which named no weight, date or bottle and had no che
 - **PR 2:** WHO weight-velocity registry + `gvWeightJumpCheck` (velocity to 24 m, weight-for-age Δz from a 12 m start up to 184 days and 60 months, fail-closed). Engine only — the chip uses it from PR 4.
 - **PR 3:** illness-episode sync — all four episode keys merge by entry id on receive and push (tombstones, derived status, concurrent-start fold, transactional write, join-pending), the module arrays are reassigned on receive, edit sheets commit by id. Spec §5A.
 - **PR 4a:** the weight confirm — `KEYS.growthConfirm`, the chip's confirm state on `gvWeightJumpCheck`, the retype UI; the emergency summary and doctor export show the weigh-in date and "not yet checked". Spec §7.4 (split into 4a/4b).
-- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 merged (#289); PR 4a in review; PR 4b (leftover-risk flow, interim ceiling removed) and PR 5 to come.
+- **PR 4b:** the leftover-risk flow (R0–R3, spec §5) — the one verdict for the next dose on the card and Home, the load block, Home alerts, the escalation fold — and the interim ceiling removed.
+- **Status:** **Open** — PRs 1–3 merged (#287, #288, #289); PR 4a merged (#290); PR 4b in review; PR 5 (the entry-time check in `addGrowthEntry`) to come.
 
 #### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
 - **Symptom:** Non-blocking notes from the #284 round.
@@ -1789,6 +1790,45 @@ Found while running the full suite for #289 on 2026-11-04. The full run had 59 f
 - **Origin:** Kael V-K-3 on PR #263 (fever readings toggle), widened by Cipher Edict V ruling 5 from fever-only to all four illness-episode keys. Pre-existing; not introduced by #263.
 - **Files:** `split/sync.js` ~lines 244–247 (registrations), `split/intelligence-illness.js` ~lines 3–14 (`_feverEpisodes` hydration) and the diarrhoea / vomiting / cold module arrays.
 - **Raised again on PR #267 (Maren V-M-267-5, Kael V-K-267-3):** the new resolved-episode editor is a write path that saves the whole module array, so a device left open can revert the other parent's entries. #267 re-reads the stored list before editing (a minimal guard). The real fix above is still owed, and should add the `render*History` renderers to the episode keys' `SYNC_RENDER_DEPS`.
+
+#### P2 — #161 PR 4b deferrables (leftover-risk flow, PR #291 Governor round, 2026-11-04)
+- **Status:** Open. Sorted DEFERRABLE by the Governors; the BLOCKING findings were fixed in #291. Spec `docs/specs/paracetamol-weight-check-v1.md` §9.
+- **Engine (Kael):**
+  - R3 keys on the earliest illness start; a weigh-in between a fever start and a later vomiting / diarrhoea start never prompts. Compare against every start. PC-1. (V-K-291-D1)
+  - `_paraGiSign` drops entries > 1 min in the future while doses are clamped to now. Clamp the same way. PC-1. (D2)
+  - A dose carrying a paracetamol bottle is not counted unless its name matches. Consider counting unless the name is on a closed non-paracetamol list. PC-2. (D3)
+  - W_ref: one failed projection throws away the others; a different weight on the latest date is left out of the minimum. PC-5. (D4)
+  - The calm 24 h total is dropped inside warnings that don't state it (R2b, R3, MED, which-bottle). PC-10. (D6)
+  - Verdict `check` with no rule rendered (no weight, paracetamol 24–72 h ago, another medicine in 24 h): "Check below" points at nothing. PC-10. (D7)
+  - Hold has no in-app exit ("until they say"); consider a "Doctor said to continue" acknowledgment. The Home alert runs with no active fever, but the retype and GI chips live only on the active fever card. PC-3; Maren + Architect. (D8)
+  - `getParacetamolNextDose(nowMs)` mixes clocks with `getFeverDoseCountdown` (`Date.now()`). PC-1. (D11)
+  - R1 amber's until is when the total falls to 60, not when the next dose fits. Maren semantics. (D13)
+  - The countdown counts every medicine, the load only paracetamol, so R0's next time and the countdown can disagree. Share the selector. PC-10. (D14)
+  - Missing tests from spec §8 C: R0b step by bottle; R2 met only on R; the no-sex fallback; the 184-day boundary; a chip test that 16.1–17.2 kg after 9.5 kg at 14 months reaches `confirm`. PC-6. (D10, remainder)
+- **Care (Maren):**
+  - R1's red weight question sits under "Call your doctor today" but never says to call, and understates R ≥ 75. PC-7. (V-M-291-D1)
+  - R2b fires only once the 4th-day dose is logged; check against today's date too. PC-1. (D6)
+  - The no-weight line has no "Add a weight" button. (D5)
+- **Surfacing (Vela):**
+  - R0 copy (a) is one ~370-character paragraph; split into context / tell the doctor / hold, wording unchanged. (V-V-291-8)
+  - The wait state can show the same time twice (countdown line and the until line); add a self-test that they agree. PC-10. (V-V-291-9)
+  - Amber's "Snooze 3d" outlasts the 72 h window; R2 amber on a GI card with no active fever asks the question but shows no chips. (V-V-291-11)
+- **Foundation (Carina):** no re-render when a dose ages out of the window (stricter until the next render; could hang off the fever countdown interval). (V-CA-291-10)
+- **Round 3 (the 6-second redesign), open:**
+  - "Check other medicines' labels…" folds into Why at amber and above (open when calm). Needs an Architect / Maren ruling on whether it belongs in the lead. PC-7. (Kael V-K-291-D23)
+  - The same-minute "delete the extra / keep both" instruction lives in Why; the teaser names it. PC-7. (Kael D24)
+  - R2's question asks about vomiting, but there is no "Vomited" chip (vomits are logged on the vomiting card), and "off food" isn't in the question. PC-10. (Ceres V-C-291-9; Kael / Maren pair-note)
+  - The prose bar (won't eat AND won't drink) vs the "Retching or off food" chip, which escalates on its own. PC-10. (Ceres V-C-291-5, Maren D18)
+  - The diarrhoea Diet banner has no won't-drink line. PC-5. (Ceres V-C-291-7)
+  - `from.trim()` in the fever-card countdown line is an internal, unescaped string (pre-existing). HR-4 hygiene. (Vela)
+- **Round 5, resolved:** the "{wt} kg is right" retype is offered only at amber; at red it is not a release (Maren's ruling, folded in #291).
+- **Round 5, open:** the 4-hour / 4-in-24 time exists only while a fever episode is active, though the load counts doses from resolved episodes; once the fever is resolved, Home's red holds show no time (the doctor-only form, by design until fixed). Compute the time from the engine's own dose list. PC-1. (Maren V-M-291-D28; Kael consult)
+- **Cipher's Edict V flags (03fc9cc), open:**
+  - F4 — Maren's ruling (V-M-291-F4, DEFERRABLE, PC-10): keep `urgent` → `action` with no dismiss (a hidden live emergency at 2 AM is the worse failure). Follow-up: an **acknowledge** control that may quiet the alert but never hide it while the source episode is active; and clear the alert when the episode resolves or the triggering reading ages out — keyed on the reading's age, never today's date — so a stale emergency never lingers past recovery.
+  - F5 (with Kael D8): `ALERT_CARD['para-load']` routes "View details" to `feverEpisodeCard`, hidden when no fever is active, while the load alert still shows. PC-3.
+  - F6 (architectural): engine and render are coupled through regexes over copy (`_paraWhy` teasers, the `whyLine` strips, `_paraSurface`'s test-only fallback). Carry structured fields on each rule (`fact` / `tell` / `release` / `callNow`).
+  - F9: a fever card with every reading deleted returns before the load block.
+- **Pre-existing, seen during the round (all fail on main too, 2026-11-04):** `alert-routing.spec.ts` ×2 ("+N more in Insights", "gotoCard expands the target card"); `smoke.spec.ts` 2a/2b/2c (tab presence); `can-i-give-this.spec.ts:71`; `diet-preference-gate.spec.ts:57,148`; the `food-effects-v2-*` set (encourage-card, p1c-choking, p1c-milk — waits on `#dietChokingIntro`; r1-combo-checker, r2-qa-food-safety, r3-allergen-note — the honey / allergen floors, likely date rot now that she is past 12 months); `vit-d3-tracking.spec.ts:324`; `vit-d3-tracking-v2.spec.ts:192`. PC-6. Worth a dedicated test-rot PR.
 
 #### P2 — Deferred from the PR #267 Governor round (illness edit + timezone)
 - **`_qaLastIllness` answers with "Invalid Date" / "Unknown" (Kael V-K-267-10).** `intelligence-qa-handlers.js` ~195–206 reads `ep.startDate` / `ep.type` / `ep.durationDays`, which no episode has (they carry `startedAt` / `illnessType` / `resolvedAt`). Its sort key is always `''`, so it returns the OLDEST episode. Fix: sort by `(resolvedAt || startedAt)` descending and read the real fields (`_episodeDurationDays`). Separate PR.

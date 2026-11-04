@@ -8430,6 +8430,7 @@ const ALERT_CARD = {
   'food-group-gap':     { tab: 'info',     card: 'infoNutrientHeatmapCard' },
   'dinner-bed-gap':     { tab: 'sleep',    card: 'sleepChartCard' },
   'reaction-window':    { tab: 'info',     card: 'infoFoodIntroCard' },
+  'para-load':          { tab: 'medical',  card: 'feverEpisodeCard' },   // the leftover-risk flow (#161 PR 4b)
   // ── wins ──
   'first-sleepthrough': { tab: 'sleep',    card: 'sleepChartCard' },
   'sleep-streak':       { tab: 'sleep',    card: 'sleepChartCard' },
@@ -8841,7 +8842,7 @@ function applyCrossSynthesis(alerts) {
       // Create synthesized alert
       const highestSev = rule.ids.reduce((best, id) => {
         const a = alerts.find(al => al.id === id);
-        return a && (SEV_ORDER[a.severity] || 2) < (SEV_ORDER[best] || 2) ? a.severity : best;
+        return a && (SEV_ORDER[a.severity] ?? 2) < (SEV_ORDER[best] ?? 2) ? a.severity : best;   // Cipher A3
       }, rule.severity || 'watch');
 
       const primaryAlert = alerts.find(a => a.id === rule.ids[0]);
@@ -9516,6 +9517,11 @@ function computeAlerts() {
     feverAlerts.forEach(a => alerts.push(a));
   } catch(e) { /* fever alerts best effort */ }
 
+  // The leftover-risk flow (#161 spec §5.4): runs while any paracetamol dose is under 72 h old.
+  try {
+    if (typeof computeParacetamolLoadAlerts === 'function') computeParacetamolLoadAlerts().forEach(a => alerts.push(a));
+  } catch(e) { /* paracetamol load alerts best effort */ }
+
   try {
     const deAlerts = computeDiarrhoeaAlerts();
     deAlerts.forEach(a => alerts.push(a));
@@ -9543,8 +9549,17 @@ function computeAlerts() {
     if (alerts[i].severity === 'positive' && isDismissed(alerts[i].key)) alerts.splice(i, 1);
   }
 
+  // Producers that call a must-act alert 'urgent' (the illness emergencies, the paracetamol load) speak Home's
+  // 'action', so they show on Home and sort first instead of falling through as "Info" (#161 PR 4b — Carina
+  // V-CA-291-1, Vela V-V-291-10). The paracetamol load alert is cleared by the same expiry-aware predicate as
+  // every warning (dismiss / acknowledge / snooze — Carina V-CA-291-6).
+  alerts.forEach(a => { if (a.severity === 'urgent') a.severity = 'action'; });
+  for (let i = alerts.length - 1; i >= 0; i--) {
+    if (alerts[i].id === 'para-load' && isDismissed(alerts[i].key)) alerts.splice(i, 1);
+  }
+
   // ── Sort by severity (action → watch → info → positive) ──
-  alerts.sort((a, b) => (SEV_ORDER[a.severity] || 3) - (SEV_ORDER[b.severity] || 3));
+  alerts.sort((a, b) => (SEV_ORDER[a.severity] ?? 3) - (SEV_ORDER[b.severity] ?? 3));   // ?? — action is 0, which || read as missing (Cipher A3)
 
   // ── Cross-alert synthesis ──
   const warningAlerts = alerts.filter(a => a.severity !== 'positive');
