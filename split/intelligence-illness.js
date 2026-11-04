@@ -4,14 +4,16 @@
 // Both phones merge the same way on receive and on push, so they converge (Carina V-CA-P3-1..14,
 // Kael V-K-P3-1..18, Maren V-M-P3-1..8). Inputs are never mutated.
 const FE_FEVER_START_F = 99;   // a fever episode starts at this reading — and a late reading this high reopens a resolved one (V-M-P3-1)
-const _EP_GONE = 'This entry changed on the other phone. Close and reopen.';
+// The entry or its episode is gone from this phone's list (removed, or moved when two episodes merged).
+const _EP_GONE = 'Not saved \u2014 the other phone removed or moved this entry. Close this and find it in the list again.';
+const _EP_GONE_DEL = 'Not deleted \u2014 the other phone already removed or moved this entry. Check the list.';
 // Per kind: the storage key, the nested entry arrays, and which late entries reopen a resolved episode
 // (an entry the parent's Resolve question rules out, or a red flag only checked on an active card — Maren).
 const _EP_SYNC = {
   fever:     { key: 'feverEpisodes',     arrays: ['readings', 'doses', 'actions'],
                reopens: (arr, e) => arr === 'readings' && Number(e.temp) >= FE_FEVER_START_F },
   diarrhoea: { key: 'diarrhoeaEpisodes', arrays: ['stools', 'fluids', 'wetDiapers', 'actions'],
-               reopens: (arr, e) => arr === 'stools' && (!!e.blood || !!e.mucus || ['soft', 'normal', 'hard'].indexOf(e.consistency) < 0) },
+               reopens: (arr, e) => arr === 'stools' && (!!e.blood || !!e.mucus || ['soft', 'normal', 'hard'].indexOf(String(e.consistency || '').replace(/'/g, '')) < 0) },
   vomiting:  { key: 'vomitingEpisodes',  arrays: ['episodes', 'fluids', 'wetDiapers', 'actions'],
                reopens: (arr, e) => arr === 'episodes' && e.type !== 'spit-up' },
   cold:      { key: 'coldEpisodes',      arrays: ['actions'], logs: 'dailyLogs',
@@ -25,8 +27,11 @@ function _epStable(v) {
   if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => k.indexOf('__sync_') !== 0).sort().map(k => JSON.stringify(k) + ':' + _epStable(v[k])).join(',') + '}';
   return JSON.stringify(v);
 }
+function _epHash(str) { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); }
 const _epT = t => { const x = new Date(t).getTime(); return Number.isFinite(x) ? x : 0; };
 const _epMin = t => Math.floor(_epT(t) / 60000);
+// An entry's instant: its time, or — a legacy cold day-log with only a date — local midnight of that date (HR-12, V-K-289-9).
+const _epEntryT = e => e.time ? _epT(e.time) : (e.date && typeof _epLocalToISO === 'function' ? _epT(_epLocalToISO(e.date, '00:00')) : 0);
 // Lazy, idempotent: arrays exist; legacy entries get a deterministic id both phones compute alike
 // ('L:<array>:<time>#<n>', n by stable JSON among same-time entries). Never stamps edit/resolve times.
 function _epNormalize(kind, list) {
@@ -37,13 +42,19 @@ function _epNormalize(kind, list) {
       const src = Array.isArray(ep[arr]) ? ep[arr] : [];
       const groups = {};
       src.forEach(e => { if (e && !e.id) (groups[String(e.time)] = groups[String(e.time)] || []).push(e); });
+      // The id carries a hash of the entry's content (plus a count among identical copies), not its position:
+      // phones holding different same-time sets still name the same entry alike (Kael V-K-289-6).
       const legacyId = new Map();
-      Object.keys(groups).forEach(t => groups[t].slice().sort((x, y) => _epStable(x) < _epStable(y) ? -1 : 1)
-        .forEach((e, n) => legacyId.set(e, 'L:' + arr + ':' + t + '#' + n)));
+      Object.keys(groups).forEach(t => { const seen = {}; groups[t].forEach(e => {
+        const h = _epHash(_epStable(e)); const k = seen[h] = (seen[h] || 0) + 1;
+        legacyId.set(e, 'L:' + arr + ':' + t + '#' + h + (k > 1 ? '.' + (k - 1) : ''));
+      }); });
       out[arr] = src.filter(e => e && typeof e === 'object').map(e => e.id ? e : Object.assign({}, e, { id: legacyId.get(e) }));
     });
     if (cfg.logs) out[cfg.logs] = (Array.isArray(ep[cfg.logs]) ? ep[cfg.logs] : []).filter(e => e && e.date);
-    out._del = Array.isArray(ep._del) ? ep._del : [];
+    out._del = Array.isArray(ep._del) ? ep._del.filter(t => t && t.arr && t.id) : [];
+    if (ep.absorbed !== undefined) out.absorbed = Array.isArray(ep.absorbed) ? ep.absorbed.filter(x => typeof x === 'string') : [];
+    if (ep.resolveSuperseded !== undefined) out.resolveSuperseded = Array.isArray(ep.resolveSuperseded) ? ep.resolveSuperseded.filter(x => x && typeof x === 'object') : [];
     return out;
   });
 }
@@ -67,6 +78,7 @@ function _epIdxOf(ep, arr, arg) {
 }
 // The live episode and entry at commit time, by ids — never the objects captured when a sheet opened.
 function _epLive(kind, epId, arr, eid) {
+  if (!epId || !eid) return null;   // an entry without an id must never match 'the first id-less entry' (V-CA-289-3)
   const ep = _epList(kind).find(e => e && e.id === epId);
   if (!ep || !Array.isArray(ep[arr])) return null;
   const i = ep[arr].findIndex(e => e && e.id === eid);
@@ -78,15 +90,44 @@ function _epCameBackHtml(ep) {
   const sup = (ep && ep.status === 'active' && Array.isArray(ep.resolveSuperseded)) ? ep.resolveSuperseded : [];
   const last = sup.reduce((m, x) => (!m || _epT(x && x.resolvedAt) > _epT(m.resolvedAt) ? x : m), null);
   if (!last || !_epT(last.resolvedAt)) return '';
-  const when = new Date(last.resolvedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ', ' + _feverTimeShort(last.resolvedAt);
-  return '<div class="ep-edit-hint">Marked better on ' + escHtml(when) + ', but new symptoms were logged after that, so this is open again. Mark it better again once symptoms settle.</div>';
+  const fmt = iso => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ', ' + _feverTimeShort(iso);
+  // Name what reopened it, so the parent can check it — and fix it if it was a typo (Vela V-V-289-6, Maren V-M-289-8).
+  let what = 'New symptoms were logged after that';
+  const by = last.by || {}, list = by.arr && Array.isArray(ep[by.arr]) ? ep[by.arr] : [];
+  const e = by.id ? list.find(x => x && x.id === by.id) : null;
+  if (e && _epT(e.time)) {
+    const at = ' at ' + _feverTimeShort(e.time);
+    if (by.arr === 'readings' && Number.isFinite(Number(e.temp))) what = 'A ' + Number(e.temp).toFixed(1) + '\u00b0F reading was logged' + at;
+    else if (by.arr === 'stools') what = 'A stool that needs watching was logged' + at;
+    else if (by.arr === 'episodes') what = 'A vomit was logged' + at;
+    else if (by.arr === 'dailyLogs') what = 'Cold symptoms were logged' + at;
+  }
+  return '<div class="ep-edit-hint">Marked resolved on ' + escHtml(fmt(last.resolvedAt)) + '. ' + escHtml(what) + ', so this is open again. Tap Mark Resolved again once symptoms settle.</div>';
 }
 // A delete leaves a tombstone so the other phone's copy can't bring the entry back (V-CA-P3-5).
 function _epTombstone(ep, arr, idx) {
   const e = ep[arr] && ep[arr][idx];
   if (!e || !e.id) return;
   if (!Array.isArray(ep._del)) ep._del = [];
-  ep._del.push({ arr: arr, id: e.id, at: new Date().toISOString() });
+  const base = String(e.id).replace(/~\d+$/, '');
+  ep._del.push({ arr: arr, id: base, at: new Date().toISOString(), h: _epStable(Object.assign({}, e, { id: base })) });
+}
+// A tombstone kills a copy of its entry unless the copy was edited after the delete; with a content hash
+// it kills only that content (a conflict copy the parent kept survives). Tombstones are keyed arr|baseId.
+function _epKilled(delMap, arr, e) {
+  const ts = delMap && delMap.get(arr + '|' + e.id);
+  return !!ts && ts.some(t => !((e.editedAt || '') > (t.at || '')) && (!t.h || t.h === _epStable(e)));
+}
+function _epDelMap(lists) {
+  const m = new Map();
+  lists.forEach(l => (l || []).forEach(t => { if (!t || !t.arr || !t.id) return; const k = t.arr + '|' + t.id; if (!m.has(k)) m.set(k, []); m.get(k).push(t); }));
+  return m;
+}
+// Tombstones from both sides, one of each, in a stable order (so the merge stays commutative).
+function _epUnionDel() {
+  const m = new Map();
+  Array.prototype.slice.call(arguments).forEach(l => (l || []).forEach(t => { if (t && t.arr && t.id) m.set(_epStable(t), t); }));
+  return Array.from(m.entries()).sort((x, y) => x[0] < y[0] ? -1 : 1).map(x => x[1]);
 }
 // Keep every active episode, every fever episode holding a dose in the last 24 h (the 4-in-24 gather),
 // then the newest up to 20 — by (startedAt, id), so both phones keep the same set (V-K-P3-6, V-CA-P3-11).
@@ -105,9 +146,11 @@ function _epCmpEp(a, b) { return (_epT(a.startedAt) - _epT(b.startedAt)) || (Str
 function _epCmpEntry(a, b) { return (_epT(a.time) - _epT(b.time)) || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0); }
 // Two copies of one entry: the later editedAt wins whole; equal content is one; differing content with
 // no edit stamp keeps both (a duplicate over-counts — the safe direction, V-K-P3-1).
-function _epMergeEntryArrays(arr, A, B) {
+function _epMergeEntryArrays(arr, A, B, delMap) {
   const byId = new Map();
-  [A, B].forEach(src => (src || []).forEach(e => {
+  [A, B].forEach(src => (src || []).forEach(e0 => {
+    const base = String(e0.id).replace(/~\d+$/, '');
+    const e = base === e0.id ? e0 : Object.assign({}, e0, { id: base });
     const cur = byId.get(e.id);
     if (!cur) { byId.set(e.id, [e]); return; }
     if (cur.some(c => _epStable(c) === _epStable(e))) return;
@@ -118,7 +161,8 @@ function _epMergeEntryArrays(arr, A, B) {
     } else cur.push(e);
   }));
   const out = [];
-  byId.forEach(v => {
+  byId.forEach(v0 => {
+    const v = v0.filter(e => !_epKilled(delMap, arr, e));
     v.sort((x, y) => _epStable(x) < _epStable(y) ? -1 : 1).forEach((e, n) => out.push(n === 0 ? e : Object.assign({}, e, { id: e.id + '~' + n })));
   });
   return out;
@@ -126,14 +170,11 @@ function _epMergeEntryArrays(arr, A, B) {
 function _epMergePair(kind, a, b) {
   const cfg = _EP_SYNC[kind];
   const out = Object.assign({}, a, b);
-  ['startedAt', 'triggerSource', 'notes'].forEach(f => { out[f] = a[f] !== undefined && a[f] !== null && a[f] !== '' ? (b[f] && _epStable(b[f]) < _epStable(a[f]) ? b[f] : a[f]) : b[f]; });
-  const delMap = new Map();
-  (a._del || []).concat(b._del || []).forEach(t => { const k = t.arr + '|' + t.id; const c = delMap.get(k); if (!c || (t.at || '') > (c.at || '')) delMap.set(k, t); });
-  out._del = Array.from(delMap.values()).sort((x, y) => (x.arr + x.id) < (y.arr + y.id) ? -1 : 1);
-  cfg.arrays.forEach(arr => {
-    const merged = _epMergeEntryArrays(arr, a[arr], b[arr]);
-    out[arr] = merged.filter(e => { const t = delMap.get(arr + '|' + String(e.id).split('~')[0]); return !t || (e.editedAt || '') > (t.at || ''); }).sort(_epCmpEntry);
-  });
+  ['startedAt', 'triggerSource', 'notes'].forEach(f => { const v = a[f] !== undefined && a[f] !== null && a[f] !== '' ? (b[f] && _epStable(b[f]) < _epStable(a[f]) ? b[f] : a[f]) : b[f]; out[f] = v === undefined ? null : v; });   // never undefined (Kael V-K-289-8)
+  if (kind === 'fever') { const pk = [Number(a.peakTemp), Number(b.peakTemp)].filter(Number.isFinite); out.peakTemp = pk.length ? Math.max.apply(null, pk) : 0; }   // the larger side (V-K-289-7)
+  out._del = _epUnionDel(a._del, b._del);
+  const delMap = _epDelMap([out._del]);
+  cfg.arrays.forEach(arr => { out[arr] = _epMergeEntryArrays(arr, a[arr], b[arr], delMap).sort(_epCmpEntry); });
   if (cfg.logs) {
     const byDate = new Map();
     (a[cfg.logs] || []).concat(b[cfg.logs] || []).forEach(l => {
@@ -158,18 +199,20 @@ function _epMergePair(kind, a, b) {
 function _epAllEntries(kind, ep) {
   const cfg = _EP_SYNC[kind], all = [];
   cfg.arrays.forEach(arr => (ep[arr] || []).forEach(e => all.push({ arr: arr, e: e, t: _epT(e.time) })));
-  if (cfg.logs) (ep[cfg.logs] || []).forEach(e => all.push({ arr: cfg.logs, e: e, t: _epT(e.time || e.date) }));
+  if (cfg.logs) (ep[cfg.logs] || []).forEach(e => all.push({ arr: cfg.logs, e: e, t: _epEntryT(e) }));
   return all;
 }
 function _epMoveEntries(kind, from, to, sinceMs) {
   const cfg = _EP_SYNC[kind];
   cfg.arrays.concat(cfg.logs ? [cfg.logs] : []).forEach(arr => {
     const keep = [], move = [];
-    (from[arr] || []).forEach(e => (_epT(e.time || e.date) >= sinceMs ? move : keep).push(e));
+    (from[arr] || []).forEach(e => (_epEntryT(e) >= sinceMs ? move : keep).push(e));
     if (!move.length) return;
     from[arr] = keep;
-    to[arr] = cfg.logs === arr ? _epMergePair(kind, { [arr]: to[arr] || [] }, { [arr]: move })[arr] : _epMergeEntryArrays(arr, to[arr], move).sort(_epCmpEntry);
+    to[arr] = cfg.logs === arr ? _epMergePair(kind, { [arr]: to[arr] || [] }, { [arr]: move })[arr]
+      : _epMergeEntryArrays(arr, to[arr], move, _epDelMap([to._del, from._del])).sort(_epCmpEntry);
   });
+  to._del = _epUnionDel(to._del, from._del);
 }
 // Receive hooks (SYNC_RENDER_DEPS mergeOnReceive, resolved by name on window — so function declarations).
 // A joining device takes the household's copy outright on its first receive (V-CA-P3-8).
@@ -188,13 +231,27 @@ function _epPostReceiveFever() { if (getActiveFeverEpisode()) _startFeverCountdo
 function _epMergeLists(kind, A, B, nowMs) {
   const cfg = _EP_SYNC[kind];
   const a = _epNormalize(kind, JSON.parse(JSON.stringify(A || []))), b = _epNormalize(kind, JSON.parse(JSON.stringify(B || [])));
-  const absorbed = new Set();
-  a.concat(b).forEach(ep => (ep.absorbed || []).forEach(id => absorbed.add(id)));
   const byId = new Map();
   a.concat(b).forEach(ep => {
-    if (absorbed.has(ep.id)) return;
     const cur = byId.get(ep.id);
     byId.set(ep.id, cur ? (_epStable(cur) <= _epStable(ep) ? _epMergePair(kind, cur, ep) : _epMergePair(kind, ep, cur)) : ep);
+  });
+  // An absorbed episode is folded into its absorber, never dropped: an entry the other phone logged into it
+  // after the fold moves into the survivor (Carina V-CA-289-2, Maren V-M-289-2). Chains are followed;
+  // the lowest absorber id wins a tie, so both phones pick the same one.
+  const absorberOf = new Map();
+  Array.from(byId.values()).sort(_epCmpEp).forEach(ep => (ep.absorbed || []).forEach(id => {
+    if (id !== ep.id && (!absorberOf.has(id) || String(ep.id) < String(absorberOf.get(id)))) absorberOf.set(id, ep.id);
+  }));
+  const rootOf = id => { const seen = new Set([id]); let r = id; while (absorberOf.has(r) && !seen.has(absorberOf.get(r))) { r = absorberOf.get(r); seen.add(r); } return r; };
+  Array.from(absorberOf.keys()).sort().forEach(id => {
+    const x = byId.get(id), root = rootOf(id), surv = byId.get(root);
+    if (!x) return;
+    if (surv && root !== id) {
+      _epMoveEntries(kind, x, surv, -Infinity);
+      surv.absorbed = Array.from(new Set((surv.absorbed || []).concat([id], x.absorbed || []))).sort();
+    }
+    if (root !== id) byId.delete(id);
   });
   let list = Array.from(byId.values()).sort(_epCmpEp);
   // Derived status (V-K-P3-2, Maren V-M-P3): resolved iff resolvedAt is set and no reopening entry is
@@ -203,7 +260,7 @@ function _epMergeLists(kind, A, B, nowMs) {
   list.forEach(ep => {
     if (!ep.resolvedAt) { ep.status = 'active'; return; }
     const newer = list.find(x => x !== ep && _epT(x.startedAt) > _epT(ep.resolvedAt));
-    if (newer) { _epMoveEntries(kind, ep, newer, _epT(newer.startedAt)); ep.status = 'resolved'; return; }
+    if (newer) { _epMoveEntries(kind, ep, newer, (_epMin(ep.resolvedAt) + 1) * 60000); ep.status = 'resolved'; return; }   // everything after the resolve's minute (Maren V-M-289-3)
     const late = _epAllEntries(kind, ep).filter(x => cfg.reopens(x.arr, x.e) && Math.floor(x.t / 60000) > _epMin(ep.resolvedAt)).sort((x, y) => x.t - y.t)[0];
     if (!late) { ep.status = 'resolved'; return; }
     const rec = { resolvedAt: ep.resolvedAt, resolvedNotes: ep.resolvedNotes || '', resolvedAtOriginal: ep.resolvedAtOriginal || null,
@@ -219,17 +276,24 @@ function _epMergeLists(kind, A, B, nowMs) {
     const surv = actives[0];
     actives.slice(1).forEach(x => {
       _epMoveEntries(kind, x, surv, -Infinity);
-      const del = new Map((surv._del || []).concat(x._del || []).map(t => [t.arr + '|' + t.id, t]));
-      surv._del = Array.from(del.values()).sort((p, q) => (p.arr + p.id) < (q.arr + q.id) ? -1 : 1);
       surv.absorbed = Array.from(new Set((surv.absorbed || []).concat([x.id], x.absorbed || []))).sort();
     });
     const gone = new Set(actives.slice(1).map(x => x.id));
     list = list.filter(ep => !gone.has(ep.id));
   }
+  // A delete recorded on the episode an entry came from still applies after the entry moved (Kael V-K-289-5).
+  const kindDel = _epDelMap(list.map(ep => ep._del));
+  list.forEach(ep => cfg.arrays.forEach(arr => { if (Array.isArray(ep[arr])) ep[arr] = ep[arr].filter(e => !_epKilled(kindDel, arr, Object.assign({}, e, { id: String(e.id).replace(/~\d+$/, '') }))); }));
+  // One shape whether an episode came from one side or both, so a single-side merge equals a pair merge
+  // of the same content (else every receive would read as divergent and push back).
+  list.forEach(ep => {
+    ['absorbed', 'resolveSuperseded', '_del'].forEach(f => { if (!Array.isArray(ep[f])) ep[f] = []; });
+    ['resolvedAt', 'resolvedNotes', 'resolvedEditedAt', 'resolvedUpdatedAt', 'resolvedAtOriginal'].forEach(f => { if (ep[f] === undefined) ep[f] = null; });
+  });
   if (kind === 'fever') list.forEach(ep => {
     const temps = (ep.readings || []).map(r => Number(r.temp)).filter(Number.isFinite);
-    const sides = [Number(ep.peakTemp)].filter(Number.isFinite);
-    ep.peakTemp = temps.length ? Math.max.apply(null, temps) : (sides.length ? sides[0] : 0);
+    const side = Number(ep.peakTemp);
+    ep.peakTemp = temps.length ? Math.max.apply(null, temps) : (Number.isFinite(side) ? side : 0);
   });
   return _epPrune(kind, list, nowMs);
 }
@@ -792,9 +856,9 @@ function renderFeverEpisodeCard() {
     });
   }
 
-  // Breaking check: 2 consecutive readings < 99
+  // Breaking check: 2 consecutive readings below the fever start (FE_FEVER_START_F)
   const recentTwo = ep.readings.slice(-2);
-  if (recentTwo.length >= 2 && recentTwo.every(r => r.temp < 99)) {
+  if (recentTwo.length >= 2 && recentTwo.every(r => r.temp < FE_FEVER_START_F)) {
     html += '<div style="padding:10px 12px;border-radius:var(--r-md);margin:var(--sp-8) 0;background:rgba(58,112,96,0.08);font-size:var(--fs-sm);color:var(--tc-sage);font-weight:600;">' + zi('check') + ' Temperature normalizing — continue monitoring for 6 hours before resolving</div>';
   }
 
@@ -927,7 +991,7 @@ function feEditReading(arg) {
       showQLToast(zi('flame') + ' Reading updated');
     },
     onDelete: function() {
-      const L = _epLive('fever', epId, 'readings', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('fever', epId, 'readings', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'readings', idx);
       ep.readings.splice(idx, 1);
@@ -965,7 +1029,7 @@ function feEditDose(arg) {
       showQLToast(zi('pill') + ' Dose updated');
     },
     onDelete: function() {
-      const L = _epLive('fever', epId, 'doses', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('fever', epId, 'doses', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'doses', idx);
       ep.doses.splice(idx, 1);
@@ -999,7 +1063,7 @@ function feEditAction(arg) {
       showQLToast('Action updated');
     },
     onDelete: function() {
-      const L = _epLive('fever', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('fever', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);
@@ -1059,9 +1123,8 @@ function epEditResolved(kind, id) {
   // left open while the other parent logged, and saving it whole would revert their entries.
   const stored = load(KEYS[cfg.key], null);
   if (Array.isArray(stored)) {
-    cfg.set(stored);
-    // The active-episode card's taps carry array indices; re-render it from the re-read list so a
-    // longer stored array can't make a tap edit the wrong entry (Cipher A1).
+    cfg.set(_epNormalize(kind, stored));   // legacy entries keep their deterministic ids — never random ones on save (V-CA-289-3, V-M-289-4)
+    // Re-render the active card from the re-read list so its rows carry the same entry ids (Cipher A1).
     try { cfg.active(); } catch (e) { console.warn('[epEditResolved] active re-render', e); }
   }
   const list = cfg.list();
@@ -1114,8 +1177,11 @@ function epEditResolved(kind, id) {
         live.resolvedAt = iso;
         live.resolvedEditedAt = new Date().toISOString();
       }
+      const notesChanged = (live.resolvedNotes || '') !== (v.rnotes || '');
       live.resolvedNotes = v.rnotes || '';
-      live.resolvedUpdatedAt = new Date().toISOString();   // every save of the resolve group, notes-only too (V-K-P3 table)
+      // A real change to the resolve group — end time or notes — stamps it; an empty Save must not outrank
+      // an earlier real edit from the other phone (Kael V-K-289-10).
+      if (!unchanged || notesChanged) live.resolvedUpdatedAt = new Date().toISOString();
       _epSave(cfg.key, liveList);
       cfg.render();
       if (typeof renderHome === 'function') renderHome();
@@ -1306,7 +1372,7 @@ function computeFeverAlerts() {
   // Breaking
   if (ep.readings.length >= 2) {
     const last2 = ep.readings.slice(-2);
-    if (last2.every(r => r.temp < 99)) {
+    if (last2.every(r => r.temp < FE_FEVER_START_F)) {
       alerts.push({
         id: 'fever-breaking', key: 'fever-breaking-' + todayStr,
         severity: 'positive', icon: zi('check'),
@@ -1783,7 +1849,7 @@ function deEditStool(arg) {
       showQLToast(zi('diaper') + ' Stool entry updated');
     },
     onDelete: function() {
-      const L = _epLive('diarrhoea', epId, 'stools', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('diarrhoea', epId, 'stools', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'stools', idx);
       ep.stools.splice(idx, 1);
@@ -1819,7 +1885,7 @@ function deEditFluid(arg) {
       showQLToast(zi('drop') + ' Fluid entry updated');
     },
     onDelete: function() {
-      const L = _epLive('diarrhoea', epId, 'fluids', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('diarrhoea', epId, 'fluids', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'fluids', idx);
       ep.fluids.splice(idx, 1);
@@ -1851,7 +1917,7 @@ function deEditWetDiaper(arg) {
       showQLToast(zi('diaper') + ' Wet diaper updated');
     },
     onDelete: function() {
-      const L = _epLive('diarrhoea', epId, 'wetDiapers', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('diarrhoea', epId, 'wetDiapers', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'wetDiapers', idx);
       ep.wetDiapers.splice(idx, 1);
@@ -1885,7 +1951,7 @@ function deEditAction(arg) {
       showQLToast('Action updated');
     },
     onDelete: function() {
-      const L = _epLive('diarrhoea', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('diarrhoea', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);
@@ -2272,7 +2338,7 @@ function voEditEntry(arg) {
       showQLToast(zi('siren') + ' Entry updated');
     },
     onDelete: function() {
-      const L = _epLive('vomiting', epId, 'episodes', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('vomiting', epId, 'episodes', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'episodes', idx);
       ep.episodes.splice(idx, 1);
@@ -2306,7 +2372,7 @@ function voEditAction(arg) {
       showQLToast('Action updated');
     },
     onDelete: function() {
-      const L = _epLive('vomiting', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('vomiting', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);
@@ -2591,7 +2657,7 @@ function ceEditAction(arg) {
       showQLToast('Action updated');
     },
     onDelete: function() {
-      const L = _epLive('cold', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE); return; }
+      const L = _epLive('cold', epId, 'actions', eid); if (!L) { showQLToast(_EP_GONE_DEL); return; }
       const ep = L.ep, idx = L.i;
       _epTombstone(ep, 'actions', idx);
       ep.actions.splice(idx, 1);

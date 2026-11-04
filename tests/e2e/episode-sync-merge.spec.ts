@@ -264,5 +264,167 @@ test('a reopened episode says it came back (V-M-P3-7); a plain active one does n
   });
   expect(r.plain).toBe('');
   expect(r.note).toContain('open again');
-  expect(r.note).toContain('Marked better on');
+  expect(r.note).toContain('Marked resolved on');
+  expect(r.note).toContain('A 100.6\u00b0F reading was logged at');
+  expect(r.note).toContain('Mark Resolved');
+});
+
+// ── Governor round on #289: each BLOCKING finding has a test that fails without its fix ──
+
+test('tapping a real dose row opens its edit sheet (V-V-289-1 / V-M-289-1 — the dispatcher passes the id)', async ({ page }) => {
+  await setup(page);
+  await page.evaluate(() => {
+    const w: any = window;
+    const now = Date.now();
+    _feverEpisodes = [w.__fe('fe-tap', 0, { startedAt: new Date(now - 3 * 3600000).toISOString(),
+      readings: [{ id: 'r1', time: new Date(now - 3600000).toISOString(), temp: 101 }],
+      doses: [{ id: 'mw1doseA', time: new Date(now - 2 * 3600000).toISOString(), medicine: 'Paracetamol', dose: '1.0 ml' }] })];
+    w.switchTab('medical');
+    w.renderFeverEpisodeCard();
+  });
+  await page.locator('#feverEpisodeCard .fe-dose-row').first().click();
+  await expect(page.locator('#epEditSave')).toBeVisible();
+});
+
+test('an entry logged into an absorbed episode after the fold survives in the survivor (V-CA-289-2 / V-M-289-2)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const A = [w.__fe('fe-a', 0, { readings: [{ id: 'ra', time: w.__iso(0), temp: 101 }] })];
+    const B = [w.__fe('fe-b', 1, { readings: [{ id: 'rb', time: w.__iso(1), temp: 102 }], doses: [{ id: 'd1', time: w.__iso(1.2), medicine: 'Paracetamol', dose: '1 ml' }] })];
+    const folded = w._epMergeLists('fever', A, B);
+    // B logs d2 into its stale fe-b before it sees the fold.
+    const B2 = [w.__fe('fe-b', 1, { readings: [{ id: 'rb', time: w.__iso(1), temp: 102 }], doses: [{ id: 'd1', time: w.__iso(1.2), medicine: 'Paracetamol', dose: '1 ml' }, { id: 'd2', time: w.__iso(5), medicine: 'Paracetamol', dose: '1 ml' }] })];
+    const m1 = w._epMergeLists('fever', folded, B2), m2 = w._epMergeLists('fever', B2, folded);
+    return { n: m1.length, id: m1[0].id, doses: m1[0].doses.map((d: any) => d.id), same: w.__S(m1) === w.__S(m2), idem: w.__S(w._epMergeLists('fever', m1, B2)) === w.__S(m1) };
+  });
+  expect(r).toEqual({ n: 1, id: 'fe-a', doses: ['d1', 'd2'], same: true, idem: true });
+});
+
+test('a red flag logged between the resolve and a newer episode moves to the active card (V-M-289-3)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const vo = (id: string, startH: number, extra: any) => Object.assign({ id, status: 'active', startedAt: w.__iso(startH), resolvedAt: null, episodes: [], fluids: [], wetDiapers: [], actions: [] }, extra);
+    const A = [vo('vo-old', 0, { status: 'resolved', resolvedAt: w.__iso(10), resolvedUpdatedAt: w.__iso(10), episodes: [{ id: 'v1', time: w.__iso(1), type: 'normal' }] }),
+               vo('vo-new', 13, { episodes: [{ id: 'v3', time: w.__iso(13), type: 'normal' }] })];
+    const B = [vo('vo-old', 0, { episodes: [{ id: 'v1', time: w.__iso(1), type: 'normal' }, { id: 'v2', time: w.__iso(10.5), type: 'bile' }] })];
+    const m = w._epMergeLists('vomiting', A, B);
+    const neu = m.find((e: any) => e.id === 'vo-new'), old = m.find((e: any) => e.id === 'vo-old');
+    return { neu: neu.episodes.map((x: any) => x.id), old: old.episodes.map((x: any) => x.id), oldStatus: old.status };
+  });
+  expect(r).toEqual({ neu: ['v2', 'v3'], old: ['v1'], oldStatus: 'resolved' });
+});
+
+test('editing a resolved episode on un-normalized legacy storage never doubles entries (V-CA-289-3 / V-M-289-4)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const legacy = [w.__fe('fe-old', 0, { status: 'resolved', resolvedAt: w.__iso(5), readings: [{ time: w.__iso(0), temp: 101 }], doses: [{ time: w.__iso(1), medicine: 'Paracetamol', dose: '1 ml' }, { time: w.__iso(3), medicine: 'Paracetamol', dose: '1 ml' }] })];
+    localStorage.setItem(KEYS.feverEpisodes, JSON.stringify(legacy));
+    w.epEditResolved('fever', 'fe-old');
+    (document.getElementById('epEditSave') as HTMLElement).click();
+    const saved = JSON.parse(localStorage.getItem(KEYS.feverEpisodes) || '[]');
+    const merged = w._epMergeLists('fever', saved, legacy);   // the other phone still holds the legacy copy
+    return { ids: saved[0].doses.map((d: any) => String(d.id).slice(0, 8)), mergedDoses: merged[0].doses.length };
+  });
+  expect(r.ids).toEqual(['L:doses:', 'L:doses:']);
+  expect(r.mergedDoses).toBe(2);
+});
+
+test('conflict copies: deleting one keeps the other, the delete sticks, and re-merging is idempotent (V-CA-289-4/-5, V-M-289-6)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const A = [w.__fe('fe-1', 0, { doses: [{ id: 'd', time: w.__iso(1), medicine: 'Paracetamol', dose: '1 ml' }] })];
+    const B = [w.__fe('fe-1', 0, { doses: [{ id: 'd', time: w.__iso(1), medicine: 'Paracetamol', dose: '1.5 ml' }] })];
+    const m = w._epMergeLists('fever', A, B);
+    const idem = w.__S(w._epMergeLists('fever', m, B)) === w.__S(m) && w.__S(w._epMergeLists('fever', m, A)) === w.__S(m);
+    // Delete the second copy (d~1) on this phone; both stale phones still hold their copy.
+    const ep = JSON.parse(JSON.stringify(m[0]));
+    const i = ep.doses.findIndex((d: any) => d.id === 'd~1');
+    const keptDose = ep.doses[1 - i].dose;
+    w._epTombstone(ep, 'doses', i); ep.doses.splice(i, 1);
+    const afterA = w._epMergeLists('fever', [ep], A)[0].doses, afterB = w._epMergeLists('fever', [ep], B)[0].doses;
+    const afterBoth = w._epMergeLists('fever', w._epMergeLists('fever', [ep], A), B)[0].doses;
+    return { copies: m[0].doses.map((d: any) => d.id), idem, afterA: afterA.map((d: any) => d.dose), afterB: afterB.map((d: any) => d.dose), afterBoth: afterBoth.map((d: any) => d.dose), keptDose };
+  });
+  expect(r.copies).toEqual(['d', 'd~1']);
+  expect(r.idem).toBe(true);
+  expect(r.afterA).toEqual([r.keptDose]);
+  expect(r.afterB).toEqual([r.keptDose]);
+  expect(r.afterBoth).toEqual([r.keptDose]);
+});
+
+test('an offline transaction failure, then a success, leaves the ledger clean so receives apply again (V-CA-289-1)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(async () => {
+    const w: any = window;
+    localStorage.setItem('sl_sync_seeded', '4'); localStorage.removeItem('sl_sync_dirty');
+    let fail = true;
+    const hRef = {
+      firestore: { runTransaction: async (fn: any) => { if (fail) throw new Error('offline'); return fn({ get: async () => ({ exists: false, data: () => ({}) }), set: () => {} }); } },
+      collection: () => ({ doc: () => ({}) }),
+    };
+    _syncUser = { uid: 't', displayName: 'T' };
+    w._syncReady.episodes = true;
+    w.save(KEYS.feverEpisodes, [w.__fe('fe-1', 0, { doses: [{ id: 'dX', time: w.__iso(1), medicine: 'Paracetamol', dose: '1 ml' }] })]);
+    w._syncFlushSingleDoc(hRef, 'episodes');
+    await new Promise(res => setTimeout(res, 50));
+    const dirtyAfterFail = !!w._syncIsDirty(KEYS.feverEpisodes);
+    fail = false;
+    w._syncFlushSingleDoc(hRef, 'episodes');   // nothing new locally: the retry still runs and clears
+    await new Promise(res => setTimeout(res, 50));
+    const dirtyAfterOk = !!w._syncIsDirty(KEYS.feverEpisodes);
+    w._epRetryReset();
+    _syncUser = null;
+    return { dirtyAfterFail, dirtyAfterOk };
+  });
+  expect(r).toEqual({ dirtyAfterFail: true, dirtyAfterOk: false });
+});
+
+test('a receive whose merge changes nothing saves and renders nothing (V-CA-289-8)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    localStorage.setItem('sl_sync_seeded', '4'); localStorage.removeItem('sl_sync_dirty');
+    const mine = [w.__fe('fe-1', 0, { doses: [{ id: 'd1', time: w.__iso(1), medicine: 'Paracetamol', dose: '1 ml' }] })];
+    w.save(KEYS.feverEpisodes, mine); _feverEpisodes = w._epNormalize('fever', mine); localStorage.removeItem('sl_sync_dirty');
+    // The same record, keys in another order (as Firestore returns maps).
+    const reordered = JSON.parse(JSON.stringify(mine)).map((e: any) => { const o: any = {}; Object.keys(e).sort().reverse().forEach(k => o[k] = e[k]); return o; });
+    let saves = 0; const real = w.save; w.save = function(k: any, v: any) { if (k === KEYS.feverEpisodes) saves++; return real.apply(this, arguments); };
+    try { w._syncHandleSingleDocSnapshot('episodes', { exists: true, metadata: { hasPendingWrites: false }, data: () => ({ [KEYS.feverEpisodes]: reordered }) }); }
+    finally { w.save = real; }
+    return { saves, dirty: !!w._syncIsDirty(KEYS.feverEpisodes) };
+  });
+  expect(r).toEqual({ saves: 0, dirty: false });
+});
+
+test('legacy ids name an entry alike when the phones hold different same-time sets (V-K-289-6)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const t = w.__iso(1);
+    const A = [w.__fe('fe-1', 0, { doses: [{ time: t, medicine: 'Paracetamol', dose: '2 ml' }] })];
+    const B = [w.__fe('fe-1', 0, { doses: [{ time: t, medicine: 'Paracetamol', dose: '1 ml' }, { time: t, medicine: 'Paracetamol', dose: '2 ml' }] })];
+    return w._epMergeLists('fever', A, B)[0].doses.map((d: any) => d.dose).sort();
+  });
+  expect(r).toEqual(['1 ml', '2 ml']);
+});
+
+test('a delete still applies after the entry moved to a newer episode (V-K-289-5)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const late = { id: 'rl', time: w.__iso(7), temp: 101 };
+    // Phone B deletes the late reading on the OLD episode before it has seen the newer one; the merge moves
+    // that reading into fe-new, and B's tombstone (kept on fe-old) must still remove it.
+    const A = [w.__fe('fe-old', 0, { status: 'resolved', resolvedAt: w.__iso(5), resolvedUpdatedAt: w.__iso(5) }), w.__fe('fe-new', 10)];
+    const bOld = w.__fe('fe-old', 0, { status: 'resolved', resolvedAt: w.__iso(5), resolvedUpdatedAt: w.__iso(5), readings: [late] });
+    const C = [w.__fe('fe-old', 0, { status: 'resolved', resolvedAt: w.__iso(5), resolvedUpdatedAt: w.__iso(5), readings: [late] }), w.__fe('fe-new', 10)];
+    w._epTombstone(bOld, 'readings', 0); bOld.readings.splice(0, 1);
+    const m = w._epMergeLists('fever', w._epMergeLists('fever', A, C), [bOld]);
+    return m.map((e: any) => e.id + ':' + e.readings.map((x: any) => x.id).join(','));
+  });
+  expect(r).toEqual(['fe-old:', 'fe-new:']);
 });
