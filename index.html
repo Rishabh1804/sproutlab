@@ -90244,6 +90244,7 @@ function _syncMergeForPush(local, cloud, key) {
   return local;
 }
 function _syncFlushDirty(hRef, _pass) {
+  _epTxnSkipped = {};   // each pass starts clean; a rejected pass must not carry skips into the next (Carina V-CA-289-14)
   var m = _syncLoadDirty();
   var dirtyKeys = Object.keys(m).filter(function(k) { return !!SYNC_KEYS[k]; });
   if (dirtyKeys.length === 0) return Promise.resolve(0);
