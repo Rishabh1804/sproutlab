@@ -618,6 +618,23 @@ function whoWfaZ(wtKg, ageMo, sex) {
   if (z < -3) return -3 + (wtKg - sd(-3)) / (sd(-2) - sd(-3));
   return z;
 }
+// The inverse of whoWfaZ: the weight (kg) at a z for an age and a sex, with WHO's restricted z beyond ±3.
+// NaN for an unknown sex, a non-finite z, or an age outside 0–60 months (fail closed). Used to carry an
+// earlier weigh-in along its own centile to a later date (#161 spec §5.1, W_ref).
+function whoWfaWeightAtZ(z, ageMo, sex) {
+  const T = (sex === 'f' || sex === 'm') ? WHO_WFA_LMS[sex] : null;
+  if (!T || typeof z !== 'number' || !Number.isFinite(z) || typeof ageMo !== 'number' || !(ageMo >= 0 && ageMo <= 60)) return NaN;
+  const i = Math.min(Math.floor(ageMo), T.length - 2);
+  const f = ageMo - i;
+  if (!(f >= 0 && f <= 1)) return NaN;
+  const L = T[i][0] + (T[i + 1][0] - T[i][0]) * f;
+  const M = T[i][1] + (T[i + 1][1] - T[i][1]) * f;
+  const S = T[i][2] + (T[i + 1][2] - T[i][2]) * f;
+  const sd = k => Math.abs(L) < 1e-6 ? M * Math.exp(k * S) : M * Math.pow(1 + L * S * k, 1 / L);
+  if (z > 3) return sd(3) + (z - 3) * (sd(3) - sd(2));
+  if (z < -3) return sd(-3) + (z + 3) * (sd(-2) - sd(-3));
+  return sd(z);
+}
 // "girls" / "boys" for growth copy ("heavier than 60% of girls her age"); "children" until known.
 function childKinWord() { const s = childSex(); return s === 'm' ? 'boys' : s === 'f' ? 'girls' : 'children'; }
 // Pronouns for copy: pron('subj') she/he, 'obj' her/him, 'poss' her/his, 'refl' herself/himself.
@@ -1266,7 +1283,9 @@ function init() {
     else if (action === 'feToggleAllReadings') feToggleAllReadings();
     else if (action === 'feLogDosePrompt') feLogDosePrompt();
     else if (action === 'feSetParaForm') feSetParaForm(arg);
-    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2, arg3);   // retype to confirm a weight (#161 §4.4)
+    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2, arg3);
+    else if (action === 'feConfirmLoadWeight') feConfirmLoadWeight(arg, arg2);   // R1's weight question (#161 §5.3)
+    else if (action === 'feLogGiSign') feLogGiSign(arg);   // R2's tummy-pain / seems-sick chips   // retype to confirm a weight (#161 §4.4)
     else if (action === 'deLogFluidPrompt') deLogFluidPrompt();
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();
@@ -7134,8 +7153,16 @@ function gvWeightNeedsConfirm(row) {
 // Record a retype: adds what the check is asking for that exact date + weight. Writes only the
 // confirmation map (never the growth row). `shownKind`: the question the parent read; if the check has
 // changed since (a receive between render and tap), nothing is recorded (Kael V-K-290-11).
-function gvConfirmRecord(row, shownKind) {
+// `fallbackKind`: when the jump check passed (nothing to ask), the kind to record anyway — the leftover-risk
+// flow's "{wt} kg is right" (#161 spec §5.3 R1), which makes the latest weight the reference weight (§5.1).
+function gvConfirmRecord(row, shownKind, fallbackKind) {
   const ask = gvWeightNeedsConfirm(row);
+  if (!ask && fallbackKind && GV_CONFIRM_KINDS.indexOf(fallbackKind) >= 0) {
+    if (!gvMeasureRows('wt').some(r => r.date === row.date && r.wt === row.wt)) return false;
+    growthConfirm = gvConfirmMerge(growthConfirm, { [row.date]: { [_gvGrams(row.wt)]: [fallbackKind] } });
+    save(KEYS.growthConfirm, growthConfirm);
+    return true;
+  }
   if (!ask || !ask.askKind) return false;
   if (shownKind && shownKind !== ask.askKind) return false;
   const add = { [row.date]: { [_gvGrams(row.wt)]: [ask.askKind] } };

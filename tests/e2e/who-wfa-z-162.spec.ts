@@ -125,7 +125,7 @@ test('#162: the fever chip doses a 4-year-old normally (no "looks off for her ag
   expect(state).toBe('ok');
 });
 
-test('band edges at 14 months (girl): exact lower flag; interim ceiling keeps the old upper flag until PR 4', async ({ page }) => {
+test('band edges at 14 months (girl): the exact WHO flags on both sides, the interim ceiling gone (#161 PR 4b)', async ({ page }) => {
   await boot(page);
   await child(page, 425, 'f');
   const r = await page.evaluate(() => {
@@ -133,17 +133,18 @@ test('band edges at 14 months (girl): exact lower flag; interim ceiling keeps th
     return { lo41: w.paraWeightPlausible(4.1, t), lo42: w.paraWeightPlausible(4.2, t), hi160: w.paraWeightPlausible(16.0, t),
       hi161: w.paraWeightPlausible(16.1, t), hi172: w.paraWeightPlausible(17.2, t), exact172: w.whoWfaZ(17.2, w.whoAgeMoAt(t), 'f') <= 5 };
   });
-  // 16.1–17.2 kg passes WHO's exact +5 flag but not the old ceiling: still no dose (V-K-287-1, V-M-287-3).
-  expect(r).toEqual({ lo41: false, lo42: true, hi160: true, hi161: false, hi172: false, exact172: true });
+  // 16.1–17.2 kg passes WHO's exact +5 flag: the weight-jump confirm (PR 4a) and the leftover-risk flow guard it now.
+  expect(r).toEqual({ lo41: false, lo42: true, hi160: true, hi161: true, hi172: true, exact172: true });
 });
 
-test('the interim ceiling stops at 24 months: day 730 applies it, day 731 uses the exact flag (Cipher N1)', async ({ page }) => {
+test('no seam at 24 months any more: day 730 and day 731 both use the exact flag (#161 PR 4b)', async ({ page }) => {
   await boot(page);
   await child(page, 730, 'f');
   const at730 = await page.evaluate(() => { const w = window as any; return w.paraWeightPlausible(20.5, w.toDateStr(new Date())); });
   await child(page, 731, 'f');
   const at731 = await page.evaluate(() => { const w = window as any; return w.paraWeightPlausible(20.5, w.toDateStr(new Date())); });
-  expect([at730, at731]).toEqual([false, true]);   // girls' upper bound 19.73 → 21.35 kg across the seam
+  expect([at730, at731]).toEqual([true, true]);
+  expect(await page.evaluate(() => typeof (window as any)._paraInterimCeilingOk)).toBe('undefined');
 });
 
 test('past 24 months the interim ceiling no longer applies (the old table clamped there — #162)', async ({ page }) => {

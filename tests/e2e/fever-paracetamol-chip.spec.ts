@@ -21,7 +21,7 @@ async function seed(page: any, opts: { rows?: { date: string; wt: number }[]; do
     const eps: any[] = [];
     if (o.earlier) eps.push({ id: 'fe-old', status: 'resolved', startedAt: new Date(now - 60 * 24 * 3600000).toISOString(),
       resolvedAt: new Date(now - 58 * 24 * 3600000).toISOString(), readings: [{ temp: 101, time: new Date(now - 60 * 24 * 3600000).toISOString(), notes: '' }],
-      doses: [{ time: new Date(now - (o.earlierHoursAgo || 60 * 24) * 3600000).toISOString(), medicine: 'Paracetamol', dose: '5 ml', notes: '', form: o.earlier }],
+      doses: [{ time: new Date(now - (o.earlierHoursAgo || 60 * 24) * 3600000).toISOString(), medicine: 'Paracetamol', dose: o.earlier === 'drops100' ? '1.0 ml' : '5 ml', notes: '', form: o.earlier }],   // a real dose for that bottle: 5 ml of drops is 500 mg, which the leftover-risk flow rightly stops (#161 PR 4b)
       actions: [], peakTemp: 101, triggerSource: 'test', notes: '', resolvedNotes: '' });
     eps.push({ id: 'fe-para', status: 'active', startedAt: new Date(now - 20 * 3600000).toISOString(), resolvedAt: null,
       readings: [{ temp: 101.2, time: new Date().toISOString(), notes: '' }],

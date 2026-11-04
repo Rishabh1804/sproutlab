@@ -172,10 +172,6 @@ fi
 # audit-who-wfa-v1.mjs — PC-9 cited-registry gate (#161/#162, spec paracetamol-weight-check-v1 §4.1):
 # WHO_WFA_LMS is exactly the committed WHO weight-for-age files (sha256 recorded), and WHO_GROWTH's
 # weight columns equal the file's P columns exactly.
-# Advisory (#161, Cipher N2): the interim dosing ceiling must go when PR 4 ships, before 2027-09-04.
-if grep -q '_paraInterimCeilingOk' intelligence-illness.js && [ "$(date +%Y%m%d)" -ge 20270801 ]; then
-  echo "WARN: _paraInterimCeilingOk (#161 interim ceiling) still present — PR 4 must ship before 2027-09-04 (spec paracetamol-weight-check-v1 §7)" >&2
-fi
 if ! node audit-who-wfa-v1.mjs >&2; then
   echo "BUILD ABORTED: WHO weight-for-age registry audit failed (see above)." >&2
   exit 1

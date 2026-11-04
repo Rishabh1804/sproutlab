@@ -9516,6 +9516,11 @@ function computeAlerts() {
     feverAlerts.forEach(a => alerts.push(a));
   } catch(e) { /* fever alerts best effort */ }
 
+  // The leftover-risk flow (#161 spec §5.4): runs while any paracetamol dose is under 72 h old.
+  try {
+    if (typeof computeParacetamolLoadAlerts === 'function') computeParacetamolLoadAlerts().forEach(a => alerts.push(a));
+  } catch(e) { /* paracetamol load alerts best effort */ }
+
   try {
     const deAlerts = computeDiarrhoeaAlerts();
     deAlerts.forEach(a => alerts.push(a));

@@ -3357,6 +3357,19 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 [data-theme="dark"] .fe-para-confirm:not(.fe-para-confirm--calm) { border-color:rgba(212,168,72,0.38); }   /* the light rgba vanishes on dark amber (Vela V-V-290-5) */
 /* The countdown while the dose is held (weight check, or no dose here): neutral, not the go-green (Vela V-V-290-6). */
 .fe-dose-next--hold { color:var(--text); }
+/* The held line when the leftover-risk flow says stop (#161 §5.3): the danger tone, bold. */
+.fe-dose-next--stop { color:var(--tc-danger); font-weight:700; }
+/* The leftover-risk block (#161 §5.3): amber "check before the next dose"; red "call your doctor today"; call-now
+   the same with a stronger border. Text at full contrast; controls reuse the confirm block's 44px rules. */
+.fe-load { background:var(--amber-light); border:1px solid rgba(138,101,32,0.28); border-radius:var(--r-md); padding:var(--sp-10) var(--sp-12); margin:var(--sp-6) 0 var(--sp-8); }
+.fe-load--red, .fe-load--now { background:var(--rose-light); border-color:rgba(196,64,64,0.35); }
+.fe-load--now { border-width:2px; border-color:var(--tc-danger); }
+.fe-load-title { font-size:var(--fs-sm); font-weight:700; color:var(--tc-amber); display:flex; align-items:center; gap:var(--sp-4); padding-bottom:var(--sp-2); }
+.fe-load--red .fe-load-title, .fe-load--now .fe-load-title { color:var(--tc-danger); }
+.fe-load-title .zi { width:16px; height:16px; flex-shrink:0; }
+.fe-load-text { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); padding:var(--sp-2) 0; }
+.fe-load .btn { min-height:44px; }
+[data-theme="dark"] .fe-load:not(.fe-load--red):not(.fe-load--now) { border-color:rgba(212,168,72,0.38); }
 .fe-para-confirm-title { font-size:var(--fs-sm); font-weight:700; color:var(--tc-amber); display:flex; align-items:center; gap:var(--sp-4); }
 .fe-para-confirm--calm .fe-para-confirm-title { color:var(--text); }
 .fe-para-confirm-title .zi { width:16px; height:16px; flex-shrink:0; }

@@ -82,7 +82,8 @@ The fever card's dose chip, which named no weight, date or bottle and had no che
 - **PR 2:** WHO weight-velocity registry + `gvWeightJumpCheck` (velocity to 24 m, weight-for-age Δz from a 12 m start up to 184 days and 60 months, fail-closed). Engine only — the chip uses it from PR 4.
 - **PR 3:** illness-episode sync — all four episode keys merge by entry id on receive and push (tombstones, derived status, concurrent-start fold, transactional write, join-pending), the module arrays are reassigned on receive, edit sheets commit by id. Spec §5A.
 - **PR 4a:** the weight confirm — `KEYS.growthConfirm`, the chip's confirm state on `gvWeightJumpCheck`, the retype UI; the emergency summary and doctor export show the weigh-in date and "not yet checked". Spec §7.4 (split into 4a/4b).
-- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 merged (#289); PR 4a in review; PR 4b (leftover-risk flow, interim ceiling removed) and PR 5 to come.
+- **PR 4b:** the leftover-risk flow (R0–R3, spec §5) — the one verdict for the next dose on the card and Home, the load block, Home alerts, the escalation fold — and the interim ceiling removed.
+- **Status:** **Open** — PRs 1–3 merged (#287, #288, #289); PR 4a merged (#290); PR 4b in review; PR 5 (the entry-time check in `addGrowthEntry`) to come.
 
 #### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
 - **Symptom:** Non-blocking notes from the #284 round.

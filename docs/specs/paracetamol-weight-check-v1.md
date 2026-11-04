@@ -86,6 +86,8 @@ Tiers: calm / amber / red ("Call your doctor today", the NHS 111 urgent-advice e
 - Extra line: "Check other medicines' labels. Some cold syrups also contain paracetamol."
 - Fold, don't duplicate: the escalation at intelligence-illness.js:570 gains "Tell them about the paracetamol: {n} doses, {mg} mg in the last 24 h"; :516 unchanged for < 48 h.
 
+**Built in PR 4b:** `PARA_LOAD_THRESHOLDS`, `_paraDoseMg` (the shared parser), `_paraRefWeight` (W_ref, with `whoWfaWeightAtZ` in core.js carrying an earlier weigh-in along its own centile), the pure `_paraLoadFrom` and its live wrapper `getParacetamolLoad`, `getParacetamolNextDose` (the one verdict), `_paraLoadHtml` (the fever card, and R2 on the vomiting and diarrhoea cards), `computeParacetamolLoadAlerts` (Home), the > 48 h escalation fold, and the retype for R1's "{wt} kg is right" (`gvConfirmRecord` with a fallback kind, so the latest weight becomes W_ref). Copy not given in the spec, written at build and labelled: R1's call-now line, the R2 opening sentence, the "Which bottle" line, the medicines-list line and the no-weight line. No dose notification exists today, so the verdict feeds the card and Home only.
+
 ### 5.4 Engine
 - `getParacetamolLoad()` (pure `_paraLoadFrom`) + `getParacetamolNextDose()` → verdict `available | wait | check | hold` + reasons. The card line, the Home alert and the "dose available" notification read only the verdict; "safe to give" only when available and the load is under. Logging is never blocked.
 - `computeParacetamolLoadAlerts()` keyed on the latest dose time; runs while any dose is < 72 h old whatever the episode status; R2 also renders in the vomiting / diarrhoea cards. Dismissal keyed on (dose time, tier).
