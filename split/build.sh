@@ -180,6 +180,16 @@ if ! node audit-who-wfa-v1.mjs >&2; then
   echo "BUILD ABORTED: WHO weight-for-age registry audit failed (see above)." >&2
   exit 1
 fi
+# Advisory (#161 spec §4.2, Kael V-K-288-6): the WHO tables stop at 60 months (Ziva turns 5 on 2030-09-04).
+if [ "$(date +%Y%m%d)" -ge 20300601 ] && ! grep -q 'WHO_WFA_PAST_60_SOURCE' data.js; then
+  echo "WARN: no weight source past 60 months is registered — the #161 weight check asks to confirm every weigh-in past age 5 (spec paracetamol-weight-check-v1 §4.2)" >&2
+fi
+# audit-who-velocity-v1.mjs — PC-9 gate (#161 PR 2, spec §4.2): WHO_WT_VELOCITY is exactly the committed
+# 2-/3-month WHO files; the PDF-transcribed 4-/6-month rows agree with their own L/M/S; the Δz knots recompute.
+if ! node audit-who-velocity-v1.mjs >&2; then
+  echo "BUILD ABORTED: WHO weight-velocity registry audit failed (see above)." >&2
+  exit 1
+fi
 # audit-hr12-dateonly-v1.sh — PC-1 ratchet (BUGS #55): date-only strings parsed with new Date()
 # may only decrease across split/*.js; a new one needs _parseLocalDate or an '// HR-12: <reason>' marker (a bare marker still counts).
 if ! bash audit-hr12-dateonly-v1.sh >&2; then

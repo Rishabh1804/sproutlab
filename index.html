@@ -18560,6 +18560,143 @@ const WHO_WFA_LMS = {
     [-0.1506, 18.3366, 0.13517],
   ],
 };
+
+// WHO Child Growth Standards, weight velocity (#161 weight-jump check, spec docs/specs/paracetamol-weight-
+// check-v1.md §4.2). Source: https://cdn.who.int/media/docs/default-source/child-growth/child-growth-
+// standards/indicators/weight-velocity/<file>, re-fetched 2026-11-04 (byte-identical to the 2026-11-03/04
+// copies), committed at docs/research/who-growth/. WHO publishes no version: sha256 + date (decision D) —
+//   girls-2mon 8bb8ccd218175d205b7e72abd8248aef7741d4e602b0929af047e9e4901315ce
+//   girls-3mon 6da9768fa094c22203c7b4c9bd0f5678ea9321fbb84496b5ee917d954628fc3d
+//   boys-2mon  5c40eab824a2fc8b5c955871a22ea9ca004a098596a8ddcf9ab9ae0cf71f96e4
+//   boys-3mon  d750caa05ecaca558dace5a93b8990dd54d7a3f4901896578e17105cfbc8ab99
+//   girls-4mon-pdf c7a92726c14d6489c7e8c4eb836250e6c81ce97c8a6233c3e908ce841bc0da77
+//   girls-6mon-pdf aa1857113b9a097882cbd44718e3660a216265dac7e283fd179661a6d7df5b55
+//   boys-4mon-pdf  80b6bb4e096ad70d1a91d5098729b8a2e5fadff7b01ffa72b385f3e8b24274f9
+//   boys-6mon-pdf  a75d645240fe17ba8298ebc6d273ba6d30ec0fdb06f3f14c4dcec88a45d160da
+// WHO_WT_VELOCITY[sex][k] — 2- and 3-month increments (ttt-weight-{girls,boys}-{2,3}mon-p.xlsx), one row per
+//   interval start month: [start, P1 g, P99 g, L, M, S, Delta]. Copied by script; split/audit-who-velocity-v1.mjs
+//   re-reads the committed xlsx and fails the build on any difference.
+// WHO_WT_VELOCITY_LONG[sex][k] — the one 4- and 6-month row each Δz knot needs (the row ending at 24 m):
+//   [start, L, M, S, Delta, P1 g, P99 g], from lms_weight_{girls,boys}_{4,6}mon_p.pdf (WHO publishes these
+//   as PDF only). Transcribed by pdftotext -layout and matched by three independent extractions on 2026-11-04
+//   (Maren, Lyra, Carina V-CA-288-3 — the interval label, sex and table checked, not only the values);
+//   the build cannot re-read a PDF, so the audit checks the row against its own L/M/S (P1/P99 within 1 g).
+// WHO_WT_DZ_KNOTS[sex] — [gap days, up, down]: the weight-for-age Δz equivalent of the WHO P99 / P1
+//   increment over 61 / 91 / 122 / 183 days, for a weigh-in starting at the median at (24 − gap) months and
+//   ending at 24 (Maren's calibration, council #161; ratified, decision E). Rounded to 0.01; the audit
+//   recomputes each from the rows above and WHO_WFA_LMS. Read only through gvWeightJumpCheck (core.js).
+const WHO_WT_VELOCITY = {
+  f: {
+    2: [
+      [0, 968, 3062, 0.4599, 2497.0406, 0.18, 600],
+      [1, 890, 2799, 0.3294, 2314.2285, 0.17612, 600],
+      [2, 625, 2213, 0.3128, 1907.0116, 0.17761, 600],
+      [3, 451, 1894, 0.356, 1673.5778, 0.18421, 600],
+      [4, 295, 1646, 0.4264, 1482.7466, 0.19524, 600],
+      [5, 170, 1473, 0.5002, 1342.3734, 0.20864, 600],
+      [6, 76, 1372, 0.5699, 1251.4869, 0.22315, 600],
+      [7, 3, 1293, 0.6268, 1181.4135, 0.23586, 600],
+      [8, -59, 1215, 0.673, 1116.8192, 0.2468, 600],
+      [9, -104, 1174, 0.7102, 1078.3961, 0.25656, 600],
+      [10, -135, 1159, 0.7382, 1058.4112, 0.26494, 600],
+      [11, -163, 1147, 0.7605, 1040.8737, 0.27292, 600],
+      [12, -185, 1142, 0.7762, 1027.9459, 0.28011, 600],
+      [13, -204, 1144, 0.7864, 1019.687, 0.28705, 600],
+      [14, -219, 1154, 0.7913, 1016.4898, 0.29343, 600],
+      [15, -231, 1172, 0.7922, 1017.5335, 0.29961, 600],
+      [16, -243, 1189, 0.7902, 1017.2241, 0.30592, 600],
+      [17, -255, 1199, 0.7866, 1012.8511, 0.31201, 600],
+      [18, -267, 1206, 0.7827, 1007.2711, 0.31824, 600],
+      [19, -279, 1213, 0.7795, 1001.8324, 0.32415, 600],
+      [20, -291, 1214, 0.7771, 993.3265, 0.33014, 600],
+      [21, -305, 1207, 0.7755, 980.7096, 0.33605, 600],
+      [22, -318, 1197, 0.7743, 967.2057, 0.34166, 600],
+    ],
+    3: [
+      [0, 1493, 4089, 0.2298, 3403.924, 0.16227, 800],
+      [1, 1293, 3600, 0.0924, 3054.3512, 0.15958, 800],
+      [2, 983, 3013, 0.0599, 2618.644, 0.16338, 800],
+      [3, 718, 2549, 0.13, 2277.5681, 0.1699, 800],
+      [4, 507, 2223, 0.2404, 2030.2917, 0.1796, 800],
+      [5, 342, 2005, 0.358, 1855.0162, 0.19157, 800],
+      [6, 212, 1846, 0.4576, 1724.5802, 0.20334, 800],
+      [7, 113, 1724, 0.5317, 1624.4588, 0.2135, 800],
+      [8, 40, 1636, 0.5891, 1552.7117, 0.22168, 800],
+      [9, -11, 1579, 0.6373, 1506.412, 0.22796, 800],
+      [10, -49, 1542, 0.6806, 1476.5227, 0.23285, 800],
+      [11, -79, 1515, 0.7211, 1455.9527, 0.23682, 800],
+      [12, -102, 1500, 0.7527, 1442.0871, 0.2404, 800],
+      [13, -120, 1497, 0.7679, 1434.2381, 0.24403, 800],
+      [14, -131, 1508, 0.7642, 1431.1099, 0.24794, 800],
+      [15, -139, 1524, 0.7482, 1429.1551, 0.25198, 800],
+      [16, -147, 1538, 0.7267, 1425.3256, 0.25598, 800],
+      [17, -155, 1548, 0.7032, 1418.4764, 0.25989, 800],
+      [18, -163, 1554, 0.6782, 1409.2288, 0.26384, 800],
+      [19, -172, 1559, 0.6522, 1398.1693, 0.26792, 800],
+      [20, -181, 1560, 0.6262, 1385.3711, 0.27191, 800],
+      [21, -190, 1556, 0.6013, 1370.5464, 0.27539, 800],
+    ],
+  },
+  m: {
+    2: [
+      [0, 1144, 3418, 0.7188, 2815.612, 0.17422, 600],
+      [1, 1040, 3088, 0.6464, 2592.0761, 0.17025, 600],
+      [2, 675, 2336, 0.6071, 2038.1036, 0.17559, 600],
+      [3, 455, 1970, 0.5915, 1744.8197, 0.18708, 600],
+      [4, 291, 1731, 0.5891, 1541.367, 0.2013, 600],
+      [5, 165, 1528, 0.5954, 1377.6979, 0.21318, 600],
+      [6, 79, 1402, 0.6088, 1272.5277, 0.22426, 600],
+      [7, 16, 1322, 0.627, 1201.4599, 0.23472, 600],
+      [8, -41, 1261, 0.6486, 1143.8903, 0.24611, 600],
+      [9, -92, 1227, 0.6725, 1101.6312, 0.25918, 600],
+      [10, -132, 1221, 0.6959, 1077.9049, 0.27217, 600],
+      [11, -169, 1218, 0.7191, 1057.9071, 0.28462, 600],
+      [12, -202, 1206, 0.7399, 1037.0541, 0.29479, 600],
+      [13, -230, 1183, 0.7597, 1014.185, 0.30285, 600],
+      [14, -250, 1170, 0.7771, 1000.5821, 0.30864, 600],
+      [15, -262, 1176, 0.7929, 999.4661, 0.3129, 600],
+      [16, -272, 1183, 0.8078, 1000.968, 0.31615, 600],
+      [17, -281, 1181, 0.821, 998.4215, 0.31858, 600],
+      [18, -291, 1173, 0.8335, 992.804, 0.32058, 600],
+      [19, -299, 1164, 0.8447, 986.9799, 0.32222, 600],
+      [20, -307, 1156, 0.8554, 981.7965, 0.32377, 600],
+      [21, -314, 1151, 0.8655, 978.4016, 0.32529, 600],
+      [22, -320, 1149, 0.8748, 976.3696, 0.32673, 600],
+    ],
+    3: [
+      [0, 1733, 4401, 0.6854, 3638.873, 0.15801, 650],
+      [1, 1415, 3882, 0.6503, 3215.101, 0.16539, 650],
+      [2, 1011, 3199, 0.5884, 2661.5629, 0.17708, 650],
+      [3, 704, 2659, 0.5368, 2231.9042, 0.1885, 650],
+      [4, 496, 2289, 0.4999, 1939.0717, 0.19877, 650],
+      [5, 355, 2049, 0.4819, 1745.5952, 0.20848, 650],
+      [6, 249, 1888, 0.4866, 1611.6464, 0.21853, 650],
+      [7, 162, 1778, 0.5135, 1514.8958, 0.2294, 650],
+      [8, 86, 1700, 0.5582, 1442.6013, 0.24108, 650],
+      [9, 21, 1644, 0.6092, 1387.884, 0.25261, 650],
+      [10, -35, 1602, 0.658, 1346.3553, 0.26315, 650],
+      [11, -80, 1571, 0.7, 1314.9304, 0.27214, 650],
+      [12, -115, 1547, 0.7323, 1291.3726, 0.27922, 650],
+      [13, -141, 1529, 0.755, 1273.886, 0.28446, 650],
+      [14, -159, 1515, 0.7695, 1261.0053, 0.28821, 650],
+      [15, -171, 1505, 0.7769, 1251.6296, 0.29074, 650],
+      [16, -177, 1499, 0.7781, 1244.9248, 0.29231, 650],
+      [17, -180, 1494, 0.774, 1240.2027, 0.29311, 650],
+      [18, -180, 1490, 0.7663, 1235.8993, 0.2935, 650],
+      [19, -180, 1484, 0.7569, 1229.8975, 0.29388, 650],
+      [20, -183, 1473, 0.7475, 1220.6029, 0.2946, 650],
+      [21, -189, 1455, 0.7393, 1206.8517, 0.29591, 650],
+    ],
+  },
+};
+const WHO_WT_VELOCITY_LONG = {
+  f: { 4: [20, 0.5249, 1576.2729, 0.26914, 800, -62, 1909], 6: [18, 0.6476, 1640.7438, 0.31376, 450, 161, 2533] },
+  m: { 4: [20, 0.6991, 1257.3339, 0.31696, 500, -54, 1779], 6: [18, 0.7478, 1508.4744, 0.30647, 350, 195, 2321] },
+};
+const WHO_WT_DZ_KNOTS = {
+  f: [[61, 0.53, 0.54], [91, 0.62, 0.6], [122, 0.71, 0.66], [183, 0.84, 0.81]],
+  m: [[61, 0.52, 0.54], [91, 0.59, 0.59], [122, 0.67, 0.64], [183, 0.76, 0.77]],
+};
 // @@DATA_BLOCK_5_END@@
 
 // @@DATA_BLOCK_6_START@@ VACC_SERIES
@@ -24920,7 +25057,9 @@ function whoT() { return WHO_GROWTH[childSex() || 'f']; }
 
 // ── WHO weight-for-age z, 0–60 months (spec docs/specs/paracetamol-weight-check-v1.md §4.1) ──
 // The age clock for every WHO_WFA_LMS read (V-CA-287-6: medical.js's percentile reads of WHO_GROWTH still
-// use ageMonthsAt's 30.44-day months — at most 0.15 day apart; converge before PR 2): whole calendar days from the birth date to the
+// use ageMonthsAt's 30.44-day months — at most 0.15 day apart; the two switch on the same day at 12, 24 and 60 m,
+// on the WHO clock; the weight-jump check counts its own boundaries in days of life — day 365, 730, 1826 —
+// so no month clock decides a method there — V-CA-288-6): whole calendar days from the birth date to the
 // weigh-in (gvDaysBetween, HR-12), divided by WHO's month, 30.4375 days (WHO Anthro). The table's last
 // row is month 60.0; a weigh-in past day 1826 is outside it.
 const WHO_MONTH_DAYS = 30.4375;
@@ -31133,9 +31272,10 @@ function gvBirthRow(measure) {
 // date (wt != null) let a stored wt:0 or an undated row become one reader's first or latest
 // measurement and not another's. A synced growthData that is not an array (sync.js:461 merges what
 // the server holds) gives no rows instead of throwing (Carina V-CA-282e-3).
-function gvMeasureRows(measure) {
+function gvMeasureRows(measure, rows) {
   const m = measure === 'ht' ? 'ht' : 'wt';
-  const src = Array.isArray(growthData) ? growthData : [];
+  // rows: an explicit source (the weight-jump check's caller-passed rows — Cipher #288 A3), else growthData.
+  const src = Array.isArray(rows) ? rows : (Array.isArray(growthData) ? growthData : []);
   return src.filter(r => r && typeof r[m] === 'number' && Number.isFinite(r[m]) && r[m] > 0 && _parseLocalDate(r.date))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -31236,6 +31376,159 @@ function gvWeightWindow(rows) {
   }
   const d = gvDaysBetween(previous.date, latest.date);
   return { latest, previous, days: Math.max(1, isFinite(d) ? d : 1) };
+}
+
+// ── The weight-jump check (#161, spec docs/specs/paracetamol-weight-check-v1.md §4.2) ──
+// Is the latest weight believable against her own earlier weights? The rows are first normalized (the
+// gvMeasureRows filter and order, so a caller's rows can't move the anchor — V-K-288-7). Every other row
+// on the latest date is looked at: a different weight there is 'samedate' (never a silent pick by array
+// order); an equal one is a re-save, not a comparison (V-V-288-1 = V-M-288-1 = V-K-288-1). The pairs are
+// then taken from the rows dated BEFORE the latest date, against the latest weight:
+//   - the pair the Growth engines measure (gvWeightWindow: from 12 m it skips back 28+ days);
+//   - the latest earlier-dated weigh-in (a modest typo among dense weigh-ins);
+//   - the latest earlier-dated weigh-in whose weight differs from the latest (the same typo entered on
+//     two dates is compared with the weight before it — D5, V-K-288-3).
+// Any pair out of band → 'confirm'; no earlier-dated weight → 'confirm'. Each pair takes exactly one method
+// (the method predicate, tested as a table):
+//   end ≤ 24.0 m and gap ≤ 92 d → velocity: the increment (g) must lie in [min(P1, 0), P99] of the WHO row
+//     starting at floor(start age), clamped (2-month table for gaps ≤ 61 d, 3-month for 62–92). This is the
+//     band containing the pair, deliberately not gvBandAge's centre-of-a-rate row.
+//   start on or after day 365 of life (WHO's 12.0 m is day 365.25 — V-M-288-2), end ≤ 60.0 m,
+//     gap ≤ 184 d → Δz: z(latest at its age) − z(previous at its age) must lie
+//     in [−down(gap), +up(gap)] (WHO_WT_DZ_KNOTS, linear in days between the 61/91/122/183 knots; ≤ 61
+//     holds the 61 knot, 183 held to 184). A weight at or above the previous one never trips the loss side.
+//   anything else → nocompare → 'confirm'.
+// Every test is written fail-closed (`!(x <= hi)` style): a NaN anywhere — unknown sex, a missing row, a
+// bad date, a weight that is not a positive number — lands on 'confirm'. Ages are on the WHO clock
+// (whoAgeMoAt, days / 30.4375), the clock of the tables this reads; gvWeightWindow's 12-month switch
+// still uses ageMonthsAt (30.44 d), which only chooses which earlier row is paired, never a verdict
+// (V-CA-287-6: the gap is ≤ 0.15 day and named here).
+// rows: gvMeasureRows('wt') by default; sex: childSex() by default.
+// → { verdict: 'ok'|'confirm', variant, reason, method, pair, pairs: [...], anchor }
+//   variant: 'ok' | 'jump-up' | 'jump-down' | 'nocompare' | 'samedate' | 'implausible' | 'outofrange' | 'error'
+//   reason (for copy that names a cause — V-V-288-4): 'noprev' | 'nosex' | 'gap' | 'age' | 'norow' | 'dob'
+//     (a row dated before the birth date) | null. A 'gap' / 'age' nocompare can sit beside another pair that
+//     compared and passed — copy must read `pairs`, not claim "no recent weigh-in" (Cipher #288 finding 9).
+//   pair: the pair that decided the verdict (the top-ranked failing pair, else the first) — what a screen
+//     shows side by side, so it never re-derives the answer (V-V-288-2, V-K-288-2). Each pair carries
+//     { a, b, gapDays, changeG, method, ok, variant, badRow: 'a'|'b'|'both'|null, reason, ... }.
+const GV_JUMP_VELOCITY_MAX_DAYS = 92;
+const GV_JUMP_DZ_MAX_DAYS = 184;
+const GV_JUMP_DZ_MIN_START_DAY = 365;   // day 365 of life (WHO's 12.0 m is day 365.25)
+function _gvDzLimits(sex, gap) {
+  const K = WHO_WT_DZ_KNOTS[sex];
+  if (!K || !(gap >= 0 && gap <= GV_JUMP_DZ_MAX_DAYS)) return null;
+  if (gap <= K[0][0]) return { up: K[0][1], down: K[0][2] };
+  for (let i = 1; i < K.length; i++) {
+    if (gap <= K[i][0] || i === K.length - 1) {
+      const a = K[i - 1], b = K[i];
+      const f = Math.min(1, (gap - a[0]) / (b[0] - a[0]));   // 183 held to 184
+      return { up: a[1] + (b[1] - a[1]) * f, down: a[2] + (b[2] - a[2]) * f };
+    }
+  }
+  return null;
+}
+function _gvJumpPair(a, b, sex) {
+  const pair = { a, b, gapDays: NaN, changeG: NaN, method: 'nocompare', ok: false, variant: 'nocompare', badRow: null, reason: null };
+  if (!a || !b) { pair.reason = 'noprev'; return pair; }
+  // gvWeightJumpCheck never pairs two rows of one date (it handles them first); if a caller does, it is
+  // never an 'ok' comparison.
+  if (a.date === b.date) { pair.gapDays = 0; pair.variant = a.wt === b.wt ? 'nocompare' : 'samedate'; pair.reason = a.wt === b.wt ? 'noprev' : null; return pair; }
+  const gap = gvDaysBetween(a.date, b.date);
+  const startMo = whoAgeMoAt(a.date), endMo = whoAgeMoAt(b.date);
+  pair.gapDays = gap; pair.startMo = startMo; pair.endMo = endMo;
+  pair.changeG = Math.round((b.wt - a.wt) * 1000);
+  const wFlag = (w, mo) => { const z = whoWfaZ(w, mo, sex); return z >= -6 && z <= 5; };
+  const aOk = wFlag(a.wt, startMo), bOk = wFlag(b.wt, endMo);
+  if (!aOk || !bOk) {
+    // badRow names a WEIGHT that is off at an age on the table — never an age or date problem
+    // (V-V-288-3, V-K-288-2; Cipher #288 A1). Past 60 months → outofrange / 'age'; a row dated before the
+    // birth date → reason 'dob' (the chip calls that 'baddate' / 'beforebirth').
+    const off = (ok, mo) => !ok && Number.isFinite(mo);
+    const bPast = !bOk && Number.isNaN(endMo) && gvDaysBetween(toDateStr(DOB), b.date) > WHO_WFA_MAX_DAY;
+    pair.variant = bPast ? 'outofrange' : 'implausible';
+    pair.reason = bPast ? 'age' : (Number.isNaN(startMo) || Number.isNaN(endMo)) ? 'dob' : null;
+    pair.badRow = off(aOk, startMo) && off(bOk, endMo) ? 'both' : off(aOk, startMo) ? 'a' : off(bOk, endMo) ? 'b' : null;
+    return pair;
+  }
+  if (!(gap > 0)) return pair;
+  if (endMo <= 24 && gap <= GV_JUMP_VELOCITY_MAX_DAYS) {
+    const k = gap <= 61 ? 2 : 3;
+    const T = WHO_WT_VELOCITY[sex] && WHO_WT_VELOCITY[sex][k];
+    const row = T && T[Math.max(0, Math.min(Math.floor(startMo), T.length - 1))];
+    const inc = Math.round((b.wt - a.wt) * 1000);
+    pair.method = 'velocity';
+    if (!row) { pair.method = 'nocompare'; pair.reason = 'norow'; return pair; }
+    pair.floor = Math.min(row[1], 0); pair.ceil = row[2];
+    pair.ok = inc >= pair.floor && inc <= pair.ceil;
+    pair.variant = pair.ok ? 'ok' : (inc > pair.ceil ? 'jump-up' : 'jump-down');
+    return pair;
+  }
+  const startDay = gvDaysBetween(toDateStr(DOB), a.date);
+  if (startDay >= GV_JUMP_DZ_MIN_START_DAY && endMo <= 60 && gap <= GV_JUMP_DZ_MAX_DAYS) {
+    const lim = _gvDzLimits(sex, gap);
+    const dz = whoWfaZ(b.wt, endMo, sex) - whoWfaZ(a.wt, startMo, sex);
+    pair.method = 'dz'; pair.dz = dz;
+    if (!lim) { pair.method = 'nocompare'; pair.reason = 'norow'; return pair; }
+    pair.up = lim.up; pair.down = lim.down;
+    const upOk = dz <= lim.up;
+    const downOk = b.wt >= a.wt || dz >= -lim.down;   // the up test is never skipped by this guard
+    pair.ok = upOk && downOk;
+    pair.variant = pair.ok ? 'ok' : (!upOk ? 'jump-up' : 'jump-down');
+    return pair;
+  }
+  pair.reason = gap > GV_JUMP_DZ_MAX_DAYS ? 'gap' : 'age';   // nocompare: gap too long, or under 12 m past 92 d
+  return pair;
+}
+// The ONE filter and order (gvMeasureRows), for rows a caller passes in too (V-K-288-7, Cipher #288 A3).
+function _gvJumpRows(rows) {
+  return Array.isArray(rows) ? gvMeasureRows('wt', rows) : gvMeasureRows('wt');
+}
+function gvWeightJumpCheck(rows, sex) {
+  let anchor = null;
+  try {
+    const R = _gvJumpRows(rows);
+    const s = sex === undefined ? childSex() : sex;
+    anchor = R.length ? R[R.length - 1] : null;
+    const out = { verdict: 'confirm', variant: 'nocompare', reason: 'noprev', method: 'nocompare', pair: null, pairs: [], anchor };
+    if (!anchor) return out;
+    if (s !== 'f' && s !== 'm') { out.reason = 'nosex'; return out; }
+    // Rows on the latest date: a different weight is a conflict to show; an equal one is a re-save.
+    const sameDay = R.filter(r => r !== anchor && r.date === anchor.date);
+    const conflict = sameDay.find(r => r.wt !== anchor.wt);
+    if (conflict) {
+      const p = _gvJumpPair(conflict, anchor, s);
+      Object.assign(out, { variant: 'samedate', reason: null, pair: p, pairs: [p] });
+      return out;
+    }
+    const E = R.filter(r => r.date < anchor.date);   // earlier-dated rows only
+    if (!E.length) return out;                        // nothing to compare with: ask
+    const prevs = [];
+    const add = r => { if (r && prevs.indexOf(r) < 0) prevs.push(r); };
+    const win = gvWeightWindow(E.concat([anchor]));
+    add(win && win.previous);
+    add(E[E.length - 1]);
+    for (let i = E.length - 1; i >= 0; i--) { if (E[i].wt !== anchor.wt) { add(E[i]); break; } }
+    // An earlier date holding two different weights: every weight of that date is compared (V-CA-288-2).
+    prevs.slice().forEach(p => E.forEach(r => { if (r.date === p.date && r.wt !== p.wt) add(r); }));
+    out.pairs = prevs.map(p => _gvJumpPair(p, anchor, s));
+    const bads = out.pairs.filter(p => !p.ok);
+    if (!bads.length) {
+      Object.assign(out, { verdict: 'ok', variant: 'ok', reason: null, method: out.pairs[0].method, pair: out.pairs[0] });
+      return out;
+    }
+    // The reason the parent is shown: a bad row first (the record is the problem), then a jump, then
+    // "couldn't compare". Ties keep pair order (the Growth window pair first).
+    const RANK = ['samedate', 'outofrange', 'implausible', 'jump-up', 'jump-down', 'nocompare'];
+    const bad = bads.slice().sort((x, y) => RANK.indexOf(x.variant) - RANK.indexOf(y.variant))[0];
+    out.variant = RANK.indexOf(bad.variant) < 0 ? 'nocompare' : bad.variant;
+    out.reason = bad.reason || (out.variant === 'nocompare' ? 'norow' : null);
+    out.method = bad.method;
+    out.pair = bad;
+    return out;
+  } catch (e) {
+    return { verdict: 'confirm', variant: 'error', reason: null, method: 'nocompare', pair: null, pairs: [], anchor };
+  }
 }
 // Solids have started: the profile's solids start date is today or earlier. The ONE check, read by
 // gvFoodAdviceOk and diet.js _libSuggestions (Ceres V-C-282c-1).
