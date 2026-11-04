@@ -6892,6 +6892,112 @@ function gvWeightWindow(rows) {
   const d = gvDaysBetween(previous.date, latest.date);
   return { latest, previous, days: Math.max(1, isFinite(d) ? d : 1) };
 }
+
+// ── The weight-jump check (#161, spec docs/specs/paracetamol-weight-check-v1.md §4.2) ──
+// Is the latest weight believable against her own earlier weights? Two pairs are tested — the pair the
+// Growth engines measure (gvWeightWindow: from 12 m it skips back 28+ days, so the same typo entered
+// twice is still compared with a real weight) and the latest against the weigh-in just before it (a
+// modest typo among dense weigh-ins). Either out of band → 'confirm'. Each pair takes exactly one method
+// (the method predicate, tested as a table):
+//   end ≤ 24.0 m and gap ≤ 92 d → velocity: the increment (g) must lie in [min(P1, 0), P99] of the WHO row
+//     starting at floor(start age), clamped (2-month table for gaps ≤ 61 d, 3-month for 62–92). This is the
+//     band containing the pair, deliberately not gvBandAge's centre-of-a-rate row.
+//   start ≥ 12.0 m, end ≤ 60.0 m, gap ≤ 184 d → Δz: z(latest at its age) − z(previous at its age) must lie
+//     in [−down(gap), +up(gap)] (WHO_WT_DZ_KNOTS, linear in days between the 61/91/122/183 knots; ≤ 61
+//     holds the 61 knot, 183 held to 184). A weight at or above the previous one never trips the loss side.
+//   anything else → nocompare → 'confirm'.
+// Every test is written fail-closed (`!(x <= hi)` style): a NaN anywhere — unknown sex, a missing row, a
+// bad date, a weight that is not a positive number — lands on 'confirm'. Ages are on the WHO clock
+// (whoAgeMoAt, days / 30.4375), the clock of the tables this reads; gvWeightWindow's 12-month switch
+// still uses ageMonthsAt (30.44 d), which only chooses which earlier row is paired, never a verdict
+// (V-CA-287-6: the gap is ≤ 0.15 day and named here).
+// rows: gvMeasureRows('wt') by default; sex: childSex() by default.
+// → { verdict: 'ok'|'confirm', variant, method, pairs: [...], anchor }
+//   variant: 'ok' | 'jump-up' | 'jump-down' | 'nocompare' | 'samedate' | 'implausible' | 'outofrange' | 'error'
+const GV_JUMP_VELOCITY_MAX_DAYS = 92;
+const GV_JUMP_DZ_MAX_DAYS = 184;
+const GV_JUMP_DZ_MIN_START_MO = 12;
+function _gvDzLimits(sex, gap) {
+  const K = WHO_WT_DZ_KNOTS[sex];
+  if (!K || !(gap >= 0 && gap <= GV_JUMP_DZ_MAX_DAYS)) return null;
+  if (gap <= K[0][0]) return { up: K[0][1], down: K[0][2] };
+  for (let i = 1; i < K.length; i++) {
+    if (gap <= K[i][0] || i === K.length - 1) {
+      const a = K[i - 1], b = K[i];
+      const f = Math.min(1, (gap - a[0]) / (b[0] - a[0]));   // 183 held to 184
+      return { up: a[1] + (b[1] - a[1]) * f, down: a[2] + (b[2] - a[2]) * f };
+    }
+  }
+  return null;
+}
+function _gvJumpPair(a, b, sex) {
+  const pair = { a, b, gapDays: NaN, method: 'nocompare', ok: false, variant: 'nocompare' };
+  if (!a || !b) return pair;
+  if (a.date === b.date) {   // two weights on one date: never a silent pick by array order (Carina C161-3)
+    pair.variant = a.wt === b.wt ? 'ok' : 'samedate'; pair.ok = a.wt === b.wt; pair.gapDays = 0; return pair;
+  }
+  const gap = gvDaysBetween(a.date, b.date);
+  const startMo = whoAgeMoAt(a.date), endMo = whoAgeMoAt(b.date);
+  pair.gapDays = gap; pair.startMo = startMo; pair.endMo = endMo;
+  const wFlag = (w, mo) => { const z = whoWfaZ(w, mo, sex); return z >= -6 && z <= 5; };
+  if (!wFlag(a.wt, startMo) || !wFlag(b.wt, endMo)) {
+    pair.variant = Number.isNaN(endMo) && gvDaysBetween(toDateStr(DOB), b.date) > WHO_WFA_MAX_DAY ? 'outofrange' : 'implausible';
+    return pair;
+  }
+  if (!(gap > 0)) return pair;
+  if (endMo <= 24 && gap <= GV_JUMP_VELOCITY_MAX_DAYS) {
+    const k = gap <= 61 ? 2 : 3;
+    const T = WHO_WT_VELOCITY[sex] && WHO_WT_VELOCITY[sex][k];
+    const row = T && T[Math.max(0, Math.min(Math.floor(startMo), T.length - 1))];
+    const inc = Math.round((b.wt - a.wt) * 1000);
+    pair.method = 'velocity'; pair.change = inc;
+    if (!row) return pair;
+    pair.floor = Math.min(row[1], 0); pair.ceil = row[2];
+    pair.ok = inc >= pair.floor && inc <= pair.ceil;
+    pair.variant = pair.ok ? 'ok' : (inc > pair.ceil ? 'jump-up' : 'jump-down');
+    return pair;
+  }
+  if (startMo >= GV_JUMP_DZ_MIN_START_MO && endMo <= 60 && gap <= GV_JUMP_DZ_MAX_DAYS) {
+    const lim = _gvDzLimits(sex, gap);
+    const dz = whoWfaZ(b.wt, endMo, sex) - whoWfaZ(a.wt, startMo, sex);
+    pair.method = 'dz'; pair.dz = dz;
+    if (!lim) return pair;
+    pair.up = lim.up; pair.down = lim.down;
+    const upOk = dz <= lim.up;
+    const downOk = b.wt >= a.wt || dz >= -lim.down;   // the up test is never skipped by this guard
+    pair.ok = upOk && downOk;
+    pair.variant = pair.ok ? 'ok' : (!upOk ? 'jump-up' : 'jump-down');
+    return pair;
+  }
+  return pair;   // nocompare (gap too long, under 12 m past 92 d, or past 60 m)
+}
+function gvWeightJumpCheck(rows, sex) {
+  try {
+    const R = Array.isArray(rows) ? rows : gvMeasureRows('wt');
+    const s = sex === undefined ? childSex() : sex;
+    const anchor = R.length ? R[R.length - 1] : null;
+    const out = { verdict: 'confirm', variant: 'nocompare', method: 'nocompare', pairs: [], anchor };
+    if (!anchor || (s !== 'f' && s !== 'm')) return out;   // no earlier weight, or no sex: ask
+    const prevImmediate = R.length >= 2 ? R[R.length - 2] : null;
+    const win = gvWeightWindow(R);
+    const prevs = [];
+    if (win && win.previous) prevs.push(win.previous);
+    if (prevImmediate && prevs.indexOf(prevImmediate) < 0) prevs.push(prevImmediate);
+    if (!prevs.length) return out;
+    out.pairs = prevs.map(p => _gvJumpPair(p, anchor, s));
+    const bads = out.pairs.filter(p => !p.ok);
+    if (!bads.length) { out.verdict = 'ok'; out.variant = 'ok'; out.method = out.pairs[0].method; return out; }
+    // The reason the parent is shown: a same-date conflict or a bad row first (the record is the problem),
+    // then a jump, then "couldn't compare".
+    const RANK = ['samedate', 'outofrange', 'implausible', 'jump-up', 'jump-down', 'nocompare'];
+    const bad = bads.slice().sort((x, y) => RANK.indexOf(x.variant) - RANK.indexOf(y.variant))[0];
+    out.variant = RANK.indexOf(bad.variant) < 0 ? 'nocompare' : bad.variant;
+    out.method = bad.method;
+    return out;
+  } catch (e) {
+    return { verdict: 'confirm', variant: 'error', method: 'nocompare', pairs: [], anchor: null };
+  }
+}
 // Solids have started: the profile's solids start date is today or earlier. The ONE check, read by
 // gvFoodAdviceOk and diet.js _libSuggestions (Ceres V-C-282c-1).
 function solidsStarted() {

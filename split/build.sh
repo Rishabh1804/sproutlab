@@ -180,6 +180,12 @@ if ! node audit-who-wfa-v1.mjs >&2; then
   echo "BUILD ABORTED: WHO weight-for-age registry audit failed (see above)." >&2
   exit 1
 fi
+# audit-who-velocity-v1.mjs — PC-9 gate (#161 PR 2, spec §4.2): WHO_WT_VELOCITY is exactly the committed
+# 2-/3-month WHO files; the PDF-transcribed 4-/6-month rows agree with their own L/M/S; the Δz knots recompute.
+if ! node audit-who-velocity-v1.mjs >&2; then
+  echo "BUILD ABORTED: WHO weight-velocity registry audit failed (see above)." >&2
+  exit 1
+fi
 # audit-hr12-dateonly-v1.sh — PC-1 ratchet (BUGS #55): date-only strings parsed with new Date()
 # may only decrease across split/*.js; a new one needs _parseLocalDate or an '// HR-12: <reason>' marker (a bare marker still counts).
 if ! bash audit-hr12-dateonly-v1.sh >&2; then

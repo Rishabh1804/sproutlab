@@ -48,7 +48,7 @@ sha256: girls-2mon `8bb8ccd218175d205b7e72abd8248aef7741d4e602b0929af047e9e49013
   - start ≥ 12.0 m, both ages ≤ 60.0 m, gap ≤ 184 d → **Δz**: z(latest at its age) − z(previous at its age) within [−kDown(gap), +kUp(gap)]; knots per sex at 61 / 91 / 122 / 183 d (girls +0.53/−0.54, +0.62/−0.60, +0.71/−0.66, +0.84/−0.81; boys +0.52/−0.54, +0.59/−0.59, +0.67/−0.64, +0.76/−0.77), linear in days between knots, ≤ 61 holds the 61 knot, 183 held to 184. The loss side never confirms a weight ≥ the previous weight.
   - anything else → **nocompare** → `confirm`.
 - **Fail closed (PC-5):** written as `!(x >= lo && x <= hi)` → `confirm`. Missing row, unknown sex, non-finite gap, weight ≤ 0, age past 60.0 m, an implausible row in the pair, two different weights on one date (`samedate`), any exception → `confirm`. The loss guard never short-circuits the up test.
-- Output: `{ verdict: ok|confirm, variant: jump-up|jump-down|nocompare|samedate|implausible|outofrange|error, method, pairs[], anchor }`.
+- Output: `{ verdict: ok|confirm, variant: jump-up|jump-down|nocompare|samedate|implausible|outofrange|error, method, pairs[], anchor }`. When several pairs fail, the variant shown is ranked: samedate → outofrange → implausible → jump-up → jump-down → nocompare (the record first, then a jump, then "couldn't compare"). **Built in #161 PR 2:** `WHO_WT_VELOCITY` (2-/3-month rows, copied by script), `WHO_WT_VELOCITY_LONG` (the 4-/6-month rows ending at 24 m, transcribed from WHO's PDFs and checked against their own L/M/S) and `WHO_WT_DZ_KNOTS` (recomputed by `split/audit-who-velocity-v1.mjs` each build); not wired to the chip until PR 4.
 - Advisory build warning from 2030-06-01 while no source past 60 m is registered.
 
 ### 4.3 Confirm persistence (`KEYS.growthConfirm`)
