@@ -145,7 +145,7 @@ test('reasons name why a comparison was not possible (V-V-288-4)', async ({ page
   expect(await jump(page, [[1800, 18], [1830, 18.2]])).toMatchObject({ variant: 'outofrange', reason: 'age' });
 });
 
-test('a pair starting on the first birthday (day 365) takes the Δz method (V-M-288-2)', async ({ page }) => {
+test('a pair starting on day 365 of life (WHO 12.0 m = 365.25 d) takes the Δz method (V-M-288-2)', async ({ page }) => {
   await boot(page);
   const w0 = await wAtZ(page, 365, 0), w1 = await wAtZ(page, 459, 0);
   expect(await jump(page, [[365, w0], [459, w1]])).toMatchObject({ verdict: 'ok', method: 'dz' });
@@ -230,4 +230,11 @@ test('boundaries: 2- → 3-month table at 61/62 days, the 24 m end at day 730/73
   // End day 730 is still velocity (≤ 24.0 m on the WHO clock); 731 is Δz.
   expect((await jump(page, [[700, 11], [730, 11.2]])).method).toBe('velocity');
   expect((await jump(page, [[701, 11], [731, 11.2]])).method).toBe('dz');
+});
+
+test('badRow names only a weight that is off; age and date problems carry a reason (Cipher #288 A1)', async ({ page }) => {
+  await boot(page);
+  expect(await jump(page, [[1800, 18], [1830, 18.2]])).toMatchObject({ variant: 'outofrange', reason: 'age', badRow: null });
+  expect(await jump(page, [[-10, 3.3], [30, 4.2]])).toMatchObject({ verdict: 'confirm', variant: 'implausible', reason: 'dob', badRow: null });
+  expect(await jump(page, [[380, 95], [425, 9.7]])).toMatchObject({ variant: 'implausible', reason: null, badRow: 'a' });
 });

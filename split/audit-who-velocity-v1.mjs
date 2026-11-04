@@ -117,14 +117,24 @@ for (const sex of ['f', 'm']) {
   for (const k of [2, 3]) SOURCES.push([`${SEX[sex]}-${k}mon`, `ttt-weight-${SEX[sex]}-${k}mon-p.xlsx`]);
   for (const k of [4, 6]) SOURCES.push([`${SEX[sex]}-${k}mon-pdf`, `lms_weight_${SEX[sex]}_${k}mon_p.pdf`]);
 }
+const fileHash = {};
 for (const [label, name] of SOURCES) {
   const p = path.join(SRC_DIR, name);
   if (!fs.existsSync(p)) fail('missing source file docs/research/who-growth/' + name);
-  const hash = crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
-  const rec = recordedHash(label, dataSrc);
-  if (!rec) fail(`${name}: no recorded sha256 ("${label}") in the WHO_WT_VELOCITY provenance comment`);
-  if (rec !== hash) fail(`${name}: sha256 ${hash} ≠ the recorded ${rec}`);
+  fileHash[label] = crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 }
+// Every source's sha256 against ITS recorded line in a data.js text — a function, so the self-test can
+// prove the rejection on a perturbed text (Cipher #288 nit 6).
+function hashErrs(src) {
+  const out = [];
+  for (const [label, name] of SOURCES) {
+    const rec = recordedHash(label, src);
+    if (!rec) out.push(`${name}: no recorded sha256 ("${label}") in the WHO_WT_VELOCITY provenance comment`);
+    else if (rec !== fileHash[label]) out.push(`${name}: sha256 ${fileHash[label]} ≠ the recorded ${rec}`);
+  }
+  return out;
+}
+{ const he = hashErrs(dataSrc); if (he.length) fail(he.join('; ')); }
 
 let files;
 try {
@@ -143,8 +153,8 @@ const v1 = clone(VEL); v1.f[2][12][2] += 1; if (!check(v1, LONG, KNOTS, WFA, fil
 const l1 = clone(LONG); l1.m[6][6] += 5; if (!check(VEL, l1, KNOTS, WFA, files).length) bad.push('PDF row transcription');
 const k1 = clone(KNOTS); k1.f[3][1] = Math.round((k1.f[3][1] + 0.01) * 100) / 100; if (!check(VEL, LONG, k1, WFA, files).length) bad.push('knot');
 const f1 = clone(files); f1.m[3][5][1] += 10; if (!check(VEL, LONG, KNOTS, WFA, f1).length) bad.push('file vs registry');
-if (recordedHash('girls-2mon', dataSrc) !== crypto.createHash('sha256').update(fs.readFileSync(path.join(SRC_DIR, 'ttt-weight-girls-2mon-p.xlsx'))).digest('hex')) bad.push('hash lookup');
-if (recordedHash('girls-2mon', dataSrc.replace(/girls-2mon [0-9a-f]{64}/, 'girls-2mon ' + '0'.repeat(64))) === recordedHash('girls-2mon', dataSrc)) bad.push('hash mismatch');
+if (!hashErrs(dataSrc.replace(/girls-2mon [0-9a-f]{64}/, 'girls-2mon ' + '0'.repeat(64))).length) bad.push('hash mismatch');
+if (!hashErrs(dataSrc.replace(/boys-6mon-pdf\s+[0-9a-f]{64}/, '')).length) bad.push('missing hash line');
 const v2 = clone(VEL); v2.f[2].pop(); if (!check(v2, LONG, KNOTS, WFA, files).length) bad.push('dropped row');
 const l2 = clone(LONG); delete l2.f[6]; if (!check(VEL, l2, KNOTS, WFA, files).length) bad.push('missing long row');
 if (bad.length) fail('self-test: the checker did not reject: ' + bad.join(', '));
