@@ -486,3 +486,18 @@ test('a key whose merge throws is left out of the transaction and stays unsynced
   });
   expect(r).toEqual({ feverWritten: true, coldWritten: false, feverDirty: false, coldDirty: true });
 });
+
+test('an end time edited earlier keeps the doses logged before Resolve was pressed, even when a newer episode exists (Cipher A1)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    // Oct-1 fever: last reading 06:30, dose 07:30, Resolve pressed at 09:00, end later edited back to 07:00.
+    const old = w.__fe('fe-1', 0, { status: 'resolved', resolvedAt: w.__iso(7), resolvedAtOriginal: w.__iso(9), resolvedEditedAt: w.__iso(30), resolvedUpdatedAt: w.__iso(30),
+      readings: [{ id: 'r1', time: w.__iso(6.5), temp: 101 }], doses: [{ id: 'd1', time: w.__iso(7.5), medicine: 'Paracetamol', dose: '1 ml' }] });
+    const neu = w.__fe('fe-2', 19 * 24, { readings: [{ id: 'r2', time: w.__iso(19 * 24), temp: 100.5 }] });
+    const m1 = w._epMergeLists('fever', [old], [neu]), m2 = w._epMergeLists('fever', [neu], [old]);
+    const f = (m: any[], id: string) => m.find((e: any) => e.id === id).doses.map((d: any) => d.id);
+    return { old: f(m1, 'fe-1'), neu: f(m1, 'fe-2'), same: w.__S(m1) === w.__S(m2), idem: w.__S(w._epMergeLists('fever', m1, [old])) === w.__S(m1) };
+  });
+  expect(r).toEqual({ old: ['d1'], neu: [], same: true, idem: true });
+});

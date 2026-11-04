@@ -278,7 +278,10 @@ function _epMergeLists(kind, A, B, nowMs) {
   list.forEach(ep => {
     if (!ep.resolvedAt) { ep.status = 'active'; return; }
     const newer = list.find(x => x !== ep && _epT(x.startedAt) > _epT(ep.resolvedAt));
-    if (newer) { _epMoveEntries(kind, ep, newer, (_epMin(ep.resolvedAt) + 1) * 60000); ep.status = 'resolved'; return; }   // everything after the resolve's minute (Maren V-M-289-3)
+    // Bounded by when Resolve was first pressed, not by an edited end time: an entry logged before that press
+    // was logged while the episode was active and belongs to it (Cipher A1; Maren V-M-289-3 otherwise).
+    const resolvedBound = Math.max(_epT(ep.resolvedAt), _epT(ep.resolvedAtOriginal));
+    if (newer) { _epMoveEntries(kind, ep, newer, (Math.floor(resolvedBound / 60000) + 1) * 60000); ep.status = 'resolved'; return; }
     const late = _epAllEntries(kind, ep).filter(x => cfg.reopens(x.arr, x.e) && Math.floor(x.t / 60000) > _epMin(ep.resolvedAt)).sort((x, y) => x.t - y.t)[0];
     if (!late) { ep.status = 'resolved'; return; }
     const rec = { resolvedAt: ep.resolvedAt, resolvedNotes: ep.resolvedNotes || '', resolvedAtOriginal: ep.resolvedAtOriginal || null,
@@ -2270,7 +2273,7 @@ function renderVomitingEpisodeCard() {
     ep.episodes.slice().reverse().slice(0, 6).forEach((e, i) => {
       const origIdx = ep.episodes.length - 1 - i;
       const icon = e.type === 'projectile' ? zi('siren') : e.type === 'bile' ? zi('dot-red') : e.type === 'spit-up' ? zi('warn') : zi('siren');
-      html += '<div class="de-stool-entry ep-entry-tap" data-action="voEditEntry" data-arg="' + _epRowArg(ep.episodes, origIdx) + '"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span class="fs-sm-500">' + (e.type || 'vomit') + '</span></div>';
+      html += '<div class="de-stool-entry ep-entry-tap" data-action="voEditEntry" data-arg="' + _epRowArg(ep.episodes, origIdx) + '"><span>' + icon + '</span><span style="font-size:var(--fs-xs);color:var(--light);min-width:60px;">' + _feverTimeShort(e.time) + '</span><span class="fs-sm-500">' + escHtml(e.type || 'vomit') + '</span></div>';   // arrives via the merge from the other phone (HR-4, Cipher A2)
     });
   }
 

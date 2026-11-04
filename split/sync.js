@@ -1730,6 +1730,7 @@ function _syncEpisodesTxn(hRef, vals) {
   var writer = _syncUser ? { uid: _syncUser.uid || null, name: _syncUser.displayName || 'Parent' } : null;
   var written = {};
   return db.runTransaction(function(t) {
+    written = {};   // a contention retry re-runs this callback: start each attempt clean (Cipher nit 4)
     return t.get(docRef).then(function(snap) {
       var cloud = (snap && snap.exists) ? (snap.data() || {}) : {};
       var payload = {};

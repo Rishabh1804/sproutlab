@@ -1750,6 +1750,8 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Join with a household that lacks an episode key keeps the joining phone's local episodes (Carina V-CA-289-7, ruled acceptable).** For a key the household already has, the joining phone takes the household's copy outright; for a key it lacks, local stays and goes up as a union on the next write (never overwriting household records). Recorded as an accepted asymmetry.
 - **Episodes without an `id` are dropped silently by `_epNormalize` (Carina V-CA-289-10 / D-4, PC-3).** Every creator sets one; log the drop or assign a deterministic id.
 - **An episode receive replays the landing fade-up (Vela V-V-289-9).** Skip `_ldAnimateIn` on sync-driven renders.
+- **The join flag can stay set when local and household already match (Cipher #289 nit 5).** The `[E]` / `[L]` / `[K4]` skips `continue` before `_epJoinDone`; harmless while the dirty ledger guards writes. End the join on those paths too.
+- **Inline `style=` on episode rows (HR-2, pre-existing; Cipher #289 nit 6).** `intelligence-illness.js` episode row renders (readings, doses, stools and vomit rows) still carry `style="font-size:…;color:…"`. Move to classes.
 
 #### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
 Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:
