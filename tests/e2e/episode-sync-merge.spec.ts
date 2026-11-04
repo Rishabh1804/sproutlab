@@ -428,3 +428,37 @@ test('a delete still applies after the entry moved to a newer episode (V-K-289-5
   });
   expect(r).toEqual(['fe-old:', 'fe-new:']);
 });
+
+test('a delete kills every other version of the entry — edit-then-delete, or an earlier edit elsewhere (V-CA-289-12)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const orig = { id: 'd1', time: w.__iso(1), medicine: 'Paracetamol', dose: '5 ml' };
+    const cloud = [w.__fe('fe-1', 0, { doses: [orig] })];
+    // This phone corrects the dose, then deletes it, before either reaches the cloud.
+    const ep = w.__fe('fe-1', 0, { doses: [Object.assign({}, orig, { dose: '2.5 ml', editedAt: new Date(Date.now() - 1000).toISOString() })] });
+    w._epTombstone(ep, 'doses', 0); ep.doses.splice(0, 1);
+    const editThenDelete = w._epMergeLists('fever', cloud, [ep])[0].doses.length;
+    // The other phone edited earlier; this phone, not having seen it, deletes later.
+    const other = [w.__fe('fe-1', 0, { doses: [Object.assign({}, orig, { dose: '4 ml', editedAt: new Date(Date.now() - 60000).toISOString() })] })];
+    const mine = w.__fe('fe-1', 0, { doses: [orig] });
+    w._epTombstone(mine, 'doses', 0); mine.doses.splice(0, 1);
+    const earlierEdit = w._epMergeLists('fever', other, [mine])[0].doses.length;
+    return { editThenDelete, earlierEdit };
+  });
+  expect(r).toEqual({ editThenDelete: 0, earlierEdit: 0 });
+});
+
+test('the came-back note does not name a reading that was since corrected (V-V-289-7)', async ({ page }) => {
+  await setup(page);
+  const note = await page.evaluate(() => {
+    const w: any = window;
+    const resolved = w.__fe('fe-1', 0, { status: 'resolved', resolvedAt: w.__iso(5), resolvedUpdatedAt: w.__iso(5), readings: [{ id: 'r1', time: w.__iso(0), temp: 101 }] });
+    const hot = w.__fe('fe-1', 0, { readings: [{ id: 'r1', time: w.__iso(0), temp: 101 }, { id: 'r2', time: w.__iso(6), temp: 101.2 }] });
+    const m = w._epMergeLists('fever', [resolved], [hot])[0];
+    m.readings.find((x: any) => x.id === 'r2').temp = 98.6;   // the typo, corrected
+    return w._epCameBackHtml(m);
+  });
+  expect(note).toContain('since been changed or removed');
+  expect(note).not.toContain('98.6');
+});

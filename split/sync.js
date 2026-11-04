@@ -1701,10 +1701,11 @@ var _epRetryTimer = null, _epRetryDelay = 30000;
 function _epRetryReset() { _epRetryDelay = 30000; if (_epRetryTimer) { clearTimeout(_epRetryTimer); _epRetryTimer = null; } }
 function _epRetryNow() {
   if (_epRetryTimer) { clearTimeout(_epRetryTimer); _epRetryTimer = null; }
-  if (_syncDisabled || !_syncHouseholdId || !_syncUser || typeof firebase === 'undefined') return;
   var m = _syncLoadDirty();
   if (!(_syncCollectionToKeys.episodes || []).some(function(k) { return !!m[k]; })) return;
-  if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) return;
+  // Not yet able to push (signed out, sync paused, breaker tripped): try again later rather than wait
+  // for the next write (Maren V-M-289-14).
+  if (_syncDisabled || !_syncHouseholdId || !_syncUser || typeof firebase === 'undefined' || _syncWriteCount >= CIRCUIT_BREAKER_LIMIT) { _epRetrySchedule(); return; }
   try { _syncCountWrites(1); _syncFlushSingleDoc(firebase.firestore().collection('households').doc(_syncHouseholdId), 'episodes'); }
   catch (e) { _syncRecordCrash('episodes-retry', e); }
 }
@@ -1715,6 +1716,7 @@ function _epRetrySchedule() {
   _epRetryTimer = setTimeout(_epRetryNow, d);
 }
 if (typeof window !== 'undefined') window.addEventListener('online', function() { _epRetryDelay = 30000; _epRetryNow(); });
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') _epRetryNow(); });   // back in the foreground (V-M-289-14)
 // One transactional write of episode keys: read the server doc, merge each key, write the merge, and set
 // the shadow to what was written. Rejects on contention or offline (callers queue a full push).
 function _syncEpisodesTxn(hRef, vals) {
@@ -1729,7 +1731,9 @@ function _syncEpisodesTxn(hRef, vals) {
       Object.keys(vals).forEach(function(k) {
         var kind = _epKindOfKeyId(k);
         if (!kind) return;
-        var merged = _epMergeLists(kind, cloud[k], vals[k]);
+        var merged;
+        try { merged = _epMergeLists(kind, cloud[k], vals[k]); }
+        catch (e) { console.warn('[sync] episode merge failed for ' + k + ' — left out of this write, local kept:', e); return; }   // (Carina D-3)
         written[k] = merged;
         payload[k] = writer ? _syncStampUnattributed(merged, writer) : merged;
       });
@@ -2250,7 +2254,7 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
   // confirmed even when no save happens. Wrap in try/finally.
   try {
     // !doc.exists is still a confirmed "nothing here yet" state from Firestore.
-    if (!doc.exists) { if (docName === 'episodes') (_syncCollectionToKeys.episodes || []).forEach(_epJoinDone); return; }
+    if (!doc.exists) { if (docName === 'episodes' && !(doc.metadata && doc.metadata.fromCache)) (_syncCollectionToKeys.episodes || []).forEach(_epJoinDone); return; }   // a cache miss is not the household's answer (Carina D-1)
     var data = doc.data();
 
     // Phase 3 Finding F: capture attribution BEFORE the __sync_* strip.
@@ -2316,7 +2320,7 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
       }
 
       // [N] null-remote — preserve local (an episode key the household lacks also ends this phone's join, V-CA-289-7)
-      if (remoteVal === null) { if (_epKindOfKeyId(key)) _epJoinDone(key); continue; }
+      if (remoteVal === null) { if (_epKindOfKeyId(key) && !(doc.metadata && doc.metadata.fromCache)) _epJoinDone(key); continue; }
 
       // [M1] ALWAYS_POPULATED_KEYS empty-remote guard
       if (ALWAYS_POPULATED_KEYS.has(key)) {

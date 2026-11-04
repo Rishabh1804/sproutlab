@@ -1747,6 +1747,9 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Diarrhoea stool chips store literal quotes (PC-2; Maren V-M-289-9).** The chips render `data-arg="'soft'"`, so `deLogStoolPrompt` stores `'soft'` with the quotes. #289 strips them in the reopen rule, but the "improving" checks still never fire for chip-logged stools. Fix: drop the quotes in the chip markup and normalise stored values on read.
 - **99.0 °F starts / reopens a fever episode; the severity ladder calls a fever only from 99.1 °F (PC-9; Kael V-K-289-11).** `FE_FEVER_START_F = 99`. Consequence ruling owed by Maren.
 - **Late entries that don't reopen an episode carry no "logged after it was marked resolved" label (Maren V-M-P3-8, accepted as DEFERRABLE in V-M-289-12).**
+- **Join with a household that lacks an episode key keeps the joining phone's local episodes (Carina V-CA-289-7, ruled acceptable).** For a key the household already has, the joining phone takes the household's copy outright; for a key it lacks, local stays and goes up as a union on the next write (never overwriting household records). Recorded as an accepted asymmetry.
+- **Episodes without an `id` are dropped silently by `_epNormalize` (Carina V-CA-289-10 / D-4, PC-3).** Every creator sets one; log the drop or assign a deterministic id.
+- **An episode receive replays the landing fade-up (Vela V-V-289-9).** Skip `_ldAnimateIn` on sync-driven renders.
 
 #### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
 Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:

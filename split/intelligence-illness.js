@@ -90,16 +90,26 @@ function _epCameBackHtml(ep) {
   const sup = (ep && ep.status === 'active' && Array.isArray(ep.resolveSuperseded)) ? ep.resolveSuperseded : [];
   const last = sup.reduce((m, x) => (!m || _epT(x && x.resolvedAt) > _epT(m.resolvedAt) ? x : m), null);
   if (!last || !_epT(last.resolvedAt)) return '';
-  const fmt = iso => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) + ', ' + _feverTimeShort(iso);
-  // Name what reopened it, so the parent can check it — and fix it if it was a typo (Vela V-V-289-6, Maren V-M-289-8).
-  let what = 'New symptoms were logged after that';
+  const dayOf = iso => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  const fmt = iso => dayOf(iso) + ', ' + _feverTimeShort(iso);
+  // Name what reopened it, so the parent can check it — and fix it if it was a typo (Vela V-V-289-6, Maren
+  // V-M-289-8) — but only while that entry still reopens: a corrected or removed one is not named as the
+  // reason (V-V-289-7). The date shows when it differs from the resolve's (V-V-289-8, V-M-289-15).
   const by = last.by || {}, list = by.arr && Array.isArray(ep[by.arr]) ? ep[by.arr] : [];
   const e = by.id ? list.find(x => x && x.id === by.id) : null;
-  if (e && _epT(e.time)) {
-    const at = ' at ' + _feverTimeShort(e.time);
-    if (by.arr === 'readings' && Number.isFinite(Number(e.temp))) what = 'A ' + Number(e.temp).toFixed(1) + '\u00b0F reading was logged' + at;
-    else if (by.arr === 'stools') what = 'A stool that needs watching was logged' + at;
-    else if (by.arr === 'episodes') what = 'A vomit was logged' + at;
+  const kind = { readings: 'fever', stools: 'diarrhoea', episodes: 'vomiting', dailyLogs: 'cold' }[by.arr];
+  let what = 'New symptoms were logged after that';
+  if (by.id && (!e || !kind || !_EP_SYNC[kind].reopens(by.arr, e))) what = 'An entry logged after that reopened it; it has since been changed or removed';
+  else if (e && _epT(e.time)) {
+    const at = ' at ' + (dayOf(e.time) === dayOf(last.resolvedAt) ? _feverTimeShort(e.time) : fmt(e.time));
+    if (by.arr === 'readings') what = 'A ' + Number(e.temp).toFixed(1) + '\u00b0F reading was logged' + at;
+    else if (by.arr === 'stools') {
+      const c = String(e.consistency || '').replace(/'/g, '');
+      const adj = ['soft', 'normal', 'hard'].indexOf(c) >= 0 ? '' : (c || 'loose');
+      const withs = [e.blood ? 'blood' : '', e.mucus ? 'mucus' : ''].filter(Boolean);
+      what = 'A ' + (adj ? adj + ' ' : '') + 'stool' + (withs.length ? ' with ' + withs.join(' and ') : '') + ' was logged' + at;   // e.g. "A watery stool", "A stool with blood"
+    }
+    else if (by.arr === 'episodes') what = 'A vomiting episode was logged' + at;
     else if (by.arr === 'dailyLogs') what = 'Cold symptoms were logged' + at;
   }
   return '<div class="ep-edit-hint">Marked resolved on ' + escHtml(fmt(last.resolvedAt)) + '. ' + escHtml(what) + ', so this is open again. Tap Mark Resolved again once symptoms settle.</div>';
@@ -109,14 +119,22 @@ function _epTombstone(ep, arr, idx) {
   const e = ep[arr] && ep[arr][idx];
   if (!e || !e.id) return;
   if (!Array.isArray(ep._del)) ep._del = [];
-  const base = String(e.id).replace(/~\d+$/, '');
-  ep._del.push({ arr: arr, id: base, at: new Date().toISOString(), h: _epStable(Object.assign({}, e, { id: base })) });
+  const base = _epBaseId(e.id);
+  // What the delete protects is the OTHER copies the parent saw and kept (conflict copies of the same
+  // entry) — not the deleted copy's content: any other version of the deleted entry still dies, so an
+  // edit-then-delete, or an earlier edit on the other phone, can't bring it back (Carina V-CA-289-12).
+  const keep = ep[arr].filter((x, i) => i !== idx && x && x.id && _epBaseId(x.id) === base)
+    .map(x => _epStable(Object.assign({}, x, { id: base }))).sort();
+  const t = { arr: arr, id: base, at: new Date().toISOString() };
+  if (keep.length) t.keep = keep;
+  ep._del.push(t);
 }
-// A tombstone kills a copy of its entry unless the copy was edited after the delete; with a content hash
-// it kills only that content (a conflict copy the parent kept survives). Tombstones are keyed arr|baseId.
+function _epBaseId(id) { return String(id).replace(/~\d+$/, ''); }
+// A tombstone kills every copy of its entry (keyed arr|baseId, the copy passed with its base id) unless
+// the copy was edited after the delete, or is a conflict copy the parent kept when deleting.
 function _epKilled(delMap, arr, e) {
   const ts = delMap && delMap.get(arr + '|' + e.id);
-  return !!ts && ts.some(t => !((e.editedAt || '') > (t.at || '')) && (!t.h || t.h === _epStable(e)));
+  return !!ts && ts.some(t => !((e.editedAt || '') > (t.at || '')) && !(Array.isArray(t.keep) && t.keep.indexOf(_epStable(e)) >= 0));
 }
 function _epDelMap(lists) {
   const m = new Map();
@@ -288,7 +306,7 @@ function _epMergeLists(kind, A, B, nowMs) {
   // of the same content (else every receive would read as divergent and push back).
   list.forEach(ep => {
     ['absorbed', 'resolveSuperseded', '_del'].forEach(f => { if (!Array.isArray(ep[f])) ep[f] = []; });
-    ['resolvedAt', 'resolvedNotes', 'resolvedEditedAt', 'resolvedUpdatedAt', 'resolvedAtOriginal'].forEach(f => { if (ep[f] === undefined) ep[f] = null; });
+    ['resolvedAt', 'resolvedNotes', 'resolvedEditedAt', 'resolvedUpdatedAt', 'resolvedAtOriginal', 'startedAt', 'triggerSource', 'notes'].forEach(f => { if (ep[f] === undefined) ep[f] = null; });   // (Carina D-2)
   });
   if (kind === 'fever') list.forEach(ep => {
     const temps = (ep.readings || []).map(r => Number(r.temp)).filter(Number.isFinite);
