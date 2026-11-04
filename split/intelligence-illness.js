@@ -1545,7 +1545,7 @@ function pruneDiarrhoeaEpisodes() { _diarrhoeaEpisodes = _epPrune('diarrhoea', _
 
 function startDiarrhoeaEpisode(source) {
   if (getActiveDiarrhoeaEpisode()) return getActiveDiarrhoeaEpisode();
-  
+
   const now = new Date().toISOString();
   const episode = {
     id: 'de-' + Date.now(),

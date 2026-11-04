@@ -1552,9 +1552,13 @@ function _syncFlushSingleDoc(hRef, collection) {
   if (collection === 'episodes') {
     var _epVals = {};
     keysForCol.forEach(function(k) { _epVals[k] = current[k]; });
-    _syncEpisodesTxn(hRef, _epVals).then(function() {
+    _syncEpisodesTxn(hRef, _epVals).then(function(written) {
       _epRetryReset();
-      _syncClearDirty(keysForCol, startedAt);
+      // Only the keys the transaction actually wrote are synced; one left out (its merge threw) stays
+      // flagged so the unsynced state is visible (Carina V-CA-289-13).
+      var done = keysForCol.filter(function(k) { return written && Object.prototype.hasOwnProperty.call(written, k); });
+      keysForCol.forEach(function(k) { if (done.indexOf(k) < 0) _syncMarkNeedsFull(k); });
+      _syncClearDirty(done, startedAt);
     }).catch(function(e) {
       console.warn('[sync] episodes transaction failed — queued for a full push and a retry:', e);
       keysForCol.forEach(_syncMarkNeedsFull);
@@ -1698,6 +1702,7 @@ function _epJoinDone(key) {
 // A failed episodes transaction (offline, contention) retries on reconnect and on a backoff timer —
 // a transaction, unlike set(), is not queued by the SDK (V-CA-289-1, V-M-289-5).
 var _epRetryTimer = null, _epRetryDelay = 30000;
+var _epTxnSkipped = {};   // episode keys a full push's transaction left out (V-CA-289-13)
 function _epRetryReset() { _epRetryDelay = 30000; if (_epRetryTimer) { clearTimeout(_epRetryTimer); _epRetryTimer = null; } }
 function _epRetryNow() {
   if (_epRetryTimer) { clearTimeout(_epRetryTimer); _epRetryTimer = null; }
@@ -1808,7 +1813,10 @@ function _syncFlushDirty(hRef, _pass) {
           // Every episode key goes, merged against the server inside the transaction (V-CA-289-6).
           var _ev = {};
           (_syncCollectionToKeys.episodes || []).forEach(function(k) { _ev[k] = load(k, null); });
-          promises.push(_syncEpisodesTxn(hRef, _ev));
+          promises.push(_syncEpisodesTxn(hRef, _ev).then(function(written) {
+            // A key left out (its merge threw) stays flagged; the clear below must not drop it (V-CA-289-13).
+            Object.keys(_ev).forEach(function(k) { if (!written || !Object.prototype.hasOwnProperty.call(written, k)) _epTxnSkipped[k] = true; });
+          }));
           return;
         }
         var cloud = (docs[i] && docs[i].exists) ? (docs[i].data() || {}) : {};
@@ -1839,7 +1847,9 @@ function _syncFlushDirty(hRef, _pass) {
       return Promise.all(promises);
     })
     .then(function() {
-      _syncClearDirty(dirtyKeys, startedAt);
+      var skipped = Object.keys(_epTxnSkipped); _epTxnSkipped = {};
+      _syncClearDirty(dirtyKeys.filter(function(k) { return skipped.indexOf(k) < 0; }), startedAt);
+      skipped.forEach(_syncMarkNeedsFull);
       // A write that landed mid-push kept its entry (l > startedAt) with a first
       // stamp no diff can ever clear — push once more, bounded (Kael F17).
       var after = _syncLoadDirty();

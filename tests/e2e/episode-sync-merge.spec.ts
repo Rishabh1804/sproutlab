@@ -462,3 +462,27 @@ test('the came-back note does not name a reading that was since corrected (V-V-2
   expect(note).toContain('since been changed or removed');
   expect(note).not.toContain('98.6');
 });
+
+test('a key whose merge throws is left out of the transaction and stays unsynced (V-CA-289-13)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(async () => {
+    const w: any = window;
+    localStorage.setItem('sl_sync_seeded', '4'); localStorage.removeItem('sl_sync_dirty');
+    let written: any = null;
+    const hRef = {
+      firestore: { runTransaction: async (fn: any) => fn({ get: async () => ({ exists: false, data: () => ({}) }), set: (_r: any, p: any) => { written = p; } }) },
+      collection: () => ({ doc: () => ({}) }),
+    };
+    _syncUser = { uid: 't', displayName: 'T' };
+    w._syncReady.episodes = true;
+    w.save(KEYS.feverEpisodes, [w.__fe('fe-1', 0)]);
+    w.save(KEYS.coldEpisodes, [{ id: 'ce-1', status: 'active', startedAt: w.__iso(0), dailyLogs: [], actions: [] }]);
+    const real = w._epMergeLists;
+    w._epMergeLists = function(kind: string) { if (kind === 'cold') throw new Error('corrupt'); return real.apply(this, arguments); };
+    try { w._syncFlushSingleDoc(hRef, 'episodes'); await new Promise(res => setTimeout(res, 50)); }
+    finally { w._epMergeLists = real; w._epRetryReset(); _syncUser = null; }
+    return { feverWritten: !!(written && written[KEYS.feverEpisodes]), coldWritten: !!(written && written[KEYS.coldEpisodes]),
+      feverDirty: !!w._syncIsDirty(KEYS.feverEpisodes), coldDirty: !!w._syncIsDirty(KEYS.coldEpisodes) };
+  });
+  expect(r).toEqual({ feverWritten: true, coldWritten: false, feverDirty: false, coldDirty: true });
+});
