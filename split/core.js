@@ -60,6 +60,10 @@ const KEYS = {
   //   { entries, _meta } breaks 20+ existing Array.isArray consumers).
   milestoneSuppress: 'ziva_milestone_suppress',
   activityMeta:      'ziva_activity_meta',
+  // growthConfirm: single-doc { 'YYYY-MM-DD': <wt kg> } — a weight the parent confirmed by retyping it after
+  //   the weight-jump check asked (#161 spec §4.3). Never on the growth row: the growth array is replaced
+  //   whole and its recovery merge is local-wins, so a confirm on the row could resurrect a fixed typo.
+  growthConfirm:     'ziva_growth_confirm',
   // teeth: single-doc tooth-eruption record { [toothId]: { date:'YYYY-MM-DD'|null, ts:epochMs } }.
   //   date:null is a tombstone (the parent removed a tooth), so a remote copy
   //   can't resurrect it. Merged per tooth, newest ts wins (_postReceiveTeeth).
@@ -511,6 +515,8 @@ let growthData, feedingData, milestones, foods, vaccData, notes, meds, visits, m
 // milestoneSuppress: per-milestone suppress-until { [milestoneId]: epochMs }.
 // Both hydrated from localStorage in init flow alongside the other data globals.
 let activityMeta, milestoneSuppress;
+// growthConfirm: weights confirmed by retyping (KEYS.growthConfirm, #161 spec §4.3).
+let growthConfirm;
 // teethLog: tooth-eruption record keyed by PRIMARY_TEETH id (see KEYS.teeth).
 let teethLog;
 // ── PROFILE (privacy-v1 §3.1) ──
@@ -1260,6 +1266,7 @@ function init() {
     else if (action === 'feToggleAllReadings') feToggleAllReadings();
     else if (action === 'feLogDosePrompt') feLogDosePrompt();
     else if (action === 'feSetParaForm') feSetParaForm(arg);
+    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2);   // retype to confirm a weight (#161 §4.4)
     else if (action === 'deLogFluidPrompt') deLogFluidPrompt();
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();
@@ -1555,6 +1562,7 @@ function init() {
   // consumers. V-K-104 floor: milestoneSuppress is explicitly registered for
   // sync (see SYNC_KEYS in sync.js) — no falling through ziva_* pattern picker.
   activityMeta = load(KEYS.activityMeta, null) || {};
+  growthConfirm = gvConfirmNormalize(load(KEYS.growthConfirm, null));
   if (typeof activityMeta !== 'object' || activityMeta === null || Array.isArray(activityMeta)) activityMeta = {};
   milestoneSuppress = load(KEYS.milestoneSuppress, null) || {};
   if (typeof milestoneSuppress !== 'object' || milestoneSuppress === null || Array.isArray(milestoneSuppress)) milestoneSuppress = {};
@@ -7048,6 +7056,53 @@ function gvWeightJumpCheck(rows, sex) {
     return { verdict: 'confirm', variant: 'error', reason: null, method: 'nocompare', pair: null, pairs: [], anchor };
   }
 }
+// ── Weight confirmations (#161 spec §4.3, decision A/B) ──
+// { 'YYYY-MM-DD': wt } — a date maps to the weight the parent retyped. Only finite positive numbers on a
+// valid date survive; anything else is dropped, so a malformed synced copy can't confirm a weight.
+function gvConfirmNormalize(m) {
+  const out = {};
+  if (!m || typeof m !== 'object' || Array.isArray(m)) return out;
+  Object.keys(m).forEach(d => { const w = m[d]; if (typeof w === 'number' && Number.isFinite(w) && w > 0 && /^\d{4}-\d{2}-\d{2}$/.test(d) && _parseLocalDate(d)) out[d] = w; });
+  return out;
+}
+// The ONE merge, receive and push alike: a union by date; a date the two sides confirmed with
+// DIFFERENT weights keeps the smaller. (The spec's "drop it" can't hold across phones: with no tombstone
+// an absent date reads as "not synced yet" and comes back on the next receive. The smaller weight is the
+// conservative pick, and a confirm only ever unlocks the exact weight on the row — gvWeightConfirmed —
+// so a kept 9.5 never confirms a 15.9 row.) Commutative, idempotent, converges.
+function gvConfirmMerge(a, b) {
+  const A = gvConfirmNormalize(a), B = gvConfirmNormalize(b), out = {};
+  Object.keys(A).concat(Object.keys(B)).sort().forEach(d => {
+    if (d in out) return;
+    out[d] = (d in A && d in B) ? Math.min(A[d], B[d]) : (d in A ? A[d] : B[d]);
+  });
+  return out;
+}
+// Confirmed only while the stored weight equals the row's weight exactly: a confirm of 15.9 never
+// covers a later edit to 16.9 on the same date.
+function gvWeightConfirmed(row) {
+  const c = row && growthConfirm && growthConfirm[row.date];
+  return typeof c === 'number' && row && c === row.wt;
+}
+// The weight-jump check as the dose reads it: null when the latest weight can be used — the check
+// passes, or the parent confirmed that exact weight — else the check's result (verdict 'confirm').
+// Bound to the row passed in (the chip's displayed row): if the check's anchor is a different row, it
+// asks (fail closed).
+function gvWeightNeedsConfirm(row) {
+  if (!row) return null;
+  let jc;
+  try { jc = gvWeightJumpCheck(); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+  const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
+  if (jc && jc.verdict === 'ok' && sameRow) return null;
+  if (gvWeightConfirmed(row)) return null;
+  return sameRow ? jc : Object.assign({}, jc, { verdict: 'confirm', variant: 'error' });
+}
+// The confirmed check's variant — so a screen can add the loss line after a confirmed drop.
+function gvWeightConfirmedVariant(row) {
+  if (!row || !gvWeightConfirmed(row)) return null;
+  try { const jc = gvWeightJumpCheck(); return jc && jc.verdict !== 'ok' ? jc.variant : null; } catch (e) { return null; }
+}
+
 // Solids have started: the profile's solids start date is today or earlier. The ONE check, read by
 // gvFoodAdviceOk and diet.js _libSuggestions (Ceres V-C-282c-1).
 function solidsStarted() {

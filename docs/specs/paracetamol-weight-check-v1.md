@@ -54,7 +54,7 @@ sha256: girls-2mon `8bb8ccd218175d205b7e72abd8248aef7741d4e602b0929af047e9e49013
 
 ### 4.3 Confirm persistence (`KEYS.growthConfirm`)
 - `{ 'YYYY-MM-DD': <wt number> }`; confirmed only while `typeof c === 'number' && c === row.wt`. A confirm never writes the growth array (Carina: the array is replaced whole and the recovery push merges same-date rows local-wins, so a confirm on the row could resurrect a fixed typo already confirmed).
-- Own merge in `_syncMergeForPush` and a `mergeOnReceive`: same value both sides → keep; different values for a date → drop the entry (the chip asks again). Model on `activityMeta`. Not persist-defaults. Armed atomically: `KEYS`, `SYNC_KEYS`, `SYNC_RENDER_DEPS` (fever card + load-alert renderer), assign/read cases, export/reset via `KEYS`.
+- Own merge in `_syncMergeForPush` and a `mergeOnReceive`: same value both sides → keep; different values for a date → drop the entry (the chip asks again). Model on `activityMeta`. **Amended at build (PR 4a):** a dropped date cannot stay dropped across phones — with no tombstone, an absent date reads as "not synced yet" and returns on the next receive — so a conflicting date keeps the **smaller** weight (`gvConfirmMerge`, commutative and idempotent). Safe because a confirm only unlocks the exact weight on the row (`c === row.wt`): a kept 9.5 never confirms a 15.9 row, and the conservative pick is the lower weight. Not persist-defaults. Armed atomically: `KEYS`, `SYNC_KEYS`, `SYNC_RENDER_DEPS` (fever card + load-alert renderer), assign/read cases, export/reset via `KEYS`.
 - The handler binds to the **displayed** date + weight (`data-arg`, `data-arg2`); finds the row by date + wt equality; writes nothing if no row matches. Accepted residual: a phone whose growth is dirty for another reason can bring its own confirmed typo row back (two coinciding events).
 
 ### 4.4 The chip `confirm` state (PR 4/5)
@@ -115,7 +115,9 @@ Worst true load that passes the check (four top doses, a typo at the band edge, 
 1. Registry: weight-for-age L/M/S, committed sources, sha256, build audit, `whoWfaZ` with restricted z; `paraWeightPlausible` on it (#162) with the interim ceiling; `WHO_GROWTH` weight columns bound by audit; `outofrange` / before-birth chip outcomes. Summon: Carina primary, Maren (consumer), Kael. (#287)
 2. Velocity registry + `gvWeightJumpCheck` (velocity + Δz, the method predicate, fail-closed); converge `ageMonthsAt` and the WHO clock or name the gap first (V-CA-287-6). Summon: Carina, Kael, Maren.
 3. Illness-episode sync lost-write fix. Summon: Carina, Kael.
-4. `KEYS.growthConfirm`; the chip `confirm` state and retype UI; remove the interim ceiling (`_paraInterimCeilingOk`, §4.1); the leftover-risk flow; `_emDocVitals`; render deps. Summon: all five Governors + core trio for styles.css; name Maren by hand on `PARA_LOAD_THRESHOLDS` (qa-route won't route it).
+4. **Split at build into 4a and 4b** (so each review stays tractable):
+   - **4a:** `KEYS.growthConfirm` (+ sync, merge, render deps); the chip `confirm` state wired to `gvWeightJumpCheck` (`gvWeightNeedsConfirm`), the retype UI and the confirm block; `noweight` + fail-closed unknown-state branches and `PARA_CHIP_STATES`; `_emDocVitals` and the doctor-visit export print the weigh-in date and "not yet checked"; the confirmed-loss line; `renderFeverEpisodeCard` in `SYNC_RENDER_DEPS[KEYS.growth]`; Ceres V-C-288-1 (the growth-vs-meals insight leaves out a flagged, unconfirmed newest weight). The interim ceiling **stays** in 4a: decision C accepts the residual only with the leftover-risk flow in place.
+   - **4b:** the leftover-risk flow (§5) and removing the interim ceiling (`_paraInterimCeilingOk`, §4.1). Summon: all five Governors + core trio for styles.css; name Maren by hand on `PARA_LOAD_THRESHOLDS` (qa-route won't route it).
 5. Next: the entry-time check in `addGrowthEntry` on the same helper (closes Maren D4).
 Each PR: canon-cc-008 chain, then Cipher.
 

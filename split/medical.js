@@ -745,6 +745,8 @@ function showFullDoctorSummary() {
     const wtWho = getGrowthRef(ageMonthsAt(lwDoc.date));
     const wtP = calcPercentile(lwDoc.wt, wtWho.w3, wtWho.w50, wtWho.w97, wtWho.w15, wtWho.w85);
     lines.push('  Weight: ' + lwDoc.wt + ' kg (' + wtP.text + ' percentile, WHO ' + childKinWord() + ')');   // the chart named, for the doctor (V-M-281-1)
+    // How old the weight is, and whether the family confirmed a weight the jump check flagged (#161 §4.4).
+    lines.push('    Weighed ' + _paraDateLabel(lwDoc.date) + (gvWeightNeedsConfirm(lwDoc) ? ' (not yet checked: it differs from the earlier weigh-in more than usual, or could not be compared)' : ''));
   }
   if (lhDoc) {
     const htWho = getGrowthRef(ageMonthsAt(lhDoc.date));

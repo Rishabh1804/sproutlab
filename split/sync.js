@@ -140,6 +140,7 @@ const SYNC_KEYS = {
   [KEYS.activityLog]:        { collection: 'activities',  model: 'single-doc' },
   [KEYS.milestones]:         { collection: 'milestones',  model: 'single-doc' },
   [KEYS.growth]:             { collection: 'growth',      model: 'single-doc' },
+  [KEYS.growthConfirm]:      { collection: 'growth',      model: 'single-doc' },   // weights confirmed by retyping (#161 §4.3)
   [KEYS.vacc]:               { collection: 'vaccinations', model: 'single-doc' },
   [KEYS.vaccBooked]:         { collection: 'vaccinations', model: 'single-doc' },
   [KEYS.meds]:               { collection: 'medical',     model: 'single-doc' },
@@ -408,7 +409,9 @@ const SYNC_RENDER_DEPS = {
   // stale on sync receive).
   [KEYS.activityLog]:       { global: 'activityLog', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
   [KEYS.milestones]:        { global: 'milestones',  postReceive: '_postReceiveMilestones', renderers: { home: ['renderHome'], 'track:milestones': ['renderMilestoneStats', 'renderMilestoneHighlights', 'renderMilestoneList', 'renderCategoryWheels', 'renderRegressionAlerts', 'renderRecentEvidence', 'renderMilestoneTimeline', 'renderActiveMilestones'] } },
-  [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth'], growth: ['renderGrowthStats'] } },
+  [KEYS.growth]:            { global: 'growthData',  renderers: { home: ['renderHome'], 'track:medical': ['renderGrowth', 'renderFeverEpisodeCard'], growth: ['renderGrowthStats'] } },   // the dose chip reads the latest weight (#161 §4.4)
+  // Weights confirmed by retyping: merged by date (gvConfirmMerge, core.js), the dose chip re-rendered (#161 §4.3).
+  [KEYS.growthConfirm]:     { global: 'growthConfirm', mergeOnReceive: '_postReceiveGrowthConfirm', renderers: { 'track:medical': ['renderFeverEpisodeCard'] } },
   [KEYS.vacc]:              { global: 'vaccData',    mergeOnReceive: '_postReceiveVacc', renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.vaccBooked]:        { global: null,          renderers: { home: ['renderHome'], 'track:medical': ['renderVaccPastList'] } },
   [KEYS.meds]:              { global: 'meds',        renderers: { home: ['renderHome'], 'track:medical': ['renderMedicalStats'] } },
@@ -483,6 +486,7 @@ function _syncSetGlobal(name, value) {
     // a future dedupeScrapbookByText).
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
+    case 'growthConfirm': growthConfirm = gvConfirmNormalize(value); return true;
     case 'mealPlan':     mealPlan     = value; return true;
     // Illness episodes (#161 PR 3): the module arrays are reassigned on receive, so the cards, the
     // countdown and the dose gate read the other phone's entries without a reload (V-CA-P3-10).
@@ -519,6 +523,7 @@ function _syncGetGlobal(name) {
     case 'activityLog':  return activityLog;
     case 'scrapbook':    return scrapbook;
     case 'teethLog':     return teethLog;
+    case 'growthConfirm': return growthConfirm;
     case 'mealPlan':     return mealPlan;
     case '_feverEpisodes':     return _feverEpisodes;
     case '_diarrhoeaEpisodes': return _diarrhoeaEpisodes;
@@ -725,6 +730,8 @@ function _postReceiveTeeth(remoteMap, localMap) {
 // sides-preserved on no-conflict" semantics — this matches what the parent
 // expects: a tag set on one device shows up on the other; clearing on one
 // device doesn't resurrect from the other.
+// Weights confirmed by retyping (#161 §4.3): the one merge, both directions.
+function _postReceiveGrowthConfirm(remoteMap, localMap) { return gvConfirmMerge(remoteMap, localMap); }
 function _postReceiveActivityMeta(remoteMap, localMap) {
   var rm = (remoteMap && typeof remoteMap === 'object' && !Array.isArray(remoteMap)) ? remoteMap : {};
   var lm = (localMap  && typeof localMap  === 'object' && !Array.isArray(localMap))  ? localMap  : {};
@@ -1764,6 +1771,8 @@ function _syncMergeForPush(local, cloud, key) {
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
   if (key === KEYS.vacc && Array.isArray(local) && Array.isArray(cloud)) return vaccDropSatisfiedPending(_syncUnionArrays(local, cloud, key));
+  // Weights confirmed by retyping: the one date merge, never local-wins (#161 §4.3).
+  if (key === KEYS.growthConfirm) return gvConfirmMerge(cloud, local);
   // Illness episodes: the one merge (spec §5A), never a local-wins union.
   var _epk = _epKindOfKeyId(key);
   if (_epk) {

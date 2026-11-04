@@ -81,7 +81,8 @@ The fever card's dose chip, which named no weight, date or bottle and had no che
 - **PR 1 (#287):** the WHO weight-for-age registry, `whoWfaZ`, and #162. The exact WHO flag is 0.3–1.7 kg higher than the old one at 3–24 months, so an **interim ceiling** keeps the old upper flag for weigh-ins ≤ 24 months until PR 4's confirm state ships — PR 1 does not widen what is dosed at ≤ 24 months (V-K-287-1, V-M-287-3; past 24 months the exact flag admits more by design, the #162 fix). PR 4 must ship before 2027-09-04; the build warns from 2027-08-01 while the interim ceiling exists.
 - **PR 2:** WHO weight-velocity registry + `gvWeightJumpCheck` (velocity to 24 m, weight-for-age Δz from a 12 m start up to 184 days and 60 months, fail-closed). Engine only — the chip uses it from PR 4.
 - **PR 3:** illness-episode sync — all four episode keys merge by entry id on receive and push (tombstones, derived status, concurrent-start fold, transactional write, join-pending), the module arrays are reassigned on receive, edit sheets commit by id. Spec §5A.
-- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 in review.
+- **PR 4a:** the weight confirm — `KEYS.growthConfirm`, the chip's confirm state on `gvWeightJumpCheck`, the retype UI; the emergency summary and doctor export show the weigh-in date and "not yet checked". Spec §7.4 (split into 4a/4b).
+- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 merged (#289); PR 4a in review; PR 4b (leftover-risk flow, interim ceiling removed) and PR 5 to come.
 
 #### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
 - **Symptom:** Non-blocking notes from the #284 round.

@@ -7,12 +7,16 @@ import { test, expect } from '@playwright/test';
 
 const H = 3600000;
 
-async function seed(page: any, opts: { rows?: { date: string; wt: number }[]; doses?: number[]; earlier?: string; earlierHoursAgo?: number } = {}) {
+// `unconfirmed`: leave the weight-jump check's question open. By default the newest weight counts as
+// already confirmed by the parent (#161 PR 4a), so these tests stay about the dose itself.
+async function seed(page: any, opts: { rows?: { date: string; wt: number }[]; doses?: number[]; earlier?: string; earlierHoursAgo?: number; unconfirmed?: boolean } = {}) {
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(500);
   await page.evaluate((o: any) => {
     const iso = (offsetDays: number) => { const d = new Date(); d.setDate(d.getDate() + offsetDays); return toDateStr(d); };
     growthData = (o.rows || []).map((r: any) => ({ date: r.date === 'DOB' ? toDateStr(DOB) : iso(+r.date), wt: r.wt }));
+    growthConfirm = {};
+    if (!o.unconfirmed && growthData.length) { const last = growthData[growthData.length - 1]; growthConfirm[last.date] = last.wt; }
     const now = Date.now();
     const eps: any[] = [];
     if (o.earlier) eps.push({ id: 'fe-old', status: 'resolved', startedAt: new Date(now - 60 * 24 * 3600000).toISOString(),
