@@ -74718,7 +74718,7 @@ function _paraLoadFrom(o) {
     out.check = true;
     fire('R1', 'red', [(D > T.dailyMaxMgKg
       ? 'That\'s more than the usual most for a day for ' + wtTxt + '. And if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), it\'s more than is safe in a day.'
-      : 'These doses fit ' + pos + ' newest weight, ' + wtTxt + '. But if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), the last 24 hours are more than is safe in a day.') + ' Call your doctor today, or confirm the weight below.'], { weightQ: !hasWq() });
+      : 'These doses fit ' + pos + ' newest weight, ' + wtTxt + '. But if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), the last 24 hours are more than is safe in a day.') + ' Call your doctor today, or weigh ' + obj + ' again.'], { weightQ: !hasWq() });   // one verb with the instruction (Vela D29)
   } else if (D > T.dailyMaxMgKg) {
     const at = _paraUnderAt(in24, now, T.dailyMaxMgKg * wDose);
     fire('R1', 'amber', ['That\'s more than the usual most for a day for ' + wtTxt + '.'], { until: Number.isFinite(at) ? at : null });
@@ -74875,11 +74875,14 @@ function _paraDoLine(load, live, where) {
   // A red rule with no stop and no time of its own (R1 red: unsafe only on the earlier weigh-in) gates the next
   // dose on the doctor or the weight, with or without a countdown time beside it (Kael V-K-291-19, Vela V-V-291-24).
   const redGate = live.some(r => PARA_TIER[r.tier] >= PARA_TIER.red && !r.stop && !Number.isFinite(r.until));
-  if (redGate) {
+  const anyRed = live.some(r => PARA_TIER[r.tier] >= PARA_TIER.red);
+  if (redGate || (anyRed && !until)) {
     // The doctor leads, the time follows; "weighed again", not "confirmed" — a typed typo is what R1 red catches
-    // (Maren V-M-291-16, ruling on Kael V-K-291-19).
-    const g = live.some(r => r.weightQ) ? 'spoken to your doctor or weighed ' + (load.obj || 'your child') + ' again' : 'spoken to your doctor';
+    // (Maren V-M-291-16, ruling on Kael V-K-291-19). Re-weighing is the one release a parent can meet alone, so
+    // it is offered only beside a time: with no time on this surface (the GI cards; Home once the fever is
+    // resolved) the hold is the doctor's (Maren V-M-291-17, D28). A red with no line here holds too (Vela D28).
     const at = until ? until.replace(/^Give no more paracetamol until /, '') : '';
+    const g = (at && live.some(r => r.weightQ)) ? 'spoken to your doctor or weighed ' + (load.obj || 'your child') + ' again' : 'spoken to your doctor';
     return 'Give no more paracetamol until you\'ve ' + g + (at ? ', and not before ' + at : '') + '.';
   }
   let gates = [];
@@ -74934,7 +74937,7 @@ function _paraLoadHtml(load, where, card) {
   live.forEach(r => { const a = _paraWhy(r).act; if (a && acts.indexOf(a) < 0) acts.push(a); });
   if (live.some(r => r.weightQ)) {
     const lw = getLatestWeight();
-    if (load.wq) html += '<div class="fe-load-q">' + escHtml(load.wq.q) + ' Check before the next dose.</div><div class="fe-load-tell">' + escHtml(load.wq.d) + '</div>';
+    if (load.wq) html += '<div class="fe-load-q">' + escHtml(load.wq.q + (tier === 'amber' ? '' : ' Check before the next dose.')) + '</div><div class="fe-load-tell">' + escHtml(load.wq.d) + '</div>';   // amber's title already says it (Vela D30)
     if (where === 'gi') {
       // One retype, on the fever card: the same ids twice on a page reads the wrong box (Vela V-V-291-4).
       html += '<div class="fe-load-tell">Answer the weight question on the fever card.</div>';

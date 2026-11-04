@@ -474,7 +474,9 @@ test('the 48 h rules keep "Tell them" when every dose is over 24 h old; R1 red a
     return { rules: ld.rules.map((x: any) => x.rule + ':' + x.tier), html: w._paraLoadHtml(ld, 'fever'), home: w._paraHomeBody(ld, w._paraSurface(ld.rules)[0], false) };
   });
   expect(r.rules).toContain('R1:red');
-  expect(r.html).toContain('Give no more paracetamol until you\'ve spoken to your doctor or weighed her again.');
+  // No time on this surface → the hold is the doctor's; re-weighing is offered only beside a time (Maren V-M-291-17).
+  expect(r.html).toContain('Give no more paracetamol until you\'ve spoken to your doctor.');
+  expect(r.html).not.toContain('weighed her again');
   expect(r.home).toContain('Give no more paracetamol until you\'ve spoken to your doctor');
 });
 
@@ -486,9 +488,12 @@ test('R1 red keeps its doctor-or-weight condition beside the 4-hour time, on the
     const doses = [20, 14, 8, 1].map(h => ({ t: now - h * 3600000, lo: 140, hi: 140, readable: true, form: null, medicine: 'Paracetamol' }));
     const ld = w._paraLoadFrom({ nowMs: now, doses, wDose: 9.5, wRef: { w: 7.4, src: { date: '2026-10-01', wt: 7.2 } }, medName: null, gi: false, illnessStart: null, latestWtDate: null, subj: 'she', obj: 'her', pos: 'her', fmtTime: () => 'T', fmtDate: () => 'D' });
     const withGap = w._paraWithGap(ld, { available: false, nextAt: now + 3 * 3600000 });
-    return { rules: ld.rules.map((x: any) => x.rule + ':' + x.tier), html: w._paraLoadHtml(withGap, 'fever'), home: w._paraHomeBody(withGap, w._paraSurface(withGap.rules)[0], false) };
+    return { rules: ld.rules.map((x: any) => x.rule + ':' + x.tier), html: w._paraLoadHtml(withGap, 'fever'), gi: w._paraLoadHtml(withGap, 'gi', 'diarrhoea'), home: w._paraHomeBody(withGap, w._paraSurface(withGap.rules)[0], false) };
   });
   expect(r.rules).toContain('R1:red');
+  // The GI card shows no time, so it never offers re-weighing as a release (Maren V-M-291-17).
+  expect(r.gi).toContain('Give no more paracetamol until you\'ve spoken to your doctor.');
+  expect(r.gi).not.toContain('weighed her again');
   expect(r.html).toMatch(/Give no more paracetamol until you've spoken to your doctor or weighed her again, and not before [^<]+\./);
   expect(r.home).toContain('until you\'ve spoken to your doctor or weighed her again, and not before');
   expect(r.home).not.toMatch(/^Give no more paracetamol until \d/);
