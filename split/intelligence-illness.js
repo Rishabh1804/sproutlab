@@ -66,18 +66,19 @@ function _paraEarlierFormHint() {
   return null;
 }
 
-// Is this weight believable for her age at the weigh-in? Approximate z from the WHO percentiles
-// (one SD = (P97 − P50) / 1.881 above the median, (P50 − P3) / 1.881 below) and apply WHO's
-// biologically-implausible flags for weight-for-age: z < −6 or z > +5 (WHO Anthro manual, 2011).
-// Outside that it is almost certainly a typo (95 kg for 9.5 kg), so no dose is offered.
+// Is this weight believable for her age at the weigh-in? WHO's biologically-implausible flags for
+// weight-for-age: z < −6 or z > +5 (WHO Anthro manual, 2011), on the exact LMS z to 60 months
+// (whoWfaZ, core.js). Outside that it is almost certainly a typo (95 kg for 9.5 kg), so no dose is
+// offered. This read the 0–24 m percentile table and clamped at its last row, so from age 2 every
+// weight was judged against a 2-year-old's chart (BUGS #162, V-K-284-4). Fail closed: a NaN z (age
+// past 60 months, a bad date) is not plausible. With the sex not yet given (the one-question gate is
+// up), the weight must pass on both the girls' and the boys' table.
 function paraWeightPlausible(weightKg, dateStr) {
   if (!(weightKg > 0)) return false;
-  const mo = ageMonthsAt(dateStr);
-  if (!Number.isFinite(mo) || mo < 0) return false;
-  const r = getInterpolatedWHO(mo);
-  const z = weightKg >= r.w50 ? (weightKg - r.w50) / ((r.w97 - r.w50) / 1.881)
-                              : (weightKg - r.w50) / ((r.w50 - r.w3) / 1.881);
-  return z >= -6 && z <= 5;
+  const mo = whoAgeMoAt(dateStr);
+  const ok = sex => { const z = whoWfaZ(weightKg, mo, sex); return z >= -6 && z <= 5; };
+  const sex = childSex();
+  return sex ? ok(sex) : (ok('f') && ok('m'));
 }
 
 // Dose range for a weight and a bottle. Low end rounds UP and high end DOWN to 0.1 ml,
@@ -104,9 +105,9 @@ function getParacetamolChip(weightRow) {
   const ageDays = gvDaysBetween(date, today());   // the one shared day count (V-CA-284-2)
   if (!Number.isFinite(ageDays) || ageDays < 0) return { state: 'baddate', form, wt, date };
   if (!paraWeightPlausible(wt, date)) return { state: 'implausible', form, wt, date };
-  // Only a weight from the newborn weeks can reach this: at 3 months or more a weight under 3 kg fails
-  // z >= -6 and reads 'implausible'; under 3 months returns 'askdoctor' above. Keep that order.
-  // A believable newborn weight under 3 kg has no dose here: one decision, never 'ok' without a dose (V-K-284-1).
+  // A weight under 3 kg can reach this: under 3 months returns 'askdoctor' above, but at 3 months 2.5 kg
+  // is z ≈ −5.7 on the WHO table (whoWfaZ), inside the flags, so the implausible gate passes it. It has
+  // no dose here: one decision, never 'ok' without a dose (V-K-284-1). Keep this after the gate.
   if (!getParacetamolDose(wt, PARACETAMOL_FORMS[0])) return { state: 'nodose', form, wt, date };
   if (!form) return { state: 'pick', form, wt, date };
   const dose = getParacetamolDose(wt, form);
