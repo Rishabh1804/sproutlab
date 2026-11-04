@@ -101,6 +101,7 @@ function check(VEL, LONG, KNOTS, WFA, files) {
       let start, p1, p99;
       if (k <= 3) { const row = (VEL[sex][k] || []).find(r => r[0] === 24 - k) || []; [start, p1, p99] = row; }
       else { const r = LONG[sex][k] || []; start = r[0]; p1 = r[5]; p99 = r[6]; }
+      if (!WFA[sex] || !WFA[sex][start] || !WFA[sex][24] || !Number.isFinite(p1) || !Number.isFinite(p99)) { errs.push(`${sex} ${KNOT_DAYS[k]}-day knot: no row to recompute it from`); return; }
       const w0 = WFA[sex][start][1];
       const upC = Math.round(wfaZ(w0 + p99 / 1000, WFA[sex][24]) * 100) / 100;
       const dnC = Math.round(-wfaZ(w0 + p1 / 1000, WFA[sex][24]) * 100) / 100;
@@ -131,7 +132,8 @@ try {
 } catch (e) { fail('could not read the WHO velocity files: ' + e.message); }
 
 const VEL = grab('WHO_WT_VELOCITY'), LONG = grab('WHO_WT_VELOCITY_LONG'), KNOTS = grab('WHO_WT_DZ_KNOTS'), WFA = grab('WHO_WFA_LMS');
-const errs = check(VEL, LONG, KNOTS, WFA, files);
+let errs;
+try { errs = check(VEL, LONG, KNOTS, WFA, files); } catch (e) { fail('the registry is malformed: ' + e.message); }
 if (errs.length) { errs.slice(0, 20).forEach(e => console.error('  ' + e)); fail(errs.length + ' mismatch(es)'); }
 
 // Self-test, after the real check passed.
@@ -141,6 +143,9 @@ const v1 = clone(VEL); v1.f[2][12][2] += 1; if (!check(v1, LONG, KNOTS, WFA, fil
 const l1 = clone(LONG); l1.m[6][6] += 5; if (!check(VEL, l1, KNOTS, WFA, files).length) bad.push('PDF row transcription');
 const k1 = clone(KNOTS); k1.f[3][1] = Math.round((k1.f[3][1] + 0.01) * 100) / 100; if (!check(VEL, LONG, k1, WFA, files).length) bad.push('knot');
 const f1 = clone(files); f1.m[3][5][1] += 10; if (!check(VEL, LONG, KNOTS, WFA, f1).length) bad.push('file vs registry');
-if (recordedHash('girls-2mon', dataSrc) === '0'.repeat(64)) bad.push('hash lookup');
+if (recordedHash('girls-2mon', dataSrc) !== crypto.createHash('sha256').update(fs.readFileSync(path.join(SRC_DIR, 'ttt-weight-girls-2mon-p.xlsx'))).digest('hex')) bad.push('hash lookup');
+if (recordedHash('girls-2mon', dataSrc.replace(/girls-2mon [0-9a-f]{64}/, 'girls-2mon ' + '0'.repeat(64))) === recordedHash('girls-2mon', dataSrc)) bad.push('hash mismatch');
+const v2 = clone(VEL); v2.f[2].pop(); if (!check(v2, LONG, KNOTS, WFA, files).length) bad.push('dropped row');
+const l2 = clone(LONG); delete l2.f[6]; if (!check(VEL, l2, KNOTS, WFA, files).length) bad.push('missing long row');
 if (bad.length) fail('self-test: the checker did not reject: ' + bad.join(', '));
 console.error('audit-who-velocity-v1: PASS (WHO_WT_VELOCITY = the committed 2-/3-month files, per-file sha256 incl. the 4-/6-month PDFs, every row on its own L/M/S, Δz knots recomputed; self-test ok)');

@@ -2080,7 +2080,8 @@ const WHO_WFA_LMS = {
 //   re-reads the committed xlsx and fails the build on any difference.
 // WHO_WT_VELOCITY_LONG[sex][k] — the one 4- and 6-month row each Δz knot needs (the row ending at 24 m):
 //   [start, L, M, S, Delta, P1 g, P99 g], from lms_weight_{girls,boys}_{4,6}mon_p.pdf (WHO publishes these
-//   as PDF only). Transcribed by pdftotext -layout, matched by two independent extractions (2026-11-04);
+//   as PDF only). Transcribed by pdftotext -layout and matched by three independent extractions on 2026-11-04
+//   (Maren, Lyra, Carina V-CA-288-3 — the interval label, sex and table checked, not only the values);
 //   the build cannot re-read a PDF, so the audit checks the row against its own L/M/S (P1/P99 within 1 g).
 // WHO_WT_DZ_KNOTS[sex] — [gap days, up, down]: the weight-for-age Δz equivalent of the WHO P99 / P1
 //   increment over 61 / 91 / 122 / 183 days, for a weigh-in starting at the median at (24 − gap) months and

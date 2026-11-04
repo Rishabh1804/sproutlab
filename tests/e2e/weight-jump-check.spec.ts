@@ -23,7 +23,9 @@ async function jump(page: any, rows: [number, number][], sex?: string | null) {
     const base = w._parseLocalDate(dob);
     const R = rows.map(([d, wt]: any) => { const x = new Date(base); x.setDate(x.getDate() + d); return { date: w.toDateStr(x), wt }; });
     const r = sex === undefined ? w.gvWeightJumpCheck(R) : w.gvWeightJumpCheck(R, sex);
-    return { verdict: r.verdict, variant: r.variant, method: r.method, methods: r.pairs.map((p: any) => p.method) };
+    return { verdict: r.verdict, variant: r.variant, reason: r.reason, method: r.method, methods: r.pairs.map((p: any) => p.method),
+      pairA: r.pair ? r.pair.a.wt : null, pairB: r.pair ? r.pair.b.wt : null, badRow: r.pair ? r.pair.badRow : null,
+      changeG: r.pair ? r.pair.changeG : null };
   }, { rows, sex, dob: DOB });
 }
 
@@ -44,13 +46,13 @@ test("Ziva's case: 9.5 kg then 15.9 kg at 14 months is a jump; 9.5 then 9.9 is f
   expect(await jump(page, [[395, 9.5], [425, 5.9]])).toMatchObject({ verdict: 'confirm', variant: 'jump-down' });
 });
 
-test('continuity across 24 months: centile-tracking weights pass, a one-digit typo is caught, no pair is uncheckable', async ({ page }) => {
-  test.setTimeout(180_000);   // ~400 page calls: both sexes × end ages 23–25 m × 3 gaps × 3 centiles × real/typo
+test('continuity across 24 months: centile-tracking weights pass, a 9.5→15.9-type typo (×1.674) is caught, no pair is uncheckable', async ({ page }) => {
+  test.setTimeout(300_000);   // ~800 page calls: both sexes × end ages 23–25 m × 6 gaps × 3 centiles × real/typo
   await boot(page);
   const seen: string[] = [];
   for (const sex of ['f', 'm']) {
     for (let end = Math.round(23 * 30.4375); end <= Math.round(25 * 30.4375); end += 6) {
-      for (const gap of [61, 91, 183]) {
+      for (const gap of [1, 7, 30, 61, 91, 183]) {   // short gaps pin the seam step too (V-M-288-4, V-K-288-4)
         for (const z0 of [-1.88, 0, 1.88]) {
           const w0 = await wAtZ(page, end - gap, z0, sex), w1 = await wAtZ(page, end, z0, sex);
           const real = await jump(page, [[end - gap, w0], [end, w1]], sex);
@@ -109,6 +111,73 @@ test('fails closed: no sex, one weight, no weights, past 60 months, an implausib
   expect(await jump(page, [[395, 9.5], [425, 9.9], [425, 9.9]])).toMatchObject({ verdict: 'ok' });   // a duplicate entry, same value
 });
 
+test('a re-saved weight is never a comparison (V-V-288-1 / V-M-288-1 / V-K-288-1)', async ({ page }) => {
+  await boot(page);
+  expect(await jump(page, [[330, 15.9], [330, 15.9]])).toMatchObject({ verdict: 'confirm', variant: 'nocompare', reason: 'noprev' });
+  expect(await jump(page, [[410, 9.5], [425, 15.9], [425, 15.9]])).toMatchObject({ verdict: 'confirm', variant: 'jump-up' });
+  expect(await jump(page, [[300, 8.0], [330, 12.5], [330, 12.5]])).toMatchObject({ verdict: 'confirm', variant: 'jump-up' });   // under 12 m
+  // A conflict anywhere on the latest date, not only in the row before it.
+  expect(await jump(page, [[395, 9.5], [425, 15.9], [425, 9.9], [425, 9.9]])).toMatchObject({ verdict: 'confirm', variant: 'samedate' });
+  expect(await jump(page, [[395, 9.5], [425, 9.9], [425, 10.6], [425, 10.6]])).toMatchObject({ verdict: 'confirm', variant: 'samedate' });
+});
+
+test('the same typo on two dates is compared with the weight before it, at any age (D5, V-K-288-3)', async ({ page }) => {
+  await boot(page);
+  expect(await jump(page, [[400, 9.5], [418, 15.9], [425, 15.9]])).toMatchObject({ verdict: 'confirm', variant: 'jump-up' });
+  expect(await jump(page, [[300, 8.0], [320, 12.5], [330, 12.5]])).toMatchObject({ verdict: 'confirm', variant: 'jump-up' });
+});
+
+test('the decisive pair is reported, with which weight is off and the change (V-V-288-2..5, V-K-288-2)', async ({ page }) => {
+  await boot(page);
+  // An earlier typo-high row: the "drop" is measured against it — the screen must be able to name it.
+  expect(await jump(page, [[380, 9.5], [420, 15.9], [425, 9.7]])).toMatchObject({ verdict: 'confirm', variant: 'jump-down', pairA: 15.9, pairB: 9.7, changeG: -6200 });
+  expect(await jump(page, [[380, 9.5], [420, 95], [425, 9.7]])).toMatchObject({ verdict: 'confirm', variant: 'implausible', pairA: 95, badRow: 'a' });
+  expect(await jump(page, [[395, 9.5], [425, 15.9]])).toMatchObject({ pairA: 9.5, pairB: 15.9, changeG: 6400 });
+});
+
+test('reasons name why a comparison was not possible (V-V-288-4)', async ({ page }) => {
+  await boot(page, null);
+  expect(await jump(page, [[395, 9.5], [425, 9.9]])).toMatchObject({ reason: 'nosex' });
+  await boot(page);
+  expect(await jump(page, [[425, 9.9]])).toMatchObject({ reason: 'noprev' });
+  expect(await jump(page, [[400, 9.2], [600, 10.2]])).toMatchObject({ verdict: 'confirm', variant: 'nocompare', reason: 'gap' });
+  expect(await jump(page, [[200, 7.5], [330, 8.6]])).toMatchObject({ verdict: 'confirm', variant: 'nocompare', reason: 'age' });
+  expect(await jump(page, [[1800, 18], [1830, 18.2]])).toMatchObject({ variant: 'outofrange', reason: 'age' });
+});
+
+test('a pair starting on the first birthday (day 365) takes the Δz method (V-M-288-2)', async ({ page }) => {
+  await boot(page);
+  const w0 = await wAtZ(page, 365, 0), w1 = await wAtZ(page, 459, 0);
+  expect(await jump(page, [[365, w0], [459, w1]])).toMatchObject({ verdict: 'ok', method: 'dz' });
+});
+
+test('residual by design: a +1 kg slip in the whole-kg digit passes the jump check at 30 days (PR 4 R1 is its backstop)', async ({ page }) => {
+  // Spec §6: the accepted residual. The leftover-risk flow (decision C) reads it at the R1 weight question.
+  await boot(page);
+  expect(await jump(page, [[395, 9.5], [425, 10.5]])).toMatchObject({ verdict: 'ok' });
+});
+
+test('a gain still trips the up test on the Δz method (the loss guard never skips it)', async ({ page }) => {
+  await boot(page);
+  const w0 = await wAtZ(page, 913, 0);
+  expect(await jump(page, [[913, w0], [1097, Math.round(w0 * 1.3 * 10) / 10]])).toMatchObject({ verdict: 'confirm', variant: 'jump-up', method: 'dz' });
+});
+
+test('a missing velocity table or a non-number weight fails closed (V-K-288-5)', async ({ page }) => {
+  await boot(page);
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    const saved = WHO_WT_VELOCITY.f[2];
+    WHO_WT_VELOCITY.f[2] = undefined;
+    let v;
+    try { v = w.gvWeightJumpCheck([{ date: '2025-02-13', wt: 9.5 }, { date: '2025-03-15', wt: 9.9 }], 'f'); }
+    finally { WHO_WT_VELOCITY.f[2] = saved; }
+    const s = w.gvWeightJumpCheck([{ date: '2025-02-13', wt: '9.5' }, { date: '2025-03-15', wt: 9.9 }], 'f');
+    return [v.verdict, v.reason, s.verdict, s.reason];
+  });
+  expect(r).toEqual(['confirm', 'norow', 'confirm', 'noprev']);
+});
+
 test('a typo entered twice is still caught against the weight a month back (D5)', async ({ page }) => {
   await boot(page);
   expect(await jump(page, [[380, 9.4], [418, 15.9], [425, 15.9]])).toMatchObject({ verdict: 'confirm', variant: 'jump-up' });
@@ -131,4 +200,34 @@ test('the check never throws: bad input reads confirm/error', async ({ page }) =
       w.gvWeightJumpCheck(null, 'f').verdict];
   });
   expect(r).toEqual(['confirm', 'confirm', 'confirm']);
+});
+
+test('an earlier date holding two different weights: both are compared (V-CA-288-2)', async ({ page }) => {
+  await boot(page);
+  // Both earlier weights are paired; 10.6 kg is believable against either, so it passes on both.
+  const both = await page.evaluate(() => {
+    const w = window as any;
+    const r = w.gvWeightJumpCheck([{ date: '2025-01-30', wt: 9.5 }, { date: '2025-01-30', wt: 10.5 }, { date: '2025-03-16', wt: 10.6 }], 'f');
+    return { verdict: r.verdict, prevs: r.pairs.map((p: any) => p.a.wt).sort() };
+  });
+  expect(both).toEqual({ verdict: 'ok', prevs: [10.5, 9.5].sort() });
+  // One of the two earlier weights makes the latest look wrong → ask.
+  expect(await jump(page, [[380, 9.5], [380, 15.9], [425, 9.7]])).toMatchObject({ verdict: 'confirm' });
+});
+
+test('boundaries: 2- → 3-month table at 61/62 days, the 24 m end at day 730/731, and the knot limits (V-CA-288-5)', async ({ page }) => {
+  await boot(page);
+  const r = await page.evaluate(() => {
+    const w = window as any;
+    const lim = (g: number) => { const x = w._gvDzLimits('f', g); return x ? [Math.round(x.up * 1000) / 1000, Math.round(x.down * 1000) / 1000] : null; };
+    return { l0: lim(0), l60: lim(60), l61: lim(61), l62: lim(62), l183: lim(183), l184: lim(184), l185: lim(185), lneg: lim(-1), lnan: lim(NaN) };
+  });
+  expect(r).toEqual({ l0: [0.53, 0.54], l60: [0.53, 0.54], l61: [0.53, 0.54], l62: [0.533, 0.542], l183: [0.84, 0.81], l184: [0.84, 0.81], l185: null, lneg: null, lnan: null });
+  // 61 days → 2-month row (P99 1142 g at 12–14 m, girls); 62 → 3-month row (P99 1500 g at 12–15 m).
+  const w0 = 9.0;
+  expect(await jump(page, [[372, w0], [433, w0 + 1.3]])).toMatchObject({ verdict: 'confirm', method: 'velocity' });   // 61 d: +1.3 kg > 1142 g
+  expect(await jump(page, [[372, w0], [434, w0 + 1.3]])).toMatchObject({ verdict: 'ok', method: 'velocity' });        // 62 d: +1.3 kg ≤ 1500 g
+  // End day 730 is still velocity (≤ 24.0 m on the WHO clock); 731 is Δz.
+  expect((await jump(page, [[700, 11], [730, 11.2]])).method).toBe('velocity');
+  expect((await jump(page, [[701, 11], [731, 11.2]])).method).toBe('dz');
 });
