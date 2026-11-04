@@ -7156,8 +7156,11 @@ function gvWeightNeedsConfirm(row) {
 // `fallbackKind`: when the jump check passed (nothing to ask), the kind to record anyway — the leftover-risk
 // flow's "{wt} kg is right" (#161 spec §5.3 R1), which makes the latest weight the reference weight (§5.1).
 function gvConfirmRecord(row, shownKind, fallbackKind) {
-  const ask = gvWeightNeedsConfirm(row);
   if (!row) return false;
+  const ask = gvWeightNeedsConfirm(row);
+  // A fallback never records a kind the parent wasn't shown: while the jump check asks, only its own chip can
+  // confirm (Carina V-CA-291-13; the caller guards too).
+  if (fallbackKind && ask) return false;
   if (!ask && fallbackKind && GV_CONFIRM_KINDS.indexOf(fallbackKind) >= 0) {
     if (!gvMeasureRows('wt').some(r => r.date === row.date && r.wt === row.wt)) return false;
     growthConfirm = gvConfirmMerge(growthConfirm, { [row.date]: { [_gvGrams(row.wt)]: [fallbackKind] } });

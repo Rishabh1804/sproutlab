@@ -950,7 +950,7 @@ function _paraLoadFrom(o) {
   } else if (metRef) {
     out.check = true;   // a question is open: an empty log is never "no" (Kael V-K-291-6a)
     fire('R2', 'amber', ['That\'s more than a day\'s usual most, every day, for over 48 hours. Has ' + subj + ' vomited, retched, or had tummy pain?',
-      'Call your doctor now if ' + subj + ' seems to feel sick (gagging, retching, or won\'t eat and won\'t drink, even breastfeeds or milk), or if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow. Yellow skin is harder to see on brown skin, so check the whites of the eyes.'], { giChips: true });
+      'Call your doctor now if ' + subj + ' seems to feel sick (gagging, retching, or won\'t eat and won\'t drink, even breastfeeds or milk), or if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow. Yellow skin is harder to see on brown skin, so check the whites of the eyes.' + PARA_ER], { giChips: true });   // a conditional call-now line carries the fallback too (Vela V-V-291-17)
   } else if (maybe) {
     out.check = true;
     fire('R2', 'amber', ['We couldn\'t read every dose amount, so we can\'t tell if the last 2 days were over the usual most. Check the bottle\'s label, then tap each dose above and write the mg given.']);
@@ -967,11 +967,13 @@ function _paraFinish(out, now, when) {
   out.stop = out.rules.some(r => r.stop);
   if (out.rules.some(r => r.rule !== 'R0' && PARA_TIER[r.tier] >= PARA_TIER.red)) out.rules.forEach(r => { if (r.rule === 'R0' && r.fact) r.lines = [r.fact]; });
   // One instruction per block (Kael V-K-291-4): under the emergency-department lead, the other call lines keep
-  // only their facts; otherwise the "can't reach your doctor" fallback is said once, on the last call-now line.
-  if (out.rules.some(r => r.er)) out.rules.forEach(r => { if (!r.er && r.fact) r.lines = [r.fact]; });
+  // only their facts and no line repeats the fallback; otherwise the "can't reach your doctor" fallback is said
+  // once, on the highest call line in the order the block renders (tier, then rule order).
+  const strip = r => { r.lines = r.lines.map(l => l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l); };
+  if (out.rules.some(r => r.er)) out.rules.forEach(r => { if (!r.er && r.fact) r.lines = [r.fact]; if (!r.er) strip(r); });
   else {
-    const withEr = out.rules.filter(r => r.lines.some(l => l.endsWith(PARA_ER)));
-    withEr.slice(0, -1).forEach(r => { r.lines = r.lines.map(l => l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l); });
+    const withEr = out.rules.filter(r => r.lines.some(l => l.endsWith(PARA_ER))).sort((a, b) => PARA_TIER[b.tier] - PARA_TIER[a.tier]);
+    withEr.slice(1).forEach(strip);
   }
   const untils = out.rules.map(r => r.until).filter(t => Number.isFinite(t) && t > now);
   if (untils.length && !out.stop) { out.until = Math.max.apply(null, untils); out.untilText = 'Give no more paracetamol until ' + when(out.until) + '.'; }
@@ -1058,7 +1060,7 @@ function _paraLoadHtml(load, where) {
       html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="switchTab" data-arg="growth">Fix the weight or add a weight</button></div>';
     }
     if (r.giChips && getActiveFeverEpisode()) {
-      html += '<div class="fe-action-chips fe-load-chips">' + PARA_GI_ACTIONS.map(a => '<span class="fe-action-chip" role="button" tabindex="0" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</span>').join('') + '</div>';
+      html += '<div class="fe-action-chips fe-load-chips">' + PARA_GI_ACTIONS.map(a => '<button type="button" class="fe-action-chip" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</button>').join('') + '</div>';
     }
     if (r.addWeight) html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-soft btn-soft--peach" data-action="switchTab" data-arg="growth">Add a weight</button></div>';
   });
@@ -1087,7 +1089,8 @@ function feConfirmLoadWeight(date, wtStr) {
   if (done && _paraRefWeight() && _paraRefWeight().confirmed) showQLToast(zi('check') + ' Weight confirmed');
   else showQLToast('The weight check has changed. Look again.');
 }
-// R2's question: "Tummy pain" / "Seems sick" logged on the active fever episode, now.
+// R2's question: "Tummy pain" / "Retching or off food" logged on the active fever episode, now ("Seems sick",
+// the earlier chip, still counts when already logged — PARA_GI_MATCH; Ceres V-C-291-6).
 function feLogGiSign(label) {
   if (PARA_GI_ACTIONS.indexOf(label) < 0 || !getActiveFeverEpisode()) return;
   logFeverAction(label);
@@ -1111,7 +1114,9 @@ function computeParacetamolLoadAlerts() {
     id: 'para-load', key: 'para-load-' + lastT + '-' + load.tier,
     severity: PARA_TIER[load.tier] >= PARA_TIER.red ? 'action' : 'watch', icon: zi('pill'),
     title: er ? 'Paracetamol: go to the emergency department now' : load.tier === 'now' ? 'Paracetamol: call your doctor now' : load.tier === 'red' ? 'Paracetamol: call your doctor today' : 'Paracetamol: check before the next dose',
-    body: top && top.lines[0] ? top.lines[0] : '',
+    // The hold time travels with it: Home hides the dose-available alert on a hold, so this is the only place on
+    // Home that says how long to wait (Vela V-V-291-12).
+    body: (top && top.lines[0] ? top.lines[0] : '') + (load.untilText ? ' ' + load.untilText : ''),
     tab: 'medical'
   });
   return alerts;
@@ -1350,7 +1355,7 @@ function renderFeverEpisodeCard() {
   }
   if (paraChip.state === 'ok' && paraNext && paraNext.verdict === 'hold') {
     // The chip never shows a dose under a stop (spec §5.4: the card reads only the verdict — Kael V-K-291-7).
-    html += '<div class="fe-para-note">The dose is hidden while the box above says to stop. Speak to your doctor first.</div>';
+    html += '<div class="fe-para-note">The dose is hidden while the box above says to stop. ' + ((paraNext.load && (paraNext.load.rules || []).some(r => r.er)) ? 'Follow the box above first.' : 'Speak to your doctor first.') + '</div>';
   } else if (paraChip.state === 'ok') {
     if (paraNext && paraNext.verdict === 'check') html += '<div class="fe-para-note">Check the box above before giving this.</div>';
     // mg first, so the line can be checked against any label or prescription (V-M-284-1c).

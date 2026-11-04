@@ -341,3 +341,37 @@ test('paracetamol by name: Indian brands and cold syrups count, plain ibuprofen 
   });
   expect(r).toEqual({ yes: [], no: [] });
 });
+
+test('the fallback is said once, on the highest call line; R2 amber\'s conditional call line carries it when alone (V-V-291-17)', async ({ page }) => {
+  await boot(page);
+  const ER = 'If you can\'t reach your doctor now, go to the emergency department.';
+  const d150: number[][] = []; for (let h = 86; h >= 0; h -= 6) d150.push([h, 150]);
+  const amber = await load(page, { doses: d150 });
+  expect(amber.rules).toContain('R2:amber');
+  expect(amber.text.split(ER).length - 1).toBe(1);
+  const d180: number[][] = []; for (let h = 86; h >= 0; h -= 6) d180.push([h, 180]);
+  const both = await load(page, { doses: d180 });
+  expect(both.rules).toEqual(expect.arrayContaining(['R1:now', 'R2:amber']));
+  expect(both.text.split(ER).length - 1).toBe(1);
+  const r1 = both.text.split(' | ').find((l: string) => l.startsWith('That\'s more paracetamol in 24 hours'));
+  expect(r1).toContain(ER);
+});
+
+test('Home\'s load alert carries the hold time; a fallback confirm never records while the jump check asks; the hero redraws on a dose receive (V-V-291-12, V-CA-291-11/-13)', async ({ page }) => {
+  await seed(page, [[40, 9.2], [3, 9.5]], [[3, '1.4 ml'], [1, '1.4 ml']], { confirmLatest: true });
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const a = w.computeParacetamolLoadAlerts()[0];
+    const deps = (0, eval)('SYNC_RENDER_DEPS');
+    const heroes = [KEYS.feverEpisodes, KEYS.vomitingEpisodes, KEYS.diarrhoeaEpisodes].map((k: string) => deps[k].renderers.home.indexOf('renderTodayHero') >= 0);
+    (0, eval)("growthData = [{ date: toDateStr(new Date(Date.now() - 40*864e5)), wt: 9.5 }, { date: toDateStr(new Date(Date.now() - 3*864e5)), wt: 16.4 }]; growthConfirm = {};");
+    const row = w.getLatestWeight();
+    const before = JSON.stringify((0, eval)('growthConfirm'));
+    const asking = !!w.gvWeightNeedsConfirm(row);
+    const rec = w.gvConfirmRecord(row, null, 'calm');
+    return { body: a.body, heroes, asking, rec, same: JSON.stringify((0, eval)('growthConfirm')) === before };
+  });
+  expect(r.body).toContain('Give no more paracetamol until');
+  expect(r.heroes).toEqual([true, true, true]);
+  expect(r).toMatchObject({ asking: true, rec: false, same: true });
+});

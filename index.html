@@ -3384,7 +3384,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .fe-load-title .zi { width:16px; height:16px; flex-shrink:0; }
 .fe-load-text { font-size:var(--fs-sm); color:var(--text); line-height:var(--lh-relaxed); padding:var(--sp-2) 0; }
 .fe-load .btn { min-height:44px; }
-.fe-load-chips .fe-action-chip { min-height:44px; display:inline-flex; align-items:center; }   /* tap target (Vela V-V-291-7) */
+.fe-load-chips .fe-action-chip { min-height:44px; display:inline-flex; align-items:center; font-family:inherit; }   /* tap target (Vela V-V-291-7) */
 .fe-load-until { font-weight:700; }
 [data-theme="dark"] .fe-load--red:not(.fe-load--now) { border-color:var(--tc-danger); }   /* the light rgba fades on dark rose (Ceres V-C-291-4) */
 [data-theme="dark"] .fe-load:not(.fe-load--red):not(.fe-load--now) { border-color:rgba(212,168,72,0.38); }
@@ -31677,8 +31677,11 @@ function gvWeightNeedsConfirm(row) {
 // `fallbackKind`: when the jump check passed (nothing to ask), the kind to record anyway — the leftover-risk
 // flow's "{wt} kg is right" (#161 spec §5.3 R1), which makes the latest weight the reference weight (§5.1).
 function gvConfirmRecord(row, shownKind, fallbackKind) {
-  const ask = gvWeightNeedsConfirm(row);
   if (!row) return false;
+  const ask = gvWeightNeedsConfirm(row);
+  // A fallback never records a kind the parent wasn't shown: while the jump check asks, only its own chip can
+  // confirm (Carina V-CA-291-13; the caller guards too).
+  if (fallbackKind && ask) return false;
   if (!ask && fallbackKind && GV_CONFIRM_KINDS.indexOf(fallbackKind) >= 0) {
     if (!gvMeasureRows('wt').some(r => r.date === row.date && r.wt === row.wt)) return false;
     growthConfirm = gvConfirmMerge(growthConfirm, { [row.date]: { [_gvGrams(row.wt)]: [fallbackKind] } });
@@ -74715,7 +74718,7 @@ function _paraLoadFrom(o) {
   } else if (metRef) {
     out.check = true;   // a question is open: an empty log is never "no" (Kael V-K-291-6a)
     fire('R2', 'amber', ['That\'s more than a day\'s usual most, every day, for over 48 hours. Has ' + subj + ' vomited, retched, or had tummy pain?',
-      'Call your doctor now if ' + subj + ' seems to feel sick (gagging, retching, or won\'t eat and won\'t drink, even breastfeeds or milk), or if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow. Yellow skin is harder to see on brown skin, so check the whites of the eyes.'], { giChips: true });
+      'Call your doctor now if ' + subj + ' seems to feel sick (gagging, retching, or won\'t eat and won\'t drink, even breastfeeds or milk), or if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow. Yellow skin is harder to see on brown skin, so check the whites of the eyes.' + PARA_ER], { giChips: true });   // a conditional call-now line carries the fallback too (Vela V-V-291-17)
   } else if (maybe) {
     out.check = true;
     fire('R2', 'amber', ['We couldn\'t read every dose amount, so we can\'t tell if the last 2 days were over the usual most. Check the bottle\'s label, then tap each dose above and write the mg given.']);
@@ -74732,11 +74735,13 @@ function _paraFinish(out, now, when) {
   out.stop = out.rules.some(r => r.stop);
   if (out.rules.some(r => r.rule !== 'R0' && PARA_TIER[r.tier] >= PARA_TIER.red)) out.rules.forEach(r => { if (r.rule === 'R0' && r.fact) r.lines = [r.fact]; });
   // One instruction per block (Kael V-K-291-4): under the emergency-department lead, the other call lines keep
-  // only their facts; otherwise the "can't reach your doctor" fallback is said once, on the last call-now line.
-  if (out.rules.some(r => r.er)) out.rules.forEach(r => { if (!r.er && r.fact) r.lines = [r.fact]; });
+  // only their facts and no line repeats the fallback; otherwise the "can't reach your doctor" fallback is said
+  // once, on the highest call line in the order the block renders (tier, then rule order).
+  const strip = r => { r.lines = r.lines.map(l => l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l); };
+  if (out.rules.some(r => r.er)) out.rules.forEach(r => { if (!r.er && r.fact) r.lines = [r.fact]; if (!r.er) strip(r); });
   else {
-    const withEr = out.rules.filter(r => r.lines.some(l => l.endsWith(PARA_ER)));
-    withEr.slice(0, -1).forEach(r => { r.lines = r.lines.map(l => l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l); });
+    const withEr = out.rules.filter(r => r.lines.some(l => l.endsWith(PARA_ER))).sort((a, b) => PARA_TIER[b.tier] - PARA_TIER[a.tier]);
+    withEr.slice(1).forEach(strip);
   }
   const untils = out.rules.map(r => r.until).filter(t => Number.isFinite(t) && t > now);
   if (untils.length && !out.stop) { out.until = Math.max.apply(null, untils); out.untilText = 'Give no more paracetamol until ' + when(out.until) + '.'; }
@@ -74823,7 +74828,7 @@ function _paraLoadHtml(load, where) {
       html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="switchTab" data-arg="growth">Fix the weight or add a weight</button></div>';
     }
     if (r.giChips && getActiveFeverEpisode()) {
-      html += '<div class="fe-action-chips fe-load-chips">' + PARA_GI_ACTIONS.map(a => '<span class="fe-action-chip" role="button" tabindex="0" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</span>').join('') + '</div>';
+      html += '<div class="fe-action-chips fe-load-chips">' + PARA_GI_ACTIONS.map(a => '<button type="button" class="fe-action-chip" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</button>').join('') + '</div>';
     }
     if (r.addWeight) html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-soft btn-soft--peach" data-action="switchTab" data-arg="growth">Add a weight</button></div>';
   });
@@ -74852,7 +74857,8 @@ function feConfirmLoadWeight(date, wtStr) {
   if (done && _paraRefWeight() && _paraRefWeight().confirmed) showQLToast(zi('check') + ' Weight confirmed');
   else showQLToast('The weight check has changed. Look again.');
 }
-// R2's question: "Tummy pain" / "Seems sick" logged on the active fever episode, now.
+// R2's question: "Tummy pain" / "Retching or off food" logged on the active fever episode, now ("Seems sick",
+// the earlier chip, still counts when already logged — PARA_GI_MATCH; Ceres V-C-291-6).
 function feLogGiSign(label) {
   if (PARA_GI_ACTIONS.indexOf(label) < 0 || !getActiveFeverEpisode()) return;
   logFeverAction(label);
@@ -74876,7 +74882,9 @@ function computeParacetamolLoadAlerts() {
     id: 'para-load', key: 'para-load-' + lastT + '-' + load.tier,
     severity: PARA_TIER[load.tier] >= PARA_TIER.red ? 'action' : 'watch', icon: zi('pill'),
     title: er ? 'Paracetamol: go to the emergency department now' : load.tier === 'now' ? 'Paracetamol: call your doctor now' : load.tier === 'red' ? 'Paracetamol: call your doctor today' : 'Paracetamol: check before the next dose',
-    body: top && top.lines[0] ? top.lines[0] : '',
+    // The hold time travels with it: Home hides the dose-available alert on a hold, so this is the only place on
+    // Home that says how long to wait (Vela V-V-291-12).
+    body: (top && top.lines[0] ? top.lines[0] : '') + (load.untilText ? ' ' + load.untilText : ''),
     tab: 'medical'
   });
   return alerts;
@@ -75115,7 +75123,7 @@ function renderFeverEpisodeCard() {
   }
   if (paraChip.state === 'ok' && paraNext && paraNext.verdict === 'hold') {
     // The chip never shows a dose under a stop (spec §5.4: the card reads only the verdict — Kael V-K-291-7).
-    html += '<div class="fe-para-note">The dose is hidden while the box above says to stop. Speak to your doctor first.</div>';
+    html += '<div class="fe-para-note">The dose is hidden while the box above says to stop. ' + ((paraNext.load && (paraNext.load.rules || []).some(r => r.er)) ? 'Follow the box above first.' : 'Speak to your doctor first.') + '</div>';
   } else if (paraChip.state === 'ok') {
     if (paraNext && paraNext.verdict === 'check') html += '<div class="fe-para-note">Check the box above before giving this.</div>';
     // mg first, so the line can be checked against any label or prescription (V-M-284-1c).
@@ -89707,9 +89715,9 @@ const SYNC_RENDER_DEPS = {
   [KEYS.medChecks]:         { global: 'medChecks',   renderers: { home: ['renderRemindersAndAlerts', 'renderHomeContextAlerts'], 'track:medical': ['renderMedicalStats', 'renderMedD3PatternCard'] } }, // T1-2: pattern card joins the sync push render list so it live-updates when device A's Done propagates to device B
   // Illness episodes (#161 PR 3, spec §5A): merged on receive (_epMergeLists, the same merge the
   // push runs), the module array reassigned, the result pushed back when it holds what the cloud lacks.
-  [KEYS.feverEpisodes]:     { global: '_feverEpisodes',     mergeOnReceive: '_epMergeReceiveFever',     pushBackOnDiverge: true, postReceive: '_epPostReceiveFever', renderers: { landing: ['renderLanding'], info: ['renderInfoIllnessImpact'], home: ['renderHomeFeverBanner', 'renderTodaySoFar', 'renderHomeContextAlerts'], 'track:medical': ['renderFeverEpisodeCard', 'renderFeverHistory', 'renderVomitingEpisodeCard', 'renderDiarrhoeaEpisodeCard'] } },   // the doses feed Home's alerts and R2 on the GI cards (#161 PR 4b, Carina V-CA-291-2)
-  [KEYS.diarrhoeaEpisodes]: { global: '_diarrhoeaEpisodes', mergeOnReceive: '_epMergeReceiveDiarrhoea', pushBackOnDiverge: true, renderers: { landing: ['renderLanding'], info: ['renderInfoIllnessImpact'], home: ['renderHomeDiarrhoeaBanner', 'renderTodaySoFar', 'renderRemindersAndAlerts', 'renderHomeContextAlerts'], 'track:medical': ['renderDiarrhoeaEpisodeCard', 'renderDiarrhoeaHistory', 'renderFeverEpisodeCard'] } },   // the leftover-risk flow reads vomits (R2) and illness starts (R3) — #161 §5.4
-  [KEYS.vomitingEpisodes]:  { global: '_vomitingEpisodes',  mergeOnReceive: '_epMergeReceiveVomiting',  pushBackOnDiverge: true, renderers: { landing: ['renderLanding'], info: ['renderInfoIllnessImpact'], home: ['renderHomeVomitingBanner', 'renderTodaySoFar', 'renderRemindersAndAlerts', 'renderHomeContextAlerts'],  'track:medical': ['renderVomitingEpisodeCard', 'renderVomitingHistory', 'renderFeverEpisodeCard'] } },   // the leftover-risk flow reads vomits (R2) and illness starts (R3) — #161 §5.4
+  [KEYS.feverEpisodes]:     { global: '_feverEpisodes',     mergeOnReceive: '_epMergeReceiveFever',     pushBackOnDiverge: true, postReceive: '_epPostReceiveFever', renderers: { landing: ['renderLanding'], info: ['renderInfoIllnessImpact'], home: ['renderHomeFeverBanner', 'renderTodaySoFar', 'renderHomeContextAlerts', 'renderTodayHero'], 'track:medical': ['renderFeverEpisodeCard', 'renderFeverHistory', 'renderVomitingEpisodeCard', 'renderDiarrhoeaEpisodeCard'] } },   // the doses feed Home's alerts, the Today hero's focus row (no false all-clear above the alert, V-CA-291-11) and R2 on the GI cards (#161 PR 4b, Carina V-CA-291-2)
+  [KEYS.diarrhoeaEpisodes]: { global: '_diarrhoeaEpisodes', mergeOnReceive: '_epMergeReceiveDiarrhoea', pushBackOnDiverge: true, renderers: { landing: ['renderLanding'], info: ['renderInfoIllnessImpact'], home: ['renderHomeDiarrhoeaBanner', 'renderTodaySoFar', 'renderRemindersAndAlerts', 'renderHomeContextAlerts', 'renderTodayHero'], 'track:medical': ['renderDiarrhoeaEpisodeCard', 'renderDiarrhoeaHistory', 'renderFeverEpisodeCard'] } },   // the leftover-risk flow reads vomits (R2) and illness starts (R3) — #161 §5.4
+  [KEYS.vomitingEpisodes]:  { global: '_vomitingEpisodes',  mergeOnReceive: '_epMergeReceiveVomiting',  pushBackOnDiverge: true, renderers: { landing: ['renderLanding'], info: ['renderInfoIllnessImpact'], home: ['renderHomeVomitingBanner', 'renderTodaySoFar', 'renderRemindersAndAlerts', 'renderHomeContextAlerts', 'renderTodayHero'],  'track:medical': ['renderVomitingEpisodeCard', 'renderVomitingHistory', 'renderFeverEpisodeCard', 'renderDiarrhoeaEpisodeCard'] } },   // a vomit answers R2 on the diarrhoea card too (V-CA-291-12)   // the leftover-risk flow reads vomits (R2) and illness starts (R3) — #161 §5.4
   [KEYS.coldEpisodes]:      { global: '_coldEpisodes',      mergeOnReceive: '_epMergeReceiveCold',      pushBackOnDiverge: true, renderers: { landing: ['renderLanding'], info: ['renderInfoIllnessImpact'], home: ['renderHomeColdBanner', 'renderTodaySoFar'],      'track:medical': ['renderColdEpisodeCard', 'renderColdHistory'] } },
   [KEYS.foods]:             { global: 'foods',        renderers: { home: ['renderHome'], 'track:diet': ['renderDietStats'] } },
   [KEYS.careTickets]:       { global: '_careTickets', renderers: { home: ['ctRenderEntryPoint', 'ctRenderZone', 'ctRenderFollowUpBanner'] } },
