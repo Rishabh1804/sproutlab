@@ -33,10 +33,11 @@ sha256: girls-2mon `8bb8ccd218175d205b7e72abd8248aef7741d4e602b0929af047e9e49013
 ## 4. The weight-jump check
 ### 4.1 Registry (PR 1)
 - One WHO weight-for-age L/M/S table, 0–60 months by month, per sex, from the committed `tab_wfa` files; one `whoWfaZ(wtKg, ageMo, sex)`. Linear interpolation of L, M, S. WHO restricted z beyond ±3 (step in SD2→SD3 units), log form when |L| < 1e-6. `sex` is explicit; never `whoT()` (it falls back to girls).
-- The velocity table (P1 / P99 and L, M, S, Delta per row; 2- and 3-month, girls and boys) is its own registry, ≤ 24 m. Knot days named: 61 / 91 / 122 / 183.
+- The velocity table (P1 / P99 and L, M, S, Delta per row; 2- and 3-month, girls and boys) is its own registry, ≤ 24 m. Knot days named: 61 / 91 / 122 / 183. **Amended at build (#287, V-CA-287-7):** it lands in PR 2 with its first consumer, `gvWeightJumpCheck`.
 - A dependency-free build audit re-extracts each committed xlsx (zlib + XML), recomputes P columns from L/M/S (velocity ±1 g; weight-for-age ±0.05 kg) and refuses to pass if a file is missing.
-- `WHO_GROWTH`'s weight columns are derived from the weight-for-age registry (no second table); medical.js reads them through `whoT()` at 14 sites (Maren consult by consumer).
-- `paraWeightPlausible` moves to `whoWfaZ` — this closes #162.
+- `WHO_GROWTH`'s weight columns are **bound** to the weight-for-age registry by the build audit: every cell must equal the committed file's P column exactly (WHO's published 0.1 kg value). **Amended at build (#287, Maren V-M-287-1, Carina V-CA-287-1):** bound, not derived — deriving would move displayed percentiles at medical.js's 14 `whoT()` sites by up to 0.05 kg, a change for its own PR. Copy that reads `whoWfaZ` states no centile (V-M-287-2).
+- `paraWeightPlausible` moves to `whoWfaZ` — this closes #162. **Interim (#287, Kael V-K-287-1, Maren V-M-287-3):** the exact flag sits 0.3–1.7 kg higher than the old approximate one at 3–24 months, so until the chip's confirm state ships (PR 4) a weigh-in at ≤ 24 months must also pass the old approximate ceiling (z ≤ +5 from (P97 − P50)/1.881); PR 1 never widens what is dosed. Removed in PR 4.
+- New chip outcomes (#287): a weigh-in dated before the birth date → `baddate` ("dated before {poss} birth date"); a weigh-in past day 1826 → `outofrange`, calm copy: "The weight check here covers children up to age 5, so it can't work out a dose from {poss} weight. Ask your doctor or chemist for the dose." (Kael V-K-287-2, Maren V-M-287-4, Vela V-V-287-1/-2).
 - **One age clock:** days / 30.4375 from `gvDaysBetween(dob, date)`; one boundary, 60.0 m = day 1826. An interpolation fraction > 1 fails closed.
 - Placement: data.js beside `WHO_GROWTH` or core.js beside `GROWTH_VELOCITY_BANDS` — Carina's call.
 
@@ -93,8 +94,8 @@ Tiers: calm / amber / red ("Call your doctor today", the NHS 111 urgent-advice e
 Worst true load that passes the check (four top doses, a typo at the band edge, real weight = previous, z0 −2..+2): ≤ 24 m velocity arm ≤ 72.8 (girls) / 72.0 (boys) mg/kg/day; Δz from 12 m up to 184 d ≤ 77.1 / 74.4; from 24 m ≤ 75.1 / 72.5. Below 75 is not guaranteed past ~157 d for girls. These cases read D = 60, R ≈ 65–67 → the R1 weight question: the next dose is held until the weight is checked. The case that survives is the same wrong number retyped at the confirm. References: BNF/TOXBASE 75 mg/kg/24 h; RCH > 200 mg/kg/24 h; RCH's > 48 h-with-GI criterion is met at > 60, which R2 catches.
 
 ## 7. Build order (separate PRs)
-1. Registry: weight-for-age L/M/S + velocity tables, committed sources, sha256, build audit, `whoWfaZ` with restricted z; `paraWeightPlausible` on it (#162); `WHO_GROWTH` weight columns derived. Summon: Carina primary, Maren (consumer), Kael.
-2. `gvWeightJumpCheck` (velocity + Δz, the method predicate, fail-closed). Summon: Carina, Kael, Maren.
+1. Registry: weight-for-age L/M/S, committed sources, sha256, build audit, `whoWfaZ` with restricted z; `paraWeightPlausible` on it (#162) with the interim ceiling; `WHO_GROWTH` weight columns bound by audit; `outofrange` / before-birth chip outcomes. Summon: Carina primary, Maren (consumer), Kael. (#287)
+2. Velocity registry + `gvWeightJumpCheck` (velocity + Δz, the method predicate, fail-closed); converge `ageMonthsAt` and the WHO clock or name the gap first (V-CA-287-6). Summon: Carina, Kael, Maren.
 3. Illness-episode sync lost-write fix. Summon: Carina, Kael.
 4. `KEYS.growthConfirm`; the chip `confirm` state and retype UI; the leftover-risk flow; `_emDocVitals`; render deps. Summon: all five Governors + core trio for styles.css; name Maren by hand on `PARA_LOAD_THRESHOLDS` (qa-route won't route it).
 5. Next: the entry-time check in `addGrowthEntry` on the same helper (closes Maren D4).

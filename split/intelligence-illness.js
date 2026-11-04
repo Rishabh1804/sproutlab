@@ -78,7 +78,20 @@ function paraWeightPlausible(weightKg, dateStr) {
   const mo = whoAgeMoAt(dateStr);
   const ok = sex => { const z = whoWfaZ(weightKg, mo, sex); return z >= -6 && z <= 5; };
   const sex = childSex();
-  return sex ? ok(sex) : (ok('f') && ok('m'));
+  return (sex ? ok(sex) : (ok('f') && ok('m'))) && _paraInterimCeilingOk(weightKg, mo);
+}
+// INTERIM — remove when the chip's weight-confirm state ships (#161 PR 4). The exact WHO flag sits
+// 0.3–1.7 kg higher than the old approximate one at 3–24 months, so on its own it would newly dose a
+// typo the chip used to stop (16.1–17.2 kg for a 9.5 kg 14-month-old — Kael V-K-287-1, Maren
+// V-M-287-3). Until the weight-jump confirm guards that window, a weigh-in at 24 months or under must
+// ALSO pass the old ceiling: approximate z from the 0–24 m table, (P97 − P50) / 1.881 per SD, ≤ +5.
+// Upper side only (the exact lower flag is already the stricter one); uncited approximation, kept
+// as a ceiling so PR 1 never widens what is dosed. Past 24 months the old table clamped (#162), so it
+// does not apply there.
+function _paraInterimCeilingOk(weightKg, mo) {
+  if (!(mo <= 24)) return true;
+  const r = getInterpolatedWHO(mo);
+  return (weightKg - r.w50) / ((r.w97 - r.w50) / 1.881) <= 5;
 }
 
 // Dose range for a weight and a bottle. Low end rounds UP and high end DOWN to 0.1 ml,
@@ -104,10 +117,17 @@ function getParacetamolChip(weightRow) {
   if (!wt || !date) return { state: 'noweight', form };
   const ageDays = gvDaysBetween(date, today());   // the one shared day count (V-CA-284-2)
   if (!Number.isFinite(ageDays) || ageDays < 0) return { state: 'baddate', form, wt, date };
+  // A weigh-in dated before the birth date is a date error, not a weight error (Vela V-V-287-2); one past
+  // the WHO table (60 months, day 1826) is out of range, not "off for her age" — a correct 5-year-old's
+  // weight must not be blamed (Kael V-K-287-2, Maren V-M-287-4, Vela V-V-287-1). Both still give no dose.
+  const lifeDays = gvDaysBetween(toDateStr(DOB), date);
+  if (Number.isFinite(lifeDays) && lifeDays < 0) return { state: 'baddate', why: 'beforebirth', form, wt, date };
+  if (Number.isFinite(lifeDays) && lifeDays > WHO_WFA_MAX_DAY) return { state: 'outofrange', form, wt, date };
   if (!paraWeightPlausible(wt, date)) return { state: 'implausible', form, wt, date };
   // A weight under 3 kg can reach this: under 3 months returns 'askdoctor' above, but at 3 months 2.5 kg
-  // is z ≈ −5.7 on the WHO table (whoWfaZ), inside the flags, so the implausible gate passes it. It has
-  // no dose here: one decision, never 'ok' without a dose (V-K-284-1). Keep this after the gate.
+  // is z ≈ −5.7 on the girls' table (whoWfaZ), inside the flags, so the gate passes it (on the boys'
+  // table it is −6.3 and the gate stops it). It has no dose here: one decision, never 'ok' without a
+  // dose (V-K-284-1). Keep this after the gate.
   if (!getParacetamolDose(wt, PARACETAMOL_FORMS[0])) return { state: 'nodose', form, wt, date };
   if (!form) return { state: 'pick', form, wt, date };
   const dose = getParacetamolDose(wt, form);
@@ -473,7 +493,10 @@ function renderFeverEpisodeCard() {
   } else if (paraChip.state === 'nodose') {
     html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' The last weight, ' + escHtml(String(paraChip.wt)) + ' kg, is too old to dose from. Weigh ' + pron('obj') + ' again, or ask your doctor for the dose.</div>';
   } else if (paraChip.state === 'baddate') {
-    html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' The last weight has a date in the future. Check it in Growth before working out a dose.</div>';
+    html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + (paraChip.why === 'beforebirth' ? ' The last weight is dated before ' + pron('poss') + ' birth date.' : ' The last weight has a date in the future.') + ' Check it in Growth before working out a dose.</div>';
+  } else if (paraChip.state === 'outofrange') {
+    // Calm, not the warn style: nothing is wrong with the weight (V-M-287-4).
+    html += '<div class="fe-para-note">The weight check here covers children up to age 5, so it can\'t work out a dose from ' + pron('poss') + ' weight. Ask your doctor or chemist for the dose.</div>';
   } else if (paraChip.state === 'implausible') {
     html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' The last weight, ' + escHtml(String(paraChip.wt)) + ' kg, looks off for ' + pron('poss') + ' age. Check it in Growth before working out a dose. If ' + pron('subj') + ' needs medicine now, ask your doctor or chemist for the dose.</div>';
   } else {

@@ -574,7 +574,8 @@ function childSex() { const s = _profChild().sex; return s === 'f' || s === 'm' 
 function whoT() { return WHO_GROWTH[childSex() || 'f']; }
 
 // ── WHO weight-for-age z, 0–60 months (spec docs/specs/paracetamol-weight-check-v1.md §4.1) ──
-// The one age clock for every WHO weight-for-age read: whole calendar days from the birth date to the
+// The age clock for every WHO_WFA_LMS read (V-CA-287-6: medical.js's percentile reads of WHO_GROWTH still
+// use ageMonthsAt's 30.44-day months — at most 0.15 day apart; converge before PR 2): whole calendar days from the birth date to the
 // weigh-in (gvDaysBetween, HR-12), divided by WHO's month, 30.4375 days (WHO Anthro). The table's last
 // row is month 60.0; a weigh-in past day 1826 is outside it.
 const WHO_MONTH_DAYS = 30.4375;
@@ -595,7 +596,8 @@ function whoAgeMoAt(dateStr) {
 // that is not a positive number, or an age outside 0–60 months.
 function whoWfaZ(wtKg, ageMo, sex) {
   const T = (sex === 'f' || sex === 'm') ? WHO_WFA_LMS[sex] : null;
-  if (!T || typeof wtKg !== 'number' || !(wtKg > 0) || !(ageMo >= 0 && ageMo <= 60)) return NaN;
+  if (!T || typeof wtKg !== 'number' || !Number.isFinite(wtKg) || !(wtKg > 0)
+      || typeof ageMo !== 'number' || !(ageMo >= 0 && ageMo <= 60)) return NaN;   // no coercion of null / '' / '24' (V-CA-287-5)
   const i = Math.min(Math.floor(ageMo), T.length - 2);
   const f = ageMo - i;
   if (!(f >= 0 && f <= 1)) return NaN;

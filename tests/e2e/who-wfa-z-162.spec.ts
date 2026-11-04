@@ -9,6 +9,10 @@ import { test, expect } from '@playwright/test';
 
 // [sex, day, [SD4neg, SD3neg, SD2neg, SD0, SD2, SD3, SD4]] from the WHO daily tables.
 const REF: [string, number, number[]][] = [
+  ['f', 91, [3.443, 3.987, 4.531, 5.839, 7.506, 8.503, 9.499]],
+  ['f', 183, [4.444, 5.088, 5.733, 7.302, 9.341, 10.585, 11.828]],
+  ['m', 91, [3.846, 4.429, 5.012, 6.369, 8.016, 8.962, 9.909]],
+  ['m', 183, [4.993, 5.675, 6.357, 7.939, 9.855, 10.956, 12.057]],
   ['f', 365, [5.505, 6.273, 7.041, 8.946, 11.506, 13.114, 14.721]],
   ['f', 730, [7.094, 8.064, 9.033, 11.474, 14.841, 17.008, 19.175]],
   ['f', 1095, [8.415, 9.608, 10.802, 13.846, 18.131, 20.942, 23.752]],
@@ -35,7 +39,7 @@ async function child(page: any, days: number, sex: string | null) {
   }, { days, sex });
 }
 
-test('whoWfaZ matches the WHO daily SD lines, incl. restricted z at ±4, at 1–5 years, both sexes', async ({ page }) => {
+test('whoWfaZ matches the WHO daily SD lines, incl. restricted z at ±4, at 3 months to 5 years, both sexes', async ({ page }) => {
   await boot(page);
   const got = await page.evaluate((REF: any) => {
     const w = window as any;
@@ -45,7 +49,8 @@ test('whoWfaZ matches the WHO daily SD lines, incl. restricted z at ±4, at 1–
     });
   }, REF);
   got.forEach((zs: number[], r: number) => zs.forEach((z, k) => {
-    expect(Math.abs(z - ZS[k]), `${REF[r][0]} day ${REF[r][1]} SD${ZS[k]}`).toBeLessThan(0.01);
+    // Monthly interpolation drifts most from the daily table at 3–6 months (≤ 0.03 z, Kael V-K-287-5).
+    expect(Math.abs(z - ZS[k]), `${REF[r][0]} day ${REF[r][1]} SD${ZS[k]}`).toBeLessThan(REF[r][1] < 365 ? 0.05 : 0.01);
   }));
 });
 
@@ -54,7 +59,8 @@ test('whoWfaZ fails closed: unknown sex, bad weight, age outside 0–60 m all gi
   const r = await page.evaluate(() => {
     const w = window as any;
     return [w.whoWfaZ(10, 24, null), w.whoWfaZ(10, 24, 'x'), w.whoWfaZ(0, 24, 'f'), w.whoWfaZ(-3, 24, 'f'),
-      w.whoWfaZ('10', 24, 'f'), w.whoWfaZ(NaN, 24, 'f'), w.whoWfaZ(10, -0.1, 'f'), w.whoWfaZ(10, 60.01, 'f'), w.whoWfaZ(10, NaN, 'f')]
+      w.whoWfaZ('10', 24, 'f'), w.whoWfaZ(NaN, 24, 'f'), w.whoWfaZ(10, -0.1, 'f'), w.whoWfaZ(10, 60.01, 'f'), w.whoWfaZ(10, NaN, 'f'),
+      w.whoWfaZ(10, null, 'f'), w.whoWfaZ(10, '', 'f'), w.whoWfaZ(10, '24', 'f'), w.whoWfaZ(Infinity, 24, 'f')]
       .map((z: number) => Number.isNaN(z));
   });
   expect(r.every(Boolean)).toBe(true);
@@ -116,4 +122,55 @@ test('#162: the fever chip doses a 4-year-old normally (no "looks off for her ag
     return chip && chip.state;
   });
   expect(state).toBe('ok');
+});
+
+test('band edges at 14 months (girl): exact lower flag; interim ceiling keeps the old upper flag until PR 4', async ({ page }) => {
+  await boot(page);
+  await child(page, 425, 'f');
+  const r = await page.evaluate(() => {
+    const w = window as any; const t = w.toDateStr(new Date());
+    return { lo41: w.paraWeightPlausible(4.1, t), lo42: w.paraWeightPlausible(4.2, t), hi160: w.paraWeightPlausible(16.0, t),
+      hi161: w.paraWeightPlausible(16.1, t), hi172: w.paraWeightPlausible(17.2, t), exact172: w.whoWfaZ(17.2, w.whoAgeMoAt(t), 'f') <= 5 };
+  });
+  // 16.1–17.2 kg passes WHO's exact +5 flag but not the old ceiling: still no dose (V-K-287-1, V-M-287-3).
+  expect(r).toEqual({ lo41: false, lo42: true, hi160: true, hi161: false, hi172: false, exact172: true });
+});
+
+test('past 24 months the interim ceiling no longer applies (the old table clamped there — #162)', async ({ page }) => {
+  await boot(page);
+  await child(page, 913, 'f');   // ~30 months: old clamped ceiling ≈ 19.8 kg, exact +5 flag well above it
+  const r = await page.evaluate(() => { const w = window as any; return w.paraWeightPlausible(21, w.toDateStr(new Date())); });
+  expect(r).toBe(true);
+});
+
+async function chipState(page: any, wt: number, dateOff: number) {
+  return page.evaluate(({ wt, dateOff }: any) => {
+    const w = window as any;
+    const d = new Date(); d.setDate(d.getDate() + dateOff);
+    growthData = [{ date: w.toDateStr(d), wt }];
+    const chip = w.getParacetamolChip(w.getLatestWeight());
+    return { state: chip.state, why: chip.why || null };
+  }, { wt, dateOff });
+}
+
+test('a weigh-in past 5 years reads outofrange (calm), never "looks off for her age"', async ({ page }) => {
+  await boot(page);
+  await child(page, 1830, 'f');
+  expect(await chipState(page, 18.5, 0)).toEqual({ state: 'outofrange', why: null });
+  const card = await page.evaluate(() => {
+    _feverEpisodes = [{ id: 'fe-5y', status: 'active', startedAt: new Date(Date.now() - 3600000).toISOString(), resolvedAt: null,
+      readings: [{ temp: 101.2, time: new Date().toISOString(), notes: '' }], doses: [], actions: [], peakTemp: 101.2, triggerSource: 'test', notes: '', resolvedNotes: '' }];
+    switchTab('medical'); renderFeverEpisodeCard();
+    const el = document.getElementById('feverEpisodeCard'); return el ? el.textContent : '';
+  });
+  expect(card).toContain('covers children up to age 5');
+  expect(card).not.toContain('looks off');
+  // A weigh-in from before the 5th birthday still doses after it (the check keys on the weigh-in's age).
+  expect((await chipState(page, 18.5, -10)).state).not.toBe('outofrange');
+});
+
+test('a weigh-in dated before the birth date reads as a date error', async ({ page }) => {
+  await boot(page);
+  await child(page, 100, 'f');
+  expect(await chipState(page, 6, -120)).toEqual({ state: 'baddate', why: 'beforebirth' });
 });

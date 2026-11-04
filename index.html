@@ -18389,6 +18389,10 @@ const EVENT_ACTIVITIES = {
 // ±2 SD columns), and the tables run to 24 months so a toddler is never read against the 12-month row.
 // WHO is the only growth reference: IAP 2015 recommends the WHO 2006 standards for children under 5
 // (Indian Pediatrics 2015;52:47–55).
+// The weight columns are bound to WHO_WFA_LMS below by split/audit-who-wfa-v1.mjs: every cell must equal
+// the committed file's P column exactly (WHO's published 0.1 kg value), so a hand edit fails the build —
+// bound, not derived (deriving would move displayed percentiles by up to 0.05 kg; Maren V-M-287-1,
+// Carina V-CA-287-1).
 const WHO_GROWTH = {
   f: {
     W3:  [2.4,3.2,4.0,4.6,5.1,5.5,5.8,6.1,6.3,6.6,6.8,7.0,7.1,7.3,7.5,7.7,7.8,8.0,8.2,8.3,8.5,8.7,8.8,9.0,9.2],
@@ -18417,8 +18421,9 @@ const WHO_GROWTH = {
 };
 
 // WHO Child Growth Standards, weight-for-age 0–5 years: L, M, S by completed month, 0–60, per sex.
-// Source: WHO, tab_wfa_girls_p_0_5.xlsx / tab_wfa_boys_p_0_5.xlsx (cdn.who.int, child-growth-standards
-// /indicators/weight-for-age; the same files WHO_GROWTH above is read from). WHO publishes no file
+// Source: WHO, tab_wfa_girls_p_0_5.xlsx / tab_wfa_boys_p_0_5.xlsx — https://cdn.who.int/media/docs/
+// default-source/child-growth/child-growth-standards/indicators/weight-for-age/tab_wfa_{girls,boys}_p_0_5.xlsx
+// (the same files WHO_GROWTH above is read from; re-fetched 2026-11-04 from that URL, byte-identical). WHO publishes no file
 // version: the record is the sha256 and the download date (Architect decision D, 2026-11-04) —
 //   girls cab683c68f937cec0fa8c80a601c4784d5f98230d787a20678d217db98f12f0e
 //   boys  675e1516ffcdf6273b1cc1370fa34e533d3bd84dfd31fdba93ebc457d907032a
@@ -24914,7 +24919,8 @@ function childSex() { const s = _profChild().sex; return s === 'f' || s === 'm' 
 function whoT() { return WHO_GROWTH[childSex() || 'f']; }
 
 // ── WHO weight-for-age z, 0–60 months (spec docs/specs/paracetamol-weight-check-v1.md §4.1) ──
-// The one age clock for every WHO weight-for-age read: whole calendar days from the birth date to the
+// The age clock for every WHO_WFA_LMS read (V-CA-287-6: medical.js's percentile reads of WHO_GROWTH still
+// use ageMonthsAt's 30.44-day months — at most 0.15 day apart; converge before PR 2): whole calendar days from the birth date to the
 // weigh-in (gvDaysBetween, HR-12), divided by WHO's month, 30.4375 days (WHO Anthro). The table's last
 // row is month 60.0; a weigh-in past day 1826 is outside it.
 const WHO_MONTH_DAYS = 30.4375;
@@ -24935,7 +24941,8 @@ function whoAgeMoAt(dateStr) {
 // that is not a positive number, or an age outside 0–60 months.
 function whoWfaZ(wtKg, ageMo, sex) {
   const T = (sex === 'f' || sex === 'm') ? WHO_WFA_LMS[sex] : null;
-  if (!T || typeof wtKg !== 'number' || !(wtKg > 0) || !(ageMo >= 0 && ageMo <= 60)) return NaN;
+  if (!T || typeof wtKg !== 'number' || !Number.isFinite(wtKg) || !(wtKg > 0)
+      || typeof ageMo !== 'number' || !(ageMo >= 0 && ageMo <= 60)) return NaN;   // no coercion of null / '' / '24' (V-CA-287-5)
   const i = Math.min(Math.floor(ageMo), T.length - 2);
   const f = ageMo - i;
   if (!(f >= 0 && f <= 1)) return NaN;
@@ -73301,7 +73308,20 @@ function paraWeightPlausible(weightKg, dateStr) {
   const mo = whoAgeMoAt(dateStr);
   const ok = sex => { const z = whoWfaZ(weightKg, mo, sex); return z >= -6 && z <= 5; };
   const sex = childSex();
-  return sex ? ok(sex) : (ok('f') && ok('m'));
+  return (sex ? ok(sex) : (ok('f') && ok('m'))) && _paraInterimCeilingOk(weightKg, mo);
+}
+// INTERIM — remove when the chip's weight-confirm state ships (#161 PR 4). The exact WHO flag sits
+// 0.3–1.7 kg higher than the old approximate one at 3–24 months, so on its own it would newly dose a
+// typo the chip used to stop (16.1–17.2 kg for a 9.5 kg 14-month-old — Kael V-K-287-1, Maren
+// V-M-287-3). Until the weight-jump confirm guards that window, a weigh-in at 24 months or under must
+// ALSO pass the old ceiling: approximate z from the 0–24 m table, (P97 − P50) / 1.881 per SD, ≤ +5.
+// Upper side only (the exact lower flag is already the stricter one); uncited approximation, kept
+// as a ceiling so PR 1 never widens what is dosed. Past 24 months the old table clamped (#162), so it
+// does not apply there.
+function _paraInterimCeilingOk(weightKg, mo) {
+  if (!(mo <= 24)) return true;
+  const r = getInterpolatedWHO(mo);
+  return (weightKg - r.w50) / ((r.w97 - r.w50) / 1.881) <= 5;
 }
 
 // Dose range for a weight and a bottle. Low end rounds UP and high end DOWN to 0.1 ml,
@@ -73327,10 +73347,17 @@ function getParacetamolChip(weightRow) {
   if (!wt || !date) return { state: 'noweight', form };
   const ageDays = gvDaysBetween(date, today());   // the one shared day count (V-CA-284-2)
   if (!Number.isFinite(ageDays) || ageDays < 0) return { state: 'baddate', form, wt, date };
+  // A weigh-in dated before the birth date is a date error, not a weight error (Vela V-V-287-2); one past
+  // the WHO table (60 months, day 1826) is out of range, not "off for her age" — a correct 5-year-old's
+  // weight must not be blamed (Kael V-K-287-2, Maren V-M-287-4, Vela V-V-287-1). Both still give no dose.
+  const lifeDays = gvDaysBetween(toDateStr(DOB), date);
+  if (Number.isFinite(lifeDays) && lifeDays < 0) return { state: 'baddate', why: 'beforebirth', form, wt, date };
+  if (Number.isFinite(lifeDays) && lifeDays > WHO_WFA_MAX_DAY) return { state: 'outofrange', form, wt, date };
   if (!paraWeightPlausible(wt, date)) return { state: 'implausible', form, wt, date };
   // A weight under 3 kg can reach this: under 3 months returns 'askdoctor' above, but at 3 months 2.5 kg
-  // is z ≈ −5.7 on the WHO table (whoWfaZ), inside the flags, so the implausible gate passes it. It has
-  // no dose here: one decision, never 'ok' without a dose (V-K-284-1). Keep this after the gate.
+  // is z ≈ −5.7 on the girls' table (whoWfaZ), inside the flags, so the gate passes it (on the boys'
+  // table it is −6.3 and the gate stops it). It has no dose here: one decision, never 'ok' without a
+  // dose (V-K-284-1). Keep this after the gate.
   if (!getParacetamolDose(wt, PARACETAMOL_FORMS[0])) return { state: 'nodose', form, wt, date };
   if (!form) return { state: 'pick', form, wt, date };
   const dose = getParacetamolDose(wt, form);
@@ -73696,7 +73723,10 @@ function renderFeverEpisodeCard() {
   } else if (paraChip.state === 'nodose') {
     html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' The last weight, ' + escHtml(String(paraChip.wt)) + ' kg, is too old to dose from. Weigh ' + pron('obj') + ' again, or ask your doctor for the dose.</div>';
   } else if (paraChip.state === 'baddate') {
-    html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' The last weight has a date in the future. Check it in Growth before working out a dose.</div>';
+    html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + (paraChip.why === 'beforebirth' ? ' The last weight is dated before ' + pron('poss') + ' birth date.' : ' The last weight has a date in the future.') + ' Check it in Growth before working out a dose.</div>';
+  } else if (paraChip.state === 'outofrange') {
+    // Calm, not the warn style: nothing is wrong with the weight (V-M-287-4).
+    html += '<div class="fe-para-note">The weight check here covers children up to age 5, so it can\'t work out a dose from ' + pron('poss') + ' weight. Ask your doctor or chemist for the dose.</div>';
   } else if (paraChip.state === 'implausible') {
     html += '<div class="fe-para-note fe-para-warn">' + zi('warn') + ' The last weight, ' + escHtml(String(paraChip.wt)) + ' kg, looks off for ' + pron('poss') + ' age. Check it in Growth before working out a dose. If ' + pron('subj') + ' needs medicine now, ask your doctor or chemist for the dose.</div>';
   } else {

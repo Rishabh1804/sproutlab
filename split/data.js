@@ -1891,6 +1891,10 @@ const EVENT_ACTIVITIES = {
 // ±2 SD columns), and the tables run to 24 months so a toddler is never read against the 12-month row.
 // WHO is the only growth reference: IAP 2015 recommends the WHO 2006 standards for children under 5
 // (Indian Pediatrics 2015;52:47–55).
+// The weight columns are bound to WHO_WFA_LMS below by split/audit-who-wfa-v1.mjs: every cell must equal
+// the committed file's P column exactly (WHO's published 0.1 kg value), so a hand edit fails the build —
+// bound, not derived (deriving would move displayed percentiles by up to 0.05 kg; Maren V-M-287-1,
+// Carina V-CA-287-1).
 const WHO_GROWTH = {
   f: {
     W3:  [2.4,3.2,4.0,4.6,5.1,5.5,5.8,6.1,6.3,6.6,6.8,7.0,7.1,7.3,7.5,7.7,7.8,8.0,8.2,8.3,8.5,8.7,8.8,9.0,9.2],
@@ -1919,8 +1923,9 @@ const WHO_GROWTH = {
 };
 
 // WHO Child Growth Standards, weight-for-age 0–5 years: L, M, S by completed month, 0–60, per sex.
-// Source: WHO, tab_wfa_girls_p_0_5.xlsx / tab_wfa_boys_p_0_5.xlsx (cdn.who.int, child-growth-standards
-// /indicators/weight-for-age; the same files WHO_GROWTH above is read from). WHO publishes no file
+// Source: WHO, tab_wfa_girls_p_0_5.xlsx / tab_wfa_boys_p_0_5.xlsx — https://cdn.who.int/media/docs/
+// default-source/child-growth/child-growth-standards/indicators/weight-for-age/tab_wfa_{girls,boys}_p_0_5.xlsx
+// (the same files WHO_GROWTH above is read from; re-fetched 2026-11-04 from that URL, byte-identical). WHO publishes no file
 // version: the record is the sha256 and the download date (Architect decision D, 2026-11-04) —
 //   girls cab683c68f937cec0fa8c80a601c4784d5f98230d787a20678d217db98f12f0e
 //   boys  675e1516ffcdf6273b1cc1370fa34e533d3bd84dfd31fdba93ebc457d907032a
