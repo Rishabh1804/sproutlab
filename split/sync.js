@@ -415,10 +415,12 @@ const SYNC_RENDER_DEPS = {
   [KEYS.visits]:            { global: 'visits',      renderers: { 'track:medical': ['renderMedicalStats'] } },
   [KEYS.doctors]:           { global: 'doctors',     renderers: { 'track:medical': ['renderDoctorPrep'] } },
   [KEYS.medChecks]:         { global: 'medChecks',   renderers: { home: ['renderRemindersAndAlerts', 'renderHomeContextAlerts'], 'track:medical': ['renderMedicalStats', 'renderMedD3PatternCard'] } }, // T1-2: pattern card joins the sync push render list so it live-updates when device A's Done propagates to device B
-  [KEYS.feverEpisodes]:     { global: null, renderers: { home: ['renderHomeFeverBanner'],     'track:medical': ['renderFeverEpisodeCard'] } },
-  [KEYS.diarrhoeaEpisodes]: { global: null, renderers: { home: ['renderHomeDiarrhoeaBanner'], 'track:medical': ['renderDiarrhoeaEpisodeCard'] } },
-  [KEYS.vomitingEpisodes]:  { global: null, renderers: { home: ['renderHomeVomitingBanner'],  'track:medical': ['renderVomitingEpisodeCard'] } },
-  [KEYS.coldEpisodes]:      { global: null, renderers: { home: ['renderHomeColdBanner'],      'track:medical': ['renderColdEpisodeCard'] } },
+  // Illness episodes (#161 PR 3, spec §5A): merged on receive (_epMergeLists, the same merge the
+  // push runs), the module array reassigned, the result pushed back when it holds what the cloud lacks.
+  [KEYS.feverEpisodes]:     { global: '_feverEpisodes',     mergeOnReceive: '_epMergeReceiveFever',     pushBackOnDiverge: true, postReceive: '_epPostReceiveFever', renderers: { home: ['renderHomeFeverBanner'],     'track:medical': ['renderFeverEpisodeCard', 'renderFeverHistory'] } },
+  [KEYS.diarrhoeaEpisodes]: { global: '_diarrhoeaEpisodes', mergeOnReceive: '_epMergeReceiveDiarrhoea', pushBackOnDiverge: true, renderers: { home: ['renderHomeDiarrhoeaBanner'], 'track:medical': ['renderDiarrhoeaEpisodeCard', 'renderDiarrhoeaHistory'] } },
+  [KEYS.vomitingEpisodes]:  { global: '_vomitingEpisodes',  mergeOnReceive: '_epMergeReceiveVomiting',  pushBackOnDiverge: true, renderers: { home: ['renderHomeVomitingBanner'],  'track:medical': ['renderVomitingEpisodeCard', 'renderVomitingHistory'] } },
+  [KEYS.coldEpisodes]:      { global: '_coldEpisodes',      mergeOnReceive: '_epMergeReceiveCold',      pushBackOnDiverge: true, renderers: { home: ['renderHomeColdBanner'],      'track:medical': ['renderColdEpisodeCard', 'renderColdHistory'] } },
   [KEYS.foods]:             { global: 'foods',        renderers: { home: ['renderHome'], 'track:diet': ['renderDietStats'] } },
   [KEYS.careTickets]:       { global: '_careTickets', renderers: { home: ['ctRenderEntryPoint', 'ctRenderZone', 'ctRenderFollowUpBanner'] } },
   // PR-ε.0 §3 — scrapbook lives in the history tab (Cipher v2 BLOCKER #9
@@ -482,6 +484,13 @@ function _syncSetGlobal(name, value) {
     case 'scrapbook':    scrapbook    = value; return true;
     case 'teethLog':     teethLog     = value; return true;
     case 'mealPlan':     mealPlan     = value; return true;
+    // Illness episodes (#161 PR 3): the module arrays are reassigned on receive, so the cards, the
+    // countdown and the dose gate read the other phone's entries without a reload (V-CA-P3-10).
+    // Edit sheets re-find their entry by id at commit, so the reassignment never strands an edit.
+    case '_feverEpisodes':     _feverEpisodes     = _epNormalize('fever', value);     return true;
+    case '_diarrhoeaEpisodes': _diarrhoeaEpisodes = _epNormalize('diarrhoea', value); return true;
+    case '_vomitingEpisodes':  _vomitingEpisodes  = _epNormalize('vomiting', value);  return true;
+    case '_coldEpisodes':      _coldEpisodes      = _epNormalize('cold', value);      return true;
     case 'profile': {
       var _prevDob = profile && profile.child ? profile.child.dob : null;
       var _prevSex = profile && profile.child ? (profile.child.sex || null) : null;
@@ -511,6 +520,10 @@ function _syncGetGlobal(name) {
     case 'scrapbook':    return scrapbook;
     case 'teethLog':     return teethLog;
     case 'mealPlan':     return mealPlan;
+    case '_feverEpisodes':     return _feverEpisodes;
+    case '_diarrhoeaEpisodes': return _diarrhoeaEpisodes;
+    case '_vomitingEpisodes':  return _vomitingEpisodes;
+    case '_coldEpisodes':      return _coldEpisodes;
     case 'profile':      return profile;
     default: return undefined;
   }
@@ -924,6 +937,7 @@ function _syncFindHousehold(uid) {
                 _syncPushDirtyThenAttach(_syncHouseholdId);
               } else {
                 _syncSaveDirty({});
+                _epJoinBegin();   // a true first attach: this device's episodes are not household data (V-CA-P3-8)
                 _syncAttachListeners(_syncHouseholdId);
               }
             }
@@ -1026,6 +1040,7 @@ function syncJoinByCode(code) {
         // joined must not clobber the household, so drop it before attaching.
         localStorage.setItem('sl_sync_seeded', '4');
         _syncSaveDirty({});
+        _epJoinBegin();   // the first episode receive takes the household's copy outright (V-CA-P3-8)
         _syncAttachListeners(_syncHouseholdId);
       });
     })
@@ -1548,6 +1563,20 @@ function _syncFlushSingleDoc(hRef, collection) {
     return;
   }
 
+  // Illness episodes: every write merges against the server copy inside a transaction — a phone that
+  // had not seen the other parent's dose can no longer overwrite it (V-CA-P3-7).
+  if (collection === 'episodes') {
+    var _epVals = {};
+    keysForCol.forEach(function(k) { if (diff.updates[k] !== undefined || Object.keys(diff.updates).some(function(u) { return u.indexOf(k + '.') === 0; })) _epVals[k] = current[k]; });
+    if (Object.keys(_epVals).length === 0) keysForCol.forEach(function(k) { _epVals[k] = current[k]; });
+    _syncEpisodesTxn(hRef, _epVals).then(function() {
+      _syncClearDirty(keysForCol, startedAt, _syncSessionAttachedAt);
+    }).catch(function(e) {
+      console.warn('[sync] episodes transaction ' + collection + ' failed — queued for a full push:', e);
+      keysForCol.forEach(_syncMarkNeedsFull);
+    });
+    return;
+  }
   var docRef = hRef.collection('singles').doc(collection);
   var syncMeta = {
     __sync_updatedBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' },
@@ -1641,6 +1670,54 @@ function _syncUnionArrays(local, cloud, key) {
   (cloud || []).forEach(function(e) { var id = _syncEntryIdentity(e, key); if (!seen[id]) { seen[id] = true; out.push(e); } });
   return out;
 }
+// ── Illness episodes (#161 PR 3) ──
+function _epKindOfKeyId(key) {
+  return key === KEYS.feverEpisodes ? 'fever' : key === KEYS.diarrhoeaEpisodes ? 'diarrhoea'
+    : key === KEYS.vomitingEpisodes ? 'vomiting' : key === KEYS.coldEpisodes ? 'cold' : null;
+}
+// A joining device takes the household's episodes outright on first receive, with no push-back (V-CA-P3-8).
+var EP_JOIN_KEY = 'sl_ep_join_pending';
+function _epJoinBegin() {
+  try { localStorage.setItem(EP_JOIN_KEY, JSON.stringify([KEYS.feverEpisodes, KEYS.diarrhoeaEpisodes, KEYS.vomitingEpisodes, KEYS.coldEpisodes])); } catch (e) {}
+}
+function _epJoinPending(key) {
+  try { var a = JSON.parse(localStorage.getItem(EP_JOIN_KEY) || '[]'); return Array.isArray(a) && a.indexOf(key) >= 0; } catch (e) { return false; }
+}
+function _epJoinDone(key) {
+  try {
+    var a = JSON.parse(localStorage.getItem(EP_JOIN_KEY) || '[]');
+    if (!Array.isArray(a)) a = [];
+    a = a.filter(function(k) { return k !== key; });
+    if (a.length) localStorage.setItem(EP_JOIN_KEY, JSON.stringify(a)); else localStorage.removeItem(EP_JOIN_KEY);
+  } catch (e) {}
+}
+// One transactional write of episode keys: read the server doc, merge each key, write the merge, and set
+// the shadow to what was written. Rejects on contention or offline (callers queue a full push).
+function _syncEpisodesTxn(hRef, vals) {
+  var db = hRef.firestore || ((typeof firebase !== 'undefined') ? firebase.firestore() : null);
+  var docRef = hRef.collection('singles').doc('episodes');
+  var writer = _syncUser ? { uid: _syncUser.uid || null, name: _syncUser.displayName || 'Parent' } : null;
+  var written = {};
+  return db.runTransaction(function(t) {
+    return t.get(docRef).then(function(snap) {
+      var cloud = (snap && snap.exists) ? (snap.data() || {}) : {};
+      var payload = {};
+      Object.keys(vals).forEach(function(k) {
+        var kind = _epKindOfKeyId(k);
+        if (!kind) return;
+        var merged = _epMergeLists(kind, cloud[k], vals[k]);
+        written[k] = merged;
+        payload[k] = writer ? _syncStampUnattributed(merged, writer) : merged;
+      });
+      payload.__sync_updatedBy = writer;
+      payload.__sync_syncedAt = _syncServerTs();
+      t.set(docRef, payload, { merge: true });
+    });
+  }).then(function() {
+    Object.keys(written).forEach(function(k) { _syncShadow[k] = _syncCloneDeep(written[k]); });
+    return written;
+  });
+}
 function _syncMergeForPush(local, cloud, key) {
   // Tooth chart: the push honours the same per-tooth newest-ts contract as the
   // receive, so an offline or imported copy can't overwrite a newer cloud edit.
@@ -1653,6 +1730,9 @@ function _syncMergeForPush(local, cloud, key) {
   // Vaccines: a pending dose the union re-adds from the cloud is dropped once either side has
   // it given (vaccDropSatisfiedPending, core.js), so a dose marked given stays given.
   if (key === KEYS.vacc && Array.isArray(local) && Array.isArray(cloud)) return vaccDropSatisfiedPending(_syncUnionArrays(local, cloud, key));
+  // Illness episodes: the one merge (spec §5A), never a local-wins union.
+  var _epk = _epKindOfKeyId(key);
+  if (_epk) return _epMergeLists(_epk, cloud, local);
   if (Array.isArray(local)) return Array.isArray(cloud) ? _syncUnionArrays(local, cloud, key) : local;
   if (local && typeof local === 'object' && cloud && typeof cloud === 'object' && !Array.isArray(cloud)) {
     var out = {};
@@ -2232,11 +2312,13 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
           if (typeof _mergeFn === 'function') _saveVal = _mergeFn(remoteVal, current);
         } catch(e) {
           console.warn('[sync] merge-on-receive ' + key + '/' + _depCfg.mergeOnReceive + ':', e);
-          _saveVal = remoteVal;
+          // Illness episodes: a failed merge keeps local — never last-write-wins, the bug the merge exists
+          // to close (V-CA-P3-9).
+          _saveVal = _epKindOfKeyId(key) ? undefined : remoteVal;
         }
       }
-      // Meal planner: a failed merge keeps local and saves nothing (V-CA-279-2).
-      if (key === KEYS.mealPlan && _saveVal === undefined) continue;
+      // Meal planner: a failed merge keeps local and saves nothing (V-CA-279-2). Same for episodes.
+      if ((key === KEYS.mealPlan || _epKindOfKeyId(key)) && _saveVal === undefined) continue;
 
       anyChanged = true;
       _remoteWriteDepth++;
@@ -2257,6 +2339,22 @@ function _syncHandleSingleDocSnapshot(docName, doc) {
           else if (_cfg && _cfg.collection) { _syncCountWrites(1); _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal); }
         }
       } catch (e) { console.warn('[sync] meal-plan push-back skipped:', e); }
+      // Illness episodes: when the merge holds entries the cloud copy lacks, the shadow becomes the cloud's
+      // copy (as the merge reads it) and the next flush — a transaction that merges against the server
+      // again — pushes them (V-CA-P3-7). Compared with _epStable, which ignores __sync_* stamps (V-CA-P3-4).
+      try {
+        var _epKind = _epKindOfKeyId(key);
+        if (_epKind && _depCfg && _depCfg.pushBackOnDiverge && !_epJoinPending(key)) {
+          var _remoteCanon = _epMergeLists(_epKind, remoteVal, []);
+          if (_epStable(_saveVal) !== _epStable(_remoteCanon)) {
+            _syncShadow[key] = _syncCloneDeep(_remoteCanon);
+            _syncMarkDirty(key);
+            if (_syncWriteCount >= CIRCUIT_BREAKER_LIMIT) _syncMarkNeedsFull(key);
+            else if (_cfg && _cfg.collection) { _syncCountWrites(1); _syncDebounceSingleDoc(null, _cfg.collection, key, remoteVal, _saveVal); }
+          }
+        }
+        if (_epKind) _epJoinDone(key);
+      } catch (e) { console.warn('[sync] episode push-back skipped:', e); }
       // Profile: the merge refills a sex the cloud copy lacks (an older-build phone saved without
       // it). Write it back, the meal planner's way, so the household's copy holds it and a new phone
       // isn't asked again (V-CA-281-1).
@@ -2475,6 +2573,11 @@ function _syncSeedFirestore(hId) {
     singleDocCollections[col][key] = val;
   });
 
+  // Illness episodes go through the same transactional merge as every other write (V-CA-P3-7, ledger (g)).
+  if (singleDocCollections.episodes) {
+    promises.push(_syncEpisodesTxn(hRef, singleDocCollections.episodes));
+    delete singleDocCollections.episodes;
+  }
   Object.keys(singleDocCollections).forEach(function(col) {
     var payload = Object.assign({}, singleDocCollections[col], {
       __sync_updatedBy: { uid: _syncUser.uid, name: _syncUser.displayName || 'Parent' },

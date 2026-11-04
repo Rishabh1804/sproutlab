@@ -80,7 +80,8 @@ The fever card's dose chip, which named no weight, date or bottle and had no che
 - **Council and spec (2026-11-04):** a five-seat council plus two Cipher passes produced the ratified spec [`docs/specs/paracetamol-weight-check-v1.md`](specs/paracetamol-weight-check-v1.md) (record: `docs/COUNCIL_2026-11-04_161.md`). It supersedes the threshold note above: WHO velocity P1/P99 to 24 m and a weight-for-age Δz method to 60 m, confirm by retyping into a separate synced key, and a leftover-risk flow on the dose total. Build in five PRs (spec §7).
 - **PR 1 (#287):** the WHO weight-for-age registry, `whoWfaZ`, and #162. The exact WHO flag is 0.3–1.7 kg higher than the old one at 3–24 months, so an **interim ceiling** keeps the old upper flag for weigh-ins ≤ 24 months until PR 4's confirm state ships — PR 1 does not widen what is dosed at ≤ 24 months (V-K-287-1, V-M-287-3; past 24 months the exact flag admits more by design, the #162 fix). PR 4 must ship before 2027-09-04; the build warns from 2027-08-01 while the interim ceiling exists.
 - **PR 2:** WHO weight-velocity registry + `gvWeightJumpCheck` (velocity to 24 m, weight-for-age Δz from a 12 m start up to 184 days and 60 months, fail-closed). Engine only — the chip uses it from PR 4.
-- **Status:** **Open** — PR 1 merged (#287); PR 2 in review.
+- **PR 3:** illness-episode sync — all four episode keys merge by entry id on receive and push (tombstones, derived status, concurrent-start fold, transactional write, join-pending), the module arrays are reassigned on receive, edit sheets commit by id. Spec §5A.
+- **Status:** **Open** — PR 1 merged (#287); PR 2 merged (#288); PR 3 in review.
 
 #### P2 (deferred) — Paracetamol chip follow-ups, by owner (162)
 - **Symptom:** Non-blocking notes from the #284 round.
@@ -1742,6 +1743,7 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **Files:** `split/medical.js`, `split/sync.js`
 
 #### P1 — Illness-episode sync receive re-renders from stale module arrays (all four keys)
+- **Status:** **Fixed in #161 PR 3** (spec `docs/specs/paracetamol-weight-check-v1.md` §5A). The four keys now carry `global:` (the receive reassigns `_feverEpisodes` etc. through `_epNormalize`), `mergeOnReceive` (one merge, `_epMergeLists`, on both phones, by entry id), `pushBackOnDiverge`, and the `render*History` renderers; every episodes write is a Firestore transaction; edit sheets re-find the live entry by id. Class PC-10 (one state, two answers). Tests: `tests/e2e/episode-sync-merge.spec.ts`.
 - **Symptom:** `SYNC_RENDER_DEPS` registers `feverEpisodes` / `diarrhoeaEpisodes` / `vomitingEpisodes` / `coldEpisodes` with `global: null` and dispatches the episode-card renderers on receive, but those renderers read module-level `let` arrays (`_feverEpisodes` etc.) hydrated once from localStorage at load, not the freshly written key. Device B resolves an episode; device A keeps showing "Active … Episode" until reload. Nothing throws (per-renderer try/catch), it silently no-ops on data.
 - **Fix shape:** Either a `_postReceive*` hook per episode key that reassigns the module array (the `_postReceiveMilestones` idiom), or have `getActive*Episode()` read through `load()`. Kael-primary; separate PR.
 - **Origin:** Kael V-K-3 on PR #263 (fever readings toggle), widened by Cipher Edict V ruling 5 from fever-only to all four illness-episode keys. Pre-existing; not introduced by #263.
