@@ -74754,6 +74754,7 @@ function _paraLoadFrom(o) {
   if (last && o.illnessStart && o.latestWtDate && o.latestWtDate < o.illnessStart) {
     fire('R3', 'amber', ['If you can, weigh ' + obj + ' again before the next dose.'], { addWeight: true });
   }
+  out.obj = obj;
   out.giQ = 'Has ' + subj + ' vomited, retched, or had tummy pain?';
   out.giWatch = 'Call your doctor now if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow, or ' + subj + ' won\'t eat and won\'t drink, even breastfeeds or milk.' + PARA_ER;
   const r2now = (out.rules.some(r => r.rule === 'R2' && r.tier === 'now') || anz48) && !anz24;   // the 48 h figure when the 48 h rule drives
@@ -74761,7 +74762,7 @@ function _paraLoadFrom(o) {
   if (r2now ? last48 : last) out.tellText = r2now
     ? 'Tell them: ' + in48.length + ' doses, ' + _paraMgText(lo48, hi48) + ' in the last 48 hours. The last at ' + when(last48.t) + '.'
     : 'Tell them: ' + in24.length + (in24.length === 1 ? ' dose, ' : ' doses, ') + _paraMgText(lo24, hi24) + ' in the last 24 hours. The last at ' + when(last.t) + '.';
-  if (out.tellText && out.bigDoseMg) out.tellText += ' The biggest dose was ' + out.bigDoseMg + '\u00a0mg: have the bottle with you.';   // the doctor needs the dose and the strength (Maren D20)
+  if (out.tellText && out.bigDoseMg) out.tellText += ' The biggest dose was ' + out.bigDoseMg + '\u00a0mg' + (out.rules.some(r => r.er) ? '.' : ': have the bottle with you.');   // the ER lead already says take it (Vela V-V-291-26)   // the doctor needs the dose and the strength (Maren D20)
   return _paraFinish(out, now, when);
 }
 // One block, one "until" (Kael V-K-291-4): when a rule at red or above (other than R0) fires, R0 keeps only its
@@ -74867,16 +74868,23 @@ function _paraLeadBold(text, lead) {
 // time is never read without its condition (Vela V-V-291-19): "…until 7:24 pm, and speak to a doctor or
 // pharmacist first." / "Speak to a doctor or pharmacist before the next dose."
 function _paraDoLine(load, live, where) {
-  const er = live.some(r => r.er), stop = live.some(r => r.stop);
+  const er = live.some(r => r.er), stop = live.some(r => r.stop) || !!load.stop;   // a stop leads every surface, shown rule or not (Kael V-K-291-D27)
   if (er) return 'Give no more paracetamol. Take the bottle with you.';
   if (stop) return 'Give no more paracetamol until your doctor says.';
   const until = load.untilText && where !== 'gi' ? load.untilText.replace(/\.$/, '') : '';
-  // Red with no stop and no time (R1 red: unsafe only on the earlier weigh-in) still holds the next dose (Kael V-K-291-19).
-  if (!until && live.some(r => PARA_TIER[r.tier] >= PARA_TIER.red)) return live.some(r => r.weightQ)
-    ? 'Give no more paracetamol until you\'ve spoken to your doctor or confirmed the weight.'
-    : 'Give no more paracetamol until you\'ve spoken to your doctor.';
-  const gates = [];
+  // A red rule with no stop and no time of its own (R1 red: unsafe only on the earlier weigh-in) gates the next
+  // dose on the doctor or the weight, with or without a countdown time beside it (Kael V-K-291-19, Vela V-V-291-24).
+  const redGate = live.some(r => PARA_TIER[r.tier] >= PARA_TIER.red && !r.stop && !Number.isFinite(r.until));
+  if (redGate) {
+    // The doctor leads, the time follows; "weighed again", not "confirmed" — a typed typo is what R1 red catches
+    // (Maren V-M-291-16, ruling on Kael V-K-291-19).
+    const g = live.some(r => r.weightQ) ? 'spoken to your doctor or weighed ' + (load.obj || 'your child') + ' again' : 'spoken to your doctor';
+    const at = until ? until.replace(/^Give no more paracetamol until /, '') : '';
+    return 'Give no more paracetamol until you\'ve ' + g + (at ? ', and not before ' + at : '') + '.';
+  }
+  let gates = [];
   live.forEach(r => { const g = _paraWhy(r).gate; if (g && gates.indexOf(g) < 0) gates.push(g); });
+  if (gates.length > 1) gates = ['speak to a doctor or pharmacist'];   // one ask, not two (Vela V-V-291-25)
   if (gates.length) return until ? until + ', and ' + gates.join(' and ') + ' first.' : gates.join(' and ').replace(/^./, c => c.toUpperCase()) + ' before the next dose.';
   return until ? until + '.' : '';
 }
@@ -74901,7 +74909,7 @@ function feLoadWhy(btn) {
 // chips, the weight retype, a button); every reason folds into one "Why" row. The full rule text lives there.
 function _paraLoadHtml(load, where, card) {
   if (!load || load.none) return '';
-  const rules = _paraSurface((load.rules || []).filter(r => where !== 'gi' || r.rule === 'R2' || r.er || r.tier === 'now'));   // and any call-now rule (Maren V-M-291-11, D18)   // the GI cards carry the emergency lead too (Maren V-M-291-11)
+  const rules = _paraSurface((load.rules || []).filter(r => where !== 'gi' || r.rule === 'R2' || r.er || PARA_TIER[r.tier] >= PARA_TIER.red));   // and any red or call-now rule: one tier for one state (Maren V-M-291-11, D18, D21)   // the GI cards carry the emergency lead too (Maren V-M-291-11)
   if (!rules.length) return '';
   const tier = rules.reduce((t, r) => PARA_TIER[r.tier] > PARA_TIER[t] ? r.tier : t, 'calm');
   if (tier === 'calm') {
@@ -75009,10 +75017,12 @@ function _paraHomeBody(load, top, er) {
   const parts = [_paraDoLine(load, live, 'home')];
   if (PARA_TIER[load.tier] >= PARA_TIER.red && load.tellText) parts.push(load.tellText);
   if (load.tier === 'now' && !er) parts.push(PARA_ER.trim());
+  // R2's question turns "today" into "now": it travels at red too (Maren D24).
+  if (load.tier === 'red' && live.some(r => r.giChips) && load.giQ) parts.push(load.giQ + PARA_GI_YES);
   if (load.tier === 'amber') {
     // At amber the question or check travels with the time: Home's title never says what to check (Vela V-V-291-19).
     if (live.some(r => r.giChips) && load.giQ) parts.push(load.giQ + PARA_GI_YES);
-    else if (live.some(r => r.weightQ) && load.wq) parts.push(load.wq.q + ' Check before the next dose.');
+    else if (live.some(r => r.weightQ) && load.wq) parts.push(load.wq.q);   // the title already says check (Vela V-V-291-27)
     else if (!parts[0] && top) parts.push(_paraWhy(top).act || _paraWhy(top).t || '');
   }
   return parts.filter(Boolean).join(' ');
