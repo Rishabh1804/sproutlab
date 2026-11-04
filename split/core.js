@@ -1285,6 +1285,7 @@ function init() {
     else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2, arg3);   // retype to confirm a weight (#161 §4.4)
     else if (action === 'feConfirmLoadWeight') feConfirmLoadWeight(arg, arg2);   // R1's weight question (#161 §5.3)
     else if (action === 'feLogGiSign') feLogGiSign(arg);   // R2's tummy-pain / retching chips
+    else if (action === 'feLoadWhy') feLoadWhy(btn);   // the load block's "Why" row (6-second rule)
     else if (action === 'deLogFluidPrompt') deLogFluidPrompt();
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();

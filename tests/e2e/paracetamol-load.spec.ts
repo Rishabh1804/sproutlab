@@ -23,7 +23,7 @@ async function load(page: Page, o: any) {
     const r = w._paraLoadFrom({ nowMs: now, doses, wDose: o.wDose === undefined ? 9.5 : o.wDose, wRef: o.wRef === undefined ? { w: 9.5, src: null } : o.wRef,
       medName: o.medName || null, gi: !!o.gi, illnessStart: o.illnessStart || null, latestWtDate: o.latestWtDate || null,
       subj: 'she', obj: 'her', pos: 'her', fmtTime: () => 'TIME', fmtDate: () => 'DATE' });
-    return { tier: r.tier, check: r.check, under: r.under, none: !!r.none, stop: r.stop, until: r.untilText || '', rules: r.rules.map((x: any) => x.rule + ':' + x.tier), text: r.rules.map((x: any) => x.lines.join(' ')).join(' | '), gi: r.rules.some((x: any) => x.giChips), wq: r.rules.some((x: any) => x.weightQ), extra: r.extra || '' };
+    return { tier: r.tier, check: r.check, under: r.under, none: !!r.none, stop: r.stop, until: r.untilText || '', rules: r.rules.map((x: any) => x.rule + ':' + x.tier), text: w._paraSurface(r.rules).map((x: any) => x.lines.join(' ')).join(' | '), raw: r, gi: r.rules.some((x: any) => x.giChips), wq: r.rules.some((x: any) => x.weightQ), extra: r.extra || '' };
   }, o);
 }
 
@@ -174,8 +174,16 @@ test('the reference weight carries an earlier weigh-in along its centile; a rety
 
 test('the card: a hold says stop and shows the red block; Home raises the load alert and never says "safe to give"', async ({ page }) => {
   const card = await seed(page, [[40, 9.2], [3, 9.5]], [[3, '1.4 ml'], [1, '1.4 ml']]);   // 2 h apart, still inside the hold → R0 red
-  await expect(card.locator('.fe-dose-next')).toContainText('Give no more paracetamol for now');
-  await expect(card.locator('.fe-load--red')).toContainText('Call your doctor today');
+  // The 6-second lead (Architect, 2026-11-04): the block leads — title, one instruction, "Tell them", a folded Why.
+  await expect(card.locator('.fe-dose-next')).toHaveCount(0);
+  await expect(card.locator('.fe-load--red .fe-load-title')).toContainText('Call your doctor today');
+  await expect(card.locator('.fe-load--red .fe-load-do')).toContainText('Give no more paracetamol until');
+  await expect(card.locator('.fe-load--red .fe-load-tell')).toContainText('Tell them: 2 doses, 280');
+  await expect(card.locator('.fe-load-prow')).not.toHaveClass(/open/);
+  await expect(card.locator('.fe-load-prow-d')).toContainText('Two doses less than 4 h apart');
+  await card.locator('[data-action="feLoadWhy"]').evaluate((b: any) => b.click());
+  await expect(card.locator('.fe-load-prow')).toHaveClass(/open/);
+  await expect(card.locator('[data-action="feLoadWhy"]')).toHaveAttribute('aria-expanded', 'true');
   const r = await page.evaluate(() => {
     const w: any = window;
     return { load: w.computeParacetamolLoadAlerts(), fever: (w.computeFeverAlerts() || []).map((a: any) => a.body).join(' | '), verdict: w.getParacetamolNextDose().verdict };
@@ -183,6 +191,7 @@ test('the card: a hold says stop and shows the red block; Home raises the load a
   expect(r.verdict).toBe('hold');
   expect(r.load[0].title).toBe('Paracetamol: call your doctor today');
   expect(r.load[0].severity).toBe('action');
+  expect(r.load[0].body).toMatch(/^Give no more paracetamol until .*Tell them: 2 doses/);
   expect(r.fever).not.toContain('safe to give');
   await expect(card.locator('.fe-para-dose')).toHaveCount(0);
   await expect(card).toContainText('The dose is hidden while the box above says to stop');
@@ -289,7 +298,9 @@ test('an amber rule keeps "safe to give" off: the 4th day of paracetamol asks to
   const card = await seed(page, [[40, 9.2], [3, 9.5]], [[72, '1.0 ml'], [48, '1.0 ml'], [24, '1.0 ml'], [6, '1.0 ml']], { confirmLatest: true });
   const r = await page.evaluate(() => { const n = (window as any).getParacetamolNextDose(); return { verdict: n.verdict, safe: n.safe }; });
   expect(r).toEqual({ verdict: 'check', safe: false });
-  await expect(card.locator('.fe-dose-next')).not.toContainText('can be given now');
+  await expect(card).not.toContainText('can be given now');
+  await expect(card.locator('.fe-load--amber .fe-load-title')).toContainText('Check before the next dose');
+  await expect(card.locator('.fe-load--amber')).toContainText('Speak to a doctor or pharmacist before giving more.');
 });
 
 test('a weight the chip rejects is no weight for the totals (V-K-291-12, V-M-291-6), and the medicines list is read by brand (V-K-291-10)', async ({ page }) => {
@@ -374,4 +385,54 @@ test('Home\'s load alert carries the hold time; a fallback confirm never records
   expect(r.body).toContain('Give no more paracetamol until');
   expect(r.heroes).toEqual([true, true, true]);
   expect(r).toMatchObject({ asking: true, rec: false, same: true });
+});
+
+test('more than one quantity, or a unit word, is never read as one dose (Kael V-K-291-14/-15)', async ({ page }) => {
+  await boot(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    return ['1 tsp', '2 tsp', '1 spoon', '1 1/2 tsp', '5 ml x2', '2x5ml', '5ml twice', '2.5 ml and 2.5 ml', '5 ml, 5 ml', '100 mg 100 mg']
+      .filter(t => { const x = w._paraDoseMg({ dose: t, form: 'syrup250' }); return !(x.lo === 0 && x.hi === Infinity); });
+  });
+  expect(r).toEqual([]);
+  const ok = await page.evaluate(() => { const x = (window as any)._paraDoseMg({ dose: '5 cc', form: 'syrup250' }); return [x.lo, x.hi]; });
+  expect(ok).toEqual([250, 250]);
+});
+
+test('under the emergency lead, amber questions, chips and retypes drop out (Kael V-K-291-17)', async ({ page }) => {
+  await boot(page);
+  const d: number[][] = []; for (let h = 46; h >= 0; h -= 4.5) d.push([h, 300]);
+  const r = await load(page, { doses: d });
+  expect(r.rules).toContain('ANZ:now');
+  expect(r.gi).toBe(false);
+  expect(r.wq).toBe(false);
+  expect(r.text).not.toContain('Has she');
+  expect(r.text).not.toContain('Call your doctor');
+});
+
+test('each surface says the fallback once: the GI card keeps it when R1 isn\'t shown there; under ANZ the GI card leads with the emergency department (Maren V-M-291-10/-11)', async ({ page }) => {
+  await boot(page);
+  const html = await page.evaluate(() => {
+    const w: any = window;
+    const now = Date.UTC(2026, 10, 10, 12);
+    const mk = (hs: number[], mg: number) => hs.map(h => ({ t: now - h * 3600000, lo: mg, hi: mg, readable: true, form: null, medicine: 'Paracetamol' }));
+    const base = { nowMs: now, wDose: 9.5, wRef: { w: 9.5, src: null }, medName: null, gi: true, illnessStart: null, latestWtDate: null, subj: 'she', obj: 'her', pos: 'her', fmtTime: () => 'TIME', fmtDate: () => 'DATE' };
+    const hs: number[] = []; for (let h = 65; h >= 0; h -= 5) hs.push(h);
+    const both = w._paraLoadFrom(Object.assign({}, base, { doses: mk(hs, 190) }));
+    const anz = w._paraLoadFrom(Object.assign({}, base, { gi: false, doses: mk([20, 15, 10, 5], 500) }));
+    return { rules: both.rules.map((x: any) => x.rule + ':' + x.tier), gi: w._paraLoadHtml(both, 'gi'), fever: w._paraLoadHtml(both, 'fever'), anzGi: w._paraLoadHtml(anz, 'gi') };
+  });
+  expect(html.rules).toEqual(expect.arrayContaining(['R1:now', 'R2:now']));
+  const ER = 'go to the emergency department.';
+  expect(html.gi.split(ER).length - 1).toBe(1);
+  expect(html.fever.split(ER).length - 1).toBe(1);
+  expect(html.anzGi).toContain('Go to the emergency department now');
+});
+
+test('"logged twice" only for the same minute; two carers minutes apart keep both doses (Maren V-M-291-13)', async ({ page }) => {
+  await boot(page);
+  const same = await load(page, { doses: [[3, 140], [3 - 1 / 60, 140]] });
+  expect(same.text).toContain('If one dose was logged twice, delete the extra. If two people each gave a dose, keep both.');
+  const apart = await load(page, { doses: [[3, 140], [3 - 10 / 60, 140]] });
+  expect(apart.text).not.toContain('logged twice');
 });
