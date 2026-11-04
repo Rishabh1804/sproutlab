@@ -497,7 +497,11 @@ function _paraLossLineHtml(chip, ep) {
   const startDay = toDateStr(new Date(ep.startedAt));
   const before = gvDaysBetween(chip.date, startDay);
   if (!Number.isFinite(before) || before > 7) return '';
-  const feeds = ageMonthsAt(today()) < 6 ? 'Keep offering milk feeds often.' : 'Keep offering breast milk or other milk, and fluids, often.';
+  // Cow's milk as a drink waits until 12 months (iron), so "other milk" only from then (Ceres V-C-290-2).
+  const mo = ageMonthsAt(today());
+  const feeds = mo < 6 ? 'Keep offering milk feeds often.'
+    : mo < 12 ? 'Keep offering breast milk or formula, and fluids, often.'
+    : 'Keep offering breast milk or other milk, and fluids, often.';
   return '<div class="fe-para-note">A real drop in weight while ' + pron('subj') + ' is unwell is worth telling your doctor today. ' + feeds + '</div>';
 }
 // "she", or neutral words when the sex isn't set (Kael V-K-290-7, Vela V-V-290-7, Maren V-M-290-11).
@@ -556,7 +560,7 @@ function _paraConfirmHtml(chip) {
   html += '<div class="fe-para-confirm-text">' + escHtml(why) + '</div>';
   html += '<div class="fe-para-confirm-text">If ' + escHtml(_paraKgText(chip.wt)) + ' is right, type it here to confirm it.</div>';
   html += '<div class="fe-para-retype"><input id="feWtRetype" class="ep-edit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Type the newest weight in kilograms">'
-    + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="feConfirmWeight" data-arg="' + escAttr(chip.date) + '" data-arg2="' + escAttr(String(chip.wt)) + '">Confirm</button></div>';
+    + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="feConfirmWeight" data-arg="' + escAttr(chip.date) + '" data-arg2="' + escAttr(String(chip.wt)) + '" data-arg3="' + escAttr(jc.askKind || '') + '">Confirm</button></div>';
   html += '<div id="feWtRetypeErr" class="fe-para-retype-err" role="alert"></div>';
   html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="switchTab" data-arg="growth">Change the weight</button></div>';
   html += '<div class="fe-para-confirm-text">If ' + _paraSubjOr('your child') + ' needs medicine now, ask your doctor or chemist for the dose.</div>';
@@ -566,7 +570,7 @@ function _paraConfirmHtml(chip) {
 // The retype (decision B): the parent types the weight the chip SHOWED; it is compared at 0.01 kg
 // (comma decimals accepted) and must still be the weight on that date in Growth. Writes only the
 // confirmation map — never the growth row — recording what the check asked (gvConfirmRecord).
-function feConfirmWeight(date, wtStr) {
+function feConfirmWeight(date, wtStr, shownKind) {
   const input = document.getElementById('feWtRetype');
   const say = msg => { const err = document.getElementById('feWtRetypeErr'); if (err) err.textContent = msg; };
   const typed = parseFloat(String(input ? input.value : '').trim().replace(',', '.'));
@@ -580,7 +584,10 @@ function feConfirmWeight(date, wtStr) {
     return;
   }
   const latest = getLatestWeight();
-  gvConfirmRecord(row);
+  if (!gvConfirmRecord(row, shownKind || null) && gvWeightNeedsConfirm(row)) {
+    // The check changed since the card was drawn: show the new question rather than record the old one.
+    renderFeverEpisodeCard(); showQLToast('The weight check has changed. Look again.'); return;
+  }
   renderFeverEpisodeCard();
   // The toast only when this was the weight the dose reads (a newer one may now be asking).
   if (latest && latest.date === row.date && latest.wt === row.wt && !gvWeightNeedsConfirm(latest)) showQLToast(zi('check') + ' Weight confirmed');

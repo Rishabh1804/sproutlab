@@ -739,10 +739,12 @@ function _docWeightCheckNote(row) {
       : 'could not be compared with an earlier weigh-in';
     return ' (' + why + '; not yet confirmed by the family)';
   }
-  if (gvWeightConfirmedVariant(row) === 'jump-down') {
-    let jc = null; try { jc = gvWeightJumpCheck(); } catch (e) {}
-    const p = jc && jc.pair;
-    return p && p.a && Number.isFinite(p.changeG) ? ' (a drop, confirmed by the family: ' + (Math.abs(p.changeG) / 1000).toFixed(1) + ' kg less than on ' + _paraDateLabel(p.a.date) + ')' : ' (a drop, confirmed by the family)';
+  const cc = gvConfirmedCheck(row);   // the check that decided it, after a same-date conflict too (Kael V-K-290-9)
+  if (cc && cc.variant === 'jump-down') {
+    const p = cc.pair;
+    if (!(p && p.a && Number.isFinite(p.changeG))) return ' (a drop, confirmed by the family)';
+    const g = Math.abs(p.changeG);   // grams under 100 g, never "0.0 kg" (Vela V-V-290-9)
+    return ' (a drop, confirmed by the family: ' + (g < 100 ? g + ' g' : (g / 1000).toFixed(1) + ' kg') + ' less than on ' + _paraDateLabel(p.a.date) + ')';
   }
   return '';
 }

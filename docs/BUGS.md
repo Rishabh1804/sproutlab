@@ -1765,6 +1765,11 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **No gate checks that SYNC_KEYS, SYNC_RENDER_DEPS and the global accessors pair up for every synced key (Carina V-CA-290-5, PC-5).** Guard backlog, owner Carina.
 - **Sync tests not yet written (Carina V-CA-290-6 b/c/e):** a confirm-only partial flush on the shared growth doc; a malformed remote entry; the [L] guard while growthConfirm is dirty.
 - **Should a passing near pair be enough on its own when a far pair can't be compared? (Maren V-M-290-3 question to Kael.)** Today the check still asks; the copy now says the near weigh-in matched.
+- **Grams keys round to the gram (Carina V-CA-290-8):** 9.5 and 9.5004 share "9500"; a confirm of one covers the other. Cannot change a dose.
+- **Unknown confirm kinds are dropped, never matched (Carina V-CA-290-9):** keep that rule if GV_CONFIRM_KINDS grows; an older build rewriting a kinds list converges through push-back.
+- **"Weighed {date}" repeats "Last measured" in the doctor export (Maren V-M-290-14):** merge the two lines.
+- **After a confirmed same-date conflict that then reads calm, the parent retypes the same number twice (Kael ruling on V-K-290-8):** kept for consistency; easing it needs a spec note.
+- **The Home alert body's "Last dose was 5h  ago" has a double space from `_feverTimeAgo` (Vela, pre-existing).**
 
 #### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
 Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:

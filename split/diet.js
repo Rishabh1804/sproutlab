@@ -7790,7 +7790,7 @@ function renderInsightsCross() {
       const jc = gvWeightNeedsConfirm(lw);
       if (jc && jc.variant === 'implausible' && jc.pair) {
         // Drop the row that looks off — the earlier one when that is the bad row (Ceres V-C-290-3).
-        const bad = jc.pair.badRow === 'a' ? [jc.pair.a] : jc.pair.badRow === 'both' ? [jc.pair.a, lw] : [lw];
+        const bad = (jc.pair.badRow === 'a' || jc.pair.reason === 'dob') ? [jc.pair.a] : jc.pair.badRow === 'both' ? [jc.pair.a, lw] : [lw];   // a row dated before birth is the earlier one (Ceres V-C-290-8)
         wtEntries = wtEntries.filter(r => bad.indexOf(r) < 0);
       } else if (jc && ['jump-up', 'jump-down', 'samedate'].indexOf(jc.variant) >= 0) {
         wtEntries = wtEntries.filter(r => r !== lw);

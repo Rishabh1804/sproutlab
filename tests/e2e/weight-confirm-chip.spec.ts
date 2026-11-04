@@ -185,15 +185,24 @@ test('Home never says "safe to give" while the card asks about the weight (Kael 
   expect(alert.body).toContain('Check the weight on the fever card');
 });
 
-test('the growth-vs-meals insight never reads a second weight on a flagged newest date (Ceres V-C-290-1)', async ({ page }) => {
-  await seed(page, [[90, 9.0], [60, 9.2], [30, 9.4], [3, 9.6], [3, 96]]);
-  const r = await page.evaluate(() => {
-    const w: any = window;
-    const el = document.getElementById('insightsCrossContent') || (() => { const d = document.createElement('div'); d.id = 'insightsCrossContent'; document.body.appendChild(d); return d; })();
-    w.renderInsightsCross();
-    return el.textContent || '';
-  });
-  expect(r).not.toMatch(/[0-9]{3,}g\/d/);
+test('the growth-vs-meals insight never reads a second weight on a flagged newest date, in either save order (Ceres V-C-290-1/-4)', async ({ page }) => {
+  const read = async (rows: [number, number][]) => {
+    await seed(page, rows);
+    return page.evaluate(() => {
+      const w: any = window;
+      // Meals logged on every day, so the insight has periods to show.
+      const fd = (0, eval)('feedingData');   // a top-level let, not a window property
+      for (let i = 0; i < 100; i++) { const d = new Date(); d.setDate(d.getDate() - i); fd[w.toDateStr(d)] = { breakfast: 'x', lunch: 'y', dinner: i % 2 ? 'z' : '' }; }
+      const el = document.getElementById('insightsCrossContent') || (() => { const d = document.createElement('div'); d.id = 'insightsCrossContent'; document.body.appendChild(d); return d; })();
+      w.renderInsightsCross();
+      return el.textContent || '';
+    });
+  };
+  for (const rows of [[[90, 9.0], [60, 9.2], [30, 9.4], [3, 9.6], [3, 96]], [[90, 9.0], [60, 9.2], [30, 9.4], [3, 96], [3, 9.6]]] as [number, number][][]) {
+    const t = await read(rows);
+    expect(t).toContain('Growth vs meals');               // the insight is shown, not just silent
+    expect(t).not.toMatch(/[0-9]{3,}g\/d/);               // and never a thousands-of-grams day from the 96 kg typo
+  }
 });
 
 test('a confirm from the other phone arrives on receive and re-renders the chip', async ({ page }) => {
@@ -246,4 +255,16 @@ test('a full push merges confirms with the cloud as a union, never local-wins (C
     return written && written[KEYS.growthConfirm];
   });
   expect(r).toEqual({ '2026-10-01': { '9200': ['calm'] }, '2026-11-01': { '15900': ['amber'] } });
+});
+
+test('a retype records only the question the parent was shown; a changed check asks again (Kael V-K-290-11)', async ({ page }) => {
+  await seed(page, [[3, 15.9]]);   // calm: nothing to compare
+  await expect(card(page).locator('[data-action="feConfirmWeight"]')).toHaveAttribute('data-arg3', 'calm');
+  // An earlier weigh-in arrives between render and tap: the question is now a jump.
+  await page.evaluate(() => { const d = new Date(); d.setDate(d.getDate() - 40); growthData.unshift({ date: (window as any).toDateStr(d), wt: 9.5 }); });
+  await card(page).locator('#feWtRetype').fill('15.9');
+  await card(page).locator('[data-action="feConfirmWeight"]').click();
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem(KEYS.growthConfirm) || '{}'));
+  expect(stored).toEqual({});
+  await expect(card(page).locator('.fe-para-confirm')).not.toHaveClass(/fe-para-confirm--calm/);
 });

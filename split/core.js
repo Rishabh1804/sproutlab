@@ -1266,7 +1266,7 @@ function init() {
     else if (action === 'feToggleAllReadings') feToggleAllReadings();
     else if (action === 'feLogDosePrompt') feLogDosePrompt();
     else if (action === 'feSetParaForm') feSetParaForm(arg);
-    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2);   // retype to confirm a weight (#161 §4.4)
+    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2, arg3);   // retype to confirm a weight (#161 §4.4)
     else if (action === 'deLogFluidPrompt') deLogFluidPrompt();
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();
@@ -7131,27 +7131,33 @@ function gvWeightNeedsConfirm(row) {
   const need = _gvKindOf(jc.variant);
   return _gvCovers(kinds, need) ? null : Object.assign({}, jc, { askKind: need });
 }
-// Record a retype: adds what the check is asking now for that exact date + weight. Writes only the
-// confirmation map (never the growth row).
-function gvConfirmRecord(row) {
+// Record a retype: adds what the check is asking for that exact date + weight. Writes only the
+// confirmation map (never the growth row). `shownKind`: the question the parent read; if the check has
+// changed since (a receive between render and tap), nothing is recorded (Kael V-K-290-11).
+function gvConfirmRecord(row, shownKind) {
   const ask = gvWeightNeedsConfirm(row);
   if (!ask || !ask.askKind) return false;
+  if (shownKind && shownKind !== ask.askKind) return false;
   const add = { [row.date]: { [_gvGrams(row.wt)]: [ask.askKind] } };
   growthConfirm = gvConfirmMerge(growthConfirm, add);
   save(KEYS.growthConfirm, growthConfirm);
   return true;
 }
-// The confirmed check's variant — so a screen can add the loss line after a confirmed drop.
-function gvWeightConfirmedVariant(row) {
+// The check that decided a confirmed weight: the jump check, or — after a confirmed same-date conflict —
+// the jump check that ran after it. Null when nothing was flagged or the weight still asks. The ONE
+// source for the loss line and the doctor export (Kael V-K-290-9).
+function gvConfirmedCheck(row) {
   if (!row || !gvWeightConfirmed(row) || gvWeightNeedsConfirm(row)) return null;
   try {
     const jc = gvWeightJumpCheck();
     if (jc.verdict === 'ok') return null;
-    if (jc.variant !== 'samedate') return jc.variant;
+    if (jc.variant !== 'samedate') return jc;
     const jc2 = _gvJumpAfterSamedate(row);
-    return jc2.verdict === 'ok' ? null : jc2.variant;
+    return jc2.verdict === 'ok' ? null : jc2;
   } catch (e) { return null; }
 }
+// The confirmed check's variant — so a screen can add the loss line after a confirmed drop.
+function gvWeightConfirmedVariant(row) { const c = gvConfirmedCheck(row); return c ? c.variant : null; }
 
 // Solids have started: the profile's solids start date is today or earlier. The ONE check, read by
 // gvFoodAdviceOk and diet.js _libSuggestions (Ceres V-C-282c-1).
