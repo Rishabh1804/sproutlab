@@ -8430,6 +8430,7 @@ const ALERT_CARD = {
   'food-group-gap':     { tab: 'info',     card: 'infoNutrientHeatmapCard' },
   'dinner-bed-gap':     { tab: 'sleep',    card: 'sleepChartCard' },
   'reaction-window':    { tab: 'info',     card: 'infoFoodIntroCard' },
+  'para-load':          { tab: 'medical',  card: 'feverEpisodeCard' },   // the leftover-risk flow (#161 PR 4b)
   // ── wins ──
   'first-sleepthrough': { tab: 'sleep',    card: 'sleepChartCard' },
   'sleep-streak':       { tab: 'sleep',    card: 'sleepChartCard' },
@@ -9546,6 +9547,15 @@ function computeAlerts() {
   // on a win has no effect — the very gap PR-J's win-× exposed (V-M-32).
   for (let i = alerts.length - 1; i >= 0; i--) {
     if (alerts[i].severity === 'positive' && isDismissed(alerts[i].key)) alerts.splice(i, 1);
+  }
+
+  // Producers that call a must-act alert 'urgent' (the illness emergencies, the paracetamol load) speak Home's
+  // 'action', so they show on Home and sort first instead of falling through as "Info" (#161 PR 4b — Carina
+  // V-CA-291-1, Vela V-V-291-10). The paracetamol load alert is cleared by the same expiry-aware predicate as
+  // every warning (dismiss / acknowledge / snooze — Carina V-CA-291-6).
+  alerts.forEach(a => { if (a.severity === 'urgent') a.severity = 'action'; });
+  for (let i = alerts.length - 1; i >= 0; i--) {
+    if (alerts[i].id === 'para-load' && isDismissed(alerts[i].key)) alerts.splice(i, 1);
   }
 
   // ── Sort by severity (action → watch → info → positive) ──

@@ -631,9 +631,8 @@ function whoWfaWeightAtZ(z, ageMo, sex) {
   const M = T[i][1] + (T[i + 1][1] - T[i][1]) * f;
   const S = T[i][2] + (T[i + 1][2] - T[i][2]) * f;
   const sd = k => Math.abs(L) < 1e-6 ? M * Math.exp(k * S) : M * Math.pow(1 + L * S * k, 1 / L);
-  if (z > 3) return sd(3) + (z - 3) * (sd(3) - sd(2));
-  if (z < -3) return sd(-3) + (z + 3) * (sd(-2) - sd(-3));
-  return sd(z);
+  const w = z > 3 ? sd(3) + (z - 3) * (sd(3) - sd(2)) : z < -3 ? sd(-3) + (z + 3) * (sd(-2) - sd(-3)) : sd(z);
+  return w > 0 ? w : NaN;   // far below −8 the restricted line crosses zero: NaN, as the contract says (Carina V-CA-291-7)
 }
 // "girls" / "boys" for growth copy ("heavier than 60% of girls her age"); "children" until known.
 function childKinWord() { const s = childSex(); return s === 'm' ? 'boys' : s === 'f' ? 'girls' : 'children'; }
@@ -1283,9 +1282,9 @@ function init() {
     else if (action === 'feToggleAllReadings') feToggleAllReadings();
     else if (action === 'feLogDosePrompt') feLogDosePrompt();
     else if (action === 'feSetParaForm') feSetParaForm(arg);
-    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2, arg3);
+    else if (action === 'feConfirmWeight') feConfirmWeight(arg, arg2, arg3);   // retype to confirm a weight (#161 §4.4)
     else if (action === 'feConfirmLoadWeight') feConfirmLoadWeight(arg, arg2);   // R1's weight question (#161 §5.3)
-    else if (action === 'feLogGiSign') feLogGiSign(arg);   // R2's tummy-pain / seems-sick chips   // retype to confirm a weight (#161 §4.4)
+    else if (action === 'feLogGiSign') feLogGiSign(arg);   // R2's tummy-pain / retching chips
     else if (action === 'deLogFluidPrompt') deLogFluidPrompt();
     else if (action === 'voLogFluidPrompt') voLogFluidPrompt();
     else if (action === 'sgToggleMore') sgToggleMore();
@@ -7078,7 +7077,8 @@ function gvWeightJumpCheck(rows, sex) {
 // ── Weight confirmations (#161 spec §4.3, decision A/B; shape amended in the PR 4a round) ──
 // { 'YYYY-MM-DD': { '<grams>': [kinds] } } — a weight the parent retyped, keyed by its date AND its weight
 // (grams, so no '.' reaches a Firestore field path), with what the check had asked:
-//   'calm'     — "couldn't compare" (no earlier weight, too long a gap, no sex set, an error);
+//   'calm'     — "couldn't compare" (no earlier weight, too long a gap, no sex set, an error), or a weight the
+//                check passed and the parent confirmed from the leftover-risk flow's weight question (#161 §5.3 R1);
 //   'amber'    — a jump, a drop, or an earlier weight that looks off (covers 'calm');
 //   'samedate' — two different weights on one date (the jump test still runs after it).
 // A confirm unlocks only what the parent was shown: a calm confirm never covers a jump that later evidence
@@ -7157,6 +7157,7 @@ function gvWeightNeedsConfirm(row) {
 // flow's "{wt} kg is right" (#161 spec §5.3 R1), which makes the latest weight the reference weight (§5.1).
 function gvConfirmRecord(row, shownKind, fallbackKind) {
   const ask = gvWeightNeedsConfirm(row);
+  if (!row) return false;
   if (!ask && fallbackKind && GV_CONFIRM_KINDS.indexOf(fallbackKind) >= 0) {
     if (!gvMeasureRows('wt').some(r => r.date === row.date && r.wt === row.wt)) return false;
     growthConfirm = gvConfirmMerge(growthConfirm, { [row.date]: { [_gvGrams(row.wt)]: [fallbackKind] } });

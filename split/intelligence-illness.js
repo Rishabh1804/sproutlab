@@ -405,8 +405,11 @@ function paraWeightPlausible(weightKg, dateStr) {
   const sex = childSex();
   return sex ? ok(sex) : (ok('f') && ok('m'));
 }
-// The interim ceiling (#287) is gone (#161 PR 4b): the weight-jump confirm (PR 4a) guards a believable typo,
-// and the leftover-risk flow (spec §5, decision C) watches the doses given from a confirmed wrong weight.
+// The interim ceiling (#287) is gone (#161 PR 4b): the weight-jump confirm (PR 4a) makes a believable typo be
+// retyped before it is dosed. What stays exposed is the accepted residual (spec §6, decision C): the same wrong
+// number retyped. After that confirm W_ref = the latest weight, so no mg/kg rule of the leftover-risk flow sees
+// doses that follow the chip; the flow catches doses beyond the packet, oversized doses, unreadable amounts and
+// long courses (Kael V-K-291-D9, Maren V-M-291-D12).
 
 // Dose range for a weight and a bottle. Low end rounds UP and high end DOWN to 0.1 ml,
 // so what is shown never goes past 15 mg/kg.
@@ -720,31 +723,47 @@ function getFeverDoseCountdown() {
 //     Children's and NHS GGC protocols).
 // Judgment, labelled (spec §3): 60 mg/kg/day (15 × 4, the app's ceiling) read as RCH's "daily therapeutic dose";
 // call-now at ≥ 75; "more than 48 hours" read as a continuous stretch; R2b counts calendar dates; R0b's 2× cut.
-// Accepted residual: a typo confirmed by retyping doses from the wrong weight; this flow catches what is given.
+// Accepted residual: a typo confirmed by retyping doses from the wrong weight, and this flow's mg/kg rules can't
+// see it (W_ref = the confirmed latest weight). Also accepted: the 75 mg/kg line computed on the dosing weight can
+// sit just above a true 75 on the real weight (V-M-C161F-7). The ANZ lines (200 / 300 mg/kg, 10 / 12 g) lead with
+// the emergency department (Architect, 2026-11-04).
 const PARA_LOAD_THRESHOLDS = Object.freeze({ dailyMaxMgKg: 60, assessMgKg: 75, anz24MgKg: 200, anz24Mg: 10000, anz48MgKg: 300, anz48Mg: 12000, multiDayHours: 48, windowHours: 72 });
 const PARA_TIER = { calm: 0, amber: 1, red: 2, now: 3 };
 // Paracetamol by name, combination products included (Combiflam carries 325 mg); a renamed ibuprofen is not.
-const PARA_NAME_RE = /paracetamol|acetaminophen|calpol|crocin|panadol|tylenol|dolo|combiflam|\bpcm\b/i;
+// Indian brands and cold syrups that carry it (Maren V-M-291-D11, Kael V-K-291-D3): Pacimol, Paracip, P-125/250/
+// 500/650, Febrex Plus, Ibugesic Plus (plain Ibugesic is ibuprofen), Sumo, Sinarest; common misspellings.
+const PARA_NAME_RE = /paracetamol|paracetmol|paracitamol|acetaminophen|calpol|crocin|panadol|tylenol|dolo|combiflam|pacimol|paracip|febrex\s*plus|ibugesic\s*plus|\bsumo\b|sinarest|\bp[- ]?(?:125|250|500|650)\b|\bpcm\b/i;
 function _paraIsParacetamol(name) { return PARA_NAME_RE.test(String(name || '')); }
-// One dose → [lo, hi] mg (spec §5.2): mg exact; ml + bottle exact; ml with no bottle 24..100 mg/ml (the weakest
-// syrup to the drops); unreadable → [0, ∞]. Comma decimals ("1,5 ml"); a comma before exactly three digits on an
-// mg amount is a thousands mark ("1,000 mg"). Ranges ("1-1.4 ml", "1 to 1.4 ml") give their ends.
+// One dose → [lo, hi] mg (spec §5.2). Read the label's strength ("120 mg/5 ml", "100 mg/ml") apart from the
+// amount given, so "5 ml (120 mg/5 ml)" is 120 mg, never 5 (Kael V-K-291-2, Maren V-M-291-5):
+//   an amount in mg → exact; ml with a strength or a bottle → exact; ml with neither → 24..100 mg/ml (the weakest
+//   syrup to the drops); a bare number with a bottle → [n, n × mg/ml] (mg or ml, Kael V-K-291-13); more than one
+//   quantity ("2 x 1.5 ml", "then") or nothing readable → [0, ∞]. Comma decimals ("1,5 ml"), leading-dot
+//   decimals (".8 ml"), a thousands comma on mg ("1,000 mg"), ranges ("1-1.4 ml").
 function _paraDoseMg(d) {
+  const unread = { lo: 0, hi: Infinity, readable: false };
   let s = String((d && d.dose) || '').toLowerCase().trim();
-  const unit = /\bmg\b|mg$|mgs?\b/.test(s) ? 'mg' : /\bml\b|ml$|mls?\b/.test(s) ? 'ml' : null;
-  s = unit === 'mg' ? s.replace(/(\d),(\d{3})(?!\d)/g, '$1$2') : s;
-  s = s.replace(/(\d),(\d)/g, '$1.$2');
-  const r = s.match(/(\d+(?:\.\d+)?)\s*(?:-|–|—|to)\s*(\d+(?:\.\d+)?)/);
-  const one = s.match(/(\d+(?:\.\d+)?)/);
-  if (!unit || !one) return { lo: 0, hi: Infinity, readable: false };
-  const a = r ? parseFloat(r[1]) : parseFloat(one[1]), b = r ? parseFloat(r[2]) : a;
-  if (!(a >= 0) || !(b >= a)) return { lo: 0, hi: Infinity, readable: false };
-  if (unit === 'mg') return { lo: a, hi: b, readable: true };
+  s = s.replace(/(\d),(\d{3})(?=\s*mg)/g, '$1$2').replace(/(\d),(\d)/g, '$1.$2');
+  const N = '(\\d*\\.\\d+|\\d+)', R = N + '\\s*(?:-|–|—|to)\\s*' + N;
+  const str = s.match(new RegExp(N + '\\s*mg\\s*(?:/|per|in)\\s*' + N + '?\\s*ml'));
+  const strength = str ? parseFloat(str[1]) / (str[2] ? parseFloat(str[2]) : 1) : null;
+  const rest = str ? s.replace(str[0], ' ') : s;
+  if (/\bx\b|×|\bthen\b|\+/.test(rest)) return unread;
+  const pick = (re1, reR) => { const r = rest.match(new RegExp(reR)); if (r) return [parseFloat(r[1]), parseFloat(r[2])]; const m = rest.match(new RegExp(re1)); return m ? [parseFloat(m[1]), parseFloat(m[1])] : null; };
+  const mg = pick(N + '\\s*mg', R + '\\s*mg'), ml = pick(N + '\\s*ml', R + '\\s*ml');
+  const ok = v => v && v[0] >= 0 && v[1] >= v[0];
+  if (ok(mg)) return { lo: mg[0], hi: mg[1], readable: true };   // the mg given, written out
   const f = d && d.form ? _paraFormById(d.form) : null;
-  if (f) return { lo: a * f.mgPerMl, hi: b * f.mgPerMl, readable: true };
-  return { lo: a * 24, hi: b * 100, readable: false };
+  if (ok(ml)) {
+    const per = strength || (f ? f.mgPerMl : null);
+    return per ? { lo: ml[0] * per, hi: ml[1] * per, readable: true } : { lo: ml[0] * 24, hi: ml[1] * 100, readable: false };
+  }
+  const bare = pick(N, R);
+  if (ok(bare) && f) return { lo: bare[0], hi: bare[1] * f.mgPerMl, readable: false };
+  return unread;
 }
-// Every paracetamol dose across every fever episode, newest last; a fast-clock device's dose counts as now.
+// Every paracetamol dose across every fever episode, newest last; a fast-clock device's dose counts as now (t),
+// its own time kept for keys (tRaw — Carina V-CA-291-5).
 function _paraDosesAll(nowMs) {
   const out = [];
   (_feverEpisodes || []).forEach(e => ((e && e.doses) || []).forEach(d => {
@@ -752,20 +771,21 @@ function _paraDosesAll(nowMs) {
     const t = new Date(d.time).getTime();
     if (!Number.isFinite(t)) return;
     const mg = _paraDoseMg(d);
-    out.push({ t: Math.min(t, nowMs), lo: mg.lo, hi: mg.hi, readable: mg.readable, form: d.form || null, medicine: d.medicine });
+    out.push({ t: Math.min(t, nowMs), tRaw: t, lo: mg.lo, hi: mg.hi, readable: mg.readable, form: d.form || null, medicine: d.medicine });
   }));
   return out.sort((a, b) => a.t - b.t);
 }
 // The reference weight W_ref (spec §5.1): the latest weight if the parent confirmed it by retyping, or with no
 // earlier weigh-in in the last 184 days; otherwise the lowest of the latest and every earlier in-window weigh-in
-// carried along its own weight-for-age z to the latest date. No sex, or a projection that fails → the lowest of
-// the latest and the previous weigh-in. { w, src: { date, wt } | null } or null when there is no weight.
+// carried along its own weight-for-age z to the latest date. Earlier weigh-ins that look off for their age are
+// left out (Maren V-M-291-6). No sex, or a projection that fails → the lowest of the latest and the previous
+// plausible weigh-in. { w, src: { date, wt } | null, confirmed? } or null when there is no weight.
 function _paraRefWeight() {
   const rows = gvMeasureRows('wt');
   const latest = rows[rows.length - 1];
   if (!latest) return null;
   if (gvWeightConfirmed(latest) && !gvWeightNeedsConfirm(latest)) return { w: latest.wt, src: null, confirmed: true };
-  const earlier = rows.filter(r => r.date < latest.date && gvDaysBetween(r.date, latest.date) <= GV_JUMP_DZ_MAX_DAYS);
+  const earlier = rows.filter(r => r.date < latest.date && gvDaysBetween(r.date, latest.date) <= GV_JUMP_DZ_MAX_DAYS && paraWeightPlausible(r.wt, r.date));
   if (!earlier.length) return { w: latest.wt, src: null };
   const sex = childSex(), moL = whoAgeMoAt(latest.date);
   let best = { w: latest.wt, src: null };
@@ -774,7 +794,7 @@ function _paraRefWeight() {
   if (sex !== 'f' && sex !== 'm' || !Number.isFinite(moL)) return fallback();
   for (const r of earlier) {
     const p = whoWfaWeightAtZ(whoWfaZ(r.wt, whoAgeMoAt(r.date), sex), moL, sex);
-    if (!Number.isFinite(p)) return fallback();
+    if (!(p > 0)) return fallback();
     if (p < best.w) best = { w: p, src: { date: r.date, wt: r.wt } };
   }
   return best;
@@ -806,118 +826,175 @@ function _paraMgText(lo, hi) {
   if (!Number.isFinite(hi)) return 'at least ' + r(lo) + ' mg';
   return r(lo) === r(hi) ? r(lo) + ' mg' : r(lo) + '–' + r(hi) + ' mg';
 }
-// A GI sign in the last 48 h (R2): a vomit (not a spit-up) in any vomiting episode, or "Tummy pain" / "Seems
-// sick" logged on a fever episode. An empty log is never "no".
-const PARA_GI_ACTIONS = ['Tummy pain', 'Seems sick'];
+// A GI sign in the last 48 h (R2): a vomit (not a spit-up) in any vomiting episode, or a tummy-pain / retching
+// answer logged on a fever episode ('Seems sick' kept so answers already logged still count — PC-8). A fast-clock
+// entry counts as now. An empty log is never "no".
+const PARA_GI_ACTIONS = ['Tummy pain', 'Retching or off food'];
+const PARA_GI_MATCH = PARA_GI_ACTIONS.concat(['Seems sick']);
 function _paraGiSign(nowMs) {
-  const since = nowMs - 48 * 36e5, inWin = t => { const x = new Date(t).getTime(); return Number.isFinite(x) && x > since && x <= nowMs + 6e4; };
+  const since = nowMs - 48 * 36e5, inWin = t => { const x = new Date(t).getTime(); return Number.isFinite(x) && Math.min(x, nowMs) > since; };
   const vom = (_vomitingEpisodes || []).some(e => ((e && e.episodes) || []).some(v => v && v.type !== 'spit-up' && inWin(v.time)));
-  const act = (_feverEpisodes || []).some(e => ((e && e.actions) || []).some(a => a && PARA_GI_ACTIONS.indexOf(a.action) >= 0 && inWin(a.time)));
+  const act = (_feverEpisodes || []).some(e => ((e && e.actions) || []).some(a => a && PARA_GI_MATCH.indexOf(a.action) >= 0 && inWin(a.time)));
   return vom || act;
 }
-// The pure engine (spec §5.3/§5.4): doses + weights + context → the rules that fire, each with its tier and copy.
+const PARA_ER = ' If you can\'t reach your doctor now, go to the emergency department.';
+// The pure engine (spec §5.3/§5.4, as amended in the PR 4b round): doses + weights + context → the rules that
+// fire, each with its tier and copy, plus the one "until" and whether anything says stop.
 function _paraLoadFrom(o) {
   const T = PARA_LOAD_THRESHOLDS, now = o.nowMs, doses = o.doses || [];
   const in24 = doses.filter(d => d.t > now - 864e5 && d.t <= now);
   const in48 = doses.filter(d => d.t > now - 1728e5 && d.t <= now);
   const lo24 = in24.reduce((x, d) => x + d.lo, 0), hi24 = in24.reduce((x, d) => x + d.hi, 0);
   const lo48 = in48.reduce((x, d) => x + d.lo, 0), hi48 = in48.reduce((x, d) => x + d.hi, 0);
-  const out = { n24: in24.length, lo24, hi24, n48: in48.length, lo48, hi48, rules: [], tier: 'calm', check: false, under: false, known: true, reasons: [] };
-  if (!doses.some(d => d.t > now - T.windowHours * 36e5)) { out.none = true; return out; }
+  const out = { n24: in24.length, lo24, hi24, n48: in48.length, lo48, hi48, rules: [], tier: 'calm', check: false, under: false, known: true, reasons: [], until: null, stop: false };
   const fire = (rule, tier, lines, extra) => { out.rules.push(Object.assign({ rule, tier, lines }, extra || {})); if (PARA_TIER[tier] > PARA_TIER[out.tier]) out.tier = tier; };
   const subj = o.subj || 'your child', obj = o.obj || 'your child', pos = o.pos || 'your child\'s', Subj = subj.charAt(0).toUpperCase() + subj.slice(1);
-  const time = ms => o.fmtTime ? o.fmtTime(ms) : new Date(ms).toISOString();
+  const when = ms => o.fmtWhen ? o.fmtWhen(ms) : (o.fmtTime ? o.fmtTime(ms) : new Date(ms).toISOString());
+  // An active paracetamol medicine in the medicines list: the total may miss doses — even with nothing logged
+  // here (Kael V-K-291-6c). Load unknown, reason named.
+  if (o.medName) {
+    out.known = false; out.check = true; out.reasons.push('med');
+    fire('MED', 'amber', [o.medName + ' is on ' + pos + ' medicines list, and doses given from there aren\'t counted here. Ask your doctor or chemist before the next dose.']);
+  }
+  if (!doses.some(d => d.t > now - T.windowHours * 36e5)) { if (!o.medName) out.none = true; return out; }
   const last = in24.length ? in24[in24.length - 1] : null;
-  // R0 — beyond the packet: a dose under 4 h after the one before, or a 5th+ in 24 h. Red, never call-now alone;
-  // runs with no weight. {nextTime}: the later of 4 h after the last dose and the oldest of 4 leaving the window.
-  const times = in24.map(d => d.t);
+  // R0 — beyond the packet: a dose under 4 h after the one before, or a 5th+ in 24 h. Red and holding only until
+  // {nextTime} (the later of 4 h after the last dose and the oldest of 4 leaving the window); after that the same
+  // facts in amber, with no stale "until" (Kael V-K-291-3, Maren V-M-291-3, Vela V-V-291-3). Never call-now alone;
+  // runs with no weight.
   let close = null;
   for (let i = in24.length - 1; i >= 1; i--) { if (in24[i].t - in24[i - 1].t < 4 * 36e5) { close = { d: in24[i], gap: in24[i].t - in24[i - 1].t }; break; } }
   if (close || in24.length >= 5) {
-    const desc = times.slice().sort((a, b) => b - a);
+    const desc = in24.map(d => d.t).sort((a, b) => b - a);
     const nextT = Math.max(desc[0] + 4 * 36e5, desc.length >= 4 ? desc[3] + 864e5 : 0);
-    const tell = 'Call your doctor today and tell them: ' + in24.length + ' doses, ' + _paraMgText(lo24, hi24) + ' in the last 24 hours, the last at ' + time(desc[0]) + '. Give no more paracetamol until ' + time(nextT) + '.';
-    const lines = close
-      ? ['This dose was ' + Math.floor(close.gap / 36e5) + ' h ' + Math.floor((close.gap % 36e5) / 6e4) + ' min after the last one. Doses close together happen, especially at night. NHS advice is to check with a doctor whenever a dose goes beyond what the packet says. ' + tell]
-      : ['That\'s ' + in24.length + ' doses in 24 hours. The packet allows 4. NHS advice is to check with a doctor whenever a dose goes beyond what the packet says. ' + tell];
-    fire('R0', 'red', lines, { nextAt: nextT });
+    const active = now < nextT;
+    const fact = close
+      ? 'The dose at ' + when(close.d.t) + ' was ' + Math.floor(close.gap / 36e5) + ' h ' + Math.floor((close.gap % 36e5) / 6e4) + ' min after the one before.' + (close.gap < 15 * 6e4 ? ' If the same dose was logged twice, delete one.' : ' Doses close together happen, especially at night.')
+      : 'That\'s ' + in24.length + ' doses in 24 hours. The packet allows 4.';
+    const tell = (active ? 'Call your doctor today' : 'If you haven\'t yet, call your doctor today') + ' and tell them: ' + in24.length + ' doses, ' + _paraMgText(lo24, hi24) + ' in the last 24 hours, the last at ' + when(desc[0]) + '.';
+    fire('R0', active ? 'red' : 'amber', [fact + ' NHS advice is to check with a doctor whenever a dose goes beyond what the packet says. ' + tell], { fact, until: active ? nextT : null });
   }
-  // Extra line whenever there was a dose in 24 h.
   if (in24.length) out.extra = 'Check other medicines\' labels. Some cold syrups also contain paracetamol.';
-  // An active paracetamol medicine in the medicines list: the total may miss doses (load unknown, reason named).
-  if (o.medName) {
-    out.known = false; out.check = true; out.reasons.push('med');
-    fire('MED', 'amber', [o.medName + ' in ' + pos + ' medicines list also contains paracetamol, so this total may be missing doses. Ask your doctor or chemist before the next dose.']);
+  // R2b — more than 3 days (NHS): runs with no weight too (Kael V-K-291-11); a question to put to someone → check.
+  if (last) {
+    const days = new Set(doses.map(d => toDateStr(new Date(d.t))));
+    let n = 0; const cur = new Date(last.t); cur.setHours(12, 0, 0, 0);
+    while (days.has(toDateStr(cur))) { n++; cur.setDate(cur.getDate() - 1); }
+    if (n >= 4) { out.check = true; fire('R2b', 'amber', ['This is the ' + _paraOrdinal(n) + ' day of paracetamol. NHS advice is to speak to a doctor or pharmacist before giving it for more than 3 days.']); }
   }
   const wRef = o.wRef && o.wRef.w, wDose = o.wDose;
   if (!(wRef > 0) || !(wDose > 0)) {
     out.known = false; out.check = true; out.reasons.push('weight');
-    if (in24.length) fire('NOWT', 'amber', ['Add a weight so the day\'s total can be checked. Last 24 h: ' + in24.length + (in24.length === 1 ? ' dose, ' : ' doses, ') + _paraMgText(lo24, hi24) + '.']);
-    return out;
+    if (in24.length) fire('NOWT', 'amber', ['Add a weight so the day\'s total can be checked. Last 24 h: ' + in24.length + (in24.length === 1 ? ' dose, ' : ' doses, ') + _paraMgText(lo24, hi24) + '.'], { addWeight: true });
+    return _paraFinish(out, now, when);
   }
   const wtTxt = (Math.round(wDose * 10) / 10) + ' kg';
-  const weightQ = () => {
-    const src = o.wRef.src;
-    return 'These doses fit ' + pos + ' newest weight, ' + wtTxt + '. But ' + wtTxt + ' is more than ' + pos + ' weigh-in on ' + (src ? o.fmtDate(src.date) + ' (' + src.wt + ' kg)' : 'an earlier date') + ' would suggest. If ' + wtTxt + ' is too high, the last 24 hours are over the usual most for a day. Check the weight before the next dose: weigh ' + obj + ' again, or check the number.';
-  };
-  // R0b — one dose bigger than one dose: lo > the chip's top dose for W_ref + one 0.1 ml step → red; ≥ 2× → now.
-  const top = Math.floor(Math.round(wRef * 15 * 1e6) / 1e6);
-  in24.forEach(d => {
-    const f = d.form ? _paraFormById(d.form) : null, step = 0.1 * (f ? f.mgPerMl : 100);
-    if (d.lo > top + step) {
-      const now2 = d.lo >= 2 * top;
-      fire('R0b', now2 ? 'now' : 'red', ['That dose is bigger than one dose for ' + (Math.round(wRef * 10) / 10) + ' kg: ' + Math.round(d.lo) + ' mg, where the most for one dose is ' + top + ' mg. Call your doctor ' + (now2 ? 'now' : 'today') + ' and tell them the amount and the bottle. Give no more paracetamol until they say.']);
-    }
-  });
-  // R1 — the rolling 24 h, escalating on lo only; a hi-only crossing asks which bottle.
+  const src = o.wRef.src, srcTxt = src ? pos + ' weigh-in on ' + o.fmtDate(src.date) + ' (' + src.wt + ' kg)' : 'an earlier weigh-in';
+  const checkWt = 'Check the weight before the next dose: weigh ' + obj + ' again, or check the number.';
+  // ANZ (RCH): over 200 mg/kg or 10 g in 24 h, or 300 mg/kg or 12 g in 48 h → the emergency department (Maren
+  // V-M-291-7; Architect, 2026-11-04).
+  const anz24 = lo24 >= T.anz24MgKg * wDose || lo24 >= T.anz24Mg, anz48 = lo48 >= T.anz48MgKg * wDose || lo48 >= T.anz48Mg;
+  if (anz24 || anz48) {
+    fire('ANZ', 'now', ['Go to the emergency department now. That\'s more paracetamol than is safe: ' + (anz24 ? _paraMgText(lo24, hi24) + ' in 24 hours' : _paraMgText(lo48, hi48) + ' in 48 hours') + ' for ' + wtTxt + '. Take the bottle with you.'], { er: true, stop: true });
+  }
+  // R0b — one dose bigger than one dose, split like R1 (Architect, 2026-11-04; Kael V-K-291-1, Maren V-M-291-1):
+  // over the top dose for the dosing weight + one 0.1 ml step → red (2× → call now); over only for W_ref → the
+  // weight question. One line, naming the biggest dose.
+  const topOf = w => Math.floor(Math.round(w * 15 * 1e6) / 1e6);
+  const topD = topOf(wDose), topR = topOf(wRef);
+  const stepOf = d => 0.1 * (d.form && _paraFormById(d.form) ? _paraFormById(d.form).mgPerMl : 100);
+  const bigD = in24.filter(d => d.lo > topD + stepOf(d)), bigR = in24.filter(d => d.lo > topR + stepOf(d) && !(d.lo > topD + stepOf(d)));
+  if (bigD.length) {
+    const max = bigD.reduce((m, d) => (d.lo > m.lo ? d : m), bigD[0]);
+    const now2 = max.lo >= 2 * topD;
+    const fact = 'That dose is bigger than one dose for ' + wtTxt + ': ' + Math.round(max.lo) + ' mg, where the most for one dose is ' + topD + ' mg.' + (bigD.length > 1 ? ' ' + bigD.length + ' doses in the last 24 hours were that big.' : '');
+    fire('R0b', now2 ? 'now' : 'red', [fact + ' Call your doctor ' + (now2 ? 'now' : 'today') + ' and tell them the amount and the bottle. Give no more paracetamol until they say.' + (now2 ? PARA_ER : '')], { stop: true, fact });
+  } else if (bigR.length) {
+    out.check = true;
+    fire('R0b', 'amber', ['That dose fits ' + pos + ' newest weight, ' + wtTxt + '. But if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), it was bigger than one dose. ' + checkWt], { weightQ: true });
+  }
+  // R1 — the rolling 24 h, escalating on lo only; a hi-only crossing asks for the mg. Copy per branch, so no line
+  // says the doses fit a weight they don't (Kael V-K-291-5, Maren V-M-291-D1).
   const D = lo24 / wDose, R = lo24 / wRef, Rhi = hi24 / wRef;
+  const hasWq = () => out.rules.some(r => r.weightQ);
   if (D >= T.assessMgKg) {
-    fire('R1', 'now', ['That\'s more paracetamol in 24 hours than is safe for ' + wtTxt + ': ' + _paraMgText(lo24, hi24) + '. Call your doctor now and tell them: ' + in24.length + ' doses, the last at ' + time(last.t) + '. Give no more paracetamol.']);
+    fire('R1', 'now', ['That\'s more paracetamol in 24 hours than is safe for ' + wtTxt + ': ' + _paraMgText(lo24, hi24) + '. Call your doctor now and tell them: ' + in24.length + ' doses, the last at ' + when(last.t) + '. Give no more paracetamol.' + PARA_ER], { stop: true, fact: 'In the last 24 hours: ' + in24.length + ' doses, the last at ' + when(last.t) + '.' });
   } else if (R >= T.assessMgKg) {
-    out.check = true; fire('R1', 'red', [weightQ()], { weightQ: true });
+    out.check = true;
+    fire('R1', 'red', [(D > T.dailyMaxMgKg
+      ? 'That\'s more than the usual most for a day for ' + wtTxt + '. And if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), it\'s more than is safe in a day.'
+      : 'These doses fit ' + pos + ' newest weight, ' + wtTxt + '. But if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), the last 24 hours are more than is safe in a day.') + ' Call your doctor today, or confirm the weight below.'], { weightQ: !hasWq() });
   } else if (D > T.dailyMaxMgKg) {
     const at = _paraUnderAt(in24, now, T.dailyMaxMgKg * wDose);
-    fire('R1', 'amber', ['That\'s more than the usual most for a day for ' + wtTxt + '.' + (Number.isFinite(at) ? ' Give no more paracetamol until ' + time(at) + '.' : '')]);
+    fire('R1', 'amber', ['That\'s more than the usual most for a day for ' + wtTxt + '.'], { until: Number.isFinite(at) ? at : null });
   } else if (R > T.dailyMaxMgKg) {
-    out.check = true; fire('R1', 'amber', [weightQ()], { weightQ: true });
+    out.check = true;
+    if (!hasWq()) fire('R1', 'amber', ['These doses fit ' + pos + ' newest weight, ' + wtTxt + '. But if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), the last 24 hours are over the usual most for a day. ' + checkWt], { weightQ: true });
   } else if (Rhi > T.dailyMaxMgKg) {
-    out.check = true; fire('R1', 'amber', ['We can\'t tell how much paracetamol was in some doses. Which bottle was it? Check the bottle, then edit those doses to add the amount.']);
+    out.check = true;
+    fire('R1', 'amber', ['We can\'t tell how much paracetamol was in some doses. Check the bottle\'s label, then tap each dose above and write the mg given (for example 120 mg).']);
   } else if (in24.length) {
     out.under = Number.isFinite(hi24);
     fire('R1', 'calm', ['Last 24 h: ' + in24.length + (in24.length === 1 ? ' dose, ' : ' doses, ') + _paraMgText(lo24, hi24) + '.']);
-  } else out.under = true;   // nothing in the last 24 h
+  } else out.under = true;
   // R2 — more than 48 hours over a day's usual most (RCH), by the longest continuous stretch in the 72 h window.
   const H48 = T.multiDayHours * 36e5;
   const metRef = _paraLongestOver(doses, now, T.dailyMaxMgKg * wRef, 'lo') > H48;
   const metDose = _paraLongestOver(doses, now, T.dailyMaxMgKg * wDose, 'lo') > H48;
   const maybe = !metRef && _paraLongestOver(doses.map(d => Object.assign({}, d, { hiF: Number.isFinite(d.hi) ? d.hi : 1e12 })), now, T.dailyMaxMgKg * wRef, 'hiF') > H48;
-  if (metRef && !metDose) { out.check = true; if (!out.rules.some(r => r.weightQ)) fire('R2', 'amber', [weightQ()], { weightQ: true }); }
-  else if (metRef && o.gi) {
-    fire('R2', 'now', ['That\'s more than a day\'s usual most, every day, for over 48 hours, and ' + subj + ' has been sick or had tummy pain. Call your doctor now. ' + Subj + ' may need a blood test. Tell them: ' + in48.length + ' doses, ' + _paraMgText(lo48, hi48) + ' in the last 48 hours.']);
+  if (metRef && !metDose) {
+    out.check = true;
+    if (!hasWq()) fire('R2', 'amber', ['These doses fit ' + pos + ' newest weight, ' + wtTxt + ', day by day. But if ' + wtTxt + ' is too high (' + srcTxt + ' suggests less), each of the last 2 days was over the usual most. ' + checkWt], { weightQ: true });
+  } else if (metRef && o.gi) {
+    fire('R2', 'now', ['That\'s more than a day\'s usual most, every day, for over 48 hours, and ' + subj + ' has vomited, retched or had tummy pain. Call your doctor now. ' + Subj + ' may need a blood test. Tell them: ' + in48.length + ' doses, ' + _paraMgText(lo48, hi48) + ' in the last 48 hours.' + PARA_ER], { stop: true, fact: 'That\'s more than a day\'s usual most, every day, for over 48 hours, and ' + subj + ' has vomited, retched or had tummy pain. Tell them: ' + in48.length + ' doses, ' + _paraMgText(lo48, hi48) + ' in the last 48 hours.' });
   } else if (metRef) {
-    fire('R2', 'amber', ['That\'s more than a day\'s usual most, every day, for over 48 hours. Has ' + subj + ' been sick or had tummy pain?',
-      'Call your doctor now if ' + subj + ' seems to feel sick (gagging, retching, or refusing food and drink), or if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow. Yellow skin is harder to see on brown skin, so check the whites of the eyes.'], { giChips: true });
+    out.check = true;   // a question is open: an empty log is never "no" (Kael V-K-291-6a)
+    fire('R2', 'amber', ['That\'s more than a day\'s usual most, every day, for over 48 hours. Has ' + subj + ' vomited, retched, or had tummy pain?',
+      'Call your doctor now if ' + subj + ' seems to feel sick (gagging, retching, or won\'t eat and won\'t drink, even breastfeeds or milk), or if ' + pos + ' skin or the whites of ' + pos + ' eyes look yellow. Yellow skin is harder to see on brown skin, so check the whites of the eyes.'], { giChips: true });
   } else if (maybe) {
-    out.check = true; fire('R2', 'amber', ['We couldn\'t read every dose amount, so we can\'t tell if the last 2 days were over the usual most. Check the bottle and edit the doses to add the amount.']);
-  }
-  // R2b — more than 3 days (NHS): a dose on each of 4+ consecutive local dates, ending on the latest dose's date.
-  if (last) {
-    const days = new Set(doses.map(d => toDateStr(new Date(d.t))));
-    let n = 0, cur = new Date(last.t); cur.setHours(12, 0, 0, 0);
-    while (days.has(toDateStr(cur))) { n++; cur.setDate(cur.getDate() - 1); }
-    if (n >= 4) fire('R2b', 'amber', ['This is the ' + _paraOrdinal(n) + ' day of paracetamol. NHS advice is to speak to a doctor or pharmacist before giving it for more than 3 days.']);
+    out.check = true;
+    fire('R2', 'amber', ['We couldn\'t read every dose amount, so we can\'t tell if the last 2 days were over the usual most. Check the bottle\'s label, then tap each dose above and write the mg given.']);
   }
   // R3 — weigh again: a long or draining illness, a dose in 24 h, and the latest weigh-in from before it began.
   if (last && o.illnessStart && o.latestWtDate && o.latestWtDate < o.illnessStart) {
     fire('R3', 'amber', ['If you can, weigh ' + obj + ' again before the next dose.'], { addWeight: true });
   }
+  return _paraFinish(out, now, when);
+}
+// One block, one "until" (Kael V-K-291-4): when a rule at red or above (other than R0) fires, R0 keeps only its
+// facts; the one "until" is the latest any rule names, and none when a rule says stop.
+function _paraFinish(out, now, when) {
+  out.stop = out.rules.some(r => r.stop);
+  if (out.rules.some(r => r.rule !== 'R0' && PARA_TIER[r.tier] >= PARA_TIER.red)) out.rules.forEach(r => { if (r.rule === 'R0' && r.fact) r.lines = [r.fact]; });
+  // One instruction per block (Kael V-K-291-4): under the emergency-department lead, the other call lines keep
+  // only their facts; otherwise the "can't reach your doctor" fallback is said once, on the last call-now line.
+  if (out.rules.some(r => r.er)) out.rules.forEach(r => { if (!r.er && r.fact) r.lines = [r.fact]; });
+  else {
+    const withEr = out.rules.filter(r => r.lines.some(l => l.endsWith(PARA_ER)));
+    withEr.slice(0, -1).forEach(r => { r.lines = r.lines.map(l => l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l); });
+  }
+  const untils = out.rules.map(r => r.until).filter(t => Number.isFinite(t) && t > now);
+  if (untils.length && !out.stop) { out.until = Math.max.apply(null, untils); out.untilText = 'Give no more paracetamol until ' + when(out.until) + '.'; }
   return out;
 }
-// The live inputs → _paraLoadFrom (spec §5.4).
+// A time, with its day when it isn't today (HR-12, local): "9:00 pm", "yesterday at 9:00 pm", "3 Nov, 9:00 pm".
+function _paraWhen(ms) {
+  const d = new Date(ms), t = _feverTimeShort(d.toISOString()), ds = toDateStr(d), td = today();
+  if (ds === td) return t;
+  const y = new Date(); y.setHours(12, 0, 0, 0); y.setDate(y.getDate() - 1);
+  if (ds === toDateStr(y)) return 'yesterday at ' + t;
+  const tm = new Date(); tm.setHours(12, 0, 0, 0); tm.setDate(tm.getDate() + 1);
+  if (ds === toDateStr(tm)) return 'tomorrow at ' + t;
+  return _paraDateLabel(ds) + ', ' + t;
+}
+// The live inputs → _paraLoadFrom (spec §5.4). A weight the chip rejects (looks off, bad date, past 5 years) is
+// no weight here (Kael V-K-291-12, Maren V-M-291-6). The medicines list is read by name and brand (V-K-291-10).
 function getParacetamolLoad(nowMs) {
   const now = nowMs || Date.now();
   const latest = getLatestWeight();
-  const med = ((typeof meds !== 'undefined' && Array.isArray(meds)) ? meds : []).find(m => m && m.active && _paraIsParacetamol(m.name));
+  let usable = !!latest;
+  if (latest) { try { const st = getParacetamolChip(latest).state; if (st === 'implausible' || st === 'baddate' || st === 'outofrange') usable = false; } catch (e) { usable = false; } }
+  const med = ((typeof meds !== 'undefined' && Array.isArray(meds)) ? meds : []).find(m => m && m.active && _paraIsParacetamol(String(m.name || '') + ' ' + String(m.brand || '')));
   const fe = getActiveFeverEpisode(), de = typeof getActiveDiarrhoeaEpisode === 'function' ? getActiveDiarrhoeaEpisode() : null, vo = getActiveVomitingEpisode();
   const starts = [];
   if (fe && now - new Date(fe.startedAt).getTime() > 48 * 36e5) starts.push(fe.startedAt);
@@ -925,14 +1002,15 @@ function getParacetamolLoad(nowMs) {
   if (vo) starts.push(vo.startedAt);
   const illnessStart = starts.length ? toDateStr(new Date(starts.map(x => new Date(x).getTime()).filter(Number.isFinite).sort((a, b) => a - b)[0])) : null;
   return _paraLoadFrom({
-    nowMs: now, doses: _paraDosesAll(now), wDose: latest ? latest.wt : NaN, wRef: _paraRefWeight(),
-    medName: med ? String(med.name) : null, gi: _paraGiSign(now), illnessStart, latestWtDate: latest ? latest.date : null,
+    nowMs: now, doses: _paraDosesAll(now), wDose: usable ? latest.wt : NaN, wRef: usable ? _paraRefWeight() : null,
+    medName: med ? String(med.name || med.brand) : null, gi: _paraGiSign(now), illnessStart, latestWtDate: latest ? latest.date : null,
     subj: childSex() ? pron('subj') : 'your child', obj: childSex() ? pron('obj') : 'your child', pos: childSex() ? pron('poss') : 'your child\'s',
-    fmtTime: ms => _feverTimeShort(new Date(ms).toISOString()), fmtDate: _paraDateLabel
+    fmtWhen: _paraWhen, fmtDate: _paraDateLabel
   });
 }
-// The one answer for the next dose (spec §5.4): hold (red / call now), check (a question open), wait (the 4 h gap
-// or 4-in-24), or available. "Safe to give" only when available and the load is under. Logging is never blocked.
+// The one answer for the next dose (spec §5.4): hold (red / call now), check (a question open), wait (the 4 h gap,
+// 4-in-24, or a time a rule names), or available. "Safe to give" only when available and nothing warns —
+// tier calm and under (Kael V-K-291-6, Maren V-M-291-2, Vela V-V-291-2). Logging is never blocked.
 function getParacetamolNextDose(nowMs) {
   const now = nowMs || Date.now();
   const load = getParacetamolLoad(now);
@@ -940,8 +1018,8 @@ function getParacetamolNextDose(nowMs) {
   let verdict = 'available';
   if (PARA_TIER[load.tier] >= PARA_TIER.red) verdict = 'hold';
   else if (load.check) verdict = 'check';
-  else if (cd && !cd.available) verdict = 'wait';
-  return { verdict, load, countdown: cd, safe: verdict === 'available' && (load.under || load.none) };
+  else if ((cd && !cd.available) || (load.until && load.until > now)) verdict = 'wait';
+  return { verdict, load, countdown: cd, safe: verdict === 'available' && load.tier === 'calm' && (load.under || !!load.none) };
 }
 
 // The leftover-risk block (spec §5.3): the rules that fired, highest tier first, folded into one block. Calm
@@ -949,33 +1027,43 @@ function getParacetamolNextDose(nowMs) {
 const PARA_TIER_TITLE = { now: 'Call your doctor now', red: 'Call your doctor today', amber: 'Check before the next dose' };
 function _paraLoadHtml(load, where) {
   if (!load || load.none) return '';
-  const rules = (load.rules || []).filter(r => where !== 'gi' || r.rule === 'R2').slice().sort((a, b) => PARA_TIER[b.tier] - PARA_TIER[a.tier]);
+  const rules = (load.rules || []).filter(r => where !== 'gi' || r.rule === 'R2').slice().sort((a, b) => (b.er ? 1 : 0) - (a.er ? 1 : 0) || PARA_TIER[b.tier] - PARA_TIER[a.tier]);
   if (!rules.length) return '';
   const tier = rules.reduce((t, r) => PARA_TIER[r.tier] > PARA_TIER[t] ? r.tier : t, 'calm');
   if (tier === 'calm') {
     return rules.map(r => r.lines.map(l => '<div class="fe-para-note t-light">' + escHtml(l) + '</div>').join('')).join('')
       + (where === 'fever' && load.extra ? '<div class="fe-para-note t-light">' + escHtml(load.extra) + '</div>' : '');
   }
+  const title = rules.some(r => r.er) ? 'Go to the emergency department now' : PARA_TIER_TITLE[tier];
   let html = '<div class="fe-load fe-load--' + tier + '" role="' + (PARA_TIER[tier] >= PARA_TIER.red ? 'alert' : 'status') + '">';
-  html += '<div class="fe-load-title">' + zi('warn') + ' ' + escHtml(PARA_TIER_TITLE[tier]) + '</div>';
+  html += '<div class="fe-load-title">' + zi('warn') + ' ' + escHtml(title) + '</div>';
   // Fold, don't duplicate (spec §5.3): a calm total adds nothing inside a warning that already gives it.
+  let chipState = null;
+  try { chipState = getParacetamolChip(getLatestWeight()).state; } catch (e) { chipState = null; }
   rules.filter(r => r.tier !== 'calm').forEach(r => {
     r.lines.forEach(l => { html += '<div class="fe-load-text">' + escHtml(l) + '</div>'; });
     if (r.weightQ) {
       const lw = getLatestWeight();
-      if (lw) {
+      if (where === 'gi') {
+        // One retype, on the fever card: the same ids twice on a page reads the wrong box (Vela V-V-291-4).
+        html += '<div class="fe-load-text">Answer the weight question on the fever card.</div>';
+      } else if (chipState === 'confirm') {
+        // The chip below is already asking about this weight: one question at a time (Kael V-K-291-9a).
+        html += '<div class="fe-load-text">Confirm the weight in the box below first.</div>';
+      } else if (lw) {
         html += '<div class="fe-para-retype"><input id="feLoadRetype" class="ep-edit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Type the newest weight in kilograms to confirm it">'
-          + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="feConfirmLoadWeight" data-arg="' + escAttr(lw.date) + '" data-arg2="' + escAttr(String(lw.wt)) + '">' + escHtml(_paraKgText(lw.wt)) + ' is right</button></div>';
+          + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="feConfirmLoadWeight" data-arg="' + escAttr(lw.date) + '" data-arg2="' + escAttr(String(lw.wt)) + '" aria-label="' + escAttr(_paraKgText(lw.wt) + ' is the right weight') + '">' + escHtml(_paraKgText(lw.wt)) + ' is right</button></div>';
         html += '<div id="feLoadRetypeErr" class="fe-para-retype-err" role="alert"></div>';
       }
       html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="switchTab" data-arg="growth">Fix the weight or add a weight</button></div>';
     }
     if (r.giChips && getActiveFeverEpisode()) {
-      html += '<div class="fe-action-chips">' + PARA_GI_ACTIONS.map(a => '<span class="fe-action-chip" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</span>').join('') + '</div>';
+      html += '<div class="fe-action-chips fe-load-chips">' + PARA_GI_ACTIONS.map(a => '<span class="fe-action-chip" role="button" tabindex="0" data-action="feLogGiSign" data-arg="' + escAttr(a) + '">' + escHtml(a) + '</span>').join('') + '</div>';
     }
     if (r.addWeight) html += '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-soft btn-soft--peach" data-action="switchTab" data-arg="growth">Add a weight</button></div>';
   });
-  if (where === 'fever' && load.extra) html += '<div class="fe-load-text t-light">' + escHtml(load.extra) + '</div>';
+  if (load.untilText && where === 'fever') html += '<div class="fe-load-text fe-load-until">' + escHtml(load.untilText) + '</div>';   // the GI cards show R2 only
+  if (where === 'fever' && load.extra) html += '<div class="fe-load-text">' + escHtml(load.extra) + '</div>';
   html += '</div>';
   return html;
 }
@@ -988,12 +1076,16 @@ function feConfirmLoadWeight(date, wtStr) {
   const shown = Number(wtStr);
   if (!Number.isFinite(typed) || typed <= 0) { say('Type the weight in kg, for example 9.5.'); return; }
   const row = gvMeasureRows('wt').find(r => r.date === date && r.wt === shown);
-  if (!row) { renderFeverEpisodeCard(); showQLToast('That weight has changed in Growth. Check it there.'); return; }
+  const redraw = () => { renderFeverEpisodeCard(); ['renderVomitingEpisodeCard', 'renderDiarrhoeaEpisodeCard', 'renderHome'].forEach(f => { try { if (typeof window[f] === 'function') window[f](); } catch (e) {} }); };
+  if (!row) { redraw(); showQLToast('That weight has changed in Growth. Check it there.'); return; }
   if (Math.round(typed * 100) !== Math.round(shown * 100)) { say('You typed ' + _paraKgText(typed) + '; Growth has ' + _paraKgText(shown) + ' on that date. If Growth is wrong, tap Fix the weight.'); return; }
-  gvConfirmRecord(row, null, 'calm');
-  renderFeverEpisodeCard();
-  if (typeof renderHome === 'function') try { renderHome(); } catch (e) {}
-  showQLToast(zi('check') + ' Weight confirmed');
+  // While the jump check is asking, the chip's own box records the answer — never this one (Kael V-K-291-9a,
+  // Carina V-CA-291-4). Otherwise a confirm, even though the check passed, makes the latest weight W_ref.
+  if (gvWeightNeedsConfirm(row)) { redraw(); showQLToast('Confirm the weight in the box on the fever card first.'); return; }
+  const done = gvConfirmRecord(row, null, 'calm');
+  redraw();
+  if (done && _paraRefWeight() && _paraRefWeight().confirmed) showQLToast(zi('check') + ' Weight confirmed');
+  else showQLToast('The weight check has changed. Look again.');
 }
 // R2's question: "Tummy pain" / "Seems sick" logged on the active fever episode, now.
 function feLogGiSign(label) {
@@ -1009,17 +1101,18 @@ function computeParacetamolLoadAlerts() {
   const load = getParacetamolLoad();
   if (!load || load.none || PARA_TIER[load.tier] < PARA_TIER.amber) return alerts;
   const doses = _paraDosesAll(Date.now());
-  const lastT = doses.length ? doses[doses.length - 1].t : 0;
-  const key = 'para-load-' + lastT + '-' + load.tier;
-  const state = loadAlertState();
-  if (state.dismissed[key]) return alerts;
-  const top = (load.rules || []).slice().sort((a, b) => PARA_TIER[b.tier] - PARA_TIER[a.tier])[0];
+  const lastT = doses.length ? doses.reduce((m, d) => Math.max(m, d.tRaw), 0) : 0;   // the dose's own time: a fast clock can't move the key
+  const top = (load.rules || []).slice().sort((a, b) => (b.er ? 1 : 0) - (a.er ? 1 : 0) || PARA_TIER[b.tier] - PARA_TIER[a.tier])[0];
+  const er = (load.rules || []).some(r => r.er);
+  // Home's words: 'action' for red and call-now (no clear control — they stay until the dose state changes),
+  // 'watch' for amber. Home's own expiry-aware dismiss/snooze check clears it (computeAlerts) — Carina V-CA-291-1/-6,
+  // Kael V-K-291-8, Maren V-M-291-4, Vela V-V-291-1.
   alerts.push({
-    id: 'para-load', key,
-    severity: load.tier === 'now' ? 'urgent' : load.tier === 'red' ? 'urgent' : 'watch', icon: zi('pill'),
-    title: load.tier === 'now' ? 'Paracetamol: call your doctor now' : load.tier === 'red' ? 'Paracetamol: call your doctor today' : 'Paracetamol: check before the next dose',
+    id: 'para-load', key: 'para-load-' + lastT + '-' + load.tier,
+    severity: PARA_TIER[load.tier] >= PARA_TIER.red ? 'action' : 'watch', icon: zi('pill'),
+    title: er ? 'Paracetamol: go to the emergency department now' : load.tier === 'now' ? 'Paracetamol: call your doctor now' : load.tier === 'red' ? 'Paracetamol: call your doctor today' : 'Paracetamol: check before the next dose',
     body: top && top.lines[0] ? top.lines[0] : '',
-    tab: 'medical', dismissable: load.tier !== 'now'
+    tab: 'medical'
   });
   return alerts;
 }
@@ -1206,7 +1299,9 @@ function renderFeverEpisodeCard() {
     });
   }
   // The one answer for the next dose (spec §5.4): the countdown line reads the verdict, never the gap alone.
-  const paraNext = getParacetamolNextDose();
+  // A throw fails closed to "check" and never blanks the card (Maren V-M-291-D8).
+  let paraNext;
+  try { paraNext = getParacetamolNextDose(); } catch (e) { paraNext = { verdict: 'check', load: null, countdown: doseCD, safe: false }; }
   if (doseCD) {
       // In a new episode the countdown counts from a dose this card doesn't list: name it, or the
       // line reads as a glitch beside "No medicine logged" (Maren V-M-284-11).
@@ -1217,6 +1312,8 @@ function renderFeverEpisodeCard() {
         html += '<div class="fe-dose-next fe-dose-next--stop">' + from + 'Give no more paracetamol for now. See below.</div>';
       } else if (paraNext.verdict === 'check') {
         html += '<div class="fe-dose-next fe-dose-next--hold">' + from + 'Check below before the next dose.</div>';
+      } else if (doseCD.available && paraNext.verdict === 'wait' && paraNext.load && paraNext.load.untilText) {
+        html += '<div class="fe-dose-next fe-dose-next--hold">' + from + escHtml(paraNext.load.untilText) + '</div>';
       } else if (doseCD.available) {
         const canDose = (paraChip.state === 'ok' || paraChip.state === 'pick') && paraNext.safe;
         html += canDose
@@ -1251,7 +1348,11 @@ function renderFeverEpisodeCard() {
   if (earlier) {
     html += '<div class="fe-para-note">Last fever you used ' + escHtml(earlier.short) + '. Check the bottle in your hand and tap it.</div>';
   }
-  if (paraChip.state === 'ok') {
+  if (paraChip.state === 'ok' && paraNext && paraNext.verdict === 'hold') {
+    // The chip never shows a dose under a stop (spec §5.4: the card reads only the verdict — Kael V-K-291-7).
+    html += '<div class="fe-para-note">The dose is hidden while the box above says to stop. Speak to your doctor first.</div>';
+  } else if (paraChip.state === 'ok') {
+    if (paraNext && paraNext.verdict === 'check') html += '<div class="fe-para-note">Check the box above before giving this.</div>';
     // mg first, so the line can be checked against any label or prescription (V-M-284-1c).
     html += '<div class="fe-para-dose">' + escHtml(paraChip.dose.display) + ' <span class="t-light">of ' + escHtml(paraChip.form.short) + '</span></div>';
     html += '<div class="fe-para-note t-light">' + paraChip.dose.lowMg + '–' + paraChip.dose.highMg + ' mg, for ' + escHtml(String(paraChip.wt)) + ' kg, weighed ' + escHtml(paraChip.dateLabel) + '</div>';
@@ -1896,7 +1997,9 @@ function renderDietFeverBanner() {
     '<div class="fe-diet-body">' +
     '<strong>Prioritize:</strong> Breast milk (most important), light foods (khichdi, dal water, curd rice, banana, rice porridge), hydrating foods (coconut water, ORS, soups).<br><br>' +
     '<strong>Avoid:</strong> New food introductions, heavy proteins, fried foods. Do not force meals if ' + childNameHtml() + ' refuses.<br><br>' +
-    '<em>Appetite loss during fever is normal. Offer small amounts frequently.</em>' +
+    '<em>Appetite loss during fever is normal. Offer small amounts frequently.</em><br><br>' +
+    // Refusing food is expected; refusing drink too is a warning sign, with or without paracetamol (Ceres V-C-291-2).
+    '<strong>Call your doctor</strong> if ' + childNameHtml() + ' won\'t drink either (breastfeeds or milk included), or seems to feel sick.' +
     '</div></div>';
 }
 
@@ -2261,6 +2364,7 @@ function renderDiarrhoeaEpisodeCard() {
   }
 
   // Guidance
+  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi'); } catch (e) {}   // R2 renders here too, above the guidance and the closing controls (#161 §5.4, Vela V-V-291-5)
   html += '<div class="fe-section-title">Guidance</div>';
   html += '<div class="fe-guidance"><ul class="ep-list">';
   html += '<li>Continue breastfeeding — most important</li>';
@@ -2287,7 +2391,6 @@ function renderDiarrhoeaEpisodeCard() {
   html += '<div class="fe-resolve"><button class="btn btn-ghost w-full" data-action="deResolvePrompt" data-arg="" >' + zi('check') + ' Mark Resolved</button></div>';
   html += '<div class="source-attribution">Guidance only — not medical advice. Trust your instincts and call your paediatrician when in doubt.</div>';
 
-  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi'); } catch (e) {}   // R2 renders here too (#161 spec §5.4)
   card.innerHTML = html;
 }
 
@@ -2771,6 +2874,7 @@ function renderVomitingEpisodeCard() {
   }
 
   // Guidance
+  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi'); } catch (e) {}   // R2 renders here too, above the guidance and the closing controls (#161 §5.4, Vela V-V-291-5)
   html += '<div class="fe-section-title">Guidance</div><div class="fe-guidance"><ul class="ep-list">';
   html += '<li>Keep ' + childNameHtml() + ' upright for 20–30 minutes after feeds</li>';
   html += '<li>Offer small, frequent feeds — not large volumes</li>';
@@ -2797,7 +2901,6 @@ function renderVomitingEpisodeCard() {
 
   html += '<div class="fe-resolve"><button class="btn btn-ghost w-full" data-action="voResolvePrompt" data-arg="" >' + zi('check') + ' Mark Resolved</button></div>';
   html += '<div class="source-attribution">Guidance only — not medical advice.</div>';
-  try { html += _paraLoadHtml(getParacetamolLoad(), 'gi'); } catch (e) {}   // R2 renders here too (#161 spec §5.4)
   card.innerHTML = html;
 }
 
