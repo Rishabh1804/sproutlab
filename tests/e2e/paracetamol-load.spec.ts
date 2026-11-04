@@ -321,8 +321,12 @@ test('R2 on a GI card points to the fever card for the weight question (no dupli
   const html = await page.evaluate(() => {
     const w: any = window;
     const load = { rules: [{ rule: 'R2', tier: 'amber', lines: ['x'], weightQ: true }], tier: 'amber' };
-    return w._paraLoadHtml(load, 'gi');
+    (0, eval)("_feverEpisodes = [{ id: 'f', status: 'active', startedAt: new Date().toISOString(), resolvedAt: null, doses: [], readings: [], actions: [] }]");
+    const withFever = w._paraLoadHtml(load, 'gi');
+    (0, eval)('_feverEpisodes = []');
+    return withFever + '|NOFEVER|' + w._paraLoadHtml(load, 'gi');
   });
+  expect(html.split('|NOFEVER|')[1]).not.toContain('Answer the weight question on the fever card.');   // no fever card to point at
   expect(html).toContain('Answer the weight question on the fever card.');
   expect(html).not.toContain('feLoadRetype');
 });
@@ -497,4 +501,19 @@ test('R1 red keeps its doctor-or-weight condition beside the 4-hour time, on the
   expect(r.html).toMatch(/Give no more paracetamol until you've spoken to your doctor or weighed her again, and not before [^<]+\./);
   expect(r.home).toContain('until you\'ve spoken to your doctor or weighed her again, and not before');
   expect(r.home).not.toMatch(/^Give no more paracetamol until \d/);
+});
+
+test('at red the "kg is right" retype is not offered; at amber it is (Maren\'s ruling, round 5)', async ({ page }) => {
+  await boot(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    (0, eval)("growthData = [{ date: toDateStr(new Date(Date.now() - 40*864e5)), wt: 9.2 }, { date: toDateStr(new Date(Date.now() - 3*864e5)), wt: 9.5 }]");
+    const red = { rules: [{ rule: 'R1', tier: 'red', lines: ['x Call your doctor today, or weigh her again.'], weightQ: true }], tier: 'red', wq: { q: 'Is 9.5 kg right?', d: 'd' }, obj: 'her' };
+    const amber = { rules: [{ rule: 'R1', tier: 'amber', lines: ['y'], weightQ: true }], tier: 'amber', wq: { q: 'Is 9.5 kg right?', d: 'd' }, obj: 'her' };
+    return { red: w._paraLoadHtml(red, 'fever'), amber: w._paraLoadHtml(amber, 'fever') };
+  });
+  expect(r.red).not.toContain('feLoadRetype');
+  expect(r.red).toContain('Fix the weight or add a weight');
+  expect(r.red).not.toContain('or weigh her again');   // no time shown → doctor-only, in Why too
+  expect(r.amber).toContain('feLoadRetype');
 });

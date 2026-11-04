@@ -1821,7 +1821,7 @@ Found while running the full suite for #289 on 2026-11-04. The full run had 59 f
   - The prose bar (won't eat AND won't drink) vs the "Retching or off food" chip, which escalates on its own. PC-10. (Ceres V-C-291-5, Maren D18)
   - The diarrhoea Diet banner has no won't-drink line. PC-5. (Ceres V-C-291-7)
   - `from.trim()` in the fever-card countdown line is an internal, unescaped string (pre-existing). HR-4 hygiene. (Vela)
-- **Round 5, open:** the fever card's "{wt} kg is right" retype is a third release beside the doctor-or-reweigh hold; whether it fits Maren's "weighed again, not confirmed" ruling is Maren's and the Architect's call. (Kael pair-note, 6c31073)
+- **Round 5, resolved:** the "{wt} kg is right" retype is offered only at amber; at red it is not a release (Maren's ruling, folded in #291).
 - **Round 5, open:** the 4-hour / 4-in-24 time exists only while a fever episode is active, though the load counts doses from resolved episodes; once the fever is resolved, Home's red holds show no time (the doctor-only form, by design until fixed). Compute the time from the engine's own dose list. PC-1. (Maren V-M-291-D28; Kael consult)
 - **Pre-existing, seen during the round:** `alert-routing.spec.ts` "+N more in Insights" and "gotoCard expands the target card" fail on main as well as on this branch. PC-6.
 

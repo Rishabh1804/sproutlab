@@ -1153,8 +1153,12 @@ function _paraLoadHtml(load, where, card) {
     const lw = getLatestWeight();
     if (load.wq) html += '<div class="fe-load-q">' + escHtml(load.wq.q + (tier === 'amber' ? '' : ' Check before the next dose.')) + '</div><div class="fe-load-tell">' + escHtml(load.wq.d) + '</div>';   // amber's title already says it (Vela D30)
     if (where === 'gi') {
-      // One retype, on the fever card: the same ids twice on a page reads the wrong box (Vela V-V-291-4).
-      html += '<div class="fe-load-tell">Answer the weight question on the fever card.</div>';
+      // One retype, on the fever card: the same ids twice on a page reads the wrong box (Vela V-V-291-4) —
+      // pointed at only when there is a fever card to answer on (Maren D28 note).
+      if (getActiveFeverEpisode()) html += '<div class="fe-load-tell">Answer the weight question on the fever card.</div>';
+    } else if (tier !== 'amber') {
+      // At red, copying the label back is a confirm, not a re-weigh: the typo R1 red exists to catch (Maren's
+      // ruling on the retype, round 5). Weigh again, fix the weight, or call — the buttons below.
     } else if (chipState === 'confirm') {
       // The chip below is already asking about this weight: one question at a time (Kael V-K-291-9a).
       html += '<div class="fe-load-tell">Confirm the weight in the box below first.</div>';
@@ -1183,6 +1187,7 @@ function _paraLoadHtml(load, where, card) {
   const whyLine = (r, l) => {
     let t = l.endsWith(PARA_ER) ? l.slice(0, -PARA_ER.length) : l;   // the fallback is in the lead
     if (r.rule === 'R0') t = t.replace(/ (?:If you haven't yet, call|Call) your doctor today and tell them:.*$/, '');   // "Tell them" is in the lead (Vela V-V-291-20)
+    if (doLine && doLine.indexOf('weighed') < 0) t = t.replace(/, or weigh \S+(?: \S+)? again\./, '.');   // the doctor-only hold: no re-weigh offer in Why either (Maren D28 note)
     return t;
   };
   live.forEach(r => r.lines.forEach(l => { body += '<p class="fe-load-text">' + escHtml(whyLine(r, l)) + '</p>'; }));
