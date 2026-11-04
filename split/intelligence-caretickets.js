@@ -139,6 +139,13 @@ var CT_TEMPLATES = {
         if (typeof ageAt !== 'function') return 80;
         // Judged at the age of the latest weigh-in, so crossing an age band with no new
         // measurement can't flip the goal to met (V-K-282-2).
+        // The goal's own window first (gvWeightGoalWindow): the threshold is read at the midpoint of
+        // the same 28+ day window the metric measures (V-M-282g-4 / V-K-282g-5), so value and metric
+        // describe one span.
+        var gw = (typeof gvWeightGoalWindow === 'function') ? gvWeightGoalWindow() : null;
+        if (gw && typeof growthVelocityBand === 'function') {
+          const bw = growthVelocityBand(gvBandAge(gw.latest, gw.previous)); if (bw && bw.wGWkMedian) return bw.wGWkMedian;
+        }
         var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
         if (typeof growthVelocityBand === 'function' && gv && gv.wtLatest) {
           // The same row as the verdict: the window midpoint (gv.wtBandAge), else the latest
@@ -259,7 +266,7 @@ function ctCompare(val, operator, threshold) {
   }
 }
 
-function ctGetMetricValue(metric, dateStr) {
+function ctGetMetricValue(metric, dateStr, ticket) {
   switch (metric) {
     case 'dailySleepScore':
       var sc = getDailySleepScore(dateStr || today());
@@ -269,9 +276,17 @@ function ctGetMetricValue(metric, dateStr) {
       // (gvWeightWindow) an infant's velocity is the last two weigh-ins, so one 7-day pair above the
       // median, held through confirmAfterDays (14) with no new weigh-in, met the weight goal. A shorter
       // window is not a measure of sustained gain: the metric is null (not met, never "not passing").
-      var gv = getGrowthVelocity();
-      if (!gv || gv.wtGPerWeek == null || !(gv.wtDays >= GV_TODDLER_WINDOW_DAYS)) return null;
-      return gv.wtGPerWeek;
+      // Its own 28-day look-back at every age (gvWeightGoalWindow — Maren V-M-282g-4 / Kael V-K-282g-5):
+      // the shared window is the last two weigh-ins under 12 m, so an infant weighed weekly never had a
+      // 28-day pair and the goal could never resolve. Still null with no weigh-in 28+ days back.
+      var gw = (typeof gvWeightGoalWindow === 'function') ? gvWeightGoalWindow() : null;
+      if (!gw) return null;
+      // Judging a goal: only once she has been weighed AFTER it was opened (or reopened / re-escalated
+      // — ctRefTime). Weigh-ins from before are the data that raised the concern, and must never say
+      // "All clear" on their own (Maren V-M-286-1, Kael V-K-286-3). A weigh-in on the opening day may
+      // predate the ticket (rows carry no time), so strictly a later local date. No ticket → display.
+      if (ticket && gw.latest.date <= toDateStr(new Date(ctRefTime(ticket)))) return null;
+      return gw.gPerWeek;
     case 'uniqueFoods7d':
       return ctUniqueFoods7d();
     default:
@@ -486,7 +501,7 @@ function ctComputeVerdict(ticket, answers) {
   // ── Goal: metric-driven ──
   var criteria = ctResolutionCriteria(ticket);
   if (criteria.type === 'manual') return { verdict: 'watch', trigger: null, allTriggers: [] };
-  var metricVal = ctGetMetricValue(criteria.metric);
+  var metricVal = ctGetMetricValue(criteria.metric, null, ticket);
   var passes = ctCompare(metricVal, criteria.operator, criteria.value);
   return { verdict: passes ? 'clear' : 'watch', trigger: null, allTriggers: [] };
 }
@@ -541,7 +556,7 @@ function ctCheckThresholdMet(ticket) {
   if (!criteria || criteria.type !== 'threshold_met') {
     return { met: false, daysHeld: 0, paused: false };
   }
-  var metricVal = ctGetMetricValue(criteria.metric);
+  var metricVal = ctGetMetricValue(criteria.metric, null, ticket);
   var passes = ctCompare(metricVal, criteria.operator, criteria.value);
   var ill = ctHasActiveIllness();
   if (passes) {
@@ -1346,7 +1361,10 @@ function _ctBuildAutoData(tpl) {
     }
     if (tpl.autoDataSources && tpl.autoDataSources.indexOf('growth') !== -1) {
       var gv = (typeof getGrowthVelocity === 'function') ? getGrowthVelocity() : null;
-      if (gv) ad.growthVelocity = { wtGPerWeek: gv.wtGPerWeek || null, htCmPerMonth: gv.htCmPerMonth || null };
+      // The weight rate recorded is the one the check-in shows (the goal window, ctGetMetricValue —
+      // Cipher #286 finding 1, PC-10), not the shared velocity window; a 0 g/week stays 0, never null.
+      var wvSnap = ctGetMetricValue('wtGPerWeek');
+      if (gv || wvSnap != null) ad.growthVelocity = { wtGPerWeek: wvSnap != null ? wvSnap : null, htCmPerMonth: (gv && gv.htCmPerMonth) || null };
     }
     if (tpl.autoDataSources && tpl.autoDataSources.indexOf('poop') !== -1) {
       ad.recentPoop = (poopData || []).filter(function(p) { return p.date === today(); });

@@ -5098,14 +5098,10 @@ function _tpGatherHeadsUp() {
 
   // 3. Growth measurement recency
   try {
-    if (growthData && growthData.length > 0) {
-      var lastMeas = growthData[growthData.length - 1];
-      if (lastMeas && lastMeas.date) {
-        var daysSince = Math.floor((new Date() - new Date(lastMeas.date)) / 86400000);
-        if (daysSince >= 14) {
-          items.push({ icon: zi('ruler'), text: 'Last measured ' + daysSince + ' days ago — time to weigh and measure', action: 'growth' });
-        }
-      }
+    // The latest measurement by date, whole calendar days (gvDaysSinceMeasure — V-CA-282g-2, HR-12).
+    var daysSince = gvDaysSinceMeasure();
+    if (daysSince != null && daysSince >= 14) {
+      items.push({ icon: zi('ruler'), text: 'Last measured ' + daysSince + ' days ago — time to weigh and measure', action: 'growth' });
     }
   } catch (e) { /* best effort */ }
 
