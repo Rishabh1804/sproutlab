@@ -501,3 +501,19 @@ test('an end time edited earlier keeps the doses logged before Resolve was press
   });
   expect(r).toEqual({ old: ['d1'], neu: [], same: true, idem: true });
 });
+
+test('a late red flag between an edited end and the Resolve press still reaches the active card (V-M-289-16)', async ({ page }) => {
+  await setup(page);
+  const r = await page.evaluate(() => {
+    const w: any = window;
+    const vo = (id: string, startH: number, extra: any) => Object.assign({ id, status: 'active', startedAt: w.__iso(startH), resolvedAt: null, episodes: [], fluids: [], wetDiapers: [], actions: [] }, extra);
+    // Resolve pressed at 10:00, end edited to 08:00; an offline phone's 09:00 bile vomit and 09:00 fluid arrive later.
+    const A = [vo('vo-1', 0, { status: 'resolved', resolvedAt: w.__iso(8), resolvedAtOriginal: w.__iso(10), resolvedUpdatedAt: w.__iso(11), episodes: [{ id: 'v1', time: w.__iso(1), type: 'normal' }] }),
+               vo('vo-2', 13, { episodes: [{ id: 'v3', time: w.__iso(13), type: 'normal' }] })];
+    const B = [vo('vo-1', 0, { episodes: [{ id: 'v1', time: w.__iso(1), type: 'normal' }, { id: 'v2', time: w.__iso(9), type: 'bile' }], fluids: [{ id: 'f1', time: w.__iso(9), type: 'ORS' }] })];
+    const m = w._epMergeLists('vomiting', A, B), m2 = w._epMergeLists('vomiting', B, A);
+    const g = (id: string, arr: string) => m.find((e: any) => e.id === id)[arr].map((x: any) => x.id);
+    return { neuVomits: g('vo-2', 'episodes'), oldFluids: g('vo-1', 'fluids'), same: w.__S(m) === w.__S(m2) };
+  });
+  expect(r).toEqual({ neuVomits: ['v2', 'v3'], oldFluids: ['f1'], same: true });
+});

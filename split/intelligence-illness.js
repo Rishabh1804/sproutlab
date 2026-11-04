@@ -206,8 +206,9 @@ function _epMergePair(kind, a, b) {
   const pickA = ra > rb || (ra === rb && _epStable([a.resolvedAt, a.resolvedNotes]) <= _epStable([b.resolvedAt, b.resolvedNotes]));
   const R = pickA ? a : b;
   ['resolvedAt', 'resolvedNotes', 'resolvedEditedAt', 'resolvedUpdatedAt'].forEach(f => { out[f] = R[f] !== undefined ? R[f] : null; });
-  const origs = [a.resolvedAtOriginal, b.resolvedAtOriginal].filter(Boolean).sort();
-  out.resolvedAtOriginal = origs.length ? origs[0] : (R.resolvedAtOriginal || null);
+  // The original press time moves with the resolve group: a stale copy from before a reopen must not bring
+  // back an old one and drop the move bound below the new press (Maren V-M-289-18).
+  out.resolvedAtOriginal = R.resolvedAtOriginal || null;
   const sup = new Map();
   (a.resolveSuperseded || []).concat(b.resolveSuperseded || []).forEach(x => sup.set(_epStable(x), x));
   out.resolveSuperseded = Array.from(sup.values()).sort((x, y) => _epStable(x) < _epStable(y) ? -1 : 1);
@@ -220,11 +221,11 @@ function _epAllEntries(kind, ep) {
   if (cfg.logs) (ep[cfg.logs] || []).forEach(e => all.push({ arr: cfg.logs, e: e, t: _epEntryT(e) }));
   return all;
 }
-function _epMoveEntries(kind, from, to, sinceMs) {
+function _epMoveEntries(kind, from, to, sinceMs, alsoMove) {
   const cfg = _EP_SYNC[kind];
   cfg.arrays.concat(cfg.logs ? [cfg.logs] : []).forEach(arr => {
     const keep = [], move = [];
-    (from[arr] || []).forEach(e => (_epEntryT(e) >= sinceMs ? move : keep).push(e));
+    (from[arr] || []).forEach(e => (_epEntryT(e) >= sinceMs || (alsoMove && alsoMove(arr, e)) ? move : keep).push(e));
     if (!move.length) return;
     from[arr] = keep;
     to[arr] = cfg.logs === arr ? _epMergePair(kind, { [arr]: to[arr] || [] }, { [arr]: move })[arr]
@@ -281,7 +282,10 @@ function _epMergeLists(kind, A, B, nowMs) {
     // Bounded by when Resolve was first pressed, not by an edited end time: an entry logged before that press
     // was logged while the episode was active and belongs to it (Cipher A1; Maren V-M-289-3 otherwise).
     const resolvedBound = Math.max(_epT(ep.resolvedAt), _epT(ep.resolvedAtOriginal));
-    if (newer) { _epMoveEntries(kind, ep, newer, (Math.floor(resolvedBound / 60000) + 1) * 60000); ep.status = 'resolved'; return; }
+    // A red flag later than the (edited) end also moves, wherever it falls: only an entry that arrived late
+    // can sit between an edited end and the press, and the active card's severity must see it (Maren V-M-289-16).
+    const endMin = _epMin(ep.resolvedAt);
+    if (newer) { _epMoveEntries(kind, ep, newer, (Math.floor(resolvedBound / 60000) + 1) * 60000, (arr, e) => cfg.reopens(arr, e) && Math.floor(_epEntryT(e) / 60000) > endMin); ep.status = 'resolved'; return; }
     const late = _epAllEntries(kind, ep).filter(x => cfg.reopens(x.arr, x.e) && Math.floor(x.t / 60000) > _epMin(ep.resolvedAt)).sort((x, y) => x.t - y.t)[0];
     if (!late) { ep.status = 'resolved'; return; }
     const rec = { resolvedAt: ep.resolvedAt, resolvedNotes: ep.resolvedNotes || '', resolvedAtOriginal: ep.resolvedAtOriginal || null,
