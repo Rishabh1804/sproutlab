@@ -1770,6 +1770,10 @@ and the age-aware diet tips. The **Tier-2** items below are stale or empty rathe
 - **"Weighed {date}" repeats "Last measured" in the doctor export (Maren V-M-290-14):** merge the two lines.
 - **After a confirmed same-date conflict that then reads calm, the parent retypes the same number twice (Kael ruling on V-K-290-8):** kept for consistency; easing it needs a spec note.
 - **The Home alert body's "Last dose was 5h  ago" has a double space from `_feverTimeAgo` (Vela, pre-existing).**
+- **One dismissal key for both Home dose-alert titles (Cipher #290 nit 2):** dismissing "check the fever card" also hides "dose available" for that dose after the confirm. Errs toward less prompting; decide if intended.
+- **One `amber` confirm covers jump-up, jump-down and implausible (Cipher #290 nit 3):** after an earlier row is edited, a weight confirmed against a jump-up can print "a drop, confirmed by the family" in the export. The family confirmed the weight, not the drop; reword or bind to the direction.
+- **Confirms are permanent (no tombstones) (Cipher #290 nit 4):** a fixed typo re-entered identically on the same date is already confirmed. Next to the §4.3 accepted residual.
+- **The doctor-export print renderer writes lines starting with two spaces into the page unescaped (Cipher #290 nit 5, pre-existing):** the new "Weighed …" line uses only internal strings.
 
 #### P2 — 19 e2e failures on main, unrelated to #289 (PC-6)
 Found while running the full suite for #289 on 2026-11-04. The full run had 59 failures. A re-run of 7 of those spec files gave 19 failures, and `origin/main`'s build fails exactly the same 19. The other 40 (the rest of the food-effects-v2 family, `diet-preference-gate`, `can-i-give-this`) are diet surfaces #289 does not touch and were not re-run against main, so treat them as suspect too:
