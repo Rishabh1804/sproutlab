@@ -1802,6 +1802,11 @@ Found while running the full suite for #289 on 2026-11-04. The full run had 59 f
 - **The Quick-log button (z-index 1001) sits over the bottom of any tall modal (pre-existing, PC-3).** #292 hides it while the growth modal is open (the `.lib-overlay-open` precedent); other modals that grow tall keep the overlap.
 - **The first-run bug-report tooltip opens over modal buttons 2 s after load (PC-6, test infrastructure).** The entry-check spec marks it seen; other specs that click modal buttons may flake under load.
 - **The growth modal's inline `oninput` / `style` attributes (HR-2/HR-3, pre-existing)** and the date input's missing `max` (a future-dated row becomes "latest").
+- **Cipher's Edict V notes on #292 (LGTM; all DEFERRABLE):**
+  - **"Retyped" is inferred from the confirm kind, not its provenance (PC-10).** The chip's own same-date retype records only `samedate`, so after it the reference weight falls to the same-date sibling and R1/R0b can ask "Is X kg right?" again. Errs toward over-warning; R1's retype records `calm` and self-heals. Fix: give a confirm its provenance (tap vs retype), or have the chip's samedate retype also record `calm` when the jump test after it passes. Amend the comment at intelligence-illness.js ~406–408 ("After that confirm W_ref = the latest weight"), now conditional.
+  - **Step 4 folds an off earlier comparator's reason (PC-10).** A back-dated off-chart weight saved unchecked can become the newest weight's `implausible` comparator (badRow 'a'); step 4 asks for a retype with that reason folded. Apply V-K-292-9's unfolded line at step 4 too. Legibility only.
+  - **Past 60 months, Keep both says "the weight check changed" (PC-1 / PC-10, latent until Sep 2030).** `paraWeightPlausible` is false past 60 m, so the samedate record is refused and `changed` fires. Make `changed` ignore a record refused only for plausibility.
+  - **`_gEntryOffHtml(...).replace('Check this weight', …)` edits rendered HTML (nit).** Pass the title as a parameter.
 
 #### P2 — #161 PR 4b deferrables (leftover-risk flow, PR #291 Governor round, 2026-11-04)
 - **Status:** Open. Sorted DEFERRABLE by the Governors; the BLOCKING findings were fixed in #291. Spec `docs/specs/paracetamol-weight-check-v1.md` §9.
