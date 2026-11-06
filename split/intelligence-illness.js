@@ -821,8 +821,10 @@ function _paraRefWeight() {
   if (!earlier.length) return { w: latest.wt, src: null };
   const sex = childSex(), moL = whoAgeMoAt(latest.date);
   let best = { w: latest.wt, src: null };
-  const prev = earlier[earlier.length - 1];
-  const fallback = () => (prev.wt < latest.wt ? { w: prev.wt, src: { date: prev.date, wt: prev.wt } } : { w: latest.wt, src: null });
+  // No projection possible: the lowest of the latest and every earlier weight in the window — the same rows the
+  // projection reads (Kael V-K-292-10: share the selector; a same-date sibling alone is not "the previous").
+  const low = earlier.reduce((m, r) => (r.wt < m.wt ? r : m), earlier[0]);
+  const fallback = () => (low.wt < latest.wt ? { w: low.wt, src: { date: low.date, wt: low.wt } } : { w: latest.wt, src: null });
   if (sex !== 'f' && sex !== 'm' || !Number.isFinite(moL)) return fallback();
   for (const r of earlier) {
     const p = whoWfaWeightAtZ(whoWfaZ(r.wt, whoAgeMoAt(r.date), sex), moL, sex);

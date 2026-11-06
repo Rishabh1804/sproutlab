@@ -11768,7 +11768,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 /* hide the quick-log FAB while a Library overlay is open so it can't clutter or
    intercept the pinned pop-up / deck footer (the overlay sits above it at z-1200). */
 .lib-overlay-open .ql-fab { display:none; }
-body:has(#growthModal.open) .ql-fab { display:none; }   /* the FAB (z 1001) sat over the growth modal's buttons once its panel made it tall (#161 §4.5) */
+body:has(#growthModal.open) :is(.ql-fab, .home-fab, .dark-toggle) { display:none; }   /* the FAB (z 1001) sat over the growth modal's buttons once its panel made it tall (#161 §4.5) */
 .lib-deck-head .zi { width:var(--icon-lg); height:var(--icon-lg); color:var(--tc-rose); }
 .lib-deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
 .lib-deck-close { flex:0 0 auto; width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; }

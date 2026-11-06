@@ -321,6 +321,47 @@ test('E4: the form is locked once saved, and focus lands in the retype box (Vela
   await expect(page.locator('#gWeight')).toBeEnabled();
 });
 
+test('an off-chart weight on a date that already has one is asked about first: never "Keep both, use 95 kg" (Maren V-M-292-9)', async ({ page }) => {
+  await seed(page, [[30, 9.2], [0, 9.4]]);
+  await enter(page, 0, '95');
+  await expect(panel(page)).toContainText('95 kg is outside the range for her age');
+  await expect(page.locator('[data-action="gEntryKeep"]')).toHaveCount(0);
+  await page.click('#growthSaveUncheckedBtn');
+  await expect(page.locator('#qlToast')).toContainText("The fever card can't use this weight until it is fixed.");
+  expect(await page.evaluate(() => JSON.stringify(growthConfirm))).toBe('{}');
+});
+
+test('E4: confirming a newest weight that dropped ends without a tick, with the next step (Maren V-M-292-8)', async ({ page }) => {
+  await seed(page, [[200, 9.6], [3, 7.9]]);
+  await enter(page, 30, '9.8');
+  await expect(panel(page)).toContainText('has dropped more than usual for that time');
+  await page.fill('#gEntryRetype', '7.9');
+  await page.click('[data-action="gEntryConfirmNewest"]');
+  await expect(page.locator('#qlToast')).toContainText('If she has really lost weight, tell your doctor.');
+  await expect(page.locator('#qlToast svg')).toHaveCount(0);
+});
+
+test('past 60 months the same-date choice is still offered; only the jump check is skipped (Carina V-CA-292-8)', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(() => {
+    const w: any = window;
+    const dob = new Date(); dob.setHours(12, 0, 0, 0); dob.setDate(dob.getDate() - 1900);
+    w._profSave(Object.assign({}, profile.child, { dob: w.toDateStr(dob), sex: 'f' }), profile.place);
+    growthData = [{ date: w.today(), wt: 18.0, ht: null }]; growthConfirm = {};
+    w.switchTab('growth'); w.openGrowthModal();
+  });
+  await enter(page, 0, '18.5');
+  await expect(panel(page)).toContainText('Growth already has a weight for');
+  await page.click('[data-action="gEntryKeep"][data-arg="new"]');
+  expect(await weightsOn(page, await iso(page, 0))).toEqual([18.5]);
+});
+
+test('the corner buttons hide while the growth modal is open (Vela V-V-292-10)', async ({ page }) => {
+  await seed(page, [[40, 9.2], [9, 9.5]]);
+  const shown = await page.evaluate(() => ['.ql-fab', '.home-fab', '.dark-toggle'].map(s => { const el = document.querySelector(s); return el ? getComputedStyle(el).display : 'none'; }));
+  expect(shown).toEqual(['none', 'none', 'none']);
+});
+
 test('the helpers with no rows argument still read Growth (the chip path is unchanged); with rows they read as of the date', async ({ page }) => {
   await seed(page, [[40, 9.5], [3, 15.9]]);
   const r = await page.evaluate(() => { const w: any = window; const row = w.getLatestWeight(); return [w.gvWeightNeedsConfirm(row).askKind, w.gvWeightNeedsConfirm(row, growthData).askKind]; });

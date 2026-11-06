@@ -7794,8 +7794,11 @@ function renderInsightsCross() {
       if (r === last) return;
       let a = null;
       try { a = gvWeightNeedsConfirm(r, growthData); } catch (e) { a = null; }
-      if (!a || a.askKind !== 'amber') return;
-      drop.push(a.variant === 'implausible' && a.pair && (a.pair.badRow === 'a' || a.pair.reason === 'dob') ? a.pair.a : r);
+      // amber, or an unsettled same-date conflict — as the newest branch below (Ceres V-C-292-3).
+      if (!a || (a.askKind !== 'amber' && a.askKind !== 'samedate')) return;
+      if (a.variant === 'implausible' && a.pair && (a.pair.badRow === 'a' || a.pair.reason === 'dob')) drop.push(a.pair.a);
+      else if (a.variant === 'implausible' && a.pair && a.pair.badRow === 'both') drop.push(a.pair.a, r);   // Kael pair-note
+      else drop.push(r);
     });
     if (drop.length) wtEntries = wtEntries.filter(r => drop.indexOf(r) < 0);
   }
