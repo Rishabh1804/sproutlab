@@ -2081,6 +2081,7 @@ function openGrowthModal() {
   document.getElementById('gHeightConvert').style.display = 'none';
   const defaultUnit = localStorage.getItem('ziva_height_unit') || 'ft';
   document.getElementById('gHeightUnit').value = defaultUnit;
+  _gEntryClear();
   updateGrowthSaveBtn();
   openModal('growthModal');
 }
@@ -2102,6 +2103,9 @@ function updateGrowthSaveBtn() {
   const hasWeight = wtChecked && !isNaN(w) && w > 0;
   const hasHeight = htChecked && !isNaN(h) && h > 0;
   const hasContent = d && (hasWeight || hasHeight);
+  // A panel is bound to the date + weight it was drawn for: editing either clears it (#161 §4.5). Not after a
+  // save (step 'newest'): that panel is about a saved row.
+  if (_gEntry && _gEntry.step !== 'newest' && (d !== _gEntry.date || !hasWeight || w !== _gEntry.wt)) _gEntryClear();
   btn.style.opacity = hasContent ? '1' : '0.4';
   btn.style.pointerEvents = hasContent ? 'auto' : 'none';
 }
@@ -2155,28 +2159,212 @@ function getHeightInCm() {
   return val;
 }
 
-function addGrowthEntry() {
+// ── The entry-time weight check (#161 spec §4.5, PR 5; Architect rulings E1–E4, 2026-11-06) ──
+// On Save, before anything is written, the new weight is checked against the weigh-ins on or before its date
+// (gvWeightNeedsConfirm with the candidate rows). Steps, at most three, usually none:
+//   birth    — dated before the birth date: a hard stop, fix the date (E3);
+//   samedate — Growth has a different weight on that date: keep both (the one typed counts) or keep either (E1);
+//   jump     — the weight jumped, dropped or looks off (amber only; a calm "couldn't compare" saves, E2):
+//              retype it to confirm, or save unchecked (decision B — never a silent block);
+//   newest   — after saving a back-dated weight, the NEWEST weight now looks off: retype it, fix it, or Done (E4).
+// The panel is bound to what the boxes held when it was drawn; editing the date or weight clears it.
+let _gEntry = null;
+function _gEntryForm() {
   const d = document.getElementById('gDate').value;
   const wtChecked = document.getElementById('gWeightCheck').checked;
-  const htChecked = document.getElementById('gHeightCheck').checked;
   const w = parseFloat(document.getElementById('gWeight').value);
   const htCm = getHeightInCm();
-
-  if (!d) return;
   const hasWeight = wtChecked && !isNaN(w) && w > 0;
-  const hasHeight = htChecked && htCm && htCm > 0;
-  if (!hasWeight && !hasHeight) return;
-
-  growthData.push({
-    date: d,
-    wt: hasWeight ? w : null,
-    ht: hasHeight ? Math.round(htCm * 10) / 10 : null,
-  });
-  closeModal('growthModal');
-  _islMarkDirty('medical');
-  renderGrowth();
-  updateHeader();
+  const hasHeight = !!(document.getElementById('gHeightCheck').checked && htCm && htCm > 0);
+  if (!d || (!hasWeight && !hasHeight)) return null;
+  return { date: d, wt: hasWeight ? w : null, ht: hasHeight ? Math.round(htCm * 10) / 10 : null };
 }
+// The modal's buttons for a step: 'save' (the form), 'unchecked' (the jump panel), 'cancel', 'done'.
+function _gEntryBtns(mode) {
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.classList.toggle('d-none', !on); };
+  show('growthCancelBtn', mode !== 'done');
+  show('growthSaveBtn', mode === 'save');
+  show('growthSaveUncheckedBtn', mode === 'unchecked');
+  show('growthDoneBtn', mode === 'done');
+}
+function _gEntryClear() {
+  _gEntry = null;
+  const host = document.getElementById('gEntryCheck');
+  if (host) host.innerHTML = '';
+  _gEntryBtns('save');
+}
+function _gEntryShow(state, html, btns) {
+  _gEntry = state;
+  const host = document.getElementById('gEntryCheck');
+  if (host) host.innerHTML = html;
+  _gEntryBtns(btns);
+}
+// The folded "Why" row (DESIGN_PRINCIPLES §11), the 4b anatomy and toggle (feLoadWhy); always drawn folded.
+function _gEntryWhyHtml(jc, extra) {
+  const body = _paraConfirmWhy(jc, jc.anchor ? jc.anchor.wt : '', 'entry') + (extra ? ' ' + extra : '');
+  return '<div class="fe-load-prow" data-where="gEntry"><button type="button" class="fe-load-prow-head" data-action="feLoadWhy" aria-expanded="false">'
+    + '<span class="fe-load-prow-txt"><span class="fe-load-prow-t">Why</span><span class="fe-load-prow-d">' + escHtml(_paraConfirmTeaser(jc)) + '</span></span>'
+    + '<span class="fe-load-prow-chev">' + zi('arrow-right') + '</span></button>'
+    + '<div class="fe-load-prow-body"><div class="fe-para-confirm-text">' + escHtml(body) + '</div></div></div>';
+}
+function _gEntryRetypeHtml(wt, action, label, kind, date) {
+  return '<div class="fe-para-confirm-text">If ' + escHtml(_paraKgText(wt)) + ' is right, type it again.</div>'
+    + '<div class="fe-para-retype"><input id="gEntryRetype" class="ep-edit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Type the weight again in kilograms">'
+    + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="' + action + '" data-arg="' + escAttr(date || '') + '" data-arg2="' + escAttr(String(wt)) + '" data-arg3="' + escAttr(kind || '') + '">' + escHtml(label) + '</button></div>'
+    + '<div id="gEntryRetypeErr" class="fe-para-retype-err" role="alert"></div>';
+}
+const _GENTRY_UNCONFIRMED = 'Until it is confirmed, the fever card won\'t work out a paracetamol dose from it.';
+// The candidate rows: the typed weight added last (so it is its date's anchor — "the one typed counts", E1);
+// keep 'new' drops every other weight on that date first. ('old:<grams>' never reaches the check: nothing new.)
+function _gEntryCandidate(f, keep) {
+  const rows = gvMeasureRows('wt').map(r => ({ date: r.date, wt: r.wt }));
+  const out = keep === 'new' ? rows.filter(r => r.date !== f.date) : rows;
+  const row = { date: f.date, wt: f.wt };
+  return { rows: out.concat([row]), row };
+}
+function addGrowthEntry() {
+  const f = _gEntryForm();
+  if (!f) return;
+  if (f.wt == null) { _gEntryCommit(f, {}); return; }   // height only: never checked
+  // E3 — a weigh-in before the birth date: the date is wrong, and only the date can fix it.
+  const life = gvDaysBetween(toDateStr(DOB), f.date);
+  if (Number.isFinite(life) && life < 0) {
+    _gEntryShow({ step: 'birth', date: f.date, wt: f.wt }, '<div class="fe-para-confirm"><div class="fe-para-confirm-title">' + zi('warn') + ' Check the date</div>'
+      + '<div class="fe-para-confirm-text">' + escHtml(_paraDateLabel(f.date) + ' is before ' + pron('poss') + ' birth date, so this weight can\'t be saved on that day.') + '</div>'
+      + '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="gEntryFixDate">Fix the date</button></div></div>', 'cancel');
+    return;
+  }
+  const onDate = gvMeasureRows('wt').filter(r => r.date === f.date);
+  // The same weight on the same date is a re-save: no second weight row, no panel (a height still saves).
+  if (onDate.some(r => r.wt === f.wt)) { _gEntryCommit(f, { resave: true }); return; }
+  // E1 — a different weight on the same date: keep both (the one typed counts), or keep either.
+  if (onDate.length) {
+    const kept = [];
+    onDate.forEach(r => { if (kept.indexOf(r.wt) < 0) kept.push(r.wt); });
+    let html = '<div class="fe-para-confirm"><div class="fe-para-confirm-title">' + zi('warn') + ' ' + escHtml('Growth already has a weight for ' + _paraDateLabel(f.date)) + '</div>'
+      + '<div class="fe-para-pair"><span>Saved ' + kept.map(w => '<span class="fe-para-pair-wt">' + escHtml(_paraKgText(w)) + '</span>').join(' and ') + '</span>'
+      + '<span>You typed <span class="fe-para-pair-wt">' + escHtml(_paraKgText(f.wt)) + '</span></span></div>'
+      + '<div class="fe-para-confirm-text">Keep both, or keep just one. If you keep both, the one you typed counts.</div>'
+      + '<div class="fe-para-confirm-actions">'
+      + '<button type="button" class="btn btn-peach" data-action="gEntryKeep" data-arg="both">' + escHtml('Keep both, use ' + _paraKgText(f.wt)) + '</button>'
+      + '<button type="button" class="btn btn-ghost" data-action="gEntryKeep" data-arg="new">' + escHtml('Keep ' + _paraKgText(f.wt) + ' only') + '</button>'
+      + kept.map(w => '<button type="button" class="btn btn-ghost" data-action="gEntryKeep" data-arg="' + escAttr('old:' + Math.round(w * 1000)) + '">' + escHtml('Keep ' + _paraKgText(w) + ' only') + '</button>').join('')
+      + '</div></div>';
+    _gEntryShow({ step: 'samedate', date: f.date, wt: f.wt }, html, 'cancel');
+    return;
+  }
+  _gEntryJumpStep(f, null);
+}
+// After the same-date choice (or none): the jump check on the candidate rows, amber only (E2).
+function _gEntryJumpStep(f, keep) {
+  const c = _gEntryCandidate(f, keep);
+  let ask = null;
+  try { ask = gvEntryNeedsConfirm(c.row, c.rows, keep === 'both'); } catch (e) { ask = null; }   // the chip still checks at dose time
+  if (!ask || ask.askKind !== 'amber' || !ask.pair || !ask.pair.a || !ask.pair.b) { _gEntryCommit(f, { keep }); return; }
+  const latest = getLatestWeight();
+  const isNewest = !latest || f.date >= latest.date;
+  const html = '<div class="fe-para-confirm"><div class="fe-para-confirm-title">' + zi('warn') + ' Check this weight</div>'
+    + _paraPairHtml(ask.pair, isNewest ? 'Newest' : 'This weight', 'Before')
+    + _gEntryRetypeHtml(f.wt, 'gEntryConfirm', 'Confirm and save', 'amber', f.date)
+    + _gEntryWhyHtml(ask, _GENTRY_UNCONFIRMED) + '</div>';
+  _gEntryShow({ step: 'jump', date: f.date, wt: f.wt, keep, shownKind: 'amber' }, html, 'unchecked');
+  const inp = document.getElementById('gEntryRetype'); if (inp) inp.focus();
+}
+function gEntryKeep(arg) {
+  const f = _gEntryForm();
+  if (!_gEntry || _gEntry.step !== 'samedate' || !f || f.date !== _gEntry.date || f.wt !== _gEntry.wt) { _gEntryClear(); return; }
+  if (arg.indexOf('old:') === 0) { _gEntryCommit(f, { keep: arg }); return; }
+  _gEntryJumpStep(f, arg === 'both' ? 'both' : 'new');
+}
+function _gEntryTyped(id) { const el = document.getElementById(id); return parseFloat(String(el ? el.value : '').trim().replace(',', '.')); }
+function _gEntrySay(msg) { const e = document.getElementById('gEntryRetypeErr'); if (e) e.textContent = msg; }
+// Step 3's retype (decision B): typed into an empty box, compared at 0.01 kg with the weight box, comma decimal accepted.
+function gEntryConfirm() {
+  const f = _gEntryForm();
+  if (!_gEntry || _gEntry.step !== 'jump' || !f || f.date !== _gEntry.date || f.wt !== _gEntry.wt) { _gEntryClear(); return; }
+  const typed = _gEntryTyped('gEntryRetype');
+  if (!Number.isFinite(typed) || typed <= 0) { _gEntrySay('Type the weight in kg, for example 9.5.'); return; }
+  if (Math.round(typed * 100) !== Math.round(f.wt * 100)) {
+    _gEntrySay('You typed ' + _paraKgText(typed) + '; the weight box has ' + _paraKgText(f.wt) + '. If the weight box is wrong, fix it there.');
+    return;
+  }
+  _gEntryCommit(f, { keep: _gEntry.keep, confirmKind: _gEntry.shownKind });
+}
+function gEntrySaveUnchecked() {
+  const f = _gEntryForm();
+  if (!_gEntry || _gEntry.step !== 'jump' || !f || f.date !== _gEntry.date || f.wt !== _gEntry.wt) { _gEntryClear(); return; }
+  _gEntryCommit(f, { keep: _gEntry.keep });
+}
+function gEntryFixDate() { const d = document.getElementById('gDate'); if (d) { d.focus(); if (typeof d.showPicker === 'function') { try { d.showPicker(); } catch (e) {} } } }
+// The write: the same-date choice, the new row, then the confirms the parent made (only what was shown — never a
+// fallback, §4.5), then E4's look at the newest weight.
+function _gEntryCommit(f, o) {
+  const before = getLatestWeight();
+  let beforeAsk = null;
+  try { beforeAsk = before ? gvWeightNeedsConfirm(before) : null; } catch (e) { beforeAsk = null; }
+  const g = w => String(Math.round(w * 1000));
+  let addWt = f.wt != null && !o.resave;
+  if (f.wt != null && (o.keep === 'new' || (o.keep && o.keep.indexOf('old:') === 0))) {
+    const keepG = o.keep === 'new' ? null : o.keep.slice(4);
+    if (keepG) addWt = false;
+    for (let i = growthData.length - 1; i >= 0; i--) {
+      const r = growthData[i];
+      if (!r || r.date !== f.date || typeof r.wt !== 'number' || (keepG && g(r.wt) === keepG)) continue;
+      if (r.ht) r.wt = null; else growthData.splice(i, 1);   // a row left with nothing is removed
+    }
+  }
+  if (addWt || f.ht) growthData.push({ date: f.date, wt: addWt ? f.wt : null, ht: f.ht });
+  _islMarkDirty('medical');
+  renderGrowth();   // sorts (stable: the typed weight stays last on its date) and saves
+  updateHeader();
+  let changed = false;
+  if (addWt) {
+    const row = gvMeasureRows('wt').filter(r => r.date === f.date && r.wt === f.wt).pop();
+    if (row && o.keep === 'both') changed = !gvConfirmRecord(row, 'samedate', null, growthData) || changed;
+    if (row && o.confirmKind) changed = !gvConfirmRecord(row, o.confirmKind, null, growthData) || changed;
+  }
+  // E4: a back-dated weight made the newest weight look off — ask about it here, the scale still in mind.
+  const after = getLatestWeight();
+  if (after && !(after.date === f.date && after.wt === f.wt)) {
+    let afterAsk = null;
+    try { afterAsk = gvWeightNeedsConfirm(after); } catch (e) { afterAsk = null; }
+    const already = beforeAsk && before && before.date === after.date && before.wt === after.wt && beforeAsk.askKind === 'amber';
+    if (afterAsk && afterAsk.askKind === 'amber' && !already && afterAsk.pair && afterAsk.pair.a && afterAsk.pair.b) {
+      const p = afterAsk.pair, mine = addWt && p.a.date === f.date && p.a.wt === f.wt;
+      const html = '<div class="fe-para-confirm"><div class="fe-para-confirm-text">' + zi('check') + ' ' + escHtml(addWt ? 'Saved ' + _paraKgText(f.wt) + ' for ' + _paraDateLabel(f.date) : 'Saved') + '</div>'
+        + '<div class="fe-para-confirm-title">' + zi('warn') + ' Now check the newest weight</div>'
+        + _paraPairHtml(p, 'Newest', mine ? 'You just added' : 'Before')
+        + _gEntryRetypeHtml(after.wt, 'gEntryConfirmNewest', 'Confirm', afterAsk.askKind, after.date)
+        + _gEntryWhyHtml(afterAsk, _GENTRY_UNCONFIRMED)
+        + '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="gEntryFixInGrowth">Fix it in Growth</button></div></div>';
+      _gEntryShow({ step: 'newest', date: after.date, wt: after.wt }, html, 'done');
+      return;
+    }
+  }
+  _gEntryClear();
+  closeModal('growthModal');
+  if (changed) showQLToast('Saved. The weight check changed, so the fever card will ask about it.');
+  else if (o.confirmKind) showQLToast(zi('check') + ' Weight confirmed and saved');
+}
+// Step 4's retype: the newest weight, as the chip would record it (it is the anchor: no rows argument).
+function gEntryConfirmNewest(date, wtStr, shownKind) {
+  if (!_gEntry || _gEntry.step !== 'newest') return;
+  const shown = Number(wtStr);
+  const typed = _gEntryTyped('gEntryRetype');
+  if (!Number.isFinite(typed) || typed <= 0) { _gEntrySay('Type the weight in kg, for example 9.5.'); return; }
+  const row = gvMeasureRows('wt').filter(r => r.date === date && r.wt === shown).pop();
+  if (!row) { _gEntryClear(); closeModal('growthModal'); showQLToast('That weight has changed in Growth. Check it there.'); return; }
+  if (Math.round(typed * 100) !== Math.round(shown * 100)) {
+    _gEntrySay('You typed ' + _paraKgText(typed) + '; Growth has ' + _paraKgText(shown) + ' on that date. If Growth is wrong, tap Fix it in Growth.');
+    return;
+  }
+  const ok = gvConfirmRecord(row, shownKind || null);
+  _gEntryClear();
+  closeModal('growthModal');
+  showQLToast(ok ? zi('check') + ' Weight confirmed' : 'The weight check changed, so the fever card will ask about it.');
+}
+function gEntryFixInGrowth() { _gEntryClear(); closeModal('growthModal'); switchTab('growth'); }
+function gEntryDone() { _gEntryClear(); closeModal('growthModal'); }
 
 // Height display helper — converts cm to the user's preferred unit
 function formatHeight(cm) {

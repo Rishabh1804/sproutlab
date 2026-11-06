@@ -505,31 +505,23 @@ function _paraChangeWords(changeG, gapDays) {
   const amt = g < 100 ? g + ' g' : (g / 1000).toFixed(1) + ' kg';
   return amt + ' ' + (changeG > 0 ? 'more' : 'less') + ' in ' + _paraGapWords(gapDays);
 }
-// Why the check asked, for a tired parent: what it compared and what to do. Jump, loss and conflict
-// read amber; "couldn't compare" reads calm. The escape line is always there (Vela, Maren). Every claim
-// comes from the check's own pairs (spec §9, Cipher #288 finding 9 — Maren V-M-290-3).
-function _paraConfirmHtml(chip) {
-  const jc = chip.check || {};
-  const v = jc.variant, p = jc.pair;
-  const amber = v === 'jump-up' || v === 'jump-down' || v === 'samedate' || v === 'implausible';
-  const okPair = (jc.pairs || []).find(x => x && x.ok);
-  let html = '<div class="fe-para-confirm' + (amber ? '' : ' fe-para-confirm--calm') + '">';
-  html += '<div class="fe-para-confirm-title">' + (amber ? zi('warn') + ' ' : '') + 'Check the weight before working out a dose</div>';
+// Two dated weights and the change between them — the ONE pair line for the chip and the Growth entry check
+// (#161 §4.5). Labelled, so the order can't be misread (Vela V-V-290-4).
+function _paraPairHtml(p, bLabel, aLabel) {
   const dated = (label, r) => '<span>' + escHtml(label) + ' <span class="fe-para-pair-wt">' + escHtml(_paraKgText(r.wt)) + '</span> · ' + escHtml(_paraDateLabel(r.date)) + '</span>';
-  if (p && p.a && p.b && v === 'samedate') {
-    // One flex item, so "and" and the comma stay with their weights (Vela V-V-290-2).
-    html += '<div class="fe-para-pair"><span><span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.b.wt)) + '</span> and <span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.a.wt)) + '</span>, both on ' + escHtml(_paraDateLabel(p.b.date)) + '</span></div>';
-  } else if (p && p.a && p.b && p.a.date !== p.b.date) {
-    // Labelled, so the order can't be misread (Vela V-V-290-4).
-    const change = _paraChangeWords(p.changeG, p.gapDays);
-    html += '<div class="fe-para-pair">' + dated('Newest', p.b) + dated('Before', p.a) + (change ? '<span class="fe-para-pair-change">' + escHtml(change) + '</span>' : '') + '</div>';
-  } else {
-    html += '<div class="fe-para-pair">' + dated('Newest', { wt: chip.wt, date: chip.date }) + '</div>';
-  }
+  const change = _paraChangeWords(p.changeG, p.gapDays);
+  return '<div class="fe-para-pair">' + dated(bLabel, p.b) + dated(aLabel, p.a) + (change ? '<span class="fe-para-pair-change">' + escHtml(change) + '</span>' : '') + '</div>';
+}
+// Why the check asked, in words — the ONE reason builder for the chip ('dose') and the Growth entry check
+// ('entry', #161 §4.5: no illness frame, a drop reads "a typo, or a real drop"). Every claim comes from the
+// check's own pairs (PC-10: one state, one answer).
+function _paraConfirmWhy(jc, wt, ctx) {
+  const v = jc.variant, p = jc.pair;
+  const okPair = (jc.pairs || []).find(x => x && x.ok);
   let why;
   if (v === 'jump-up') why = 'That is more than children usually gain in that time, so one of the numbers may be a typo.';
-  else if (v === 'jump-down') why = 'That is a bigger drop than usual for that time. It may be a typo, or a real drop while ' + _paraSubjOr('your child') + ' is unwell.';
-  else if (v === 'samedate') why = 'Growth has two different weights on the same day, so the dose can\'t tell which is right. If ' + _paraKgText(p && p.a ? p.a.wt : '') + ' is the right one, tap Change the weight and remove ' + _paraKgText(chip.wt) + '.';
+  else if (v === 'jump-down') why = 'That is a bigger drop than usual for that time. It may be a typo, or a real drop' + (ctx === 'entry' ? '.' : ' while ' + _paraSubjOr('your child') + ' is unwell.');
+  else if (v === 'samedate') why = 'Growth has two different weights on the same day, so the dose can\'t tell which is right. If ' + _paraKgText(p && p.a ? p.a.wt : '') + ' is the right one, tap Change the weight and remove ' + _paraKgText(wt) + '.';
   else if (v === 'implausible') {
     // Only an off EARLIER row, or a row dated before the birth date, reaches here: the chip's own gate
     // stops an off newest weight first (Kael V-K-290-2).
@@ -548,6 +540,36 @@ function _paraConfirmHtml(chip) {
   else if (jc.reason === 'age') why = 'These weigh-ins are too far apart to check at ' + pron('poss') + ' age.';
   else if (jc.reason === 'nosex') why = 'The weight can\'t be checked until your child\'s sex is set in Settings.';
   else why = 'The weight couldn\'t be checked against an earlier one.';
+  return why;
+}
+// The reason in a few words, for a folded "Why" row's teaser (§11).
+function _paraConfirmTeaser(jc) {
+  const v = jc && jc.variant;
+  if (v === 'jump-up') return 'More than children usually gain in that time';
+  if (v === 'jump-down') return 'A bigger drop than usual for that time';
+  if (v === 'implausible') return 'A weight looks off for ' + pron('poss') + ' age';
+  if (v === 'samedate') return 'Two weights on one day';
+  return 'The weight couldn\'t be checked';
+}
+// Why the check asked, for a tired parent: what it compared and what to do. Jump, loss and conflict
+// read amber; "couldn't compare" reads calm. The escape line is always there (Vela, Maren). Every claim
+// comes from the check's own pairs (spec §9, Cipher #288 finding 9 — Maren V-M-290-3).
+function _paraConfirmHtml(chip) {
+  const jc = chip.check || {};
+  const v = jc.variant, p = jc.pair;
+  const amber = v === 'jump-up' || v === 'jump-down' || v === 'samedate' || v === 'implausible';
+  let html = '<div class="fe-para-confirm' + (amber ? '' : ' fe-para-confirm--calm') + '">';
+  html += '<div class="fe-para-confirm-title">' + (amber ? zi('warn') + ' ' : '') + 'Check the weight before working out a dose</div>';
+  const dated = (label, r) => '<span>' + escHtml(label) + ' <span class="fe-para-pair-wt">' + escHtml(_paraKgText(r.wt)) + '</span> · ' + escHtml(_paraDateLabel(r.date)) + '</span>';
+  if (p && p.a && p.b && v === 'samedate') {
+    // One flex item, so "and" and the comma stay with their weights (Vela V-V-290-2).
+    html += '<div class="fe-para-pair"><span><span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.b.wt)) + '</span> and <span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.a.wt)) + '</span>, both on ' + escHtml(_paraDateLabel(p.b.date)) + '</span></div>';
+  } else if (p && p.a && p.b && p.a.date !== p.b.date) {
+    html += _paraPairHtml(p, 'Newest', 'Before');
+  } else {
+    html += '<div class="fe-para-pair">' + dated('Newest', { wt: chip.wt, date: chip.date }) + '</div>';
+  }
+  const why = _paraConfirmWhy(jc, chip.wt, 'dose');
   html += '<div class="fe-para-confirm-text">' + escHtml(why) + '</div>';
   html += '<div class="fe-para-confirm-text">If ' + escHtml(_paraKgText(chip.wt)) + ' is right, type it here to confirm it.</div>';
   html += '<div class="fe-para-retype"><input id="feWtRetype" class="ep-edit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Type the newest weight in kilograms">'

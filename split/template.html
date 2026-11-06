@@ -3182,6 +3182,8 @@
         </label>
         <input type="number" id="gWeight" class="modal-input" step="0.01" placeholder="Weight (kg)" oninput="autoCheckField('gWeightCheck');updateGrowthSaveBtn()">
       </div>
+      <!-- The entry-time weight check (#161 spec §4.5): filled by medical.js when the check asks -->
+      <div id="gEntryCheck"></div>
       <!-- Height section with checkbox -->
       <div>
         <label class="collapse-hdr-flex settings-sub" style="cursor:pointer;margin-bottom:4px;">
@@ -3198,9 +3200,11 @@
         <div id="gHeightConvert" style="font-size:var(--fs-sm);color:var(--mid);padding-left:2px;display:none;"></div>
       </div>
     </div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" data-close-modal="growthModal">Cancel</button>
+    <div class="modal-btns" id="growthModalBtns">
+      <button class="btn btn-ghost" id="growthCancelBtn" data-close-modal="growthModal">Cancel</button>
       <button class="btn btn-rose" id="growthSaveBtn" data-action="addGrowthEntry">Save</button>
+      <button class="btn btn-ghost d-none" id="growthSaveUncheckedBtn" data-action="gEntrySaveUnchecked">Save unchecked</button>
+      <button class="btn btn-ghost d-none" id="growthDoneBtn" data-action="gEntryDone">Done</button>
     </div>
   </div>
 </div>
