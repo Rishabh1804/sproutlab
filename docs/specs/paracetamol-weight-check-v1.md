@@ -65,6 +65,65 @@ sha256: girls-2mon `8bb8ccd218175d205b7e72abd8248aef7741d4e602b0929af047e9e49013
 - `_emDocVitals` (diet.js; also read by intelligence-cards.js:1921 / :2054 and `_emDocWho`) prints the weigh-in date always and "not yet checked" when the check trips. The doctor-visit export (medical.js:742) does the same or is logged DEFERRABLE under Maren.
 - `renderFeverEpisodeCard` joins `SYNC_RENDER_DEPS[KEYS.growth]`.
 
+### 4.5 The entry-time check (`addGrowthEntry`, PR 5) — DRAFT, for the Architect's review
+**Status:** design draft (Lyra, 2026-11-06). Not built; nothing is wired until the Architect signs off the design and the mock. Closes Maren D4 and Ceres C161-3: a jumped or implausible weight is caught when the parent types it, with the scale reading in hand, not first at the dose chip during an illness.
+
+**When it runs.** On Save in the Add Measurement modal, when a weight is entered. Height-only entries are never checked. The check runs before anything is written, on the candidate rows: Growth's weight rows plus the new row (after any same-date choice below), taken **as of the entered date** (rows dated on or before it). So a back-dated weight is checked against the weigh-ins before it, and a weight on the latest date is exactly what the chip will later check. A weight past 60 months (`outofrange`) saves with no panel: the check doesn't cover that age and the chip already says so.
+
+**1. Same date, different weight (`samedate`).** Asked first, before any jump check. Growth's sync identity for a growth row is its date (`SYNC_ENTRY_IDENTITY[KEYS.growth] = ['date']`), so two weights on one date are a state sync can't hold reliably; entry never creates one.
+- Panel: "Growth already has 9.4 kg for 6 Nov" / "You typed 9.5 kg." Two actions: **Use 9.5 kg** and **Keep 9.4 kg**. No "keep both".
+- Use: every other weight on that date leaves its row (`wt` set to null; a row left with neither weight nor height is removed), then the new row is added, then the jump check runs on the result (step 2).
+- Keep: the typed weight is dropped; a height typed with it still saves.
+- The same weight on the same date is a re-save: no second weight row is added (a height typed with it still saves).
+- Confirms for a replaced weight stay (no tombstones; §4.3 accepted residual).
+
+**2. The jump check trips** (`jump-up`, `jump-down`, `implausible`, `nocompare`, `error`), and existing confirms (`growthConfirm`) don't already cover the ask. The modal keeps its fields and shows the panel under the weight box; Save turns into the panel's actions. Editing the weight box hides the panel and brings Save back (a stale panel never stays).
+- **The 6-second rule (§11):** action title, the pair, one instruction, actions only; the reason is folded into one disclosure row with a teaser.
+  - Title. Amber: "Check this weight". Calm: "Confirm this weight".
+  - The pair, always visible: "Newest 15.9 kg · 6 Nov / Before 9.5 kg · 24 Sep · 6.4 kg more in 6 weeks" (the chip's own pair line, from the check's `pair`; never re-derived).
+  - One instruction: "If 15.9 kg is right, type it again." An empty retype box and **Confirm and save**.
+  - Folded "Why?" row, with the teaser being the reason in a few words ("More than children usually gain in 6 weeks"). The body holds the full reason sentence and what happens if it isn't confirmed: "Until it is confirmed, the fever card won't work out a paracetamol dose from it."
+  - Secondary ghost action: **Save without checking**.
+- Tiers: jump, drop and implausible read amber; couldn't-compare (`noprev`, `gap`, `age`, `nosex`, `error`) reads calm. The calm case still asks. Entry is the cheapest moment to retype (the scale is in front of the parent), and a calm confirm made now saves a retype at 2 AM.
+- Entry reason copy has no illness frame: a drop reads "It may be a typo, or a real drop." (the chip's version adds "while {subj} is unwell"). One shared builder serves both surfaces, with the context as a parameter (PC-10: one state, one answer).
+- **A weigh-in dated before the birth date:** "6 Nov 2024 is before {poss} birth date. Check the date." Only the date can fix this, so no retype is offered. Actions: fix the date (focus it) or Cancel. *(This is the only hard stop. Architect's call; see question 3.)*
+
+**3. The retype.** Typed into an empty box (decision B). `parseFloat` with a comma decimal accepted, compared at 0.01 kg, non-finite rejected; the same rules as `feConfirmWeight`.
+- Mismatch: "You typed 9.5 kg; the weight box has 15.9 kg. If the weight box is wrong, fix it there." Nothing is saved, and the retype box keeps focus.
+- Match: write the row (and any same-date Use), save through `renderGrowth`, then record the confirm with `gvConfirmRecord(row, shownKind)`, where `shownKind` is the `askKind` the panel was drawn with.
+  - It records **only the shown kind**, never more. A calm entry confirm never covers a jump later evidence reveals (§4.3).
+  - The **fallback is never used at entry.** `fallbackKind` remains R1's "{wt} kg is right" path only, and stays refused while the check asks (Carina V-CA-291-13).
+  - If the check changed between drawing the panel and the tap (a sync receive landed), the row stays saved but no confirm is recorded. Toast: "Saved. The weight check changed, so the fever card will ask about it."
+- A passing check records nothing (nothing was asked).
+- An entry confirm counts exactly like a chip confirm. It clears the chip, and it makes the weight the leftover-risk flow's reference weight (§5.1: confirmed and not asking → W_ref = latest).
+
+**4. Never silently blocks (decision B).** Every weight outcome saves through one visible choice: Confirm and save, Use / Keep, or Save without checking. "Save without checking" writes the row unconfirmed. The chip then asks at dose time, exactly as today, so nothing is lost and nothing gets a dose unasked. The one exception is the before-birth date, which offers no save path (question 3).
+
+**Helpers (core.js, Carina).** `gvWeightNeedsConfirm(row, rows)` and `gvConfirmRecord(row, shownKind, fallbackKind, rows)` gain an optional `rows` argument: an explicit source, taken as of `row.date`. `_gvJumpAfterSamedate(row, rows)` follows. With no `rows` argument, the chip's behaviour is unchanged (today's calls stay byte-identical). The pre-save check calls `gvWeightNeedsConfirm(candidate, candidateRows)`. The post-save record calls it with `gvMeasureRows('wt')` as of the date, so it re-checks the live state and refuses a changed ask.
+
+**Surface.** The panel reuses the confirm block's anatomy (`.fe-para-confirm`, `.fe-para-pair`, `.fe-para-retype`; amber and calm tiers) plus one disclosure row. It sits in a new `#gEntryCheck` container in the growth modal. House `.btn`, 44 px, stacks at large zoom, U+00A0 before escHtml, `data-action` only: the new markup carries no inline handler or style (the modal's existing inline `oninput`/`style` attributes are pre-existing HR-2/HR-3 debt, logged and left alone unless the core trio asks).
+
+**Summon set (expected; confirm with `pnpm qa-route`).** Maren (medical.js, primary), Carina (core.js helpers + the growth / growthConfirm write path), Kael (consult on the jump-check engine and the shared reason builder in intelligence-illness.js), and the core trio Maren → Ceres → Vela for template.html (+ styles.css if the disclosure row needs a class). Cipher Edict V last.
+
+**Tests (e2e).**
+- 9.5 → 15.9 kg at 14 months shows the amber panel. A matching retype saves the row and records `amber`; the chip then reaches `pick` or `ok`.
+- A mismatch saves nothing.
+- Save without checking saves the row unconfirmed, and the chip reads `confirm`.
+- Same date: Use replaces the old weight (height kept); Keep drops the typed weight; an equal weight adds no second row.
+- A back-dated typo is checked against its own earlier weigh-ins.
+- `noprev` shows the calm panel.
+- A height-only entry and a passing weight close straight away with no panel.
+- A sync receive between render and tap records nothing.
+- A before-birth date offers no save.
+- No-`rows` calls to the helpers are unchanged (the existing chip tests stay green).
+
+**Left out (DEFERRABLE, to log at build).**
+- A back-dated entry can make the *newest* weight's check ask. The chip shows that at dose time; entry doesn't announce it.
+- The date input has no `max` (a future-dated row becomes "latest").
+- Two rows on one date for height (the date-identity merge) is pre-existing.
+- The modal's inline handlers and styles (HR-2/HR-3).
+- A "(checked)" marker in Growth history (§9).
+
 ## 5. The leftover-risk flow (decision C; PR 4)
 ### 5.1 Reference weight
 - **D** = the 24 h total ÷ the dosing weight. **R** = the 24 h total ÷ **W_ref** (R ≥ D).
@@ -134,7 +193,7 @@ Worst true load that passes the check (four top doses, a typo at the band edge, 
 4. **Split at build into 4a and 4b** (so each review stays tractable):
    - **4a:** `KEYS.growthConfirm` (+ sync, merge, render deps); the chip `confirm` state wired to `gvWeightJumpCheck` (`gvWeightNeedsConfirm`), the retype UI and the confirm block; `noweight` + fail-closed unknown-state branches and `PARA_CHIP_STATES`; `_emDocVitals` and the doctor-visit export print the weigh-in date and "not yet checked"; the confirmed-loss line; `renderFeverEpisodeCard` in `SYNC_RENDER_DEPS[KEYS.growth]`; Ceres V-C-288-1 (the growth-vs-meals insight leaves out a flagged, unconfirmed newest weight). The interim ceiling **stays** in 4a: decision C accepts the residual only with the leftover-risk flow in place.
    - **4b:** the leftover-risk flow (§5) and removing the interim ceiling (`_paraInterimCeilingOk`, §4.1). Summon: all five Governors + core trio for styles.css; name Maren by hand on `PARA_LOAD_THRESHOLDS` (qa-route won't route it).
-5. Next: the entry-time check in `addGrowthEntry` on the same helper (closes Maren D4).
+5. Next: the entry-time check in `addGrowthEntry` on the same helper (closes Maren D4, Ceres C161-3). Design: §4.5 (draft).
 Each PR: canon-cc-008 chain, then Cipher.
 
 ## 8. Self-tests
