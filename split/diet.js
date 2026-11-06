@@ -7782,11 +7782,25 @@ function renderInsightsCross() {
   // confirmed is left out, so this insight never reads a typo the dose chip is asking about (Ceres
   // V-C-288-1, PC-10).
   let wtEntries = gvWeightRows();
+  // Every date reduced to its last row — the one that counts (the entry's "keep both", #161 §4.5 E1) and the one
+  // the check and the chip read — so a second weight on a date can't carry the number in (Ceres V-C-290-1,
+  // V-C-292-2).
+  wtEntries = wtEntries.filter((r, i, a) => i === a.length - 1 || a[i + 1].date !== r.date);
+  // An earlier weight that fails its own check as of its date (a back-dated weight saved unchecked) and nobody
+  // confirmed is left out too — or, when its comparator is the off row, the comparator (Ceres V-C-292-1, the
+  // reader half of C161-3; Cipher #288 finding 8).
+  { const last = wtEntries[wtEntries.length - 1], drop = [];
+    wtEntries.forEach(r => {
+      if (r === last) return;
+      let a = null;
+      try { a = gvWeightNeedsConfirm(r, growthData); } catch (e) { a = null; }
+      if (!a || a.askKind !== 'amber') return;
+      drop.push(a.variant === 'implausible' && a.pair && (a.pair.badRow === 'a' || a.pair.reason === 'dob') ? a.pair.a : r);
+    });
+    if (drop.length) wtEntries = wtEntries.filter(r => drop.indexOf(r) < 0);
+  }
   { const lw = wtEntries[wtEntries.length - 1];
     if (lw) {
-      // The newest date reduced to the row the check and the chip read, so a second weight on that date
-      // (a conflict or a re-save) can't carry the number in (Ceres V-C-290-1).
-      wtEntries = wtEntries.filter(r => r.date !== lw.date || r === lw);
       const jc = gvWeightNeedsConfirm(lw);
       if (jc && jc.variant === 'implausible' && jc.pair) {
         // Drop the row that looks off — the earlier one when that is the bad row (Ceres V-C-290-3).

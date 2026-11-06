@@ -2084,6 +2084,11 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 @keyframes popIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
 .modal h3 { font-family:'Fraunces', serif; font-size:var(--fs-xl); margin-bottom:var(--sp-16); }
 .modal-btns { display:flex; gap:var(--sp-8); justify-content:flex-end; margin-top:var(--sp-16); }
+/* The growth modal scrolls when the entry check's panel makes it tall, so its exits stay reachable on a short
+   phone at large text (#161 §4.5, Vela V-V-292-1); its own buttons are 44 px and stack at large zoom (V-V-292-2). */
+#growthModal > .modal { max-height:calc(100vh - 2 * var(--sp-16)); max-height:calc(100dvh - 2 * var(--sp-16)); overflow-y:auto; }
+#growthModalBtns .btn { min-height:44px; }
+:root[data-zoom="med"] #growthModalBtns, :root[data-zoom="high"] #growthModalBtns { flex-direction:column; align-items:stretch; }
 .modal-input {
   width:100%; padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
   border:1.5px solid var(--rose-light);
@@ -3593,6 +3598,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .ep-time-row .ep-now-btn:active { background:var(--surface); }
 [data-theme="dark"] .ep-edit-sheet { background:var(--surface); }
 [data-theme="dark"] .ep-edit-input { background:var(--base); border-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .ep-edit-input:focus { border-color:var(--indigo); }   /* the rule above outranked the focus border (Vela V-V-292-8) */
 [data-theme="dark"] .ep-time-row input[type="time"] { background:var(--base); border-color:rgba(255,255,255,0.08); color:var(--text); }
 [data-theme="dark"] .ep-time-row .ep-now-btn { background:var(--base); border-color:rgba(255,255,255,0.08); color:var(--light); }
 
@@ -11762,6 +11768,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 /* hide the quick-log FAB while a Library overlay is open so it can't clutter or
    intercept the pinned pop-up / deck footer (the overlay sits above it at z-1200). */
 .lib-overlay-open .ql-fab { display:none; }
+body:has(#growthModal.open) .ql-fab { display:none; }   /* the FAB (z 1001) sat over the growth modal's buttons once its panel made it tall (#161 §4.5) */
 .lib-deck-head .zi { width:var(--icon-lg); height:var(--icon-lg); color:var(--tc-rose); }
 .lib-deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
 .lib-deck-close { flex:0 0 auto; width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; }

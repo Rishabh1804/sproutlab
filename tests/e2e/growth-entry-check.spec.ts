@@ -10,7 +10,8 @@ declare let growthData: any; declare let growthConfirm: any; declare let profile
 // Kael (consult: the jump-check engine and the shared reason builder), core trio (template.html).
 
 async function boot(page: Page) {
-  await page.addInitScript(() => { try { localStorage.setItem('ziva_guide_seen', '1'); } catch (e) {} });
+  // The first-open guide and the first-run bug-report tooltip (opens 2 s after load, over the modal's buttons).
+  await page.addInitScript(() => { try { localStorage.setItem('ziva_guide_seen', '1'); localStorage.setItem('ziva_bug_tooltip_seen', '1'); } catch (e) {} });
   await page.goto('/index.html?nosync');
   await page.waitForFunction(() => typeof (window as any).gEntryKeep === 'function' && typeof (window as any).gvEntryNeedsConfirm === 'function', null, { timeout: 15_000 });
 }
@@ -201,21 +202,131 @@ test('a height-only entry is never checked', async ({ page }) => {
   expect(await page.evaluate(() => growthData.some((r: any) => r.ht === 76 && r.wt == null))).toBe(true);
 });
 
-test('if the check changed between the panel and the tap (a sync landed), the row saves but nothing is recorded', async ({ page }) => {
+test('a weight arriving on that date from the other phone redraws the flow instead of writing past it (Carina V-CA-292-7)', async ({ page }) => {
   await seed(page, [[40, 9.2], [9, 9.5]]);
   await enter(page, 0, '15.9');
-  // The other phone's weight for today lands: the newest weight now shares its date, a different question.
   await page.evaluate(() => { growthData.push({ date: (window as any).today(), wt: 15.0, ht: null }); });
   await page.fill('#gEntryRetype', '15.9');
   await page.click('[data-action="gEntryConfirm"]');
+  await expect(panel(page)).toContainText('Growth already has a weight for');
   const today = await iso(page, 0);
-  expect(await weightsOn(page, today)).toEqual([15.0, 15.9]);
+  expect(await weightsOn(page, today)).toEqual([15.0]);   // the typed weight was not written past the new one
   expect(await kinds(page, today, 15.9)).toEqual([]);
+});
+
+test('if the check changed between the panel and the tap, the row saves but nothing is recorded, and the toast says so', async ({ page }) => {
+  await seed(page, [[40, 9.2], [9, 9.5]]);
+  await enter(page, 0, '15.9');
+  // The other phone clears the sex in Settings: the check now asks "couldn't compare", a different question.
+  await page.evaluate(() => { const w: any = window; w._profSave(Object.assign({}, profile.child, { sex: null }), profile.place); });
+  await page.fill('#gEntryRetype', '15.9');
+  await page.click('[data-action="gEntryConfirm"]');
+  const today = await iso(page, 0);
+  expect(await weightsOn(page, today)).toEqual([15.9]);
+  expect(await kinds(page, today, 15.9)).toEqual([]);
+});
+
+test('a typed weight off the chart for her age gets no retype; Save unchecked records nothing; the chip stays implausible (Kael V-K-292-1)', async ({ page }) => {
+  await seed(page, [[40, 9.2], [9, 9.5]]);
+  await enter(page, 0, '19.5');
+  await expect(panel(page)).toContainText('19.5 kg is outside the range for her age');
+  await expect(page.locator('#gEntryRetype')).toHaveCount(0);
+  await expect(page.locator('[data-action="gEntryFixWeight"]')).toBeFocused();
+  await page.click('#growthSaveUncheckedBtn');
+  const today = await iso(page, 0);
+  expect(await weightsOn(page, today)).toEqual([19.5]);
+  expect(await page.evaluate(() => JSON.stringify(growthConfirm))).toBe('{}');
+  expect(await chipState(page)).toBe('implausible');
+  // Defence in depth: the record itself refuses an off-chart weight.
+  expect(await page.evaluate((d) => { const w: any = window; return w.gvConfirmRecord({ date: d, wt: 19.5 }, 'amber'); }, today)).toBe(false);
+});
+
+test('an off-chart weight with no earlier weigh-in is still caught (Kael V-K-292-4)', async ({ page }) => {
+  await seed(page, []);
+  await enter(page, 0, '95');
+  await expect(panel(page)).toContainText('is outside the range for her age');
+  expect(await weightsOn(page, await iso(page, 0))).toEqual([]);
+});
+
+test('keep both never makes a heavy tap-settled weight the reference weight; a retype does (Maren V-M-292-1)', async ({ page }) => {
+  await seed(page, [[30, 9.2], [0, 9.4]]);
+  await enter(page, 0, '9.5');
+  await page.click('[data-action="gEntryKeep"][data-arg="both"]');
+  const ref = await page.evaluate(() => (window as any)._paraRefWeight());
+  expect(ref.w).toBeLessThanOrEqual(9.4);   // the lighter same-date weight (or a lower projection) bounds it
+  expect(!!ref.confirmed).toBe(false);
+  // The chip's R1 retype ("9.5 kg is right") records calm: now it is confirmed by retyping.
+  await page.evaluate(() => { const w: any = window; w.gvConfirmRecord(w.getLatestWeight(), null, 'calm'); });
+  const ref2 = await page.evaluate(() => (window as any)._paraRefWeight());
+  expect(ref2.w).toBe(9.5);
+  expect(ref2.confirmed).toBe(true);
+});
+
+test('keep both, then a sync orders the other weight last: it carries no confirm, so the chip asks', async ({ page }) => {
+  await seed(page, [[30, 9.2], [0, 9.4]]);
+  await enter(page, 0, '9.5');
+  await page.click('[data-action="gEntryKeep"][data-arg="both"]');
+  expect(await chipState(page)).not.toBe('confirm');
+  await page.evaluate((d) => { const i = growthData.findIndex((r: any) => r.date === d && r.wt === 9.4); const [r] = growthData.splice(i, 1); growthData.push(r); }, await iso(page, 0));
   expect(await chipState(page)).toBe('confirm');
 });
 
-test('the helpers with no rows argument still read Growth (the chip path is unchanged)', async ({ page }) => {
+test('same date holding two weights: each is named, and "Keep X only" removes the rest', async ({ page }) => {
+  await seed(page, [[30, 9.2], [0, 9.4], [0, 9.6]]);
+  await enter(page, 0, '9.5');
+  await expect(page.locator('[data-action="gEntryKeep"]')).toHaveCount(4);
+  await expect(panel(page)).toContainText('Keep 9.6 kg only');
+  await page.click('[data-action="gEntryKeep"][data-arg="old:9600"]');
+  expect(await weightsOn(page, await iso(page, 0))).toEqual([9.6]);
+});
+
+test('a confirmed drop ends without a tick and with the next step (Maren V-M-292-3)', async ({ page }) => {
+  await seed(page, [[40, 9.6], [9, 9.8]]);
+  await enter(page, 0, '7.9');
+  await expect(panel(page)).toContainText('Check this weight');
+  await page.fill('#gEntryRetype', '7.9');
+  await page.click('[data-action="gEntryConfirm"]');
+  await expect(page.locator('#qlToast')).toContainText('If she has really lost weight, tell your doctor.');
+  await expect(page.locator('#qlToast svg')).toHaveCount(0);
+});
+
+test('the "fever card" line is said only about the newest weight (Kael V-K-292-2, Vela V-V-292-4)', async ({ page }) => {
+  await seed(page, [[40, 9.2], [9, 9.5], [3, 9.6]]);
+  await enter(page, 20, '15.9');
+  await expect(panel(page)).toContainText('This weight');
+  expect(await page.locator('#gEntryCheck .fe-load-prow-body').textContent()).not.toContain('fever card');
+});
+
+test('at a small phone and large text the modal scrolls, so the exits stay reachable (Vela V-V-292-1)', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await seed(page, [[40, 9.2], [9, 9.5]]);
+  await page.evaluate(() => document.documentElement.setAttribute('data-zoom', 'high'));
+  await enter(page, 0, '15.9');
+  await page.waitForTimeout(350);   // the open animation
+  const box = await page.locator('#growthModal > .modal').boundingBox();
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(640);
+  await page.locator('#growthSaveUncheckedBtn').click();
+  expect(await weightsOn(page, await iso(page, 0))).toEqual([15.9]);
+});
+
+test('E4: the form is locked once saved, and focus lands in the retype box (Vela V-V-292-3/-6)', async ({ page }) => {
+  await seed(page, [[200, 7.6], [3, 11.4]]);
+  await enter(page, 30, '9.2');
+  await expect(panel(page)).toContainText('Next to the weight you just added');
+  await expect(page.locator('#gWeight')).toBeDisabled();
+  await expect(page.locator('#gEntryRetype')).toBeFocused();
+  await page.click('#growthDoneBtn');
+  await page.evaluate(() => (window as any).openGrowthModal());
+  await expect(page.locator('#gWeight')).toBeEnabled();
+});
+
+test('the helpers with no rows argument still read Growth (the chip path is unchanged); with rows they read as of the date', async ({ page }) => {
   await seed(page, [[40, 9.5], [3, 15.9]]);
   const r = await page.evaluate(() => { const w: any = window; const row = w.getLatestWeight(); return [w.gvWeightNeedsConfirm(row).askKind, w.gvWeightNeedsConfirm(row, growthData).askKind]; });
   expect(r).toEqual(['amber', 'amber']);
+  // A back-dated row: Growth's anchor is a different row (asks, fail closed); as of its date it passes (V-CA-292-5a).
+  const b = await page.evaluate(() => { const w: any = window; growthData = [{ date: w.toDateStr(new Date(Date.now() - 60 * 864e5)), wt: 9.0 }, { date: w.toDateStr(new Date(Date.now() - 30 * 864e5)), wt: 9.2 }, { date: w.today(), wt: 9.5 }];
+    const row = growthData[1]; const a = w.gvWeightNeedsConfirm(row); return [a && a.variant, w.gvWeightNeedsConfirm(row, growthData), w.gvEntryNeedsConfirm(row, undefined, true).variant]; });
+  expect(b).toEqual(['error', null, 'error']);
 });

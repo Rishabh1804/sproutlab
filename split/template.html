@@ -3183,7 +3183,7 @@
         <input type="number" id="gWeight" class="modal-input" step="0.01" placeholder="Weight (kg)" oninput="autoCheckField('gWeightCheck');updateGrowthSaveBtn()">
       </div>
       <!-- The entry-time weight check (#161 spec §4.5): filled by medical.js when the check asks -->
-      <div id="gEntryCheck"></div>
+      <div id="gEntryCheck" aria-live="polite"></div>
       <!-- Height section with checkbox -->
       <div>
         <label class="collapse-hdr-flex settings-sub" style="cursor:pointer;margin-bottom:4px;">

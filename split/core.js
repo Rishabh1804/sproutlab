@@ -1082,6 +1082,7 @@ function init() {
     else if (action === 'gEntryConfirm') gEntryConfirm();   // retype the typed weight to confirm and save
     else if (action === 'gEntrySaveUnchecked') gEntrySaveUnchecked();
     else if (action === 'gEntryFixDate') gEntryFixDate();   // E3: a weigh-in before the birth date
+    else if (action === 'gEntryFixWeight') gEntryFixWeight();   // a weight off the chart for its age: fix the number
     else if (action === 'gEntryConfirmNewest') gEntryConfirmNewest(arg, arg2, arg3);   // E4: the newest weight
     else if (action === 'gEntryFixInGrowth') gEntryFixInGrowth();
     else if (action === 'gEntryDone') gEntryDone();
@@ -7174,8 +7175,10 @@ function gvWeightNeedsConfirm(row, rows) {
 // on this exact date + weight covers what it covers (§4.3). The row must be the anchor, else it asks (error).
 function gvEntryNeedsConfirm(row, rows, keepBoth) {
   if (!keepBoth) return gvWeightNeedsConfirm(row, rows);
+  if (!row) return null;
   const R = _gvAsOfRows(row, rows);
-  if (!row || !R) return null;
+  // No source to read: ask (fail closed), never "nothing to ask" (Carina V-CA-292-4, Kael V-K-292-8).
+  if (!R) return { verdict: 'confirm', variant: 'error', pairs: [], askKind: null };
   let jc;
   try { jc = _gvJumpAfterSamedate(row, R); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
   const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
@@ -7193,6 +7196,10 @@ function gvEntryNeedsConfirm(row, rows, keepBoth) {
 // its date (pass growthData). The entry never passes a fallback (§4.5).
 function gvConfirmRecord(row, shownKind, fallbackKind, rows) {
   if (!row) return false;
+  // A weight off the chart for its age (WHO's implausible flag) is never confirmed: no retype makes it a
+  // dosing weight, so recording one would only print "confirmed by the family" beside an impossible number
+  // (Kael V-K-292-1, defence in depth behind the entry panels).
+  if (typeof paraWeightPlausible === 'function' && !paraWeightPlausible(row.wt, row.date)) return false;
   const ask = gvWeightNeedsConfirm(row, rows);
   // A fallback never records a kind the parent wasn't shown: while the jump check asks, only its own chip can
   // confirm (Carina V-CA-291-13; the caller guards too).

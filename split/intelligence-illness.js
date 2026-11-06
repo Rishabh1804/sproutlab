@@ -811,8 +811,13 @@ function _paraRefWeight() {
   const rows = gvMeasureRows('wt');
   const latest = rows[rows.length - 1];
   if (!latest) return null;
-  if (gvWeightConfirmed(latest) && !gvWeightNeedsConfirm(latest)) return { w: latest.wt, src: null, confirmed: true };
-  const earlier = rows.filter(r => r.date < latest.date && gvDaysBetween(r.date, latest.date) <= GV_JUMP_DZ_MAX_DAYS && paraWeightPlausible(r.wt, r.date));
+  // Confirmed by RETYPING (§5.1): an amber or calm confirm. A samedate confirm alone — which the Growth entry's
+  // "Keep both" records from a tap (§4.5, E1) — settles which row counts, never the number (Maren V-M-292-1).
+  const retyped = _gvConfirmKinds(latest).some(k => k === 'amber' || k === 'calm');
+  if (retyped && !gvWeightNeedsConfirm(latest)) return { w: latest.wt, src: null, confirmed: true };
+  // Not retyped: the other weights on the latest date join the lower bound, so a heavy tap-settled default never
+  // becomes the reference (PC-11: the mistake falls on the under-dose side).
+  const earlier = rows.filter(r => r !== latest && (r.date < latest.date || r.wt !== latest.wt) && gvDaysBetween(r.date, latest.date) <= GV_JUMP_DZ_MAX_DAYS && paraWeightPlausible(r.wt, r.date));
   if (!earlier.length) return { w: latest.wt, src: null };
   const sex = childSex(), moL = whoAgeMoAt(latest.date);
   let best = { w: latest.wt, src: null };
