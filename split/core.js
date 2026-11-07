@@ -1078,6 +1078,14 @@ function init() {
     else if (action === 'closeCrop') closeCrop();
     else if (action === 'saveCrop') saveCrop();
     else if (action === 'addGrowthEntry') addGrowthEntry();
+    else if (action === 'gEntryKeep') gEntryKeep(arg);   // the entry check's same-date choice (#161 §4.5, E1)
+    else if (action === 'gEntryConfirm') gEntryConfirm();   // retype the typed weight to confirm and save
+    else if (action === 'gEntrySaveUnchecked') gEntrySaveUnchecked();
+    else if (action === 'gEntryFixDate') gEntryFixDate();   // E3: a weigh-in before the birth date
+    else if (action === 'gEntryFixWeight') gEntryFixWeight();   // a weight off the chart for its age: fix the number
+    else if (action === 'gEntryConfirmNewest') gEntryConfirmNewest(arg, arg2, arg3);   // E4: the newest weight
+    else if (action === 'gEntryFixInGrowth') gEntryFixInGrowth();
+    else if (action === 'gEntryDone') gEntryDone();
     else if (action === 'addVacc') addVacc();
     else if (action === 'saveVaccAppt') saveVaccAppt();
     else if (action === 'saveVaccEdit') saveVaccEdit();
@@ -7125,17 +7133,27 @@ function _gvCovers(kinds, need) {
 function gvWeightConfirmed(row) { return _gvConfirmKinds(row).length > 0; }
 // The check after a confirmed same-date conflict: the confirmed weight against the earlier weigh-ins, the
 // other weight on its date left out — so the jump test still runs (Kael V-K-290-8).
-function _gvJumpAfterSamedate(row) {
-  return gvWeightJumpCheck(gvMeasureRows('wt').filter(r => r.date !== row.date || r === row || (r.wt === row.wt)));
+function _gvJumpAfterSamedate(row, rows) {
+  const src = Array.isArray(rows) ? rows : gvMeasureRows('wt');
+  return gvWeightJumpCheck(src.filter(r => r.date !== row.date || r === row || (r.wt === row.wt)));
+}
+// The rows as of a weigh-in's date (#161 §4.5, the entry check): an explicit source through the ONE filter,
+// rows dated after it left out, so a back-dated weight is checked against the weigh-ins before it and the
+// newest row on its date is the anchor. No rows given → null (the callers then read Growth, as today).
+function _gvAsOfRows(row, rows) {
+  return Array.isArray(rows) && row ? gvMeasureRows('wt', rows).filter(r => r.date <= row.date) : null;
 }
 // The weight-jump check as the dose reads it: null when the latest weight can be used — the check passes,
 // or the parent confirmed exactly what it asks — else the check's result plus askKind (what a retype
 // records). Bound to the row passed in (the chip's displayed row): if the check's anchor is a different
 // row, it asks and a confirm can't clear it (fail closed).
-function gvWeightNeedsConfirm(row) {
+// `rows` (optional, #161 §4.5): an explicit source, read as of row.date — the entry check's candidate rows
+// before a save, or the live rows for a back-dated weight. Without it, Growth as today (the chip).
+function gvWeightNeedsConfirm(row, rows) {
   if (!row) return null;
+  const R = _gvAsOfRows(row, rows);
   let jc;
-  try { jc = gvWeightJumpCheck(); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+  try { jc = R ? gvWeightJumpCheck(R) : gvWeightJumpCheck(); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
   const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
   if (!sameRow) return Object.assign({}, jc, { verdict: 'confirm', variant: 'error', askKind: null });
   if (jc.verdict === 'ok') return null;
@@ -7143,7 +7161,7 @@ function gvWeightNeedsConfirm(row) {
   if (jc.variant === 'samedate') {
     if (!_gvCovers(kinds, 'samedate')) return Object.assign({}, jc, { askKind: 'samedate' });
     let jc2;
-    try { jc2 = _gvJumpAfterSamedate(row); } catch (e) { jc2 = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+    try { jc2 = _gvJumpAfterSamedate(row, R || undefined); } catch (e) { jc2 = { verdict: 'confirm', variant: 'error', pairs: [] }; }
     if (jc2.verdict === 'ok') return null;
     const need2 = _gvKindOf(jc2.variant);
     return _gvCovers(kinds, need2) ? null : Object.assign({}, jc2, { askKind: need2 });
@@ -7151,14 +7169,38 @@ function gvWeightNeedsConfirm(row) {
   const need = _gvKindOf(jc.variant);
   return _gvCovers(kinds, need) ? null : Object.assign({}, jc, { askKind: need });
 }
+// The ask the Growth entry check shows (#161 §4.5) for a candidate row among candidate rows, as of its date.
+// keepBoth: the parent chose to keep two weights on that date (E1, "the one typed counts") — the conflict is
+// settled by the samedate confirm the save records, so only the jump test after it is asked. A confirm already
+// on this exact date + weight covers what it covers (§4.3). The row must be the anchor, else it asks (error).
+function gvEntryNeedsConfirm(row, rows, keepBoth) {
+  if (!keepBoth) return gvWeightNeedsConfirm(row, rows);
+  if (!row) return null;
+  const R = _gvAsOfRows(row, rows);
+  // No source to read: ask (fail closed), never "nothing to ask" (Carina V-CA-292-4, Kael V-K-292-8).
+  if (!R) return { verdict: 'confirm', variant: 'error', pairs: [], askKind: null };
+  let jc;
+  try { jc = _gvJumpAfterSamedate(row, R); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+  const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
+  if (!sameRow) return Object.assign({}, jc, { verdict: 'confirm', variant: 'error', askKind: null });
+  if (jc.verdict === 'ok') return null;
+  const need = _gvKindOf(jc.variant);
+  return _gvCovers(_gvConfirmKinds(row), need) ? null : Object.assign({}, jc, { askKind: need });
+}
 // Record a retype: adds what the check is asking for that exact date + weight. Writes only the
 // confirmation map (never the growth row). `shownKind`: the question the parent read; if the check has
 // changed since (a receive between render and tap), nothing is recorded (Kael V-K-290-11).
 // `fallbackKind`: when the jump check passed (nothing to ask), the kind to record anyway — the leftover-risk
 // flow's "{wt} kg is right" (#161 spec §5.3 R1), which makes the latest weight the reference weight (§5.1).
-function gvConfirmRecord(row, shownKind, fallbackKind) {
+// `rows` (optional): as gvWeightNeedsConfirm — the entry check records a back-dated weight against Growth as of
+// its date (pass growthData). The entry never passes a fallback (§4.5).
+function gvConfirmRecord(row, shownKind, fallbackKind, rows) {
   if (!row) return false;
-  const ask = gvWeightNeedsConfirm(row);
+  // A weight off the chart for its age (WHO's implausible flag) is never confirmed: no retype makes it a
+  // dosing weight, so recording one would only print "confirmed by the family" beside an impossible number
+  // (Kael V-K-292-1, defence in depth behind the entry panels).
+  if (typeof paraWeightPlausible === 'function' && !paraWeightPlausible(row.wt, row.date)) return false;
+  const ask = gvWeightNeedsConfirm(row, rows);
   // A fallback never records a kind the parent wasn't shown: while the jump check asks, only its own chip can
   // confirm (Carina V-CA-291-13; the caller guards too).
   if (fallbackKind && ask) return false;

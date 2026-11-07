@@ -2099,6 +2099,11 @@ svg.zi { width:16px; height:16px; vertical-align:-2px; flex-shrink:0; }
 @keyframes popIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
 .modal h3 { font-family:'Fraunces', serif; font-size:var(--fs-xl); margin-bottom:var(--sp-16); }
 .modal-btns { display:flex; gap:var(--sp-8); justify-content:flex-end; margin-top:var(--sp-16); }
+/* The growth modal scrolls when the entry check's panel makes it tall, so its exits stay reachable on a short
+   phone at large text (#161 §4.5, Vela V-V-292-1); its own buttons are 44 px and stack at large zoom (V-V-292-2). */
+#growthModal > .modal { max-height:calc(100vh - 2 * var(--sp-16)); max-height:calc(100dvh - 2 * var(--sp-16)); overflow-y:auto; }
+#growthModalBtns .btn { min-height:44px; }
+:root[data-zoom="med"] #growthModalBtns, :root[data-zoom="high"] #growthModalBtns { flex-direction:column; align-items:stretch; }
 .modal-input {
   width:100%; padding:var(--sp-10) var(--sp-12); border-radius:var(--r-lg);
   border:1.5px solid var(--rose-light);
@@ -3608,6 +3613,7 @@ input:checked + .toggle-track::before { transform:translateX(20px); }
 .ep-time-row .ep-now-btn:active { background:var(--surface); }
 [data-theme="dark"] .ep-edit-sheet { background:var(--surface); }
 [data-theme="dark"] .ep-edit-input { background:var(--base); border-color:rgba(255,255,255,0.08); }
+[data-theme="dark"] .ep-edit-input:focus { border-color:var(--indigo); }   /* the rule above outranked the focus border (Vela V-V-292-8) */
 [data-theme="dark"] .ep-time-row input[type="time"] { background:var(--base); border-color:rgba(255,255,255,0.08); color:var(--text); }
 [data-theme="dark"] .ep-time-row .ep-now-btn { background:var(--base); border-color:rgba(255,255,255,0.08); color:var(--light); }
 
@@ -11777,6 +11783,7 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
 /* hide the quick-log FAB while a Library overlay is open so it can't clutter or
    intercept the pinned pop-up / deck footer (the overlay sits above it at z-1200). */
 .lib-overlay-open .ql-fab { display:none; }
+body:has(#growthModal.open) :is(.ql-fab, .home-fab, .dark-toggle) { display:none; }   /* the FAB (z 1001) sat over the growth modal's buttons once its panel made it tall (#161 §4.5) */
 .lib-deck-head .zi { width:var(--icon-lg); height:var(--icon-lg); color:var(--tc-rose); }
 .lib-deck-title { font-family:'Fraunces',serif; font-weight:600; font-size:var(--fs-lg); color:var(--text); flex:1; }
 .lib-deck-close { flex:0 0 auto; width:32px; height:32px; border:none; border-radius:var(--r-full); background:var(--surface-alt); color:var(--mid); cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -15636,6 +15643,8 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         </label>
         <input type="number" id="gWeight" class="modal-input" step="0.01" placeholder="Weight (kg)" oninput="autoCheckField('gWeightCheck');updateGrowthSaveBtn()">
       </div>
+      <!-- The entry-time weight check (#161 spec §4.5): filled by medical.js when the check asks -->
+      <div id="gEntryCheck" aria-live="polite"></div>
       <!-- Height section with checkbox -->
       <div>
         <label class="collapse-hdr-flex settings-sub" style="cursor:pointer;margin-bottom:4px;">
@@ -15652,9 +15661,11 @@ details[open] .sc-disclosure-toggle { transform:rotate(180deg); }
         <div id="gHeightConvert" style="font-size:var(--fs-sm);color:var(--mid);padding-left:2px;display:none;"></div>
       </div>
     </div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" data-close-modal="growthModal">Cancel</button>
+    <div class="modal-btns" id="growthModalBtns">
+      <button class="btn btn-ghost" id="growthCancelBtn" data-close-modal="growthModal">Cancel</button>
       <button class="btn btn-rose" id="growthSaveBtn" data-action="addGrowthEntry">Save</button>
+      <button class="btn btn-ghost d-none" id="growthSaveUncheckedBtn" data-action="gEntrySaveUnchecked">Save unchecked</button>
+      <button class="btn btn-ghost d-none" id="growthDoneBtn" data-action="gEntryDone">Done</button>
     </div>
   </div>
 </div>
@@ -25616,6 +25627,14 @@ function init() {
     else if (action === 'closeCrop') closeCrop();
     else if (action === 'saveCrop') saveCrop();
     else if (action === 'addGrowthEntry') addGrowthEntry();
+    else if (action === 'gEntryKeep') gEntryKeep(arg);   // the entry check's same-date choice (#161 §4.5, E1)
+    else if (action === 'gEntryConfirm') gEntryConfirm();   // retype the typed weight to confirm and save
+    else if (action === 'gEntrySaveUnchecked') gEntrySaveUnchecked();
+    else if (action === 'gEntryFixDate') gEntryFixDate();   // E3: a weigh-in before the birth date
+    else if (action === 'gEntryFixWeight') gEntryFixWeight();   // a weight off the chart for its age: fix the number
+    else if (action === 'gEntryConfirmNewest') gEntryConfirmNewest(arg, arg2, arg3);   // E4: the newest weight
+    else if (action === 'gEntryFixInGrowth') gEntryFixInGrowth();
+    else if (action === 'gEntryDone') gEntryDone();
     else if (action === 'addVacc') addVacc();
     else if (action === 'saveVaccAppt') saveVaccAppt();
     else if (action === 'saveVaccEdit') saveVaccEdit();
@@ -31663,17 +31682,27 @@ function _gvCovers(kinds, need) {
 function gvWeightConfirmed(row) { return _gvConfirmKinds(row).length > 0; }
 // The check after a confirmed same-date conflict: the confirmed weight against the earlier weigh-ins, the
 // other weight on its date left out — so the jump test still runs (Kael V-K-290-8).
-function _gvJumpAfterSamedate(row) {
-  return gvWeightJumpCheck(gvMeasureRows('wt').filter(r => r.date !== row.date || r === row || (r.wt === row.wt)));
+function _gvJumpAfterSamedate(row, rows) {
+  const src = Array.isArray(rows) ? rows : gvMeasureRows('wt');
+  return gvWeightJumpCheck(src.filter(r => r.date !== row.date || r === row || (r.wt === row.wt)));
+}
+// The rows as of a weigh-in's date (#161 §4.5, the entry check): an explicit source through the ONE filter,
+// rows dated after it left out, so a back-dated weight is checked against the weigh-ins before it and the
+// newest row on its date is the anchor. No rows given → null (the callers then read Growth, as today).
+function _gvAsOfRows(row, rows) {
+  return Array.isArray(rows) && row ? gvMeasureRows('wt', rows).filter(r => r.date <= row.date) : null;
 }
 // The weight-jump check as the dose reads it: null when the latest weight can be used — the check passes,
 // or the parent confirmed exactly what it asks — else the check's result plus askKind (what a retype
 // records). Bound to the row passed in (the chip's displayed row): if the check's anchor is a different
 // row, it asks and a confirm can't clear it (fail closed).
-function gvWeightNeedsConfirm(row) {
+// `rows` (optional, #161 §4.5): an explicit source, read as of row.date — the entry check's candidate rows
+// before a save, or the live rows for a back-dated weight. Without it, Growth as today (the chip).
+function gvWeightNeedsConfirm(row, rows) {
   if (!row) return null;
+  const R = _gvAsOfRows(row, rows);
   let jc;
-  try { jc = gvWeightJumpCheck(); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+  try { jc = R ? gvWeightJumpCheck(R) : gvWeightJumpCheck(); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
   const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
   if (!sameRow) return Object.assign({}, jc, { verdict: 'confirm', variant: 'error', askKind: null });
   if (jc.verdict === 'ok') return null;
@@ -31681,7 +31710,7 @@ function gvWeightNeedsConfirm(row) {
   if (jc.variant === 'samedate') {
     if (!_gvCovers(kinds, 'samedate')) return Object.assign({}, jc, { askKind: 'samedate' });
     let jc2;
-    try { jc2 = _gvJumpAfterSamedate(row); } catch (e) { jc2 = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+    try { jc2 = _gvJumpAfterSamedate(row, R || undefined); } catch (e) { jc2 = { verdict: 'confirm', variant: 'error', pairs: [] }; }
     if (jc2.verdict === 'ok') return null;
     const need2 = _gvKindOf(jc2.variant);
     return _gvCovers(kinds, need2) ? null : Object.assign({}, jc2, { askKind: need2 });
@@ -31689,14 +31718,38 @@ function gvWeightNeedsConfirm(row) {
   const need = _gvKindOf(jc.variant);
   return _gvCovers(kinds, need) ? null : Object.assign({}, jc, { askKind: need });
 }
+// The ask the Growth entry check shows (#161 §4.5) for a candidate row among candidate rows, as of its date.
+// keepBoth: the parent chose to keep two weights on that date (E1, "the one typed counts") — the conflict is
+// settled by the samedate confirm the save records, so only the jump test after it is asked. A confirm already
+// on this exact date + weight covers what it covers (§4.3). The row must be the anchor, else it asks (error).
+function gvEntryNeedsConfirm(row, rows, keepBoth) {
+  if (!keepBoth) return gvWeightNeedsConfirm(row, rows);
+  if (!row) return null;
+  const R = _gvAsOfRows(row, rows);
+  // No source to read: ask (fail closed), never "nothing to ask" (Carina V-CA-292-4, Kael V-K-292-8).
+  if (!R) return { verdict: 'confirm', variant: 'error', pairs: [], askKind: null };
+  let jc;
+  try { jc = _gvJumpAfterSamedate(row, R); } catch (e) { jc = { verdict: 'confirm', variant: 'error', pairs: [] }; }
+  const sameRow = jc && jc.anchor && jc.anchor.date === row.date && jc.anchor.wt === row.wt;
+  if (!sameRow) return Object.assign({}, jc, { verdict: 'confirm', variant: 'error', askKind: null });
+  if (jc.verdict === 'ok') return null;
+  const need = _gvKindOf(jc.variant);
+  return _gvCovers(_gvConfirmKinds(row), need) ? null : Object.assign({}, jc, { askKind: need });
+}
 // Record a retype: adds what the check is asking for that exact date + weight. Writes only the
 // confirmation map (never the growth row). `shownKind`: the question the parent read; if the check has
 // changed since (a receive between render and tap), nothing is recorded (Kael V-K-290-11).
 // `fallbackKind`: when the jump check passed (nothing to ask), the kind to record anyway — the leftover-risk
 // flow's "{wt} kg is right" (#161 spec §5.3 R1), which makes the latest weight the reference weight (§5.1).
-function gvConfirmRecord(row, shownKind, fallbackKind) {
+// `rows` (optional): as gvWeightNeedsConfirm — the entry check records a back-dated weight against Growth as of
+// its date (pass growthData). The entry never passes a fallback (§4.5).
+function gvConfirmRecord(row, shownKind, fallbackKind, rows) {
   if (!row) return false;
-  const ask = gvWeightNeedsConfirm(row);
+  // A weight off the chart for its age (WHO's implausible flag) is never confirmed: no retype makes it a
+  // dosing weight, so recording one would only print "confirmed by the family" beside an impossible number
+  // (Kael V-K-292-1, defence in depth behind the entry panels).
+  if (typeof paraWeightPlausible === 'function' && !paraWeightPlausible(row.wt, row.date)) return false;
+  const ask = gvWeightNeedsConfirm(row, rows);
   // A fallback never records a kind the parent wasn't shown: while the jump check asks, only its own chip can
   // confirm (Carina V-CA-291-13; the caller guards too).
   if (fallbackKind && ask) return false;
@@ -53634,11 +53687,28 @@ function renderInsightsCross() {
   // confirmed is left out, so this insight never reads a typo the dose chip is asking about (Ceres
   // V-C-288-1, PC-10).
   let wtEntries = gvWeightRows();
+  // Every date reduced to its last row — the one that counts (the entry's "keep both", #161 §4.5 E1) and the one
+  // the check and the chip read — so a second weight on a date can't carry the number in (Ceres V-C-290-1,
+  // V-C-292-2).
+  wtEntries = wtEntries.filter((r, i, a) => i === a.length - 1 || a[i + 1].date !== r.date);
+  // An earlier weight that fails its own check as of its date (a back-dated weight saved unchecked) and nobody
+  // confirmed is left out too — or, when its comparator is the off row, the comparator (Ceres V-C-292-1, the
+  // reader half of C161-3; Cipher #288 finding 8).
+  { const last = wtEntries[wtEntries.length - 1], drop = [];
+    wtEntries.forEach(r => {
+      if (r === last) return;
+      let a = null;
+      try { a = gvWeightNeedsConfirm(r, growthData); } catch (e) { a = null; }
+      // amber, or an unsettled same-date conflict — as the newest branch below (Ceres V-C-292-3).
+      if (!a || (a.askKind !== 'amber' && a.askKind !== 'samedate')) return;
+      if (a.variant === 'implausible' && a.pair && (a.pair.badRow === 'a' || a.pair.reason === 'dob')) drop.push(a.pair.a);
+      else if (a.variant === 'implausible' && a.pair && a.pair.badRow === 'both') drop.push(a.pair.a, r);   // Kael pair-note
+      else drop.push(r);
+    });
+    if (drop.length) wtEntries = wtEntries.filter(r => drop.indexOf(r) < 0);
+  }
   { const lw = wtEntries[wtEntries.length - 1];
     if (lw) {
-      // The newest date reduced to the row the check and the chip read, so a second weight on that date
-      // (a conflict or a re-save) can't carry the number in (Ceres V-C-290-1).
-      wtEntries = wtEntries.filter(r => r.date !== lw.date || r === lw);
       const jc = gvWeightNeedsConfirm(lw);
       if (jc && jc.variant === 'implausible' && jc.pair) {
         // Drop the row that looks off — the earlier one when that is the bad row (Ceres V-C-290-3).
@@ -56783,6 +56853,7 @@ function openGrowthModal() {
   document.getElementById('gHeightConvert').style.display = 'none';
   const defaultUnit = localStorage.getItem('ziva_height_unit') || 'ft';
   document.getElementById('gHeightUnit').value = defaultUnit;
+  _gEntryClear();
   updateGrowthSaveBtn();
   openModal('growthModal');
 }
@@ -56804,6 +56875,9 @@ function updateGrowthSaveBtn() {
   const hasWeight = wtChecked && !isNaN(w) && w > 0;
   const hasHeight = htChecked && !isNaN(h) && h > 0;
   const hasContent = d && (hasWeight || hasHeight);
+  // A panel is bound to the date + weight it was drawn for: editing either clears it (#161 §4.5). Not after a
+  // save (step 'newest'): that panel is about a saved row.
+  if (_gEntry && _gEntry.step !== 'newest' && (d !== _gEntry.date || !hasWeight || w !== _gEntry.wt)) _gEntryClear();
   btn.style.opacity = hasContent ? '1' : '0.4';
   btn.style.pointerEvents = hasContent ? 'auto' : 'none';
 }
@@ -56857,28 +56931,295 @@ function getHeightInCm() {
   return val;
 }
 
-function addGrowthEntry() {
+// ── The entry-time weight check (#161 spec §4.5, PR 5; Architect rulings E1–E4, 2026-11-06) ──
+// On Save, before anything is written, the new weight is checked against the weigh-ins on or before its date
+// (gvWeightNeedsConfirm with the candidate rows). Steps, at most three, usually none:
+//   birth    — dated before the birth date: a hard stop, fix the date (E3);
+//   samedate — Growth has a different weight on that date: keep both (the one typed counts) or keep either (E1);
+//   off      — the typed weight is off the chart for its age: no retype (it can never be a dosing weight), fix it
+//              or save unchecked (Kael V-K-292-1/-4);
+//   jump     — the weight jumped, dropped, or an earlier weight looks off (amber only; a calm "couldn't compare"
+//              saves, E2): retype it to confirm, or save unchecked (decision B — never a silent block);
+//   newest   — after saving a back-dated weight, the NEWEST weight now looks off: retype it, fix it, or Done (E4).
+// The panel is bound to what the boxes held, and to the weights on that date, when it was drawn; editing the date
+// or weight clears it, and a weight arriving on that date from the other phone redraws it (Carina V-CA-292-7).
+let _gEntry = null;
+const _GENTRY_FORM_IDS = ['gDate', 'gWeightCheck', 'gWeight', 'gHeightCheck', 'gHeight', 'gHeightUnit'];
+function _gEntryForm() {
   const d = document.getElementById('gDate').value;
   const wtChecked = document.getElementById('gWeightCheck').checked;
-  const htChecked = document.getElementById('gHeightCheck').checked;
   const w = parseFloat(document.getElementById('gWeight').value);
   const htCm = getHeightInCm();
-
-  if (!d) return;
   const hasWeight = wtChecked && !isNaN(w) && w > 0;
-  const hasHeight = htChecked && htCm && htCm > 0;
-  if (!hasWeight && !hasHeight) return;
-
-  growthData.push({
-    date: d,
-    wt: hasWeight ? w : null,
-    ht: hasHeight ? Math.round(htCm * 10) / 10 : null,
-  });
-  closeModal('growthModal');
-  _islMarkDirty('medical');
-  renderGrowth();
-  updateHeader();
+  const hasHeight = !!(document.getElementById('gHeightCheck').checked && htCm && htCm > 0);
+  if (!d || (!hasWeight && !hasHeight)) return null;
+  return { date: d, wt: hasWeight ? w : null, ht: hasHeight ? Math.round(htCm * 10) / 10 : null };
 }
+// The distinct weights Growth holds on a date, in grams — what a panel was drawn against.
+function _gEntryDateWeights(date) {
+  return Array.from(new Set(gvMeasureRows('wt').filter(r => r.date === date).map(r => Math.round(r.wt * 1000)))).sort((a, b) => a - b).join(',');
+}
+// The modal's buttons for a step: 'save' (the form), 'unchecked' (Cancel + Save unchecked), 'cancel', 'done'.
+function _gEntryBtns(mode) {
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.classList.toggle('d-none', !on); };
+  show('growthCancelBtn', mode !== 'done');
+  show('growthSaveBtn', mode === 'save');
+  show('growthSaveUncheckedBtn', mode === 'unchecked');
+  show('growthDoneBtn', mode === 'done');
+}
+// After a save (step 'newest') the form is done: its boxes are disabled so only the panel acts (Vela V-V-292-6).
+function _gEntryFormLocked(locked) {
+  _GENTRY_FORM_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !!locked; });
+}
+function _gEntryClear() {
+  _gEntry = null;
+  const host = document.getElementById('gEntryCheck');
+  if (host) host.innerHTML = '';
+  _gEntryFormLocked(false);
+  _gEntryBtns('save');
+}
+// Draw a step: the panel, the modal's buttons, then bring it into view and put focus on its first action, so the
+// exits are reachable in a tall modal and the keyboard lands where the parent acts (Vela V-V-292-1/-3).
+function _gEntryShow(state, html, btns, focusSel) {
+  state.onDate = state.onDate != null ? state.onDate : _gEntryDateWeights(state.date);
+  _gEntry = state;
+  const host = document.getElementById('gEntryCheck');
+  if (host) host.innerHTML = html;
+  _gEntryFormLocked(state.step === 'newest');
+  _gEntryBtns(btns);
+  if (host && typeof host.scrollIntoView === 'function') { try { host.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
+  const f = focusSel && document.querySelector('#gEntryCheck ' + focusSel);
+  if (f) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } }
+}
+// The folded "Why" row (DESIGN_PRINCIPLES §11), the 4b anatomy and toggle (feLoadWhy); always drawn folded.
+function _gEntryWhyHtml(jc, extra, bodyOverride) {
+  const body = (bodyOverride || _paraConfirmWhy(jc, jc.anchor ? jc.anchor.wt : '', 'entry')) + (extra ? ' ' + extra : '');
+  return '<div class="fe-load-prow" data-where="gEntry"><button type="button" class="fe-load-prow-head" data-action="feLoadWhy" aria-expanded="false">'
+    + '<span class="fe-load-prow-txt"><span class="fe-load-prow-t">Why</span><span class="fe-load-prow-d">' + escHtml(_paraConfirmTeaser(jc)) + '</span></span>'
+    + '<span class="fe-load-prow-chev">' + zi('arrow-right') + '</span></button>'
+    + '<div class="fe-load-prow-body"><div class="fe-para-confirm-text">' + escHtml(body) + '</div></div></div>';
+}
+function _gEntryRetypeHtml(wt, action, label, kind, date) {
+  return '<div class="fe-para-confirm-text">If ' + escHtml(_paraKgText(wt)) + ' is right, type it again.</div>'
+    + '<div class="fe-para-retype"><input id="gEntryRetype" class="ep-edit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Type the weight again in kilograms">'
+    + '<button type="button" class="btn btn-soft btn-soft--peach" data-action="' + action + '" data-arg="' + escAttr(date || '') + '" data-arg2="' + escAttr(String(wt)) + '" data-arg3="' + escAttr(kind || '') + '">' + escHtml(label) + '</button></div>'
+    + '<div id="gEntryRetypeErr" class="fe-para-retype-err" role="alert"></div>';
+}
+// Said only about the weight the fever card doses from — the newest (Kael V-K-292-2, Vela V-V-292-4, Maren V-M-292-5).
+const _GENTRY_UNCONFIRMED = 'Until it is confirmed, the fever card won\'t work out a paracetamol dose from it.';
+// A weight off the chart for its age: the chip stops it as 'implausible' whatever is confirmed, so no retype is
+// offered and nothing is ever recorded (Kael V-K-292-1).
+function _gEntryOffHtml(wt, date, actionHtml) {
+  return '<div class="fe-para-confirm"><div class="fe-para-confirm-title">' + zi('warn') + ' Check this weight</div>'
+    + '<div class="fe-para-pair"><span><span class="fe-para-pair-wt">' + escHtml(_paraKgText(wt)) + '</span> · ' + escHtml(_paraDateLabel(date)) + '</span></div>'
+    + '<div class="fe-para-confirm-text">' + escHtml(_paraKgText(wt) + ' is outside the range for ' + pron('poss') + ' age on ' + _paraDateLabel(date) + '. Check the number, or weigh ' + pron('obj') + ' again.') + '</div>'
+    + '<div class="fe-para-confirm-actions">' + actionHtml + '</div></div>';
+}
+// The candidate rows: the typed weight added last (so it is its date's anchor — "the one typed counts", E1);
+// keep 'new' drops every other weight on that date first. ('old:<grams>' never reaches the check: nothing new.)
+function _gEntryCandidate(f, keep) {
+  const rows = gvMeasureRows('wt').map(r => ({ date: r.date, wt: r.wt }));
+  const out = keep === 'new' ? rows.filter(r => r.date !== f.date) : rows;
+  const row = { date: f.date, wt: f.wt };
+  return { rows: out.concat([row]), row };
+}
+function addGrowthEntry() {
+  const f = _gEntryForm();
+  if (!f) return;
+  if (f.wt == null) { _gEntryCommit(f, {}); return; }   // height only: never checked
+  // E3 — a weigh-in before the birth date: the date is wrong, and only the date can fix it.
+  const life = gvDaysBetween(toDateStr(DOB), f.date);
+  if (Number.isFinite(life) && life < 0) {
+    _gEntryShow({ step: 'birth', date: f.date, wt: f.wt }, '<div class="fe-para-confirm"><div class="fe-para-confirm-title">' + zi('warn') + ' Check the date</div>'
+      + '<div class="fe-para-confirm-text">' + escHtml(_paraDateLabel(f.date) + ' is before ' + pron('poss') + ' birth date, so this weight can\'t be saved on that day.') + '</div>'
+      + '<div class="fe-para-confirm-actions"><button type="button" class="btn btn-peach" data-action="gEntryFixDate">Fix the date</button></div></div>', 'cancel', '[data-action="gEntryFixDate"]');
+    return;
+  }
+  // Past the weight check's age range (60 months) only the jump check is skipped (_gEntryJumpStep): the same-date
+  // choice is about the record, not the dose (Carina V-CA-292-8).
+  const past = Number.isFinite(life) && life > WHO_WFA_MAX_DAY;
+  // Off the chart for its age: asked before the same-date choice, so nobody is offered "Keep both, use 95 kg"
+  // (Maren V-M-292-9, Kael V-K-292-11, Carina V-CA-292-9).
+  if (!past && typeof paraWeightPlausible === 'function' && !paraWeightPlausible(f.wt, f.date)) { _gEntryOffStep(f); return; }
+  const onDate = gvMeasureRows('wt').filter(r => r.date === f.date);
+  // The same weight on the same date is a re-save: no second weight row, no panel (a height still saves).
+  if (onDate.some(r => r.wt === f.wt)) { _gEntryCommit(f, { resave: true }); return; }
+  // E1 — a different weight on the same date: keep both (the one typed counts), or keep either.
+  if (onDate.length) {
+    const kept = [];
+    onDate.forEach(r => { if (kept.indexOf(r.wt) < 0) kept.push(r.wt); });
+    let html = '<div class="fe-para-confirm"><div class="fe-para-confirm-title">' + zi('warn') + ' ' + escHtml('Growth already has a weight for ' + _paraDateLabel(f.date)) + '</div>'
+      + '<div class="fe-para-pair"><span>Saved ' + kept.map(w => '<span class="fe-para-pair-wt">' + escHtml(_paraKgText(w)) + '</span>').join(' and ') + '</span>'
+      + '<span>You typed <span class="fe-para-pair-wt">' + escHtml(_paraKgText(f.wt)) + '</span></span></div>'
+      + '<div class="fe-para-confirm-text">Keep both, or keep just one. If you keep both, the one you typed counts.</div>'
+      + '<div class="fe-para-confirm-actions">'
+      + '<button type="button" class="btn btn-peach" data-action="gEntryKeep" data-arg="both">' + escHtml('Keep both, use ' + _paraKgText(f.wt)) + '</button>'
+      + '<button type="button" class="btn btn-ghost" data-action="gEntryKeep" data-arg="new">' + escHtml('Keep ' + _paraKgText(f.wt) + ' only') + '</button>'
+      + kept.map(w => '<button type="button" class="btn btn-ghost" data-action="gEntryKeep" data-arg="' + escAttr('old:' + Math.round(w * 1000)) + '">' + escHtml('Keep ' + _paraKgText(w) + ' only') + '</button>').join('')
+      + '</div></div>';
+    _gEntryShow({ step: 'samedate', date: f.date, wt: f.wt }, html, 'cancel', '[data-action="gEntryKeep"][data-arg="both"]');
+    return;
+  }
+  _gEntryJumpStep(f, null);
+}
+// After the same-date choice (or none): first the chart's own range, then the jump check on the candidate rows,
+// amber only (E2).
+function _gEntryOffStep(f) {
+  const latest = getLatestWeight();
+  _gEntryShow({ step: 'off', date: f.date, wt: f.wt, keep: null, off: true, isNewest: !latest || f.date >= latest.date },
+    _gEntryOffHtml(f.wt, f.date, '<button type="button" class="btn btn-peach" data-action="gEntryFixWeight">Fix the weight</button>'),
+    'unchecked', '[data-action="gEntryFixWeight"]');
+}
+function _gEntryJumpStep(f, keep) {
+  const latest = getLatestWeight();
+  const isNewest = !latest || f.date >= latest.date;
+  const life = gvDaysBetween(toDateStr(DOB), f.date);
+  if (Number.isFinite(life) && life > WHO_WFA_MAX_DAY) { _gEntryCommit(f, { keep }); return; }   // past 60 m: no jump check (E2)
+  const c = _gEntryCandidate(f, keep);
+  let ask = null;
+  try { ask = gvEntryNeedsConfirm(c.row, c.rows, keep === 'both'); } catch (e) { ask = null; }   // the chip still checks at dose time
+  if (!ask || ask.askKind !== 'amber' || !ask.pair || !ask.pair.a || !ask.pair.b) { _gEntryCommit(f, { keep }); return; }
+  // An EARLIER weight is the off one: say so up front, not folded — the likely fix is in Growth (Kael V-K-292-9).
+  const earlierOff = ask.variant === 'implausible' && ask.pair.badRow === 'a';
+  const why = _paraConfirmWhy(ask, f.wt, 'entry');
+  const html = '<div class="fe-para-confirm"><div class="fe-para-confirm-title">' + zi('warn') + ' Check this weight</div>'
+    + _paraPairHtml(ask.pair, isNewest ? 'Newest' : 'This weight', 'Before')
+    + (earlierOff ? '<div class="fe-para-confirm-text">' + escHtml(why) + '</div>' : '')
+    + _gEntryRetypeHtml(f.wt, 'gEntryConfirm', 'Confirm and save', 'amber', f.date)
+    + (earlierOff ? '' : _gEntryWhyHtml(ask, isNewest ? _GENTRY_UNCONFIRMED : '')) + '</div>';
+  _gEntryShow({ step: 'jump', date: f.date, wt: f.wt, keep, shownKind: 'amber', variant: ask.variant, isNewest }, html, 'unchecked', '#gEntryRetype');
+}
+// The panel's binding still holds: the same boxes, and the same weights on that date. A weight that arrived from
+// the other phone redraws the flow from the top instead of writing past it (Carina V-CA-292-7).
+function _gEntryBound(steps) {
+  const f = _gEntryForm();
+  if (!_gEntry || steps.indexOf(_gEntry.step) < 0 || !f || f.date !== _gEntry.date || f.wt !== _gEntry.wt) { _gEntryClear(); return null; }
+  if (_gEntryDateWeights(f.date) !== _gEntry.onDate) { _gEntryClear(); addGrowthEntry(); showQLToast('Growth changed on that date. Look again.'); return null; }
+  return f;
+}
+function gEntryKeep(arg) {
+  const f = _gEntryBound(['samedate']);
+  if (!f) return;
+  if (arg.indexOf('old:') === 0) { _gEntryCommit(f, { keep: arg }); return; }
+  _gEntryJumpStep(f, arg === 'both' ? 'both' : 'new');
+}
+function _gEntryTyped(id) { const el = document.getElementById(id); return parseFloat(String(el ? el.value : '').trim().replace(',', '.')); }
+function _gEntrySay(msg) { const e = document.getElementById('gEntryRetypeErr'); if (e) e.textContent = msg; }
+// Step 3's retype (decision B): typed into an empty box, compared at 0.01 kg with the weight box, comma decimal accepted.
+function gEntryConfirm() {
+  const f = _gEntryBound(['jump']);
+  if (!f) return;
+  const typed = _gEntryTyped('gEntryRetype');
+  if (!Number.isFinite(typed) || typed <= 0) { _gEntrySay('Type the weight in kg, for example 9.5.'); return; }
+  if (Math.round(typed * 100) !== Math.round(f.wt * 100)) {
+    _gEntrySay('You typed ' + _paraKgText(typed) + '; the weight box has ' + _paraKgText(f.wt) + '. If the weight box is wrong, fix it there.');
+    return;
+  }
+  _gEntryCommit(f, { keep: _gEntry.keep, confirmKind: _gEntry.shownKind, variant: _gEntry.variant, isNewest: _gEntry.isNewest });
+}
+function gEntrySaveUnchecked() {
+  const f = _gEntryBound(['jump', 'off']);
+  if (!f) return;
+  _gEntryCommit(f, { keep: _gEntry.keep, unchecked: true, off: !!_gEntry.off, isNewest: _gEntry.isNewest });
+}
+function gEntryFixDate() { const d = document.getElementById('gDate'); if (d) { d.focus(); if (typeof d.showPicker === 'function') { try { d.showPicker(); } catch (e) {} } } }
+function gEntryFixWeight() { const w = document.getElementById('gWeight'); if (w) { w.focus(); if (typeof w.select === 'function') w.select(); } }
+// The write: the same-date choice, the new row, then the confirms the parent made (only what was shown — never a
+// fallback, §4.5), then E4's look at the newest weight.
+function _gEntryCommit(f, o) {
+  const before = getLatestWeight();
+  let beforeAsk = null;
+  try { beforeAsk = before ? gvWeightNeedsConfirm(before) : null; } catch (e) { beforeAsk = null; }
+  const g = w => String(Math.round(w * 1000));
+  let addWt = f.wt != null && !o.resave;
+  if (f.wt != null && (o.keep === 'new' || (o.keep && o.keep.indexOf('old:') === 0))) {
+    const keepG = o.keep === 'new' ? null : o.keep.slice(4);
+    if (keepG) addWt = false;
+    for (let i = growthData.length - 1; i >= 0; i--) {
+      const r = growthData[i];
+      if (!r || r.date !== f.date || typeof r.wt !== 'number' || (keepG && g(r.wt) === keepG)) continue;
+      if (r.ht) r.wt = null; else growthData.splice(i, 1);   // a row left with nothing is removed
+    }
+  }
+  if (addWt || f.ht) growthData.push({ date: f.date, wt: addWt ? f.wt : null, ht: f.ht });
+  _islMarkDirty('medical');
+  renderGrowth();   // sorts (stable: the typed weight stays last on its date) and saves
+  updateHeader();
+  // "The check changed" only when, after recording, the check still asks something the parent answered — not
+  // because a record was redundant (Carina V-CA-292-3, Maren V-M-292-4).
+  let changed = false;
+  if (addWt && (o.keep === 'both' || o.confirmKind)) {
+    const row = gvMeasureRows('wt').filter(r => r.date === f.date && r.wt === f.wt).pop();
+    if (row && o.keep === 'both') gvConfirmRecord(row, 'samedate', null, growthData);
+    if (row && o.confirmKind) gvConfirmRecord(row, o.confirmKind, null, growthData);
+    let left = null;
+    try { left = row ? gvWeightNeedsConfirm(row, growthData) : null; } catch (e) { left = null; }
+    changed = !!left && left.askKind !== 'calm' && !(o.unchecked && left.askKind === 'amber');
+  }
+  const changedLine = 'The weight check changed, so the fever card will ask about it.';
+  // E4: a back-dated weight made the newest weight look off — ask about it here, the scale still in mind.
+  const after = getLatestWeight();
+  if (after && !(after.date === f.date && after.wt === f.wt)) {
+    let afterAsk = null;
+    try { afterAsk = gvWeightNeedsConfirm(after); } catch (e) { afterAsk = null; }
+    const already = beforeAsk && before && before.date === after.date && before.wt === after.wt && beforeAsk.askKind === 'amber';
+    if (afterAsk && afterAsk.askKind === 'amber' && !already && afterAsk.pair && afterAsk.pair.a && afterAsk.pair.b) {
+      const p = afterAsk.pair, mine = addWt && p.a.date === f.date && p.a.wt === f.wt;
+      const savedHtml = '<div class="fe-para-confirm-text">' + zi('check') + ' ' + escHtml(addWt ? 'Saved ' + _paraKgText(f.wt) + ' for ' + _paraDateLabel(f.date) : 'Saved') + '</div>'
+        + (changed ? '<div class="fe-para-confirm-text">' + escHtml(changedLine) + '</div>' : '');   // Kael V-K-292-6
+      const fixBtn = '<button type="button" class="btn btn-peach" data-action="gEntryFixInGrowth">Fix it in Growth</button>';
+      if (typeof paraWeightPlausible === 'function' && !paraWeightPlausible(after.wt, after.date)) {
+        // The newest weight is off the chart: no retype (Kael V-K-292-1), only fix it or Done.
+        _gEntryShow({ step: 'newest', date: after.date, wt: after.wt }, '<div class="fe-para-confirm fe-para-confirm--calm">' + savedHtml + '</div>' + _gEntryOffHtml(after.wt, after.date, fixBtn).replace('Check this weight', 'Now check the newest weight'), 'done', '[data-action="gEntryFixInGrowth"]');
+        return;
+      }
+      // The signed mock's wording when the weight just added is the comparator (Vela V-V-292-7).
+      const mineWhy = mine && (afterAsk.variant === 'jump-up' || afterAsk.variant === 'jump-down')
+        ? 'Next to the weight you just added, the newest weight ' + (afterAsk.variant === 'jump-up' ? 'is more than children usually gain in that time' : 'has dropped more than usual for that time') + ', so one of them may be a typo.'
+        : null;
+      const html = '<div class="fe-para-confirm">' + savedHtml
+        + '<div class="fe-para-confirm-title">' + zi('warn') + ' Now check the newest weight</div>'
+        + _paraPairHtml(p, 'Newest', mine ? 'You just added' : 'Before')
+        + _gEntryRetypeHtml(after.wt, 'gEntryConfirmNewest', 'Confirm', afterAsk.askKind, after.date)
+        + _gEntryWhyHtml(afterAsk, _GENTRY_UNCONFIRMED, mineWhy)
+        + '<div class="fe-para-confirm-actions">' + fixBtn + '</div></div>';
+      _gEntryShow({ step: 'newest', date: after.date, wt: after.wt, variant: afterAsk.variant }, html, 'done', '#gEntryRetype');
+      return;
+    }
+  }
+  _gEntryClear();
+  closeModal('growthModal');
+  if (changed) showQLToast('Saved. ' + changedLine);
+  // A confirmed drop is not "fine": no tick, and the next step (Maren V-M-292-3).
+  else if (o.confirmKind && o.variant === 'jump-down') showQLToast('Saved. If ' + pron('subj') + ' has really lost weight, tell your doctor.');
+  else if (o.confirmKind) showQLToast(zi('check') + ' Weight confirmed and saved');
+  // Saved unchecked: the fever card will ask — said only about the weight it doses from (Vela V-V-292-9). An
+  // off-chart weight it never asks about: it can't use it at all (Carina V-CA-292-9).
+  else if (o.unchecked && o.off) showQLToast('Saved. The fever card can\'t use this weight until it is fixed.');
+  else if (o.unchecked && o.isNewest) showQLToast('Saved. The fever card will ask about this weight.');
+}
+// Step 4's retype: the newest weight, as the chip would record it (it is the anchor: no rows argument).
+function gEntryConfirmNewest(date, wtStr, shownKind) {
+  if (!_gEntry || _gEntry.step !== 'newest') return;
+  const shown = Number(wtStr);
+  const typed = _gEntryTyped('gEntryRetype');
+  if (!Number.isFinite(typed) || typed <= 0) { _gEntrySay('Type the weight in kg, for example 9.5.'); return; }
+  const row = gvMeasureRows('wt').filter(r => r.date === date && r.wt === shown).pop();
+  if (!row) { _gEntryClear(); closeModal('growthModal'); showQLToast('That weight has changed in Growth. Check it there.'); return; }
+  if (Math.round(typed * 100) !== Math.round(shown * 100)) {
+    _gEntrySay('You typed ' + _paraKgText(typed) + '; Growth has ' + _paraKgText(shown) + ' on that date. If Growth is wrong, tap Fix it in Growth.');
+    return;
+  }
+  const ok = gvConfirmRecord(row, shownKind || null);
+  const drop = _gEntry.variant === 'jump-down';
+  _gEntryClear();
+  closeModal('growthModal');
+  // A confirmed drop is not "fine": no tick, and the next step (Maren V-M-292-8, as V-M-292-3).
+  showQLToast(!ok ? 'The weight check changed, so the fever card will ask about it.'
+    : drop ? 'Weight confirmed. If ' + pron('subj') + ' has really lost weight, tell your doctor.' : zi('check') + ' Weight confirmed');
+}
+function gEntryFixInGrowth() { _gEntryClear(); closeModal('growthModal'); switchTab('growth'); }
+function gEntryDone() { _gEntryClear(); closeModal('growthModal'); }
 
 // Height display helper — converts cm to the user's preferred unit
 function formatHeight(cm) {
@@ -74291,31 +74632,23 @@ function _paraChangeWords(changeG, gapDays) {
   const amt = g < 100 ? g + ' g' : (g / 1000).toFixed(1) + ' kg';
   return amt + ' ' + (changeG > 0 ? 'more' : 'less') + ' in ' + _paraGapWords(gapDays);
 }
-// Why the check asked, for a tired parent: what it compared and what to do. Jump, loss and conflict
-// read amber; "couldn't compare" reads calm. The escape line is always there (Vela, Maren). Every claim
-// comes from the check's own pairs (spec §9, Cipher #288 finding 9 — Maren V-M-290-3).
-function _paraConfirmHtml(chip) {
-  const jc = chip.check || {};
-  const v = jc.variant, p = jc.pair;
-  const amber = v === 'jump-up' || v === 'jump-down' || v === 'samedate' || v === 'implausible';
-  const okPair = (jc.pairs || []).find(x => x && x.ok);
-  let html = '<div class="fe-para-confirm' + (amber ? '' : ' fe-para-confirm--calm') + '">';
-  html += '<div class="fe-para-confirm-title">' + (amber ? zi('warn') + ' ' : '') + 'Check the weight before working out a dose</div>';
+// Two dated weights and the change between them — the ONE pair line for the chip and the Growth entry check
+// (#161 §4.5). Labelled, so the order can't be misread (Vela V-V-290-4).
+function _paraPairHtml(p, bLabel, aLabel) {
   const dated = (label, r) => '<span>' + escHtml(label) + ' <span class="fe-para-pair-wt">' + escHtml(_paraKgText(r.wt)) + '</span> · ' + escHtml(_paraDateLabel(r.date)) + '</span>';
-  if (p && p.a && p.b && v === 'samedate') {
-    // One flex item, so "and" and the comma stay with their weights (Vela V-V-290-2).
-    html += '<div class="fe-para-pair"><span><span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.b.wt)) + '</span> and <span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.a.wt)) + '</span>, both on ' + escHtml(_paraDateLabel(p.b.date)) + '</span></div>';
-  } else if (p && p.a && p.b && p.a.date !== p.b.date) {
-    // Labelled, so the order can't be misread (Vela V-V-290-4).
-    const change = _paraChangeWords(p.changeG, p.gapDays);
-    html += '<div class="fe-para-pair">' + dated('Newest', p.b) + dated('Before', p.a) + (change ? '<span class="fe-para-pair-change">' + escHtml(change) + '</span>' : '') + '</div>';
-  } else {
-    html += '<div class="fe-para-pair">' + dated('Newest', { wt: chip.wt, date: chip.date }) + '</div>';
-  }
+  const change = _paraChangeWords(p.changeG, p.gapDays);
+  return '<div class="fe-para-pair">' + dated(bLabel, p.b) + dated(aLabel, p.a) + (change ? '<span class="fe-para-pair-change">' + escHtml(change) + '</span>' : '') + '</div>';
+}
+// Why the check asked, in words — the ONE reason builder for the chip ('dose') and the Growth entry check
+// ('entry', #161 §4.5: no illness frame, a drop reads "a typo, or a real drop"). Every claim comes from the
+// check's own pairs (PC-10: one state, one answer).
+function _paraConfirmWhy(jc, wt, ctx) {
+  const v = jc.variant, p = jc.pair;
+  const okPair = (jc.pairs || []).find(x => x && x.ok);
   let why;
   if (v === 'jump-up') why = 'That is more than children usually gain in that time, so one of the numbers may be a typo.';
-  else if (v === 'jump-down') why = 'That is a bigger drop than usual for that time. It may be a typo, or a real drop while ' + _paraSubjOr('your child') + ' is unwell.';
-  else if (v === 'samedate') why = 'Growth has two different weights on the same day, so the dose can\'t tell which is right. If ' + _paraKgText(p && p.a ? p.a.wt : '') + ' is the right one, tap Change the weight and remove ' + _paraKgText(chip.wt) + '.';
+  else if (v === 'jump-down') why = 'That is a bigger drop than usual for that time. It may be a typo, or a real drop' + (ctx === 'entry' ? '.' : ' while ' + _paraSubjOr('your child') + ' is unwell.');
+  else if (v === 'samedate') why = 'Growth has two different weights on the same day, so the dose can\'t tell which is right. If ' + _paraKgText(p && p.a ? p.a.wt : '') + ' is the right one, tap Change the weight and remove ' + _paraKgText(wt) + '.';
   else if (v === 'implausible') {
     // Only an off EARLIER row, or a row dated before the birth date, reaches here: the chip's own gate
     // stops an off newest weight first (Kael V-K-290-2).
@@ -74334,6 +74667,36 @@ function _paraConfirmHtml(chip) {
   else if (jc.reason === 'age') why = 'These weigh-ins are too far apart to check at ' + pron('poss') + ' age.';
   else if (jc.reason === 'nosex') why = 'The weight can\'t be checked until your child\'s sex is set in Settings.';
   else why = 'The weight couldn\'t be checked against an earlier one.';
+  return why;
+}
+// The reason in a few words, for a folded "Why" row's teaser (§11).
+function _paraConfirmTeaser(jc) {
+  const v = jc && jc.variant;
+  if (v === 'jump-up') return 'More than children usually gain in that time';
+  if (v === 'jump-down') return 'A bigger drop than usual for that time';
+  if (v === 'implausible') return 'A weight looks off for ' + pron('poss') + ' age';
+  if (v === 'samedate') return 'Two weights on one day';
+  return 'The weight couldn\'t be checked';
+}
+// Why the check asked, for a tired parent: what it compared and what to do. Jump, loss and conflict
+// read amber; "couldn't compare" reads calm. The escape line is always there (Vela, Maren). Every claim
+// comes from the check's own pairs (spec §9, Cipher #288 finding 9 — Maren V-M-290-3).
+function _paraConfirmHtml(chip) {
+  const jc = chip.check || {};
+  const v = jc.variant, p = jc.pair;
+  const amber = v === 'jump-up' || v === 'jump-down' || v === 'samedate' || v === 'implausible';
+  let html = '<div class="fe-para-confirm' + (amber ? '' : ' fe-para-confirm--calm') + '">';
+  html += '<div class="fe-para-confirm-title">' + (amber ? zi('warn') + ' ' : '') + 'Check the weight before working out a dose</div>';
+  const dated = (label, r) => '<span>' + escHtml(label) + ' <span class="fe-para-pair-wt">' + escHtml(_paraKgText(r.wt)) + '</span> · ' + escHtml(_paraDateLabel(r.date)) + '</span>';
+  if (p && p.a && p.b && v === 'samedate') {
+    // One flex item, so "and" and the comma stay with their weights (Vela V-V-290-2).
+    html += '<div class="fe-para-pair"><span><span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.b.wt)) + '</span> and <span class="fe-para-pair-wt">' + escHtml(_paraKgText(p.a.wt)) + '</span>, both on ' + escHtml(_paraDateLabel(p.b.date)) + '</span></div>';
+  } else if (p && p.a && p.b && p.a.date !== p.b.date) {
+    html += _paraPairHtml(p, 'Newest', 'Before');
+  } else {
+    html += '<div class="fe-para-pair">' + dated('Newest', { wt: chip.wt, date: chip.date }) + '</div>';
+  }
+  const why = _paraConfirmWhy(jc, chip.wt, 'dose');
   html += '<div class="fe-para-confirm-text">' + escHtml(why) + '</div>';
   html += '<div class="fe-para-confirm-text">If ' + escHtml(_paraKgText(chip.wt)) + ' is right, type it here to confirm it.</div>';
   html += '<div class="fe-para-retype"><input id="feWtRetype" class="ep-edit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" aria-label="Type the newest weight in kilograms">'
@@ -74575,13 +74938,20 @@ function _paraRefWeight() {
   const rows = gvMeasureRows('wt');
   const latest = rows[rows.length - 1];
   if (!latest) return null;
-  if (gvWeightConfirmed(latest) && !gvWeightNeedsConfirm(latest)) return { w: latest.wt, src: null, confirmed: true };
-  const earlier = rows.filter(r => r.date < latest.date && gvDaysBetween(r.date, latest.date) <= GV_JUMP_DZ_MAX_DAYS && paraWeightPlausible(r.wt, r.date));
+  // Confirmed by RETYPING (§5.1): an amber or calm confirm. A samedate confirm alone — which the Growth entry's
+  // "Keep both" records from a tap (§4.5, E1) — settles which row counts, never the number (Maren V-M-292-1).
+  const retyped = _gvConfirmKinds(latest).some(k => k === 'amber' || k === 'calm');
+  if (retyped && !gvWeightNeedsConfirm(latest)) return { w: latest.wt, src: null, confirmed: true };
+  // Not retyped: the other weights on the latest date join the lower bound, so a heavy tap-settled default never
+  // becomes the reference (PC-11: the mistake falls on the under-dose side).
+  const earlier = rows.filter(r => r !== latest && (r.date < latest.date || r.wt !== latest.wt) && gvDaysBetween(r.date, latest.date) <= GV_JUMP_DZ_MAX_DAYS && paraWeightPlausible(r.wt, r.date));
   if (!earlier.length) return { w: latest.wt, src: null };
   const sex = childSex(), moL = whoAgeMoAt(latest.date);
   let best = { w: latest.wt, src: null };
-  const prev = earlier[earlier.length - 1];
-  const fallback = () => (prev.wt < latest.wt ? { w: prev.wt, src: { date: prev.date, wt: prev.wt } } : { w: latest.wt, src: null });
+  // No projection possible: the lowest of the latest and every earlier weight in the window — the same rows the
+  // projection reads (Kael V-K-292-10: share the selector; a same-date sibling alone is not "the previous").
+  const low = earlier.reduce((m, r) => (r.wt < m.wt ? r : m), earlier[0]);
+  const fallback = () => (low.wt < latest.wt ? { w: low.wt, src: { date: low.date, wt: low.wt } } : { w: latest.wt, src: null });
   if (sex !== 'f' && sex !== 'm' || !Number.isFinite(moL)) return fallback();
   for (const r of earlier) {
     const p = whoWfaWeightAtZ(whoWfaZ(r.wt, whoAgeMoAt(r.date), sex), moL, sex);
