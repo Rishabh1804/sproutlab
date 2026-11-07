@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Confirms What</title>
+<style>
+:root {
+  --bg: #fdf8f3; --card: #ffffff; --ink: #3a3340; --mute: #7a7083; --line: #eadfd6;
+  --sage: #8fbfa8; --rose: #e48ba0; --amber: #d9a24f; --lav: #a995d8; --sky: #84b8d0; --indigo: #8391c9; --peach: #f1b78a;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1d1a22; --card: #26222c; --ink: #ece6f0; --mute: #a79cb2; --line: #3a3442; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Georgia, "Times New Roman", serif; }
+main { max-width: 920px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.7rem; margin: 0 0 4px; }
+h2 { font-size: 1.15rem; margin: 28px 0 10px; }
+p.sub { color: var(--mute); margin: 0 0 18px; font-family: system-ui, sans-serif; font-size: .9rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
+.lead { font-size: 1.05rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.rule h3 { margin: 0 0 6px; font-size: 1rem; }
+.rule p, .find p { margin: 0; font-family: system-ui, sans-serif; font-size: .9rem; color: var(--mute); }
+.find { border-left: 4px solid var(--rose); }
+.find h3 { margin: 0 0 6px; font-size: 1rem; }
+.tag { display: inline-block; font-family: system-ui, sans-serif; font-size: .75rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); margin-left: 6px; color: var(--mute); }
+ol.flow { font-family: system-ui, sans-serif; font-size: .92rem; padding-left: 20px; margin: 0; }
+ol.flow li { margin: 6px 0; }
+.mark { color: var(--sage); }
+.warn { color: var(--rose); }
+.lens { display: grid; grid-template-columns: 90px 1fr; gap: 8px; font-family: system-ui, sans-serif; font-size: .9rem; margin: 4px 0; }
+.lens b { color: var(--lav); }
+footer { margin-top: 28px; color: var(--mute); font-family: system-ui, sans-serif; font-size: .85rem; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: .85em; }
+@media (max-width: 560px) { .lens { grid-template-columns: 70px 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Who confirms what</h1>
+  <p class="sub">Synthesis 2026-11-07 &middot; the #161 arc, PRs #287&ndash;#292 &middot; prose source: <code>SYNTHESIS_2026-11-07_who-confirms-what.md</code></p>
+
+  <div class="card lead">
+    One believable typo (15.9&nbsp;kg for 9.5) became six PRs. The hard findings kept asking one question:
+    <strong>when the app treats a number as confirmed, who confirmed it, and what exactly did they confirm?</strong>
+  </div>
+
+  <h2>Confirms that stood in for more than the parent did</h2>
+  <div class="grid">
+    <div class="card find"><h3>A calm confirm covering a jump <span class="tag">#290</span></h3><p>Fixed: a confirm covers only the kind of question shown (Kael V-K-290-3).</p></div>
+    <div class="card find"><h3>A tap counted as a retype <span class="tag">#292 safety-tier</span></h3><p>"Keep both" settles which row counts, not the number. Only a retype now confirms the reference weight (Maren V-M-292-1).</p></div>
+    <div class="card find"><h3>"Confirmed" beside an impossible weight <span class="tag">#292</span></h3><p>No retype for an off-chart weight; the record function refuses it (Kael V-K-292-1).</p></div>
+    <div class="card find"><h3>A confirm written past a change <span class="tag">#292</span></h3><p>A panel binds to the weights it was drawn against and redraws on change (Carina V-CA-292-7).</p></div>
+  </div>
+
+  <h2>Rules the arc earned</h2>
+  <div class="grid">
+    <div class="card rule"><h3><span class="mark">&#10003;</span> Record only what was shown</h3><p><code>gvConfirmRecord(row, shownKind)</code>; never a broader kind, never a fallback while the check asks.</p></div>
+    <div class="card rule"><h3><span class="mark">&#10003;</span> A tap settles which, a retype settles the number</h3><p>Choosing between named records is not evidence a number is right.</p></div>
+    <div class="card rule"><h3><span class="mark">&#10003;</span> An optional source, never a second engine</h3><p>"As of a date" passes rows to the one check; the no-argument path stays byte-identical.</p></div>
+    <div class="card rule"><h3><span class="mark">&#10003;</span> Bind the panel</h3><p>Re-check at the tap; redraw, never write past a change.</p></div>
+    <div class="card rule"><h3><span class="mark">&#10003;</span> Defence at the write</h3><p>What the surface forbids, the record function refuses too.</p></div>
+    <div class="card rule"><h3><span class="mark">&#10003;</span> Fail closed to the safer surface</h3><p>Anything unsettled saves unconfirmed; the dose chip still asks at dose time.</p></div>
+  </div>
+
+  <h2>Convergent verification</h2>
+  <div class="card">
+    <div class="lens"><b>Maren</b><span>the dose consequence of a tap</span></div>
+    <div class="lens"><b>Kael</b><span>the engine's gate order</span></div>
+    <div class="lens"><b>Carina</b><span>the write racing a sync</span></div>
+    <div class="lens"><b>Vela</b><span>the exits a parent couldn't reach: a forced "confirm"</span></div>
+    <div class="lens"><b>Ceres</b><span>the reader that kept what the dose side dropped</span></div>
+  </div>
+
+  <h2>The #161 build</h2>
+  <div class="card">
+    <ol class="flow">
+      <li><strong>#287</strong> WHO weight-for-age registry to 60 months; closes #162</li>
+      <li><strong>#288</strong> velocity registry + <code>gvWeightJumpCheck</code></li>
+      <li><strong>#289</strong> illness-episode sync merges by entry id</li>
+      <li><strong>#290</strong> the weight confirm: the dose waits for a retype</li>
+      <li><strong>#291</strong> the leftover-risk flow (R0&ndash;R3)</li>
+      <li><strong>#292</strong> the entry-time check: caught while the scale is in hand</li>
+    </ol>
+  </div>
+
+  <h2>Candidate canon <span class="warn">&#9873;</span></h2>
+  <div class="card">
+    <ol class="flow">
+      <li>Confirm provenance: a confirm carries what was asked and how it was answered.</li>
+      <li>As-of evaluation through the one engine (the optional-rows pattern).</li>
+      <li>Panel binding: re-check at the tap, redraw on change.</li>
+    </ol>
+  </div>
+
+  <footer>Lyra, The Weaver. Spec: <code>docs/specs/paracetamol-weight-check-v1.md</code> &middot; open edges: <code>docs/BUGS.md</code> "#161 PR 5 deferrables".</footer>
+</main>
+</body>
+</html>
