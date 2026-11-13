@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Orchestration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+:root {
+  --sage: #b5d5c5;
+  --rose: #f2a8b8;
+  --amber: #e8b86d;
+  --lavender: #c9b8e8;
+  --sky: #a8cfe0;
+  --indigo: #9ba8d8;
+  --peach: #fad4b4;
+
+  /* Deeper edges of the same hues, so a pastel bar shows against its track. */
+  --sage-edge: #4f7d66;
+  --rose-edge: #a8465f;
+  --lavender-edge: #6a52a0;
+  --sky-edge: #3e7894;
+  --peach-edge: #a8662e;
+
+  --bg: #fbf7f2;
+  --surface: #fffdfa;
+  --surface-2: #f5eee6;
+  --line: #e6dcd1;
+  --track: #f3ece4;
+  --track-edge: #9a8b7d;
+  --text: #2f2925;
+  --muted: #655b53;
+  --on-pastel: #2a231f;
+  --warn-text: #8a2f45;
+  --focus: #6a5aa8;
+
+  --font-head: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-body: "Nunito", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  --fs-xs: 0.78rem;
+  --fs-sm: 0.88rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.2rem;
+  --fs-xl: 1.6rem;
+  --fs-num: 1.45rem;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+
+  --r1: 8px;
+  --r2: 14px;
+  --r-pill: 999px;
+
+  --bar-h: 14px;
+  --shadow: 0 1px 2px rgba(60, 40, 20, 0.06), 0 4px 14px rgba(60, 40, 20, 0.05);
+  --speed: 160ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1a18;
+    --surface: #26221f;
+    --surface-2: #2f2a26;
+    --line: #3d3631;
+    --track: #1b1816;
+    --track-edge: #8c8076;
+    --text: #f3ece5;
+    --muted: #bdb2a8;
+    --on-pastel: #241e1a;
+    --warn-text: #ffc2cf;
+    --focus: #c9b8e8;
+    --sage-edge: #d8ece2;
+    --rose-edge: #fbd3dc;
+    --lavender-edge: #e4dbf4;
+    --sky-edge: #d3e8f1;
+    --peach-edge: #fde9d8;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --speed: 0ms; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+}
+
+h1 { font-size: var(--fs-xl); }
+h2 { font-size: var(--fs-lg); margin-bottom: var(--s3); }
+h3 { font-size: var(--fs-md); }
+
+p { margin: 0; }
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--s4);
+  display: grid;
+  gap: var(--s4);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "controls" "base" "agents" "totals" "history" "foot";
+}
+
+.area-head { grid-area: head; }
+.area-controls { grid-area: controls; }
+.area-base { grid-area: base; }
+.area-agents { grid-area: agents; }
+.area-totals { grid-area: totals; }
+.area-history { grid-area: history; }
+.area-foot { grid-area: foot; }
+
+/* On a narrow screen the side column's panels join the page's own grid. */
+.side { display: contents; }
+
+@media (min-width: 980px) {
+  .wrap {
+    padding: var(--s5);
+    gap: var(--s5);
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-areas:
+      "head head"
+      "controls controls"
+      "agents side"
+      "history history"
+      "foot foot";
+    align-items: start;
+  }
+  .side {
+    grid-area: side;
+    display: grid;
+    gap: var(--s5);
+    min-width: 0;
+  }
+  .side > * { grid-area: auto; }
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  padding: var(--s4);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+/* header */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+}
+.head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.liveness {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s1) var(--s3);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 700;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--muted);
+}
+.liveness.is-live .dot { background: var(--sage); box-shadow: 0 0 0 3px rgba(181, 213, 197, 0.35); }
+.liveness.is-stale .dot { background: var(--amber); }
+.liveness.is-down .dot { background: var(--rose); }
+.liveness.is-ended .dot { background: var(--indigo); }
+.notice {
+  flex-basis: 100%;
+  font-size: var(--fs-sm);
+  color: var(--warn-text);
+  font-weight: 700;
+}
+
+/* controls */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s3);
+  align-items: end;
+}
+.field {
+  display: grid;
+  gap: var(--s1);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  font-weight: 600;
+  min-width: 0;
+}
+button, select {
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  padding: var(--s2) var(--s3);
+  min-height: 40px;
+  max-width: 100%;
+}
+button { cursor: pointer; font-weight: 600; }
+button:hover, select:hover { border-color: var(--muted); }
+button:focus-visible, select:focus-visible, .card-head:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+button[aria-pressed="true"] { background: var(--surface-2); border-color: var(--muted); }
+.note { color: var(--muted); font-size: var(--fs-xs); flex-basis: 100%; }
+
+/* chips */
+.chip {
+  display: inline-block;
+  padding: 1px var(--s2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--on-pastel);
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+.st-running { background: var(--amber); }
+.st-done { background: var(--sage); }
+.st-failed { background: var(--rose); }
+.st-stale { background: var(--indigo); }
+.st-idle { background: var(--sky); }
+.st-ended { background: var(--indigo); }
+.t-Fable { background: var(--lavender); }
+.t-Opus { background: var(--rose); }
+.t-Sonnet { background: var(--sky); }
+.t-Haiku { background: var(--sage); }
+.t-other { background: var(--peach); }
+
+/* base card */
+.base-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
+}
+.stat { display: grid; gap: 2px; min-width: 0; align-content: start; }
+.stat-wide { grid-column: 1 / -1; }
+.stat-label { font-size: var(--fs-xs); color: var(--muted); font-weight: 600; }
+.stat-value { font-weight: 700; }
+.big {
+  font-family: var(--font-head);
+  font-size: var(--fs-num);
+  font-weight: 600;
+  line-height: 1.1;
+}
+.small { font-size: var(--fs-xs); color: var(--muted); }
+
+/* agent cards */
+.group-title {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  font-weight: 700;
+  margin: var(--s4) 0 var(--s2);
+}
+.group-title:first-of-type { margin-top: 0; }
+.cards { display: grid; gap: var(--s3); }
+.card {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--line);
+  border-radius: var(--r1);
+  background: var(--surface);
+  overflow: hidden;
+}
+.card.st-border-running { border-left-color: var(--amber); }
+.card.st-border-done { border-left-color: var(--sage); }
+.card.st-border-failed { border-left-color: var(--rose); }
+.card.st-border-stale { border-left-color: var(--indigo); }
+.card.is-flagged { border-color: var(--rose); border-left-color: var(--rose); }
+.card-head {
+  display: grid;
+  gap: var(--s1);
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: var(--s3);
+  min-height: 0;
+  font-weight: 400;
+}
+.card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s2);
+}
+.card-title strong { font-family: var(--font-head); font-size: var(--fs-md); font-weight: 600; }
+.card-line { font-size: var(--fs-sm); color: var(--muted); }
+.card-line b { color: var(--text); font-weight: 700; }
+.flag {
+  margin: 0 var(--s3) var(--s3);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r1);
+  background: var(--surface-2);
+  border: 1px solid var(--rose);
+  color: var(--warn-text);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+.check-ok { margin: 0 var(--s3) var(--s3); font-size: var(--fs-xs); color: var(--muted); }
+.detail {
+  border-top: 1px dashed var(--line);
+  padding: var(--s3);
+  background: var(--surface-2);
+}
+.detail dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--s1) var(--s3);
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.detail dt { color: var(--muted); font-weight: 600; }
+.detail dd { margin: 0; }
+.empty { color: var(--muted); font-size: var(--fs-sm); }
+.section-error { color: var(--warn-text); font-size: var(--fs-sm); font-weight: 700; }
+
+/* totals */
+.scope { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); }
+.explain { font-size: var(--fs-xs); color: var(--muted); margin-bottom: var(--s3); }
+.bars { display: grid; gap: var(--s3); }
+.bar-row {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s1) var(--s3);
+}
+.bar-name { font-weight: 700; font-size: var(--fs-sm); }
+.bar-num { font-family: var(--font-head); font-weight: 600; text-align: right; }
+.bar-detail { grid-column: 2 / -1; font-size: var(--fs-xs); color: var(--muted); }
+progress {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--bar-h);
+  border: 1px solid var(--track-edge);
+  border-radius: var(--r-pill);
+  background: var(--track);
+  overflow: hidden;
+  --bar: var(--muted);
+  --edge: var(--text);
+}
+progress::-webkit-progress-bar { background: var(--track); border-radius: var(--r-pill); }
+progress::-webkit-progress-value {
+  background: var(--bar);
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 2px var(--edge);
+  transition: width var(--speed) ease;
+}
+progress::-moz-progress-bar {
+  background: var(--bar);
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 2px var(--edge);
+}
+progress.t-Fable { --bar: var(--lavender); --edge: var(--lavender-edge); background: var(--track); }
+progress.t-Opus { --bar: var(--rose); --edge: var(--rose-edge); background: var(--track); }
+progress.t-Sonnet { --bar: var(--sky); --edge: var(--sky-edge); background: var(--track); }
+progress.t-Haiku { --bar: var(--sage); --edge: var(--sage-edge); background: var(--track); }
+progress.t-other { --bar: var(--peach); --edge: var(--peach-edge); background: var(--track); }
+.overall {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s2);
+  margin-top: var(--s4);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+/* history */
+.table-scroll { overflow-x: auto; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
+th, td { padding: var(--s2); text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: var(--fs-xs); color: var(--muted); font-weight: 700; }
+td.num { font-variant-numeric: tabular-nums; }
+.hist-list { display: grid; gap: var(--s3); }
+.hist-item { border: 1px solid var(--line); border-radius: var(--r1); padding: var(--s3); }
+.hist-tiers { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); margin-top: var(--s2); font-size: var(--fs-sm); }
+.hist-wide { display: none; }
+@media (min-width: 640px) {
+  .hist-wide { display: block; }
+  .hist-narrow { display: none; }
+}
+
+/* footer */
+.foot { display: grid; gap: var(--s3); font-size: var(--fs-sm); color: var(--muted); }
+.foot strong { color: var(--text); }
+.failure {
+  padding: var(--s3);
+  border-radius: var(--r1);
+  border: 1px solid var(--rose);
+  background: var(--surface-2);
+  color: var(--warn-text);
+  font-weight: 700;
+}
+.mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: var(--fs-xs); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="area-head panel head">
+    <div>
+      <h1>Orchestration</h1>
+      <p class="small" id="session-line">Waiting for the first snapshot</p>
+    </div>
+    <div class="head-meta">
+      <span class="liveness" id="liveness"><span class="dot"></span><span id="liveness-text">connecting</span></span>
+      <span id="written-at"></span>
+    </div>
+    <p class="notice" id="notice" hidden></p>
+  </header>
+
+  <section class="area-controls panel controls" aria-label="View controls">
+    <button type="button" data-action="toggle-finished" id="toggle-finished" aria-pressed="false">Hide finished</button>
+    <label class="field">Sort
+      <select data-action="sort" id="sort">
+        <option value="start">Start time</option>
+        <option value="tokens">Tokens</option>
+      </select>
+    </label>
+    <label class="field">Session
+      <select data-action="session" id="session"></select>
+    </label>
+    <button type="button" data-action="reset-view">Reset view</button>
+    <button type="button" data-action="undo-reset" id="undo-reset" hidden>Show all again</button>
+    <p class="note" id="reset-note">Reset view hides agents that finished before you press it, in this browser only. It does not change the record.</p>
+  </section>
+
+  <section class="area-agents panel" aria-labelledby="agents-title">
+    <h2 id="agents-title">Agents</h2>
+    <div id="agents"></div>
+  </section>
+
+  <div class="side">
+  <section class="area-base panel" aria-labelledby="base-title">
+    <h2 id="base-title">Base session</h2>
+    <div id="base"></div>
+  </section>
+
+  <section class="area-totals panel" aria-labelledby="totals-title">
+    <h2 id="totals-title">Tokens by model tier</h2>
+    <div class="scope">
+      <button type="button" data-action="scope" data-scope="session" id="scope-session" aria-pressed="true">This session</button>
+      <button type="button" data-action="scope" data-scope="all" id="scope-all" aria-pressed="false">All sessions</button>
+    </div>
+    <p class="explain">The figure is input plus output tokens: fresh input, cache writes (counted as input) and output, added up. Cache reads are shown beside it on their own: they are billed at a fraction of fresh input. This page shows tokens, not cost.</p>
+    <div id="totals"></div>
+  </section>
+  </div>
+
+  <section class="area-history panel" aria-labelledby="history-title">
+    <h2 id="history-title">History</h2>
+    <div id="history"></div>
+  </section>
+
+  <footer class="area-foot panel foot" id="foot"></footer>
+</div>
+<script>
+'use strict';
+(function () {
+  var TIERS = ['Fable', 'Opus', 'Sonnet', 'Haiku', 'other'];
+  var KNOWN_SCHEMA = 1;
+  var STALE_AFTER_MS = 15000;
+  var POLL_MS = 4000;
+  var HISTORY_POLL_MS = 20000;
+  var HISTORY_SESSIONS = 12;
+
+  function load(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem('orchestration.' + key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (e) { return fallback; }
+  }
+  function save(key, value) {
+    try { window.localStorage.setItem('orchestration.' + key, JSON.stringify(value)); } catch (e) { /* private window */ }
+  }
+  /** A map with no prototype: a key from the data can never reach Object's own. */
+  function dict() { return Object.create(null); }
+
+  var view = {
+    showFinished: load('showFinished', true) !== false,
+    sort: load('sort', 'start') === 'tokens' ? 'tokens' : 'start',
+    scope: 'session',
+    session: null,
+    hideBefore: Number(load('hideBefore', 0)) || 0,
+    expanded: dict()
+  };
+  var data = { state: null, sessions: [], dir: '', note: null, history: null, session: null };
+  var net = { stream: 'connecting', fetchOk: true, polling: null, historyPolling: null };
+
+  var numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+  function n(value) { return numberFormat.format(Math.floor(Number(value) || 0)); }
+  function plural(count, one, many) { return n(count) + ' ' + (Math.floor(Number(count) || 0) === 1 ? one : many); }
+  function num(v) { return typeof v === 'number' && isFinite(v) ? v : 0; }
+  /** The headline: fresh input, cache writes and output. Cache reads stand apart. */
+  function headline(t) { return t ? num(t.input) + num(t.cacheWrite) + num(t.output) : 0; }
+  function cacheRead(t) { return t ? num(t.cacheRead) : 0; }
+  function tierOf(model) {
+    var m = String(model || '').toLowerCase();
+    if (m.indexOf('fable') >= 0) return 'Fable';
+    if (m.indexOf('opus') >= 0) return 'Opus';
+    if (m.indexOf('sonnet') >= 0) return 'Sonnet';
+    if (m.indexOf('haiku') >= 0) return 'Haiku';
+    return 'other';
+  }
+  function ms(iso) { var t = Date.parse(typeof iso === 'string' ? iso : ''); return isNaN(t) ? null : t; }
+  function duration(milliseconds) {
+    var s = Math.max(0, Math.floor(milliseconds / 1000));
+    if (s < 60) return s + 's';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ' + String(s % 60).padStart(2, '0') + 's';
+    return Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm';
+  }
+  function clock(iso) {
+    var t = ms(iso);
+    return t === null ? 'not known' : new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  function stamp(iso) {
+    var t = ms(iso);
+    return t === null ? 'not known' : new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'medium' });
+  }
+  function shortId(id) { return String(id || '').slice(0, 8); }
+  function text(v, fallback) { return typeof v === 'string' && v !== '' ? v : fallback; }
+
+  function el(tag, className, content) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (content !== undefined && content !== null) node.textContent = String(content);
+    return node;
+  }
+  function add(parent) {
+    for (var i = 1; i < arguments.length; i++) {
+      var child = arguments[i];
+      if (child === null || child === undefined || child === false) continue;
+      parent.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+    }
+    return parent;
+  }
+  function chip(content, cls) { return el('span', 'chip ' + cls, content); }
+  function stat(label, value, big, wide) {
+    return add(el('div', 'stat' + (wide ? ' stat-wide' : '')), el('span', 'stat-label', label), el('span', big ? 'big' : 'stat-value', value));
+  }
+  function tokenWords(t) {
+    return 'input ' + n(t.input) + ', cache write ' + n(t.cacheWrite) + ', output ' + n(t.output) + ', cache read ' + n(t.cacheRead);
+  }
+  function isOpenRow(a) { return a.status === 'running' || a.status === 'stale'; }
+
+  /** Draws one section; a value it did not expect blanks that section alone. */
+  function guard(id, draw) {
+    var box = document.getElementById(id);
+    try {
+      draw(box);
+    } catch (e) {
+      box.replaceChildren(el('p', 'section-error', 'This section could not be shown: the snapshot holds a value it did not expect. The rest of the page is unaffected.'));
+    }
+  }
+
+  // ---------------------------------------------------------------- header
+  function anythingRunning(s) {
+    if (!s) return false;
+    if (s.base && s.base.status === 'running') return true;
+    return (s.agents || []).some(function (a) { return a.status === 'running'; });
+  }
+  function renderLiveness() {
+    var box = document.getElementById('liveness');
+    var label = document.getElementById('liveness-text');
+    var s = data.state;
+    var state = 'is-live';
+    var words = 'live';
+    if (!net.fetchOk) { state = 'is-down'; words = 'cannot reach the server'; }
+    else if (s && s.ended) { state = 'is-ended'; words = 'session ended ' + clock(s.ended.at); }
+    else if (net.stream !== 'open') { state = 'is-stale'; words = 'stream down, checking every few seconds'; }
+    else if (s && anythingRunning(s)) {
+      var age = Date.now() - (ms(s.writtenAt) || 0);
+      if (age > STALE_AFTER_MS) { state = 'is-stale'; words = 'stale: no update for ' + duration(age); }
+    }
+    if (!s && net.fetchOk && net.stream === 'open') words = 'live, no snapshot yet';
+    box.className = 'liveness ' + state;
+    label.textContent = words;
+    document.getElementById('written-at').textContent = s ? 'updated ' + clock(s.writtenAt) : '';
+  }
+  function renderHeader() {
+    var s = data.state;
+    document.getElementById('session-line').textContent = s
+      ? 'Session ' + shortId(s.sessionId || data.session) + (s.base && s.base.model ? ', ' + s.base.model : '')
+      : 'Waiting for the first snapshot';
+    var notes = [];
+    if (s && typeof s.schema === 'number' && s.schema > KNOWN_SCHEMA) {
+      notes.push('This snapshot is format ' + s.schema + ', newer than this page knows (' + KNOWN_SCHEMA + '): some figures may be missing.');
+    }
+    if (data.note === 'showing-last-good') notes.push('The newest snapshot could not be read (perhaps mid-write); showing the last good one.');
+    else if (data.note === 'too-large') notes.push('The snapshot is too large to read.');
+    else if (data.note === 'no-such-session') notes.push('No snapshot for that session.');
+    else if (data.note === 'unreadable') notes.push('The snapshot could not be read.');
+    var notice = document.getElementById('notice');
+    notice.textContent = notes.join(' ');
+    notice.hidden = notes.length === 0;
+    renderLiveness();
+  }
+
+  // ---------------------------------------------------------------- controls
+  function renderControls() {
+    var toggle = document.getElementById('toggle-finished');
+    toggle.textContent = view.showFinished ? 'Hide finished' : 'Show finished';
+    toggle.setAttribute('aria-pressed', view.showFinished ? 'false' : 'true');
+    document.getElementById('sort').value = view.sort;
+    var picker = document.getElementById('session');
+    picker.replaceChildren();
+    if (data.sessions.length === 0) add(picker, el('option', '', 'No sessions found'));
+    data.sessions.forEach(function (s, i) {
+      var option = el('option', '', shortId(s.id) + (i === 0 ? ' (newest)' : '') + ', ' + clock(s.updatedAt));
+      option.value = String(s.id);
+      picker.appendChild(option);
+    });
+    if (data.session) picker.value = data.session;
+    document.getElementById('undo-reset').hidden = view.hideBefore === 0;
+    document.getElementById('scope-session').setAttribute('aria-pressed', String(view.scope === 'session'));
+    document.getElementById('scope-all').setAttribute('aria-pressed', String(view.scope === 'all'));
+  }
+
+  // ---------------------------------------------------------------- base
+  function drawBase(box) {
+    box.replaceChildren();
+    var s = data.state;
+    if (!s || !s.base) { add(box, el('p', 'empty', 'No snapshot yet.')); return; }
+    var b = s.base;
+    var status = el('span', 'stat-value');
+    if (s.ended) {
+      add(status, chip('ended', 'st-ended'), ' at ' + stamp(s.ended.at));
+    } else if (b.status === 'running' && b.turnStartedAt) {
+      add(status, chip('running', 'st-running'), ' this turn, for ');
+      var since = el('span', '', duration(Date.now() - (ms(b.turnStartedAt) || Date.now())));
+      since.dataset.since = b.turnStartedAt;
+      status.appendChild(since);
+    } else {
+      add(status, chip('idle', 'st-idle'), b.lastTurnMs !== null && b.lastTurnMs !== undefined ? ' the last turn took ' + duration(b.lastTurnMs) : '');
+    }
+    var allUnreported = num(b.turns) > 0 && num(b.unreportedTurns) >= num(b.turns);
+    var tier = tierOf(b.model);
+    var grid = el('div', 'base-grid');
+    add(grid,
+      add(el('div', 'stat stat-wide'), el('span', 'stat-label', 'Status'), status),
+      add(el('div', 'stat'), el('span', 'stat-label', 'Model'), add(el('span', 'stat-value'), chip(tier, 't-' + tier), ' ', text(b.model, 'not known yet'))),
+      stat('Effort', text(b.effort, 'not reported')),
+      stat('Tokens (input + output)', allUnreported ? 'not reported' : n(headline(b.tokens)), !allUnreported),
+      stat('Cache read', allUnreported ? 'not reported' : n(cacheRead(b.tokens))),
+      stat('Turns', plural(b.turns, 'turn', 'turns') + (num(b.unreportedTurns) > 0 ? ', ' + plural(b.unreportedTurns, 'turn', 'turns') + ' with no usage reported' : ''), false, true)
+    );
+    if (!allUnreported) add(grid, add(el('div', 'stat stat-wide'), el('span', 'stat-label', 'All four counts'), el('span', 'small', tokenWords(b.tokens || {}))));
+    if (b.firstSeenAt) add(grid, stat('Seen since', stamp(b.firstSeenAt), false, true));
+    box.appendChild(grid);
+  }
+
+  // ---------------------------------------------------------------- agents
+  function sorted(list) {
+    var copy = list.slice();
+    copy.sort(function (a, b) {
+      if (view.sort === 'tokens') return headline(b.tokens) - headline(a.tokens);
+      return (ms(b.startedAt) || 0) - (ms(a.startedAt) || 0);
+    });
+    return copy;
+  }
+  function modelWords(a) {
+    var ran = a.ranModel || a.resolvedModel;
+    return 'asked ' + text(a.askedModel, 'inherits') + (ran ? ', runs on ' + ran : '');
+  }
+  function effortWords(a) {
+    return 'asked ' + text(a.askedEffort, 'inherits') + (a.ranEffort ? ', ran at ' + a.ranEffort : '');
+  }
+  function card(a, staleMinutes) {
+    var id = String(a.agentId);
+    var article = el('article', 'card st-border-' + text(a.status, 'running'));
+    article.dataset.action = 'expand';
+    article.dataset.id = id;
+    var flagged = a.check && a.check.flag === 'same';
+    if (flagged) article.className += ' is-flagged';
+    var open = view.expanded[id] === true;
+
+    var head = el('button', 'card-head');
+    head.type = 'button';
+    head.dataset.action = 'expand';
+    head.dataset.id = id;
+    head.setAttribute('aria-expanded', String(open));
+
+    var title = el('span', 'card-title');
+    var statusWord = a.status === 'stale' ? 'running, no update' : text(a.status, 'running');
+    add(title, chip(statusWord, 'st-' + text(a.status, 'running')));
+    if (a.label) add(title, el('strong', '', a.label), el('span', 'small', (a.stage ? a.stage + ', ' : '') + text(a.seat, 'unknown')));
+    else if (a.stage) add(title, el('strong', '', a.stage), el('span', 'small', text(a.seat, 'unknown')));
+    else add(title, el('strong', '', text(a.seat, 'unknown')), el('span', 'small', 'no stage word'));
+    head.appendChild(title);
+
+    var ranTier = tierOf(a.ranModel || a.resolvedModel || a.askedModel);
+    add(head, add(el('span', 'card-line'), el('b', '', 'Model '), chip(ranTier, 't-' + ranTier), ' ', modelWords(a)));
+    add(head, add(el('span', 'card-line'), el('b', '', 'Effort '), effortWords(a)));
+
+    var line = add(el('span', 'card-line'), el('b', '', 'Elapsed '));
+    var start = ms(a.startedAt);
+    if (isOpenRow(a)) {
+      var ticking = el('span', '', duration(Date.now() - (start || Date.now())));
+      ticking.dataset.since = typeof a.startedAt === 'string' ? a.startedAt : '';
+      line.appendChild(ticking);
+    } else {
+      var endAt = ms(a.endedAt);
+      line.appendChild(document.createTextNode(start && endAt ? duration(endAt - start) : 'not known'));
+    }
+    add(line, ', ', el('b', '', 'Tokens '),
+      a.tokens ? n(headline(a.tokens)) + ' (cache read ' + n(cacheRead(a.tokens)) + ')' : (isOpenRow(a) ? 'when it ends' : 'not reported'));
+    head.appendChild(line);
+    if (a.status === 'stale') add(head, el('span', 'card-line', 'Running for over ' + n(staleMinutes) + ' minutes with no update.'));
+    article.appendChild(head);
+
+    if (flagged) {
+      add(article, el('p', 'flag', a.check.against === 'base'
+        ? 'Same model as the base session, the only one that did work here: this review is not independent.'
+        : 'Same model as the work: this review ran on the model that did the work it reviews, so it is not independent.'));
+    } else if (a.check) {
+      add(article, el('p', 'check-ok', text(a.check.reason, '')));
+    }
+
+    if (open) {
+      var detail = el('div', 'detail');
+      var list = el('dl');
+      var t = a.tokens;
+      var rows = [
+        ['Input', t ? n(t.input) : 'not reported'],
+        ['Cache write', t ? n(t.cacheWrite) : 'not reported'],
+        ['Output', t ? n(t.output) : 'not reported'],
+        ['Cache read', t ? n(t.cacheRead) : 'not reported'],
+        ['Turns', plural(a.turns, 'turn', 'turns') + ' ended, ' + n(a.reportedTurns) + ' with usage'],
+        ['Started', stamp(a.startedAt)],
+        ['Ended', a.endedAt ? stamp(a.endedAt) : 'not yet'],
+        [isOpenRow(a) ? 'Last turn ended' : 'End reason', text(a.endReason, 'none yet')],
+        ['Agent id', id]
+      ];
+      if (a.workflowRunId) rows.push(['Workflow', a.workflowRunId + ', agent ' + (typeof a.workflowIndex === 'number' ? a.workflowIndex : 'not known')]);
+      rows.forEach(function (r) { add(list, el('dt', '', r[0]), el('dd', r[0] === 'Agent id' || r[0] === 'Workflow' ? 'mono' : '', r[1])); });
+      detail.appendChild(list);
+      article.appendChild(detail);
+    }
+    return article;
+  }
+  function drawAgents(box) {
+    box.replaceChildren();
+    var s = data.state;
+    var agents = s && Array.isArray(s.agents) ? s.agents : [];
+    var staleMinutes = s ? num(s.staleMinutes) : 30;
+    var running = sorted(agents.filter(isOpenRow));
+    var finished = sorted(agents.filter(function (a) {
+      if (isOpenRow(a)) return false;
+      if (view.hideBefore > 0) {
+        var endedAt = ms(a.endedAt) || ms(a.activeAt) || 0;
+        if (endedAt < view.hideBefore) return false;
+      }
+      return true;
+    }));
+    var hiddenByReset = agents.filter(function (a) { return !isOpenRow(a); }).length - finished.length;
+    var addCards = function (list) {
+      var wrap = el('div', 'cards');
+      list.forEach(function (a) {
+        try { wrap.appendChild(card(a, staleMinutes)); }
+        catch (e) { wrap.appendChild(el('p', 'section-error', 'One agent could not be shown: its record holds a value this page did not expect.')); }
+      });
+      return wrap;
+    };
+
+    add(box, el('h3', 'group-title', 'Running (' + running.length + ')'));
+    if (running.length === 0) add(box, el('p', 'empty', 'Nothing running.'));
+    else add(box, addCards(running));
+
+    add(box, el('h3', 'group-title', 'Finished (' + finished.length + ')'));
+    if (!view.showFinished) add(box, el('p', 'empty', plural(finished.length, 'finished agent', 'finished agents') + ' hidden.'));
+    else if (finished.length === 0) add(box, el('p', 'empty', 'None yet.'));
+    else add(box, addCards(finished));
+    if (hiddenByReset > 0) add(box, el('p', 'empty', plural(hiddenByReset, 'agent that finished', 'agents that finished') + ' before Reset view ' + (hiddenByReset === 1 ? 'is' : 'are') + ' hidden in this browser.'));
+  }
+
+  // ---------------------------------------------------------------- totals
+  function drawTotals(box) {
+    box.replaceChildren();
+    var s = data.state;
+    var t = s && s.totals ? (view.scope === 'all' ? s.totals.allSessions : s.totals.session) : null;
+    if (!t) { add(box, el('p', 'empty', 'No totals yet.')); return; }
+    var max = 0;
+    TIERS.forEach(function (tier) { max = Math.max(max, headline(t.byTier[tier])); });
+    var bars = el('div', 'bars');
+    var sumHead = 0;
+    var sumRead = 0;
+    TIERS.forEach(function (tier) {
+      var tokens = t.byTier[tier] || {};
+      var value = headline(tokens);
+      sumHead += value;
+      sumRead += cacheRead(tokens);
+      var meter = el('progress', 't-' + tier);
+      meter.max = max > 0 ? max : 1;
+      meter.value = value;
+      meter.setAttribute('aria-label', tier + ': ' + n(value) + ' input and output tokens');
+      add(bars, add(el('div', 'bar-row'),
+        el('span', 'bar-name', tier), meter, el('span', 'bar-num', n(value)),
+        el('span', 'bar-detail', value + cacheRead(tokens) > 0 ? tokenWords(tokens) : 'none')));
+    });
+    box.appendChild(bars);
+    add(box, add(el('div', 'overall'),
+      add(el('div', 'stat'), el('span', 'stat-label', (view.scope === 'all' ? 'All sessions' : 'This session') + ', input + output'), el('span', 'big', n(sumHead))),
+      add(el('div', 'stat'), el('span', 'stat-label', 'Cache read'), el('span', 'stat-value', n(sumRead))),
+      el('span', 'small', plural(t.agents, 'agent', 'agents') + ', ' + plural(t.turns, 'main turn', 'main turns') + (t.since ? ', since ' + stamp(t.since) : ''))));
+  }
+
+  // ---------------------------------------------------------------- history
+  function drawHistory(box) {
+    box.replaceChildren();
+    var h = data.history;
+    if (!h) { add(box, el('p', 'empty', 'Loading the usage logs.')); return; }
+    if (!Array.isArray(h.lines) || h.lines.length === 0) { add(box, el('p', 'empty', 'No usage lines recorded yet.')); return; }
+    var bySession = dict();
+    h.lines.forEach(function (line) {
+      var id = String(line.sessionId || 'unknown');
+      var row = bySession[id] || (bySession[id] = { id: id, last: '', tiers: dict(), reported: dict(), total: 0, anyReported: false, unreported: 0 });
+      var counts = [line.inputTokens, line.cacheWriteTokens, line.outputTokens];
+      var isReported = counts.some(function (c) { return typeof c === 'number'; });
+      var tier = tierOf(line.model);
+      if (isReported) {
+        var value = num(line.inputTokens) + num(line.cacheWriteTokens) + num(line.outputTokens);
+        row.tiers[tier] = (row.tiers[tier] || 0) + value;
+        row.reported[tier] = true;
+        row.total += value;
+        row.anyReported = true;
+      } else {
+        row.unreported += 1;
+      }
+      var time = typeof line.time === 'string' ? line.time : '';
+      if (time > row.last) row.last = time;
+    });
+    var rows = Object.keys(bySession).map(function (k) { return bySession[k]; })
+      .sort(function (a, b) { return a.last < b.last ? 1 : -1; });
+    var cell = function (r, tier) {
+      if (r.reported[tier]) return n(r.tiers[tier]);
+      return '';
+    };
+    var table = el('table');
+    var head = add(el('tr'), el('th', '', 'Session'));
+    TIERS.forEach(function (tier) { head.appendChild(el('th', '', tier)); });
+    head.appendChild(el('th', '', 'Total'));
+    add(table, add(el('thead'), head));
+    var body = el('tbody');
+    rows.slice(0, HISTORY_SESSIONS).forEach(function (r) {
+      var first = add(el('td'), el('span', '', shortId(r.id)), el('br'), el('span', 'small', stamp(r.last)));
+      if (r.unreported > 0) add(first, el('br'), el('span', 'small', plural(r.unreported, 'line', 'lines') + ' not reported'));
+      var tr = add(el('tr'), first);
+      TIERS.forEach(function (tier) { tr.appendChild(el('td', 'num', cell(r, tier))); });
+      tr.appendChild(el('td', 'num', r.anyReported ? n(r.total) : 'not reported'));
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+    add(box, add(el('div', 'table-scroll hist-wide'), table));
+    var list = el('div', 'hist-list hist-narrow');
+    rows.slice(0, HISTORY_SESSIONS).forEach(function (r) {
+      var tiers = el('div', 'hist-tiers');
+      TIERS.forEach(function (tier) {
+        if (r.reported[tier]) add(tiers, add(el('span'), chip(tier, 't-' + tier), ' ' + n(r.tiers[tier])));
+      });
+      add(list, add(el('div', 'hist-item'),
+        add(el('div', 'card-title'), el('strong', '', 'Session ' + shortId(r.id)), el('span', 'small', stamp(r.last))),
+        add(el('div', 'card-line'), el('b', '', 'Input + output '), r.anyReported ? n(r.total) : 'not reported',
+          r.unreported > 0 ? ', ' + plural(r.unreported, 'line', 'lines') + ' not reported' : ''),
+        tiers));
+    });
+    box.appendChild(list);
+    add(box, el('p', 'small', 'Input plus output tokens (fresh input, cache writes, output) per session and model tier; an empty cell had no usage reported. Read from the newest ' + n(h.bound) + ' log lines' +
+      (h.truncated ? ', from the end of each log file only' : '') + '; showing up to ' + HISTORY_SESSIONS + ' sessions.'));
+  }
+
+  // ---------------------------------------------------------------- footer
+  function drawFoot(box) {
+    box.replaceChildren();
+    var s = data.state;
+    if (s && s.lastWriteFailure) {
+      var f = s.lastWriteFailure;
+      add(box, el('p', 'failure', 'Last write failed at ' + stamp(f.at) + ': the ' + text(f.target, 'file') + ' could not be written (' + text(f.reason, 'no reason given') + ').'));
+    }
+    add(box, add(el('p'), el('strong', '', 'Usage log: '), el('span', 'mono', s && s.logPath ? s.logPath : 'not known yet'), s ? '' : ' (folder ' + data.dir + ')'));
+    add(box, el('p', '', 'Recorded: one line per finished agent and per main-loop turn, with time, session, stage word, seat, agent id, model, effort, status, duration and the four token counts. Never recorded: prompt text. Agent descriptions, and a teammate’s role, are recorded only when the logLabels option is on' +
+      (s ? ' (it is ' + (s.logLabels ? 'on' : 'off') + ' for this session); otherwise a teammate is written as teammate.' : '.')));
+    add(box, el('p', '', 'Token counts are what the engine reported at each turn’s end; an agent whose end was not reported shows "not reported", never a zero or an estimate. A turn that ran on more than one model is counted under its last model. The figures are tokens, not cost: cache reads are billed at a fraction of fresh input, so they are shown apart.'));
+    add(box, el('p', '', 'Same-model check, by label prefix only: draft, build and fold are work; review, verify and edict-v are review. A review is flagged only against a real pair: work whose label has the same text after the colon, inside the same workflow run, or among the session’s own agents outside workflows. A review with no pair reads "no paired work found: independence not checked". Only when no other agent in the session did any work is a review compared with the base session’s model.'));
+    add(box, el('p', '', 'Limits of the check: labels without these prefixes are not checked, a label is taken at its word, work done by an unlabelled agent is never paired, and workflow phase names are not available, so phases are not matched.'));
+    add(box, el('p', '', 'Times are shown in your local time zone.' + (s ? ' An agent with no update for ' + n(s.staleMinutes) + ' minutes is shown as running with no update; it still counts as running until it ends.' : '')));
+  }
+
+  function renderAll() {
+    try { renderHeader(); } catch (e) { /* the header keeps what it had */ }
+    try { renderControls(); } catch (e) { /* the controls keep what they had */ }
+    guard('base', drawBase);
+    guard('agents', drawAgents);
+    guard('totals', drawTotals);
+    guard('history', drawHistory);
+    guard('foot', drawFoot);
+  }
+
+  // ---------------------------------------------------------------- data
+  function fetchJson(url) {
+    return fetch(url, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+  function fetchState() {
+    var url = '/api/state' + (view.session ? '?session=' + encodeURIComponent(view.session) : '');
+    return fetchJson(url).then(function (body) {
+      net.fetchOk = true;
+      var sameSession = body && body.session === data.session;
+      // Keep the last good state when this read found none for the same session.
+      if (body && body.state) data.state = body.state;
+      else if (!sameSession) data.state = null;
+      data.sessions = body && Array.isArray(body.sessions) ? body.sessions : [];
+      data.session = body ? body.session : null;
+      data.dir = body && typeof body.dir === 'string' ? body.dir : '';
+      data.note = body ? body.note : null;
+      if (body && !body.state && sameSession && data.state) data.note = 'showing-last-good';
+    }, function () {
+      net.fetchOk = false;
+    }).then(renderAll);
+  }
+  function fetchHistory() {
+    return fetchJson('/api/history').then(function (body) {
+      data.history = body;
+      guard('history', drawHistory);
+    }, function () { /* the next poll or event tries again */ });
+  }
+  function startPolling() {
+    if (net.polling === null) net.polling = setInterval(fetchState, POLL_MS);
+    if (net.historyPolling === null) net.historyPolling = setInterval(fetchHistory, HISTORY_POLL_MS);
+  }
+  function stopPolling() {
+    if (net.polling !== null) { clearInterval(net.polling); net.polling = null; }
+    if (net.historyPolling !== null) { clearInterval(net.historyPolling); net.historyPolling = null; }
+  }
+  function connect() {
+    if (typeof EventSource === 'undefined') { net.stream = 'down'; startPolling(); return; }
+    var source = new EventSource('/api/events');
+    source.addEventListener('open', function () { net.stream = 'open'; stopPolling(); renderLiveness(); fetchState(); });
+    source.addEventListener('error', function () { net.stream = 'down'; startPolling(); renderLiveness(); });
+    source.addEventListener('state', function () { fetchState(); });
+    source.addEventListener('history', function () { fetchHistory(); });
+  }
+
+  // ---------------------------------------------------------------- actions
+  function onAction(event) {
+    var target = event.target instanceof Element ? event.target.closest('[data-action]') : null;
+    if (!target) return;
+    var action = target.dataset.action;
+    var isChange = event.type === 'change';
+    if (target.tagName === 'SELECT' && !isChange) return;
+    if (action === 'toggle-finished') {
+      view.showFinished = !view.showFinished; save('showFinished', view.showFinished);
+    } else if (action === 'sort') {
+      view.sort = target.value === 'tokens' ? 'tokens' : 'start'; save('sort', view.sort);
+    } else if (action === 'session') {
+      view.session = target.value || null; fetchState(); return;
+    } else if (action === 'reset-view') {
+      view.hideBefore = Date.now(); save('hideBefore', view.hideBefore);
+    } else if (action === 'undo-reset') {
+      view.hideBefore = 0; save('hideBefore', 0);
+    } else if (action === 'scope') {
+      view.scope = target.dataset.scope === 'all' ? 'all' : 'session';
+    } else if (action === 'expand') {
+      var id = target.dataset.id;
+      if (!id) return;
+      if (window.getSelection && String(window.getSelection()) !== '') return;
+      view.expanded[id] = view.expanded[id] !== true;
+      event.stopPropagation();
+    } else {
+      return;
+    }
+    renderAll();
+  }
+  document.addEventListener('click', onAction);
+  document.addEventListener('change', onAction);
+
+  // Elapsed times tick in the page; the liveness word follows the clock.
+  setInterval(function () {
+    var nodes = document.querySelectorAll('[data-since]');
+    for (var i = 0; i < nodes.length; i++) {
+      var since = ms(nodes[i].dataset.since);
+      if (since !== null) nodes[i].textContent = duration(Date.now() - since);
+    }
+    try { renderLiveness(); } catch (e) { /* next second */ }
+  }, 1000);
+
+  renderAll();
+  fetchState();
+  fetchHistory();
+  connect();
+})();
+</script>
+</body>
+</html>
