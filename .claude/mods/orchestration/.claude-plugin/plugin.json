@@ -1,0 +1,15 @@
+{
+  "name": "orchestration",
+  "version": "0.2.1",
+  "author": { "name": "Lyra (SproutLab)" },
+  "description": "A pane that shows subagents and workflow agents as they run, their models and token counts, flags a review that ran on the same model as its work, and logs usage to a JSON lines file per session.",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "logLabels": {
+      "type": "boolean",
+      "title": "Write agent labels to the usage log",
+      "description": "Off by default: the usage log, the totals store and the export then carry only an agent's seat, stage word and id. On: they also carry its description, which may hold private words.",
+      "default": false
+    }
+  }
+}
