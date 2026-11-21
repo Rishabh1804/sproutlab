@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { pinAgeMonths } from './fixtures/clock';
 
 // food-effects-v2 P1c — the CHOKING SET (milk-spec §9, the first choking-by-form-PRIMARY render).
 //
@@ -35,14 +36,28 @@ declare const _fdAgeRule: (n: string) => any;
 declare const _effPolarity: (e: any) => string;
 declare const FOOD_EFFECTS: Record<string, any>;
 
+// Open a Library book's food pop-up the way a tap on the shelf does (libOpenBook reads the
+// key from the tapped button) and return its front face. Asserted pop-up-relative — not
+// through the tab chrome, which races the app's deferred switchTab(savedTab) on init.
+async function openBook(page: Page, key: string) {
+  await page.evaluate((k) => {
+    const b = document.createElement('button');
+    b.setAttribute('data-arg', k);
+    (window as any).libOpenBook(b);
+  }, key);
+  return page.locator('#libPopOv .fp-front');
+}
+
 test.describe('food-effects-v2 P1c — the choking set', () => {
   test.beforeEach(async ({ page }) => {
+    // A 9-month-old: inside the introduction window these cards are written for. Pinned so the
+    // spec does not expire as the fixture child grows (cow's milk and honey re-frame at 12 and 24 mo).
+    await pinAgeMonths(page, 9);
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() =>
       typeof (window as any).renderDietLibrary === 'function'
       && typeof (window as any).getFoodEffect === 'function'
-      && typeof (window as any)._effPolarity === 'function'
-      && !!document.getElementById('dietChokingIntro'), null, { timeout: 10_000 });
+      && typeof (window as any)._effPolarity === 'function', null, { timeout: 10_000 });
     await page.evaluate(() => (window as any).renderDietLibrary());
   });
 
@@ -101,58 +116,60 @@ test.describe('food-effects-v2 P1c — the choking set', () => {
     expect(e.severe).not.toMatch(/hives|swelling of the lips|wheez/);
   });
 
-  // ── the dedicated card: split conditional lead (carve-out FIRST, then the gate) ──
-  test('the card renders a SPLIT lead — sage carve-out (sprout) above the amber gate (clock), never a siren', async ({ page }) => {
-    const host = page.locator('#dietChokingIntro');
-    await expect(host.locator('.enc-split')).toHaveCount(1);
-    await expect(host.locator('.enc-split-good use[href="#zi-sprout"]')).toHaveCount(1);
-    await expect(host.locator('.enc-split-gate use[href="#zi-clock"]')).toHaveCount(1);
-    // conditional, NOT the rose 'avoid' siren and NOT the encourage benefit banner.
-    await expect(host.locator('.enc-split use[href="#zi-siren"]')).toHaveCount(0);
-    await expect(host.locator('.enc-benefit')).toHaveCount(0);
-    // carve-out (modify, don't ban) leads the gate in reading order.
-    const order = await page.evaluate(() => {
-      const h = document.getElementById('dietChokingIntro')!;
-      const good = h.querySelector('.enc-split-good'), gate = h.querySelector('.enc-split-gate');
-      if (!good || !gate) return 'missing';
-      return (good.compareDocumentPosition(gate) & 4) ? 'good-first' : 'gate-first';
-    });
-    expect(order).toBe('good-first');
+  // ── the choking book's pop-up (the dedicated card was retired in Library #5b; S11 moved its
+  //    guidance here): a CONDITIONAL lead — modify, don't ban — never the siren, never "yes" ──
+  test('the pop-up leads CONDITIONAL — the amber wait band (clock), never a siren, never the encourage tick', async ({ page }) => {
+    const front = await openBook(page, 'choking hazards');
+    const verdict = front.locator('.fp-verdict');
+    await expect(verdict).toHaveCount(1);
+    await expect(verdict).toHaveClass(/\bfp-verdict--wait\b/);
+    await expect(verdict.locator('use[href="#zi-clock"]')).toHaveCount(1);
+    // conditional, NOT the rose 'avoid' band, NOT the siren, and NOT the encourage "yes".
+    await expect(verdict.locator('use[href="#zi-siren"], use[href="#zi-warn"]')).toHaveCount(0);
+    await expect(front.locator('.fp-verdict--no, .fp-verdict--yes')).toHaveCount(0);
+    // the lead is the carve-out (how to make it safe), not a ban.
+    await expect(verdict).toContainText(/cut small, cook soft, grind/i);
+    // modify-don't-ban is the first row a parent can open, above the forms and the floor.
+    await expect(front.locator('.lib-prow').first()).toContainText(/the hazard is the SHAPE, not the food/);
   });
 
   // ── M-γ-1: the per-food cut rules render (the load-bearing "modify, don't ban" guidance) ──
-  test('the cut-it-this-way rules render PINNED (quarter grapes lengthwise; hot dogs lengthwise)', async ({ page }) => {
-    const host = page.locator('#dietChokingIntro');
-    await expect(host.locator('.enc-form-list li')).toContainText([/quarter lengthwise/i]);
-    await expect(host).toContainText(/hot dogs?.*lengthwise|lengthwise.*strips/i);
-    // the cut rules are PINNED, never folded into the collapse body.
-    await expect(page.locator('#dietChokingIntroMore .enc-form')).toHaveCount(0);
+  test('the cut-it-this-way rules are on the card (quarter grapes lengthwise; hot dogs lengthwise)', async ({ page }) => {
+    const forms = (await openBook(page, 'choking hazards')).locator('.lib-prow--forms');
+    await expect(forms).toHaveCount(1);
+    await expect(forms.locator('.fp-chip--ok').first()).toContainText(/quarter lengthwise/i);
+    await expect(forms).toContainText(/hot dogs?.*lengthwise.*strips/i);
+    // the never list names the classic plugs.
+    await expect(forms.locator('.fp-chip--never').first()).toContainText(/whole grapes/i);
   });
 
-  // ── the choking-first-aid strip is PINNED + scoped to choking (not "allergic reaction") ──
-  test('the choking-first-aid strip is pinned, present-only, and choking-scoped', async ({ page }) => {
-    await expect(page.locator('#dietChokingIntro .cons-severe')).toHaveCount(1);
-    await expect(page.locator('#dietChokingIntroBody .cons-severe')).toHaveCount(0); // pinned, never folds
-    await expect(page.locator('#dietChokingIntro .cons-severe-h')).toContainText(/if she is choking/i);
-    await expect(page.locator('#dietChokingIntro .enc-emergency')).toContainText(/back blow|abdominal thrust/i);
+  // ── the choking-first-aid floor is on the card + scoped to choking (not "allergic reaction") ──
+  test('the choking-first-aid floor is on the card, choking-scoped, and deep-links to the Deck choking card', async ({ page }) => {
+    const front = await openBook(page, 'choking hazards');
+    // One floor row, in the amber caution chrome (choking is mechanical — not the anaphylaxis rose).
+    const floor = front.locator('.lib-prow--floor');
+    await expect(floor).toHaveCount(1);
+    await expect(floor).toHaveClass(/\blib-prow--caution\b/);
+    await expect(floor.locator('.lib-prow-t')).toContainText(/if she is choking/i);
+    const act = floor.locator('.lib-prow-act');
+    await expect(act).toContainText(/back blows/i);
+    await expect(act).toContainText(/abdominal thrusts/i);
+    await expect(act).toContainText(/NO adrenaline/);
+    // The deep-link lands on the Deck's choking card — mechanical first aid, no adrenaline step.
+    await expect(floor.locator('.lib-prow-deck')).toHaveAttribute('data-arg', 'choking');
+    await page.evaluate(() => (window as any).libPopToDeck(document.querySelector('#libPopOv .lib-prow-deck')));
+    // Child combinators: the Deck's cards are nested in one another in the DOM today (an unclosed
+    // div in _emDocFace — docs/BUGS.md), so a descendant selector would read the botulism card too.
+    const card = page.locator('#libDeckOv #ec-choking > .fp-flip > .fp-front');
+    await expect(card).toContainText(/back blows/i);
+    await expect(card).toContainText(/abdominal thrusts/i);
+    await expect(card).not.toContainText(/adrenaline|auto-injector/i);
   });
 
-  // ── the gagging-vs-choking discriminator (highest-value education) is PINNED, by the floor (V-V-12) ──
-  test('the gagging-vs-choking discriminator is PINNED above the fold (gagging LOUD/normal; choking QUIET = emergency)', async ({ page }) => {
-    const pinned = page.locator('#dietChokingIntro');
-    await expect(pinned.locator('.enc-myth')).toContainText(/gagging is loud/i);
-    await expect(pinned.locator('.enc-myth')).toContainText(/choking is quiet/i);
-    // V-V-12: it must NOT be stranded in the collapse body — the discriminator is load-bearing.
-    await expect(page.locator('#dietChokingIntroMore .enc-myth')).toHaveCount(0);
-    // and it sits immediately before the choking-first-aid floor (discriminator → emergency).
-    const order = await page.evaluate(() => {
-      const h = document.getElementById('dietChokingIntro')!;
-      const myth = h.querySelector('.enc-myth'), floor = h.querySelector('.cons-severe');
-      if (!myth || !floor) return 'missing';
-      return (myth.compareDocumentPosition(floor) & 4) ? 'myth-first' : 'floor-first';
-    });
-    expect(order).toBe('myth-first');
-  });
+  // ── the gagging-vs-choking discriminator (V-V-12) was PINNED on the retired card. No live
+  //    surface renders it now (the record still holds it: FOOD_EFFECTS['choking hazards'].myth),
+  //    so its guard went with the card — logged in docs/BUGS.md, "Guidance dropped when the
+  //    Library knowledge cards were retired", for the Architect to restore or let go. ──
 
   // ── the detail-sheet second surface: conditional flag, never the rose siren ──
   test('the Library detail sheet renders a hazard food (grape) as CONDITIONAL, not the avoid siren', async ({ page }) => {

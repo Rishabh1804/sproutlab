@@ -1,154 +1,140 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { pinAgeMonths } from './fixtures/clock';
 
-// food-effects-v2 — the guided-introduction KNOWLEDGE card (renderDietNutIntro
-// → #dietNutIntro), living in Diet → Library (the knowledge base), NOT the Info
-// analytics tab. It surfaces the peanut + tree-nut benefit / safe-form / watch-for
-// guidance from FOOD_EFFECTS so a parent can consume it as reference.
+// food-effects-v2 — the nut-introduction guidance, on the Library food pop-up.
 //
-// The card is rendered via the real Library lazy hook (renderDietLibrary →
-// renderDietNutIntro), and asserted CARD-RELATIVE (counts / DOM position / the
-// collapse body's display) — not through the active-tab chrome, which races the
-// app's deferred switchTab(savedTab) on init (the food-library-f3 spec sidesteps
-// the same way). What we test is the card's internal contract, not which tab is
-// currently shown.
+// History: this guidance first shipped as one heavy knowledge card (renderDietNutIntro →
+// #dietNutIntro) with its emergency floor PINNED. Library redesign #5b (#216) retired that
+// card from the Guides wing, and the 6-second card (S11, Architect-ratified) moved each
+// food's guidance onto its own pop-up (libOpenBook → #libPopOv): a verdict band leads, then
+// disclosure rows the parent opens; the floor is a row on the card plus a one-tap deep-link
+// into the always-reachable Emergency Deck. These guards follow the guidance to that surface.
 //
-// Guards: (1) benefit-first + affirming icon (V-3); (2) the severe floor is PINNED
-// outside the collapse body, never folds (A-1/V-1); (3) the never-whole/choking
-// form-gate is pinned (A-2); (4) record-sourced (LEAP), honey gets no banner;
-// (5) the myth + high-risk note reach the body; (6) the bulk collapses, floor pinned.
+// Guards: (1) benefit-first + an affirming icon (V-3); (2) the severe floor is on the card
+// and one tap from full first aid (A-1/V-1, as re-ratified in S11); (3) the never-whole /
+// choking form-gate is on the card (A-2); (4) honey is never shelved as "introduce early"
+// (V-3 polarity); (5) the card is a 6-second card: the verdict is always shown, rows fold.
+//
+// Retired with the old card and NOT carried to any live surface (logged in docs/BUGS.md,
+// "Guidance dropped when the Library knowledge cards were retired"): the how-to-introduce
+// protocol with tree nut's "each nut on its own, a few days apart" (M-γ-1), the LEAP evidence
+// line, the "delay" myth, and the high-risk (eczema / egg allergy) note. Their guards went
+// with the card; restoring the content is an Architect decision, not a test fix.
 
-// Is `sel` shown within the card — i.e. no display:none ancestor between it and
-// #dietNutIntroCard? (Stops at the card, so the hidden inactive-tab panel above
-// the card doesn't count — we're testing the card's own structure.)
-const SHOWN_IN_CARD = (sel: string) => {
-  let n: HTMLElement | null = document.querySelector(sel);
-  if (!n) return false;
-  while (n && n.id !== 'dietNutIntroCard') {
-    if (getComputedStyle(n).display === 'none') return false;
-    n = n.parentElement;
-  }
-  return !!n; // reached the card without hitting display:none
-};
+// Open a Library book's food pop-up the way a tap on the shelf does (libOpenBook reads the
+// key from the tapped button) and return its front face. Asserted pop-up-relative — not
+// through the tab chrome, which races the app's deferred switchTab(savedTab) on init.
+async function openBook(page: Page, key: string) {
+  await page.evaluate((k) => {
+    const b = document.createElement('button');
+    b.setAttribute('data-arg', k);
+    (window as any).libOpenBook(b);
+  }, key);
+  return page.locator('#libPopOv .fp-front');
+}
 
-test.describe('food-effects-v2 — the nut-introduction knowledge card (Library)', () => {
+test.describe('food-effects-v2 — the nut-introduction guidance (Library food pop-up)', () => {
   test.beforeEach(async ({ page }) => {
+    // A 9-month-old: inside the introduction window these cards are written for. Pinned so the
+    // spec does not expire as the fixture child grows (cow's milk and honey re-frame at 12 and 24 mo).
+    await pinAgeMonths(page, 9);
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() =>
       typeof (window as any).renderDietLibrary === 'function'
+      && typeof (window as any).libOpenBook === 'function'
       && typeof (window as any).getFoodEffect === 'function'
-      && !!document.getElementById('dietNutIntro'), null, { timeout: 10_000 });
+      && !!document.getElementById('libPopOv'), null, { timeout: 10_000 });
     // Open the Library via its real lazy-render hook (what switchDietSub calls).
     await page.evaluate(() => (window as any).renderDietLibrary());
   });
 
-  test('renders benefit-first, with an affirming (non-warn) icon', async ({ page }) => {
-    const host = page.locator('#dietNutIntro');
-    await expect(host.locator('.enc-benefit')).toHaveCount(1);
-    // The benefit banner leads the affirming sprout icon — never the warn glyph.
-    await expect(host.locator('.enc-benefit-h use[href="#zi-sprout"]')).toHaveCount(1);
-    await expect(host.locator('.enc-benefit use[href="#zi-warn"]')).toHaveCount(0);
-    // Benefit banner sits ABOVE the severe strip in DOM/reading order, and both
-    // are in the pinned host (not the collapse body).
-    const order = await page.evaluate(() => {
-      const h = document.getElementById('dietNutIntro')!;
-      const benefit = h.querySelector('.enc-benefit');
-      const severe = h.querySelector('.cons-severe');
-      if (!benefit || !severe) return 'missing';
-      return (benefit.compareDocumentPosition(severe) & 4) ? 'benefit-first' : 'severe-first';
+  for (const key of ['peanut', 'tree nut']) {
+    test(`${key}: the pop-up leads benefit-first, with an affirming (non-warn) icon`, async ({ page }) => {
+      const front = await openBook(page, key);
+      // The verdict band is the sage "yes" and says the benefit, not a caution.
+      const verdict = front.locator('.fp-verdict');
+      await expect(verdict).toHaveCount(1);
+      await expect(verdict).toHaveClass(/\bfp-verdict--yes\b/);
+      await expect(verdict).toContainText(/good to introduce early/i);
+      // It carries the affirming tick — never the warn glyph or the siren.
+      await expect(verdict.locator('use[href="#zi-check"]')).toHaveCount(1);
+      await expect(verdict.locator('use[href="#zi-warn"], use[href="#zi-siren"]')).toHaveCount(0);
+      // The benefit reads ABOVE the reaction floor in DOM/reading order.
+      const order = await front.evaluate((f) => {
+        const v = f.querySelector('.fp-verdict');
+        const floor = f.querySelector('.lib-prow--floor');
+        if (!v || !floor) return 'missing';
+        return (v.compareDocumentPosition(floor) & 4) ? 'benefit-first' : 'floor-first';
+      });
+      expect(order).toBe('benefit-first');
     });
-    expect(order).toBe('benefit-first');
+  }
+
+  test('the severe-reaction floor is on the card and one tap from full first aid (A-1/V-1, S11)', async ({ page }) => {
+    const front = await openBook(page, 'peanut');
+    // Exactly one floor row, in the anaphylaxis (rose) chrome — not the amber caution variant.
+    const floor = front.locator('.lib-prow--floor');
+    await expect(floor).toHaveCount(1);
+    await expect(floor).not.toHaveClass(/\blib-prow--caution\b/);
+    // All three anaphylaxis red flags, and the emergency action (call 112) with them.
+    await expect(floor.locator('.lib-prow-signs li')).toHaveCount(3);
+    await expect(floor.locator('.lib-prow-act')).toContainText(/112/);
+    // The row deep-links to the anaphylaxis card of the Emergency Deck, carrying the food.
+    const link = floor.locator('.lib-prow-deck[data-action="libPopToDeck"]');
+    await expect(link).toHaveCount(1);
+    await expect(link).toHaveAttribute('data-arg', 'anaphylaxis');
+    await page.evaluate(() => (window as any).libPopToDeck(document.querySelector('#libPopOv .lib-prow-deck')));
+    // Child combinators: the Deck's cards are nested in one another in the DOM today (an unclosed
+    // div in _emDocFace — docs/BUGS.md), so a descendant selector would read the later cards too.
+    const card = page.locator('#libDeckOv #ec-anaphylaxis');
+    await expect(card).toHaveCount(1);
+    await expect(card.locator('> .fp-flip > .fp-front .ec-name')).toContainText(/peanut/i);
+    await expect(card.locator('> .fp-flip > .fp-front .ec-call')).toContainText(/112/);
+    // And the Deck stands on its own: opened with no food, the same floor is there.
+    await page.evaluate(() => { (window as any)._libCloseDeck(); (window as any).libOpenDeck(); });
+    await expect(page.locator('#libDeckOv #ec-anaphylaxis > .fp-flip > .fp-front .ec-signs li')).toHaveCount(3);
   });
 
-  test('the severe-reaction strip is pinned and never folds (A-1/V-1)', async ({ page }) => {
-    // The strip lives in the pinned host, never the collapse body.
-    await expect(page.locator('#dietNutIntro .cons-severe')).toHaveCount(1);
-    await expect(page.locator('#dietNutIntroBody .cons-severe')).toHaveCount(0);
-    // All three anaphylaxis red flags present.
-    await expect(page.locator('#dietNutIntro .cons-severe-list li')).toHaveCount(3);
-    // The collapse body starts collapsed, yet the strip is shown within the card
-    // (no display:none ancestor up to the card) and has no <details> accordion.
-    const r = await page.evaluate((shownSrc) => {
-      const SHOWN = new Function('sel', 'return (' + shownSrc + ')(sel)') as (s: string) => boolean;
-      const body = document.getElementById('dietNutIntroBody');
+  for (const key of ['peanut', 'tree nut']) {
+    test(`${key}: the form-gate invariant is on the card and not suppressed (A-2)`, async ({ page }) => {
+      const forms = (await openBook(page, key)).locator('.lib-prow--forms');
+      await expect(forms).toHaveCount(1);
+      // The load-bearing distinction: form removes CHOKING, not ALLERGY.
+      await expect(forms.locator('.lib-prow-p')).toContainText(/does not remove the allergy risk/i);
+      // The "never whole" list is present.
+      await expect(forms.locator('.fp-chip--never').first()).toContainText(/whole/i);
+    });
+  }
+
+
+  test('honey is never shelved as "introduce early" (V-3 polarity)', async ({ page }) => {
+    // The acute-toxin honey record sits on the warn shelf under 12 months — never with the
+    // sage encourage books, whatever else changes about the shelves.
+    await expect(page.locator('#dietShelvesRoot .lib-group--encourage .lib-book')).not.toHaveCount(0);
+    await expect(page.locator('#dietShelvesRoot .lib-group--encourage .lib-book[data-arg="honey"]')).toHaveCount(0);
+    await expect(page.locator('#dietShelvesRoot .lib-group--warn .lib-book[data-arg="honey"]')).toHaveCount(1);
+  });
+
+
+  test('the pop-up is a 6-second card: the verdict is always shown, the detail rows fold', async ({ page }) => {
+    const front = await openBook(page, 'peanut');
+    const r = await front.evaluate((f) => {
+      const rows = Array.from(f.querySelectorAll('.lib-prow'));
+      const verdict = f.querySelector('.fp-verdict')!;
+      const openByDefault = rows.filter((x) => x.classList.contains('open')).length;
+      const head = f.querySelector('.lib-prow--forms .lib-prow-head') as HTMLElement;
+      (window as any).libPopRow(head);
       return {
-        bodyCollapsed: body ? getComputedStyle(body).display === 'none' : false,
-        stripShown: SHOWN('#dietNutIntro .cons-severe'),
-        detailsAncestors: document.querySelectorAll('#dietNutIntro .cons-severe').length
-          && !!document.querySelector('#dietNutIntro .cons-severe')!.closest('details'),
-      };
-    }, SHOWN_IN_CARD.toString());
-    expect(r.bodyCollapsed, 'collapse body starts collapsed').toBe(true);
-    expect(r.stripShown, 'severe strip shown within the card while collapsed').toBe(true);
-    expect(r.detailsAncestors, 'severe strip not inside a <details>').toBe(false);
-    // The emergency action (call 112) co-locates with the strip.
-    await expect(page.locator('#dietNutIntro .enc-emergency')).toContainText(/112/);
-  });
-
-  test('the form-gate invariant is pinned and not suppressed (A-2)', async ({ page }) => {
-    const note = page.locator('#dietNutIntro .enc-form-note');
-    await expect(note).toHaveCount(1);
-    // The load-bearing distinction: form removes CHOKING, not ALLERGY.
-    await expect(note).toContainText(/allergy/i);
-    // The "never whole" list is present.
-    await expect(page.locator('#dietNutIntro .enc-form-list.enc-never li').first()).toHaveCount(1);
-    // Pinned (not in the collapse body) and shown within the card.
-    await expect(page.locator('#dietNutIntroBody .enc-form-note')).toHaveCount(0);
-    const shown = await page.evaluate((src) =>
-      (new Function('sel', 'return (' + src + ')(sel)') as any)('#dietNutIntro .enc-form-note'),
-      SHOWN_IN_CARD.toString());
-    expect(shown).toBe(true);
-  });
-
-  test('M-γ-1: tree-nut attribution guidance is not dropped by the combined card', async ({ page }) => {
-    // A combined peanut+tree-nut card must still surface tree nut's distinct
-    // "introduce each nut on its own, a few days apart" guidance — otherwise a
-    // parent could offer a mixed almond/walnut/cashew paste at once and lose
-    // the ability to attribute a reaction. Sourced per-food from the records.
-    const proto = page.locator('#dietNutIntroCard .enc-proto');
-    await expect(proto).toContainText(/each nut on its own|few days apart/i);
-    // Both foods' keep-offering lines are labelled (no single peanut-only rhythm).
-    await expect(proto.locator('.enc-proto-row', { hasText: /Keep offering — Tree nuts/ })).toHaveCount(1);
-  });
-
-  test('benefit content is record-sourced (LEAP); honey gets no benefit banner here', async ({ page }) => {
-    // The cited evidence reaches the surface.
-    await expect(page.locator('#dietNutIntro .enc-evidence')).toContainText(/LEAP/);
-    // This is an encourage-only card: the acute-toxin honey record is not folded
-    // in, so its title never appears with a sage benefit banner (V-3 polarity).
-    const honeyTitle = await page.evaluate(() => (window as any).getFoodEffect('honey')?.title);
-    await expect(page.locator('#dietNutIntroCard')).not.toContainText(honeyTitle);
-  });
-
-  test('the "delay" myth and the high-risk cohort note both reach the parent (in the body)', async ({ page }) => {
-    // Both are calm-secondary detail, so they live in the collapse body.
-    await expect(page.locator('#dietNutIntroBody .enc-myth')).toContainText(/delay/i);
-    await expect(page.locator('#dietNutIntroBody .enc-highrisk')).toContainText(/eczema/i);
-  });
-
-  test('the card collapses meaningfully: the how-to bulk is in the body, the floor is pinned', async ({ page }) => {
-    // The card must collapse to a compact form, not sit permanently expanded.
-    const r = await page.evaluate(() => {
-      const body = document.getElementById('dietNutIntroBody')!;
-      const pinned = document.getElementById('dietNutIntro')!;
-      return {
-        bodyCollapsedByDefault: getComputedStyle(body).display === 'none',
-        // the bulk (how-to protocol) is in the collapse body…
-        protoInBody: body.querySelectorAll('.enc-proto').length,
-        protoInPinned: pinned.querySelectorAll('.enc-proto').length,
-        // …while the essentials are pinned (and not in the body).
-        benefitPinned: pinned.querySelectorAll('.enc-benefit').length,
-        formNotePinned: pinned.querySelectorAll('.enc-form-note').length,
-        severePinned: pinned.querySelectorAll('.cons-severe').length,
-        benefitInBody: body.querySelectorAll('.enc-benefit').length,
-        severeInBody: body.querySelectorAll('.cons-severe').length,
+        rowKinds: rows.map((x) => (x.className.match(/lib-prow--(why|forms|floor|nutri)/) || [])[1]),
+        openByDefault,
+        verdictInsideARow: !!verdict.closest('.lib-prow'),
+        formsOpensOnTap: head.closest('.lib-prow')!.classList.contains('open'),
       };
     });
-    expect(r.bodyCollapsedByDefault, 'collapse body hidden by default').toBe(true);
-    expect(r.protoInBody, 'how-to protocol is the collapsible bulk').toBe(1);
-    expect(r.protoInPinned).toBe(0);
-    expect(r.benefitPinned).toBe(1);
-    expect(r.formNotePinned).toBe(1);
-    expect(r.severePinned).toBe(1);
-    expect(r.benefitInBody + r.severeInBody, 'essentials never in the collapse body').toBe(0);
+    // The four rows, in reading order: why → safe forms → the floor → nutrition.
+    expect(r.rowKinds).toEqual(['why', 'forms', 'floor', 'nutri']);
+    expect(r.openByDefault, 'every row starts folded').toBe(0);
+    expect(r.verdictInsideARow, 'the verdict band is never folded into a row').toBe(false);
+    expect(r.formsOpensOnTap, 'a row opens on tap').toBe(true);
   });
 });
