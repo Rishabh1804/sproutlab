@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // Vit D3 Tracking v2 — Tier 2 Phase 2-B regression guards.
 // Spec: docs/specs/vit-d3-tracking-v2-tier-2.md §Phase 2-B.
@@ -16,6 +17,7 @@ test('regression-guard-d3-v2-t2-b-1: markMedDone before any meal writes withFat:
   // when the parent later saves breakfast.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
@@ -61,6 +63,7 @@ test('regression-guard-d3-v2-t2-b-2: adjustMedTime midnight rollover toasts and 
   // today() has rolled past the captured day, toast + return without writing.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
@@ -107,6 +110,7 @@ test('regression-guard-d3-v2-t2-b-3: confirmMedDoneAt + confirmMedAdjust reject 
   // silently. T2-B.3 gates both confirmers on a past-time check.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
@@ -160,6 +164,7 @@ test('regression-guard-d3-v2-t2-b-4: outing-planner intents — skip-today still
   // treat skip != resolved.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
@@ -201,6 +206,7 @@ test('regression-guard-d3-v2-t2-b-5: adjustMedTime preserves withFat:true agains
   // check would NOT preserve a prior positive observation. The `!== true` widen does.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // v3-5 — Unified Chip-State Taxonomy regression guards.
 // Spec: docs/specs/v3-5-chip-taxonomy-tsf-story.md §Functional tests — chip-state taxonomy.
@@ -55,6 +56,7 @@ test('regression-guard-v3-5-done-state: logged events default to data-state="don
 // ── regression-guard-v3-5-skipped-state (T2-A.3 / V-V-25 regression) ──
 test('regression-guard-v3-5-skipped-state: skipped med carries data-state="skipped" + strikethrough', async ({ page }) => {
   await gotoFresh(page);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
     if (!d3) return { skipped: 'no D3 med' };
@@ -81,6 +83,7 @@ test('regression-guard-v3-5-skipped-state: skipped med carries data-state="skipp
 // ── regression-guard-v3-5-late-state ───────────────────────────────────
 test('regression-guard-v3-5-late-state: late med carries data-state="late"', async ({ page }) => {
   await gotoFresh(page);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
     if (!d3) return { skipped: 'no D3 med' };

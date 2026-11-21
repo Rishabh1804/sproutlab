@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // Vit D3 Tracking v2 — Tier 1 regression guards.
 // Spec: docs/specs/vit-d3-tracking-v2.md.
@@ -194,6 +195,7 @@ test('regression-guard-d3-v2-t1-5: ISL range summary formats D3 time in 12h', as
   // CR-9's _formatTime12h sweep missed this site. Every other surface renders "2:30 PM".
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // this guard is about the once-daily drops flow
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));

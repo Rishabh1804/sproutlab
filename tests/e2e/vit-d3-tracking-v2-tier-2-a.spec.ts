@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // Vit D3 Tracking v2 — Tier 2 Phase 2-A regression guards.
 // Spec: docs/specs/vit-d3-tracking-v2-tier-2.md §Phase 2-A.
@@ -15,6 +16,7 @@ test('regression-guard-d3-v2-t2-a-1: pattern card excludes today from adherence 
   // unloggedDays exclude today on the same boundary so all three lines agree.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
@@ -62,6 +64,7 @@ test('regression-guard-d3-v2-t2-a-2: pattern card preserves through-yesterday st
   // and historical context is erased. T2-A.2 extends V-M-64's exclude-today fallback to skip.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
@@ -113,6 +116,7 @@ test('regression-guard-d3-v2-t2-a-3: skipped TSF chip has data-state attr and st
   // faded icon. Half-awake-readable distinction.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));

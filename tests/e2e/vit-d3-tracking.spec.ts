@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // Vit D3 Tracking v1 — regression guards.
 // Spec: docs/specs/vit-d3-tracking-v1.md.
@@ -326,6 +327,7 @@ test('regression-guard-d3-skipped-surface-renders: skipped state renders an expl
   // Parent got zero acknowledgement of their explicit skip + a contradictory overlay.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // this guard is about the once-daily drops flow
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
@@ -446,6 +448,7 @@ test('regression-guard-d3-pattern-adherence-respects-medStart: a med activated 3
   // for a recently-activated med. Now restricts the denominator to days post-medStart.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // this guard is about the once-daily drops flow
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
@@ -522,6 +525,7 @@ test('regression-guard-d3-qaSupplement-schema-aware: qaAnswerSupplement reads ne
   // object shape. The try/catch swallowed it and returned 'Unable to compute'. Now schema-aware.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // this guard is about the once-daily drops flow
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
