@@ -1,0 +1,11 @@
+# Check every text file out with LF on every platform.
+# The build and its audit gates read split/ sources byte-for-byte (literal "\n" anchors,
+# sha256-pinned registries), so a CRLF checkout on Windows (core.autocrlf=true) aborts
+# `pnpm build` at audit-first-aid-age-v1 and would rewrite the built index.html.
+* text=auto eol=lf
+
+# Never converted.
+*.png  binary
+*.pdf  binary
+*.xlsx binary
+*.mp4  binary
