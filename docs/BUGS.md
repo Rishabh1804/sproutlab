@@ -1,11 +1,53 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-11-03 (growth follow-up #286 section: #159 edge items fixed as #163, deferrals #164, pre-existing e2e failures #165; #161 threshold consult recorded; prior: paracetamol chip #284 section: g-6 fixed, its deferrals logged as #161–#162; prior: 2026-10-31 child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
+**Last updated:** 2026-11-21 (test-rot PR section opened: the 53 standing e2e failures fixed as #166; app findings #167–#169 logged, #168 and #169 fixed; prior: 2026-11-03 — growth follow-up #286 section: #159 edge items fixed as #163, deferrals #164, pre-existing e2e failures #165; #161 threshold consult recorded; prior: paracetamol chip #284 section: g-6 fixed, its deferrals logged as #161–#162; prior: 2026-10-31 child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
 
 ## Open Bugs
+
+### Test-rot PR — 2026-11-21 (the 53 standing e2e failures on `main`)
+
+The 53 failures carried on `main` since the #161 thread (#165 below, and "19 e2e failures on main" under Data / Sync), root-caused and fixed in the tests. Three app findings surfaced on the way. On the Architect's word (2026-11-21) two are fixed in the same PR (168, 169), which therefore runs the canon-cc-008 chain; 167 stays open.
+
+#### P2 — The 53 standing e2e failures, by cause (166)
+- **Age-premised specs (15).** The fixture child has a fixed DOB, so a spec that assumes "between 6 and 12 months" expired when she passed 12. `food-effects-v2-r1-combo-checker` (7), `-r2-qa-food-safety` (6), `-r3-allergen-note:52`, `diet-preference-gate:148`. **Fix:** `tests/e2e/fixtures/clock.ts` (`pinAgeMonths`, relative to the fixture DOB); those cases are pinned to 9 months.
+- **Retired Library cards (27).** `food-effects-v2-encourage-card` (7), `-p1c-choking` (10), `-p1c-milk` (10) waited for `#dietNutIntro` / `#dietChokingIntro` / `#dietMilkIntro`, hosts removed in Library #5b (#216, 2026-06-04). **Fix:** 12 never needed the card; the rest assert the same contracts on the food pop-ups and the Emergency Deck, pinned to 9 months (`p1c-milk` (g) was also age-premised). Five guards had no surface left (see 167).
+- **Lean landing (5).** `smoke` 2a–2c listed a `home` nav tab; `alert-routing` :39/:62 assumed the app opens on Today. The first tab is the landing since #219.
+- **Inactive D3 drops (4, plus 10 hidden).** `vit-d3-tracking` :324/:444/:520 and `-v2:192` exercised the once-daily drops, which the fixture keeps as inactive history. Ten more guards (`-tier-2-a`, `-tier-2-b`, `v3-5-chip-taxonomy` :56/:82) had been **skipping themselves** with "no D3 med". **Fix:** `tests/e2e/fixtures/meds.ts` (`useOnceDailyD3Drops`). Nine of the ten pass; the tenth is 168.
+- **Superseded expectations (2).** `can-i-give-this:71` looked for `style.display === 'block'` (the row opens through `hidden` since #279); `diet-preference-gate:57` expected shellfish un-gated (it has its own token on the fish sid since V-K-270-10).
+- **Patch class:** PC-6 (PC-3 for the retired cards)
+- **Status:** **Fixed** in the test-rot PR.
+
+#### P1 — "Give before leaving" drops the vitamin D dose after a skip (168)
+- **Symptom:** `_obCheckVitD3Needed('outing-give')` returns `false` once today's dose is marked skipped. T2-B.4 ruled the opposite for the outing surfaces: a 7 AM misclick-skip must not hide the dose from an afternoon outing ("skip ≠ resolved" for `outing-pack` and `outing-give`). `outing-pack` still honours it; `outing-give` does not.
+- **Cause:** since the multi-dose rewrite (#270) the non-pack branch reads `medSlotStates()`, which marks a skipped dose `resolved`, so no slot is `due`.
+- **Found by:** `vit-d3-tracking-v2-tier-2-b` T2-B.4, which had been self-skipping (166). It now runs and fails on `main`'s code.
+- **Fix:** `_obCheckVitD3Needed` (home.js) keeps the slot that is due now on the give-list when it was skipped; an earlier or later slot never counts (Cipher A2 holds). The overlay and packing intents are unchanged.
+- **Tests:** T2-B.4 (once daily) and `t2-b-4-twice-daily` (morning skipped / given at 10:00).
+- **Patch class:** PC-10 (one state, two answers), PC-5
+- **Status:** **Fixed** in the test-rot PR.
+
+#### P2 — Guidance dropped when the Library knowledge cards were retired (167)
+- **Symptom:** these record fields are rendered only by `renderDietNutIntro` / `renderDietMilkIntro` / `renderDietChokingIntro` (diet.js), which nothing calls since #5b, so no parent sees them:
+  - `howToIntroduce` for peanut and tree nut: start with ¼ teaspoon, at home in the morning, watch for 2 hours, and tree nut's "introduce each nut on its own a few days apart" (Maren M-γ-1: without it a mixed nut paste makes a reaction unattributable);
+  - `howToIntroduce.highRiskNote`: severe eczema or a known egg allergy → talk to the paediatrician before the first taste;
+  - `earlyIntroBenefit.evidence` (LEAP) and `.paradigm` (the "delay nuts" myth);
+  - the choking record's gagging-vs-choking discriminator ("gagging is LOUD, choking is QUIET"; Vela V-V-12 called it load-bearing).
+- **Cause:** #5b's guides are "quick reference only" and the S11 pop-up renders `whyGood`, `safeForm`, the floor and nutrition; these fields were not carried over. Whether that was intended is not recorded.
+- **Tests:** the five guards for this content were removed with the cards (they had been failing since June).
+- **Decision needed (Architect; Maren + Ceres):** add the content to the food pop-up (a "How to introduce" row; the discriminator on the choking floor row), or let it go and delete the three dead renderers.
+- **Patch class:** PC-3 (dead paths), PC-7
+- **Status:** **Open**
+
+#### P2 — Emergency Deck cards are nested inside one another (169)
+- **Symptom:** in `#libDeckOv`, `#ec-choking` is a child of `#ec-anaphylaxis` and `#ec-botulism` a child of `#ec-choking`; the sheet has one card child, not three. The cards still stack and read in order; card chrome, spacing, and any per-card selector or print isolation see the wrong boxes.
+- **Cause:** `_emDocFace()` (diet.js) opens `.docface` and never closes it, so each card's closing tags land one level short.
+- **Fix:** the missing `</div>` at the end of `_emDocFace`'s return. `_geDocFace` (intelligence-cards.js) had the same unclosed div; it was harmless there (the pop-up is its overlay's only child) and is closed too.
+- **Tests:** `food-effects-v2-p1c-choking` "the Emergency Deck renders its three cards as siblings".
+- **Patch class:** PC-4
+- **Status:** **Fixed** in the test-rot PR.
 
 ### Growth follow-up — 2026-11-03 (PR #286, BUGS #159 edge items)
 
@@ -46,9 +88,9 @@ The four #159 items where a parent could misread something, plus the fixes from 
 
 #### P2 — e2e failures already on main (165)
 - **Symptom:** `smoke.spec.ts` :89, :117, :144 (essential-mode tab sets); `diet-preference-gate.spec.ts` :57, :148; `food-effects-v2-r2-qa-food-safety.spec.ts` :51–:103 (6 cases). All fail identically on a `main` build (checked 2026-11-03 during #286). `smoke.spec.ts:822` is the known flake (#123), failing about 1 run in 3.
-- **Cause:** Not yet diagnosed.
+- **Cause:** Diagnosed in 166 (test-rot PR, 2026-11-21).
 - **Patch class:** PC-6
-- **Status:** **Open**
+- **Status:** **Fixed** by 166.
 
 ### Paracetamol chip — 2026-11-03 (PR #284, Maren V-M-282g-6)
 
@@ -1782,6 +1824,7 @@ Found while running the full suite for #289 on 2026-11-04. The full run had 59 f
 - `food-effects-v2-p1c-milk.spec.ts` ×10 — timeouts.
 - `smoke.spec.ts` 2a/2b/2c — a tab panel never gets `active`.
 - `vit-d3-tracking.spec.ts` ×3, `vit-d3-tracking-v2.spec.ts` ×1 — "Adherence 0/13" where the test expects N/3 from medStart; today's "Given at X" action item missing; a waitForFunction timeout. Likely date-dependent (Ziva is past 14 months; the Caldikind switch of 2026-09-24).
+- **Status:** **Fixed** by 166 (test-rot PR, 2026-11-21); causes recorded there.
 
 #### P1 — Illness-episode sync receive re-renders from stale module arrays (all four keys)
 - **Status:** **Fixed in #161 PR 3** (spec `docs/specs/paracetamol-weight-check-v1.md` §5A). The four keys now carry `global:` (the receive reassigns `_feverEpisodes` etc. through `_epNormalize`), `mergeOnReceive` (one merge, `_epMergeLists`, on both phones, by entry id), `pushBackOnDiverge`, and the `render*History` renderers; every episodes write is a Firestore transaction; edit sheets re-find the live entry by id. Class PC-10 (one state, two answers). Tests: `tests/e2e/episode-sync-merge.spec.ts`.
