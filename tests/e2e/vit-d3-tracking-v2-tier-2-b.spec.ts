@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { useOnceDailyD3Drops } from './fixtures/meds';
+import { pinAgeMonths } from './fixtures/clock';
 
 // Vit D3 Tracking v2 — Tier 2 Phase 2-B regression guards.
 // Spec: docs/specs/vit-d3-tracking-v2-tier-2.md §Phase 2-B.
@@ -196,6 +197,39 @@ test('regression-guard-d3-v2-t2-b-4: outing-planner intents — skip-today still
   expect(r.overlayDone, 'T2-B.4: done is universally resolved (overlay)').toBe(false);
   expect(r.packDone,    'T2-B.4: done is universally resolved (outing-pack)').toBe(false);
   expect(r.giveDone,    'T2-B.4: done is universally resolved (outing-give)').toBe(false);
+});
+
+// ── T2-B.4, twice-daily (BUGS #168) ──────────────────────────────────────────
+test('regression-guard-d3-v2-t2-b-4-twice-daily: a skipped current dose stays on the outing give-list; a later dose not yet due does not', async ({ page }) => {
+  // The fixture's active supplement is the twice-daily syrup (morning from 05:00, evening from
+  // 16:00). At 10:00 the morning dose is the current one. medSlotStates files a skipped dose
+  // under 'resolved'; for 'outing-give' the current slot must still show (skip != resolved),
+  // while a GIVEN morning dose leaves nothing to give before an outing at 10:00 (Cipher A2:
+  // only the dose due now, never one that is not due yet).
+  await pinAgeMonths(page, 14);   // 10:00 on a day after the syrup's start date
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const m = vitDSupplement();
+    const slots = medDoseSlots(m);
+    const t = today();
+    medChecks[t] = {};
+    const pending = { give: _obCheckVitD3Needed('outing-give'), overlay: _obCheckVitD3Needed('overlay') };
+    medChecks[t][slots[0].key] = { status:'skipped', givenAt:null, loggedAt:'07:00', withFat:null, fatFood:null, fatDelta:null };
+    const skipped = { give: _obCheckVitD3Needed('outing-give'), overlay: _obCheckVitD3Needed('overlay'), pack: _obCheckVitD3Needed('outing-pack') };
+    medChecks[t][slots[0].key] = { status:'done', givenAt:'08:00', loggedAt:'08:02', withFat:null, fatFood:null, fatDelta:null };
+    const done = { give: _obCheckVitD3Needed('outing-give'), overlay: _obCheckVitD3Needed('overlay'), pack: _obCheckVitD3Needed('outing-pack') };
+    return { slotCount: slots.length, hour: new Date().getHours(), pending, skipped, done };
+  });
+
+  expect(r.slotCount, 'fixture supplement is twice daily').toBe(2);
+  expect(r.hour).toBe(10);
+  expect(r.pending).toEqual({ give: true, overlay: true });
+  // morning skipped: still on the give-list and the packing list; the overlay stops flagging it.
+  expect(r.skipped).toEqual({ give: true, overlay: false, pack: true });
+  // morning given: nothing to give now; the evening dose is still to come, so pack the bottle.
+  expect(r.done).toEqual({ give: false, overlay: false, pack: true });
 });
 
 // ── T2-B.5 ───────────────────────────────────────────────────────────────────
