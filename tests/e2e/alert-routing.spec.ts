@@ -44,6 +44,8 @@ test('the "+N more in Insights" link is no longer a dead click', async ({ page }
     localStorage.setItem('ziva_essential_mode', 'false');
   });
   await page.goto('/index.html?nosync');
+  // The app opens on the lean landing (#219); the alerts card lives on the dense Today panel.
+  await page.evaluate(() => (window as any).switchTab('home'));
   await page.locator('#homeUnifiedAlertsCard, #homeZenState').first().waitFor({ state: 'attached' });
   await page.waitForTimeout(800);
 
@@ -63,6 +65,9 @@ test('gotoCard expands the target card and back returns to the origin', async ({
   await page.addInitScript(() => localStorage.setItem('ziva_guide_seen', 'true'));
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  // The app opens on the lean landing (#219); start from the dense Today panel so it is the origin.
+  await page.evaluate(() => (window as any).switchTab('home'));
+  await expect(page.locator('#tab-home')).toHaveClass(/active/);
 
   // Jump to a collapsed card from the home tab.
   await page.evaluate(() => gotoCard('insights', 'insightsCorrelationCard'));

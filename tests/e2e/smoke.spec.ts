@@ -6,7 +6,9 @@ import { test, expect, type ConsoleMessage, type Page } from '@playwright/test';
 // `?nosync` skips Firebase init in start.js but keeps initSyncVisibility() running,
 // so the indicator + offline badge still wire up to navigator.onLine.
 
-const PRIMARY_TABS = ['home', 'growth', 'track', 'insights', 'history', 'info'] as const;
+// The first nav tab is the lean landing (#219, data-tab="landing", labelled "Home tab"); the dense
+// Today panel (#tab-home) is one tap behind it and has no nav button of its own.
+const PRIMARY_TABS = ['landing', 'growth', 'track', 'insights', 'history', 'info'] as const;
 
 // Console errors we treat as benign on cold boot. CDN flakes for Chart.js or
 // Firebase background warm-up shouldn't fail the smoke run; province-specific
@@ -83,7 +85,7 @@ test.describe('SproutLab smoke (Phase 2 arming)', () => {
   //   2b — full mode (opt-out) renders all six (positive, opt-out state)
   //   2c — essential-mode hides exactly Insights + Info, nothing more (regression-guard)
 
-  const ESSENTIAL_VISIBLE = ['home', 'growth', 'track', 'history'] as const;
+  const ESSENTIAL_VISIBLE = ['landing', 'growth', 'track', 'history'] as const;
   const ESSENTIAL_HIDDEN = ['insights', 'info'] as const;
 
   test('2a — essential-mode default renders four tabs (Insights + Info hidden)', async ({ page }) => {
