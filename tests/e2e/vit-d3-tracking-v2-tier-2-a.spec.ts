@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // Vit D3 Tracking v2 — Tier 2 Phase 2-A regression guards.
 // Spec: docs/specs/vit-d3-tracking-v2-tier-2.md §Phase 2-A.
@@ -15,10 +16,11 @@ test('regression-guard-d3-v2-t2-a-1: pattern card excludes today from adherence 
   // unloggedDays exclude today on the same boundary so all three lines agree.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // Seed 13 perfect prior days; ensure today is empty (unlogged morning).
     if (!medChecks[t]) medChecks[t] = {};
@@ -44,10 +46,6 @@ test('regression-guard-d3-v2-t2-a-1: pattern card excludes today from adherence 
     return { text };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   // After T2-A.1: today is excluded from the denominator → 13/13 (100%), no "not logged" stripe.
   // Pre-fix would have read "Adherence: 13/14 days (93%)" + "1 day not logged".
   expect(r.text, 'T2-A.1: denominator must exclude today (13/13, not 13/14)').toContain('Adherence: 13/13 days (100%)');
@@ -62,10 +60,11 @@ test('regression-guard-d3-v2-t2-a-2: pattern card preserves through-yesterday st
   // and historical context is erased. T2-A.2 extends V-M-64's exclude-today fallback to skip.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     // Skip today (loggedAt-only — schema per CR-10).
@@ -89,10 +88,6 @@ test('regression-guard-d3-v2-t2-a-2: pattern card preserves through-yesterday st
     return { text };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   // After T2-A.2: skipped today walks from yesterday → 13-day through-yesterday streak preserved.
   expect(r.text, 'T2-A.2: streak label must read "through yesterday" on legitimate skip').toContain('Streak through yesterday');
   expect(r.text, 'T2-A.2: 13-day prior streak must be preserved (not zeroed)').toContain('13 days');
@@ -113,10 +108,11 @@ test('regression-guard-d3-v2-t2-a-3: skipped TSF chip has data-state attr and st
   // faded icon. Half-awake-readable distinction.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'skipped', givenAt:null, loggedAt:'09:15', withFat:null, fatFood:null, fatDelta:null };
@@ -142,10 +138,6 @@ test('regression-guard-d3-v2-t2-a-3: skipped TSF chip has data-state attr and st
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.found, 'T2-A.3: chip wrapper must carry data-state="skipped"').toBe(true);
   expect(r.labelDecoration, 'T2-A.3: skipped label must render strikethrough').toContain('line-through');
   expect(r.timeOpacity, 'T2-A.3: time slot must be faded (warn-color + opacity 0.7)').toBeLessThanOrEqual(0.8);

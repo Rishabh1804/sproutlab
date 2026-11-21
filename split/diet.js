@@ -2318,7 +2318,7 @@ function _emDocFace(hz, food) {
     '<div class="doc-actions">' +
     '<button class="doc-btn doc-btn--ghost" data-action="cardFlipBack" aria-label="Back to first aid">' + zi('undo') + 'Back</button>' +
     '<button class="doc-btn doc-btn--copy" data-action="emCopyDoc" data-arg="' + escHtml(hz) + '">' + zi('copy') + 'Copy</button>' +
-    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc" data-arg="' + escHtml(hz) + '">' + zi('share') + 'Save</button></div></div>';
+    '<button class="doc-btn doc-btn--save" data-action="emSaveDoc" data-arg="' + escHtml(hz) + '">' + zi('share') + 'Save</button></div></div></div>';   // closes .doc-actions, .doc, .docface (BUGS #169)
 }
 
 function _libDeckHtml(focusHz) {

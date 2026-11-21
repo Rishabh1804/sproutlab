@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // v3-5 — Unified Chip-State Taxonomy regression guards.
 // Spec: docs/specs/v3-5-chip-taxonomy-tsf-story.md §Functional tests — chip-state taxonomy.
@@ -55,9 +56,10 @@ test('regression-guard-v3-5-done-state: logged events default to data-state="don
 // ── regression-guard-v3-5-skipped-state (T2-A.3 / V-V-25 regression) ──
 test('regression-guard-v3-5-skipped-state: skipped med carries data-state="skipped" + strikethrough', async ({ page }) => {
   await gotoFresh(page);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status: 'skipped', loggedAt: '09:15' };
@@ -72,7 +74,6 @@ test('regression-guard-v3-5-skipped-state: skipped med carries data-state="skipp
       strikethrough: labelStyle ? labelStyle.textDecorationLine.includes('line-through') : false,
     };
   });
-  if ((r as any).skipped) { test.skip(true, (r as any).skipped); return; }
   expect(r.found, 'skipped chip rendered').toBe(true);
   expect(r.state).toBe('skipped');
   expect(r.strikethrough, 'skipped chip carries strikethrough label (T2-A.3 regression)').toBe(true);
@@ -81,9 +82,10 @@ test('regression-guard-v3-5-skipped-state: skipped med carries data-state="skipp
 // ── regression-guard-v3-5-late-state ───────────────────────────────────
 test('regression-guard-v3-5-late-state: late med carries data-state="late"', async ({ page }) => {
   await gotoFresh(page);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status: 'late', givenAt: '11:30', loggedAt: '14:00' };
@@ -91,7 +93,6 @@ test('regression-guard-v3-5-late-state: late med carries data-state="late"', asy
     const chip = document.querySelector('.tsf-event[data-state="late"]') as HTMLElement | null;
     return { found: !!chip, state: chip ? chip.getAttribute('data-state') : null };
   });
-  if ((r as any).skipped) { test.skip(true, (r as any).skipped); return; }
   expect(r.found, 'late chip rendered').toBe(true);
   expect(r.state).toBe('late');
 });

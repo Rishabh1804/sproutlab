@@ -6791,8 +6791,17 @@ function _obCheckVitD3Needed(intent) {
   // "Give before leaving" only for the med's one 'due' dose — never an unlogged earlier dose
   // (Cipher A2); packing counts any dose still to come today (bring the bottle).
   if (intent !== 'outing-pack') {
-    return medSlotStates(d3).some(function(x) {
-      return x.state === 'due' && !(intent === 'overlay' && x.parsed && x.parsed.status === 'skipped');
+    var states = medSlotStates(d3);
+    // The slot whose window is open now — the same "latest slot already due" medSlotStates uses.
+    var dueIdx = -1;
+    states.forEach(function(x, i) { if (medSlotDueNow({ doseSlot: x.label })) dueIdx = i; });
+    return states.some(function(x, i) {
+      if (x.state === 'due') return true;
+      // BUGS #168: medSlotStates files a skipped dose under 'resolved', which is right for the
+      // overlay (skip = decided) but hid the dose from the give-list. For 'outing-give' the
+      // current slot still shows when it was skipped; an earlier slot never does (Cipher A2).
+      return intent === 'outing-give' && i === dueIdx && x.state === 'resolved'
+        && !!x.parsed && x.parsed.status === 'skipped';
     });
   }
   return medDoseSlots(d3).some(function(sl) {

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
 
 // Vit D3 Tracking v1 — regression guards.
 // Spec: docs/specs/vit-d3-tracking-v1.md.
@@ -72,7 +73,7 @@ test('regression-guard-d3-with-fat-auto-detect: a fat-bearing meal logged near t
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // Seed meal log: breakfast at 08:30 with ghee chapati
     if (!feedingData[t]) feedingData[t] = {};
@@ -106,7 +107,7 @@ test('regression-guard-d3-with-fat-no-match: dose with no nearby fat-meal record
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!feedingData[t]) feedingData[t] = {};
     feedingData[t].breakfast = 'rice, cucumber, apple';
@@ -136,7 +137,7 @@ test('regression-guard-d3-substring-no-false-positive: coconut water does NOT ma
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!feedingData[t]) feedingData[t] = {};
     feedingData[t].breakfast = 'coconut water, banana';
@@ -177,7 +178,7 @@ test('regression-guard-d3-history-render-no-throw: Med-Log history tab renders w
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // Seed a v1 object-shape entry
     if (!medChecks[t]) medChecks[t] = {};
@@ -307,7 +308,7 @@ test('regression-guard-d3-confirmMedDoneAt-empty-input: empty time-input blocks 
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (medChecks[t]) delete medChecks[t][d3.name];
     // Simulate the inline editor: create the input element with an empty value.
@@ -326,10 +327,11 @@ test('regression-guard-d3-skipped-surface-renders: skipped state renders an expl
   // Parent got zero acknowledgement of their explicit skip + a contradictory overlay.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // this guard is about the once-daily drops flow
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     markMedSkipped(d3.name, 0);
     // Force a re-render
     renderRemindersAndAlerts();
@@ -359,7 +361,7 @@ test('regression-guard-d3-resolveMissedMed-object-shape: backfill via missed-med
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const yesterday = _offsetDateStr(today(), -1);
     if (medChecks[yesterday]) delete medChecks[yesterday][d3.name];
     resolveMissedMed(d3.name, yesterday, 'done');
@@ -390,7 +392,7 @@ test('regression-guard-d3-coconut-water-still-rejected-after-tie-fix: chronologi
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!feedingData[t]) feedingData[t] = {};
     // Mix of meals — non-fat coconut water at exact dose time should NOT match
@@ -415,7 +417,7 @@ test('regression-guard-d3-plural-singular-drift: parent typing "walnuts" matches
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!feedingData[t]) feedingData[t] = {};
     feedingData[t].breakfast = 'walnuts, banana'; // parent typed plural; NUTRITION key is 'walnut' singular
@@ -446,10 +448,11 @@ test('regression-guard-d3-pattern-adherence-respects-medStart: a med activated 3
   // for a recently-activated med. Now restricts the denominator to days post-medStart.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // this guard is about the once-daily drops flow
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     // Set d3Med.start to 3 days ago. Also set _trackingSince to a much earlier date
     // so it doesn't dominate the effectiveStart calculation in the fresh-install context.
     const startDate = _offsetDateStr(today(), -2);
@@ -486,7 +489,7 @@ test('regression-guard-d3-snapshot-fat-refresh: logging a fat-meal AFTER the dos
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // Clear feedingData and medChecks for today
     feedingData[t] = {};
@@ -522,10 +525,11 @@ test('regression-guard-d3-qaSupplement-schema-aware: qaAnswerSupplement reads ne
   // object shape. The try/catch swallowed it and returned 'Unable to compute'. Now schema-aware.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // this guard is about the once-daily drops flow
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'14:30', loggedAt:'14:30', withFat:true, fatFood:'ghee', fatDelta:-5 };
@@ -557,7 +561,7 @@ test('regression-guard-d3-undoMedSkip-reads-as-pending: Undo skip does NOT silen
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // First: skip — produces {status:'skipped', loggedAt:'HH:MM', ...}
     markMedSkipped(d3.name, 0);
@@ -596,7 +600,7 @@ test('regression-guard-d3-yesterday-skipped-schema-aware: home medical preview r
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const yesterday = _offsetDateStr(today(), -1);
     if (!medChecks[yesterday]) medChecks[yesterday] = {};
     medChecks[yesterday][d3.name] = { status:'skipped', givenAt:null, loggedAt:'10:00', withFat:null, fatFood:null, fatDelta:null };
@@ -669,7 +673,7 @@ test('regression-guard-d3-refresh-never-flips-true-to-false: positive withFat ob
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     feedingData[t] = { breakfast:'chapati, ghee', breakfast_time:'08:30' };
     if (medChecks[t]) delete medChecks[t][d3.name];
@@ -699,7 +703,7 @@ test('regression-guard-d3-adjust-flow: adjustMedTime updates givenAt AND re-runs
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!feedingData[t]) feedingData[t] = {};
     // Only a morning fat-meal — afternoon has no meal

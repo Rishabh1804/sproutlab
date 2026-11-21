@@ -74,9 +74,12 @@ test.describe('"Can I give this?" — recipe-aware (§10)', () => {
     const state = await page.evaluate(() => ({
       dietActive: document.getElementById('tab-diet')!.classList.contains('active'),
       recipesActive: document.getElementById('diet-sub-recipes')!.classList.contains('active'),
+      // The detail opens through the `hidden` attribute (no inline style, HR-2) and the row
+      // announces it with aria-expanded — the contract expandRecipeRow() has kept since #279.
       rowExpanded: (() => {
         const d = document.getElementById('rdet-c-moong-dal-khichdi');
-        return !!d && d.style.display === 'block';
+        const row = document.getElementById('rrow-c-moong-dal-khichdi');
+        return !!d && !d.hidden && !!row && row.getAttribute('aria-expanded') === 'true';
       })(),
     }));
     expect(state.dietActive).toBe(true);

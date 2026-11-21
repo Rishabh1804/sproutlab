@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { useOnceDailyD3Drops } from './fixtures/meds';
+import { pinAgeMonths } from './fixtures/clock';
 
 // Vit D3 Tracking v2 — Tier 2 Phase 2-B regression guards.
 // Spec: docs/specs/vit-d3-tracking-v2-tier-2.md §Phase 2-B.
@@ -16,10 +18,11 @@ test('regression-guard-d3-v2-t2-b-1: markMedDone before any meal writes withFat:
   // when the parent later saves breakfast.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // Zero meals logged today.
     if (!feedingData[t]) feedingData[t] = {};
@@ -44,10 +47,6 @@ test('regression-guard-d3-v2-t2-b-1: markMedDone before any meal writes withFat:
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.noMeals_withFat, 'T2-B.1: zero-meals path must write withFat:null (unknown), not false').toBeNull();
   expect(r.withMeal_withFat, 'T2-B.1: meals-exist-but-none-in-window path stays withFat:false (true negative)').toBe(false);
 });
@@ -61,10 +60,11 @@ test('regression-guard-d3-v2-t2-b-2: adjustMedTime midnight rollover toasts and 
   // today() has rolled past the captured day, toast + return without writing.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'08:00', loggedAt:'08:02', withFat:true, fatFood:'paratha', fatDelta:5 };
@@ -91,10 +91,6 @@ test('regression-guard-d3-v2-t2-b-2: adjustMedTime midnight rollover toasts and 
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.toastFired, 'T2-B.2: toast must fire on midnight rollover').toBe(true);
   expect(r.toastContent, 'T2-B.2: toast names the issue').toContain('Date changed');
   expect(r.recordUnchanged, 'T2-B.2: the existing record must be untouched on rollover').toBe(true);
@@ -107,10 +103,11 @@ test('regression-guard-d3-v2-t2-b-3: confirmMedDoneAt + confirmMedAdjust reject 
   // silently. T2-B.3 gates both confirmers on a past-time check.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'08:00', loggedAt:'08:02', withFat:true, fatFood:'paratha', fatDelta:5 };
@@ -139,10 +136,6 @@ test('regression-guard-d3-v2-t2-b-3: confirmMedDoneAt + confirmMedAdjust reject 
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   if (!r.pickedIsFuture) {
     test.skip(true, 'wall-clock happens to be at 23:59 — future-time boundary not exercisable');
     return;
@@ -160,10 +153,11 @@ test('regression-guard-d3-v2-t2-b-4: outing-planner intents — skip-today still
   // treat skip != resolved.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('the once-daily D3 drops are not active');   // never skip this guard again (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     // Seed skipped today.
@@ -179,10 +173,6 @@ test('regression-guard-d3-v2-t2-b-4: outing-planner intents — skip-today still
     return { overlay, outPack, outGive, overlayDone, packDone, giveDone };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   // Skip today:
   expect(r.overlay,  'T2-B.4: overlay intent treats skip as resolved (V-M-67/74)').toBe(false);
   expect(r.outPack,  'T2-B.4: outing-pack intent must STILL surface D3 after a morning skip').toBe(true);
@@ -193,6 +183,87 @@ test('regression-guard-d3-v2-t2-b-4: outing-planner intents — skip-today still
   expect(r.giveDone,    'T2-B.4: done is universally resolved (outing-give)').toBe(false);
 });
 
+// ── T2-B.4, twice-daily (BUGS #168) ──────────────────────────────────────────
+test('regression-guard-d3-v2-t2-b-4-twice-daily: a skipped current dose stays on the outing give-list; a later dose not yet due does not', async ({ page }) => {
+  // The fixture's active supplement is the twice-daily syrup (morning from 05:00, evening from
+  // 16:00). At 10:00 the morning dose is the current one. medSlotStates files a skipped dose
+  // under 'resolved'; for 'outing-give' the current slot must still show (skip != resolved),
+  // while a GIVEN morning dose leaves nothing to give before an outing at 10:00 (Cipher A2:
+  // only the dose due now, never one that is not due yet).
+  await pinAgeMonths(page, 14);   // 10:00 on a day after the syrup's start date
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const m = vitDSupplement();
+    const slots = medDoseSlots(m);
+    const t = today();
+    medChecks[t] = {};
+    const pending = { give: _obCheckVitD3Needed('outing-give'), overlay: _obCheckVitD3Needed('overlay') };
+    medChecks[t][slots[0].key] = { status:'skipped', givenAt:null, loggedAt:'07:00', withFat:null, fatFood:null, fatDelta:null };
+    const skipped = { give: _obCheckVitD3Needed('outing-give'), overlay: _obCheckVitD3Needed('overlay'), pack: _obCheckVitD3Needed('outing-pack') };
+    medChecks[t][slots[0].key] = { status:'done', givenAt:'08:00', loggedAt:'08:02', withFat:null, fatFood:null, fatDelta:null };
+    const done = { give: _obCheckVitD3Needed('outing-give'), overlay: _obCheckVitD3Needed('overlay'), pack: _obCheckVitD3Needed('outing-pack') };
+    return { slotCount: slots.length, hour: new Date().getHours(), pending, skipped, done };
+  });
+
+  expect(r.slotCount, 'fixture supplement is twice daily').toBe(2);
+  expect(r.hour).toBe(10);
+  expect(r.pending).toEqual({ give: true, overlay: true });
+  // morning skipped: still on the give-list and the packing list; the overlay stops flagging it.
+  expect(r.skipped).toEqual({ give: true, overlay: false, pack: true });
+  // morning given: nothing to give now; the evening dose is still to come, so pack the bottle.
+  expect(r.done).toEqual({ give: false, overlay: false, pack: true });
+});
+
+// ── T2-B.4, twice-daily: the double-dose side (Maren V-M-294-1) ───────────────
+test('regression-guard-d3-v2-t2-b-4-evening: a morning skip never keeps the give-list alive once the evening dose is the current one', async ({ page }) => {
+  // 17:00 — the evening dose is current. Only ITS state decides the give-list: a stale morning
+  // skip must not prompt "give … before leaving" after the evening dose was given (that would
+  // invite a second evening dose).
+  await pinAgeMonths(page, 14, 10, 17);
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const m = vitDSupplement();
+    const [am, pm] = medDoseSlots(m).map((x) => x.key);
+    const t = today();
+    const skip = { status:'skipped', givenAt:null, loggedAt:'07:00', withFat:null, fatFood:null, fatDelta:null };
+    const done = { status:'done', givenAt:'16:30', loggedAt:'16:31', withFat:null, fatFood:null, fatDelta:null };
+    const read = () => ({ give: _obCheckVitD3Needed('outing-give'), pack: _obCheckVitD3Needed('outing-pack') });
+    medChecks[t] = { [am]: skip, [pm]: done };
+    const eveningDone = read();
+    medChecks[t] = { [am]: skip };
+    const eveningUnlogged = read();
+    medChecks[t] = { [am]: skip, [pm]: { ...skip, loggedAt: '16:30' } };
+    const eveningSkipped = read();
+    return { hour: new Date().getHours(), eveningDone, eveningUnlogged, eveningSkipped };
+  });
+
+  expect(r.hour).toBe(17);
+  expect(r.eveningDone.give, 'evening given: a stale morning skip must not prompt a dose').toBe(false);
+  expect(r.eveningUnlogged.give, 'evening unlogged: the evening dose is due').toBe(true);
+  expect(r.eveningSkipped.give, 'evening skipped: the current dose still shows (skip != resolved)').toBe(true);
+});
+
+test('regression-guard-d3-v2-t2-b-4-night: before the morning window opens, a skipped slot prompts nothing', async ({ page }) => {
+  // 03:00 — no slot of a twice-daily medicine is current (morning opens at 05:00).
+  await pinAgeMonths(page, 14, 10, 3);
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const m = vitDSupplement();
+    const t = today();
+    medChecks[t] = { [medDoseSlots(m)[0].key]: { status:'skipped', givenAt:null, loggedAt:'02:00', withFat:null, fatFood:null, fatDelta:null } };
+    return { hour: new Date().getHours(), give: _obCheckVitD3Needed('outing-give') };
+  });
+
+  expect(r.hour).toBe(3);
+  expect(r.give).toBe(false);
+});
+
 // ── T2-B.5 ───────────────────────────────────────────────────────────────────
 test('regression-guard-d3-v2-t2-b-5: adjustMedTime preserves withFat:true against a null re-detection', async ({ page }) => {
   // Trigger: currently dead path (_detectFatContextNearTime always returns boolean per
@@ -201,10 +272,11 @@ test('regression-guard-d3-v2-t2-b-5: adjustMedTime preserves withFat:true agains
   // check would NOT preserve a prior positive observation. The `!== true` widen does.
   await page.goto('/index.html?nosync');
   await page.waitForTimeout(700);
+  await useOnceDailyD3Drops(page);   // the fixture keeps the drops as inactive history; this guard is about them
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'08:45', loggedAt:'08:46', withFat:true, fatFood:'paratha', fatDelta:5 };
@@ -221,10 +293,6 @@ test('regression-guard-d3-v2-t2-b-5: adjustMedTime preserves withFat:true agains
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.afterGivenAt, 'T2-B.5: Adjust still updates givenAt').toBe('08:50');
   expect(r.afterWithFat, 'T2-B.5 (V-M-77): null detection must NOT erase a prior true (preserve path)').toBe(true);
   expect(r.afterFood,    'T2-B.5: prior fatFood preserved when preserveWithFat triggers').toBe('paratha');

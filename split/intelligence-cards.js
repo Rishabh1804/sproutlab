@@ -1926,7 +1926,7 @@ function _geDocFace(e) {
     + '<div class="doc-actions">'
     + '<button class="doc-btn doc-btn--ghost" data-action="cardFlipBack" aria-label="Back to first aid">' + zi('undo') + 'Back</button>'
     + '<button class="doc-btn doc-btn--copy" data-action="geCopyDoc" data-arg="' + escHtml(e.id) + '">' + zi('copy') + 'Copy</button>'
-    + '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save</button></div></div>';
+    + '<button class="doc-btn doc-btn--save" data-action="emSaveDoc">' + zi('share') + 'Save</button></div></div></div>';   // closes .doc-actions, .doc, .docface (BUGS #169)
 }
 
 // The flip card (front + back). `pop` adds the close × (the room-level pinned card has none).

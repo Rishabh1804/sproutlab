@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pinAgeMonths } from './fixtures/clock';
 
 // food-effects v2 — R2: the Smart Q&A food-safety answer (qaHandleFoodSafety)
 // reconciled onto FOOD_EFFECTS (spec §3.2). Both polarities + the floor SECTION
@@ -39,6 +40,9 @@ async function ask(page: any, raw: string) {
 
 test.describe('food-effects v2 — R2 Q&A food-safety (both poles + floor)', () => {
   test.beforeEach(async ({ page }) => {
+    // These cases are about a 9-month-old: past the nut floor (6 mo), under the honey ceiling (12 mo).
+    // Pin the clock to that age so the spec does not expire as the fixture child grows.
+    await pinAgeMonths(page, 9);
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() =>
       typeof qaHandleFoodSafety === 'function'

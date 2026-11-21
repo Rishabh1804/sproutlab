@@ -1,27 +1,20 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { pinAgeMonths } from './fixtures/clock';
 
 // food-effects-v2 P1c — the MILK polarity cards (milk-spec §4/§5/§10).
 //
-// Two never-before-rendered v2 foodClasses, as sibling cards in Diet → Library
-// (renderDietMilkIntro → #dietMilkIntro / #dietPlantMilkIntro), the nut card untouched:
-//   • cow milk   = drink-timing      — CONDITIONAL, a SPLIT lead: sage carve-out band
-//     ("good in food now") OVER an amber gate band ("wait as the main drink", M-2
-//     skim-proof). CMPA severe strip PINNED + present-only, with a class-aware scope header.
-//   • plant milk = substitute-caveat — INFORM, a SKY banner leading with rice<5=arsenic; NO
-//     severe strip (the floor follows the hazard; harm is nutritional/chronic, not acute).
+// Two v2 foodClasses. They first rendered as sibling Library cards (renderDietMilkIntro →
+// #dietMilkIntro / #dietPlantMilkIntro); Library #5b (#216) retired those cards, and each milk
+// now reads on its own food pop-up (libOpenBook → #libPopOv), the 6-second card: a verdict
+// band, then rows that start folded, the floor one tap from the Emergency Deck (design record:
+// docs/design/library-redesign/11-food-card-6sec-template.html):
+//   • cow milk   = drink-timing      — CONDITIONAL: the amber wait band leads with the
+//     carve-out ("fine in food; wait as a drink"); the forms row lists ok before never. The
+//     CMPA severe floor is a rose row, dairy-scoped, deep-linking to the anaphylaxis card.
+//   • plant milk = substitute-caveat — INFORM, a sky band; the never list names rice<5=arsenic;
+//     NO acute floor (the floor follows the hazard; harm is nutritional/chronic, not acute).
 //
-// Card-relative assertions (DOM position / display), mirroring the encourage-card spec, so the
-// deferred switchTab(savedTab) race on init doesn't matter — we test each card's own contract.
-
-const SHOWN = (sel: string, cardId: string) => {
-  let n: HTMLElement | null = document.querySelector(sel);
-  if (!n) return false;
-  while (n && n.id !== cardId) {
-    if (getComputedStyle(n).display === 'none') return false;
-    n = n.parentElement;
-  }
-  return !!n;
-};
+// Pop-up-relative assertions, so the deferred switchTab(savedTab) race on init doesn't matter.
 
 declare const renderDietLibrary: () => void;
 declare const getFoodEffect: (n: string) => any;
@@ -29,78 +22,92 @@ declare const renderFoodDetailSheet: (n: string) => void;
 declare const _fdAgeRule: (n: string) => any;
 declare const _effPolarity: (e: any) => string;
 
+// Open a Library book's food pop-up the way a tap on the shelf does (libOpenBook reads the
+// key from the tapped button) and return its front face. Asserted pop-up-relative — not
+// through the tab chrome, which races the app's deferred switchTab(savedTab) on init.
+async function openBook(page: Page, key: string) {
+  await page.evaluate((k) => {
+    const b = document.createElement('button');
+    b.setAttribute('data-arg', k);
+    (window as any).libOpenBook(b);
+  }, key);
+  return page.locator('#libPopOv .fp-front');
+}
+
 test.describe('food-effects-v2 P1c — milk polarity cards', () => {
   test.beforeEach(async ({ page }) => {
+    // A 9-month-old: inside the introduction window these cards are written for. Pinned so the
+    // spec does not expire as the fixture child grows (cow's milk and honey re-frame at 12 and 24 mo).
+    await pinAgeMonths(page, 9);
     await page.goto('/index.html?nosync');
     await page.waitForFunction(() =>
       typeof (window as any).renderDietLibrary === 'function'
-      && typeof (window as any).getFoodEffect === 'function'
-      && !!document.getElementById('dietMilkIntro')
-      && !!document.getElementById('dietPlantMilkIntro'), null, { timeout: 10_000 });
+      && typeof (window as any).getFoodEffect === 'function', null, { timeout: 10_000 });
     await page.evaluate(() => (window as any).renderDietLibrary());
   });
 
-  // ── §10(a) — cow milk: split lead, carve-out FIRST then gate; never warn/avoid, never encourage ──
-  test('(a) cow milk renders the SPLIT lead — sage carve-out (sprout) above the amber gate (clock)', async ({ page }) => {
-    const host = page.locator('#dietMilkIntro');
-    await expect(host.locator('.enc-split')).toHaveCount(1);
-    await expect(host.locator('.enc-split-good use[href="#zi-sprout"]')).toHaveCount(1);
-    await expect(host.locator('.enc-split-gate use[href="#zi-clock"]')).toHaveCount(1);
-    // The lead is neither an "avoid" warn banner nor an "introduce early" benefit banner.
-    await expect(host.locator('.enc-split use[href="#zi-warn"]')).toHaveCount(0);
-    await expect(host.locator('.enc-split use[href="#zi-siren"]')).toHaveCount(0);
-    await expect(host.locator('.enc-benefit')).toHaveCount(0);
-    // carve-out leads the gate in DOM/reading order (the reassurance reads first).
-    const order = await page.evaluate(() => {
-      const h = document.getElementById('dietMilkIntro')!;
-      const good = h.querySelector('.enc-split-good'), gate = h.querySelector('.enc-split-gate');
+  // The dedicated milk cards were retired in Library #5b; S11 moved their guidance onto each
+  // milk's own food pop-up (libOpenBook). (a)–(c) follow it there.
+  // ── §10(a) — cow milk: a CONDITIONAL lead, the carve-out before the gate; never warn/avoid, never encourage ──
+  test('(a) cow milk leads CONDITIONAL — the amber wait band (clock), carve-out before the gate', async ({ page }) => {
+    const front = await openBook(page, 'cow milk');
+    const verdict = front.locator('.fp-verdict');
+    await expect(verdict).toHaveClass(/\bfp-verdict--wait\b/);
+    await expect(verdict.locator('use[href="#zi-clock"]')).toHaveCount(1);
+    // The lead is neither an "avoid" warn band nor an "introduce early" yes band, and no siren.
+    await expect(verdict.locator('use[href="#zi-warn"], use[href="#zi-siren"]')).toHaveCount(0);
+    await expect(front.locator('.fp-verdict--no, .fp-verdict--yes')).toHaveCount(0);
+    // The reassurance reads first, inside the lead itself.
+    await expect(verdict).toContainText(/fine in food; wait as a drink/i);
+    // In the forms row the carve-out (ok) chips come before the gate (never) chips.
+    const forms = front.locator('.lib-prow--forms');
+    const order = await forms.evaluate((f) => {
+      const good = f.querySelector('.fp-chip--ok'), gate = f.querySelector('.fp-chip--never');
       if (!good || !gate) return 'missing';
       return (good.compareDocumentPosition(gate) & 4) ? 'good-first' : 'gate-first';
     });
     expect(order).toBe('good-first');
-    // The non-suppressible invariant ("the drink is gated; the dairy is not") is pinned.
-    await expect(host.locator('.enc-form-note')).toContainText(/the drink is gated; the dairy is not/i);
-    await expect(page.locator('#dietMilkIntroBody .enc-form-note')).toHaveCount(0);
+    // The non-suppressible invariant ("the drink is gated; the dairy is not") is on the card.
+    await expect(forms.locator('.lib-prow-p')).toContainText(/the drink is gated; the dairy is not/i);
   });
 
-  // ── §10(b) — cow milk CMPA severe strip: pinned, present-only, scope header, 112/108 + antihistamine ──
-  test('(b) cow milk pins the CMPA severe strip with a dairy-scoped header and the emergency line', async ({ page }) => {
-    await expect(page.locator('#dietMilkIntro .cons-severe')).toHaveCount(1);
-    await expect(page.locator('#dietMilkIntroBody .cons-severe')).toHaveCount(0); // pinned, never folds
-    // V-V-4 scope header separates the ALLERGY floor from the TIMING gate, scoped to the
-    // SEVERE path (M-M-2 — not "any reaction is an emergency").
-    await expect(page.locator('#dietMilkIntro .cons-severe-h')).toContainText(/severe/i);
-    await expect(page.locator('#dietMilkIntro .cons-severe-h')).toContainText(/dairy/i);
+  // ── §10(b) — cow milk CMPA severe floor: on the card, rose, dairy-scoped, 112/108 + antihistamine ──
+  test('(b) cow milk carries the CMPA severe floor: rose, dairy-scoped, with the emergency line', async ({ page }) => {
+    const front = await openBook(page, 'cow milk');
+    const floor = front.locator('.lib-prow--floor');
+    await expect(floor).toHaveCount(1);
+    // An ALLERGY floor (rose), kept apart from the amber TIMING gate in the lead (V-V-4).
+    await expect(floor).not.toHaveClass(/\blib-prow--caution\b/);
+    await expect(floor.locator('.lib-prow-signs li')).toHaveCount(4);
+    // Scoped to the SEVERE path of a dairy reaction (M-M-2 — not "any reaction is an emergency").
+    const act = floor.locator('.lib-prow-act');
+    await expect(act).toContainText(/a mild reaction to dairy/i);
     // the emergency action: call 112/108 + the antihistamine-doesn't-treat-anaphylaxis line.
-    const emg = page.locator('#dietMilkIntro .enc-emergency');
-    await expect(emg).toContainText(/112|108/);
-    await expect(emg).toContainText(/antihistamine/i);
-    // shown within the card while the collapse body is hidden by default.
-    const r = await page.evaluate((src) => {
-      const fn = new Function('sel', 'cardId', 'return (' + src + ')(sel, cardId)') as any;
-      const body = document.getElementById('dietMilkIntroBody');
-      return {
-        bodyCollapsed: body ? getComputedStyle(body).display === 'none' : false,
-        stripShown: fn('#dietMilkIntro .cons-severe', 'dietMilkIntroCard'),
-      };
-    }, SHOWN.toString());
-    expect(r.bodyCollapsed).toBe(true);
-    expect(r.stripShown).toBe(true);
+    await expect(act).toContainText(/112|108/);
+    await expect(act).toContainText(/antihistamine does not treat anaphylaxis/i);
+    // The floor follows the hazard: cow's milk deep-links to the anaphylaxis card (V-M-237).
+    await expect(floor.locator('.lib-prow-deck')).toHaveAttribute('data-arg', 'anaphylaxis');
   });
 
-  // ── §10(c) — plant milk: sky inform banner fronts rice<5=arsenic; NO severe strip ──
-  test('(c) plant milk renders the SKY inform banner fronting rice<5=arsenic, and NO severe strip', async ({ page }) => {
-    const host = page.locator('#dietPlantMilkIntro');
-    await expect(host.locator('.enc-inform')).toHaveCount(1);
-    await expect(host.locator('.enc-inform-h use[href="#zi-info"]')).toHaveCount(1);
-    // the single hardest fact is fronted in the lead.
-    await expect(host.locator('.enc-inform-lead')).toContainText(/arsenic/i);
-    await expect(host.locator('.enc-inform-lead')).toContainText(/under 5/i);
-    // substitute-caveat carries NO emergency floor (the floor follows the hazard).
-    await expect(page.locator('#dietPlantMilkIntroCard .cons-severe')).toHaveCount(0);
-    await expect(page.locator('#dietPlantMilkIntroCard use[href="#zi-siren"]')).toHaveCount(0);
-    // the "Never" list names rice<5 and the not-a-substitute line.
-    await expect(host.locator('.enc-form-list.enc-never')).toContainText(/rice/i);
+  // ── §10(c) — plant milk: sky inform lead, rice<5=arsenic named; NO acute floor ──
+  test('(c) plant milk leads INFORM (sky, info), names rice<5=arsenic, and has NO acute floor', async ({ page }) => {
+    const front = await openBook(page, 'plant milk');
+    const verdict = front.locator('.fp-verdict');
+    await expect(verdict).toHaveClass(/\bfp-verdict--info\b/);
+    await expect(verdict.locator('use[href="#zi-info"]')).toHaveCount(1);
+    await expect(verdict.locator('use[href="#zi-warn"], use[href="#zi-siren"]')).toHaveCount(0);
+    // the "Never" list names rice under 5 (arsenic) and the not-a-substitute line. On the retired
+    // card the arsenic fact was FRONTED in the lead; here the lead is "Not a substitute under 1" and
+    // arsenic sits in a never chip inside the folded Safe-forms row. That placement change is not
+    // settled — docs/BUGS.md #167, "Placement contracts retired with the cards".
+    const never = front.locator('.lib-prow--forms .fp-chip--never');
+    await expect(never.filter({ hasText: /rice drinks/i })).toContainText(/under 5 years/i);
+    await expect(never.filter({ hasText: /rice drinks/i })).toContainText(/arsenic/i);
+    await expect(never.filter({ hasText: /substitute before 12 months/i })).toHaveCount(1);
+    // substitute-caveat carries NO acute (rose) floor — the floor follows the hazard. What it
+    // does carry is the amber, soy-scoped watch row.
+    await expect(front.locator('.lib-prow--floor:not(.lib-prow--caution)')).toHaveCount(0);
+    await expect(front.locator('.lib-prow--floor.lib-prow--caution')).toContainText(/soy milk only/i);
   });
 
   // ── §10(d) — resolver guard: breast/formula/soy do NOT fire cow-milk; cow family DOES ──
