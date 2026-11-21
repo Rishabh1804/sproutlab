@@ -22,7 +22,7 @@ test('regression-guard-d3-v2-t2-b-1: markMedDone before any meal writes withFat:
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // Zero meals logged today.
     if (!feedingData[t]) feedingData[t] = {};
@@ -47,10 +47,6 @@ test('regression-guard-d3-v2-t2-b-1: markMedDone before any meal writes withFat:
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.noMeals_withFat, 'T2-B.1: zero-meals path must write withFat:null (unknown), not false').toBeNull();
   expect(r.withMeal_withFat, 'T2-B.1: meals-exist-but-none-in-window path stays withFat:false (true negative)').toBe(false);
 });
@@ -68,7 +64,7 @@ test('regression-guard-d3-v2-t2-b-2: adjustMedTime midnight rollover toasts and 
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'08:00', loggedAt:'08:02', withFat:true, fatFood:'paratha', fatDelta:5 };
@@ -95,10 +91,6 @@ test('regression-guard-d3-v2-t2-b-2: adjustMedTime midnight rollover toasts and 
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.toastFired, 'T2-B.2: toast must fire on midnight rollover').toBe(true);
   expect(r.toastContent, 'T2-B.2: toast names the issue').toContain('Date changed');
   expect(r.recordUnchanged, 'T2-B.2: the existing record must be untouched on rollover').toBe(true);
@@ -115,7 +107,7 @@ test('regression-guard-d3-v2-t2-b-3: confirmMedDoneAt + confirmMedAdjust reject 
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'08:00', loggedAt:'08:02', withFat:true, fatFood:'paratha', fatDelta:5 };
@@ -144,10 +136,6 @@ test('regression-guard-d3-v2-t2-b-3: confirmMedDoneAt + confirmMedAdjust reject 
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   if (!r.pickedIsFuture) {
     test.skip(true, 'wall-clock happens to be at 23:59 — future-time boundary not exercisable');
     return;
@@ -288,7 +276,7 @@ test('regression-guard-d3-v2-t2-b-5: adjustMedTime preserves withFat:true agains
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'08:45', loggedAt:'08:46', withFat:true, fatFood:'paratha', fatDelta:5 };
@@ -305,10 +293,6 @@ test('regression-guard-d3-v2-t2-b-5: adjustMedTime preserves withFat:true agains
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.afterGivenAt, 'T2-B.5: Adjust still updates givenAt').toBe('08:50');
   expect(r.afterWithFat, 'T2-B.5 (V-M-77): null detection must NOT erase a prior true (preserve path)').toBe(true);
   expect(r.afterFood,    'T2-B.5: prior fatFood preserved when preserveWithFat triggers').toBe('paratha');

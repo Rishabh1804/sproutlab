@@ -17,7 +17,7 @@ test('regression-guard-d3-v2-t1-1: adjustMedTime preserves positive withFat acro
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!feedingData[t]) feedingData[t] = {};
     feedingData[t].breakfast = 'paratha';
@@ -69,10 +69,6 @@ test('regression-guard-d3-v2-t1-2-sync: medChecks renderer list includes renderM
     };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   expect(r.hasEntry).toBe(true);
   expect(r.hasStats, 'renderMedicalStats must remain in the renderers list').toBe(true);
   expect(r.hasPattern, 'T1-2: renderMedD3PatternCard must be added to the renderers list').toBe(true);
@@ -112,7 +108,7 @@ test('regression-guard-d3-v2-t1-3: skipped med events surface in TSF timeline at
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     // Directly seed a skipped record with a specific loggedAt so the assertion is deterministic.
@@ -146,7 +142,7 @@ test('regression-guard-d3-v2-t1-4: _refreshTodayMedWithFat triggers re-renders o
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     // No fat-food yet → markMedDone records withFat:false.
     if (!feedingData[t]) feedingData[t] = {};
@@ -199,7 +195,7 @@ test('regression-guard-d3-v2-t1-5: ISL range summary formats D3 time in 12h', as
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = { status:'done', givenAt:'14:30', loggedAt:'14:32', withFat:false, fatFood:null, fatDelta:null };
@@ -237,7 +233,7 @@ test('regression-guard-d3-v2-t1-6-t3-14: pending filters treat cleared sentinel 
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     // Seed a cleared sentinel directly (as undoMedSkip would have left it).
@@ -271,7 +267,7 @@ test('regression-guard-d3-v2-t3-14-corrupted-empty: empty-object partial-write r
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('no D3 medicine in the fixture');   // fail loudly, never self-skip (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     medChecks[t][d3.name] = {}; // corrupted partial-write

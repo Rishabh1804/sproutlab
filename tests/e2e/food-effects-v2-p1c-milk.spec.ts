@@ -96,7 +96,10 @@ test.describe('food-effects-v2 P1c — milk polarity cards', () => {
     await expect(verdict).toHaveClass(/\bfp-verdict--info\b/);
     await expect(verdict.locator('use[href="#zi-info"]')).toHaveCount(1);
     await expect(verdict.locator('use[href="#zi-warn"], use[href="#zi-siren"]')).toHaveCount(0);
-    // the "Never" list names rice under 5 (arsenic) and the not-a-substitute line.
+    // the "Never" list names rice under 5 (arsenic) and the not-a-substitute line. On the retired
+    // card the arsenic fact was FRONTED in the lead; here the lead is "Not a substitute under 1" and
+    // arsenic sits in a never chip inside the folded Safe-forms row. That placement change is not
+    // settled — docs/BUGS.md #167, "Placement contracts retired with the cards".
     const never = front.locator('.lib-prow--forms .fp-chip--never');
     await expect(never.filter({ hasText: /rice drinks/i })).toContainText(/under 5 years/i);
     await expect(never.filter({ hasText: /rice drinks/i })).toContainText(/arsenic/i);

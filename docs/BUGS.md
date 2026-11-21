@@ -1,6 +1,6 @@
 # SproutLab — Bug Log
 **Maintained by:** Lyra (Builder) · Maren (Care) · Kael (Intelligence) · Vela (Surfacing — canon-gen-001)
-**Last updated:** 2026-11-21 (test-rot PR section opened: the 53 standing e2e failures fixed as #166; app findings #167–#169 logged, #168 and #169 fixed; prior: 2026-11-03 — growth follow-up #286 section: #159 edge items fixed as #163, deferrals #164, pre-existing e2e failures #165; #161 threshold consult recorded; prior: paracetamol chip #284 section: g-6 fixed, its deferrals logged as #161–#162; prior: 2026-10-31 child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
+**Last updated:** 2026-11-21 (test-rot PR section opened: the 53 standing e2e failures fixed as #166; app findings #167–#169 logged, #168 and #169 fixed, Governor-round deferrals #170; prior: 2026-11-03 — growth follow-up #286 section: #159 edge items fixed as #163, deferrals #164, pre-existing e2e failures #165; #161 threshold consult recorded; prior: paracetamol chip #284 section: g-6 fixed, its deferrals logged as #161–#162; prior: 2026-10-31 child-sex S2–S4 build section opened; prior: 2026-10-28 repo sweep — stale entries moved to Fixed, sweep findings logged near the top of Open Bugs)
 **Format:** P0 = visible user-facing bug · P1 = correctness/data bug · P2 = code quality / HR violation
 
 ---
@@ -13,20 +13,11 @@ The 53 failures carried on `main` since the #161 thread (#165 below, and "19 e2e
 
 #### P2 — The 53 standing e2e failures, by cause (166)
 - **Age-premised specs (15).** The fixture child has a fixed DOB, so a spec that assumes "between 6 and 12 months" expired when she passed 12. `food-effects-v2-r1-combo-checker` (7), `-r2-qa-food-safety` (6), `-r3-allergen-note:52`, `diet-preference-gate:148`. **Fix:** `tests/e2e/fixtures/clock.ts` (`pinAgeMonths`, relative to the fixture DOB); those cases are pinned to 9 months.
-- **Retired Library cards (27).** `food-effects-v2-encourage-card` (7), `-p1c-choking` (10), `-p1c-milk` (10) waited for `#dietNutIntro` / `#dietChokingIntro` / `#dietMilkIntro`, hosts removed in Library #5b (#216, 2026-06-04). **Fix:** 12 never needed the card; the rest assert the same contracts on the food pop-ups and the Emergency Deck, pinned to 9 months (`p1c-milk` (g) was also age-premised). Five guards had no surface left (see 167).
+- **Retired Library cards (27).** `food-effects-v2-encourage-card` (7), `-p1c-choking` (10), `-p1c-milk` (10) waited for `#dietNutIntro` / `#dietChokingIntro` / `#dietMilkIntro`, hosts removed in Library #5b (#216, 2026-06-04). **Fix:** 12 never needed the card; the rest assert the same contracts on the food pop-ups and the Emergency Deck, pinned to 9 months (`p1c-milk` (g) was also age-premised). Five guards had no surface left and four placement assertions were relaxed (see 167).
 - **Lean landing (5).** `smoke` 2a–2c listed a `home` nav tab; `alert-routing` :39/:62 assumed the app opens on Today. The first tab is the landing since #219.
 - **Inactive D3 drops (4, plus 10 hidden).** `vit-d3-tracking` :324/:444/:520 and `-v2:192` exercised the once-daily drops, which the fixture keeps as inactive history. Ten more guards (`-tier-2-a`, `-tier-2-b`, `v3-5-chip-taxonomy` :56/:82) had been **skipping themselves** with "no D3 med". **Fix:** `tests/e2e/fixtures/meds.ts` (`useOnceDailyD3Drops`). Nine of the ten pass; the tenth is 168.
 - **Superseded expectations (2).** `can-i-give-this:71` looked for `style.display === 'block'` (the row opens through `hidden` since #279); `diet-preference-gate:57` expected shellfish un-gated (it has its own token on the fish sid since V-K-270-10).
 - **Patch class:** PC-6 (PC-3 for the retired cards)
-- **Status:** **Fixed** in the test-rot PR.
-
-#### P1 — "Give before leaving" drops the vitamin D dose after a skip (168)
-- **Symptom:** `_obCheckVitD3Needed('outing-give')` returns `false` once today's dose is marked skipped. T2-B.4 ruled the opposite for the outing surfaces: a 7 AM misclick-skip must not hide the dose from an afternoon outing ("skip ≠ resolved" for `outing-pack` and `outing-give`). `outing-pack` still honours it; `outing-give` does not.
-- **Cause:** since the multi-dose rewrite (#270) the non-pack branch reads `medSlotStates()`, which marks a skipped dose `resolved`, so no slot is `due`.
-- **Found by:** `vit-d3-tracking-v2-tier-2-b` T2-B.4, which had been self-skipping (166). It now runs and fails on `main`'s code.
-- **Fix:** `_obCheckVitD3Needed` (home.js) keeps the slot that is due now on the give-list when it was skipped; an earlier or later slot never counts (Cipher A2 holds). The overlay and packing intents are unchanged.
-- **Tests:** T2-B.4 (once daily) and `t2-b-4-twice-daily` (morning skipped / given at 10:00).
-- **Patch class:** PC-10 (one state, two answers), PC-5
 - **Status:** **Fixed** in the test-rot PR.
 
 #### P1 — Guidance dropped when the Library knowledge cards were retired (167)
@@ -37,14 +28,26 @@ The 53 failures carried on `main` since the #161 thread (#165 below, and "19 e2e
   - the choking record's single gagging-vs-choking discriminator sentence (`myth.truth`: "gagging is LOUD, choking is QUIET"; Vela V-V-12 called it load-bearing). Its two halves still render apart (see below); the food pop-up's choking floor row has no "gagging is loud — let it resolve" line.
 - **What survives elsewhere (Maren V-M-294-4):** the general "introduce one at a time and watch" line is live on the food detail sheet, the food pop-up and the meal planner (diet.js), though not the nut-specific "each nut on its own"; the act-or-wait choking rule ("coughing forcefully, let it continue; cannot cry, cough or breathe, act") is in the General-room choking record (data.js `GENERAL_EMERGENCIES`). **The true gap** is the first-taste protocol (¼ teaspoon, at home in the morning, watch 2 hours), `highRiskNote`, and the explicit "gagging is loud and normal, don't intervene" reassurance.
 - **Wider than the nut card (Ceres V-C-294-1):** `howToIntroduce` also sits on the other six introduce-early records (egg, soy, wheat, sesame, fish and cow milk in data.js) and has never had a renderer; the retired card read only peanut and tree nut. The restore decision covers the whole set. The choking QUIET half is live (pop-up floor signs, Deck `recognise`, Deck step 1) and the LOUD half renders through `watchFor` in `_severeFloorHtml` (detail sheet, log-time card, combo checker).
+- **Placement contracts retired with the cards (Cipher A1, 2026-11-21):** the re-pointed specs assert where the guidance sits now, which is weaker than where it sat:
+  - (i) **Plant milk, rice drinks under 5 (arsenic).** The retired card fronted it in the lead. The pop-up's lead is "Not a substitute under 1" (`glance`, data.js) and arsenic is a never chip inside the folded Safe-forms row. For a child past 12 months that lead reads as cleared.
+  - (ii) **Pinned → folded.** The peanut / tree-nut and CMPA severe floor ("pinned, never folds", A-1 / V-1), the form-gate note (A-2) and the choking cut rules were pinned on the cards; on the pop-up each is a row that starts folded, with the floor one tap from the Emergency Deck. The specs call this "S11, Architect-ratified" from the code comments and the design record `docs/design/library-redesign/11-food-card-6sec-template.html`; **no ratification record was found in `docs/` — Architect to confirm.**
 - **Ceres's position (2026-11-21 audit):** restore how-to-introduce with `highRiskNote` as a "How to introduce" row on `_libPopHtml` for every `allergen-introduce-early` record, and add `myth.truth` to the choking floor row; LEAP and the myth may fold into "Why it's good" or go.
 - **Hold:** neither the three dead renderers nor the record fields are deleted until the Architect decides. **Owner:** Ceres primary, Maren co-sitting. **Target:** the next Nutrition build session.
 - **Maren's position (2026-11-21 audit):** restore `highRiskNote` and the gagging reassurance on the food pop-up (a "How to introduce" row; the choking floor row) — both are safety-tier; the LEAP and "delay" myth lines can go. Do not delete the three dead renderers until that is decided. Ceres-primary, Maren co-sitting.
 - **Cause:** #5b's guides are "quick reference only" and the S11 pop-up renders `whyGood`, `safeForm`, the floor and nutrition; these fields were not carried over. Whether that was intended is not recorded.
 - **Tests:** the five guards for this content were removed with the cards (they had been failing since June).
-- **Decision needed (Architect; Maren + Ceres):** add the content to the food pop-up (a "How to introduce" row; the discriminator on the choking floor row), or let it go and delete the three dead renderers.
+- **Decision needed (Architect; Maren + Ceres):** (a) add the content to the food pop-up (a "How to introduce" row; the discriminator on the choking floor row), or let it go and delete the three dead renderers; (b) whether rice-under-5 arsenic returns to the plant-milk lead; (c) confirm the folded floor + one-tap Deck trade (S11) on the record.
 - **Patch class:** PC-3 (dead paths), PC-7
 - **Status:** **Open**
+
+#### P1 — "Give before leaving" drops the vitamin D dose after a skip (168)
+- **Symptom:** `_obCheckVitD3Needed('outing-give')` returns `false` once today's dose is marked skipped. T2-B.4 ruled the opposite for the outing surfaces: a 7 AM misclick-skip must not hide the dose from an afternoon outing ("skip ≠ resolved" for `outing-pack` and `outing-give`). `outing-pack` still honours it; `outing-give` does not.
+- **Cause:** since the multi-dose rewrite (#270) the non-pack branch reads `medSlotStates()`, which marks a skipped dose `resolved`, so no slot is `due`.
+- **Found by:** `vit-d3-tracking-v2-tier-2-b` T2-B.4, which had been self-skipping (166). It now runs and fails on `main`'s code.
+- **Fix:** `_obCheckVitD3Needed` (home.js) keeps the slot that is due now on the give-list when it was skipped; an earlier or later slot never counts (Cipher A2 holds). The overlay and packing intents are unchanged.
+- **Tests:** T2-B.4 (once daily) and `t2-b-4-twice-daily` (morning skipped / given at 10:00).
+- **Patch class:** PC-10 (one state, two answers), PC-5
+- **Status:** **Fixed** in the test-rot PR.
 
 #### P2 — Emergency Deck cards are nested inside one another (169)
 - **Symptom:** in `#libDeckOv`, `#ec-choking` is a child of `#ec-anaphylaxis` and `#ec-botulism` a child of `#ec-choking`; the sheet has one card child, not three. The cards still stack and read in order; card chrome, spacing, and any per-card selector see the wrong boxes: the first card's radius, shadow and focus ring wrap all three, and the gap between cards is lost. Saving the first card's doctor summary also printed all three summaries, because `.doc-print .fp-back *` (styles.css) reached the nested cards (Vela V-V-294-2).
@@ -58,8 +61,10 @@ The 53 failures carried on `main` since the #161 thread (#165 below, and "19 e2e
 - **Maren V-M-294-2 (PC-7):** the outing line "Give … dose before leaving (if not already given)" (home.js `_obRenderMedical`) does not acknowledge a skip, and on a twice-daily medicine does not name which dose. Suggested: the helper exposes why it fired, and the skipped case reads "You marked this morning's … dose as skipped — give it before leaving if you still want to."
 - **Maren V-M-294-3 (PC-10):** `_obCheckVitD3Needed` reads the hour twice (inside `medSlotStates` and in its own loop); read it once and pass it to both, or have `medSlotStates` return a current-slot flag.
 - **Maren V-M-294-5 (PC-1, pre-existing):** a morning slot stays current until 15:59, so a dose given at 15:45 is followed by the evening window at 16:00. For the dose-spacing backlog.
-- **Ceres V-C-294-3 (PC-1 / PC-5):** the food-safety specs now run at a pinned 9 months; no e2e case was found for the `foodEffectForAge` re-frame at 12–24 months (honey past the botulism gate, cow's milk as a drink, no added sugar before 2) on the pop-up or detail sheet — the surface the parents see today. Add one `pinAgeMonths(page, 14)` case per re-framed record.
+- **First item for the next Nutrition session (Cipher A3) — Ceres V-C-294-3 (PC-1 / PC-5):** the food-safety specs now run at a pinned 9 months; no e2e case was found for the `foodEffectForAge` re-frame at 12–24 months (honey past the botulism gate, cow's milk as a drink, no added sugar before 2) on the pop-up or detail sheet — the surface the parents see today. Add one `pinAgeMonths(page, 14)` case per re-framed record.
 - **Ceres pair-note (Carina / Maren, pre-existing):** `_severeFloorHtml` (core.js) renders the choking record's reassuring `watchFor` ("gagging — LOUD, normal…") under a "Watch for" header, which frames reassurance as a danger list.
+- **Cipher A2 (PC-6):** the D3 specs' `return { skipped: 'no D3 med' }` → `test.skip` branches are now `throw`s (the shape that hid #168). `v3-5-tsf-story-arc.spec.ts` has seven more self-skip branches of the same pattern, and `vit-d3-tracking-v2.spec.ts` / `v3-5-chip-taxonomy.spec.ts` keep three for other preconditions (`SYNC_RENDER_DEPS not exposed`, `deriver not exported`, a 23:59 wall clock); convert or justify each.
+- **Cipher A4 (nits):** `dayEntry` in `_obCheckVitD3Needed` (home.js) is unused; the comments at diet.js `renderDietMilkIntro` still describe the dead `.enc-inform` lead — resolve with the #167 decision.
 - **Maren (note):** no app code calls `_obCheckVitD3Needed('overlay')`; only tests exercise that intent.
 - **Status:** **Open**
 
