@@ -158,12 +158,28 @@ test.describe('food-effects-v2 P1c — the choking set', () => {
     // The deep-link lands on the Deck's choking card — mechanical first aid, no adrenaline step.
     await expect(floor.locator('.lib-prow-deck')).toHaveAttribute('data-arg', 'choking');
     await page.evaluate(() => (window as any).libPopToDeck(document.querySelector('#libPopOv .lib-prow-deck')));
-    // Child combinators: the Deck's cards are nested in one another in the DOM today (an unclosed
-    // div in _emDocFace — docs/BUGS.md), so a descendant selector would read the botulism card too.
+    // Child combinators keep each assertion on this card's own front face.
     const card = page.locator('#libDeckOv #ec-choking > .fp-flip > .fp-front');
     await expect(card).toContainText(/back blows/i);
     await expect(card).toContainText(/abdominal thrusts/i);
     await expect(card).not.toContainText(/adrenaline|auto-injector/i);
+  });
+
+  // ── BUGS #169: the Deck's cards are three SIBLINGS. An unclosed .docface div once nested
+  //    choking inside anaphylaxis and botulism inside choking, so per-card chrome, selectors and
+  //    print isolation saw the wrong boxes. ──
+  test('the Emergency Deck renders its three cards as siblings, none nested in another', async ({ page }) => {
+    await page.evaluate(() => (window as any).libOpenDeck());
+    const sheet = page.locator('#libDeckOv .lib-deck-sheet');
+    await expect(sheet.locator('> .ecard')).toHaveCount(3);
+    await expect(sheet.locator('.ecard .ecard')).toHaveCount(0);
+    const ids = await sheet.locator('> .ecard').evaluateAll((els) => els.map((e) => e.id));
+    expect(ids).toEqual(['ec-anaphylaxis', 'ec-choking', 'ec-botulism']);
+    // each card holds exactly its own two faces, and the doc face closes inside the back face.
+    for (const id of ids) {
+      await expect(sheet.locator(`#${id} > .fp-flip > .fp-face`)).toHaveCount(2);
+      await expect(sheet.locator(`#${id} > .fp-flip > .fp-back > .docface`)).toHaveCount(1);
+    }
   });
 
   // ── the gagging-vs-choking discriminator (V-V-12) was PINNED on the retired card. No live

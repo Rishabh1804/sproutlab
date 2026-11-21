@@ -84,8 +84,7 @@ test.describe('food-effects-v2 — the nut-introduction guidance (Library food p
     await expect(link).toHaveCount(1);
     await expect(link).toHaveAttribute('data-arg', 'anaphylaxis');
     await page.evaluate(() => (window as any).libPopToDeck(document.querySelector('#libPopOv .lib-prow-deck')));
-    // Child combinators: the Deck's cards are nested in one another in the DOM today (an unclosed
-    // div in _emDocFace — docs/BUGS.md), so a descendant selector would read the later cards too.
+    // Child combinators keep each assertion on this card's own front face.
     const card = page.locator('#libDeckOv #ec-anaphylaxis');
     await expect(card).toHaveCount(1);
     await expect(card.locator('> .fp-flip > .fp-front .ec-name')).toContainText(/peanut/i);
