@@ -23,14 +23,15 @@ export function fixtureDob(): Date {
 }
 
 // The local date on which the fixture child has completed `months` months, plus `days` more.
-// The default 10 days keeps the age clear of a month boundary; the time is mid-morning.
-export function dateAtAge(months: number, days = 10): Date {
+// The default 10 days keeps the age clear of a month boundary; the default time is mid-morning
+// (pass `hour` for a spec about a time of day, e.g. a dose slot's window).
+export function dateAtAge(months: number, days = 10, hour = 10): Date {
   const dob = fixtureDob();
-  return new Date(dob.getFullYear(), dob.getMonth() + months, dob.getDate() + days, 10, 0, 0);
+  return new Date(dob.getFullYear(), dob.getMonth() + months, dob.getDate() + days, hour, 0, 0);
 }
 
-export async function pinAgeMonths(page: Page, months: number, days = 10): Promise<Date> {
-  const at = dateAtAge(months, days);
+export async function pinAgeMonths(page: Page, months: number, days = 10, hour = 10): Promise<Date> {
+  const at = dateAtAge(months, days, hour);
   await page.clock.setFixedTime(at);
   return at;
 }

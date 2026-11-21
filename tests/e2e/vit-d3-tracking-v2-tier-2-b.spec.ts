@@ -169,7 +169,7 @@ test('regression-guard-d3-v2-t2-b-4: outing-planner intents — skip-today still
 
   const r = await page.evaluate(() => {
     const d3 = (meds || []).find(m => m.active && m.name && m.name.toLowerCase().includes('d3'));
-    if (!d3) return { skipped: 'no D3 med' };
+    if (!d3) throw new Error('the once-daily D3 drops are not active');   // never skip this guard again (BUGS #168)
     const t = today();
     if (!medChecks[t]) medChecks[t] = {};
     // Seed skipped today.
@@ -185,10 +185,6 @@ test('regression-guard-d3-v2-t2-b-4: outing-planner intents — skip-today still
     return { overlay, outPack, outGive, overlayDone, packDone, giveDone };
   });
 
-  if ((r as any).skipped) {
-    test.skip(true, (r as any).skipped);
-    return;
-  }
   // Skip today:
   expect(r.overlay,  'T2-B.4: overlay intent treats skip as resolved (V-M-67/74)').toBe(false);
   expect(r.outPack,  'T2-B.4: outing-pack intent must STILL surface D3 after a morning skip').toBe(true);
@@ -230,6 +226,54 @@ test('regression-guard-d3-v2-t2-b-4-twice-daily: a skipped current dose stays on
   expect(r.skipped).toEqual({ give: true, overlay: false, pack: true });
   // morning given: nothing to give now; the evening dose is still to come, so pack the bottle.
   expect(r.done).toEqual({ give: false, overlay: false, pack: true });
+});
+
+// ── T2-B.4, twice-daily: the double-dose side (Maren V-M-294-1) ───────────────
+test('regression-guard-d3-v2-t2-b-4-evening: a morning skip never keeps the give-list alive once the evening dose is the current one', async ({ page }) => {
+  // 17:00 — the evening dose is current. Only ITS state decides the give-list: a stale morning
+  // skip must not prompt "give … before leaving" after the evening dose was given (that would
+  // invite a second evening dose).
+  await pinAgeMonths(page, 14, 10, 17);
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const m = vitDSupplement();
+    const [am, pm] = medDoseSlots(m).map((x) => x.key);
+    const t = today();
+    const skip = { status:'skipped', givenAt:null, loggedAt:'07:00', withFat:null, fatFood:null, fatDelta:null };
+    const done = { status:'done', givenAt:'16:30', loggedAt:'16:31', withFat:null, fatFood:null, fatDelta:null };
+    const read = () => ({ give: _obCheckVitD3Needed('outing-give'), pack: _obCheckVitD3Needed('outing-pack') });
+    medChecks[t] = { [am]: skip, [pm]: done };
+    const eveningDone = read();
+    medChecks[t] = { [am]: skip };
+    const eveningUnlogged = read();
+    medChecks[t] = { [am]: skip, [pm]: { ...skip, loggedAt: '16:30' } };
+    const eveningSkipped = read();
+    return { hour: new Date().getHours(), eveningDone, eveningUnlogged, eveningSkipped };
+  });
+
+  expect(r.hour).toBe(17);
+  expect(r.eveningDone.give, 'evening given: a stale morning skip must not prompt a dose').toBe(false);
+  expect(r.eveningUnlogged.give, 'evening unlogged: the evening dose is due').toBe(true);
+  expect(r.eveningSkipped.give, 'evening skipped: the current dose still shows (skip != resolved)').toBe(true);
+});
+
+test('regression-guard-d3-v2-t2-b-4-night: before the morning window opens, a skipped slot prompts nothing', async ({ page }) => {
+  // 03:00 — no slot of a twice-daily medicine is current (morning opens at 05:00).
+  await pinAgeMonths(page, 14, 10, 3);
+  await page.goto('/index.html?nosync');
+  await page.waitForTimeout(700);
+
+  const r = await page.evaluate(() => {
+    const m = vitDSupplement();
+    const t = today();
+    medChecks[t] = { [medDoseSlots(m)[0].key]: { status:'skipped', givenAt:null, loggedAt:'02:00', withFat:null, fatFood:null, fatDelta:null } };
+    return { hour: new Date().getHours(), give: _obCheckVitD3Needed('outing-give') };
+  });
+
+  expect(r.hour).toBe(3);
+  expect(r.give).toBe(false);
 });
 
 // ── T2-B.5 ───────────────────────────────────────────────────────────────────

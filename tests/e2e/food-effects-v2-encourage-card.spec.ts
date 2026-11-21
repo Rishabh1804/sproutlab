@@ -5,7 +5,8 @@ import { pinAgeMonths } from './fixtures/clock';
 //
 // History: this guidance first shipped as one heavy knowledge card (renderDietNutIntro →
 // #dietNutIntro) with its emergency floor PINNED. Library redesign #5b (#216) retired that
-// card from the Guides wing, and the 6-second card (S11, Architect-ratified) moved each
+// card from the Guides wing, and the 6-second card (S11, Architect-ratified; design record
+// docs/design/library-redesign/11-food-card-6sec-template.html) moved each
 // food's guidance onto its own pop-up (libOpenBook → #libPopOv): a verdict band leads, then
 // disclosure rows the parent opens; the floor is a row on the card plus a one-tap deep-link
 // into the always-reachable Emergency Deck. These guards follow the guidance to that surface.

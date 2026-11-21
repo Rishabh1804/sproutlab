@@ -3,26 +3,18 @@ import { pinAgeMonths } from './fixtures/clock';
 
 // food-effects-v2 P1c — the MILK polarity cards (milk-spec §4/§5/§10).
 //
-// Two never-before-rendered v2 foodClasses, as sibling cards in Diet → Library
-// (renderDietMilkIntro → #dietMilkIntro / #dietPlantMilkIntro), the nut card untouched:
-//   • cow milk   = drink-timing      — CONDITIONAL, a SPLIT lead: sage carve-out band
-//     ("good in food now") OVER an amber gate band ("wait as the main drink", M-2
-//     skim-proof). CMPA severe strip PINNED + present-only, with a class-aware scope header.
-//   • plant milk = substitute-caveat — INFORM, a SKY banner leading with rice<5=arsenic; NO
-//     severe strip (the floor follows the hazard; harm is nutritional/chronic, not acute).
+// Two v2 foodClasses. They first rendered as sibling Library cards (renderDietMilkIntro →
+// #dietMilkIntro / #dietPlantMilkIntro); Library #5b (#216) retired those cards, and each milk
+// now reads on its own food pop-up (libOpenBook → #libPopOv), the 6-second card: a verdict
+// band, then rows that start folded, the floor one tap from the Emergency Deck (design record:
+// docs/design/library-redesign/11-food-card-6sec-template.html):
+//   • cow milk   = drink-timing      — CONDITIONAL: the amber wait band leads with the
+//     carve-out ("fine in food; wait as a drink"); the forms row lists ok before never. The
+//     CMPA severe floor is a rose row, dairy-scoped, deep-linking to the anaphylaxis card.
+//   • plant milk = substitute-caveat — INFORM, a sky band; the never list names rice<5=arsenic;
+//     NO acute floor (the floor follows the hazard; harm is nutritional/chronic, not acute).
 //
-// Card-relative assertions (DOM position / display), mirroring the encourage-card spec, so the
-// deferred switchTab(savedTab) race on init doesn't matter — we test each card's own contract.
-
-const SHOWN = (sel: string, cardId: string) => {
-  let n: HTMLElement | null = document.querySelector(sel);
-  if (!n) return false;
-  while (n && n.id !== cardId) {
-    if (getComputedStyle(n).display === 'none') return false;
-    n = n.parentElement;
-  }
-  return !!n;
-};
+// Pop-up-relative assertions, so the deferred switchTab(savedTab) race on init doesn't matter.
 
 declare const renderDietLibrary: () => void;
 declare const getFoodEffect: (n: string) => any;

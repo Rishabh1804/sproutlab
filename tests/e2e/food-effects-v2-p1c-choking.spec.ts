@@ -4,12 +4,15 @@ import { pinAgeMonths } from './fixtures/clock';
 // food-effects-v2 P1c — the CHOKING SET (milk-spec §9, the first choking-by-form-PRIMARY render).
 //
 // `FOOD_EFFECTS['choking hazards']` — ONE combined record for the foods that are an airway
-// hazard by FORM (round/hard/small/sticky), not by allergy or toxin. Rendered as a dedicated
-// Diet → Library card (renderDietChokingIntro → #dietChokingIntro), sibling of the nut + milk
-// cards (those untouched). Load-bearing contracts:
+// hazard by FORM (round/hard/small/sticky), not by allergy or toxin. It first rendered as a
+// dedicated Library card (renderDietChokingIntro → #dietChokingIntro); Library #5b (#216)
+// retired that card, and the record now reads on its own food pop-up (libOpenBook →
+// #libPopOv) with the floor one tap away in the Emergency Deck. The pop-up is the 6-second
+// card: a verdict band, then rows that start folded (design record:
+// docs/design/library-redesign/11-food-card-6sec-template.html). Load-bearing contracts:
 //   • POLARITY is CONDITIONAL (_effPolarity → 'conditional') — the model is MODIFY, DON'T BAN;
-//     amber, a SPLIT lead (sage carve-out "safe in the right form" over an amber gate "whole
-//     forms wait until ~5"), NEVER the rose 'avoid' siren and NEVER the sage encourage benefit.
+//     the amber wait band leads with the carve-out ("cut small, cook soft, grind — whole waits
+//     until ~5"), NEVER the rose 'avoid' band or siren and NEVER the sage encourage "yes".
 //   • THE FLOOR IS CHOKING FIRST AID, NOT ANAPHYLAXIS (the floor follows the hazard): back
 //     blows + abdominal thrusts (child 1y+ technique since 2026-09 — the under-1 chest-thrust
 //     protocol was retired when the child turned one), and NO adrenaline / auto-injector.
@@ -19,22 +22,13 @@ import { pinAgeMonths } from './fixtures/clock';
 //     shadows the peanut/tree-nut records. Traced through the LIVE resolver, asserted on the
 //     ACTUAL logged forms — a green build hides alias-precedence leaks.
 
-const SHOWN = (sel: string, cardId: string) => {
-  let n: HTMLElement | null = document.querySelector(sel);
-  if (!n) return false;
-  while (n && n.id !== cardId) {
-    if (getComputedStyle(n).display === 'none') return false;
-    n = n.parentElement;
-  }
-  return !!n;
-};
-
 declare const renderDietLibrary: () => void;
 declare const getFoodEffect: (n: string) => any;
 declare const renderFoodDetailSheet: (n: string) => void;
 declare const _fdAgeRule: (n: string) => any;
 declare const _effPolarity: (e: any) => string;
 declare const FOOD_EFFECTS: Record<string, any>;
+declare const GENERAL_EMERGENCIES: any[];
 
 // Open a Library book's food pop-up the way a tap on the shelf does (libOpenBook reads the
 // key from the tapped button) and return its front face. Asserted pop-up-relative — not
@@ -180,6 +174,17 @@ test.describe('food-effects-v2 P1c — the choking set', () => {
       await expect(sheet.locator(`#${id} > .fp-flip > .fp-face`)).toHaveCount(2);
       await expect(sheet.locator(`#${id} > .fp-flip > .fp-back > .docface`)).toHaveCount(1);
     }
+    // The General-room pop-up shares the doc face (_geDocFace, the same once-unclosed div):
+    // its flip holds exactly two faces and the doc face closes inside the back one (Vela V-V-294-1).
+    const opened = await page.evaluate(() => {
+      const e = (GENERAL_EMERGENCIES as any[]).find((x) => x && x.doc && x.severity !== 'critical' && x.source !== 'PLACEHOLDER');
+      if (!e) return null;
+      (window as any)._geShowCard(e.id);
+      return e.id as string;
+    });
+    expect(opened, 'a General-room emergency with a doctor summary exists').toBeTruthy();
+    await expect(page.locator('#geCardOv .ge-pop > .fp-flip > .fp-face')).toHaveCount(2);
+    await expect(page.locator('#geCardOv .ge-pop > .fp-flip > .fp-back > .docface')).toHaveCount(1);
   });
 
   // ── the gagging-vs-choking discriminator (V-V-12) was PINNED on the retired card. No live
