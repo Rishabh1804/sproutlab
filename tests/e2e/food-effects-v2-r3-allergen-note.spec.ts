@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pinAgeMonths } from './fixtures/clock';
 
 // food-effects v2 — R3: the diet allergen note / food-detail flag
 // (renderFoodDetailSheet → _fdAllergenNote) reconciled onto FOOD_EFFECTS (§3.3).
@@ -50,6 +51,14 @@ test.describe('food-effects v2 — R3 allergen note / food-detail flag', () => {
   });
 
   test('honey surfaces the botulism floor in the detail sheet (acute-toxin)', async ({ page }) => {
+    // The botulism frame ("Honey before 12 months") applies under 12 months; past that the record is
+    // re-framed by age (foodEffectForAge). Pin a 9-month-old and reload so the sheet is read at that age.
+    await pinAgeMonths(page, 9);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() =>
+      typeof renderFoodDetailSheet === 'function'
+      && typeof getFoodEffect === 'function'
+      && !!document.getElementById('foodDetailBody'), null, { timeout: 10_000 });
     const d = await detail(page, 'honey');
     expect(d.html, 'record-framed header').toContain('Honey before 12 months');
     expect(d.watch, 'botulism watch-fors render').toBeGreaterThan(0);

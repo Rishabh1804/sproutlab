@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pinAgeMonths } from './fixtures/clock';
 
 // Dietary-preference SURFACING GATE — the 4-class gate (veg / eggetarian / pescatarian / nonveg).
 // vegan is deferred to its own spec (it would additionally gate dairy + honey).
@@ -54,17 +55,22 @@ test.describe('dietary-preference surfacing gate (4-class)', () => {
   });
 
   // ── classification safety: word-boundary, not substring ──
-  test('classification is word-boundary safe (eggplant is veg; shellfish is not gated as fish)', async ({ page }) => {
+  test('classification is word-boundary safe (eggplant and crabapple are veg; shellfish is seafood by its own token)', async ({ page }) => {
     const r = await page.evaluate(() => ({
       eggYolk: _dietNonvegSid('Egg yolk'),
       eggplant: _dietNonvegSid('eggplant'),       // must NOT be classed as egg
-      shellfish: _dietNonvegSid('shellfish'),     // \bfish\b must not match shellfish
+      crabapple: _dietNonvegSid('crabapple'),     // \bcrab\b must not match inside a fruit's name
+      // Shellfish is seafood: since the 12–24 m vocabulary pass (Kael V-K-270-10) it has its OWN
+      // token mapped to the fish sid, so a vegetarian household never has it surfaced. The
+      // word boundary is still what keeps a token out of a longer word (eggplant, crabapple).
+      shellfish: _dietNonvegSid('shellfish'),
       chicken: _dietNonvegSid('Chicken (puree)'),
       paneer: _dietNonvegSid('paneer'),
     }));
     expect(r.eggYolk).toBe('eggs');
     expect(r.eggplant).toBeNull();
-    expect(r.shellfish).toBeNull();
+    expect(r.crabapple).toBeNull();
+    expect(r.shellfish).toBe('fish');
     expect(r.chicken).toBe('poultry');
     expect(r.paneer).toBeNull();
   });
@@ -146,6 +152,12 @@ test.describe('dietary-preference surfacing gate (4-class)', () => {
   // headline. An off-preference food that is ALSO below its age floor must keep the hard
   // age-safety reason as the lead line; the soft preference note drops to the body. ──
   test('M-214-1: an off-preference + below-age-floor combo keeps the AGE reason as the headline', async ({ page }) => {
+    // Salt's floor is 12 months, so the case needs a child under it: pin a 9-month-old and reload.
+    await pinAgeMonths(page, 9);
+    await page.goto('/index.html?nosync');
+    await page.waitForFunction(() =>
+      typeof (window as any).checkFoodCombo === 'function'
+      && !!document.getElementById('comboInput'), null, { timeout: 10_000 });
     const r = await page.evaluate(() => {
       localStorage.setItem('ziva_diet_pref', 'veg');   // chicken is off-preference...
       const input = document.getElementById('comboInput') as HTMLInputElement;
